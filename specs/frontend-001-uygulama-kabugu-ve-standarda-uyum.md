@@ -189,14 +189,14 @@ token'ları ve bileşen envanteri dosyada yazdığı gibi olur.
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test/kanıt eşlemesi PR'da tabloyla gösterildi.
-- [ ] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
+- [x] Tüm kabul kriterleri karşılandı; kriter → test/kanıt eşlemesi PR'da tabloyla gösterildi.
+- [x] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
       (`docs/evidence/frontend-001-ac<n>.png`); AC-4 ve AC-13 için Arapça görüntü var.
-- [ ] **`0001`'in 35 kriteri hâlâ yeşil** — 23 birim + 50 e2e testi geçiyor (C1).
-- [ ] `docs/frontend.md` § 8'deki sekiz kapı yeşil.
-- [ ] Yeni domain terimi **yok**; kullanılan terimler `docs/domain.md` sözlüğünden.
-- [ ] Mimari karar verilmedi; backend sözleşmesi değişmedi.
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] **`0001`'in 35 kriteri hâlâ yeşil** — 23 birim + 50 e2e testi geçiyor (C1).
+- [x] `docs/frontend.md` § 8'deki sekiz kapı yeşil.
+- [x] Yeni domain terimi **yok**; kullanılan terimler `docs/domain.md` sözlüğünden.
+- [x] Mimari karar verilmedi; backend sözleşmesi değişmedi.
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
