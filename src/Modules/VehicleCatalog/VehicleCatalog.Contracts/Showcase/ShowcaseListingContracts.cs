@@ -13,6 +13,8 @@ namespace CarGallery.Modules.VehicleCatalog.Contracts.Showcase;
 /// </summary>
 public sealed record ShowcaseListingDto(
     Guid ListingId,
+    /// <summary>İlanın detay adresi. 0001 R9'un altı alanına ek; 0002/E5 ile eklendi.</summary>
+    string Slug,
     bool IsReserved,
     string? CoverImageUrl,
     string ModelName,

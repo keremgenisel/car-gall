@@ -1,4 +1,5 @@
 using CarGallery.Modules.VehicleCatalog;
+using CarGallery.Modules.VehicleCatalog.Application.Detail;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Tests.Integration;
 using Microsoft.AspNetCore.Builder;
@@ -32,6 +33,7 @@ internal sealed class ModuleApi : IAsyncDisposable
         // Model adı VehicleReference'a aittir; bu testlerde o sınırın ötesi sahtelenir.
         builder.Services.Replace(ServiceDescriptor.Singleton<IVehicleModelNameResolver>(new FakeModelNameResolver()));
         builder.Services.Replace(ServiceDescriptor.Singleton<IBodyTypeCatalog>(new FakeBodyTypeCatalog()));
+        builder.Services.Replace(ServiceDescriptor.Singleton<IReferenceLabelResolver>(new FakeReferenceLabelResolver()));
 
         WebApplication app = builder.Build();
         app.MapVehicleCatalog();

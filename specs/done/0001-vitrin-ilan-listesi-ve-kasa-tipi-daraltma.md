@@ -55,6 +55,9 @@ vitrinde C3'te sabitlenen yanıt süresi eşiklerinin altında kalır.
 - **R9.** Her ilan kartı şunları taşır: kapak görseli, model adı, yıl, kilometre,
   fiyat **veya** "fiyat sorunuz", şube adı. Liste yanıtı bu alanların **dışında hiçbir alan
   taşımaz**; opsiyonel alanlar liste yanıtında bulunmaz (detay sayfası kapsam dışıdır → X9).
+  *(Adres alanı `slug` sonradan eklendi: karttan detaya gidiş onsuz kurulamıyordu.
+  → `specs/0002-arac-detay.md` **E5**. Bu ek, R9'un "opsiyonel alan taşımaz" kuralını
+  değiştirmez.)*
 - **R10.** Liste yanıtı hiçbir gizli alanı taşımaz — şase, plaka, iç notlar ve `Gizli`
   işaretli opsiyonel alanlar yanıtta **hiç bulunmaz**, boş değer olarak da gelmez.
 - **R11.** Liste ekranı **yükleniyor**, **boş** ve **hata** durumlarının üçünü de ele alır.
