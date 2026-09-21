@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | Geliştiriliyor |
 | **Sahip** | Developer oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (vitrin okuma tarafı) · `VehicleReference` (donanım paketi, yakıt, vites, çekiş — **E8**) · `frontend/` public vitrin |
