@@ -1,4 +1,5 @@
 @import url('../shared/design/tokens.css');
+@import url('../shared/ui/ui.css');
 
 /*
  * CSS'te fiziksel yön özellikleri YASAKTIR; logical properties zorunludur (C6,
@@ -83,16 +84,6 @@ body {
   gap: var(--space-5);
 }
 
-.link-button {
-  background: none;
-  border: none;
-  color: var(--color-accent);
-  text-decoration: underline;
-  cursor: pointer;
-  padding: var(--space-2);
-  font: inherit;
-}
-
 :focus-visible {
   outline: var(--focus-ring-width) solid var(--color-accent);
   outline-offset: var(--space-1);
@@ -107,15 +98,6 @@ body {
   margin: 0;
 }
 
-.listing-card {
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
 .listing-card__media {
   position: relative;
   background: var(--color-surface-muted);
@@ -127,18 +109,6 @@ body {
   aspect-ratio: var(--media-aspect-ratio);
   object-fit: cover;
   display: block;
-}
-
-.listing-card__badge {
-  position: absolute;
-  inset-block-start: var(--space-4);
-  inset-inline-start: var(--space-4);
-  background: var(--color-ink);
-  color: var(--color-surface);
-  border-radius: var(--radius-pill);
-  padding-block: var(--space-2);
-  padding-inline: var(--space-5);
-  font-size: var(--font-size-xs);
 }
 
 .listing-card__body {
@@ -164,56 +134,12 @@ body {
   margin: 0;
 }
 
-.state-panel {
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-8);
-  text-align: center;
-  display: grid;
-  gap: var(--space-5);
-  justify-items: center;
-}
-
-/* İskelet, .listing-card kutusunu paylaşır; yalnız içerik yerine yer tutucu boyar.
-   Ayrı bir kutu modeli tutmak, ikisinin zamanla ayrışmasına ve düzenin kaymasına yol açar. */
-.skeleton-card__media {
-  aspect-ratio: var(--media-aspect-ratio);
-  background: var(--color-surface-muted);
-}
-
-.skeleton-card__line {
-  background: var(--color-surface-muted);
-  border-radius: var(--radius-sm);
-  color: transparent;
-  min-block-size: 1em;
-}
-
-.skeleton-card__line::after {
-  content: '\00a0';
-}
-
 .pagination {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-5);
   margin-block-start: var(--space-7);
-}
-
-.pagination__button {
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  padding-block: var(--space-4);
-  padding-inline: var(--space-5);
-  cursor: pointer;
-  font: inherit;
-}
-
-.pagination__button[disabled] {
-  opacity: 0.5;
-  cursor: default;
 }
 
 /* Yön duyarlı ikon mantıksal olarak aynalanır (docs/frontend.md § 6). */

@@ -16,7 +16,16 @@ const zorunlu = [
 ]
 const yasak = ['api', 'components', 'lib', 'locales']
 
+// docs/frontend.md § 4.2 — başlangıç envanteri shared/ui altında var olmalı.
+const envanter = ['Button', 'Card', 'Badge', 'EmptyState', 'ErrorState', 'Skeleton']
+
 const hatalar = []
+
+for (const bilesen of envanter) {
+  if (!existsSync(`${src}shared/ui/${bilesen}.tsx`)) {
+    hatalar.push(`envanterde eksik bileşen: src/shared/ui/${bilesen}.tsx (§ 4.2)`)
+  }
+}
 
 for (const yol of zorunlu) {
   if (!existsSync(`${src}${yol}`)) {

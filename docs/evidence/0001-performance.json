@@ -14,7 +14,7 @@
     "protocol": "Lighthouse mobil profili (4x CPU kısıtı, Slow 4G), 3 koşu, medyan (spec 0001 C3)",
     "runs": [
       {
-        "lcpMilliseconds": 1728,
+        "lcpMilliseconds": 1729,
         "cumulativeLayoutShift": 0
       },
       {
@@ -22,12 +22,12 @@
         "cumulativeLayoutShift": 0
       },
       {
-        "lcpMilliseconds": 1731,
+        "lcpMilliseconds": 1729,
         "cumulativeLayoutShift": 0
       }
     ],
     "median": {
-      "lcpMilliseconds": 1730,
+      "lcpMilliseconds": 1729,
       "cumulativeLayoutShift": 0
     },
     "thresholds": {

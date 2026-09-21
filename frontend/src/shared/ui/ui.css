@@ -1,0 +1,100 @@
+/*
+ * Envanter bileşenlerinin stilleri — docs/frontend.md § 4.2.
+ * Değerlerin tamamı token'dan gelir (§ 4.1); ham hex/px lint tarafından kırılır.
+ */
+
+.ui-button {
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-md);
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ui-button--primary {
+  background: var(--color-accent);
+  color: var(--color-ink-inverse);
+}
+
+.ui-button--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.ui-button--text {
+  background: none;
+  border-color: transparent;
+  color: var(--color-accent);
+  text-decoration: underline;
+  padding-inline: var(--space-2);
+}
+
+.ui-button[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ui-card {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.ui-badge {
+  display: inline-block;
+  background: var(--color-ink);
+  color: var(--color-ink-inverse);
+  border-radius: var(--radius-pill);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-5);
+  font-size: var(--font-size-xs);
+}
+
+.ui-badge--floating {
+  position: absolute;
+  inset-block-start: var(--space-4);
+  inset-inline-start: var(--space-4);
+}
+
+.ui-state {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-8);
+  text-align: center;
+  display: grid;
+  gap: var(--space-5);
+  justify-items: center;
+}
+
+.ui-state__title,
+.ui-state__body {
+  margin: 0;
+}
+
+.ui-state__body {
+  color: var(--color-ink-muted);
+}
+
+.ui-skeleton {
+  background: var(--color-surface-muted);
+}
+
+.ui-skeleton--media {
+  aspect-ratio: var(--media-aspect-ratio);
+}
+
+.ui-skeleton--line {
+  border-radius: var(--radius-sm);
+  min-block-size: 1em;
+  color: transparent;
+}
+
+.ui-skeleton--line::after {
+  content: '\00a0';
+}
