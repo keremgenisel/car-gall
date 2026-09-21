@@ -61,8 +61,12 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Lint (JS/TS)
+      - name: Lint (ESLint)
         run: npm run lint
+
+      # docs/frontend.md § 8 — biçim Prettier'ın işi; lint biçimle uğraşmaz.
+      - name: Biçim kontrolü (Prettier)
+        run: npm run format:check
 
       # Fiziksel CSS yön özellikleri yasaktır (C6, Yasak Listesi 25).
       - name: Lint (CSS — logical properties)
