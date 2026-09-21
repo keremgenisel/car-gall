@@ -80,6 +80,10 @@ jobs:
       - name: Eksik çeviri anahtarı kontrolü
         run: npm run check:locales
 
+      # docs/frontend.md § 1 ve § 4.2 — klasör yapısı ve bileşen envanteri.
+      - name: Klasör yapısı ve envanter kontrolü
+        run: npm run check:structure
+
       - name: Tip kontrolü
         run: npm run typecheck
 
