@@ -114,7 +114,7 @@ Bunlar kararın gizli maliyeti değil, **bilinen fiyatı**:
 - **Paylaşılan veritabanı, paylaşılan kader.** Tek migration penceresi, tek yedekleme
   politikası, tek bağlantı havuzu. Bir modülün ağır sorgusu diğerlerinin bağlantılarını
   tüketebilir.
-- **Proje sayısı ~20.** Dokuz modül × iki proje + host + BuildingBlocks + test projeleri.
+- **Proje sayısı ~22.** On modül × iki proje + host + BuildingBlocks + test projeleri.
   Çözüm büyük görünür, build süresi tek projeli bir uygulamaya göre uzundur.
   Bunu **bilinçli olarak** ödüyoruz: klasör ayrımı sınır dayatmaz, proje ayrımı dayatır.
 - **Tek prosesteyken bile nihai tutarlılık.** Bir araç yayınlandığında vitrin okuma modeli
@@ -183,7 +183,7 @@ gerçek bir okuma/yazma izolasyonu.
 Kod monolit, veri tamamen ayrı.
 
 **Reddedildi.** İzolasyon şema ayrımının verdiğinden belirgin biçimde fazla değil, ama
-maliyeti belirgin biçimde fazla: kurulum başına dokuz veritabanı, dokuz yedekleme
-politikası, dokuz bağlantı dizesi — ve bunlar kurulum sayısıyla çarpılıyor. Ayrıca her
+maliyeti belirgin biçimde fazla: kurulum başına on veritabanı, on yedekleme
+politikası, on bağlantı dizesi — ve bunlar kurulum sayısıyla çarpılıyor. Ayrıca her
 raporlama ve kompozisyon ihtiyacı anında dağıtık sorgu problemine dönüşüyor.
 **Şema ayrımı, bu izolasyonun büyük kısmını çok daha ucuza veriyor.**
