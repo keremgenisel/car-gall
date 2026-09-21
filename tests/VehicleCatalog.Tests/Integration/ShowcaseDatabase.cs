@@ -37,12 +37,25 @@ public sealed class ShowcaseDatabase : IAsyncLifetime
         return new VehicleCatalogDbContext(builder.Options);
     }
 
-    /// <summary>Paylaşılan seed'e bağımlı test yazılmaz; her test kendi verisini kurar (docs/testing.md § 4).</summary>
+    /// <summary>
+    /// Paylaşılan seed'e bağımlı test yazılmaz; her test kendi verisini kurar
+    /// (docs/testing.md § 4). Alan ayarları da migration'ın seed ettiği hâle döndürülür:
+    /// bir test onları değiştirip patlarsa koleksiyondaki sonraki testler kirli durumu
+    /// devralırdı.
+    /// </summary>
     internal async Task ResetAsync()
     {
         await using VehicleCatalogDbContext context = CreateContext();
+
         await context.Database.ExecuteSqlRawAsync(
             $"TRUNCATE TABLE {VehicleCatalogDbContext.Schema}.showcase_listings");
+
+        await context.Database.ExecuteSqlRawAsync(
+            $"""
+            UPDATE {VehicleCatalogDbContext.Schema}.vehicle_field_settings
+            SET form_state = 2, public_visibility = 1
+            WHERE field_key = 'body_type'
+            """);
     }
 }
 

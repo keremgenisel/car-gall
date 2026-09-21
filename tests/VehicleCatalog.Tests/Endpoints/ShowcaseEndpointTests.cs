@@ -75,7 +75,7 @@ public sealed class ShowcaseEndpointTests(ShowcaseDatabase database)
         }
     }
 
-    [Fact(DisplayName = "AC-24: Gizli işaretli bir opsiyonel alan liste yanıtında hiç bulunmaz — boş değer olarak da bulunmaz")]
+    [Fact(DisplayName = "AC-24: Gizli işaretli bir opsiyonel alan liste yanıtında hiç bulunmaz — boş değer olarak da bulunmaz — ve daraltma ekseni olarak da sunulmaz; gizleme VehicleCatalog'un sorgu tarafında uygulanır")]
     public async Task YanitSekliSabittir_YalnizKartAlanlari()
     {
         await database.ResetAsync();

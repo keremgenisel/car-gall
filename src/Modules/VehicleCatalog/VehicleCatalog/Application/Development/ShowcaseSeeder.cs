@@ -53,7 +53,7 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
 
             vehicle.AttachMediaAsset(Guid.CreateVersion7());
 
-            Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: listingCount - index);
+            Listing listing = Listing.CreateDraft(vehicle.Id, showcaseSortWeight: listingCount - index);
             listing.Publish(clock);
 
             if (index % 7 == 6)

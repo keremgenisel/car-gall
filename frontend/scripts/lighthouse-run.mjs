@@ -1,4 +1,4 @@
-import { writeFileSync, mkdirSync } from 'node:fs'
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs'
 import lighthouse from 'lighthouse'
 import * as chromeLauncher from 'chrome-launcher'
 
@@ -45,20 +45,29 @@ const lcpMedian = median(results.map((r) => r.lcp))
 const clsMedian = median(results.map((r) => r.cls))
 
 mkdirSync('../docs/evidence', { recursive: true })
-writeFileSync(
-  '../docs/evidence/0001-performance.json',
-  JSON.stringify(
-    {
-      url: URL_TO_TEST,
-      protocol: 'Lighthouse mobil profili, 3 koşu, medyan (spec 0001 C3)',
-      runs: results,
-      median: { lcpMilliseconds: lcpMedian, cumulativeLayoutShift: clsMedian },
-      thresholds: { lcpMilliseconds: LCP_THRESHOLD_MS, cumulativeLayoutShift: CLS_THRESHOLD },
-    },
-    null,
-    2,
-  ) + '\n',
-)
+
+const reportPath = '../docs/evidence/0001-performance.json'
+
+// Sunucu ölçümü aynı dosyanın "server" bölümünü yazar; birbirinin üstüne yazmazlar.
+const report = existsSync(reportPath) ? JSON.parse(readFileSync(reportPath, 'utf8')) : {}
+
+report.spec = '0001'
+report.client = {
+  url: URL_TO_TEST,
+  protocol: 'Lighthouse mobil profili (4x CPU kısıtı, Slow 4G), 3 koşu, medyan (spec 0001 C3)',
+  runs: results.map((r) => ({
+    lcpMilliseconds: Math.round(r.lcp),
+    cumulativeLayoutShift: Number(r.cls.toFixed(3)),
+  })),
+  median: {
+    lcpMilliseconds: Math.round(lcpMedian),
+    cumulativeLayoutShift: Number(clsMedian.toFixed(3)),
+  },
+  thresholds: { lcpMilliseconds: LCP_THRESHOLD_MS, cumulativeLayoutShift: CLS_THRESHOLD },
+  met: lcpMedian < LCP_THRESHOLD_MS && clsMedian < CLS_THRESHOLD,
+}
+
+writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n')
 
 console.log(`medyan LCP: ${Math.round(lcpMedian)} ms (eşik ${LCP_THRESHOLD_MS} ms)`)
 console.log(`medyan CLS: ${clsMedian.toFixed(3)} (eşik ${CLS_THRESHOLD})`)

@@ -43,4 +43,7 @@ internal sealed class VehicleFieldSetting
 internal static class VehicleFieldKeys
 {
     internal const string BodyType = "body_type";
+
+    /// <summary>Tramer — hasar kayıt tutarı (docs/domain.md sözlüğü).</summary>
+    internal const string DamageRecordAmount = "damage_record_amount";
 }

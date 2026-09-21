@@ -27,7 +27,11 @@ internal static class ShowcaseQueryHarness
         IVehicleModelNameResolver? modelNames = null)
     {
         await using VehicleCatalogDbContext context = database.CreateContext();
-        ShowcaseListingQueries queries = new(context, modelNames ?? new FakeModelNameResolver(), Locales);
+        ShowcaseListingQueries queries = new(
+            context,
+            modelNames ?? new FakeModelNameResolver(),
+            new FakeBodyTypeCatalog(),
+            Locales);
 
         return await queries.GetAsync(
             new ShowcaseListingFilter(bodyTypes ?? [], page, locale),

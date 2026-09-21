@@ -54,6 +54,7 @@ internal static class ShowcaseListingProjector
             PriceOnRequest = vehicle.Price.IsOnRequest,
             BranchId = vehicle.BranchId,
             BranchNames = new Dictionary<string, string>(branchNames),
+            CoverAssetId = vehicle.CoverAssetId,
             CoverMediaUrl = coverMediaUrl,
         };
     }

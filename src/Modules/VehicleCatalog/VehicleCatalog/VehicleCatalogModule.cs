@@ -32,6 +32,7 @@ public static class VehicleCatalogModule
         services.AddSingleton(BuildLocaleOptions(defaultLocale, enabledLocales));
         services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();
+        services.AddScoped<IBodyTypeCatalog, BodyTypeCatalog>();
         services.AddScoped<IShowcaseListingQueries, ShowcaseListingQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
 

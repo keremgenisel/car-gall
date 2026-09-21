@@ -31,6 +31,7 @@ internal sealed class ModuleApi : IAsyncDisposable
 
         // Model adı VehicleReference'a aittir; bu testlerde o sınırın ötesi sahtelenir.
         builder.Services.Replace(ServiceDescriptor.Singleton<IVehicleModelNameResolver>(new FakeModelNameResolver()));
+        builder.Services.Replace(ServiceDescriptor.Singleton<IBodyTypeCatalog>(new FakeBodyTypeCatalog()));
 
         WebApplication app = builder.Build();
         app.MapVehicleCatalog();

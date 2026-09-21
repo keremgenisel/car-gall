@@ -53,6 +53,13 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                             FormState = 2,
                             IsCore = true,
                             PublicVisibility = 1
+                        },
+                        new
+                        {
+                            FieldKey = "damage_record_amount",
+                            FormState = 1,
+                            IsCore = false,
+                            PublicVisibility = 0
                         });
                 });
 
@@ -77,6 +84,10 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("branch_names");
+
+                    b.Property<Guid?>("CoverAssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cover_asset_id");
 
                     b.Property<string>("CoverMediaUrl")
                         .HasColumnType("text")

@@ -83,24 +83,56 @@ public sealed class OlayIsleyiciTests(ShowcaseDatabase database)
     public async Task KapakGorseliYazilir_MediaAssetReadyGeldiginde()
     {
         await database.ResetAsync();
+        Guid kapakVarligi = Guid.CreateVersion7();
         ShowcaseListing listing = new ShowcaseListingBuilder().Build();
+        listing.CoverAssetId = kapakVarligi;
         listing.CoverMediaUrl = null;
         await ShowcaseQueryHarness.SeedAsync(database, [listing]);
 
-        await using (VehicleCatalogDbContext context = database.CreateContext())
-        {
-            MediaAssetReadyHandler handler = new(context);
-            await handler.HandleAsync(
-                new MediaAssetReady(Guid.CreateVersion7(), Simdi, Guid.CreateVersion7(), "https://cdn.example.test/kapak.webp"),
-                listing.VehicleId,
-                CancellationToken.None);
-        }
+        await HandleMediaAsync(kapakVarligi, "https://cdn.example.test/kapak.webp", listing.VehicleId);
 
         await using VehicleCatalogDbContext read = database.CreateContext();
         ShowcaseListing stored = await read.ShowcaseListings.AsNoTracking()
             .SingleAsync(row => row.ListingId == listing.ListingId);
 
         Assert.Equal("https://cdn.example.test/kapak.webp", stored.CoverMediaUrl);
+    }
+
+    [Fact]
+    public async Task KapakDegismez_IkinciGorselinOlayiSonraGeldiginde()
+    {
+        await database.ResetAsync();
+
+        Guid kapakVarligi = Guid.CreateVersion7();
+        Guid ikinciVarlik = Guid.CreateVersion7();
+
+        ShowcaseListing listing = new ShowcaseListingBuilder().Build();
+        listing.CoverAssetId = kapakVarligi;
+        listing.CoverMediaUrl = null;
+        await ShowcaseQueryHarness.SeedAsync(database, [listing]);
+
+        // Medya işleme süreleri farklıdır ve teslimat sıra garantisi vermez
+        // (docs/architecture.md § 2.C): ikinci görsel önce hazır olabilir.
+        await HandleMediaAsync(ikinciVarlik, "https://cdn.example.test/ikinci.webp", listing.VehicleId);
+        await HandleMediaAsync(kapakVarligi, "https://cdn.example.test/kapak.webp", listing.VehicleId);
+        await HandleMediaAsync(ikinciVarlik, "https://cdn.example.test/ikinci-yeniden.webp", listing.VehicleId);
+
+        await using VehicleCatalogDbContext read = database.CreateContext();
+        ShowcaseListing stored = await read.ShowcaseListings.AsNoTracking()
+            .SingleAsync(row => row.ListingId == listing.ListingId);
+
+        // Kapak sıralı listenin ilk elemanıdır; en son hazır olan görsel değil.
+        Assert.Equal("https://cdn.example.test/kapak.webp", stored.CoverMediaUrl);
+    }
+
+    private async Task HandleMediaAsync(Guid mediaAssetId, string url, Guid vehicleId)
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+        MediaAssetReadyHandler handler = new(context);
+        await handler.HandleAsync(
+            new MediaAssetReady(Guid.CreateVersion7(), Simdi, mediaAssetId, url),
+            vehicleId,
+            CancellationToken.None);
     }
 
     private async Task HandleAsync(BranchDetailsChanged notification)

@@ -21,12 +21,23 @@ internal sealed class VehicleFieldSettingConfiguration : IEntityTypeConfiguratio
 
         // Alan listesi kodda tanımlı, sabit ve versiyonludur; kullanıcı yeni alan tanımlayamaz
         // (F5, Yasak Listesi 40). Bu yüzden çekirdek alanlar migration ile gelir.
-        builder.HasData(new VehicleFieldSetting
-        {
-            FieldKey = VehicleFieldKeys.BodyType,
-            FormState = FieldFormState.Required,
-            PublicVisibility = FieldPublicVisibility.Visible,
-            IsCore = true,
-        });
+        builder.HasData(
+            new VehicleFieldSetting
+            {
+                FieldKey = VehicleFieldKeys.BodyType,
+                FormState = FieldFormState.Required,
+                PublicVisibility = FieldPublicVisibility.Visible,
+                IsCore = true,
+            },
+            // Tramer: açık ama Gizli bir opsiyonel alan (docs/architecture.md § 4). Galeri
+            // bilgiyi kayıt altına alır, vitrinde göstermez. Liste yanıtında hiç bulunmaz
+            // ve daraltma ekseni olarak da sunulmaz (F3, AC-24).
+            new VehicleFieldSetting
+            {
+                FieldKey = VehicleFieldKeys.DamageRecordAmount,
+                FormState = FieldFormState.Optional,
+                PublicVisibility = FieldPublicVisibility.Hidden,
+                IsCore = false,
+            });
     }
 }

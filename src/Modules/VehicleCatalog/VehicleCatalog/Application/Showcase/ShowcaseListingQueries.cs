@@ -9,13 +9,16 @@ namespace CarGallery.Modules.VehicleCatalog.Application.Showcase;
 internal sealed class ShowcaseListingQueries(
     VehicleCatalogDbContext context,
     IVehicleModelNameResolver modelNameResolver,
+    IBodyTypeCatalog bodyTypeCatalog,
     ShowcaseLocaleOptions localeOptions) : IShowcaseListingQueries
 {
     public async Task<PagedResult<ShowcaseListingDto>> GetAsync(
         ShowcaseListingFilter filter,
         CancellationToken cancellationToken)
     {
-        ShowcaseListingRequest request = ShowcaseListingRequest.Normalize(filter.BodyTypes, filter.Page, filter.PageSize);
+        IReadOnlySet<string> canonicalSlugs = await bodyTypeCatalog.GetCanonicalSlugsAsync(cancellationToken);
+        ShowcaseListingRequest request =
+            ShowcaseListingRequest.Normalize(filter.BodyTypes, filter.Page, canonicalSlugs, filter.PageSize);
         Locale locale = localeOptions.ResolveOrDefault(filter.Locale);
 
         IQueryable<ShowcaseListing> query = context.ShowcaseListings.AsNoTracking();

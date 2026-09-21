@@ -105,6 +105,7 @@ internal sealed class ShowcaseListingBuilder
         PriceOnRequest = priceOnRequest,
         BranchId = Guid.CreateVersion7(),
         BranchNames = branchNames,
+        CoverAssetId = Guid.CreateVersion7(),
         CoverMediaUrl = "https://cdn.example.test/cover.webp",
     };
 }

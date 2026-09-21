@@ -43,5 +43,13 @@ internal sealed class ShowcaseListing
     /// <summary>Locale → şube adı. Şube adı çevrilebilir bir alandır (docs/architecture.md § 1).</summary>
     internal Dictionary<string, string> BranchNames { get; set; } = [];
 
+    /// <summary>
+    /// Kapak, sıralı medya listesinin İLK elemanıdır (docs/domain.md, Kapak Görseli).
+    /// Hangi varlığın kapak olduğu burada tutulur; aksi hâlde MediaAssetReady olayları
+    /// sıra dışı geldiğinde en son hazır olan görsel kapak olur ve domain kuralı bozulur.
+    /// Teslimat sıra garantisi vermez (docs/architecture.md § 2.C).
+    /// </summary>
+    internal Guid? CoverAssetId { get; set; }
+
     internal string? CoverMediaUrl { get; set; }
 }

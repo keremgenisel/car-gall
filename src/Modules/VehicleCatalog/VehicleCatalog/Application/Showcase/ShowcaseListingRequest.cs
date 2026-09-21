@@ -25,15 +25,24 @@ internal sealed record ShowcaseListingRequest
 
     internal int ResolvedPageSize { get; }
 
-    internal static ShowcaseListingRequest Normalize(IReadOnlyList<string>? rawBodyTypes, int rawPage, int? rawPageSize = null)
+    internal static ShowcaseListingRequest Normalize(
+        IReadOnlyList<string>? rawBodyTypes,
+        int rawPage,
+        IReadOnlySet<string> canonicalSlugs,
+        int? rawPageSize = null)
     {
         List<BodyTypeSlug> bodyTypes = [];
 
         foreach (string raw in rawBodyTypes ?? [])
         {
-            // Eşleştirme tam ve harfe duyarlıdır: "SUV" tanınmayan değerdir ve yok sayılır
-            // (C13, AC-17). ILIKE/lower() Türkçe collation altında yanlış sonuç verir (C11).
-            if (BodyTypeSlug.TryParse(raw, out BodyTypeSlug slug) && !bodyTypes.Contains(slug))
+            // Tanınmak için İKİ koşul: biçim kanonik slug biçiminde olacak VE değer
+            // kanonik kümede bulunacak. Yalnız biçime bakmak "banana" gibi biçimi geçerli
+            // ama var olmayan bir değeri daraltmaya sokar ve boş liste üretirdi (AC-17).
+            // Eşleştirme tam ve harfe duyarlıdır: "SUV" kümede yoktur (C13); ILIKE/lower()
+            // Türkçe collation altında yanlış sonuç verir (C11, Yasak Listesi 27).
+            if (BodyTypeSlug.TryParse(raw, out BodyTypeSlug slug)
+                && canonicalSlugs.Contains(slug.Value)
+                && !bodyTypes.Contains(slug))
             {
                 bodyTypes.Add(slug);
             }

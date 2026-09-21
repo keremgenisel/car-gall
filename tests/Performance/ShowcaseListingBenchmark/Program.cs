@@ -46,6 +46,9 @@ Console.WriteLine(FormattableString.Invariant($"p50: {p50:F1} ms"));
 Console.WriteLine(FormattableString.Invariant($"p95: {p95:F1} ms  (eşik: {ThresholdMilliseconds} ms)"));
 Console.WriteLine(FormattableString.Invariant($"p99: {p99:F1} ms"));
 
+// Ölçüm yalnız iş log'unda kalırsa kanıt koşuyla birlikte kaybolur; rapora yazılır.
+WriteReport(p50, p95, p99, totalCount);
+
 if (p95 >= ThresholdMilliseconds)
 {
     Console.Error.WriteLine(FormattableString.Invariant(
@@ -55,6 +58,42 @@ if (p95 >= ThresholdMilliseconds)
 
 Console.WriteLine("YEŞİL — C3 sunucu eşiği karşılandı.");
 return 0;
+
+static void WriteReport(double p50, double p95, double p99, int totalCount)
+{
+    string reportPath = Environment.GetEnvironmentVariable("PERF_REPORT_PATH")
+        ?? Path.Combine("docs", "evidence", "0001-performance.json");
+
+    Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
+
+    // Uç ölçümü aynı dosyanın "client" bölümünü yazar; birbirinin üstüne yazmazlar.
+    Dictionary<string, System.Text.Json.JsonElement> report = File.Exists(reportPath)
+        ? System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(
+              File.ReadAllText(reportPath)) ?? []
+        : [];
+
+    var server = new
+    {
+        protocol = "500 ilan, iki kasa tipiyle daraltılmış istek, 20 ısınma + 200 ölçüm, eşzamanlılık 1 (spec 0001 C3)",
+        filteredCount = totalCount,
+        p50Milliseconds = Math.Round(p50, 1),
+        p95Milliseconds = Math.Round(p95, 1),
+        p99Milliseconds = Math.Round(p99, 1),
+        thresholdMilliseconds = ThresholdMilliseconds,
+        met = p95 < ThresholdMilliseconds,
+    };
+
+    report["spec"] = System.Text.Json.JsonSerializer.SerializeToElement("0001");
+    report["server"] = System.Text.Json.JsonSerializer.SerializeToElement(server);
+
+    File.WriteAllText(
+        reportPath,
+        System.Text.Json.JsonSerializer.Serialize(
+            report,
+            new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+
+    Console.WriteLine($"Rapor: {reportPath}");
+}
 
 static async Task SendAsync(HttpClient client, string path)
 {

@@ -33,6 +33,7 @@ internal sealed class ShowcaseListingConfiguration : IEntityTypeConfiguration<Sh
             .HasColumnName("branch_names")
             .HasColumnType("jsonb")
             .HasConversion(LocalizedNames.Converter, LocalizedNames.Comparer);
+        builder.Property(listing => listing.CoverAssetId).HasColumnName("cover_asset_id");
         builder.Property(listing => listing.CoverMediaUrl).HasColumnName("cover_media_url");
 
         // R7'nin tam sıralaması tek indeksle karşılanır; üçüncü kırıcı (ilan kimliği) indeksin

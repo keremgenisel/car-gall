@@ -56,6 +56,31 @@ public sealed class DaraltmaTests(ShowcaseDatabase database)
         Assert.Equal(4, karisik.TotalCount);
     }
 
+    [Fact(DisplayName = "AC-17: Tanınmayan bir kasa tipi değeri istendiğinde o değer yok sayılır; hiç tanınan değer yoksa daraltmasız liste gösterilir")]
+    public async Task Daraltmasiz_KanonikKumedeOlmayanDeger()
+    {
+        await database.ResetAsync();
+        await SeedKarisikAsync();
+
+        // "banana" kanonik SLUG BİÇİMİNE uyar ama kümede yoktur. Yalnız biçime bakan bir
+        // doğrulama bunu "tanınmış" sayar, WHERE ... IN (...)'e sokar ve boş liste üretir.
+        PagedResult<ShowcaseListingDto> page = await ShowcaseQueryHarness.QueryAsync(database, bodyTypes: ["banana"]);
+
+        Assert.Equal(9, page.TotalCount);
+    }
+
+    [Fact(DisplayName = "AC-17: Tanınan değerler varsa onlarla daraltma yapılır")]
+    public async Task YalnizKanonikDegerleDaraltir_KarisikIstekte()
+    {
+        await database.ResetAsync();
+        await SeedKarisikAsync();
+
+        PagedResult<ShowcaseListingDto> page =
+            await ShowcaseQueryHarness.QueryAsync(database, bodyTypes: ["banana", "sedan"]);
+
+        Assert.Equal(4, page.TotalCount);
+    }
+
     [Fact(DisplayName = "AC-17: Eşleştirme harfe duyarlıdır: ?bodyType=SUV tanınmayan değerdir")]
     public async Task HarfeDuyarlidir_KasaTipiEslestirmesi()
     {
