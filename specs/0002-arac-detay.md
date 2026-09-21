@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Durum** | Onaylandı |
-| **Sahip** | atanmadı |
+| **Sahip** | Developer oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (vitrin okuma tarafı) · `VehicleReference` (donanım paketi, yakıt, vites, çekiş — **E8**) · `frontend/` public vitrin |
 | **Bağımlı spec'ler** | `0001` (tamamlandı) · **`frontend-001` (ÖNKOŞUL — önce tamamlanır, bkz. C14 ve Context § Verilen kararlar)** |

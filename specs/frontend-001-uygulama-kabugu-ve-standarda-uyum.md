@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
-| **Sahip** | atanmadı |
+| **Durum** | Onaylandı |
+| **Sahip** | Developer oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` — vitrin tarafı. Backend sözleşmesi **değişmez.** |
 | **Bağımlı spec'ler** | `0001` (vitrin ilan listesi) — bu mini-spec onun ekran karşılığını yeniden yapılandırır |
