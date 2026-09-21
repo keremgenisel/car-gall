@@ -1,5 +1,5 @@
 import { useLocale } from '../../app/localeContext'
-import type { BodyType } from '../../api/types'
+import type { BodyType } from '../../shared/api/types'
 
 interface Props {
   readonly bodyTypes: readonly BodyType[]

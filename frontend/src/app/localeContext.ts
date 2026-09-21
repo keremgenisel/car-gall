@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
-import type { Translator } from '../lib/i18n'
-import type { AppLocale } from '../lib/locale'
+import type { Translator } from '../shared/i18n/i18n'
+import type { AppLocale } from '../shared/lib/locale'
 
 export interface LocaleContextValue {
   readonly locale: AppLocale

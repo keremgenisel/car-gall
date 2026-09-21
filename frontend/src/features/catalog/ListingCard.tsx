@@ -1,6 +1,6 @@
 import { useLocale } from '../../app/localeContext'
-import type { ShowcaseListing } from '../../api/types'
-import { formatMoney } from '../../lib/format'
+import type { ShowcaseListing } from '../../shared/api/types'
+import { formatMoney } from '../../shared/i18n/format'
 
 interface Props {
   readonly listing: ShowcaseListing
