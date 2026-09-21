@@ -51,6 +51,7 @@ internal sealed class ShowcaseListingQueries(
         [
             .. rows.Select(row => new ShowcaseListingDto(
                 row.ListingId,
+                row.Slug,
                 row.IsReserved,
                 row.CoverMediaUrl,
                 modelNames.TryGetValue(row.VehicleModelId, out string? name) ? name : string.Empty,

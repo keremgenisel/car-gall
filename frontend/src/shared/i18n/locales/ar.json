@@ -26,5 +26,19 @@
   "showcase.pagination.label": "ترقيم الصفحات",
   "showcase.pagination.previous": "الصفحة السابقة",
   "showcase.pagination.next": "الصفحة التالية",
-  "showcase.pagination.page": "الصفحة {page, number} من {totalPages, number}"
+  "showcase.pagination.page": "الصفحة {page, number} من {totalPages, number}",
+  "detail.loading": "جارٍ تحميل الإعلان",
+  "detail.reserved": "محجوزة",
+  "detail.priceOnRequest": "السعر عند الطلب",
+  "detail.imageAlt": "{model} {year, number, ::group-off}",
+  "detail.mileageValue": "{kilometers, number} كم",
+  "detail.field.modelYear": "سنة الصنع",
+  "detail.field.mileage": "المسافة المقطوعة",
+  "detail.field.branch": "الفرع",
+  "detail.notFound.title": "هذه السيارة ليست في المعرض",
+  "detail.notFound.body": "قد يكون الإعلان الذي تبحث عنه قد أُزيل. يمكنك تصفّح السيارات الأخرى في المعرض.",
+  "detail.notFound.action": "العودة إلى المعرض",
+  "detail.error.title": "حدث خطأ ما",
+  "detail.error.body": "تعذّر تحميل الإعلان الآن. يُرجى المحاولة مرة أخرى.",
+  "detail.error.retry": "حاول مرة أخرى"
 }

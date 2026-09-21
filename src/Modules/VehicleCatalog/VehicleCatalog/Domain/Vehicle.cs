@@ -13,12 +13,14 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     internal const string MediaRequired = "vehicle.media_required";
 
     private readonly List<Guid> mediaAssetIds = [];
+    private readonly List<VehicleOptionalFieldValue> optionalFieldValues = [];
 
     private Vehicle(
         VehicleId id,
         Guid branchId,
         Guid vehicleModelId,
-        BodyTypeSlug bodyType,
+        VehicleSpecification specification,
+        LocalizedText color,
         int modelYear,
         int mileageKilometers,
         ListingPrice price)
@@ -26,7 +28,8 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     {
         BranchId = branchId;
         VehicleModelId = vehicleModelId;
-        BodyType = bodyType;
+        Specification = specification;
+        Color = color;
         ModelYear = modelYear;
         MileageKilometers = mileageKilometers;
         Price = price;
@@ -38,7 +41,16 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// <summary>Referans verinin (VehicleReference) kimliği; model adı orada yaşar.</summary>
     internal Guid VehicleModelId { get; }
 
-    internal BodyTypeSlug BodyType { get; }
+    internal VehicleSpecification Specification { get; }
+
+    /// <summary>Kasa tipi çekirdek alandır ve daraltmanın tek eksenidir (0001 R8).</summary>
+    internal BodyTypeSlug BodyType => Specification.BodyType;
+
+    /// <summary>
+    /// Renk taksonomi değildir; galeriye göre değişen serbest metindir ve locale başına
+    /// taşınır, sessiz fallback'le (docs/architecture.md § 3, docs/domain.md).
+    /// </summary>
+    internal LocalizedText Color { get; }
 
     internal int ModelYear { get; }
 
@@ -58,10 +70,13 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// <summary>Sıralı medya listesinin ilk elemanı (docs/domain.md, Kapak Görseli).</summary>
     internal Guid? CoverAssetId => mediaAssetIds.Count > 0 ? mediaAssetIds[0] : null;
 
+    internal IReadOnlyList<VehicleOptionalFieldValue> OptionalFieldValues => optionalFieldValues;
+
     internal static Result<Vehicle> Create(
         Guid branchId,
         Guid vehicleModelId,
-        BodyTypeSlug bodyType,
+        VehicleSpecification specification,
+        LocalizedText color,
         int modelYear,
         int mileageKilometers,
         ListingPrice price)
@@ -80,7 +95,8 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
             VehicleId.New(),
             branchId,
             vehicleModelId,
-            bodyType,
+            specification,
+            color,
             modelYear,
             mileageKilometers,
             price));
@@ -95,6 +111,24 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     }
 
     internal void ChangePrice(ListingPrice price) => Price = price;
+
+    /// <summary>
+    /// Alan kapatıldığında değer SİLİNMEZ (F1); yalnız yanıta girmez (F3).
+    /// Bu yüzden değer yazmak alan ayarına bakmaz — ayrım sorgu tarafında yapılır (C4).
+    /// </summary>
+    internal void SetOptionalFieldValue(string fieldKey, LocalizedText value)
+    {
+        VehicleOptionalFieldValue? mevcut =
+            optionalFieldValues.Find(item => item.FieldKey == fieldKey);
+
+        if (mevcut is null)
+        {
+            optionalFieldValues.Add(new VehicleOptionalFieldValue { FieldKey = fieldKey, Value = value });
+            return;
+        }
+
+        mevcut.Value = value;
+    }
 
     internal Result ChangeMileage(int mileageKilometers)
     {

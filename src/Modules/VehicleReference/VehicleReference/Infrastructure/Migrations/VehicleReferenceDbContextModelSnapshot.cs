@@ -73,6 +73,102 @@ namespace CarGallery.Modules.VehicleReference.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CarGallery.Modules.VehicleReference.Domain.ReferenceTerm", b =>
+                {
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Slug")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("CanonicalName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("canonical_name");
+
+                    b.HasKey("Kind", "Slug");
+
+                    b.ToTable("reference_terms", "vehicle_reference");
+
+                    b.HasData(
+                        new
+                        {
+                            Kind = 1,
+                            Slug = "petrol",
+                            CanonicalName = "Petrol"
+                        },
+                        new
+                        {
+                            Kind = 1,
+                            Slug = "diesel",
+                            CanonicalName = "Diesel"
+                        },
+                        new
+                        {
+                            Kind = 1,
+                            Slug = "hybrid",
+                            CanonicalName = "Hybrid"
+                        },
+                        new
+                        {
+                            Kind = 1,
+                            Slug = "electric",
+                            CanonicalName = "Electric"
+                        },
+                        new
+                        {
+                            Kind = 2,
+                            Slug = "manual",
+                            CanonicalName = "Manual"
+                        },
+                        new
+                        {
+                            Kind = 2,
+                            Slug = "automatic",
+                            CanonicalName = "Automatic"
+                        },
+                        new
+                        {
+                            Kind = 3,
+                            Slug = "front-wheel-drive",
+                            CanonicalName = "Front-wheel drive"
+                        },
+                        new
+                        {
+                            Kind = 3,
+                            Slug = "rear-wheel-drive",
+                            CanonicalName = "Rear-wheel drive"
+                        },
+                        new
+                        {
+                            Kind = 3,
+                            Slug = "all-wheel-drive",
+                            CanonicalName = "All-wheel drive"
+                        },
+                        new
+                        {
+                            Kind = 4,
+                            Slug = "base",
+                            CanonicalName = "Base"
+                        },
+                        new
+                        {
+                            Kind = 4,
+                            Slug = "comfort",
+                            CanonicalName = "Comfort"
+                        },
+                        new
+                        {
+                            Kind = 4,
+                            Slug = "premium",
+                            CanonicalName = "Premium"
+                        });
+                });
+
             modelBuilder.Entity("CarGallery.Modules.VehicleReference.Domain.VehicleModel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -226,6 +322,295 @@ namespace CarGallery.Modules.VehicleReference.Infrastructure.Migrations
                                     BodyTypeSlug = "pickup",
                                     Locale = "en",
                                     Name = "Pickup"
+                                });
+                        });
+
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.VehicleReference.Domain.ReferenceTerm", b =>
+                {
+                    b.OwnsMany("CarGallery.Modules.VehicleReference.Domain.ReferenceTermTranslation", "Translations", b1 =>
+                        {
+                            b1.Property<int>("Kind")
+                                .HasColumnType("integer")
+                                .HasColumnName("kind");
+
+                            b1.Property<string>("Slug")
+                                .HasMaxLength(40)
+                                .HasColumnType("character varying(40)")
+                                .HasColumnName("slug");
+
+                            b1.Property<string>("Locale")
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("locale");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)")
+                                .HasColumnName("name");
+
+                            b1.HasKey("Kind", "Slug", "Locale");
+
+                            b1.ToTable("reference_term_translations", "vehicle_reference");
+
+                            b1.WithOwner()
+                                .HasForeignKey("Kind", "Slug");
+
+                            b1.HasData(
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "petrol",
+                                    Locale = "tr",
+                                    Name = "Benzin"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "petrol",
+                                    Locale = "ar",
+                                    Name = "بنزين"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "petrol",
+                                    Locale = "en",
+                                    Name = "Petrol"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "diesel",
+                                    Locale = "tr",
+                                    Name = "Dizel"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "diesel",
+                                    Locale = "ar",
+                                    Name = "ديزل"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "diesel",
+                                    Locale = "en",
+                                    Name = "Diesel"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "hybrid",
+                                    Locale = "tr",
+                                    Name = "Hibrit"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "hybrid",
+                                    Locale = "ar",
+                                    Name = "هجين"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "hybrid",
+                                    Locale = "en",
+                                    Name = "Hybrid"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "electric",
+                                    Locale = "tr",
+                                    Name = "Elektrik"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "electric",
+                                    Locale = "ar",
+                                    Name = "كهربائي"
+                                },
+                                new
+                                {
+                                    Kind = 1,
+                                    Slug = "electric",
+                                    Locale = "en",
+                                    Name = "Electric"
+                                },
+                                new
+                                {
+                                    Kind = 2,
+                                    Slug = "manual",
+                                    Locale = "tr",
+                                    Name = "Manuel"
+                                },
+                                new
+                                {
+                                    Kind = 2,
+                                    Slug = "manual",
+                                    Locale = "ar",
+                                    Name = "يدوي"
+                                },
+                                new
+                                {
+                                    Kind = 2,
+                                    Slug = "manual",
+                                    Locale = "en",
+                                    Name = "Manual"
+                                },
+                                new
+                                {
+                                    Kind = 2,
+                                    Slug = "automatic",
+                                    Locale = "tr",
+                                    Name = "Otomatik"
+                                },
+                                new
+                                {
+                                    Kind = 2,
+                                    Slug = "automatic",
+                                    Locale = "ar",
+                                    Name = "أوتوماتيك"
+                                },
+                                new
+                                {
+                                    Kind = 2,
+                                    Slug = "automatic",
+                                    Locale = "en",
+                                    Name = "Automatic"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "front-wheel-drive",
+                                    Locale = "tr",
+                                    Name = "Önden çekiş"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "front-wheel-drive",
+                                    Locale = "ar",
+                                    Name = "دفع أمامي"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "front-wheel-drive",
+                                    Locale = "en",
+                                    Name = "Front-wheel drive"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "rear-wheel-drive",
+                                    Locale = "tr",
+                                    Name = "Arkadan itiş"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "rear-wheel-drive",
+                                    Locale = "ar",
+                                    Name = "دفع خلفي"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "rear-wheel-drive",
+                                    Locale = "en",
+                                    Name = "Rear-wheel drive"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "all-wheel-drive",
+                                    Locale = "tr",
+                                    Name = "Dört çeker"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "all-wheel-drive",
+                                    Locale = "ar",
+                                    Name = "دفع رباعي"
+                                },
+                                new
+                                {
+                                    Kind = 3,
+                                    Slug = "all-wheel-drive",
+                                    Locale = "en",
+                                    Name = "All-wheel drive"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "base",
+                                    Locale = "tr",
+                                    Name = "Standart"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "base",
+                                    Locale = "ar",
+                                    Name = "أساسي"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "base",
+                                    Locale = "en",
+                                    Name = "Base"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "comfort",
+                                    Locale = "tr",
+                                    Name = "Comfort"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "comfort",
+                                    Locale = "ar",
+                                    Name = "كومفورت"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "comfort",
+                                    Locale = "en",
+                                    Name = "Comfort"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "premium",
+                                    Locale = "tr",
+                                    Name = "Premium"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "premium",
+                                    Locale = "ar",
+                                    Name = "بريميوم"
+                                },
+                                new
+                                {
+                                    Kind = 4,
+                                    Slug = "premium",
+                                    Locale = "en",
+                                    Name = "Premium"
                                 });
                         });
 

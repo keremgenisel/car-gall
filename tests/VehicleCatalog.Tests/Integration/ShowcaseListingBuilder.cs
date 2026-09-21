@@ -8,7 +8,19 @@ internal sealed class ShowcaseListingBuilder
     private bool isReserved;
     private int showcaseSortWeight;
     private DateTimeOffset publishedAt = new(2026, 3, 1, 9, 0, 0, TimeSpan.Zero);
+    private string? slug;
     private string bodyTypeSlug = "sedan";
+    private string fuelTypeSlug = "diesel";
+    private string transmissionTypeSlug = "automatic";
+    private string drivetrainTypeSlug = "front-wheel-drive";
+    private string trimLevelSlug = "comfort";
+    private Dictionary<string, string> colorNames = new()
+    {
+        ["tr"] = "Beyaz",
+        ["ar"] = "أبيض",
+        ["en"] = "White",
+    };
+    private List<ShowcaseListingOptionalValue> optionalValues = [];
     private int modelYear = 2019;
     private int mileageKilometers = 125_000;
     private decimal? priceAmount = 1_250_000m;
@@ -46,9 +58,42 @@ internal sealed class ShowcaseListingBuilder
         return this;
     }
 
-    internal ShowcaseListingBuilder WithBodyType(string slug)
+    internal ShowcaseListingBuilder WithBodyType(string value)
     {
-        bodyTypeSlug = slug;
+        bodyTypeSlug = value;
+        return this;
+    }
+
+    internal ShowcaseListingBuilder WithSlug(string value)
+    {
+        slug = value;
+        return this;
+    }
+
+    internal ShowcaseListingBuilder WithSpecification(string fuel, string gearbox, string drive, string trim)
+    {
+        fuelTypeSlug = fuel;
+        transmissionTypeSlug = gearbox;
+        drivetrainTypeSlug = drive;
+        trimLevelSlug = trim;
+        return this;
+    }
+
+    internal ShowcaseListingBuilder WithColorNames(Dictionary<string, string> names)
+    {
+        colorNames = names;
+        return this;
+    }
+
+    /// <summary>Yalnız açık ve public alanlar okuma modeline girer (C4).</summary>
+    internal ShowcaseListingBuilder WithOptionalValue(string fieldKey, Dictionary<string, string> values)
+    {
+        optionalValues.Add(new ShowcaseListingOptionalValue
+        {
+            ListingId = listingId,
+            FieldKey = fieldKey,
+            Values = values,
+        });
         return this;
     }
 
@@ -95,7 +140,16 @@ internal sealed class ShowcaseListingBuilder
         IsReserved = isReserved,
         ShowcaseSortWeight = showcaseSortWeight,
         PublishedAt = publishedAt,
+        // Slug tekildir (ux_showcase_listings_slug); varsayılan değer kimlikten türer,
+        // yoksa çoklu seed aynı adresi paylaşır ve indeks kırılır.
+        Slug = slug ?? $"toyota-corolla-2019-{listingId:N}",
         BodyTypeSlug = bodyTypeSlug,
+        FuelTypeSlug = fuelTypeSlug,
+        TransmissionTypeSlug = transmissionTypeSlug,
+        DrivetrainTypeSlug = drivetrainTypeSlug,
+        TrimLevelSlug = trimLevelSlug,
+        ColorNames = colorNames,
+        OptionalValues = optionalValues,
         VehicleModelId = Guid.CreateVersion7(),
         ModelYear = modelYear,
         MileageKilometers = mileageKilometers,

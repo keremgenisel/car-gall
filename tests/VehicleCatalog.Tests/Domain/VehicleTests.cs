@@ -58,7 +58,13 @@ public sealed class VehicleTests
         Result<Vehicle> result = Vehicle.Create(
             Guid.CreateVersion7(),
             Guid.CreateVersion7(),
-            BodyTypeSlug.Create("suv").Value,
+            VehicleSpecification.Create(
+                BodyTypeSlug.Create("suv").Value,
+                "diesel",
+                "automatic",
+                "front-wheel-drive",
+                "base").Value,
+            LocalizedText.Empty,
             2020,
             -1,
             ListingPrice.OnRequest());

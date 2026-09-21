@@ -26,5 +26,19 @@
   "showcase.pagination.label": "Pagination",
   "showcase.pagination.previous": "Previous page",
   "showcase.pagination.next": "Next page",
-  "showcase.pagination.page": "Page {page, number} of {totalPages, number}"
+  "showcase.pagination.page": "Page {page, number} of {totalPages, number}",
+  "detail.loading": "Loading listing",
+  "detail.reserved": "Reserved",
+  "detail.priceOnRequest": "Price on request",
+  "detail.imageAlt": "{model} {year, number, ::group-off}",
+  "detail.mileageValue": "{kilometers, number} km",
+  "detail.field.modelYear": "Model year",
+  "detail.field.mileage": "Mileage",
+  "detail.field.branch": "Branch",
+  "detail.notFound.title": "This car is not in the showroom",
+  "detail.notFound.body": "The listing you are looking for may have been taken down. You can browse the other cars in the showroom.",
+  "detail.notFound.action": "Back to showroom",
+  "detail.error.title": "Something went wrong",
+  "detail.error.body": "The listing could not be loaded right now. Please try again.",
+  "detail.error.retry": "Try again"
 }

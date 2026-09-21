@@ -1,7 +1,9 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.VehicleCatalog.Application.Detail;
 using CarGallery.Modules.VehicleCatalog.Application.Development;
 using CarGallery.Modules.VehicleCatalog.Application.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
+using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 using CarGallery.Modules.VehicleCatalog.Contracts.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Contracts.Showcase;
 using CarGallery.Modules.VehicleCatalog.Endpoints;
@@ -33,7 +35,9 @@ public static class VehicleCatalogModule
         services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();
         services.AddScoped<IBodyTypeCatalog, BodyTypeCatalog>();
+        services.AddScoped<IReferenceLabelResolver, ReferenceLabelResolver>();
         services.AddScoped<IShowcaseListingQueries, ShowcaseListingQueries>();
+        services.AddScoped<IShowcaseListingDetailQueries, ShowcaseListingDetailQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
 
         return services;

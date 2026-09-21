@@ -21,7 +21,24 @@ internal sealed class ShowcaseListing
 
     internal required DateTimeOffset PublishedAt { get; set; }
 
+    /// <summary>
+    /// İlanın kalıcı adresi (0002 R2, E9). Okuma modelinde SAKLANIR, yeniden hesaplanmaz —
+    /// kararlılık yeniden üretmemekle sağlanır.
+    /// </summary>
+    internal required string Slug { get; init; }
+
     internal required string BodyTypeSlug { get; init; }
+
+    internal required string FuelTypeSlug { get; init; }
+
+    internal required string TransmissionTypeSlug { get; init; }
+
+    internal required string DrivetrainTypeSlug { get; init; }
+
+    internal required string TrimLevelSlug { get; init; }
+
+    /// <summary>Renk serbest metindir ve locale başına taşınır (architecture.md § 3).</summary>
+    internal Dictionary<string, string> ColorNames { get; set; } = [];
 
     internal required Guid VehicleModelId { get; init; }
 
@@ -52,4 +69,11 @@ internal sealed class ShowcaseListing
     internal Guid? CoverAssetId { get; set; }
 
     internal string? CoverMediaUrl { get; set; }
+
+    /// <summary>
+    /// YALNIZCA açık ve public opsiyonel alanların değerleri. Kapalı veya Gizli alan
+    /// buraya HİÇ yazılmaz — gizleme sorgu tarafında değil, yansıtma anında uygulanır
+    /// (C4, Yasak Listesi 41). Yanıta girmeyen alan, okuma modelinde de yoktur.
+    /// </summary>
+    internal List<ShowcaseListingOptionalValue> OptionalValues { get; init; } = [];
 }

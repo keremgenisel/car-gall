@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 using CarGallery.Modules.VehicleCatalog.Contracts.Showcase;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +19,11 @@ internal static class ShowcaseEndpoints
         builder.MapGet("/api/catalog/showcase-listings", GetShowcaseListingsAsync)
             .WithName("GetShowcaseListings")
             .Produces<PagedResult<ShowcaseListingDto>>(StatusCodes.Status200OK);
+
+        builder.MapGet("/api/catalog/showcase-listings/{slug}", GetShowcaseListingDetailAsync)
+            .WithName("GetShowcaseListingDetail")
+            .Produces<ShowcaseListingDetailDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private static async Task<Ok<PagedResult<ShowcaseListingDto>>> GetShowcaseListingsAsync(
@@ -38,6 +44,21 @@ internal static class ShowcaseEndpoints
 
         PagedResult<ShowcaseListingDto> page = await queries.GetAsync(filter, cancellationToken);
         return TypedResults.Ok(page);
+    }
+
+    private static async Task<Results<Ok<ShowcaseListingDetailDto>, NotFound>> GetShowcaseListingDetailAsync(
+        string slug,
+        HttpContext httpContext,
+        IShowcaseListingDetailQueries queries,
+        CancellationToken cancellationToken)
+    {
+        ShowcaseListingDetailDto? detail =
+            await queries.FindAsync(slug, ResolveLocale(httpContext), cancellationToken);
+
+        // Görünmeyen ilan ile hiç var olmayan ilan AYNI karşılığı alır: aynı durum kodu,
+        // aynı (boş) gövde. Ayrım yapan bir dal yok — ayrım yapılmadığı için sızdırılamaz
+        // (C13, AC-8).
+        return detail is null ? TypedResults.NotFound() : TypedResults.Ok(detail);
     }
 
     private static int ParsePositiveInteger(string? raw, int fallback) =>

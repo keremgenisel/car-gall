@@ -9,6 +9,8 @@ export interface ShowcasePrice {
 
 export interface ShowcaseListing {
   readonly listingId: string
+  /** İlanın kalıcı detay adresi (0002/E5). */
+  readonly slug: string
   readonly isReserved: boolean
   readonly coverImageUrl: string | null
   readonly modelName: string
@@ -16,6 +18,30 @@ export interface ShowcaseListing {
   readonly mileageKilometers: number
   readonly price: ShowcasePrice
   readonly branchName: string
+}
+
+/** Etiketi çözülmüş nitelik satırı: ziyaretçi ham slug görmez. */
+export interface ShowcaseAttribute {
+  readonly key: string
+  readonly label: string
+  readonly value: string
+}
+
+/**
+ * Kapalı veya `Gizli` işaretli alanlar bu yanıtta BULUNMAZ — boş değer olarak da
+ * bulunmaz (F3, AC-12, AC-13). Şase, plaka ve iç notlar hiç taşınmaz (F4, AC-14).
+ * Gizleme sunucuda uygulanır; uç yalnız geleni gösterir.
+ */
+export interface ShowcaseListingDetail {
+  readonly slug: string
+  readonly isReserved: boolean
+  readonly coverImageUrl: string | null
+  readonly modelName: string
+  readonly modelYear: number
+  readonly mileageKilometers: number
+  readonly price: ShowcasePrice
+  readonly branchName: string
+  readonly attributes: readonly ShowcaseAttribute[]
 }
 
 export interface PagedResult<TItem> {

@@ -48,7 +48,8 @@ public sealed class ShowcaseDatabase : IAsyncLifetime
         await using VehicleCatalogDbContext context = CreateContext();
 
         await context.Database.ExecuteSqlRawAsync(
-            $"TRUNCATE TABLE {VehicleCatalogDbContext.Schema}.showcase_listings");
+            // CASCADE zorunlu: opsiyonel değer tablosu okuma modeline foreign key ile bağlı.
+            $"TRUNCATE TABLE {VehicleCatalogDbContext.Schema}.showcase_listings CASCADE");
 
         await context.Database.ExecuteSqlRawAsync(
             $"""

@@ -85,9 +85,11 @@ public sealed class ShowcaseEndpointTests(ShowcaseDatabase database)
         using JsonDocument document = JsonDocument.Parse(await api.Client.GetStringAsync("/api/catalog/showcase-listings"));
         JsonElement item = document.RootElement.GetProperty("items")[0];
 
+        // "slug" 0002/E5 ile eklendi: karttan detaya gidişin adresi sözleşmede taşınmalı.
+        // Beklenti sessizce gevşetilmedi — kümeye AÇIKÇA eklendi ve 0001 R9'a not düşüldü.
         string[] expected =
         [
-            "listingId", "isReserved", "coverImageUrl", "modelName",
+            "listingId", "slug", "isReserved", "coverImageUrl", "modelName",
             "modelYear", "mileageKilometers", "price", "branchName",
         ];
 

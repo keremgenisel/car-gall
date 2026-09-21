@@ -7,6 +7,10 @@ namespace CarGallery.Modules.VehicleCatalog.Tests;
 internal sealed class VehicleBuilder
 {
     private string bodyType = "sedan";
+    private string fuelType = "diesel";
+    private string transmission = "automatic";
+    private string drivetrain = "front-wheel-drive";
+    private string trimLevel = "comfort";
     private int modelYear = 2019;
     private int mileageKilometers = 125_000;
     private ListingPrice price = ListingPrice.Of(Money.Create(1_250_000m, "TRY", 2).Value);
@@ -56,12 +60,36 @@ internal sealed class VehicleBuilder
         return this;
     }
 
+    internal VehicleBuilder WithSpecification(string fuel, string gearbox, string drive, string trim)
+    {
+        fuelType = fuel;
+        transmission = gearbox;
+        drivetrain = drive;
+        trimLevel = trim;
+        return this;
+    }
+
     internal Vehicle Build()
     {
+        VehicleSpecification specification = VehicleSpecification.Create(
+            BodyTypeSlug.Create(bodyType).Value,
+            fuelType,
+            transmission,
+            drivetrain,
+            trimLevel).Value;
+
+        LocalizedText color = LocalizedText.From(
+        [
+            new KeyValuePair<Locale, string>(Locale.Create("tr").Value, "Beyaz"),
+            new KeyValuePair<Locale, string>(Locale.Create("ar").Value, "أبيض"),
+            new KeyValuePair<Locale, string>(Locale.Create("en").Value, "White"),
+        ]);
+
         Vehicle vehicle = Vehicle.Create(
             branchId,
             vehicleModelId,
-            BodyTypeSlug.Create(bodyType).Value,
+            specification,
+            color,
             modelYear,
             mileageKilometers,
             price).Value;

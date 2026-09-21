@@ -12,6 +12,8 @@ internal sealed class VehicleReferenceDbContext(DbContextOptions<VehicleReferenc
 
     internal DbSet<VehicleModel> VehicleModels => Set<VehicleModel>();
 
+    internal DbSet<ReferenceTerm> ReferenceTerms => Set<ReferenceTerm>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);

@@ -9,6 +9,12 @@ public sealed class ProjectionTests
 {
     private static readonly DateTimeOffset Yayin = new(2026, 3, 1, 9, 0, 0, TimeSpan.Zero);
 
+    private static readonly ListingSlug Slug =
+        ListingSlug.Create("Toyota Corolla", 2019, new ListingId(Guid.CreateVersion7())).Value;
+
+    /// <summary>Bu testlerde hiçbir opsiyonel alan public değildir; AC-12/13 ayrıca sınanır.</summary>
+    private static readonly HashSet<string> PublicAlanYok = [];
+
     private static readonly Dictionary<string, string> SubeAdlari = new()
     {
         ["tr"] = "Merkez Şube",
@@ -24,7 +30,7 @@ public sealed class ProjectionTests
         listing.Publish(new FixedClock(Yayin));
         listing.Reserve();
 
-        ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, SubeAdlari, "https://cdn.example.test/a.webp");
+        ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, "https://cdn.example.test/a.webp", PublicAlanYok);
 
         Assert.NotNull(row);
         Assert.True(row.IsReserved);
@@ -61,7 +67,7 @@ public sealed class ProjectionTests
                 throw new ArgumentOutOfRangeException(nameof(durum), durum, "Bilinmeyen durum.");
         }
 
-        ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, SubeAdlari, null);
+        ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, null, PublicAlanYok);
 
         Assert.Null(row);
     }
@@ -73,7 +79,7 @@ public sealed class ProjectionTests
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 3);
         listing.Publish(new FixedClock(Yayin));
 
-        ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, SubeAdlari, null);
+        ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, null, PublicAlanYok);
 
         Assert.NotNull(row);
         Assert.False(row.IsReserved);
@@ -87,7 +93,7 @@ public sealed class ProjectionTests
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 0);
         listing.Publish(new FixedClock(Yayin));
 
-        ShowcaseListing row = ShowcaseListingProjector.Project(vehicle, listing, SubeAdlari, null)!;
+        ShowcaseListing row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, null, PublicAlanYok)!;
 
         Assert.True(row.PriceOnRequest);
         Assert.Null(row.PriceAmount);
@@ -102,7 +108,7 @@ public sealed class ProjectionTests
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 0);
         listing.Publish(new FixedClock(Yayin));
 
-        ShowcaseListing row = ShowcaseListingProjector.Project(vehicle, listing, SubeAdlari, null)!;
+        ShowcaseListing row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, null, PublicAlanYok)!;
 
         Assert.Equal(1250.500m, row.PriceAmount);
         Assert.Equal(3, row.PriceMinorUnitExponent);
