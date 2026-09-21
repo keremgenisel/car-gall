@@ -16,7 +16,9 @@ test.describe('Üç durum', () => {
     await expect(page.getByTestId('list-skeleton')).toBeVisible()
   })
 
-  test('AC-26: Daraltma sonucu boşken ekran seçime uyan ilan olmadığını bildirir ve seçimi temizle eylemini sunar', async ({ page }) => {
+  test('AC-26: Daraltma sonucu boşken ekran seçime uyan ilan olmadığını bildirir ve seçimi temizle eylemini sunar', async ({
+    page,
+  }) => {
     await page.route('**/api/catalog/showcase-listings*', async (route) => {
       const url = new URL(route.request().url())
       const daraltilmis = url.searchParams.getAll('bodyType').length > 0
@@ -33,12 +35,18 @@ test.describe('Üç durum', () => {
     await expect(page.getByTestId('empty-by-filter')).toBeVisible()
     await expect(page.getByTestId('empty-showcase')).toHaveCount(0)
     // Eylem panelin İÇİNDE sunulur; filtre çubuğundaki aynı adlı düğmeyle karışmasın.
-    await expect(page.getByTestId('empty-by-filter').getByRole('button', { name: 'Seçimi temizle' })).toBeVisible()
+    await expect(
+      page.getByTestId('empty-by-filter').getByRole('button', { name: 'Seçimi temizle' }),
+    ).toBeVisible()
   })
 
-  test('AC-27: Vitrinde hiç yayında ilan yokken — daraltma seçili olsa da — ekran araç bulunmadığını bildirir ve seçimi temizle eylemi gösterilmez', async ({ page }) => {
+  test('AC-27: Vitrinde hiç yayında ilan yokken — daraltma seçili olsa da — ekran araç bulunmadığını bildirir ve seçimi temizle eylemi gösterilmez', async ({
+    page,
+  }) => {
     await page.route('**/api/catalog/showcase-listings*', async (route) => {
-      await route.fulfill({ json: { items: [], page: 1, pageSize: 24, totalCount: 0, totalPages: 0 } })
+      await route.fulfill({
+        json: { items: [], page: 1, pageSize: 24, totalCount: 0, totalPages: 0 },
+      })
     })
 
     await page.goto('/tr/?bodyType=suv')
@@ -48,9 +56,14 @@ test.describe('Üç durum', () => {
     await expect(page.getByTestId('empty-by-filter')).toHaveCount(0)
   })
 
-  test('AC-28: Liste verisi alınamadığında ekran çeviri kataloğundaki mesajı ve tekrar dene eylemini gösterir; teknik detay göstermez', async ({ page }) => {
+  test('AC-28: Liste verisi alınamadığında ekran çeviri kataloğundaki mesajı ve tekrar dene eylemini gösterir; teknik detay göstermez', async ({
+    page,
+  }) => {
     await page.route('**/api/catalog/showcase-listings*', async (route) => {
-      await route.fulfill({ status: 500, json: { errorCode: 'catalog.unavailable', traceId: '00-abc-123-01' } })
+      await route.fulfill({
+        status: 500,
+        json: { errorCode: 'catalog.unavailable', traceId: '00-abc-123-01' },
+      })
     })
 
     await page.goto('/tr/')

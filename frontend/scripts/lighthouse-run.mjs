@@ -26,10 +26,13 @@ try {
 
     const lcp = lhr.audits['largest-contentful-paint'].numericValue
     const cls = lhr.audits['cumulative-layout-shift'].numericValue
-    const lcpElement = lhr.audits['largest-contentful-paint-element']?.details?.items?.[0]
-      ?.items?.[0]?.node?.snippet ?? 'bilinmiyor'
+    const lcpElement =
+      lhr.audits['largest-contentful-paint-element']?.details?.items?.[0]?.items?.[0]?.node
+        ?.snippet ?? 'bilinmiyor'
 
-    console.log(`koşu ${run}: LCP ${Math.round(lcp)} ms · CLS ${cls.toFixed(3)} · LCP öğesi: ${lcpElement}`)
+    console.log(
+      `koşu ${run}: LCP ${Math.round(lcp)} ms · CLS ${cls.toFixed(3)} · LCP öğesi: ${lcpElement}`,
+    )
     results.push({ lcp, cls, lcpElement })
   }
 } finally {
@@ -73,7 +76,9 @@ console.log(`medyan LCP: ${Math.round(lcpMedian)} ms (eşik ${LCP_THRESHOLD_MS} 
 console.log(`medyan CLS: ${clsMedian.toFixed(3)} (eşik ${CLS_THRESHOLD})`)
 
 if (lcpMedian >= LCP_THRESHOLD_MS || clsMedian >= CLS_THRESHOLD) {
-  console.error('KIRMIZI — C3 uç eşiği karşılanmadı. AP-12: önce ölç, TEK optimizasyon, yeniden ölç.')
+  console.error(
+    'KIRMIZI — C3 uç eşiği karşılanmadı. AP-12: önce ölç, TEK optimizasyon, yeniden ölç.',
+  )
   process.exit(1)
 }
 

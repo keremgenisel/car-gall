@@ -46,9 +46,7 @@ export function ListingCard({ listing, aboveTheFold }: Props) {
           {' · '}
           {t('showcase.card.mileage', { kilometers: listing.mileageKilometers })}
         </p>
-        <p className="listing-card__price">
-          {price ?? t('showcase.card.priceOnRequest')}
-        </p>
+        <p className="listing-card__price">{price ?? t('showcase.card.priceOnRequest')}</p>
         <p className="listing-card__branch" dir="auto">
           {listing.branchName}
         </p>

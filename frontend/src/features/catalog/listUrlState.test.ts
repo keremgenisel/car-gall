@@ -10,7 +10,9 @@ import {
 
 describe('C13: kanonik URL biçimi', () => {
   it('çoklu seçimi tekrarlı parametreyle yazar, virgüllü liste kullanmaz', () => {
-    expect(toCanonicalSearch({ bodyTypes: ['sedan', 'suv'], page: 1 })).toBe('?bodyType=sedan&bodyType=suv')
+    expect(toCanonicalSearch({ bodyTypes: ['sedan', 'suv'], page: 1 })).toBe(
+      '?bodyType=sedan&bodyType=suv',
+    )
   })
 
   it('page=1 i URL ye yazmaz', () => {

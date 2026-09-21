@@ -23,8 +23,7 @@ export function Pagination({ page, totalPages, onChange }: Props) {
       >
         <span className="pagination__icon" aria-hidden="true">
           {'←'}
-        </span>
-        {' '}
+        </span>{' '}
         {t('showcase.pagination.previous')}
       </button>
 
@@ -38,8 +37,7 @@ export function Pagination({ page, totalPages, onChange }: Props) {
         onClick={() => onChange(page + 1)}
         disabled={page >= totalPages}
       >
-        {t('showcase.pagination.next')}
-        {' '}
+        {t('showcase.pagination.next')}{' '}
         <span className="pagination__icon" aria-hidden="true">
           {'→'}
         </span>

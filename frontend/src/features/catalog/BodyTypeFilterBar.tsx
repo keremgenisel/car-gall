@@ -45,7 +45,12 @@ export function BodyTypeFilterBar({ bodyTypes, selected, onToggle, onClear }: Pr
         <span data-testid="selected-count">
           {t('showcase.filter.selectedCount', { count: selected.length })}
         </span>
-        <button type="button" className="link-button" onClick={onClear} disabled={selected.length === 0}>
+        <button
+          type="button"
+          className="link-button"
+          onClick={onClear}
+          disabled={selected.length === 0}
+        >
           {t('showcase.filter.clear')}
         </button>
       </div>

@@ -31,10 +31,16 @@ export function fetchShowcaseListings(
   )
 }
 
-export function fetchBodyTypes(locale: AppLocale, signal?: AbortSignal): Promise<readonly BodyType[]> {
+export function fetchBodyTypes(
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<readonly BodyType[]> {
   return getJson<readonly BodyType[]>(`/api/reference/body-types?locale=${locale}`, locale, signal)
 }
 
-export function fetchFieldSettings(locale: AppLocale, signal?: AbortSignal): Promise<FieldSettings> {
+export function fetchFieldSettings(
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<FieldSettings> {
   return getJson<FieldSettings>('/api/catalog/field-settings', locale, signal)
 }

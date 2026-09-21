@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Çok dillilik ve RTL', () => {
-  test('AC-30: Arapça locale de sayfa dir="rtl" ve lang="ar" ile basılır; ızgara ve sayfalama sağdan sola akar', async ({ page }) => {
+  test('AC-30: Arapça locale de sayfa dir="rtl" ve lang="ar" ile basılır; ızgara ve sayfalama sağdan sola akar', async ({
+    page,
+  }) => {
     await page.goto('/ar/')
 
     // Yön SUNUCUDAN basılır, uçta hesaplanmaz (docs/frontend.md § 6).
@@ -31,7 +33,9 @@ test.describe('Çok dillilik ve RTL', () => {
     }
   })
 
-  test('AC-29: Kasa tipi etiketleri üç locale de kendi dilinde görünür; ham anahtar görünmez', async ({ page }) => {
+  test('AC-29: Kasa tipi etiketleri üç locale de kendi dilinde görünür; ham anahtar görünmez', async ({
+    page,
+  }) => {
     const beklenen: Record<string, string> = { tr: 'SUV', ar: 'دفع رباعي', en: 'SUV' }
 
     for (const locale of ['tr', 'ar', 'en']) {
@@ -55,7 +59,9 @@ test.describe('Çok dillilik ve RTL', () => {
     }
   })
 
-  test('AC-31: Sonuç sayısı metni toplam ilan sayısını bildirir ve Arapça da doğru çoğul biçimini kullanır', async ({ page }) => {
+  test('AC-31: Sonuç sayısı metni toplam ilan sayısını bildirir ve Arapça da doğru çoğul biçimini kullanır', async ({
+    page,
+  }) => {
     await page.goto('/ar/')
 
     // Sayı veri setinden gelir; test seed büyüklüğüne bağlanmaz.
@@ -68,7 +74,9 @@ test.describe('Çok dillilik ve RTL', () => {
     expect(metin).not.toMatch(/[٠-٩]/)
   })
 
-  test('AC-22: KWD dışı kurulumda da tutar locale biçiminde ve Latin rakamla gösterilir', async ({ page }) => {
+  test('AC-22: KWD dışı kurulumda da tutar locale biçiminde ve Latin rakamla gösterilir', async ({
+    page,
+  }) => {
     await page.goto('/ar/')
 
     const fiyat = await page.locator('.listing-card__price').first().innerText()

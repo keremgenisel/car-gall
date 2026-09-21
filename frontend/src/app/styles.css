@@ -23,7 +23,11 @@ body {
   margin: 0;
   background: var(--surface-muted);
   color: var(--ink);
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
 }
 
 .page {
@@ -199,7 +203,7 @@ body {
 }
 
 .skeleton-card__line::after {
-  content: "\00a0";
+  content: '\00a0';
 }
 
 .pagination {

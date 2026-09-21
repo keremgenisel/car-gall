@@ -23,7 +23,10 @@ describe('AC-31: sonuç sayısı ICU mesaj formatıyla üretilir', () => {
 describe('AC-32: görsel alt metni model adı + yıl kalıbından üretilir', () => {
   it('üç locale de model adını ve gruplamasız yılı taşır', () => {
     for (const locale of ['tr', 'ar', 'en'] as const) {
-      const alt = createTranslator(locale)('showcase.card.imageAlt', { model: 'Toyota Corolla', year: 2019 })
+      const alt = createTranslator(locale)('showcase.card.imageAlt', {
+        model: 'Toyota Corolla',
+        year: 2019,
+      })
       expect(alt).toContain('Toyota Corolla')
       expect(alt).toContain('2019')
     }
@@ -38,7 +41,14 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
       const t = createTranslator(locale)
 
       for (const key of keys) {
-        const value = t(key, { count: 3, model: 'X', year: 2020, kilometers: 1000, page: 1, totalPages: 2 })
+        const value = t(key, {
+          count: 3,
+          model: 'X',
+          year: 2020,
+          kilometers: 1000,
+          page: 1,
+          totalPages: 2,
+        })
         expect(value).not.toBe(key)
         expect(value.trim()).not.toBe('')
       }

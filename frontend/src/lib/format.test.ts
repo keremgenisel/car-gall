@@ -37,7 +37,12 @@ describe('AC-22: KWD tutarı üç ondalıkla ve Batı Arap rakamlarıyla göster
   })
 
   it('iki ondalıklı para biriminde iki ondalık gösterir', () => {
-    const tryMoney = { onRequest: false, amount: 1250000, currencyCode: 'TRY', minorUnitExponent: 2 }
+    const tryMoney = {
+      onRequest: false,
+      amount: 1250000,
+      currencyCode: 'TRY',
+      minorUnitExponent: 2,
+    }
     expect(formatMoney(tryMoney, 'tr')).toContain('1.250.000,00')
   })
 })

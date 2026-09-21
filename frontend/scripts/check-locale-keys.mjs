@@ -9,7 +9,10 @@ const localesDir = new URL('../src/locales/', import.meta.url).pathname
 const files = readdirSync(localesDir).filter((name) => name.endsWith('.json'))
 
 const catalogs = new Map(
-  files.map((name) => [name.replace('.json', ''), JSON.parse(readFileSync(join(localesDir, name), 'utf8'))]),
+  files.map((name) => [
+    name.replace('.json', ''),
+    JSON.parse(readFileSync(join(localesDir, name), 'utf8')),
+  ]),
 )
 
 const allKeys = new Set()

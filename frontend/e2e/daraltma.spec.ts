@@ -1,13 +1,39 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Kasa tipine göre daraltma', () => {
-  test("AC-10: Seçili kasa tipi sayısı ekranda görünür; seçimi temizle eylemi klavyeyle odaklanabilir ve üç locale'de erişilebilir adı vardır", async ({ page }) => {
+  test("AC-10: Seçili kasa tipi sayısı ekranda görünür; seçimi temizle eylemi klavyeyle odaklanabilir ve üç locale'de erişilebilir adı vardır", async ({
+    page,
+  }) => {
     const locales = [
-      { locale: 'tr', suv: 'SUV', sedan: 'Sedan', clear: 'Seçimi temizle', none: 'Seçim yok', one: '1', two: '2' },
-      { locale: 'en', suv: 'SUV', sedan: 'Sedan', clear: 'Clear selection', none: 'No selection', one: '1', two: '2' },
+      {
+        locale: 'tr',
+        suv: 'SUV',
+        sedan: 'Sedan',
+        clear: 'Seçimi temizle',
+        none: 'Seçim yok',
+        one: '1',
+        two: '2',
+      },
+      {
+        locale: 'en',
+        suv: 'SUV',
+        sedan: 'Sedan',
+        clear: 'Clear selection',
+        none: 'No selection',
+        one: '1',
+        two: '2',
+      },
       // Arapça'da "bir" ve "iki" ayrı çoğul biçimleridir ve rakam taşımaz; ICU'nun doğru
       // çalıştığının kanıtı tam olarak budur (C5, AC-31).
-      { locale: 'ar', suv: 'دفع رباعي', sedan: 'سيدان', clear: 'مسح التحديد', none: 'لا يوجد تحديد', one: 'واحد', two: 'محددان' },
+      {
+        locale: 'ar',
+        suv: 'دفع رباعي',
+        sedan: 'سيدان',
+        clear: 'مسح التحديد',
+        none: 'لا يوجد تحديد',
+        one: 'واحد',
+        two: 'محددان',
+      },
     ] as const
 
     for (const { locale, suv, sedan, clear, none, one, two } of locales) {
@@ -39,7 +65,9 @@ test.describe('Kasa tipine göre daraltma', () => {
     await expect(page.locator('fieldset')).toHaveCount(1)
   })
 
-  test('AC-7: İki kasa tipi seçildiğinde liste, herhangi birine uyan ilanları gösterir', async ({ page }) => {
+  test('AC-7: İki kasa tipi seçildiğinde liste, herhangi birine uyan ilanları gösterir', async ({
+    page,
+  }) => {
     await page.goto('/tr/')
 
     await page.getByRole('checkbox', { name: 'SUV' }).check()
@@ -63,10 +91,14 @@ test.describe('Kasa tipine göre daraltma', () => {
     expect(await okunanToplam(page)).toBe(tumu)
   })
 
-  test('AC-12: Kasa tipi alanı public değilken daraltma çubuğu hiç gösterilmez; liste daraltmasız çalışır', async ({ page }) => {
+  test('AC-12: Kasa tipi alanı public değilken daraltma çubuğu hiç gösterilmez; liste daraltmasız çalışır', async ({
+    page,
+  }) => {
     await page.route('**/api/catalog/field-settings', async (route) => {
       await route.fulfill({
-        json: { fields: [{ fieldKey: 'body_type', isOpen: true, isPublic: false, isFilterable: false }] },
+        json: {
+          fields: [{ fieldKey: 'body_type', isOpen: true, isPublic: false, isFilterable: false }],
+        },
       })
     })
 

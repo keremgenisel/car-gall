@@ -10,7 +10,10 @@ const KANIT = '../docs/evidence'
 // Yalnız `--project=masaustu` ile çağrılır; iki profilde koşmak aynı dosyaları üzerine yazardı.
 
 async function kanit(page: Page, selector: string, dosya: string) {
-  await page.locator(selector).first().screenshot({ path: `${KANIT}/${dosya}` })
+  await page
+    .locator(selector)
+    .first()
+    .screenshot({ path: `${KANIT}/${dosya}` })
 }
 
 test('AC-2: rezerve rozeti', async ({ page }) => {
@@ -21,7 +24,11 @@ test('AC-2: rezerve rozeti', async ({ page }) => {
 })
 
 test('AC-10: seçili sayı ve seçimi temizle — üç locale', async ({ page }) => {
-  for (const [locale, suv] of [['tr', 'SUV'], ['en', 'SUV'], ['ar', 'دفع رباعي']] as const) {
+  for (const [locale, suv] of [
+    ['tr', 'SUV'],
+    ['en', 'SUV'],
+    ['ar', 'دفع رباعي'],
+  ] as const) {
     await page.goto(`/${locale}/`)
     await page.getByRole('checkbox', { name: suv }).check()
     await kanit(page, '[data-testid="body-type-filter"]', `0001-ac10-${locale}.png`)
@@ -30,7 +37,11 @@ test('AC-10: seçili sayı ve seçimi temizle — üç locale', async ({ page })
 
 test('AC-12: kasa tipi public değilken çubuk gösterilmez', async ({ page }) => {
   await page.route('**/api/catalog/field-settings', async (route) => {
-    await route.fulfill({ json: { fields: [{ fieldKey: 'body_type', isOpen: true, isPublic: false, isFilterable: false }] } })
+    await route.fulfill({
+      json: {
+        fields: [{ fieldKey: 'body_type', isOpen: true, isPublic: false, isFilterable: false }],
+      },
+    })
   })
   await page.goto('/tr/')
   await expect(page.getByTestId('listing-card').first()).toBeVisible()
@@ -96,7 +107,9 @@ test('AC-26: daraltma sonucu boş', async ({ page }) => {
 
 test('AC-27: vitrinde hiç ilan yok', async ({ page }) => {
   await page.route('**/api/catalog/showcase-listings*', async (route) => {
-    await route.fulfill({ json: { items: [], page: 1, pageSize: 24, totalCount: 0, totalPages: 0 } })
+    await route.fulfill({
+      json: { items: [], page: 1, pageSize: 24, totalCount: 0, totalPages: 0 },
+    })
   })
   await page.goto('/tr/?bodyType=suv')
   await kanit(page, '[data-testid="empty-showcase"]', '0001-ac27.png')
@@ -104,7 +117,10 @@ test('AC-27: vitrinde hiç ilan yok', async ({ page }) => {
 
 test('AC-28: hata durumu', async ({ page }) => {
   await page.route('**/api/catalog/showcase-listings*', async (route) => {
-    await route.fulfill({ status: 500, json: { errorCode: 'catalog.unavailable', traceId: '00-abc-123-01' } })
+    await route.fulfill({
+      status: 500,
+      json: { errorCode: 'catalog.unavailable', traceId: '00-abc-123-01' },
+    })
   })
   await page.goto('/tr/')
   await kanit(page, '[data-testid="list-error"]', '0001-ac28.png')
@@ -142,12 +158,16 @@ test('AC-32: görsel alt metni', async ({ page }) => {
   expect(alt).toBeTruthy()
 
   // alt metni görüntüde görünmez; kanıt için görselin üstüne basılır.
-  await page.getByTestId('listing-card').first().evaluate((node, metin) => {
-    const etiket = node.ownerDocument.createElement('p')
-    etiket.textContent = `alt="${metin}"`
-    etiket.style.cssText = 'margin:0;padding:8px;font:14px monospace;background:#16191d;color:#fff'
-    node.prepend(etiket)
-  }, alt)
+  await page
+    .getByTestId('listing-card')
+    .first()
+    .evaluate((node, metin) => {
+      const etiket = node.ownerDocument.createElement('p')
+      etiket.textContent = `alt="${metin}"`
+      etiket.style.cssText =
+        'margin:0;padding:8px;font:14px monospace;background:#16191d;color:#fff'
+      node.prepend(etiket)
+    }, alt)
 
   await kanit(page, '[data-testid="listing-card"]', '0001-ac32-ar.png')
 })
