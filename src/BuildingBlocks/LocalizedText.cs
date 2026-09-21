@@ -40,6 +40,6 @@ public sealed class LocalizedText
 
     public bool HasValueFor(Locale locale) => valuesByLocale.ContainsKey(locale.Code);
 
-    /// <summary>Denormalize okuma modelleri locale → metin eşlemesini olduğu gibi saklar.</summary>
+    /// <summary>Denormalize okuma modelleri ve jsonb sütunları locale → metin eşlemesini olduğu gibi saklar.</summary>
     public Dictionary<string, string> ToDictionary() => new(valuesByLocale);
 }

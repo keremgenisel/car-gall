@@ -1,0 +1,39 @@
+using CarGallery.BuildingBlocks;
+using CarGallery.Modules.Dealership.Application;
+using CarGallery.Modules.Dealership.Contracts.Events;
+using CarGallery.Modules.Dealership.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace CarGallery.Modules.Dealership;
+
+/// <summary>
+/// Modülün tek giriş noktası. **Endpoint kaydı yoktur**: D1 uyarınca bu spec'te yazma ucu
+/// açılmaz ve okuma yüzeyi yalnız `Contracts` üzerinden tüketilir (D6).
+/// </summary>
+public static class DealershipModule
+{
+    public static IServiceCollection AddDealership(
+        this IServiceCollection services,
+        string connectionString,
+        string defaultLocale)
+    {
+        services.AddDbContext<DealershipDbContext>(options =>
+            options.UseNpgsql(
+                connectionString,
+                npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", DealershipDbContext.Schema)));
+
+        Result<Locale> parsed = Locale.Create(defaultLocale);
+
+        if (parsed.IsFailure)
+        {
+            throw new InvalidOperationException($"Varsayılan locale geçersiz: '{defaultLocale}'.");
+        }
+
+        services.AddScoped<IBranchQueries>(provider => new BranchQueries(
+            provider.GetRequiredService<DealershipDbContext>(),
+            parsed.Value));
+
+        return services;
+    }
+}
