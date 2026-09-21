@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\src\Host\Host.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="TestWebRoot\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

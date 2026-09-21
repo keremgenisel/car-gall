@@ -1,0 +1,237 @@
+/*
+ * CSS'te fiziksel yön özellikleri YASAKTIR; logical properties zorunludur (C6,
+ * Yasak Listesi 25, docs/frontend.md § 6). RTL'de ızgara akışı, sayfalama okları ve
+ * rozet hizası en sık kırılan yerlerdir ve kaynağı hep fiziksel yöndür.
+ */
+
+:root {
+  --surface: #fff;
+  --surface-muted: #f4f5f7;
+  --ink: #16191d;
+  --ink-muted: #5b6270;
+  --accent: #1f5fd0;
+  --border: #d9dde4;
+  --radius: 10px;
+  --gap: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.page {
+  max-inline-size: 1200px;
+  margin-inline: auto;
+  padding-inline: var(--gap);
+  padding-block: 24px;
+}
+
+.page__title {
+  font-size: 1.5rem;
+  margin-block: 0 8px;
+}
+
+.result-count {
+  color: var(--ink-muted);
+  margin-block: 0 var(--gap);
+}
+
+.filter-bar {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--gap);
+  margin-block-end: var(--gap);
+}
+
+.filter-bar__legend {
+  font-weight: 600;
+  padding-inline: 4px;
+}
+
+.filter-bar__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 12px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding-block: 6px;
+  padding-inline: 12px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.filter-chip--selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filter-bar__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px;
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--gap);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.listing-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.listing-card__media {
+  position: relative;
+  background: var(--surface-muted);
+}
+
+.listing-card__image {
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.listing-card__badge {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-start: 8px;
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: 999px;
+  padding-block: 4px;
+  padding-inline: 10px;
+  font-size: 0.75rem;
+}
+
+.listing-card__body {
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.listing-card__model {
+  font-weight: 600;
+  margin: 0;
+}
+
+.listing-card__meta,
+.listing-card__branch {
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.listing-card__price {
+  font-weight: 600;
+  margin: 0;
+}
+
+.state-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  text-align: center;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--gap);
+}
+
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  block-size: 320px;
+}
+
+/* Görseller açık en-boy oranıyla gelir; iskelet de aynı yüksekliği tutar (CLS önlemi, AC-25). */
+.skeleton-card__media {
+  aspect-ratio: 4 / 3;
+  background: var(--surface-muted);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-block-start: 24px;
+}
+
+.pagination__button {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding-block: 8px;
+  padding-inline: 14px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.pagination__button[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Yön duyarlı ikon mantıksal olarak aynalanır (docs/frontend.md § 6). */
+[dir='rtl'] .pagination__icon {
+  transform: scaleX(-1);
+}
+
+/* Ekran okuyucuya görünür, göze görünmez. */
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

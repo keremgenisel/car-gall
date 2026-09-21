@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace CarGallery.Host.Tests;
 
-public sealed class LocaleYonlendirmeTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class LocaleYonlendirmeTests : IClassFixture<HostFactory>
 {
-    private readonly WebApplicationFactory<Program> factory;
+    private readonly HostFactory factory;
 
-    public LocaleYonlendirmeTests(WebApplicationFactory<Program> factory) => this.factory = factory;
+    public LocaleYonlendirmeTests(HostFactory factory) => this.factory = factory;
 
     private HttpClient CreateClient() => factory.CreateClient(new WebApplicationFactoryClientOptions
     {
