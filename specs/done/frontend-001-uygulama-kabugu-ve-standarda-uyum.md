@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | **Tamamlandı** |
 | **Sahip** | Developer oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` — vitrin tarafı. Backend sözleşmesi **değişmez.** |
@@ -197,8 +197,8 @@ token'ları ve bileşen envanteri dosyada yazdığı gibi olur.
 - [x] Yeni domain terimi **yok**; kullanılan terimler `docs/domain.md` sözlüğünden.
 - [x] Mimari karar verilmedi; backend sözleşmesi değişmedi.
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] Takım Yöneticisi onayladı ve squash-merge edildi.
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
