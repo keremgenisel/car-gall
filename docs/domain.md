@@ -41,6 +41,11 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Alan Ayarı** | `VehicleFormSettings` | Hangi opsiyonel alanın açık/zorunlu ve public olduğunu belirleyen tekil ayar. |
 | **Medya Varlığı** | `MediaAsset` | Yüklenmiş ve işlenmiş görsel/video. Sahipsizdir; araca `VehicleCatalog` bağlar. |
 | **Kapak Görseli** | `CoverAsset` | İlanın listede görünen ilk görseli. Sıralı medya listesinin ilk elemanı. |
+| **Donanım Paketi** | `TrimLevel` | Bir modelin donanım seviyesi. Referans veridir; `VehicleReference` besler. |
+| **Yakıt** | `FuelType` | Aracın yakıt türü. Referans veridir; kapalı kümedir ve locale başına çevrilir. |
+| **Vites** | `TransmissionType` | Şanzıman türü. Referans veridir; kapalı kümedir. |
+| **Çekiş** | `DrivetrainType` | Aracın çekiş düzeni. Referans veridir; kapalı kümedir. |
+| **Renk** | `Color` | Aracın rengi. Taksonomi DEĞİLDİR ve galeriye göre değişir; `VehicleCatalog`'un kendi değeridir. |
 
 ### Talep tarafı
 
