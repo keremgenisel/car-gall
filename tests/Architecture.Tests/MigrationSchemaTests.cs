@@ -51,7 +51,22 @@ public sealed partial class MigrationSchemaTests
 
         foreach (string file in SolutionLayout.SourceFiles())
         {
-            if (!Path.GetFileName(file).EndsWith("DbContext.cs", StringComparison.Ordinal))
+            string fileName = Path.GetFileName(file);
+
+            if (!fileName.EndsWith("DbContext.cs", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // Kural SOMUT modül DbContext'lerini hedefler. Arayüz dosyaları (IOutboxDbContext)
+            // ve BuildingBlocks'taki altyapı tipleri migration taşımaz — tespit yalnız dosya
+            // adına bakarsa onları da modül sanır ve kural yanlış yerde kırmızı verir.
+            if (fileName.Length > 1 && fileName[0] == 'I' && char.IsUpper(fileName[1]))
+            {
+                continue;
+            }
+
+            if (!SolutionLayout.IsModuleProject(file) && !SolutionLayout.Relative(file).StartsWith("src/Modules/", StringComparison.Ordinal))
             {
                 continue;
             }

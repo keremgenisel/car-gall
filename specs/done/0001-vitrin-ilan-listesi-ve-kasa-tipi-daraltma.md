@@ -164,6 +164,9 @@ vitrinde C3'te sabitlenen yanıt süresi eşiklerinin altında kalır.
   **Doğrudan sonucu:** bu spec tek başına merge edildiğinde vitrin okuma modelini üretimde
   dolduran bir yol yoktur — tablo yalnızca geliştirme seed'iyle dolar. 0001 tek başına
   çalışan bir ürün parçası değildir ve bunu takip eden spec tamamlar.
+  *(Güncelleme: olay dağıtımı — outbox — ve şube dinleyicilerinin DI'a bağlanması
+  `specs/0003-galeri-profili-ve-subeler.md`'ye devredildi. Araç yazma yolu hâlâ kapsam
+  dışıdır ve kendi spec'ini bekler.)*
   *(QA D6 bulgusu; Takım Yöneticisi onayıyla eklendi.)*
 
 ---

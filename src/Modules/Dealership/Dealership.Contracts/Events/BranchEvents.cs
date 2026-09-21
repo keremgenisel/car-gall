@@ -30,3 +30,19 @@ public sealed record BranchDeactivated(
     Guid EventId,
     DateTimeOffset OccurredAt,
     Guid BranchId) : IIntegrationEvent;
+
+/// <summary>
+/// D6 — okuma yüzeyi bilerek dar: "şube kimliği geçerli mi ve ziyaretçinin locale'indeki
+/// adı nedir". R12'nin bugün tüketicisi yok (`VehicleCatalog` şube bilgisini olaydan alıyor,
+/// `Identity` modülü mevcut değil); genişletme, ihtiyacı doğuran spec'e bırakıldı.
+/// </summary>
+public sealed record BranchSummaryDto(Guid BranchId, string Name, string Status);
+
+public interface IBranchQueries
+{
+    /// <summary>
+    /// Bulunamayan şube için <c>null</c> döner. Ziyaretçinin locale'inde karşılığı olmayan
+    /// ad için varsayılan locale'deki ad döner; boş ad DÖNMEZ (R5, AC-5).
+    /// </summary>
+    Task<BranchSummaryDto?> FindAsync(Guid branchId, string locale, CancellationToken cancellationToken);
+}

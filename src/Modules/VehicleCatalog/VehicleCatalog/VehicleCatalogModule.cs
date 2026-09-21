@@ -1,6 +1,9 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Outbox;
+using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.VehicleCatalog.Application.Detail;
 using CarGallery.Modules.VehicleCatalog.Application.Development;
+using CarGallery.Modules.VehicleCatalog.Application.EventHandlers;
 using CarGallery.Modules.VehicleCatalog.Application.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
@@ -33,6 +36,14 @@ public static class VehicleCatalogModule
 
         services.AddSingleton(BuildLocaleOptions(defaultLocale, enabledLocales));
         services.AddSingleton<IClock, SystemClock>();
+
+        // 0003 C1 — dinleyiciler ilk kez DI'a bağlanıyor. 0001 X10'da kapsam dışı bırakılan
+        // bu adım 0003'e devredildi; bugüne kadar "dinleyen var, konuşan yok"tu.
+        // Yayıncı bu kayıtları GÖRMEZ: dağıtıcı alıcıları DI'dan çözer (C7, Yasak Listesi 18).
+        services.AddScoped<IIntegrationEventDispatchTarget, BranchDetailsChangedHandler>();
+        services.AddScoped<IIntegrationEventDispatchTarget, BranchDeactivatedHandler>();
+        services.AddScoped<IIntegrationEventHandler<BranchDetailsChanged>, BranchDetailsChangedHandler>();
+        services.AddScoped<IIntegrationEventHandler<BranchDeactivated>, BranchDeactivatedHandler>();
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();
         services.AddScoped<IBodyTypeCatalog, BodyTypeCatalog>();
         services.AddScoped<IReferenceLabelResolver, ReferenceLabelResolver>();

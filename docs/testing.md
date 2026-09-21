@@ -12,10 +12,17 @@ Bir kriterin testi yoksa o kriter karşılanmamıştır — kod çalışıyor g�
 tests/
   <Modül>.Tests/             → modül başına bir proje
   Architecture.Tests/        → sınır ihlallerini kıran mimari testler
+  Host.Tests/                → host davranışı ve modüller arası uçtan uca akış
 ```
 
 Bir test projesi **yalnızca kendi modülüne** ve o modülün `Contracts`'ına referans verir.
 Başka modülün iç tipine test üzerinden erişmek de yasaktır (`docs/architecture.md` § 5/6).
+
+**`Host.Tests` bunun istisnası değil, kapsayıcısıdır.** Host zaten tüm modülleri kaydeder;
+locale yönlendirmesi, hata haritalama gibi host davranışları ve **iki modülü birlikte kapsayan
+uçtan uca akışlar** burada test edilir — modül test projeleri bunları yazamaz, çünkü yazarlarsa
+sınırı ihlal ederler. Buraya iş kuralı testi konmaz; iş kuralı kendi modülünün projesinde
+kalır.
 
 ### "Her kriter bir test"
 
