@@ -2,7 +2,13 @@
   <Folder Name="/src/">
     <Project Path="src/BuildingBlocks/BuildingBlocks.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/VehicleCatalog/">
+    <Project Path="src/Modules/VehicleCatalog/VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
+    <Project Path="src/Modules/VehicleCatalog/VehicleCatalog/VehicleCatalog.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+    <Project Path="tests/VehicleCatalog.Tests/VehicleCatalog.Tests.csproj" />
   </Folder>
 </Solution>

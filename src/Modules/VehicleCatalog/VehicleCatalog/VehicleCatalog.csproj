@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CarGallery.Modules.VehicleCatalog</RootNamespace>
+    <AssemblyName>CarGallery.Modules.VehicleCatalog</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="VehicleCatalog.Tests" />
+  </ItemGroup>
+
+</Project>
