@@ -1,23 +1,34 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Kasa tipine göre daraltma', () => {
-  test('AC-10: Seçili kasa tipi sayısı ekranda görünür; seçimi temizle eylemi klavyeyle odaklanabilir', async ({ page }) => {
-    await page.goto('/tr/')
+  test("AC-10: Seçili kasa tipi sayısı ekranda görünür; seçimi temizle eylemi klavyeyle odaklanabilir ve üç locale'de erişilebilir adı vardır", async ({ page }) => {
+    const locales = [
+      { locale: 'tr', suv: 'SUV', sedan: 'Sedan', clear: 'Seçimi temizle', none: 'Seçim yok', one: '1', two: '2' },
+      { locale: 'en', suv: 'SUV', sedan: 'Sedan', clear: 'Clear selection', none: 'No selection', one: '1', two: '2' },
+      // Arapça'da "bir" ve "iki" ayrı çoğul biçimleridir ve rakam taşımaz; ICU'nun doğru
+      // çalıştığının kanıtı tam olarak budur (C5, AC-31).
+      { locale: 'ar', suv: 'دفع رباعي', sedan: 'سيدان', clear: 'مسح التحديد', none: 'لا يوجد تحديد', one: 'واحد', two: 'محددان' },
+    ] as const
 
-    await expect(page.getByTestId('selected-count')).toContainText('Seçim yok')
+    for (const { locale, suv, sedan, clear, none, one, two } of locales) {
+      await page.goto(`/${locale}/`)
 
-    await page.getByRole('checkbox', { name: 'SUV' }).check()
-    await expect(page.getByTestId('selected-count')).toContainText('1')
+      await expect(page.getByTestId('selected-count')).toContainText(none)
 
-    await page.getByRole('checkbox', { name: 'Sedan' }).check()
-    await expect(page.getByTestId('selected-count')).toContainText('2')
+      await page.getByRole('checkbox', { name: suv }).check()
+      await expect(page.getByTestId('selected-count')).toContainText(one)
 
-    const temizle = page.getByRole('button', { name: 'Seçimi temizle' })
-    await temizle.focus()
-    await expect(temizle).toBeFocused()
+      await page.getByRole('checkbox', { name: sedan }).check()
+      await expect(page.getByTestId('selected-count')).toContainText(two)
 
-    await page.keyboard.press('Enter')
-    await expect(page.getByTestId('selected-count')).toContainText('Seçim yok')
+      // Erişilebilir ad her locale'de kendi dilinde: getByRole adı ada göre bulur.
+      const temizle = page.getByTestId('body-type-filter').getByRole('button', { name: clear })
+      await temizle.focus()
+      await expect(temizle).toBeFocused()
+
+      await page.keyboard.press('Enter')
+      await expect(page.getByTestId('selected-count')).toContainText(none)
+    }
   })
 
   test('AC-11: Daraltma çubuğu yalnızca kasa tipi eksenini sunar', async ({ page }) => {
@@ -62,7 +73,7 @@ test.describe('Kasa tipine göre daraltma', () => {
     await page.goto('/tr/')
 
     await expect(page.getByTestId('body-type-filter')).toHaveCount(0)
-    await expect(page.locator('.listing-card').first()).toBeVisible()
+    await expect(page.getByTestId('listing-card').first()).toBeVisible()
   })
 })
 

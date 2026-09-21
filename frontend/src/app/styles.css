@@ -184,23 +184,22 @@ body {
   justify-items: center;
 }
 
-.skeleton-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--gap);
-}
-
-.skeleton-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  block-size: 320px;
-}
-
-/* Görseller açık en-boy oranıyla gelir; iskelet de aynı yüksekliği tutar (CLS önlemi, AC-25). */
+/* İskelet, .listing-card kutusunu paylaşır; yalnız içerik yerine yer tutucu boyar.
+   Ayrı bir kutu modeli tutmak, ikisinin zamanla ayrışmasına ve düzenin kaymasına yol açar. */
 .skeleton-card__media {
   aspect-ratio: 4 / 3;
   background: var(--surface-muted);
+}
+
+.skeleton-card__line {
+  background: var(--surface-muted);
+  border-radius: 4px;
+  color: transparent;
+  min-block-size: 1em;
+}
+
+.skeleton-card__line::after {
+  content: "\00a0";
 }
 
 .pagination {

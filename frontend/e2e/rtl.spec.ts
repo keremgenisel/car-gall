@@ -18,8 +18,8 @@ test.describe('Çok dillilik ve RTL', () => {
     expect(sonraki).not.toBeNull()
     expect(onceki!.x).toBeGreaterThan(sonraki!.x)
 
-    const ilk = await page.locator('.listing-card').first().boundingBox()
-    const ikinci = await page.locator('.listing-card').nth(1).boundingBox()
+    const ilk = await page.getByTestId('listing-card').first().boundingBox()
+    const ikinci = await page.getByTestId('listing-card').nth(1).boundingBox()
 
     expect(ilk).not.toBeNull()
     expect(ikinci).not.toBeNull()

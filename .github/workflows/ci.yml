@@ -84,3 +84,66 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+  e2e:
+    name: E2E — kritik akışlar, üç durum ve RTL
+    runs-on: ubuntu-latest
+
+    # 8 kriterin (AC-10, 14, 18, 19, 26, 27, 28, 30) CI'da koşan tek testi buradadır;
+    # bu iş olmadan o kriterler kapısız kalır.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: cionly
+          POSTGRES_DB: cargallery
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Playwright tarayıcısı
+        working-directory: frontend
+        run: npm run test:e2e:install
+
+      - name: Frontend build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Host'u seed ederek başlat
+        env:
+          ConnectionStrings__VehicleCatalog: Host=localhost;Port=5432;Database=cargallery;Username=postgres;Password=cionly
+          Development__SeedShowcase: 'true'
+          Development__SeedListingCount: '200'
+          ASPNETCORE_URLS: http://localhost:5080
+        run: |
+          dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release &
+          until curl -sf -o /dev/null http://localhost:5080/api/catalog/field-settings; do sleep 1; done
+
+      - name: E2E testleri (mobil + masaüstü)
+        working-directory: frontend
+        run: npm run test:e2e
+
+      - name: Kanıt görüntülerindeki değişikliği yükle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-evidence
+          path: docs/evidence/
+          if-no-files-found: warn

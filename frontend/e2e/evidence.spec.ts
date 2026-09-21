@@ -15,7 +15,7 @@ async function kanit(page: Page, selector: string, dosya: string) {
 
 test('AC-2: rezerve rozeti', async ({ page }) => {
   await page.goto('/tr/')
-  const rezerveKart = page.locator('.listing-card').filter({ hasText: 'Rezerve' }).first()
+  const rezerveKart = page.getByTestId('listing-card').filter({ hasText: 'Rezerve' }).first()
   await expect(rezerveKart).toBeVisible()
   await rezerveKart.screenshot({ path: `${KANIT}/0001-ac2.png` })
 })
@@ -33,20 +33,20 @@ test('AC-12: kasa tipi public değilken çubuk gösterilmez', async ({ page }) =
     await route.fulfill({ json: { fields: [{ fieldKey: 'body_type', isOpen: true, isPublic: false, isFilterable: false }] } })
   })
   await page.goto('/tr/')
-  await expect(page.locator('.listing-card').first()).toBeVisible()
+  await expect(page.getByTestId('listing-card').first()).toBeVisible()
   await page.locator('.page').screenshot({ path: `${KANIT}/0001-ac12.png` })
 })
 
 test('AC-20: kart alanları ve sayı biçimlendirmesi — üç locale', async ({ page }) => {
   for (const locale of ['tr', 'en', 'ar'] as const) {
     await page.goto(`/${locale}/`)
-    await kanit(page, '.listing-card', `0001-ac20-${locale}.png`)
+    await kanit(page, '[data-testid="listing-card"]', `0001-ac20-${locale}.png`)
   }
 })
 
 test('AC-21: fiyat sorunuz', async ({ page }) => {
   await page.goto('/tr/')
-  const kart = page.locator('.listing-card').filter({ hasText: 'Fiyat sorunuz' }).first()
+  const kart = page.getByTestId('listing-card').filter({ hasText: 'Fiyat sorunuz' }).first()
   await expect(kart).toBeVisible()
   await kart.screenshot({ path: `${KANIT}/0001-ac21.png` })
 })
@@ -67,7 +67,7 @@ test('AC-22: KWD üç ondalık — üç locale', async ({ page }) => {
     await page.goto(`/${locale}/`)
     const fiyat = page.locator('.listing-card__price').first()
     await expect(fiyat).toContainText('250')
-    await kanit(page, '.listing-card', `0001-ac22-${locale}.png`)
+    await kanit(page, '[data-testid="listing-card"]', `0001-ac22-${locale}.png`)
   }
 })
 
@@ -117,10 +117,18 @@ test('AC-29: kasa tipi etiketleri — üç locale', async ({ page }) => {
   }
 })
 
-test('AC-30: Arapça RTL sayfa', async ({ page }) => {
+test('AC-30: Arapça RTL — ızgara ve sayfalama', async ({ page }) => {
   await page.goto('/ar/')
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+
+  // Kriter ızgarayı VE sayfalama denetimlerini kapsıyor; tek kadraj ikisini birden
+  // almıyordu (QA D11). İki kanıt üretilir.
   await page.screenshot({ path: `${KANIT}/0001-ac30-ar.png`, fullPage: false })
+
+  const sayfalama = page.getByRole('navigation')
+  await sayfalama.scrollIntoViewIfNeeded()
+  await expect(sayfalama).toBeVisible()
+  await sayfalama.screenshot({ path: `${KANIT}/0001-ac30-ar-b.png` })
 })
 
 test('AC-31: sonuç sayısı ICU çoğul — Arapça', async ({ page }) => {
@@ -134,12 +142,12 @@ test('AC-32: görsel alt metni', async ({ page }) => {
   expect(alt).toBeTruthy()
 
   // alt metni görüntüde görünmez; kanıt için görselin üstüne basılır.
-  await page.locator('.listing-card').first().evaluate((node, metin) => {
+  await page.getByTestId('listing-card').first().evaluate((node, metin) => {
     const etiket = node.ownerDocument.createElement('p')
     etiket.textContent = `alt="${metin}"`
     etiket.style.cssText = 'margin:0;padding:8px;font:14px monospace;background:#16191d;color:#fff'
     node.prepend(etiket)
   }, alt)
 
-  await kanit(page, '.listing-card', '0001-ac32-ar.png')
+  await kanit(page, '[data-testid="listing-card"]', '0001-ac32-ar.png')
 })

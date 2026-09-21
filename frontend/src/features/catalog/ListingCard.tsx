@@ -2,12 +2,22 @@ import { useLocale } from '../../app/localeContext'
 import type { ShowcaseListing } from '../../api/types'
 import { formatMoney } from '../../lib/format'
 
-export function ListingCard({ listing }: { readonly listing: ShowcaseListing }) {
+interface Props {
+  readonly listing: ShowcaseListing
+  /**
+   * İlk ekranda görünen kartlar. Kapak görseli LCP adayıdır; katlama üstündeki görseli
+   * lazy yüklemek, tarayıcının onu keşfetmesini düzen hesaplanana kadar geciktirir ve
+   * LCP'yi doğrudan büyütür (AC-35). docs/frontend.md § 8 zaten "kapak görseli hariç" diyor.
+   */
+  readonly aboveTheFold: boolean
+}
+
+export function ListingCard({ listing, aboveTheFold }: Props) {
   const { locale, t } = useLocale()
   const price = formatMoney(listing.price, locale)
 
   return (
-    <li className="listing-card">
+    <li className="listing-card" data-testid="listing-card">
       <div className="listing-card__media">
         {listing.coverImageUrl === null ? null : (
           <img
@@ -17,7 +27,8 @@ export function ListingCard({ listing }: { readonly listing: ShowcaseListing }) 
             alt={t('showcase.card.imageAlt', { model: listing.modelName, year: listing.modelYear })}
             width={480}
             height={360}
-            loading="lazy"
+            loading={aboveTheFold ? 'eager' : 'lazy'}
+            fetchPriority={aboveTheFold ? 'high' : 'auto'}
           />
         )}
         {listing.isReserved ? (

@@ -112,8 +112,14 @@ export function ShowcaseListPage() {
           ) : (
             <>
               <ul className="listing-grid">
-                {load.page.items.map((listing) => (
-                  <ListingCard key={listing.listingId} listing={listing} />
+                {load.page.items.map((listing, index) => (
+                  <ListingCard
+                    key={listing.listingId}
+                    listing={listing}
+                    /* Mobilde tek sütun, masaüstünde ilk satır: ilk dört kart her iki
+                       düzende de katlama üstündedir. */
+                    aboveTheFold={index < 4}
+                  />
                 ))}
               </ul>
               <Pagination page={load.page.page} totalPages={load.page.totalPages} onChange={onPageChange} />

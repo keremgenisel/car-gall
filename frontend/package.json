@@ -13,7 +13,9 @@
     "lint:css": "stylelint \"src/**/*.css\"",
     "check:locales": "node scripts/check-locale-keys.mjs",
     "check:text": "node scripts/check-hardcoded-text.mjs",
-    "perf:lighthouse": "node scripts/lighthouse-run.mjs"
+    "perf:lighthouse": "node scripts/lighthouse-run.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "intl-messageformat": "^12.1.2",
