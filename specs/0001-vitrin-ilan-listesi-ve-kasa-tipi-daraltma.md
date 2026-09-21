@@ -152,6 +152,16 @@ vitrinde C3'te sabitlenen yanıt süresi eşiklerinin altında kalır.
   yanıltır. İstenirse ayrı bir spec olur.
 - **X9.** İlan detay sayfası ve talep formu — *neden:* bu spec listeleme ve daraltmadır.
   Karttan detaya gidiş bağlantısı vardır; detay sayfasının kendisi bu spec'te değildir.
+- **X10.** **Vitrin okuma modelini besleyen yazma yolu ve olay dağıtımı** — araç/ilan
+  agregatlarının kalıcılaştırılması, outbox dağıtıcısı ve entegrasyon olayı işleyicilerinin
+  DI'a bağlanması. *neden:* bu spec vitrin **okuma** tarafıdır; panel X6 ile zaten kapsam
+  dışıdır ve yazma yolu olmadan okuma tarafının tüm kriterleri doğrulanabilir. Yansıtıcı
+  (`ShowcaseListingProjector`) ve olay işleyicileri yazılmış ve testlerle kanıtlanmıştır;
+  **bağlanmamıştır.**
+  **Doğrudan sonucu:** bu spec tek başına merge edildiğinde vitrin okuma modelini üretimde
+  dolduran bir yol yoktur — tablo yalnızca geliştirme seed'iyle dolar. 0001 tek başına
+  çalışan bir ürün parçası değildir ve bunu takip eden spec tamamlar.
+  *(QA D6 bulgusu; Takım Yöneticisi onayıyla eklendi.)*
 
 ---
 
