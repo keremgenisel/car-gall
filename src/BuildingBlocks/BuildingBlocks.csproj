@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CarGallery.BuildingBlocks</RootNamespace>
+    <AssemblyName>CarGallery.BuildingBlocks</AssemblyName>
+  </PropertyGroup>
+
+</Project>
