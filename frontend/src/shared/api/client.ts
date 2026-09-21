@@ -8,13 +8,20 @@ import type { AppLocale } from '../lib/locale'
 export class ApiError extends Error {
   readonly errorCode: string
   readonly traceId: string | null
+  /**
+   * HTTP durum kodu; ağ hatasında `null`. Yalnız api/ katmanı okur — "bulunamadı"yı
+   * "hata"dan ayırmak için gerekir (AC-18 / AC-19). Ziyaretçiye ASLA gösterilmez
+   * (docs/frontend.md § 4): ErrorState zaten durum kodu alan bir prop taşımıyor.
+   */
+  readonly status: number | null
 
-  constructor(errorCode: string, traceId: string | null) {
+  constructor(errorCode: string, traceId: string | null, status: number | null = null) {
     // Mesaj yalnız geliştirici içindir; ziyaretçiye ASLA gösterilmez (docs/frontend.md § 4).
     super(errorCode)
     this.name = 'ApiError'
     this.errorCode = errorCode
     this.traceId = traceId
+    this.status = status
   }
 }
 
@@ -50,9 +57,14 @@ export async function getJson<TResponse>(
 async function toApiError(response: Response): Promise<ApiError> {
   try {
     const problem = (await response.json()) as { errorCode?: string; traceId?: string }
-    return new ApiError(problem.errorCode ?? DEFAULT_ERROR_CODE, problem.traceId ?? null)
+    return new ApiError(
+      problem.errorCode ?? DEFAULT_ERROR_CODE,
+      problem.traceId ?? null,
+      response.status,
+    )
   } catch {
     // Gövde okunamadıysa da kullanıcıya teknik detay sızmaz; genel kodla devam edilir.
-    return new ApiError(DEFAULT_ERROR_CODE, null)
+    // 404 gövdesiz gelir (E7): durum kodu burada korunmazsa "bulunamadı" kaybolurdu.
+    return new ApiError(DEFAULT_ERROR_CODE, null, response.status)
   }
 }

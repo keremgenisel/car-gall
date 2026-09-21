@@ -22,6 +22,7 @@ const { fetchShowcaseListings, fetchBodyTypes, fetchFieldSettings } =
 
 const ilan: ShowcaseListing = {
   listingId: '0192c000-0000-7000-8000-000000000001',
+  slug: 'toyota-corolla-2019-0192c0',
   isReserved: false,
   coverImageUrl: '/seed-media/cover-0.svg',
   modelName: 'Toyota Corolla',

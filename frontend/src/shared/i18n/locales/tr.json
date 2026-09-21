@@ -26,5 +26,19 @@
   "showcase.pagination.label": "Sayfalama",
   "showcase.pagination.previous": "Önceki sayfa",
   "showcase.pagination.next": "Sonraki sayfa",
-  "showcase.pagination.page": "Sayfa {page, number} / {totalPages, number}"
+  "showcase.pagination.page": "Sayfa {page, number} / {totalPages, number}",
+  "detail.loading": "İlan yükleniyor",
+  "detail.reserved": "Rezerve",
+  "detail.priceOnRequest": "Fiyat sorunuz",
+  "detail.imageAlt": "{model} {year, number, ::group-off}",
+  "detail.mileageValue": "{kilometers, number} km",
+  "detail.field.modelYear": "Model yılı",
+  "detail.field.mileage": "Kilometre",
+  "detail.field.branch": "Şube",
+  "detail.notFound.title": "Bu araç vitrinde değil",
+  "detail.notFound.body": "Aradığınız ilan yayından kalkmış olabilir. Vitrindeki diğer araçlara göz atabilirsiniz.",
+  "detail.notFound.action": "Vitrine dön",
+  "detail.error.title": "Bir sorun oluştu",
+  "detail.error.body": "İlan şu anda getirilemedi. Lütfen tekrar deneyin.",
+  "detail.error.retry": "Tekrar dene"
 }

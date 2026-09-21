@@ -1,6 +1,14 @@
 import type { AppLocale } from '../lib/locale'
-import { getJson } from './client'
-import type { BodyType, FieldSettings, PagedResult, ShowcaseListing } from './types'
+import { ApiError, getJson } from './client'
+import type {
+  BodyType,
+  FieldSettings,
+  PagedResult,
+  ShowcaseListing,
+  ShowcaseListingDetail,
+} from './types'
+
+const NOT_FOUND = 404
 
 export interface ShowcaseQuery {
   readonly bodyTypes: readonly string[]
@@ -29,6 +37,33 @@ export function fetchShowcaseListings(
     locale,
     signal,
   )
+}
+
+/**
+ * `null` = ilan vitrinde yok. "Gizli" ile "hiç yok" ayrımı burada da YAPILMAZ: sunucu
+ * ikisine de aynı karşılığı verir (E7, C13, AC-8) ve uç ikisini ayıracak bir bilgi almaz.
+ *
+ * Bulunamadı ile hata AYRI durumlardır (AC-18 / AC-19); ayrım api/ katmanında kalır,
+ * ekran yalnız `null` görür ve durum kodunu hiç bilmez.
+ */
+export async function fetchListingDetail(
+  slug: string,
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<ShowcaseListingDetail | null> {
+  try {
+    return await getJson<ShowcaseListingDetail>(
+      `/api/catalog/showcase-listings/${encodeURIComponent(slug)}?locale=${locale}`,
+      locale,
+      signal,
+    )
+  } catch (cause) {
+    if (cause instanceof ApiError && cause.status === NOT_FOUND) {
+      return null
+    }
+
+    throw cause
+  }
 }
 
 export function fetchBodyTypes(
