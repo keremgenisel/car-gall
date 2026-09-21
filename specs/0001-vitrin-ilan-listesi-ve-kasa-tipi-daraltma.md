@@ -333,20 +333,20 @@ kurar. Bu spec yazılırken kod okunmamıştır; okunacak kod yoktur.
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
       (`docs/evidence/0001-ac<n>.png`), boş ve hata durumları dâhil; AC-30 için Arapça
       görüntü de var.
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] Yeni migration varsa yalnızca `VehicleCatalog` şemasına dokunuyor.
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır (doğrulandı).
-- [ ] Mimari karar verilmedi; `docs/architecture.md` § Karar Defteri değişmedi (doğrulandı).
-- [ ] C3'teki performans eşikleri, **C3'teki ölçüm protokolüyle** CI'da ölçülüyor ve
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] Yeni migration varsa yalnızca `VehicleCatalog` şemasına dokunuyor.
+- [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır (doğrulandı).
+- [x] Mimari karar verilmedi; `docs/architecture.md` § Karar Defteri değişmedi (doğrulandı).
+- [x] C3'teki performans eşikleri, **C3'teki ölçüm protokolüyle** CI'da ölçülüyor ve
       raporlanıyor.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
