@@ -1,0 +1,29 @@
+{
+  "url": "http://localhost:5080/tr/",
+  "protocol": "Lighthouse mobil profili, 3 koşu, medyan (spec 0001 C3)",
+  "runs": [
+    {
+      "lcp": 2705.0634000000005,
+      "cls": 0,
+      "lcpElement": "bilinmiyor"
+    },
+    {
+      "lcp": 2710.1028499999998,
+      "cls": 0,
+      "lcpElement": "bilinmiyor"
+    },
+    {
+      "lcp": 2704.27335,
+      "cls": 0,
+      "lcpElement": "bilinmiyor"
+    }
+  ],
+  "median": {
+    "lcpMilliseconds": 2705.0634000000005,
+    "cumulativeLayoutShift": 0
+  },
+  "thresholds": {
+    "lcpMilliseconds": 2500,
+    "cumulativeLayoutShift": 0.1
+  }
+}

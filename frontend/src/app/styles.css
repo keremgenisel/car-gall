@@ -51,6 +51,11 @@ body {
   margin-block-end: var(--gap);
 }
 
+.filter-bar--skeleton {
+  /* Çubuğun gerçek yüksekliği: legend + seçenek satırı + özet satırı. */
+  min-block-size: 132px;
+}
+
 .filter-bar__legend {
   font-weight: 600;
   padding-inline: 4px;

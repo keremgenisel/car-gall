@@ -9,6 +9,7 @@ import { EmptyByFilter } from './states/EmptyByFilter'
 import { EmptyShowcase } from './states/EmptyShowcase'
 import { ListError } from './states/ListError'
 import { ListSkeleton } from './states/ListSkeleton'
+import { FilterBarSkeleton } from './states/FilterBarSkeleton'
 import { clearBodyTypes, toggleBodyType, withPage } from './listUrlState'
 import { replaceCanonicalPage, useListUrlState } from './useListUrlState'
 
@@ -24,7 +25,7 @@ export function ShowcaseListPage() {
   const [state, pushState] = useListUrlState()
   const [result, setResult] = useState<{ readonly key: string; readonly value: LoadState } | null>(null)
   const [bodyTypes, setBodyTypes] = useState<readonly BodyType[]>([])
-  const [filterVisible, setFilterVisible] = useState(false)
+  const [filterGate, setFilterGate] = useState<'loading' | 'visible' | 'hidden'>('loading')
   const [reloadToken, setReloadToken] = useState(0)
 
   // Yükleniyor durumu efekt içinde setState ile kurulmaz, istek anahtarından TÜRETİLİR:
@@ -40,10 +41,10 @@ export function ShowcaseListPage() {
     Promise.all([fetchFieldSettings(locale, controller.signal), fetchBodyTypes(locale, controller.signal)])
       .then(([settings, types]) => {
         const bodyTypeField = settings.fields.find((field) => field.fieldKey === BODY_TYPE_FIELD)
-        setFilterVisible(bodyTypeField?.isFilterable === true)
+        setFilterGate(bodyTypeField?.isFilterable === true ? 'visible' : 'hidden')
         setBodyTypes(types)
       })
-      .catch(() => setFilterVisible(false))
+      .catch(() => setFilterGate('hidden'))
 
     return () => controller.abort()
   }, [locale])
@@ -87,7 +88,8 @@ export function ShowcaseListPage() {
     <main className="page">
       <h1 className="page__title">{t('showcase.title')}</h1>
 
-      {filterVisible ? (
+      {filterGate === 'loading' ? <FilterBarSkeleton /> : null}
+      {filterGate === 'visible' ? (
         <BodyTypeFilterBar
           bodyTypes={bodyTypes}
           selected={state.bodyTypes}
