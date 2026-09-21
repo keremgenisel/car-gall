@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Geliştiriliyor |
+| **Durum** | Onaylandı |
 | **Sahip** | Developer oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (vitrin okuma tarafı) · `VehicleReference` (donanım paketi, yakıt, vites, çekiş — **E8**) · `frontend/` public vitrin |
@@ -332,19 +332,19 @@ aksi hâlde DoD'deki "yeni domain terimi yok" maddesi dürüstçe işaretlenemez
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0002-ac<n>.png`),
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0002-ac<n>.png`),
       bulunamadı ve hata durumları dâhil; RTL kriteri için Arapça görüntü de var.
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] Yeni migration varsa yalnızca `VehicleCatalog` şemasına dokunuyor.
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
-- [ ] Sayfa, `docs/frontend.md` § 4.2 envanterindeki bileşenleri kullanıyor; yeni ortak
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] Yeni migration varsa yalnızca `VehicleCatalog` şemasına dokunuyor.
+- [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
+- [x] Sayfa, `docs/frontend.md` § 4.2 envanterindeki bileşenleri kullanıyor; yeni ortak
       bileşen eklendiyse gerekçesi PR'da yazılı.
-- [ ] Ham piksel / hex renk eklenmedi; yeni değer gerektiyse önce token tanımlandı (§ 4.1).
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] Ham piksel / hex renk eklenmedi; yeni değer gerektiyse önce token tanımlandı (§ 4.1).
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
@@ -354,10 +354,19 @@ aksi hâlde DoD'deki "yeni domain terimi yok" maddesi dürüstçe işaretlenemez
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Spec revizyon sayısı** | **1** | Onaydan sonra tek değişiklik: Durum alanının `Geliştiriliyor`a alınması (`a519581`). Kriterlerin kendisi hiç değişmedi — PLAN gözden geçirmesinde çıkan altı belirsizlik (E7–E12) spec onaylanmadan önce karara bağlanmıştı. |
+| **Düzeltme turu sayısı** | **0** | PR açıldığında kapılar ilk koşuda yeşildi. Bu sayı düşük çünkü iş iki oturuma bölündü ve backend tarafı ayrı doğrulanmıştı; tek turda bitmiş bir iş değil, ikiye bölünmüş bir iş. |
+| **Bulgu gerçek/gürültü oranı** | **3 / 0** | Uygulama sırasında kendi bulduklarım: (1) AC-2'nin backend testi kriteri karşılamıyordu — yalnız yanıtta `slug` var mı diye bakıyordu, kartın bağlantı taşıdığını doğrulamıyordu; (2) AC-23'ün kanıt görseli vardı ama testi yoktu, `dir="auto"` kaldırılsa hiçbir şey kırılmazdı; (3) `ApiError` durum kodu taşımadığı için 404 ile 500 ayırt edilemiyordu ve "bulunamadı" ekranı hiç gösterilemezdi. Üçü de dış gözden geçirme olmadan bulundu; bu sütun gerçek bir QA turuyla daha anlamlı olur. |
+| **Regresyon sayısı** | **1** | `ShowcaseListing` tipine `slug` eklenince `ShowcaseListPage.test.tsx`'in fixture'ı derlenmedi. Tip kontrolü yakaladı, commit öncesi kapandı. |
+| **Kaçan hata** | **-** | Henüz merge edilmedi. |
 
 **Bu spec'ten çıkarılan ders:**
+Kriteri karşılayan test ile kriterin geçtiği test aynı şey değil. AC-2'nin backend testi
+adında AC-2 yazıyordu ve yeşildi; doğruladığı şey ise kriterin **önkoşuluydu** (yanıtta slug
+var mı), kriterin kendisi değil (kartta bağlantı var mı). Eşleme tablosu "AC-2 → bir test"
+diye bakıldığında kapalı görünüyordu. Aynı biçimde AC-23'ün kanıt görseli vardı ama
+`dir="auto"` silinse görsel yeniden üretilene kadar hiçbir kapı kırılmazdı — görsel kanıt
+tek başına regresyona karşı korumaz.
+
+Bir sonraki spec'te eşleme tablosu doldurulurken her satır için şu sorulmalı: bu test
+kaldırılsa kriter gerçekten kırılır mı? Kırılmıyorsa o satır kanıt değil, dekordur.
