@@ -4,6 +4,12 @@
     <Project Path="src/Host/Host.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Dealership/">
+    <Project Path="src/Modules/Dealership/Dealership.Contracts/Dealership.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Media/">
+    <Project Path="src/Modules/Media/Media.Contracts/Media.Contracts.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/VehicleCatalog/">
     <Project Path="src/Modules/VehicleCatalog/VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
     <Project Path="src/Modules/VehicleCatalog/VehicleCatalog/VehicleCatalog.csproj" />
