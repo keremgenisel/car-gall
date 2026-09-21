@@ -12,17 +12,20 @@ internal sealed record ShowcaseListingRequest
     /// <summary>R6: sayfa başına 24 ilan.</summary>
     internal const int PageSize = 24;
 
-    private ShowcaseListingRequest(IReadOnlyList<BodyTypeSlug> bodyTypes, int page)
+    private ShowcaseListingRequest(IReadOnlyList<BodyTypeSlug> bodyTypes, int page, int pageSize)
     {
         BodyTypes = bodyTypes;
         Page = page;
+        ResolvedPageSize = pageSize;
     }
 
     internal IReadOnlyList<BodyTypeSlug> BodyTypes { get; }
 
     internal int Page { get; }
 
-    internal static ShowcaseListingRequest Normalize(IReadOnlyList<string>? rawBodyTypes, int rawPage)
+    internal int ResolvedPageSize { get; }
+
+    internal static ShowcaseListingRequest Normalize(IReadOnlyList<string>? rawBodyTypes, int rawPage, int? rawPageSize = null)
     {
         List<BodyTypeSlug> bodyTypes = [];
 
@@ -36,7 +39,9 @@ internal sealed record ShowcaseListingRequest
             }
         }
 
-        return new ShowcaseListingRequest(bodyTypes, rawPage < 1 ? 1 : rawPage);
+        int pageSize = rawPageSize is null or < 1 ? PageSize : Math.Min(rawPageSize.Value, PageSize);
+
+        return new ShowcaseListingRequest(bodyTypes, rawPage < 1 ? 1 : rawPage, pageSize);
     }
 
     /// <summary>
@@ -45,7 +50,7 @@ internal sealed record ShowcaseListingRequest
     /// </summary>
     internal int ResolvePage(int totalCount)
     {
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling(totalCount / (double)PageSize);
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling(totalCount / (double)ResolvedPageSize);
         return Page > totalPages ? 1 : Page;
     }
 }

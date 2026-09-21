@@ -21,10 +21,17 @@ public sealed partial class PublicSurfaceTests
             string[] lines = File.ReadAllLines(file);
             for (int index = 0; index < lines.Length; index++)
             {
-                if (TopLevelPublicType().IsMatch(lines[index]))
+                if (!TopLevelPublicType().IsMatch(lines[index]))
                 {
-                    violations.Add($"{relative}:{index + 1}  {lines[index].Trim()}");
+                    continue;
                 }
+
+                if (IsModuleEntryPoint(relative, lines[index]))
+                {
+                    continue;
+                }
+
+                violations.Add($"{relative}:{index + 1}  {lines[index].Trim()}");
             }
         }
 
@@ -60,6 +67,29 @@ public sealed partial class PublicSurfaceTests
 
     private static bool IsInsideContractsProject(string relativePath) =>
         relativePath.Contains(".Contracts/", StringComparison.Ordinal);
+
+    /// <summary>
+    /// Tek istisna: modülün DI ve endpoint kaydını yapan giriş noktası. Host onu
+    /// çağıramazsa modül kaydedilemez (docs/conventions.md § 1, § 3). İstisna DAR tutulur —
+    /// dosya adı, tip adı ve konum birebir eşleşmek zorundadır; başka her public tip ihlaldir.
+    ///
+    /// AP-10: docs/architecture.md § 5 "Contracts dışında hiçbir şey public değildir" ile
+    /// docs/conventions.md § 1'in MapXModule() çağrısı çelişiyor. Bu okuma Takım
+    /// Yöneticisi onayı bekliyor.
+    /// </summary>
+    private static bool IsModuleEntryPoint(string relativePath, string line)
+    {
+        string fileName = Path.GetFileNameWithoutExtension(relativePath);
+        if (!fileName.EndsWith("Module", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        string[] segments = relativePath.Split('/');
+        bool sitsAtModuleRoot = segments.Length == 5 && segments[3] == segments[2];
+
+        return sitsAtModuleRoot && line.Contains($"class {fileName}", StringComparison.Ordinal);
+    }
 
     // Dosya kapsamlı namespace kullandığımız için üst düzey tipler 0. sütundan başlar;
     // girintili "public" bir üyedir, tip değildir.

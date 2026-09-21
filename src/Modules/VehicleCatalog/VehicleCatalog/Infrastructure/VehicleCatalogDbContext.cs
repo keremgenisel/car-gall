@@ -1,3 +1,4 @@
+using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,8 @@ internal sealed class VehicleCatalogDbContext(DbContextOptions<VehicleCatalogDbC
     internal const string Schema = "vehicle_catalog";
 
     internal DbSet<ShowcaseListing> ShowcaseListings => Set<ShowcaseListing>();
+
+    internal DbSet<VehicleFieldSetting> VehicleFieldSettings => Set<VehicleFieldSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

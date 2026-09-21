@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.15.0" />
@@ -22,6 +23,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modules\VehicleCatalog\VehicleCatalog\VehicleCatalog.csproj" />
+  </ItemGroup>
+
+  <!-- Modülün kendi endpoint'lerini Host'a bağlanmadan ayağa kaldırmak için:
+       test projesi yalnız kendi modülüne referans verir (docs/testing.md § 1). -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/BuildingBlocks/BuildingBlocks.csproj" />
+    <Project Path="src/Host/Host.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
   <Folder Name="/src/Modules/VehicleCatalog/">

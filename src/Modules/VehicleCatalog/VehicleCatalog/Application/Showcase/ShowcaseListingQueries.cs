@@ -15,7 +15,7 @@ internal sealed class ShowcaseListingQueries(
         ShowcaseListingFilter filter,
         CancellationToken cancellationToken)
     {
-        ShowcaseListingRequest request = ShowcaseListingRequest.Normalize(filter.BodyTypes, filter.Page);
+        ShowcaseListingRequest request = ShowcaseListingRequest.Normalize(filter.BodyTypes, filter.Page, filter.PageSize);
         Locale locale = localeOptions.ResolveOrDefault(filter.Locale);
 
         IQueryable<ShowcaseListing> query = context.ShowcaseListings.AsNoTracking();
@@ -35,8 +35,8 @@ internal sealed class ShowcaseListingQueries(
             .OrderByDescending(listing => listing.ShowcaseSortWeight)
             .ThenByDescending(listing => listing.PublishedAt)
             .ThenBy(listing => listing.ListingId)
-            .Skip((page - 1) * ShowcaseListingRequest.PageSize)
-            .Take(ShowcaseListingRequest.PageSize)
+            .Skip((page - 1) * request.ResolvedPageSize)
+            .Take(request.ResolvedPageSize)
             .ToListAsync(cancellationToken);
 
         IReadOnlyDictionary<Guid, string> modelNames = await modelNameResolver.ResolveAsync(
@@ -57,7 +57,7 @@ internal sealed class ShowcaseListingQueries(
                 ResolveBranchName(row, locale)))
         ];
 
-        return new PagedResult<ShowcaseListingDto>(items, page, ShowcaseListingRequest.PageSize, totalCount);
+        return new PagedResult<ShowcaseListingDto>(items, page, request.ResolvedPageSize, totalCount);
     }
 
     private static ShowcasePriceDto ToPrice(ShowcaseListing row) => row.PriceOnRequest

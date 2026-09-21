@@ -34,7 +34,16 @@ public sealed record ShowcasePriceDto(
     public static ShowcasePriceDto OnRequestPrice() => new(true, null, null, null);
 }
 
-public sealed record ShowcaseListingFilter(IReadOnlyList<string> BodyTypes, int Page, string Locale);
+/// <summary>
+/// pageSize opsiyoneldir ve üst sınırı 24'tür; aşan istek üst sınıra kırpılır, hata dönmez
+/// (docs/conventions.md § 3). Uç hiçbir zaman göndermez, böylece C13'ün kanonik URL biçimi
+/// bozulmaz ve R6'nın "sayfa başına 24" kuralı vitrinde her zaman geçerli kalır.
+/// </summary>
+public sealed record ShowcaseListingFilter(
+    IReadOnlyList<string> BodyTypes,
+    int Page,
+    string Locale,
+    int? PageSize = null);
 
 public interface IShowcaseListingQueries
 {
