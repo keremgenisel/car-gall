@@ -1,0 +1,86 @@
+# docs/git.md § 4 — Bir PR bu kapıların HEPSİ yeşil olmadan merge edilmez.
+# "Sonra düzeltiriz" yoktur; kırmızı pipeline ile merge yoktur.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend — build, xUnit, mimari testler, migration şema kontrolü
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      # Uyarılar hata olarak derlenir (Directory.Build.props).
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Entegrasyon testleri Testcontainers ile GERÇEK PostgreSQL kullanır;
+      # SQLite in-memory ile EF testi yapılmaz (docs/testing.md § 1).
+      # Mimari testler ve migration şema kontrolü de bu koşunun içindedir.
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      - name: Test sonuçlarını yükle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: '**/TestResults/*.trx'
+          if-no-files-found: warn
+
+  frontend:
+    name: Frontend — lint, tip kontrolü, testler, build, çeviri anahtarları
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint (JS/TS)
+        run: npm run lint
+
+      # Fiziksel CSS yön özellikleri yasaktır (C6, Yasak Listesi 25).
+      - name: Lint (CSS — logical properties)
+        run: npm run lint:css
+
+      # Kullanıcıya görünen metin koda gömülemez (C4, Yasak Listesi 24).
+      - name: Sert kodlanmış metin kontrolü
+        run: npm run check:text
+
+      # tr/ar/en katalogları anahtar bazında eşit olmalı (docs/testing.md § 3).
+      - name: Eksik çeviri anahtarı kontrolü
+        run: npm run check:locales
+
+      - name: Tip kontrolü
+        run: npm run typecheck
+
+      - name: Birim testleri
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
