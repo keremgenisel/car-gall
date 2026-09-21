@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.Modules.Dealership.Application;
 using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.Dealership.Infrastructure;
@@ -29,6 +30,16 @@ public static class DealershipModule
         {
             throw new InvalidOperationException($"Varsayılan locale geçersiz: '{defaultLocale}'.");
         }
+
+        services.AddSingleton<IClock, SystemClock>();
+        services.AddScoped<IOutboxWriter, OutboxWriter<DealershipDbContext>>();
+        services.AddScoped<DealershipUnitOfWork>();
+        services.AddScoped(provider => new OutboxDispatcher<DealershipDbContext>(
+            provider.GetRequiredService<DealershipDbContext>(),
+            provider,
+            provider.GetRequiredService<IClock>(),
+            new OutboxDispatchOptions(),
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<OutboxDispatcher<DealershipDbContext>>>()));
 
         services.AddScoped<IBranchQueries>(provider => new BranchQueries(
             provider.GetRequiredService<DealershipDbContext>(),
