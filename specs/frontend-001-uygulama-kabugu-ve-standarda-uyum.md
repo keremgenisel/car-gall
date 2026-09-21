@@ -206,10 +206,21 @@ token'ları ve bileşen envanteri dosyada yazdığı gibi olur.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Spec revizyon sayısı** | **0** | Onaydan (`3445f9b`) sonra spec dosyasına hiç dokunulmadı. Kriterler uygulama boyunca değişmedi. |
+| **Düzeltme turu sayısı** | **0** | PR açılmadı; gözden geçirme turu olmadı. Bu satır merge akışı işlediğinde anlam kazanır. |
+| **Bulgu gerçek/gürültü oranı** | **— / —** | Dış gözden geçirme yapılmadı. Aşağıdaki kusurları testlerin ve kendi doğrulamamın bulduğu not edilmelidir; bu sütunun yerine geçmez. |
+| **Regresyon sayısı** | **2** | (1) Kabuk eklenince sayfada iki `<main>` oluştu — AC-1 testi yakaladı. (2) Dil değiştirici de `<nav>` olduğu için AC-30'un kanıt locator'ı belirsizleşti ve daha önce yeşil olan test kırıldı. İkisi de merge öncesi kapandı. |
+| **Kaçan hata** | **-** | Merge edilmedi. |
 
 **Bu spec'ten çıkarılan ders:**
+Mekanik dönüşüm, derlenen ama anlamı yanlış kod üretir. Token geçişinde dört kusur çıktı ve
+dördü de "değer doğru, anlam yanlış" biçimindeydi: köşe token'ı boşluk olarak, boşluk token'ı
+köşe olarak, kenarlık token'ı ölçü olarak kullanılmıştı; `font-family` ise hiç bağlanmamıştı
+çünkü biçimlendirici onu çok satıra bölmüştü ve tek satırlık arama sessizce eşleşmedi.
+Hiçbirini derleyici, lint veya test yakalayamazdı — çünkü hepsi geçerli CSS üretiyordu.
+Yakalayan şey, dönüşümün çıktısını satır satır okumak oldu.
+
+İkinci ders: yeşil test her zaman doğru sebeple yeşil değildir. Testing Library'nin otomatik
+`cleanup`'ı `vitest` globals kapalı olduğu için hiç koşmuyordu; temizlenmeyen DOM yüzünden bir
+test öncekinin ekranını görüyordu. Bunu yeni yazılan bir testin BEKLENMEDİK biçimde geçmesi
+ortaya çıkardı — beklenen sonucu alan test bile sorgulanmalı.
