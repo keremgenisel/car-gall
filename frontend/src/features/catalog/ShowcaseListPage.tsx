@@ -109,7 +109,7 @@ export function ShowcaseListPage() {
   )
 
   return (
-    <main className="page">
+    <div className="page">
       <h1 className="page__title">{t('showcase.title')}</h1>
 
       {filterGate === 'loading' ? <FilterBarSkeleton /> : null}
@@ -161,6 +161,6 @@ export function ShowcaseListPage() {
           )}
         </>
       ) : null}
-    </main>
+    </div>
   )
 }

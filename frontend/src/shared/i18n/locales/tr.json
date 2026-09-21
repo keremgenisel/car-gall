@@ -1,4 +1,9 @@
 {
+  "app.brandName": "Oto Galeri",
+  "app.localeSwitcher.label": "Dil seçimi",
+  "app.locale.tr": "Türkçe",
+  "app.locale.ar": "العربية",
+  "app.locale.en": "English",
   "showcase.title": "Vitrin",
   "showcase.resultCount": "{count, plural, one {# ilan bulundu} other {# ilan bulundu}}",
   "showcase.loading": "İlanlar yükleniyor",

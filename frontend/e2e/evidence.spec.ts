@@ -141,7 +141,8 @@ test('AC-30: Arapça RTL — ızgara ve sayfalama', async ({ page }) => {
   // almıyordu (QA D11). İki kanıt üretilir.
   await page.screenshot({ path: `${KANIT}/0001-ac30-ar.png`, fullPage: false })
 
-  const sayfalama = page.getByRole('navigation')
+  // Kabuk geldikten sonra sayfada iki <nav> var (dil değiştirici + sayfalama).
+  const sayfalama = page.locator('.pagination')
   await sayfalama.scrollIntoViewIfNeeded()
   await expect(sayfalama).toBeVisible()
   await sayfalama.screenshot({ path: `${KANIT}/0001-ac30-ar-b.png` })
