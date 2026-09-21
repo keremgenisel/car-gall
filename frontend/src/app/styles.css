@@ -1,19 +1,10 @@
+@import url('../shared/design/tokens.css');
+
 /*
  * CSS'te fiziksel yön özellikleri YASAKTIR; logical properties zorunludur (C6,
  * Yasak Listesi 25, docs/frontend.md § 6). RTL'de ızgara akışı, sayfalama okları ve
  * rozet hizası en sık kırılan yerlerdir ve kaynağı hep fiziksel yöndür.
  */
-
-:root {
-  --surface: #fff;
-  --surface-muted: #f4f5f7;
-  --ink: #16191d;
-  --ink-muted: #5b6270;
-  --accent: #1f5fd0;
-  --border: #d9dde4;
-  --radius: 10px;
-  --gap: 16px;
-}
 
 * {
   box-sizing: border-box;
@@ -21,109 +12,105 @@
 
 body {
   margin: 0;
-  background: var(--surface-muted);
-  color: var(--ink);
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+  font-family: var(--font-family-base);
 }
 
 .page {
-  max-inline-size: 1200px;
+  max-inline-size: var(--layout-max-inline-size);
   margin-inline: auto;
-  padding-inline: var(--gap);
-  padding-block: 24px;
+  padding-inline: var(--space-6);
+  padding-block: var(--space-7);
 }
 
 .page__title {
-  font-size: 1.5rem;
-  margin-block: 0 8px;
+  font-size: var(--font-size-lg);
+  margin-block: 0 var(--space-4);
 }
 
 .result-count {
-  color: var(--ink-muted);
-  margin-block: 0 var(--gap);
+  color: var(--color-ink-muted);
+  margin-block: 0 var(--space-6);
 }
 
 .filter-bar {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  padding: var(--gap);
-  margin-block-end: var(--gap);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-6);
+  margin-block-end: var(--space-6);
 }
 
 .filter-bar--skeleton {
   /* Çubuğun gerçek yüksekliği: legend + seçenek satırı + özet satırı. */
-  min-block-size: 132px;
+  min-block-size: var(--filter-bar-min-block-size);
 }
 
 .filter-bar__legend {
-  font-weight: 600;
-  padding-inline: 4px;
+  font-weight: var(--font-weight-semibold);
+  padding-inline: var(--space-2);
 }
 
 .filter-bar__options {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-block: 12px;
+  gap: var(--space-4);
+  margin-block: var(--space-5);
 }
 
 .filter-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding-block: 6px;
-  padding-inline: 12px;
-  background: var(--surface);
+  gap: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  background: var(--color-surface);
   cursor: pointer;
 }
 
 .filter-chip--selected {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .filter-bar__summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-5);
 }
 
 .link-button {
   background: none;
   border: none;
-  color: var(--accent);
+  color: var(--color-accent);
   text-decoration: underline;
   cursor: pointer;
-  padding: 4px;
+  padding: var(--space-2);
   font: inherit;
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) solid var(--color-accent);
+  outline-offset: var(--space-1);
 }
 
 .listing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--gap);
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-inline-size), 1fr));
+  gap: var(--space-6);
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
 .listing-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -131,73 +118,73 @@ body {
 
 .listing-card__media {
   position: relative;
-  background: var(--surface-muted);
+  background: var(--color-surface-muted);
 }
 
 .listing-card__image {
   inline-size: 100%;
   block-size: auto;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: var(--media-aspect-ratio);
   object-fit: cover;
   display: block;
 }
 
 .listing-card__badge {
   position: absolute;
-  inset-block-start: 8px;
-  inset-inline-start: 8px;
-  background: var(--ink);
-  color: var(--surface);
-  border-radius: 999px;
-  padding-block: 4px;
-  padding-inline: 10px;
-  font-size: 0.75rem;
+  inset-block-start: var(--space-4);
+  inset-inline-start: var(--space-4);
+  background: var(--color-ink);
+  color: var(--color-surface);
+  border-radius: var(--radius-pill);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-5);
+  font-size: var(--font-size-xs);
 }
 
 .listing-card__body {
-  padding: 12px;
+  padding: var(--space-5);
   display: grid;
-  gap: 4px;
+  gap: var(--space-2);
 }
 
 .listing-card__model {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin: 0;
 }
 
 .listing-card__meta,
 .listing-card__branch {
-  color: var(--ink-muted);
-  font-size: 0.875rem;
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
   margin: 0;
 }
 
 .listing-card__price {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin: 0;
 }
 
 .state-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 32px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-8);
   text-align: center;
   display: grid;
-  gap: 12px;
+  gap: var(--space-5);
   justify-items: center;
 }
 
 /* İskelet, .listing-card kutusunu paylaşır; yalnız içerik yerine yer tutucu boyar.
    Ayrı bir kutu modeli tutmak, ikisinin zamanla ayrışmasına ve düzenin kaymasına yol açar. */
 .skeleton-card__media {
-  aspect-ratio: 4 / 3;
-  background: var(--surface-muted);
+  aspect-ratio: var(--media-aspect-ratio);
+  background: var(--color-surface-muted);
 }
 
 .skeleton-card__line {
-  background: var(--surface-muted);
-  border-radius: 4px;
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-sm);
   color: transparent;
   min-block-size: 1em;
 }
@@ -210,16 +197,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-block-start: 24px;
+  gap: var(--space-5);
+  margin-block-start: var(--space-7);
 }
 
 .pagination__button {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  padding-block: 8px;
-  padding-inline: 14px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
   cursor: pointer;
   font: inherit;
 }
@@ -237,8 +224,8 @@ body {
 /* Ekran okuyucuya görünür, göze görünmez. */
 .visually-hidden {
   position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
+  inline-size: var(--size-hairline);
+  block-size: var(--size-hairline);
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;

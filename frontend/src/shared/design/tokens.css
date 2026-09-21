@@ -1,0 +1,58 @@
+/*
+ * Tasarım token'ları — docs/frontend.md § 4.1.
+ *
+ * Değerler YALNIZCA burada yaşar. Bileşende gömülü hex veya ham piksel yasaktır ve
+ * lint kırar: tema, koyu mod ve marka değişimi tek dosyadan yapılabilsin diye.
+ * Bileşene gömülen her sabit, o değişimi bir sonraki kişinin borcuna yazar.
+ */
+
+:root {
+  /* --- Renk --- */
+  --color-surface: #fff;
+  --color-surface-muted: #f4f5f7;
+  --color-ink: #16191d;
+  --color-ink-muted: #5b6270;
+  --color-ink-inverse: #fff;
+  --color-accent: #1f5fd0;
+  --color-border: #d9dde4;
+
+  /* --- Aralık --- (4px tabanlı ölçek) */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 12px;
+  --space-6: 16px;
+  --space-7: 24px;
+  --space-8: 32px;
+
+  /* --- Tipografi --- */
+  --font-family-base: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.5rem;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --line-height-base: 1.5;
+
+  /* --- Köşe --- */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+
+  /* --- Kenarlık ve kıl payı ölçüler --- */
+  --size-hairline: 1px;
+  --border-width: var(--size-hairline);
+  --focus-ring-width: 3px;
+
+  /* --- Düzen --- */
+  --layout-max-inline-size: 1200px;
+  --card-min-inline-size: 240px;
+  --media-aspect-ratio: 4 / 3;
+
+  /* Daraltma çubuğunun ölçülmüş yüksekliği: legend + seçenek satırı + özet satırı.
+     İskelet bu yüksekliği baştan tutar, yoksa çubuk belirince düzen kayar (CLS). */
+  --filter-bar-min-block-size: 132px;
+}

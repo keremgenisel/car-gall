@@ -5,6 +5,13 @@
  */
 module.exports = {
   extends: ['stylelint-config-standard'],
+  overrides: [
+    {
+      // Token'ların tanımlandığı dosya: ham değer buraya AİTTİR.
+      files: ['src/shared/design/tokens.css'],
+      rules: { 'declaration-property-value-disallowed-list': null },
+    },
+  ],
   rules: {
     'property-disallowed-list': [
       [
@@ -25,9 +32,13 @@ module.exports = {
       ],
       { message: 'Fiziksel yön özelliği yasak; logical property kullan (docs/frontend.md § 6).' },
     ],
+    // docs/frontend.md § 4.1 — gömülü sabit değer yasak; değer token'dan gelir.
+    // tokens.css muaf: token'ların TANIMLANDIĞI tek yer orası.
     'declaration-property-value-disallowed-list': [
-      { 'text-align': ['left', 'right'] },
-      { message: 'text-align: start | end kullan (docs/frontend.md § 6).' },
+      {
+        '/^(?!--).*$/': ['/#[0-9a-fA-F]{3,8}\\b/', '/(?<![\\w-])[0-9]+px(?![\\w-])/'],
+      },
+      { message: 'Gömülü hex veya ham piksel yasak; token kullan (docs/frontend.md § 4.1).' },
     ],
     'custom-property-pattern': null,
     'selector-class-pattern': null,
