@@ -120,6 +120,20 @@ test.describe('İlan detayı', () => {
     await expect(page.getByTestId('listing-detail')).toBeVisible()
   })
 
+  test('AC-23: Arapça gövdede Latin model adı karışık yönlü metin olarak işaretlenir', async ({
+    page,
+  }) => {
+    const href = await ilkIlaninAdresi(page, 'ar')
+    await page.goto(href)
+
+    // dir="auto" olmadan Latin model adı RTL akışta ters sırayla görünür; noktalama
+    // ve rakamlar yanlış tarafa kayar (docs/frontend.md § 6).
+    await expect(page.getByRole('heading', { level: 1 })).toHaveAttribute('dir', 'auto')
+
+    const deger = page.getByTestId('detail-attributes').locator('dd').first()
+    await expect(deger).toHaveAttribute('dir', 'auto')
+  })
+
   test('AC-21: Detay etiketleri üç locale de kendi dilinde görünür, ham anahtar görünmez', async ({
     page,
   }) => {
