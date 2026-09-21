@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | **Tamamlandı** |
 | **Sahip** | Developer oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (yeni — bugün yalnızca `Dealership.Contracts` var) · `BuildingBlocks` (olay dağıtımı) |
@@ -419,8 +419,8 @@ kalsın. *Bilerek ödenen bedel:* bugün çözülemeyen, yalnızca saklanan bir 
 - [x] Arayüz kriteri **yok**; görsel kanıt bu spec için uygulanabilir değildir (X1, X3).
 - [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] Takım Yöneticisi onayladı ve squash-merge edildi.
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
