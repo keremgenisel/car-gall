@@ -45,7 +45,11 @@ internal readonly record struct ListingSlug
         }
 
         string yıl = modelYear.ToString(CultureInfo.InvariantCulture);
-        string sonek = listingId.Value.ToString("N", CultureInfo.InvariantCulture)[..SuffixLength];
+        // Sonek kimliğin SON altı karakterinden gelir, ilkinden değil: Guid v7'nin baş
+        // baytları zaman damgasıdır ve ilk altı hex karakter ~65 saniyede bir değişir —
+        // aynı dakikada yayınlanan iki ilan aynı soneki alır ve tekil adres çakışırdı.
+        string tam = listingId.Value.ToString("N", CultureInfo.InvariantCulture);
+        string sonek = tam[^SuffixLength..];
         return Result.Success(new ListingSlug($"{ad}-{yıl}-{sonek}"));
     }
 

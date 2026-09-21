@@ -85,6 +85,11 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("branch_names");
 
+                    b.Property<string>("ColorNames")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("color_names");
+
                     b.Property<Guid?>("CoverAssetId")
                         .HasColumnType("uuid")
                         .HasColumnName("cover_asset_id");
@@ -92,6 +97,18 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                     b.Property<string>("CoverMediaUrl")
                         .HasColumnType("text")
                         .HasColumnName("cover_media_url");
+
+                    b.Property<string>("DrivetrainTypeSlug")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("drivetrain_type_slug");
+
+                    b.Property<string>("FuelTypeSlug")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("fuel_type_slug");
 
                     b.Property<bool>("IsReserved")
                         .HasColumnType("boolean")
@@ -131,6 +148,24 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("showcase_sort_weight");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("TransmissionTypeSlug")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("transmission_type_slug");
+
+                    b.Property<string>("TrimLevelSlug")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("trim_level_slug");
+
                     b.Property<Guid>("VehicleId")
                         .HasColumnType("uuid")
                         .HasColumnName("vehicle_id");
@@ -144,11 +179,44 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                     b.HasIndex("BodyTypeSlug")
                         .HasDatabaseName("ix_showcase_listings_body_type");
 
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ux_showcase_listings_slug");
+
                     b.HasIndex("ShowcaseSortWeight", "PublishedAt", "ListingId")
                         .IsDescending(true, true, false)
                         .HasDatabaseName("ix_showcase_listings_ordering");
 
                     b.ToTable("showcase_listings", "vehicle_catalog");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel.ShowcaseListing", b =>
+                {
+                    b.OwnsMany("CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel.ShowcaseListingOptionalValue", "OptionalValues", b1 =>
+                        {
+                            b1.Property<Guid>("ListingId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("listing_id");
+
+                            b1.Property<string>("FieldKey")
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)")
+                                .HasColumnName("field_key");
+
+                            b1.Property<string>("Values")
+                                .IsRequired()
+                                .HasColumnType("jsonb")
+                                .HasColumnName("values");
+
+                            b1.HasKey("ListingId", "FieldKey");
+
+                            b1.ToTable("showcase_listing_optional_values", "vehicle_catalog");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ListingId");
+                        });
+
+                    b.Navigation("OptionalValues");
                 });
 #pragma warning restore 612, 618
         }

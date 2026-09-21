@@ -42,6 +42,15 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             ["en"] = "Main Branch",
         };
 
+        // Yalnız o an AÇIK ve PUBLIC olan opsiyonel alanlar yansıtılır (C4).
+        // Tramer seed'de Gizli olduğu için buraya GİRMEZ — AC-13 bunu sınar.
+        HashSet<string> publicOptionalFieldKeys =
+        [
+            .. (await context.VehicleFieldSettings.AsNoTracking().ToListAsync(cancellationToken))
+                .Where(setting => setting is { IsCore: false, IsOpen: true, IsPublic: true })
+                .Select(setting => setting.FieldKey)
+        ];
+
         List<ShowcaseListing> rows = [];
 
         for (int index = 0; index < listingCount; index++)
@@ -98,7 +107,15 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 listing.Reserve();
             }
 
-            ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, branchNames, CoverUrl(index));
+            ListingSlug slug = ListingSlug.Create("Toyota Corolla", vehicle.ModelYear, listing.Id).Value;
+
+            ShowcaseListing? row = ShowcaseListingProjector.Project(
+                vehicle,
+                listing,
+                slug,
+                branchNames,
+                CoverUrl(index),
+                publicOptionalFieldKeys);
             if (row is not null)
             {
                 rows.Add(row);

@@ -13,7 +13,21 @@ public sealed class ListingSlugTests
         // Slug kanonik Latin addan üretilir; locale hiç girdi değildir.
         ListingSlug slug = ListingSlug.Create("Toyota Corolla", 2019, Kimlik).Value;
 
-        Assert.Equal("toyota-corolla-2019-0192c0", slug.Value);
+        Assert.Equal("toyota-corolla-2019-000001", slug.Value);
+    }
+
+    [Fact]
+    public void CakismazSonek_AyniAndaUretilenKimliklerde()
+    {
+        // Guid v7'nin baş baytları zaman damgasıdır: aynı milisaniyede üretilen iki kimlik
+        // ilk altı hex karakteri paylaşır. Sonek son altı karakterden geldiği için çakışmaz.
+        ListingId ilk = ListingId.New();
+        ListingId ikinci = ListingId.New();
+
+        string a = ListingSlug.Create("Toyota Corolla", 2019, ilk).Value.Value;
+        string b = ListingSlug.Create("Toyota Corolla", 2019, ikinci).Value.Value;
+
+        Assert.NotEqual(a, b);
     }
 
     [Fact]
@@ -29,9 +43,9 @@ public sealed class ListingSlugTests
     }
 
     [Theory]
-    [InlineData("Şahin Doğan", 2001, "sahin-dogan-2001-0192c0")]
-    [InlineData("Işıl Ümit", 1999, "isil-umit-1999-0192c0")]
-    [InlineData("BMW  3  Series", 2020, "bmw-3-series-2020-0192c0")]
+    [InlineData("Şahin Doğan", 2001, "sahin-dogan-2001-000001")]
+    [InlineData("Işıl Ümit", 1999, "isil-umit-1999-000001")]
+    [InlineData("BMW  3  Series", 2020, "bmw-3-series-2020-000001")]
     public void AsciiyeIndirger_TurkceKarakterleri(string modelAdi, int yil, string beklenen)
     {
         // lower() ile değil açık eşlemeyle: Türkçe collation altında I/İ sessizce bozulur.

@@ -16,11 +16,18 @@ internal static class ShowcaseListingProjector
     /// ilanı ne olursa olsun vitrinde yer almaz — "sessizce vitrinde kalmazlar".
     /// Görünmeyen ilan için <c>null</c> döner; çağıran satırı siler.
     /// </summary>
+    /// <param name="publicOptionalFieldKeys">
+    /// O an AÇIK ve PUBLIC olan opsiyonel alanların anahtarları. Listede olmayan alanın
+    /// değeri okuma modeline HİÇ yazılmaz — gizleme yansıtma anında uygulanır, sunum
+    /// katmanında değil (C4, Yasak Listesi 41). Değer `Vehicle`'da durmaya devam eder (F1).
+    /// </param>
     internal static ShowcaseListing? Project(
         Vehicle vehicle,
         Listing listing,
+        ListingSlug slug,
         IReadOnlyDictionary<string, string> branchNames,
-        string? coverMediaUrl)
+        string? coverMediaUrl,
+        IReadOnlySet<string> publicOptionalFieldKeys)
     {
         if (vehicle.AwaitingBranchAssignment)
         {
@@ -44,7 +51,13 @@ internal static class ShowcaseListingProjector
             IsReserved = listing.Status is ListingStatus.Reserved,
             ShowcaseSortWeight = listing.ShowcaseSortWeight,
             PublishedAt = listing.PublishedAt.Value,
+            Slug = slug.Value,
             BodyTypeSlug = vehicle.BodyType.Value,
+            FuelTypeSlug = vehicle.Specification.FuelTypeSlug,
+            TransmissionTypeSlug = vehicle.Specification.TransmissionTypeSlug,
+            DrivetrainTypeSlug = vehicle.Specification.DrivetrainTypeSlug,
+            TrimLevelSlug = vehicle.Specification.TrimLevelSlug,
+            ColorNames = vehicle.Color.ToDictionary(),
             VehicleModelId = vehicle.VehicleModelId,
             ModelYear = vehicle.ModelYear,
             MileageKilometers = vehicle.MileageKilometers,
@@ -56,6 +69,17 @@ internal static class ShowcaseListingProjector
             BranchNames = new Dictionary<string, string>(branchNames),
             CoverAssetId = vehicle.CoverAssetId,
             CoverMediaUrl = coverMediaUrl,
+            OptionalValues =
+            [
+                .. vehicle.OptionalFieldValues
+                    .Where(value => publicOptionalFieldKeys.Contains(value.FieldKey))
+                    .Select(value => new ShowcaseListingOptionalValue
+                    {
+                        ListingId = listing.Id.Value,
+                        FieldKey = value.FieldKey,
+                        Values = value.Value.ToDictionary(),
+                    })
+            ],
         };
     }
 }

@@ -17,7 +17,16 @@ internal sealed class ShowcaseListingConfiguration : IEntityTypeConfiguration<Sh
         builder.Property(listing => listing.IsReserved).HasColumnName("is_reserved");
         builder.Property(listing => listing.ShowcaseSortWeight).HasColumnName("showcase_sort_weight");
         builder.Property(listing => listing.PublishedAt).HasColumnName("published_at");
+        builder.Property(listing => listing.Slug).HasColumnName("slug").HasMaxLength(160);
         builder.Property(listing => listing.BodyTypeSlug).HasColumnName("body_type_slug").HasMaxLength(40);
+        builder.Property(listing => listing.FuelTypeSlug).HasColumnName("fuel_type_slug").HasMaxLength(40);
+        builder.Property(listing => listing.TransmissionTypeSlug).HasColumnName("transmission_type_slug").HasMaxLength(40);
+        builder.Property(listing => listing.DrivetrainTypeSlug).HasColumnName("drivetrain_type_slug").HasMaxLength(40);
+        builder.Property(listing => listing.ColorNames)
+            .HasColumnName("color_names")
+            .HasColumnType("jsonb")
+            .HasConversion(LocalizedNames.Converter, LocalizedNames.Comparer);
+        builder.Property(listing => listing.TrimLevelSlug).HasColumnName("trim_level_slug").HasMaxLength(40);
         builder.Property(listing => listing.VehicleModelId).HasColumnName("vehicle_model_id");
         builder.Property(listing => listing.ModelYear).HasColumnName("model_year");
         builder.Property(listing => listing.MileageKilometers).HasColumnName("mileage_kilometers");
@@ -45,5 +54,24 @@ internal sealed class ShowcaseListingConfiguration : IEntityTypeConfiguration<Sh
 
         builder.HasIndex(listing => listing.BodyTypeSlug)
             .HasDatabaseName("ix_showcase_listings_body_type");
+
+        // Detay tek sorguyla slug üzerinden okunur (E7); tekil indeks hem adresin
+        // benzersizliğini hem de aramanın sabit maliyetini garanti eder.
+        builder.HasIndex(listing => listing.Slug)
+            .HasDatabaseName("ux_showcase_listings_slug")
+            .IsUnique();
+
+        builder.OwnsMany(listing => listing.OptionalValues, value =>
+        {
+            value.ToTable("showcase_listing_optional_values");
+            value.WithOwner().HasForeignKey(item => item.ListingId);
+            value.HasKey(item => new { item.ListingId, item.FieldKey });
+            value.Property(item => item.ListingId).HasColumnName("listing_id");
+            value.Property(item => item.FieldKey).HasColumnName("field_key").HasMaxLength(60);
+            value.Property(item => item.Values)
+                .HasColumnName("values")
+                .HasColumnType("jsonb")
+                .HasConversion(LocalizedNames.Converter, LocalizedNames.Comparer);
+        });
     }
 }
