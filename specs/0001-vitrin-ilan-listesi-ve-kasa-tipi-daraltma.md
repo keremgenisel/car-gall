@@ -356,10 +356,19 @@ kurar. Bu spec yazılırken kod okunmamıştır; okunacak kod yoktur.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Spec revizyon sayısı** | **1** | Onay (`ef7051f`) sonrası tek değişiklik: X10'un eklenmesi (`0bc3191`). Yazma yolu hiçbir X maddesiyle dışlanmıyordu; "yapılmadı" ile "kapsam dışı" ayırt edilemiyordu. Kriterlerin kendisi hiç değişmedi. |
+| **Düzeltme turu sayısı** | **1** | PR henüz açılmadı; tur PR öncesi QA gözden geçirmesidir. 12 bulgu, hepsi tek turda kapandı. |
+| **Bulgu gerçek/gürültü oranı** | **12 / 0** | Gürültü bulgu yok. Yalnız D2'nin önerdiği NEDEN yanlıştı (katlama üstü lazy görsel); bulgunun kendisi — LCP eşiği kırmızı — gerçekti ve ölçümle kapandı. |
+| **Regresyon sayısı** | **1** | CLS düzeltmesi iskelete `.listing-card` sınıfını verince, daha önce yeşil olan e2e seçicileri iskeletle eşleşmeye başladı. Testler yakaladı, merge öncesi kapandı (`data-testid="listing-card"`). |
+| **Kaçan hata** | **-** | Henüz merge edilmedi. |
 
 **Bu spec'ten çıkarılan ders:**
+Gözlemlenebilir sonucu yazan kriter, mekanizmayı yazan kriterden daha çok hata yakalıyor.
+AC-17 "hiç tanınan değer yoksa daraltmasız liste gösterilir" dediği için, tip düzeyinde
+doğru görünen bir kod (`BodyTypeSlug` biçim doğrulaması) kusurlu yakalandı: `banana`
+geçerli bir slug biçimidir ama kanonik küme üyesi değildir. Aynı biçimde C3'ün ölçüm
+protokolünü spec'e yazmış olmak, performans tartışmasını "sence hızlı mı" olmaktan
+çıkarıp kapatılabilir bir kusura çevirdi — hem gerçek CLS kusurunu buldurdu hem de
+LCP için ileri sürülen iki ayrı nedeni (görsel önceliği, ilk turda) çürüttü.
+Bir sonraki spec'te kriterler yine davranışla yazılmalı; "şöyle uygulansın" diye yazılan
+her kriter, uygulandığı an doğrulanmış sayılır ve kusuru gizler.
