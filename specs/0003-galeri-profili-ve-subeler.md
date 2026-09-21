@@ -403,22 +403,22 @@ kalsın. *Bilerek ödenen bedel:* bugün çözülemeyen, yalnızca saklanan bir 
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok; `Dealership` yalnızca kendi şemasına
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — modül sınırı ihlali yok; `Dealership` yalnızca kendi şemasına
       dokunuyor ve başka modüle senkron çağrı yapmıyor.
-- [ ] Outbox yolu uçtan uca test edildi: yayından tüketiciye, tekrar ve başarısızlık dâhil
+- [x] Outbox yolu uçtan uca test edildi: yayından tüketiciye, tekrar ve başarısızlık dâhil
       (AC-25, AC-26, AC-28, AC-29).
-- [ ] AC-32'nin uçtan uca testi `tests/Host.Tests` altında yaşıyor ve modül test projelerine
+- [x] AC-32'nin uçtan uca testi `tests/Host.Tests` altında yaşıyor ve modül test projelerine
       sızmıyor (C17).
-- [ ] Yeni migration yalnızca `Dealership` şemasına dokunuyor.
-- [ ] Arayüz metni **yok**; çeviri anahtarı kontrolü bu spec için **uygulanabilir değildir**
+- [x] Yeni migration yalnızca `Dealership` şemasına dokunuyor.
+- [x] Arayüz metni **yok**; çeviri anahtarı kontrolü bu spec için **uygulanabilir değildir**
       (X1, X3). Şube adı/adresi veridir, arayüz metni değildir.
-- [ ] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
-- [ ] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] Arayüz kriteri **yok**; görsel kanıt bu spec için uygulanabilir değildir (X1, X3).
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
+- [x] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [x] Arayüz kriteri **yok**; görsel kanıt bu spec için uygulanabilir değildir (X1, X3).
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
