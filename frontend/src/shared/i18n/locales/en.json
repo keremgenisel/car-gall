@@ -1,4 +1,9 @@
 {
+  "app.brandName": "Oto Galeri",
+  "app.localeSwitcher.label": "Language selection",
+  "app.locale.tr": "Türkçe",
+  "app.locale.ar": "العربية",
+  "app.locale.en": "English",
   "showcase.title": "Showcase",
   "showcase.resultCount": "{count, plural, one {# listing found} other {# listings found}}",
   "showcase.loading": "Loading listings",

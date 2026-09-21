@@ -1,8 +1,8 @@
 import IntlMessageFormat from 'intl-messageformat'
-import ar from '../locales/ar.json'
-import en from '../locales/en.json'
-import tr from '../locales/tr.json'
-import { intlLocale, type AppLocale } from './locale'
+import ar from './locales/ar.json'
+import en from './locales/en.json'
+import tr from './locales/tr.json'
+import { intlLocale, type AppLocale } from '../lib/locale'
 
 type Catalog = Record<string, string>
 

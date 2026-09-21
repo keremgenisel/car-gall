@@ -1,19 +1,20 @@
 import { useLocale } from '../../../app/localeContext'
+import { Button, EmptyState } from '../../../shared/ui'
 
-/**
- * R12(a): daraltma sonucu boş. "Sonuç yok" yeterli değildir; ziyaretçiye ne
- * yapabileceği söylenir (docs/frontend.md § 3).
- */
+/** 0001 R12(a): daraltma sonucu boş. Ziyaretçiye ne yapabileceği söylenir. */
 export function EmptyByFilter({ onClear }: { readonly onClear: () => void }) {
   const { t } = useLocale()
 
   return (
-    <div className="state-panel" data-testid="empty-by-filter">
-      <h2>{t('showcase.empty.filtered.title')}</h2>
-      <p>{t('showcase.empty.filtered.body')}</p>
-      <button type="button" className="link-button" onClick={onClear}>
-        {t('showcase.filter.clear')}
-      </button>
-    </div>
+    <EmptyState
+      testId="empty-by-filter"
+      title={t('showcase.empty.filtered.title')}
+      description={t('showcase.empty.filtered.body')}
+      action={
+        <Button variant="text" onClick={onClear}>
+          {t('showcase.filter.clear')}
+        </Button>
+      }
+    />
   )
 }

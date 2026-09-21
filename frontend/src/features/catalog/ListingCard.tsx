@@ -1,13 +1,13 @@
 import { useLocale } from '../../app/localeContext'
-import type { ShowcaseListing } from '../../api/types'
-import { formatMoney } from '../../lib/format'
+import type { ShowcaseListing } from '../../shared/api/types'
+import { formatMoney } from '../../shared/i18n/format'
+import { Badge, Card } from '../../shared/ui'
 
 interface Props {
   readonly listing: ShowcaseListing
   /**
    * İlk ekranda görünen kartlar. Kapak görseli LCP adayıdır; katlama üstündeki görseli
-   * lazy yüklemek, tarayıcının onu keşfetmesini düzen hesaplanana kadar geciktirir ve
-   * LCP'yi doğrudan büyütür (AC-35). docs/frontend.md § 8 zaten "kapak görseli hariç" diyor.
+   * lazy yüklemek tarayıcının onu keşfetmesini geciktirir (docs/frontend.md § 7).
    */
   readonly aboveTheFold: boolean
 }
@@ -17,13 +17,12 @@ export function ListingCard({ listing, aboveTheFold }: Props) {
   const price = formatMoney(listing.price, locale)
 
   return (
-    <li className="listing-card" data-testid="listing-card">
+    <Card as="li" testId="listing-card">
       <div className="listing-card__media">
         {listing.coverImageUrl === null ? null : (
           <img
             className="listing-card__image"
             src={listing.coverImageUrl}
-            /* alt metni locale'de ICU ile üretilir; ham anahtar görünmez (AC-32). */
             alt={t('showcase.card.imageAlt', { model: listing.modelName, year: listing.modelYear })}
             width={480}
             height={360}
@@ -31,9 +30,7 @@ export function ListingCard({ listing, aboveTheFold }: Props) {
             fetchPriority={aboveTheFold ? 'high' : 'auto'}
           />
         )}
-        {listing.isReserved ? (
-          <span className="listing-card__badge">{t('showcase.card.reserved')}</span>
-        ) : null}
+        {listing.isReserved ? <Badge floating>{t('showcase.card.reserved')}</Badge> : null}
       </div>
 
       <div className="listing-card__body">
@@ -51,6 +48,6 @@ export function ListingCard({ listing, aboveTheFold }: Props) {
           {listing.branchName}
         </p>
       </div>
-    </li>
+    </Card>
   )
 }

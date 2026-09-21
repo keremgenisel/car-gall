@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocale } from '../../app/localeContext'
-import { fetchBodyTypes, fetchFieldSettings, fetchShowcaseListings } from '../../api/catalog'
-import type { BodyType, PagedResult, ShowcaseListing } from '../../api/types'
+import { fetchBodyTypes, fetchFieldSettings, fetchShowcaseListings } from '../../shared/api/catalog'
+import type { BodyType, PagedResult, ShowcaseListing } from '../../shared/api/types'
 import { ListingCard } from './ListingCard'
 import { BodyTypeFilterBar } from './BodyTypeFilterBar'
 import { Pagination } from './Pagination'
@@ -109,7 +109,7 @@ export function ShowcaseListPage() {
   )
 
   return (
-    <main className="page">
+    <div className="page">
       <h1 className="page__title">{t('showcase.title')}</h1>
 
       {filterGate === 'loading' ? <FilterBarSkeleton /> : null}
@@ -161,6 +161,6 @@ export function ShowcaseListPage() {
           )}
         </>
       ) : null}
-    </main>
+    </div>
   )
 }

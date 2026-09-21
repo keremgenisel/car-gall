@@ -16,7 +16,7 @@ export default defineConfig({
   },
   projects: [
     // Kanıt görüntüleri tek profilde üretilir; iki profil aynı dosyaları üzerine yazardı.
-    { name: 'mobil', use: { ...devices['Pixel 7'] }, testIgnore: /evidence\.spec\.ts/ },
+    { name: 'mobil', use: { ...devices['Pixel 7'] }, testIgnore: /evidence.*\.spec\.ts/ },
     { name: 'masaustu', use: { ...devices['Desktop Chrome'] } },
   ],
 })

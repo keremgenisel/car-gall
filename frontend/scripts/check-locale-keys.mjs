@@ -5,7 +5,7 @@ import { join } from 'node:path'
  * CI kapısı: tr/ar/en katalogları anahtar bazında EŞİT olmalı (docs/testing.md § 3).
  * Eksik anahtar ziyaretçiye boş metin veya ham anahtar gösterir; ikisi de kabul edilemez.
  */
-const localesDir = new URL('../src/locales/', import.meta.url).pathname
+const localesDir = new URL('../src/shared/i18n/locales/', import.meta.url).pathname
 const files = readdirSync(localesDir).filter((name) => name.endsWith('.json'))
 
 const catalogs = new Map(

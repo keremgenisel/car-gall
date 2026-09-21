@@ -1,4 +1,9 @@
 {
+  "app.brandName": "أوتو غاليري",
+  "app.localeSwitcher.label": "اختيار اللغة",
+  "app.locale.tr": "Türkçe",
+  "app.locale.ar": "العربية",
+  "app.locale.en": "English",
   "showcase.title": "المعرض",
   "showcase.resultCount": "{count, plural, zero {لا توجد إعلانات} one {إعلان واحد} two {إعلانان} few {# إعلانات} many {# إعلاناً} other {# إعلان}}",
   "showcase.loading": "جارٍ تحميل الإعلانات",

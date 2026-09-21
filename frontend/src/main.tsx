@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'
-import { localeFromPath } from './lib/locale'
+import { localeFromPath } from './shared/lib/locale'
 import './app/styles.css'
 
 const locale = localeFromPath(window.location.pathname)

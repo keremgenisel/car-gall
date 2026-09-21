@@ -1,4 +1,4 @@
-import { intlLocale, type AppLocale } from './locale'
+import { intlLocale, type AppLocale } from '../lib/locale'
 
 export interface MoneyView {
   readonly onRequest: boolean
