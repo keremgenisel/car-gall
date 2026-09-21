@@ -16,6 +16,16 @@ namespace CarGallery.Modules.VehicleCatalog.Application.Development;
 internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clock)
 {
     private static readonly string[] BodyTypes = ["sedan", "suv", "hatchback", "station-wagon", "coupe", "pickup"];
+    private static readonly string[] FuelTypes = ["petrol", "diesel", "hybrid", "electric"];
+    private static readonly string[] Transmissions = ["manual", "automatic"];
+    private static readonly string[] Drivetrains = ["front-wheel-drive", "rear-wheel-drive", "all-wheel-drive"];
+    private static readonly string[] TrimLevels = ["base", "comfort", "premium"];
+    private static readonly (string Tr, string Ar, string En)[] Colors =
+    [
+        ("Beyaz", "أبيض", "White"),
+        ("Siyah", "أسود", "Black"),
+        ("Gri", "رمادي", "Grey"),
+    ];
 
     internal async Task SeedAsync(int listingCount, Guid vehicleModelId, CancellationToken cancellationToken)
     {
@@ -43,15 +53,42 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 ? ListingPrice.OnRequest()
                 : ListingPrice.Of(Money.Create(750_000m + (index * 12_500m), "TRY", 2).Value);
 
+            VehicleSpecification specification = VehicleSpecification.Create(
+                BodyTypeSlug.Create(bodyType).Value,
+                FuelTypes[index % FuelTypes.Length],
+                Transmissions[index % Transmissions.Length],
+                Drivetrains[index % Drivetrains.Length],
+                TrimLevels[index % TrimLevels.Length]).Value;
+
+            (string tr, string ar, string en) = Colors[index % Colors.Length];
+            LocalizedText color = LocalizedText.From(
+            [
+                new KeyValuePair<Locale, string>(Locale.Create("tr").Value, tr),
+                new KeyValuePair<Locale, string>(Locale.Create("ar").Value, ar),
+                new KeyValuePair<Locale, string>(Locale.Create("en").Value, en),
+            ]);
+
             Vehicle vehicle = Vehicle.Create(
                 branchId,
                 vehicleModelId,
-                BodyTypeSlug.Create(bodyType).Value,
+                specification,
+                color,
                 2016 + (index % 9),
                 45_000 + (index * 1_137),
                 price).Value;
 
             vehicle.AttachMediaAsset(Guid.CreateVersion7());
+
+            // E10 — opsiyonel alan DEĞERLERİ yazma yolu gelene kadar buradan gelir.
+            // Tramer alanı seed'de Gizli'dir; AC-13 tam olarak onu sınar.
+            vehicle.SetOptionalFieldValue(
+                VehicleFieldKeys.DamageRecordAmount,
+                LocalizedText.From(
+                [
+                    new KeyValuePair<Locale, string>(Locale.Create("tr").Value, $"{index * 1_250} TL"),
+                    new KeyValuePair<Locale, string>(Locale.Create("ar").Value, $"{index * 1_250} ليرة"),
+                    new KeyValuePair<Locale, string>(Locale.Create("en").Value, $"{index * 1_250} TRY"),
+                ]));
 
             Listing listing = Listing.CreateDraft(vehicle.Id, showcaseSortWeight: listingCount - index);
             listing.Publish(clock);
