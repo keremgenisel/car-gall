@@ -90,13 +90,15 @@ public sealed class SubeKapatmaZinciriTests : IAsyncLifetime
         command.CommandText = """
             DELETE FROM vehicle_catalog.showcase_listings;
             INSERT INTO vehicle_catalog.showcase_listings
-                (listing_id, vehicle_id, is_reserved, showcase_sort_weight, published_at,
+                (listing_id, vehicle_id, slug, is_reserved, showcase_sort_weight, published_at,
                  body_type_slug, vehicle_model_id, model_year, mileage_kilometers,
                  price_on_request, branch_id, branch_names, cover_asset_id, cover_media_url)
             VALUES
-                (gen_random_uuid(), gen_random_uuid(), false, 1, now(), 'sedan', gen_random_uuid(),
+                (gen_random_uuid(), gen_random_uuid(), 'kapatilacak-sube-2020-aaaaaa',
+                 false, 1, now(), 'sedan', gen_random_uuid(),
                  2020, 1000, true, @kapatilacak, @adlarA::jsonb, NULL, NULL),
-                (gen_random_uuid(), gen_random_uuid(), false, 1, now(), 'sedan', gen_random_uuid(),
+                (gen_random_uuid(), gen_random_uuid(), 'acik-kalan-sube-2021-bbbbbb',
+                 false, 1, now(), 'sedan', gen_random_uuid(),
                  2021, 2000, true, @acikKalan, @adlarB::jsonb, NULL, NULL);
             """;
         command.Parameters.AddWithValue("kapatilacak", KapatilacakSube);
