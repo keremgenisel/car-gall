@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | **Tamamlandı** |
 | **Sahip** | Developer oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (vitrin okuma tarafı) · `VehicleReference` (kasa tipi kanonik kümesi ve locale etiketleri — minimal) · `Dealership.Contracts` + `Media.Contracts` (yalnız olay sözleşmeleri) · `frontend/` public vitrin |
@@ -347,8 +347,8 @@ kurar. Bu spec yazılırken kod okunmamıştır; okunacak kod yoktur.
       raporlanıyor.
 - [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] Takım Yöneticisi onayladı ve squash-merge edildi.
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
