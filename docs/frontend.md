@@ -1,106 +1,162 @@
-# Frontend Konvansiyonları — İSKELET
+# Frontend Standardı
 
-> **Bu dosya bilinçli olarak iskelettir.** Yalnızca ilk dilimlerin ihtiyaç duyduğu, ihlal
-> edilirse sonradan pahalıya mal olacak kuralları içerir.
->
-> **Dilim 1.8'de profesyonel standarda genişletilecek:** tasarım token'ları, bileşen
-> envanteri, erişilebilirlik ölçütleri, performans bütçesi ve kalite kapıları.
-> O zamana kadar buraya yeni kural eklemek serbesttir; **var olan kuralı gevşetmek
-> öneri kuralına tabidir** (`AGENTS.md` Altın Kural 2).
+Bu dosya **arayüz tarafının tek gerçek kaynağıdır.** Bir frontend işi burada yazılana göre
+denetlenir — kişiye, alışkanlığa veya "geçen sefer böyle yapmıştık"a göre değil.
+
+**Burada yaşamayan kurallar** (tekrarlanmaz, yalnız atıf yapılır):
+
+| Konu | Sahibi |
+|---|---|
+| Hata sözleşmesi (`errorCode`, `ProblemDetails`), para/sayı saklama | `docs/conventions.md` § 5, § 7 |
+| Locale çözümleme, SEO, `hreflang`, sitemap, çeviri sahipliği | `docs/architecture.md` § 3 |
+| Test stratejisi, görsel kanıt konumu, CI kapılarının listesi | `docs/testing.md` |
+| Branch, commit, PR, merge | `docs/git.md` |
+| Ortak dil (araç, ilan, vitrin, şube…) | `docs/domain.md` |
+
+Buradaki bir kuralı **gevşetmek** öneri kuralına tabidir (`AGENTS.md` Altın Kural 2).
+Kuralı sıkılaştırmak veya eksik bir alanı doldurmak serbesttir.
 
 ---
 
-## 1. Stack ve Yapı
+## 1. Dil ve Yapı
 
-**React + Vite + TypeScript.** Tek uygulama, iki rota ağacı:
-`/{locale}/…` public vitrin, `/{locale}/admin/…` yönetim paneli (lazy-load).
+**TypeScript zorunludur.** `strict` açık, `any` yasak; bilinmeyen için `unknown` + daraltma.
+`.js`/`.jsx` kaynak dosyası bulunmaz. *Gerekçe:* bu arayüz backend sözleşmesini tüketiyor;
+sözleşme değiştiğinde kırılmanın derleme anında görünmesi, çalışma anında görünmesinden ucuzdur.
 
 ```
 frontend/
   src/
-    api/            → TEK API client dosyası ve modül başına çağrı grupları. (§ 2)
-    app/            → Rota ağacı, sağlayıcılar (provider), uygulama kabuğu.
-    features/       → Modül başına ekran ve bileşenler. Backend modülleriyle AYNI isimler.
-      catalog/  leads/  dealership/  content/  identity/
-    components/     → Özellikten bağımsız paylaşılan bileşenler.
-    lib/            → Saf yardımcılar (biçimlendirme, hesap). Yan etkisiz, test edilebilir.
-    locales/        → tr.json · ar.json · en.json
-  public/
+    app/                    → uygulama kabuğu: rota ağacı, sağlayıcılar, giriş noktası
+    features/<feature>/     → EKRANLAR. Klasör adı backend modülüyle aynıdır.
+    shared/
+      api/                  → TEK API client + çağrı grupları + DTO tipleri (§ 2)
+      ui/                   → ortak bileşenler; envanter § 4.2'de
+      design/               → tasarım token'ları (§ 4.1)
+      i18n/                 → çeviri katalogları ve biçimlendirme yardımcıları (§ 6)
+      lib/                  → saf yardımcılar. Yan etkisiz, test edilebilir.
+  e2e/                      → uçtan uca akış testleri (docs/testing.md § 3)
+  scripts/                  → kalite kapısı betikleri (§ 8)
 ```
 
-- `features/` altındaki klasör adları **backend modül adlarıyla aynıdır.** Bir ekranın hangi
-  modüle ait olduğu klasöründen okunur.
-- Bir feature başka bir feature'ın iç bileşenini import etmez. Paylaşılan şey
-  `components/` veya `lib/` altına çıkar.
-- TypeScript `strict` açık. `any` yasaktır; bilinmeyen için `unknown` + daraltma.
-
----
-
-## 2. API Çağrıları — Tek Client
-
-**Tüm ağ istekleri `src/api/` altındaki tek client'tan geçer.** Bileşenin içinde
-`fetch`/`axios` çağrısı yasaktır.
-
-Client'ın tek sorumluluğu ve tek yerde çözdüğü şeyler:
-- taban URL ve kimlik başlığı,
-- `Accept-Language` başlığının aktif locale ile gönderilmesi,
-- HTTP hatalarının **tek tip bir hata nesnesine** dönüştürülmesi (`errorCode` + parametreler),
-- `traceId`'nin yakalanması (kullanıcıya gösterilmez, destek için saklanır),
-- iptal (abort) ve zaman aşımı,
-- yanıt tiplerinin tek yerde tanımlanması.
-
 Kurallar:
-- Endpoint yolları **yalnızca** `src/api/` içinde yazılır. Bileşende URL dizesi bulunmaz.
-- Backend DTO tipleri `src/api/types.ts` altında tanımlanır; bileşenler bu tipleri kullanır.
-- Client **ham hata mesajı döndürmez**; `errorCode` döndürür. Çeviri uçta yapılır (§ 4).
+
+- **`features/` altındaki klasör adları backend modül adlarıyla aynıdır** (`catalog`, `leads`,
+  `dealership`, `content`, `identity`). Bir ekranın hangi modüle ait olduğu klasöründen okunur.
+- **Bir feature başka bir feature'ın iç dosyasını import etmez.** Paylaşılan şey `shared/`e çıkar.
+  İki feature'ın aynı bileşene ihtiyacı varsa bu, bileşenin ortak olduğunun kanıtıdır.
+- **`shared/` altındaki hiçbir şey `features/`ten import etmez.** Bu ok tek yönlüdür; çift yönlü
+  olduğu gün "ortak" klasörü ikinci bir feature'a dönüşür.
+- Bir dosya bir kavram. 300 satırı aşan bileşen dosyası gözden geçirilir.
 
 ---
 
-## 3. Her Ekranda Üç Durum — Zorunlu
+## 2. API Disiplini
 
-Veri çeken **her** ekran ve her veri bölgesi şu üç durumu **açıkça** ele alır:
+**Tüm ağ istekleri `shared/api` altındaki tek client'tan geçer.** Bileşenin içinde `fetch`
+veya `axios` çağrısı **yasaktır**.
+
+- **Endpoint yolu yalnızca `shared/api` içinde yazılır.** Bileşende URL dizesi bulunmaz.
+  *Gerekçe:* rota değiştiğinde aranacak tek yer olsun; `grep` ile bulunamayan URL, taşınamayan
+  URL'dir.
+- **DTO tipleri backend sözleşmesinden türetilir** ve `shared/api/types.ts` altında yaşar.
+  Uç, backend'in `X.Contracts` yüzeyinde olmayan bir alanı uydurmaz; alan gerekiyorsa önce
+  sözleşme değişir. Tip ile sözleşmenin ayrıştığı yer, sessiz hata üreten yerdir.
+- Client'ın tek yerde çözdüğü şeyler: taban URL, `Accept-Language`, HTTP hatasının **tek tip
+  hata nesnesine** (`errorCode` + parametreler) dönüştürülmesi, `traceId` yakalama, iptal
+  (abort) ve zaman aşımı.
+- **Client ham hata metni döndürmez**, `errorCode` döndürür. Çeviri uçta yapılır (§ 5).
+- Sunucu verisi için sorgu/önbellek katmanı kullanılır; **sunucu verisi global store'a
+  kopyalanmaz.** İstemci durumu (form, seçim) yereldir.
+- **Filtre ve sayfalama URL'de yaşar** — paylaşılabilir bağlantı ve çalışan geri tuşu bunun
+  sonucudur, ayrıca yapılan bir iş değil.
+
+---
+
+## 3. Üç Durum Kuralı
+
+Veri çeken **her** ekran ve her veri bölgesi üç durumu da **tasarlar**. Üçü de ele alınmamış
+ekran tamamlanmış sayılmaz ve kabul kriteri karşılanmamıştır.
 
 | Durum | Kural |
 |---|---|
-| **Yükleniyor** | Boş ekran veya ani sıçrama yok. İskelet (skeleton) tercih edilir; en azından bir gösterge. |
-| **Boş** | "Sonuç yok" yeterli değil. Neden boş ve kullanıcı ne yapabilir söylenir (filtre temizle, araç ekle). |
-| **Hata** | Kullanıcıya anlamlı bir mesaj + **tekrar dene** eylemi. Teknik detay yok. |
+| **Yükleniyor** | İskelet (`Skeleton`). Boş ekran veya ani sıçrama yok. |
+| **Boş** | "Sonuç yok" yeterli değil: neden boş ve kullanıcı **ne yapabilir** söylenir. |
+| **Hata** | Anlamlı mesaj + **tekrar dene** eylemi. Teknik detay yok. |
 
-- Üçü de ele alınmamış ekran **tamamlanmış sayılmaz** ve kabul kriteri karşılanmamıştır.
-- Boş ve hata durumlarının **görsel kanıtı** PR'a eklenir (`docs/testing.md` § 3).
-- Kısmi hata (sayfanın bir bölümü yüklenemedi) tüm sayfayı düşürmez; o bölge kendi hata
-  durumunu gösterir.
+- **İskelet, gerçek içeriğin kutu modelini taklit eder** — aynı en-boy oranı, aynı satır
+  yükseklikleri, aynı sayıda öğe. *Gerekçe:* yer tutucunun işi boşluğu doldurmak değil, **doğru**
+  boşluğu tutmaktır; yanlış yükseklik veri gelince düzeni kaydırır (CLS).
+- **Boş durumlar ayrıştırılır.** "Filtre sonucu boş" ile "hiç kayıt yok" farklı ekranlardır ve
+  farklı eylem sunarlar. İkisi aynı anda doğruysa **daha temel olan** kazanır — aksi hâlde
+  "filtreyi temizle" düğmesi kullanıcıyı olmayan bir sonuca yollar.
+- **Kısmi hata tüm sayfayı düşürmez**; o bölge kendi hata durumunu gösterir.
+- Boş ve hata durumlarının **görsel kanıtı** PR'a eklenir (`docs/testing.md` § 3). Bu ikisi en
+  sık atlanan ve en sık bozuk olan durumlardır.
+
+### 3.1 Kullanıcıya teknik detay sızmaz
+
+**Yasak:** HTTP durum kodu, `errorCode`'un kendisi, stack trace, SQL, endpoint yolu, sunucu
+istisna metni, `traceId`.
+
+1. API `errorCode` döner (`vehicle.cannot_publish.no_media`).
+2. Uç, bu kodu çeviri kataloğundan kullanıcı diline çevirir.
+3. Karşılığı yoksa genel bir mesaj gösterilir ve kod **konsola/loga** yazılır.
+4. `traceId` destek için saklanır; istenirse "destek kodu" olarak kopyalanabilir sunulur —
+   hata metninin içine gömülmez.
+
+**Her hata mesajı üç etkin dilde (TR / EN / AR) ve eylem önerili yazılır:** ne olduğunu ve ne
+yapılabileceğini söyler ("tekrar dene"). Tek dilde yazılmış bir hata mesajı, o dili konuşmayan
+ziyaretçi için boş ekrandır.
 
 ---
 
-## 4. Hata Metni — Kullanıcıya Teknik Detay Sızmaz
+## 4. Tasarım Sistemi
 
-**Yasak:** HTTP durum kodu, `errorCode`'un kendisi, stack trace, SQL, endpoint yolu,
-sunucu istisna metni, `traceId` — hiçbiri kullanıcıya gösterilmez.
+### 4.1 Token'lar
 
-Akış:
-1. API `errorCode` döner (`vehicle.cannot_publish.no_media`).
-2. Uç, bu kodu çeviri katalogundan **kullanıcı diline** çevirir.
-3. Katalogda karşılığı **yoksa** genel bir mesaj gösterilir
-   ("Bir sorun oluştu, lütfen tekrar deneyin.") ve kod **konsola/loga** yazılır.
-4. `traceId` destek için saklanır; istenirse "destek kodu" olarak kopyalanabilir biçimde
-   sunulur — hata metninin içine gömülmez.
+**Tasarım token'ları tek dosyada yaşar:** `src/shared/design/tokens.css`. Token grupları:
+**renk**, **aralık (spacing)**, **tipografi**, **köşe yarıçapı (radius)**.
 
-Kullanıcıya gösterilen her hata mesajı **ne olduğunu ve ne yapılabileceğini** söyler.
+- **Bileşenlerde gömülü sabit değer YASAKTIR:** hex renk (`#1f5fd0`), ham piksel (`12px`),
+  ham font boyutu. Değer token'dan gelir: `var(--color-accent)`, `var(--space-3)`.
+- İstisna yoktur; yeni bir değer gerekiyorsa **önce token tanımlanır**, sonra kullanılır.
+  *Gerekçe:* tema, koyu mod ve marka değişimi tek dosyadan yapılabilir olsun. Bileşene gömülen
+  her hex, o değişimi bir sonraki kişinin borcuna yazar.
+- Lint bunu kırar (§ 8).
+
+### 4.2 Bileşen Envanteri
+
+Ortak bileşenler `shared/ui` altında yaşar. **Başlangıç envanteri:**
+
+| Bileşen | Sorumluluğu |
+|---|---|
+| `Button` | Birincil / ikincil / metin varyantları; `disabled` ve yükleniyor hâli |
+| `Card` | İçerik kutusu: kenarlık, köşe, iç boşluk |
+| `Badge` | Kısa durum etiketi (ör. "Rezerve") |
+| `EmptyState` | Başlık + açıklama + **tek eylem** (§ 3) |
+| `ErrorState` | Başlık + açıklama + **tekrar dene** (§ 3.1) |
+| `Skeleton` | Gerçek içeriğin kutu modelini taklit eden yer tutucu (§ 3) |
+
+**Her yeni ekran önce bu envantere bakar.** Envanterde karşılığı olan bir şeyi yeniden yazmak
+gözden geçirmede reddedilir. Karşılığı yoksa **yeni bileşen önerilir** (öneri kuralı): ne, neden,
+hangi iki ekranda kullanılacak. Tek ekranda kullanılan şey ortak bileşen değildir; o feature'ın
+içinde kalır.
 
 ---
 
 ## 5. Metin ve Çok Dillilik
 
-- **Kullanıcıya görünen hiçbir metin bileşene gömülmez.** İstisna yok — placeholder,
-  `aria-label`, `title`, boş durum metni, buton etiketi dâhil. Lint bunu kırar.
-- Çeviri katalogları: `src/locales/{tr,ar,en}.json`. Üçü **anahtar bazında eşittir**;
-  CI eksik anahtarı kırar (`docs/testing.md` § 3).
-- **ICU mesaj formatı zorunludur.** Dize birleştirmeyle cümle kurulmaz —
-  Arapça'da altı çoğul biçimi vardır ve `count > 1` mantığı yanlıştır.
-- Tarih, sayı ve para biçimlendirmesi **uçta**, aktif locale ile yapılır.
-  Sunucu ham sayı + para birimi kodu döner (`docs/conventions.md` § 7).
-- Arapça'da **Latin rakam varsayılan**, yapılandırılabilir.
+- **Kullanıcıya görünen hiçbir metin bileşene gömülmez.** İstisna yok — `placeholder`,
+  `aria-label`, `title`, `alt`, boş durum metni, buton etiketi dâhil. Lint bunu kırar (§ 8).
+- Çeviri katalogları: `src/shared/i18n/locales/{tr,ar,en}.json`. Üçü **anahtar bazında eşittir**;
+  CI eksik anahtarı kırar.
+- **ICU mesaj formatı zorunludur.** Dize birleştirmeyle cümle kurulmaz: Arapça'da **altı çoğul
+  biçimi** vardır ve `count > 1` mantığı sessizce yanlış cümle üretir.
+- Tarih, sayı ve para biçimlendirmesi **uçta**, aktif locale ile yapılır. Sunucu ham sayı + para
+  birimi kodu döner (`docs/conventions.md` § 7).
+- **Rakam sistemi açıkça sabitlenir.** Varsayılana güvenilmez: `ar` locale'inin ICU varsayılanı
+  ortama göre Hint-Arap rakamı olabilir ve hata yalnızca belirli bir tarayıcıda görünür.
 - Locale URL yol önekinden gelir (`/tr`, `/ar`, `/en`). Geçersiz önek → 404.
   `Accept-Language` ile **otomatik yönlendirme yapılmaz**.
 
@@ -108,49 +164,86 @@ Kullanıcıya gösterilen her hata mesajı **ne olduğunu ve ne yapılabileceği
 
 ## 6. RTL
 
-- Yön locale'in özelliğidir; `<html lang dir>` sunucudan basılı gelir, uçta yeniden hesaplanmaz.
-- **CSS'te fiziksel yön özellikleri yasaktır** — lint kırar:
-  `left`, `right`, `margin-left`, `margin-right`, `padding-left`, `padding-right`,
-  `text-align: left|right`, `border-left|right`, `float: left|right`.
+- **Yön locale'in özelliğidir**; `<html lang dir>` sunucudan basılı gelir, uçta yeniden
+  hesaplanmaz.
+- **CSS'te fiziksel yön özellikleri yasaktır** — lint kırar: `left`, `right`, `margin-left`,
+  `margin-right`, `padding-left`, `padding-right`, `text-align: left|right`,
+  `border-left|right`, `float`, `clear`.
   Yerine **logical properties**: `inset-inline-start`, `margin-inline-start`,
   `padding-inline-end`, `text-align: start|end`, `border-inline-start`.
-- Yön duyarlı ikonlar (ok, geri, ileri, "sonraki araç") mantıksal olarak aynalanır.
+- Yön duyarlı ikonlar (ok, geri, ileri) mantıksal olarak aynalanır.
   **Aynalanmaz:** marka logoları, medya oynatma kontrolleri, saat, grafik eksenleri.
 - Karışık yönlü içerik (Arapça metin içinde Latin model adı veya rakam) için `dir="auto"`
-  veya `<bdi>` kullanılır.
+  veya `<bdi>`.
 - **Admin paneli de tam RTL.** Yarı-RTL bir panel bozuk görünür.
+- RTL kriteri olan her ekranın **Arapça görsel kanıtı** zorunludur; LTR görüntü RTL kriterini
+  kanıtlamaz.
 
 ---
 
-## 7. Dilimler Mini-Spec'le Koşar
+## 7. Erişilebilirlik Tabanı
 
-Her arayüz dilimi bir **mini-spec**e dayanır (`specs/TEMPLATE.md`'den üretilir, ekran
-odaklı ve kısa). Mini-spec olmadan ekran yapılmaz (`AGENTS.md` Altın Kural 1).
-
-Bir arayüz mini-spec'i en az şunları taşır:
-- hangi ekran / hangi rota,
-- hangi API çağrıları (var olan endpoint'ler — yoksa backend spec'i önce gelir),
-- kabul kriterleri: her satır tek başına **görsel olarak doğrulanabilir**,
-- üç durumun (yükleniyor / boş / hata) beklenen davranışı,
-- RTL ve çok dil beklentisi,
-- kapsam dışı olanlar.
-
-Dilim tamamlandığında: her kritere **görsel kanıt** (`docs/testing.md` § 3), lint + build
-yeşil, PR şablonu dolu (`docs/git.md` § 5).
+- **Semantik HTML.** Başlık hiyerarşisi (`h1` → `h2`) atlanmaz; liste `<ul>/<li>`, gezinme
+  `<nav>`, sayfa gövdesi `<main>`. Tıklanabilir `<div>` yazılmaz — düğme `<button>`, bağlantı
+  `<a>`.
+- **Her form alanının `<label>`'ı vardır.** Yalnız `placeholder` etiket değildir.
+- **Klavyeyle gezilebilirlik:** her etkileşimli öğeye Tab ile ulaşılır, Enter/Space ile
+  çalıştırılır, **odak halkası görünür**. Odak tuzağı bırakılmaz.
+- **Kontrast:** normal metin en az **4.5:1**, büyük metin ve arayüz öğesi en az **3:1**.
+- **Renk tek başına anlam taşımaz**; durum ayrıca metin veya ikonla anlatılır.
+- Her görselin `alt` metni vardır ve locale'e göre üretilir; dekoratif görselde `alt=""`.
+- Araç görselleri `loading="lazy"`, açık `width`/`height` ile (CLS önlemi) ve responsive
+  `srcset` ile gelir. **Katlama üstündeki kapak görseli hariç:** o `eager` yüklenir.
 
 ---
 
-## 8. Şimdilik Yeterli Olan Asgari Kurallar
+## 8. Kalite Kapıları
 
-Bunlar 1.8'de genişletilecek; şimdilik tabanı tutar:
+Aşağıdakiler **zorunludur** ve pipeline'da koşar. Hepsinin komutu `package.json`'da tanımlıdır;
+komutu olmayan kapı, kapı değildir.
 
-- **Erişilebilirlik tabanı:** her etkileşimli öğe klavyeyle erişilebilir ve odak halkası
-  görünür; her görselin `alt` metni vardır (medya `alt`'ı locale başına, backend'den);
-  form alanlarının `<label>`'ı vardır; renk tek başına anlam taşımaz.
-- **Görsel:** araç görselleri `loading="lazy"`, açık `width`/`height` ile (CLS önlemi),
-  responsive `srcset` ile. Kapak görseli hariç.
-- **Durum yönetimi:** sunucu verisi için sorgu/cache katmanı; global store'a sunucu verisi
-  kopyalanmaz. İstemci durumu (form, filtre) yerel tutulur.
-- **Rota:** filtre ve sayfalama **URL'de** yaşar (paylaşılabilir, geri tuşu çalışır).
-- **Mobil öncelikli.** Tasarım önce dar ekranda doğrulanır.
-- **`console.log` üretime gitmez.** Lint kırar.
+| Kapı | Komut | Ne kırar |
+|---|---|---|
+| Tip kontrolü | `npm run typecheck` | `tsc --noEmit`, hatasız |
+| Lint (JS/TS) | `npm run lint` | ESLint — hatasız, **uyarı da kabul edilmez** |
+| Biçim | `npm run format:check` | Prettier — biçim farkı yok |
+| Lint (CSS) | `npm run lint:css` | Fiziksel yön özellikleri (§ 6) ve gömülü hex/px (§ 4.1) |
+| Sert kodlanmış metin | `npm run check:text` | Bileşene gömülü kullanıcı metni (§ 5) |
+| Eksik çeviri anahtarı | `npm run check:locales` | `tr`/`ar`/`en` anahtar bazında eşit değilse |
+| Birim + smoke test | `npm run test` | Vitest + Testing Library |
+| Production build | `npm run build` | Build başarısız olursa |
+
+**Uyarı bırakılmaz.** Sessiz bırakılan uyarı, bir sonraki gerçek uyarıyı gizler.
+
+### 8.1 Smoke test — Vitest + Testing Library
+
+Her feature'ın **kritik akışı** için bileşen düzeyinde bir smoke testi yazılır: ekran gerçek
+API client'ı sahtelenmiş hâlde monte edilir, **üç durumun üçü de** (yükleniyor / boş / hata) ve
+mutlu yol doğrulanır.
+
+- Test, kullanıcının gördüğü şeye göre sorgular: rol, erişilebilir ad, metin. CSS sınıfına veya
+  bileşen iç yapısına göre sorgulayan test, yeniden düzenlemede kırılır ve hiçbir şey kanıtlamaz.
+- Saf mantık (biçimlendirme, URL durumu, hesap) için ayrıca birim testi yazılır.
+- **Bu, `docs/testing.md` § 3'teki uçtan uca smoke testin yerine geçmez.** Orası ürünü baştan
+  sona ayakta tutan dört akışı kapsar; burası tek ekranın kendi içinde doğru davrandığını
+  kapsar. İki farklı kapsam, iki ayrı kapı.
+
+---
+
+## 9. Süreç
+
+- **Her arayüz dilimi bir mini-spec'e dayanır:** `specs/frontend-XXX-<kebab-ad>.md`,
+  `specs/TEMPLATE.md`'den üretilir, ekran odaklı ve kısadır. Mini-spec olmadan ekran yapılmaz
+  (`AGENTS.md` Altın Kural 1).
+- Bir arayüz mini-spec'i en az şunları taşır:
+  - hangi ekran / hangi rota,
+  - hangi API çağrıları (**var olan** endpoint'ler — yoksa backend spec'i önce gelir),
+  - kabul kriterleri: her satır tek başına **görsel olarak doğrulanabilir**,
+  - üç durumun beklenen davranışı,
+  - RTL ve çok dil beklentisi,
+  - envanterden kullanılacak bileşenler; yeni bileşen gerekiyorsa gerekçesi,
+  - kapsam dışı olanlar.
+- **Görsel kanıt VERIFY'ın parçasıdır**, süs değil: her `[görsel]` kriter için ekran görüntüsü
+  `docs/evidence/<spec-no>-ac<n>.png` altına konur; boş ve hata durumları dâhil, RTL kriteri
+  varsa Arapça görüntüyle. Kanıtı olmayan kriter karşılanmamıştır.
+- **Branch, commit ve PR kuralları `docs/git.md` ile aynıdır.** Frontend işinin ayrıcalığı yoktur.

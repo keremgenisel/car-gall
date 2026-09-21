@@ -51,7 +51,7 @@ Tek bir araç galerisi için satış vitrini ve yönetim paneli.
 | Adlandırma, katmanlar, hata yönetimi, `decimal`/`Money`, tarih-saat, id'ler, EF kuralları | `docs/conventions.md` |
 | Branch stratejisi, commit formatı, PR şartları, merge kuralı, git yasakları | `docs/git.md` |
 | Test stratejisi, xUnit adlandırma, kriter→test eşlemesi, görsel kanıt, CI kapıları | `docs/testing.md` |
-| React/Vite/TS konvansiyonları, API client, yükleme/boş/hata durumları, i18n & RTL | `docs/frontend.md` |
+| **Frontend standardı** — TS zorunluluğu, klasör yapısı, tek API client, tasarım token'ları ve bileşen envanteri, üç durum kuralı, erişilebilirlik tabanı, kalite kapıları, mini-spec süreci | `docs/frontend.md` |
 | **Neden böyle** — mimari kararların gerekçesi ve değerlendirilen alternatifler | `docs/decisions/` |
 | Spec yazma şablonu ve SCORECARD | `specs/TEMPLATE.md` |
 | Aktif spec'ler | `specs/*.md` |
