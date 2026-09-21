@@ -5,6 +5,7 @@ using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.Dealership.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CarGallery.Modules.Dealership;
 
@@ -41,10 +42,30 @@ public static class DealershipModule
             new OutboxDispatchOptions(),
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<OutboxDispatcher<DealershipDbContext>>>()));
 
+        // Arka plan dağıtıcısı modülün kendi kaydıdır: outbox tablosu bu modülün
+        // şemasındadır ve onu okuyan da bu modülün DbContext'idir (D9).
+        services.AddHostedService(provider => new OutboxDispatcherHostedService<DealershipDbContext>(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILogger<OutboxDispatcherHostedService<DealershipDbContext>>>()));
+
         services.AddScoped<IBranchQueries>(provider => new BranchQueries(
             provider.GetRequiredService<DealershipDbContext>(),
             parsed.Value));
 
         return services;
+    }
+
+    /// <summary>
+    /// Şemayı ve kurulum verisini uygular. D1 uyarınca bu modülün yazma ucu yoktur;
+    /// başlangıç verisi migration ile gelir ve bu çağrı onu uygular.
+    /// </summary>
+    public static async Task MigrateDealershipAsync(
+        this IServiceProvider services,
+        CancellationToken cancellationToken = default)
+    {
+        using IServiceScope scope = services.CreateScope();
+        DealershipDbContext context = scope.ServiceProvider.GetRequiredService<DealershipDbContext>();
+
+        await context.Database.MigrateAsync(cancellationToken);
     }
 }

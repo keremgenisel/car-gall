@@ -68,7 +68,7 @@ public sealed class OlayIsleyiciTests(ShowcaseDatabase database)
 
         await using (VehicleCatalogDbContext context = database.CreateContext())
         {
-            BranchDeactivatedHandler handler = new(context);
+            BranchDeactivatedHandler handler = new(context, new FixedClock(Simdi));
             await handler.HandleAsync(
                 new BranchDeactivated(Guid.CreateVersion7(), Simdi, kapatilan),
                 CancellationToken.None);
@@ -138,7 +138,7 @@ public sealed class OlayIsleyiciTests(ShowcaseDatabase database)
     private async Task HandleAsync(BranchDetailsChanged notification)
     {
         await using VehicleCatalogDbContext context = database.CreateContext();
-        BranchDetailsChangedHandler handler = new(context);
+        BranchDetailsChangedHandler handler = new(context, new FixedClock(Simdi));
         await handler.HandleAsync(notification, CancellationToken.None);
     }
 

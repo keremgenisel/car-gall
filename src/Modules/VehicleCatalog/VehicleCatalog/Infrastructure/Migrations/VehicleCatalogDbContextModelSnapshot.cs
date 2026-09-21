@@ -23,6 +23,26 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CarGallery.BuildingBlocks.Outbox.InboxEntry", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
+
+                    b.Property<string>("HandlerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("handler_name");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.HasKey("EventId", "HandlerName");
+
+                    b.ToTable("inbox_entries", "vehicle_catalog");
+                });
+
             modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Domain.VehicleFieldSetting", b =>
                 {
                     b.Property<string>("FieldKey")

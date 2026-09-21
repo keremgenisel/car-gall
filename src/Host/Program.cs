@@ -1,5 +1,6 @@
 using CarGallery.Host;
 using CarGallery.Host.Localization;
+using CarGallery.Modules.Dealership;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
 
@@ -54,6 +55,9 @@ builder.Services.AddVehicleCatalog(
 // Model adı ve kasa tipi etiketleri referans veridir ve VehicleReference'a aittir
 // (docs/architecture.md § 3). Catalog onlara yalnız Contracts üzerinden ulaşır.
 builder.Services.AddVehicleReference(connectionString);
+// Modül kendi arka plan dağıtıcısını da kaydeder: DealershipDbContext internal'dır ve
+// host onu göremez — sınırın doğru yerde durduğunun işareti.
+builder.Services.AddDealership(connectionString, localization.DefaultLocale);
 
 builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocale, localization.EnabledLocales));
 builder.Services.AddSingleton<IndexHtmlRenderer>();

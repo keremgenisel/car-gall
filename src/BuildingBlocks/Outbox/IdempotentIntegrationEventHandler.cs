@@ -29,16 +29,42 @@ public abstract class IdempotentIntegrationEventHandler<TEvent, TDbContext>(TDbC
             return;
         }
 
-        await HandleCoreAsync(integrationEvent, cancellationToken);
+        // İş ile inbox kaydı AYNI transaction'da olmalı. `ExecuteUpdate`/`ExecuteDelete`
+        // kullanan bir alıcıda iş ANINDA çalışır, inbox kaydı ise SaveChanges'te; ikisi
+        // arasında süreç düşerse iş yapılmış ama kaydedilmemiş olur ve tekrar çalışır.
+        // Bugünkü iki tüketici tekrara dayanıklı olduğu için bu bugün zararsız — ama
+        // sayaç artıran ilk tüketicide sessizce bozulurdu.
+        bool ownsTransaction = context.Database.CurrentTransaction is null;
 
-        context.InboxEntries.Add(new InboxEntry
+        var transaction = ownsTransaction
+            ? await context.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+
+        try
         {
-            EventId = integrationEvent.EventId,
-            HandlerName = HandlerName,
-            ProcessedAt = clock.UtcNow,
-        });
+            await HandleCoreAsync(integrationEvent, cancellationToken);
 
-        await context.SaveChangesAsync(cancellationToken);
+            context.InboxEntries.Add(new InboxEntry
+            {
+                EventId = integrationEvent.EventId,
+                HandlerName = HandlerName,
+                ProcessedAt = clock.UtcNow,
+            });
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        finally
+        {
+            if (transaction is not null)
+            {
+                await transaction.DisposeAsync();
+            }
+        }
     }
 
     public Task HandleAsync(IIntegrationEvent integrationEvent, CancellationToken cancellationToken) =>

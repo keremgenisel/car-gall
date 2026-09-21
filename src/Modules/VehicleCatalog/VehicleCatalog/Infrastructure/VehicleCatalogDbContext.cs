@@ -1,3 +1,4 @@
+using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure;
 /// (docs/architecture.md § 1). Migration yalnızca bu şemaya dokunur; CI bunu kontrol eder.
 /// </summary>
 internal sealed class VehicleCatalogDbContext(DbContextOptions<VehicleCatalogDbContext> options)
-    : DbContext(options)
+    : DbContext(options), IInboxDbContext
 {
     internal const string Schema = "vehicle_catalog";
 
@@ -17,10 +18,17 @@ internal sealed class VehicleCatalogDbContext(DbContextOptions<VehicleCatalogDbC
 
     internal DbSet<VehicleFieldSetting> VehicleFieldSettings => Set<VehicleFieldSetting>();
 
+    /// <summary>
+    /// İşlenmiş olay kaydı ALICININ kendi şemasındadır; başka modülün inbox'ına yazılmaz
+    /// (D4, Yasak Listesi 16).
+    /// </summary>
+    public DbSet<InboxEntry> InboxEntries => Set<InboxEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VehicleCatalogDbContext).Assembly);
+        modelBuilder.ApplyConfiguration(new InboxEntryConfiguration());
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>
