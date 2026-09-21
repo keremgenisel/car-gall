@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.VehicleCatalog.Application.Development;
 using CarGallery.Modules.VehicleCatalog.Application.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Contracts.FieldSettings;
@@ -29,11 +30,31 @@ public static class VehicleCatalogModule
                 npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", VehicleCatalogDbContext.Schema)));
 
         services.AddSingleton(BuildLocaleOptions(defaultLocale, enabledLocales));
+        services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();
         services.AddScoped<IShowcaseListingQueries, ShowcaseListingQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Migration'ı uygular ve vitrini örnek veriyle doldurur. YALNIZCA geliştirme ve
+    /// kanıt üretimi içindir; üretim yolunda çağrılmaz.
+    /// </summary>
+    public static async Task SeedVehicleCatalogForDevelopmentAsync(
+        this IServiceProvider services,
+        int listingCount,
+        Guid vehicleModelId,
+        CancellationToken cancellationToken = default)
+    {
+        using IServiceScope scope = services.CreateScope();
+
+        VehicleCatalogDbContext context = scope.ServiceProvider.GetRequiredService<VehicleCatalogDbContext>();
+        await context.Database.MigrateAsync(cancellationToken);
+
+        ShowcaseSeeder seeder = new(context, scope.ServiceProvider.GetRequiredService<IClock>());
+        await seeder.SeedAsync(listingCount, vehicleModelId, cancellationToken);
     }
 
     public static void MapVehicleCatalog(this IEndpointRouteBuilder builder)

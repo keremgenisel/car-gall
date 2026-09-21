@@ -9,6 +9,15 @@ internal sealed class LocalePrefixMiddleware(RequestDelegate next, LocalePrefixR
     {
         PathString path = context.Request.Path;
 
+        // Bir endpoint zaten eşleştiyse bu bir SPA rotası değildir; karışılmaz.
+        // Yalnız "/api" kontrolü yetmez: modüllerin tanımladığı her rota (örn. medya)
+        // aksi hâlde locale öneki sanılıp 404 olurdu.
+        if (context.GetEndpoint() is not null)
+        {
+            await next(context);
+            return;
+        }
+
         // API rotaları locale öneki taşımaz (docs/conventions.md § 2).
         if (path.StartsWithSegments("/api"))
         {

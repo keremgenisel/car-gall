@@ -24,4 +24,7 @@
     <Project Path="tests/VehicleCatalog.Tests/VehicleCatalog.Tests.csproj" />
     <Project Path="tests/VehicleReference.Tests/VehicleReference.Tests.csproj" />
   </Folder>
+  <Folder Name="/tests/Performance/">
+    <Project Path="tests/Performance/ShowcaseListingBenchmark/ShowcaseListingBenchmark.csproj" />
+  </Folder>
 </Solution>
