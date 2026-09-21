@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Modules/VehicleCatalog/VehicleCatalog/VehicleCatalog.csproj" />
+    <ProjectReference Include="..\Modules\VehicleReference\VehicleReference\VehicleReference.csproj" />
   </ItemGroup>
 
   <ItemGroup>

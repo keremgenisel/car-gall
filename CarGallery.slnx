@@ -14,8 +14,13 @@
     <Project Path="src/Modules/VehicleCatalog/VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
     <Project Path="src/Modules/VehicleCatalog/VehicleCatalog/VehicleCatalog.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/VehicleReference/">
+    <Project Path="src/Modules/VehicleReference/VehicleReference.Contracts/VehicleReference.Contracts.csproj" />
+    <Project Path="src/Modules/VehicleReference/VehicleReference/VehicleReference.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
     <Project Path="tests/VehicleCatalog.Tests/VehicleCatalog.Tests.csproj" />
+    <Project Path="tests/VehicleReference.Tests/VehicleReference.Tests.csproj" />
   </Folder>
 </Solution>

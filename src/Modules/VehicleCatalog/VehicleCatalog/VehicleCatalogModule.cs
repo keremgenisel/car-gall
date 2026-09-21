@@ -29,6 +29,7 @@ public static class VehicleCatalogModule
                 npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", VehicleCatalogDbContext.Schema)));
 
         services.AddSingleton(BuildLocaleOptions(defaultLocale, enabledLocales));
+        services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();
         services.AddScoped<IShowcaseListingQueries, ShowcaseListingQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
 

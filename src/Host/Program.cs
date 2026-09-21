@@ -1,5 +1,6 @@
 using CarGallery.Host;
 using CarGallery.Modules.VehicleCatalog;
+using CarGallery.Modules.VehicleReference;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -24,9 +25,14 @@ builder.Services.AddVehicleCatalog(
     localization.DefaultLocale,
     localization.EnabledLocales);
 
+// Model adı ve kasa tipi etiketleri referans veridir ve VehicleReference'a aittir
+// (docs/architecture.md § 3). Catalog onlara yalnız Contracts üzerinden ulaşır.
+builder.Services.AddVehicleReference(connectionString);
+
 WebApplication app = builder.Build();
 
 app.MapVehicleCatalog();
+app.MapVehicleReference();
 
 app.Run();
 
