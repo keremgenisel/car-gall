@@ -1,4 +1,5 @@
 using CarGallery.Host;
+using CarGallery.Host.Localization;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
 
@@ -29,7 +30,13 @@ builder.Services.AddVehicleCatalog(
 // (docs/architecture.md § 3). Catalog onlara yalnız Contracts üzerinden ulaşır.
 builder.Services.AddVehicleReference(connectionString);
 
+builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocale, localization.EnabledLocales));
+builder.Services.AddSingleton<IndexHtmlRenderer>();
+
 WebApplication app = builder.Build();
+
+app.UseStaticFiles();
+app.UseMiddleware<LocalePrefixMiddleware>();
 
 app.MapVehicleCatalog();
 app.MapVehicleReference();
