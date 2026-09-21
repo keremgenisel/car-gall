@@ -20,6 +20,7 @@ public static class VehicleReferenceModule
 
         services.AddScoped<IBodyTypeQueries, BodyTypeQueries>();
         services.AddScoped<IVehicleModelQueries, VehicleModelQueries>();
+        services.AddScoped<IReferenceTermQueries, ReferenceTermQueries>();
 
         return services;
     }

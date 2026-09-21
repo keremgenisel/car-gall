@@ -19,3 +19,18 @@ public interface IVehicleModelQueries
         string locale,
         CancellationToken cancellationToken);
 }
+
+/// <summary>Kapalı kümeli referans terimi: slug + ziyaretçinin locale'indeki etiketi.</summary>
+public sealed record ReferenceTermDto(string Kind, string Slug, string Label);
+
+public interface IReferenceTermQueries
+{
+    /// <summary>
+    /// Verilen (tür, slug) çiftlerinin etiketlerini çözer. Karşılığı olmayan locale'de
+    /// kanonik Latin ada düşülür; ham anahtar ASLA dönmez.
+    /// </summary>
+    Task<IReadOnlyDictionary<(string Kind, string Slug), string>> ResolveLabelsAsync(
+        IReadOnlyCollection<(string Kind, string Slug)> terms,
+        string locale,
+        CancellationToken cancellationToken);
+}

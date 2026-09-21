@@ -51,3 +51,43 @@ internal sealed class VehicleModelQueries(VehicleReferenceDbContext context) : I
                 ?? model.CanonicalName);
     }
 }
+
+internal sealed class ReferenceTermQueries(VehicleReferenceDbContext context) : IReferenceTermQueries
+{
+    public async Task<IReadOnlyDictionary<(string Kind, string Slug), string>> ResolveLabelsAsync(
+        IReadOnlyCollection<(string Kind, string Slug)> terms,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (terms.Count == 0)
+        {
+            return new Dictionary<(string, string), string>();
+        }
+
+        HashSet<string> sluglar = [.. terms.Select(term => term.Slug)];
+
+        List<ReferenceTerm> kayitlar = await context.ReferenceTerms
+            .AsNoTracking()
+            .Include(term => term.Translations)
+            .Where(term => sluglar.Contains(term.Slug))
+            .ToListAsync(cancellationToken);
+
+        Dictionary<(string, string), string> sonuc = [];
+
+        foreach (ReferenceTerm kayit in kayitlar)
+        {
+            string kind = kayit.Kind.ToString();
+            if (!terms.Contains((kind, kayit.Slug)))
+            {
+                continue;
+            }
+
+            // Çevirisi olmayan locale'de kanonik Latin ada düşülür; ham anahtar dönmez.
+            sonuc[(kind, kayit.Slug)] =
+                kayit.Translations.FirstOrDefault(translation => translation.Locale == locale)?.Name
+                ?? kayit.CanonicalName;
+        }
+
+        return sonuc;
+    }
+}
