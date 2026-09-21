@@ -428,10 +428,26 @@ kalsın. *Bilerek ödenen bedel:* bugün çözülemeyen, yalnızca saklanan bir 
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Spec revizyon sayısı** | **1** | C14 ve AC-34, **onay anında** düzeltildi (R-1): "yalnızca `Dealership` şemasına" diyorlardı ve D4 ile çelişiyorlardı. Onaydan **sonra** spec'e hiç dokunulmadı; kriterler uygulama boyunca değişmedi. |
+| **Düzeltme turu sayısı** | **0** | PR bu kayıtla birlikte açılıyor; henüz gözden geçirme turu olmadı. |
+| **Bulgu gerçek/gürültü oranı** | **— / —** | Dış gözden geçirme yapılmadı. Aşağıdaki üç kusuru testlerin ve kendi doğrulamamın bulduğu ayrıca not edilmelidir; bu sütunun yerine geçmez. |
+| **Regresyon sayısı** | **1** | `MigrationTasir_HerDbContextSahibiModul` daha önce yeşildi ve `IOutboxDbContext.cs` eklenince kırmızıya döndü — testin kuralı değil TESPİTİ fazla genişti. Merge öncesi kapandı (`8502c84`). |
+| **Kaçan hata** | **-** | Merge edilmedi. |
 
 **Bu spec'ten çıkarılan ders:**
+**Test edilmiş bir alıcı, yayıncısı olmadan hiçbir şey kanıtlamaz.** `VehicleCatalog` iki
+şube dinleyicisini `0001`'de yazdı, entegrasyon testleri yeşildi ve iki spec boyunca yeşil
+kaldı — ama o testler handler'ı **doğrudan** çağırıyordu. Aradaki dağıtım yolu hiç var
+olmadığı için A8'in güvenlik ağı baştan beri ölüydü ve **yeşil testler bunu gizliyordu.**
+Kapatılan bir şubenin araçları vitrinde kalmaya devam ederdi ve kimse fark etmezdi.
+
+Bunun kuralı şu: bir modülün dışıyla konuştuğu her yolda, testin gözlem noktası **o yolun
+iki ucunu da** kapsamalı. AC-32 bu yüzden `Host.Tests`'te yaşıyor ve elle handler çağırmak
+yerine arka plan dağıtıcısının teslim etmesini bekliyor; dinleyicinin kaydı kaldırıldığında
+kırmızıya düştüğü probe ile doğrulandı.
+
+İkinci ders, `frontend-001`'inkinin tekrarı: **yeşil test her zaman doğru sebeple yeşil
+değildir.** AC-27'nin testi "ters sırada işlenirse" diyordu ama ters sırayı hiç kurmuyordu;
+üstelik iki duyuru aynı `OccurredAt`'i taşıdığı için sıralanacak bir şey de yoktu. Aynı
+tuzak bu spec'te iki kez çıktı — bir kriteri karşıladığını söyleyen testin, karşılamadığında
+gerçekten kırmızıya düştüğü ayrıca denenmeli.
