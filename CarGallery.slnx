@@ -6,6 +6,7 @@
   <Folder Name="/src/Modules/" />
   <Folder Name="/src/Modules/Dealership/">
     <Project Path="src/Modules/Dealership/Dealership.Contracts/Dealership.Contracts.csproj" />
+    <Project Path="src/Modules/Dealership/Dealership/Dealership.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Media/">
     <Project Path="src/Modules/Media/Media.Contracts/Media.Contracts.csproj" />
@@ -20,6 +21,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+    <Project Path="tests/Dealership.Tests/Dealership.Tests.csproj" />
     <Project Path="tests/Host.Tests/Host.Tests.csproj" />
     <Project Path="tests/VehicleCatalog.Tests/VehicleCatalog.Tests.csproj" />
     <Project Path="tests/VehicleReference.Tests/VehicleReference.Tests.csproj" />
