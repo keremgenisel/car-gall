@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>CarGallery.Host</RootNamespace>
+    <AssemblyName>CarGallery.Host</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Modules/VehicleCatalog/VehicleCatalog/VehicleCatalog.csproj" />
+    <ProjectReference Include="..\Modules\VehicleReference\VehicleReference\VehicleReference.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Host.Tests" />
+  </ItemGroup>
+
+</Project>

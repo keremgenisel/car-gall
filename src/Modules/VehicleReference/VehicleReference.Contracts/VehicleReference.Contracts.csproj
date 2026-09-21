@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CarGallery.Modules.VehicleReference.Contracts</RootNamespace>
+    <AssemblyName>CarGallery.Modules.VehicleReference.Contracts</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.csproj" />
+  </ItemGroup>
+
+</Project>

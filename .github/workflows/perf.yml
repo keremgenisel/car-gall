@@ -1,0 +1,70 @@
+# C3 ölçüm protokolü — HARFİYEN uygulanır ve her koşuda raporlanır.
+#   Sunucu: 500 ilanlık sabit veri seti, iki kasa tipiyle daraltılmış istek,
+#           20 ısınma + 200 ölçüm, eşzamanlılık 1, p95 < 400 ms (AC-34)
+#   Uç:     Lighthouse mobil profili, 3 koşu, medyan; LCP < 2,5 s (AC-35), CLS < 0,1 (AC-25)
+name: Performans
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  thresholds:
+    name: C3 eşikleri
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: cionly
+          POSTGRES_DB: cargallery
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Frontend build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Host'u 500 ilanla başlat
+        env:
+          ConnectionStrings__VehicleCatalog: Host=localhost;Port=5432;Database=cargallery;Username=postgres;Password=cionly
+          Development__SeedShowcase: 'true'
+          Development__SeedListingCount: '500'
+          ASPNETCORE_URLS: http://localhost:5080
+        run: |
+          dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release &
+          until curl -sf -o /dev/null http://localhost:5080/api/catalog/field-settings; do sleep 1; done
+
+      # AC-34
+      - name: Sunucu p95 ölçümü
+        run: dotnet run --project tests/Performance/ShowcaseListingBenchmark/ShowcaseListingBenchmark.csproj -c Release
+
+      # AC-35 ve AC-25
+      - name: Uç LCP ve CLS ölçümü
+        working-directory: frontend
+        run: npm run perf:lighthouse
+
+      - name: Ölçüm raporunu yükle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: docs/evidence/0001-performance.json
+          if-no-files-found: warn

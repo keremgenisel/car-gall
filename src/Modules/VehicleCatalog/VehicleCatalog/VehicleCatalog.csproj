@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CarGallery.Modules.VehicleCatalog</RootNamespace>
+    <AssemblyName>CarGallery.Modules.VehicleCatalog</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Dealership\Dealership.Contracts\Dealership.Contracts.csproj" />
+    <ProjectReference Include="..\..\Media\Media.Contracts\Media.Contracts.csproj" />
+    <ProjectReference Include="..\..\VehicleReference\VehicleReference.Contracts\VehicleReference.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="VehicleCatalog.Tests" />
+  </ItemGroup>
+
+  <!-- Endpoint'ler modülün kendi içinde tanımlanır; host yalnızca toplar (docs/conventions.md § 3). -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+  </ItemGroup>
+
+</Project>

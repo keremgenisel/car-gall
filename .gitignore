@@ -61,3 +61,9 @@ Thumbs.db
 docker-compose.override.yml
 /tmp/
 /scratch/
+
+# ---------- Frontend build ciktisi ----------
+# Vite, Host'un wwwroot'una uretir; uretilmis dosya commit edilmez (docs/git.md § 3).
+src/Host/wwwroot/
+node_modules/
+frontend/dist/

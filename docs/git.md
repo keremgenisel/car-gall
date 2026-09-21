@@ -22,6 +22,14 @@ feature/0007-sube-calisma-saatleri
 feature/0012-lead-atama
 ```
 
+**Frontend mini-spec'leri** (`specs/frontend-XXX-<ad>.md`, → `docs/frontend.md` § 9) dört haneli
+numara taşımaz; branch adında spec dosya adının önekiyle numarası birlikte kullanılır:
+
+```
+feature/frontend-<XXX>-<kisa-ad>     → specs/frontend-001-standarda-uyum.md
+                                       ↳ feature/frontend-001-standarda-uyum
+```
+
 Diğer önekler:
 ```
 fix/<spec-no>-<kisa-ad>       → kabul kriterine aykırı davranışın düzeltilmesi

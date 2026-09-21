@@ -1,0 +1,30 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BuildingBlocks/BuildingBlocks.csproj" />
+    <Project Path="src/Host/Host.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Dealership/">
+    <Project Path="src/Modules/Dealership/Dealership.Contracts/Dealership.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Media/">
+    <Project Path="src/Modules/Media/Media.Contracts/Media.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/VehicleCatalog/">
+    <Project Path="src/Modules/VehicleCatalog/VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
+    <Project Path="src/Modules/VehicleCatalog/VehicleCatalog/VehicleCatalog.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/VehicleReference/">
+    <Project Path="src/Modules/VehicleReference/VehicleReference.Contracts/VehicleReference.Contracts.csproj" />
+    <Project Path="src/Modules/VehicleReference/VehicleReference/VehicleReference.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+    <Project Path="tests/Host.Tests/Host.Tests.csproj" />
+    <Project Path="tests/VehicleCatalog.Tests/VehicleCatalog.Tests.csproj" />
+    <Project Path="tests/VehicleReference.Tests/VehicleReference.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Performance/">
+    <Project Path="tests/Performance/ShowcaseListingBenchmark/ShowcaseListingBenchmark.csproj" />
+  </Folder>
+</Solution>

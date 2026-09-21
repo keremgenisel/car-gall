@@ -1,0 +1,39 @@
+{
+  "spec": "0001",
+  "server": {
+    "protocol": "500 ilan, iki kasa tipiyle daraltılmış istek, 20 ısınma + 200 ölçüm, eşzamanlılık 1 (spec 0001 C3)",
+    "filteredCount": 168,
+    "p50Milliseconds": 1.1,
+    "p95Milliseconds": 2.2,
+    "p99Milliseconds": 2.6,
+    "thresholdMilliseconds": 400,
+    "met": true
+  },
+  "client": {
+    "url": "http://localhost:5080/tr/",
+    "protocol": "Lighthouse mobil profili (4x CPU kısıtı, Slow 4G), 3 koşu, medyan (spec 0001 C3)",
+    "runs": [
+      {
+        "lcpMilliseconds": 1728,
+        "cumulativeLayoutShift": 0
+      },
+      {
+        "lcpMilliseconds": 1730,
+        "cumulativeLayoutShift": 0
+      },
+      {
+        "lcpMilliseconds": 1731,
+        "cumulativeLayoutShift": 0
+      }
+    ],
+    "median": {
+      "lcpMilliseconds": 1730,
+      "cumulativeLayoutShift": 0
+    },
+    "thresholds": {
+      "lcpMilliseconds": 2500,
+      "cumulativeLayoutShift": 0.1
+    },
+    "met": true
+  }
+}
