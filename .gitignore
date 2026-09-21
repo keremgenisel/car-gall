@@ -1,0 +1,63 @@
+# ---------- .NET ----------
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.userosscache
+*.suo
+*.rsuser
+*.dbmdl
+*.binlog
+artifacts/
+publish/
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+*.trx
+.vs/
+.idea/
+*.sln.docstates
+
+# ---------- Sırlar — ASLA commit edilmez ----------
+# (docs/git.md § 3: sızan sır rotasyon gerektirir, geçmişten silmek geçmiş yeniden yazmaktır)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.Local.json
+*.env
+.env
+.env.*
+!.env.example
+secrets.json
+*.pfx
+*.p12
+*.key
+*.pem
+
+# ---------- Node / frontend ----------
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+*.tsbuildinfo
+
+# ---------- Araçlar ----------
+.tool-versions
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ---------- Yerel geliştirme ----------
+docker-compose.override.yml
+/tmp/
+/scratch/
