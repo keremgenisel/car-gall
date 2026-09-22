@@ -104,34 +104,11 @@ public static class LeadsModule
     /// </summary>
     private static void AddRateLimiting(IServiceCollection services, LeadRateLimitOptions options)
     {
-        services.AddRateLimiter(limiter =>
-        {
-            limiter.AddPolicy(LeadEndpoints.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
-                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = options.RequestLimit,
-                    Window = TimeSpan.FromMinutes(options.WindowMinutes),
-                    QueueLimit = 0,
-                }));
+        services.AddRateLimiter(limiter => limiter.AddPolicy<string, LeadRateLimitPolicy>(
+            LeadEndpoints.RateLimitPolicy));
 
-            limiter.OnRejected = async (context, cancellationToken) =>
-            {
-                // AC-33/AC-34 — gövde kararlı bir `errorCode` taşır ve teknik ayrıntı
-                // içermez. Varsayılan boş 503 gövdesi bırakılsaydı uç, hız sınırını
-                // genel bir ağ hatasından ayıramazdı.
-                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                context.HttpContext.Response.ContentType = "application/problem+json";
-
-                await context.HttpContext.Response.WriteAsync(
-                    JsonSerializer.Serialize(new Dictionary<string, object?>(StringComparer.Ordinal)
-                    {
-                        ["status"] = StatusCodes.Status429TooManyRequests,
-                        ["errorCode"] = LeadErrors.RateLimited,
-                    }),
-                    cancellationToken);
-            };
-        });
+        // Politika DI'dan ActivatorUtilities ile kurulur; bağımlılığı çözülebilir olmalı.
+        services.AddSingleton(options);
     }
 
     /// <summary>

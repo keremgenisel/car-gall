@@ -106,6 +106,9 @@ export interface AddStaffRequest {
   readonly role: StaffRole
   readonly preferredLocale: string
   readonly branchId: string | null
+}
+
+/**
  * Talep tipleri backend sözleşmesinin kapalı kümesidir (0005 R3). Uç kendi listesini
  * uydurmaz: burada olmayan bir değer sunucuda `lead.invalid_type` ile reddedilir.
  *
