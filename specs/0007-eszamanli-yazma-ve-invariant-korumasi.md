@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
+| **Durum** | Onaylandı |
 | **Sahip** | Developer (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `BuildingBlocks` (ortak desen) · `Identity` · `Dealership` |
@@ -38,7 +38,7 @@ yapar; ve deseni izlemeyen yeni bir yazma yolu eklendiğinde bunu **bir test sö
   olabilirdi. Tanımın nerede duracağı **C2**'dedir.)*
 - **R4.** Koruma, Context § Invariant envanteri tablosunda sayılan **her** kurala uygulanır.
   Envanter kapalıdır: orada olmayan bir kural bu spec'in kapsamında değildir.
-  *(Veritabanı tekil indeksiyle korunan kurallar için bkz. X5.)*
+  *(Veritabanı tekil indeksiyle korunan kurallar için bkz. X4.)*
 - **R5.** Invariant kararına giren sayı **yalnızca ortak desenin ürettiği değer** üzerinden
   elde edilebilir. Deseni atlayan bir yazma yolu eklendiğinde bunu bir test bildirir; koruma
   gözden geçirmeye bırakılmaz. Testin arayacağı işaret budur — ham sayım ile yazmanın aynı
