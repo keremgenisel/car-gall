@@ -187,10 +187,13 @@ jobs:
           E2E_SEED_ADMIN_PASSWORD: ${{ env.SEED_ADMIN_PASSWORD }}
         run: npm run test:e2e
 
-      - name: Kanıt görüntülerindeki değişikliği yükle
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-evidence
-          path: docs/evidence/
-          if-no-files-found: warn
+      # Kanıt üretimi artık AÇIKÇA istenir (`npm run evidence`); CI'ın e2e koşusu hiçbir
+      # görsel yazmaz ve çalışma ağacını kirletmez. Bu yüzden yüklenecek bir değişiklik
+      # de yok — kanıtlar depoda, PR'da doğrudan görülür (docs/testing.md § 3).
+      - name: Kanıt dosyaları değişmedi mi?
+        run: |
+          if ! git diff --quiet -- docs/evidence; then
+            echo "E2E koşusu kanıt görsellerini değiştirdi; bu artık olmamalı." >&2
+            git diff --stat -- docs/evidence >&2
+            exit 1
+          fi

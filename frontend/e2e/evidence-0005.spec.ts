@@ -1,18 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-
-/**
- * Spec 0005'in görsel kanıtları (docs/testing.md § 3). Görüntü KRİTERİN karşılandığını
- * gösterir, ekranın genel görünümünü değil. Yalnız masaüstü profilinde koşar — mobil
- * profil aynı dosyaları üzerine yazardı (playwright.config.ts testIgnore).
- */
-const KANIT = '../docs/evidence'
-
-async function kanit(page: Page, selector: string, dosya: string) {
-  await page
-    .locator(selector)
-    .first()
-    .screenshot({ path: `${KANIT}/${dosya}` })
-}
+import { kanit } from './kanit'
 
 async function ilkSlug(page: Page, locale = 'tr') {
   await page.goto(`/${locale}/`)
