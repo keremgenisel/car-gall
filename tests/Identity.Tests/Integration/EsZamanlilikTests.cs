@@ -1,9 +1,11 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.Modules.Identity.Application;
 using CarGallery.Modules.Identity.Domain;
 using CarGallery.Modules.Identity.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace CarGallery.Modules.Identity.Tests.Integration;
 
@@ -133,6 +135,155 @@ public sealed class EsZamanlilikTests(IdentityDatabase database)
     }
 
     /// <summary>
+    /// "Reddedildi" demek yetmez: reddedilen istek geriye hiçbir iz bırakmamalı. Duyuru
+    /// düşseydi `Leads` o personelin açık taleplerini yeniden atardı — personel hâlâ
+    /// aktifken.
+    /// </summary>
+    [Fact(DisplayName = "0007/AC-18: Reddedilen istekte hiçbir yan etki kalmaz: ne satır değişir ne outbox'a duyuru düşer")]
+    public async Task Birakmaz_YanEtki_ReddedilenIstekte()
+    {
+        (IdentityHarness harness, Guid birinci, Guid ikinci) = await IkiYoneticiKurAsync();
+
+        Assert.True((await harness.KomutAsync(k => k.DeactivateAsync(birinci, CancellationToken.None))).IsSuccess);
+        await DuyurulariTemizleAsync();
+
+        Result sonuc = await harness.KomutAsync(k => k.DeactivateAsync(ikinci, CancellationToken.None));
+
+        Assert.True(sonuc.IsFailure);
+        Assert.Equal(IdentityErrors.LastActiveManager, sonuc.Error.Code);
+        Assert.Equal(1, await AktifYoneticiSayisiAsync());
+        Assert.Equal(0, await DuyuruSayisiAsync());
+    }
+
+    /// <summary>
+    /// Kilit sabit sırada (`ORDER BY id`) alınmasaydı iki istek satırları ters sırada
+    /// kilitler ve PostgreSQL birini deadlock kurbanı seçerdi; o durumda sonuç
+    /// `concurrency.lost` olurdu, `last_active_manager` değil.
+    /// </summary>
+    [Fact(DisplayName = "0007/AC-19: Karara giren satırlar sabit bir sırada kilitlenir; eşzamanlı iki istek karşılıklı kilitlenmeye (deadlock) düşmez")]
+    public async Task Dusmez_KarsilikliKilitlenmeye()
+    {
+        for (int tur = 0; tur < Tur; tur++)
+        {
+            (IdentityHarness harness, Guid birinci, Guid ikinci) = await IkiYoneticiKurAsync();
+
+            // Kasten ters yönde: iki istek aynı kümeyi zıt hedeflerle kilitliyor.
+            Result[] sonuclar = await EsZamanliAsync(
+                harness,
+                komutlar => komutlar.DeactivateAsync(ikinci, CancellationToken.None),
+                komutlar => komutlar.DeactivateAsync(birinci, CancellationToken.None));
+
+            Assert.DoesNotContain(sonuclar, sonuc => sonuc.IsFailure && sonuc.Error.Code == ConcurrencyErrors.Lost);
+        }
+    }
+
+    /// <summary>
+    /// AP-03 — eşzamanlılık testi "bazen geçen" test demek değildir. Beş turun HEPSİ aynı
+    /// sonucu vermeli; bir tur farklı çıkarsa koruma deterministik değildir ve o test
+    /// güven vermez.
+    /// </summary>
+    [Fact(DisplayName = "0007/AC-21: Eşzamanlılık testleri gerçek PostgreSQL üzerinde koşar ve art arda beş turda da aynı sonucu verir")]
+    public async Task Ayni_BesTurda()
+    {
+        List<string> turSonuclari = [];
+
+        for (int tur = 0; tur < Tur; tur++)
+        {
+            (IdentityHarness harness, Guid birinci, Guid ikinci) = await IkiYoneticiKurAsync();
+
+            Result[] sonuclar = await EsZamanliAsync(
+                harness,
+                komutlar => komutlar.DeactivateAsync(birinci, CancellationToken.None),
+                komutlar => komutlar.DeactivateAsync(ikinci, CancellationToken.None));
+
+            turSonuclari.Add(
+                $"basarili={sonuclar.Count(sonuc => sonuc.IsSuccess)};" +
+                $"kod={sonuclar.Single(sonuc => sonuc.IsFailure).Error.Code};" +
+                $"aktif={await AktifYoneticiSayisiAsync()}");
+        }
+
+        Assert.Equal(Tur, turSonuclari.Count);
+        Assert.Single(turSonuclari.Distinct(StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    /// R6'nın iki red türü. Karamsar kilitte ikinci istek normalde KAYBETMEZ — bekler ve
+    /// güncel sayıyla kural gereği reddedilir. Kaybın gerçek kaynağı kilit zaman aşımıdır:
+    /// bu test kilidi dışarıdan tutup isteği o duvara çarptırıyor.
+    ///
+    /// İki kodun AYRI olması kozmetik değil: kural gereği red kalıcıdır ve o kullanıcıya
+    /// "tekrar deneyin" denirse sonsuza kadar denemesi söylenmiş olur.
+    /// </summary>
+    [Fact(DisplayName = "0007/AC-12: Kural gereği red ile eşzamanlılık kaybı farklı hata kodlarıyla döner; iki durum hata kodundan ayırt edilebilir")]
+    public async Task AyirtEdilir_KuralGeregiRedVeEsZamanlilikKaybi()
+    {
+        (IdentityHarness harness, Guid birinci, Guid ikinci) = await IkiYoneticiKurAsync();
+
+        // Kural gereği red: tek aktif Yönetici kalınca ikincisi reddedilir.
+        Assert.True((await harness.KomutAsync(k => k.DeactivateAsync(birinci, CancellationToken.None))).IsSuccess);
+
+        Result kuralGeregi = await harness.KomutAsync(k => k.DeactivateAsync(ikinci, CancellationToken.None));
+
+        Assert.True(kuralGeregi.IsFailure);
+        Assert.Equal(IdentityErrors.LastActiveManager, kuralGeregi.Error.Code);
+
+        // Eşzamanlılık kaybı: satırlar dışarıdan kilitliyken kısa süreli istek duvara çarpar.
+        await using IdentityDbContext tutan = database.CreateContext();
+        await using IDbContextTransaction kilit = await tutan.Database.BeginTransactionAsync();
+        await KilitleAsync(tutan);
+
+        Result kayip = await harness.KomutAsync(
+            k => k.DeactivateAsync(ikinci, CancellationToken.None),
+            new InvariantGuardOptions(TimeSpan.FromMilliseconds(200)));
+
+        await kilit.RollbackAsync();
+
+        Assert.True(kayip.IsFailure);
+        Assert.Equal(ConcurrencyErrors.Lost, kayip.Error.Code);
+
+        // Kriterin kendisi: ikisi ayırt edilebiliyor.
+        Assert.NotEqual(kuralGeregi.Error.Code, kayip.Error.Code);
+    }
+
+    /// <summary>
+    /// Çakışmanın GERÇEKTEN kurulduğunu gözler. Bu olmadan AC-1'in yeşili şüpheli kalırdı:
+    /// iki istek hiç çakışmamış da olabilir ve test yine geçerdi.
+    ///
+    /// İddia yalnızca ALT sınırdır — "şu ana kadar bitmedi". Üst sınır iddia edilseydi
+    /// ("şu kadar sürede bitti") test CI'ın yavaşlığında rastgele kırılırdı (AP-03).
+    /// </summary>
+    [Fact(DisplayName = "0007/AC-20: Test, çakışmanın gerçekten kurulduğunu gözler: ikinci isteğin birinci commit edene kadar beklediği doğrulanır")]
+    public async Task Bekler_IkinciIstek_BirinciCommitEdene_Kadar()
+    {
+        (IdentityHarness harness, Guid birinci, _) = await IkiYoneticiKurAsync();
+
+        await using IdentityDbContext tutan = database.CreateContext();
+        await using IDbContextTransaction kilit = await tutan.Database.BeginTransactionAsync();
+        await KilitleAsync(tutan);
+
+        // Kilit süresi cömert: ölçülen şey zaman aşımı değil, BEKLEME.
+        Task<Result> bekleyen = harness.KomutAsync(
+            k => k.DeactivateAsync(birinci, CancellationToken.None),
+            new InvariantGuardOptions(TimeSpan.FromSeconds(30)));
+
+        await Task.Delay(TimeSpan.FromMilliseconds(500));
+
+        Assert.False(bekleyen.IsCompleted);
+
+        await kilit.CommitAsync();
+
+        Assert.True((await bekleyen).IsSuccess);
+    }
+
+    /// <summary>
+    /// Korumanın kilitlediği satırların aynısını dışarıdan kilitler.
+    /// </summary>
+    private static Task KilitleAsync(IdentityDbContext context) =>
+        context.Database.ExecuteSqlRawAsync(
+            $"SELECT id FROM {IdentityDbContext.Schema}.staff WHERE role = {{0}} AND status = {{1}} ORDER BY id FOR UPDATE",
+            [(int)StaffRole.Manager, (int)StaffStatus.Active]);
+
+    /// <summary>
     /// İki komutu aynı anda başlatır. `KomutAsync` her çağrıda kendi bağlamını açtığı için
     /// bu, gerçek boru hattındaki iki ayrı isteğin karşılığıdır.
     /// </summary>
@@ -174,6 +325,13 @@ public sealed class EsZamanlilikTests(IdentityDatabase database)
         return await context.Staff
             .AsNoTracking()
             .CountAsync(staff => staff.Role == StaffRole.Manager && staff.Status == StaffStatus.Active);
+    }
+
+    private async Task DuyurulariTemizleAsync()
+    {
+        await using IdentityDbContext context = database.CreateContext();
+
+        await context.Database.ExecuteSqlRawAsync($"DELETE FROM {IdentityDbContext.Schema}.outbox_messages");
     }
 
     private async Task<int> DuyuruSayisiAsync()

@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -29,6 +30,11 @@ internal static class IdentityProblems
             IdentityErrors.InvalidCredentials => StatusCodes.Status401Unauthorized,
             IdentityErrors.PasswordChangeRequired => StatusCodes.Status403Forbidden,
             IdentityErrors.LastActiveManager => StatusCodes.Status409Conflict,
+
+            // 0007/AC-13 — eşzamanlılık kaybı da bir DURUM ÇAKIŞMASIDIR ve `409` döner.
+            // Kural gereği redden AYRI bir kod taşır (AC-12): bu geçicidir, tekrar denemek
+            // işe yarar; kural gereği red kalıcıdır ve tekrar denemek asla işe yaramaz.
+            ConcurrencyErrors.Lost => StatusCodes.Status409Conflict,
             IdentityErrors.StaffNotFound => StatusCodes.Status404NotFound,
             IdentityErrors.RateLimited => StatusCodes.Status429TooManyRequests,
             _ => StatusCodes.Status422UnprocessableEntity,
