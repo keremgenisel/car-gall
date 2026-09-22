@@ -1,0 +1,226 @@
+using System.Globalization;
+using System.Text.Json;
+using System.Threading.RateLimiting;
+using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Outbox;
+using CarGallery.Modules.Identity.Application;
+using CarGallery.Modules.Identity.Contracts;
+using CarGallery.Modules.Identity.Contracts.Setup;
+using CarGallery.Modules.Identity.Contracts.Sessions;
+using CarGallery.Modules.Identity.Domain;
+using CarGallery.Modules.Identity.Endpoints;
+using CarGallery.Modules.Identity.Endpoints.Authentication;
+using CarGallery.Modules.Identity.Infrastructure;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace CarGallery.Modules.Identity;
+
+/// <summary>
+/// Modülün tek giriş noktası: DI kaydı ve endpoint kaydı. Host yalnızca bunu çağırır
+/// (docs/conventions.md § 3).
+/// </summary>
+public static class IdentityModule
+{
+    public static IServiceCollection AddIdentity(this IServiceCollection services, IdentitySetup setup)
+    {
+        if (string.IsNullOrWhiteSpace(setup.SeedAdminPassword))
+        {
+            // D2/AC-53 — başlangıç parolası yapılandırmada yoksa uygulama BAŞLAMAZ.
+            // Üretilmiş bir varsayılan, bilinen parolalı bir Yönetici hesabı demektir.
+            throw new InvalidOperationException(
+                "Identity:SeedAdmin:Password yapılandırılmamış; başlangıç Yönetici parolası olmadan uygulama başlayamaz.");
+        }
+
+        services.AddDbContext<IdentityDbContext>(options =>
+            options.UseNpgsql(
+                setup.ConnectionString,
+                npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", IdentityDbContext.Schema)));
+
+        IdentityOptions identityOptions = new()
+        {
+            AccessLifetime = TimeSpan.FromMinutes(setup.AccessLifetimeMinutes),
+            RefreshLifetime = TimeSpan.FromDays(setup.RefreshLifetimeDays),
+            FailedAttemptThreshold = setup.FailedAttemptThreshold,
+            LockoutDuration = TimeSpan.FromMinutes(setup.LockoutMinutes),
+            MinimumPasswordLength = setup.MinimumPasswordLength,
+            PasswordIterations = setup.PasswordIterations,
+        };
+
+        services.AddSingleton(identityOptions);
+        services.AddSingleton(BuildLocaleOptions(setup.DefaultLocale, setup.EnabledLocales));
+        services.AddSingleton(setup);
+        services.AddSingleton<IClock, BuildingBlocks.SystemClock>();
+        services.AddSingleton<IPasswordHasher>(provider =>
+            new Pbkdf2PasswordHasher(provider.GetRequiredService<IdentityOptions>()));
+
+        services.AddScoped<IOutboxWriter, OutboxWriter<IdentityDbContext>>();
+        services.AddScoped<IdentityUnitOfWork>();
+        services.AddScoped<IBranchValidator, BranchValidator>();
+        services.AddScoped<IStaffSessionQueries, StaffSessionQueries>();
+        services.AddScoped<Login>();
+        services.AddScoped<Logout>();
+        services.AddScoped<StaffCommands>();
+
+        // Dağıtıcı modülün kendi kaydıdır: outbox tablosu bu modülün şemasındadır.
+        // Bugün abonesi yok (X6, X7) — dağıtıcı yine de ayakta, çünkü konuşan yazıldı.
+        services.AddScoped(provider => new OutboxDispatcher<IdentityDbContext>(
+            provider.GetRequiredService<IdentityDbContext>(),
+            provider,
+            provider.GetRequiredService<IClock>(),
+            new OutboxDispatchOptions(),
+            provider.GetRequiredService<ILogger<OutboxDispatcher<IdentityDbContext>>>()));
+
+        services.AddHostedService(provider => new OutboxDispatcherHostedService<IdentityDbContext>(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILogger<OutboxDispatcherHostedService<IdentityDbContext>>>()));
+
+        AddAuthentication(services);
+        AddAuthorization(services);
+        AddLoginRateLimiting(services, setup);
+
+        return services;
+    }
+
+    public static void MapIdentity(this IEndpointRouteBuilder builder)
+    {
+        builder.MapSessionEndpoints();
+        builder.MapAdminEndpoints();
+    }
+
+    /// <summary>
+    /// Yönetim isteklerinin önünde duran iki ara katman. Host bunları çağırmazsa R10'un
+    /// kapısı ve AC-30'un sunucu yarısı sessizce kaybolur — `Host.Tests` bu yüzden
+    /// gerçek boru hattını sınar.
+    /// </summary>
+    public static IApplicationBuilder UseIdentity(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<CrossOriginGuard>();
+        app.UseMiddleware<PasswordChangeGate>();
+
+        return app;
+    }
+
+    /// <summary>
+    /// Şemayı uygular ve kurulum Yönetici hesabını garanti eder (D2). İdempotenttir:
+    /// hesap varsa dokunulmaz.
+    /// </summary>
+    public static async Task MigrateIdentityAsync(
+        this IServiceProvider services,
+        CancellationToken cancellationToken = default)
+    {
+        using IServiceScope scope = services.CreateScope();
+
+        IdentityDbContext context = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        await context.Database.MigrateAsync(cancellationToken);
+
+        IdentitySetup setup = scope.ServiceProvider.GetRequiredService<IdentitySetup>();
+
+        await SeedAdministrator.EnsureAsync(
+            context,
+            scope.ServiceProvider.GetRequiredService<IPasswordHasher>(),
+            scope.ServiceProvider.GetRequiredService<IdentityLocaleOptions>(),
+            scope.ServiceProvider.GetRequiredService<IClock>(),
+            setup.SeedAdminLoginId,
+            setup.SeedAdminPassword,
+            setup.SeedAdminDisplayName,
+            cancellationToken);
+    }
+
+    private static void AddAuthentication(IServiceCollection services) =>
+        services
+            .AddAuthentication(AdminSurface.AuthenticationScheme)
+            .AddScheme<SessionAuthenticationOptions, SessionAuthenticationHandler>(
+                AdminSurface.AuthenticationScheme,
+                _ => { });
+
+    /// <summary>
+    /// C19 — oturumsuz istek `401`, yetkisi yetmeyen istek `403`. Politika adları
+    /// `Identity.Contracts`'ta yayınlı: sonraki panel spec'leri aynı köke aynı adlarla
+    /// takılacak.
+    /// </summary>
+    private static void AddAuthorization(IServiceCollection services) =>
+        services
+            .AddAuthorizationBuilder()
+            .AddPolicy(AdminSurface.AuthenticatedPolicy, policy => policy
+                .AddAuthenticationSchemes(AdminSurface.AuthenticationScheme)
+                .RequireAuthenticatedUser())
+            .AddPolicy(AdminSurface.ManagerPolicy, policy => policy
+                .AddAuthenticationSchemes(AdminSurface.AuthenticationScheme)
+                .RequireAuthenticatedUser()
+                .RequireRole(StaffRoleCode.ToCode(StaffRole.Manager)));
+
+    /// <summary>
+    /// R6'nın İKİNCİ yarısı: giriş ucu ayrıca kaynak IP bazlı hız sınırına tabidir.
+    /// Hesap kilidinden farklıdır — o, hesap başına ve doğru parolayı da reddeder;
+    /// bu, kaynak başına ve isteği hiç işlemeden keser.
+    /// </summary>
+    private static void AddLoginRateLimiting(IServiceCollection services, IdentitySetup setup) =>
+        services.AddRateLimiter(limiter =>
+        {
+            limiter.AddPolicy(SessionEndpoints.RateLimitPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = setup.LoginRequestLimit,
+                        Window = TimeSpan.FromMinutes(setup.LoginRequestWindowMinutes),
+                        QueueLimit = 0,
+                    }));
+
+            limiter.OnRejected = async (context, cancellationToken) =>
+            {
+                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                context.HttpContext.Response.ContentType = "application/problem+json";
+
+                await context.HttpContext.Response.WriteAsync(
+                    JsonSerializer.Serialize(new Dictionary<string, object?>(StringComparer.Ordinal)
+                    {
+                        ["status"] = StatusCodes.Status429TooManyRequests,
+                        ["errorCode"] = IdentityErrors.RateLimited,
+                    }),
+                    cancellationToken);
+            };
+        });
+
+    private static IdentityLocaleOptions BuildLocaleOptions(string defaultLocale, IReadOnlyList<string> enabled)
+    {
+        Result<Locale> parsedDefault = Locale.Create(defaultLocale);
+
+        if (parsedDefault.IsFailure)
+        {
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture, "Varsayılan locale geçersiz: '{0}'.", defaultLocale));
+        }
+
+        List<Locale> locales = [];
+
+        foreach (string code in enabled)
+        {
+            Result<Locale> parsed = Locale.Create(code);
+
+            if (parsed.IsFailure)
+            {
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.InvariantCulture, "Etkin locale listesinde geçersiz kod: '{0}'.", code));
+            }
+
+            locales.Add(parsed.Value);
+        }
+
+        if (locales.Count == 0 || !locales.Any(locale => locale.Code == parsedDefault.Value.Code))
+        {
+            throw new InvalidOperationException(
+                "Etkin locale listesi boş olamaz ve varsayılan locale'i içermelidir.");
+        }
+
+        return new IdentityLocaleOptions(parsedDefault.Value, locales);
+    }
+}
