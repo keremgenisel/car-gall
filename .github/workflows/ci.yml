@@ -84,6 +84,10 @@ jobs:
       - name: Klasör yapısı ve envanter kontrolü
         run: npm run check:structure
 
+      # 0006 C17/AC-29 — oturum bilgisi JS'ten okunabilir bir yerde tutulamaz.
+      - name: Oturum saklama kontrolü
+        run: npm run check:session
+
       - name: Tip kontrolü
         run: npm run typecheck
 

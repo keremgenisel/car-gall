@@ -7,6 +7,12 @@ import type { AppLocale } from '../lib/locale'
 
 export class ApiError extends Error {
   readonly errorCode: string
+  /**
+   * Sunucunun gönderdiği yapısal parametre: hangi ALANIN hatalı olduğu. Metin değildir
+   * ve ziyaretçiye gösterilmez — ekran alanı işaretler, metni kendi kataloğundan üretir
+   * (docs/conventions.md § 5).
+   */
+  readonly field: string | null
   readonly traceId: string | null
   /**
    * HTTP durum kodu; ağ hatasında `null`. Yalnız api/ katmanı okur — "bulunamadı"yı
@@ -15,13 +21,19 @@ export class ApiError extends Error {
    */
   readonly status: number | null
 
-  constructor(errorCode: string, traceId: string | null, status: number | null = null) {
+  constructor(
+    errorCode: string,
+    traceId: string | null,
+    status: number | null = null,
+    field: string | null = null,
+  ) {
     // Mesaj yalnız geliştirici içindir; ziyaretçiye ASLA gösterilmez (docs/frontend.md § 4).
     super(errorCode)
     this.name = 'ApiError'
     this.errorCode = errorCode
     this.traceId = traceId
     this.status = status
+    this.field = field
   }
 }
 
@@ -37,6 +49,10 @@ export async function getJson<TResponse>(
   try {
     response = await fetch(path, {
       signal,
+      // Oturum çerezi HttpOnly'dir ve JS onu OKUYAMAZ (0006 C17); tarayıcı aynı kökene
+      // giden isteklerde kendisi taşır. Açıkça yazılması, varsayılanın değişmesi
+      // hâlinde oturumun sessizce kaybolmasını engeller.
+      credentials: 'same-origin',
       headers: { Accept: 'application/json', 'Accept-Language': locale },
     })
   } catch (cause) {
@@ -56,15 +72,61 @@ export async function getJson<TResponse>(
 
 async function toApiError(response: Response): Promise<ApiError> {
   try {
-    const problem = (await response.json()) as { errorCode?: string; traceId?: string }
+    const problem = (await response.json()) as {
+      errorCode?: string
+      traceId?: string
+      field?: string
+    }
     return new ApiError(
       problem.errorCode ?? DEFAULT_ERROR_CODE,
       problem.traceId ?? null,
       response.status,
+      problem.field ?? null,
     )
   } catch {
     // Gövde okunamadıysa da kullanıcıya teknik detay sızmaz; genel kodla devam edilir.
     // 404 gövdesiz gelir (E7): durum kodu burada korunmazsa "bulunamadı" kaybolurdu.
     return new ApiError(DEFAULT_ERROR_CODE, null, response.status)
   }
+}
+
+/**
+ * Durum değiştiren istek. Oturum çerezi tarayıcı tarafından taşınır; uç onu ne okur ne
+ * yazar (0006 C17, AC-29).
+ */
+export async function sendJson<TResponse>(
+  method: 'POST' | 'DELETE',
+  path: string,
+  body: unknown,
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<TResponse | null> {
+  let response: Response
+
+  try {
+    response = await fetch(path, {
+      method,
+      signal,
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Accept-Language': locale,
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === 'AbortError') {
+      throw cause
+    }
+
+    throw new ApiError(DEFAULT_ERROR_CODE, null)
+  }
+
+  if (!response.ok) {
+    throw await toApiError(response)
+  }
+
+  // 204 gövdesizdir; her yazma ucu bir gövde döndürmez.
+  return response.status === 204 ? null : ((await response.json()) as TResponse)
 }
