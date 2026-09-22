@@ -24,6 +24,8 @@ doldurulduğunda buraya taşınır.
 
 ## Periyodik okuma
 
+> **Yapılan analizler:** [SCORECARD-ANALIZ.md](SCORECARD-ANALIZ.md) — 2026-09-22, ilk altı spec.
+
 Belirli aralıklarla scorecard'lar birlikte okunur ve şu sorular sorulur:
 
 - Spec revizyon sayısı sürekli yüksek mi? → Spec yazma aşaması çok ince.
