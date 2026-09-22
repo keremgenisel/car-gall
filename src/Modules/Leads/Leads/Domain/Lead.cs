@@ -38,6 +38,14 @@ internal sealed class Lead : AggregateRoot<LeadId>
         Status = LeadStatus.New;
     }
 
+    /// <summary>
+    /// EF Core'un okuma yolu. Karmaşık tipler (`Contact`, `Vehicle`) kurucuya BAĞLANAMAZ;
+    /// EF onları özellik üzerinden yazar. İş kodu bu kurucuyu çağırmaz — talep yalnız
+    /// <see cref="Capture"/> ile doğar ve doğrulamayı atlayan bir yol yoktur.
+    /// </summary>
+    private Lead()
+        : base(default) => IdempotencyKey = string.Empty;
+
     internal LeadType Type { get; private set; }
 
     /// <summary>**L4** — her talep `Yeni` başlar; geçişler atama akışıyla gelir (X2).</summary>
