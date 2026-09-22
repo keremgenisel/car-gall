@@ -43,6 +43,13 @@ internal sealed class LockoutState
     internal static LockoutState For(LoginId loginId, string clientKey) =>
         new(loginId.Normalized, clientKey);
 
+    /// <summary>
+    /// Ayrıştırılamayan bir giriş kimliği için de sayaç gerekir (R3): aksi hâlde "biçimi
+    /// bozuk" girişler sayaca hiç dokunmaz ve sonsuz deneme kanalı açılırdı.
+    /// </summary>
+    internal static LockoutState ForKey(string normalizedKey, string clientKey) =>
+        new(normalizedKey, clientKey);
+
     internal bool IsLockedAt(DateTimeOffset now) => LockedUntil is not null && now < LockedUntil;
 
     /// <summary>

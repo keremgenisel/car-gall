@@ -28,6 +28,7 @@ internal sealed class Staff : AggregateRoot<StaffId>
     {
         DisplayName = displayName;
         LoginId = loginId;
+        NormalizedLoginId = loginId.Normalized;
         PasswordHash = passwordHash;
         Role = role;
         PreferredLocale = preferredLocale;
@@ -40,11 +41,28 @@ internal sealed class Staff : AggregateRoot<StaffId>
 
     /// <summary>EF Core'un okuma yolu; iş kodundan çağrılmaz.</summary>
     private Staff()
-        : base(default) => DisplayName = string.Empty;
+        : base(default)
+    {
+        DisplayName = string.Empty;
+        NormalizedLoginId = string.Empty;
+    }
 
     internal string DisplayName { get; private set; }
 
     internal LoginId LoginId { get; private set; }
+
+    /// <summary>
+    /// Tekilliğin ve giriş eşleştirmesinin kurulduğu kolon. <see cref="LoginId"/>'nin
+    /// normalize hâlinin KOPYASIDIR ve yalnız kurucuda yazılır; giriş kimliği kayıttan
+    /// sonra değişmez.
+    ///
+    /// Ayrı bir kolon olmasının nedeni teknik: indeks ham kolon üzerinde `lower()` ile
+    /// kurulamaz — Türkçe collation altında yanlış eşleşirdi (Yasak Listesi 27) — ve
+    /// karmaşık tip üyesine indeks kurulamaz. Normalize değer bu yüzden yazma anında
+    /// üretilip kendi kolonunda durur (docs/conventions.md § 6'nın "yazma anında üretilen
+    /// normalize arama kolonu" kuralıyla aynı desen).
+    /// </summary>
+    internal string NormalizedLoginId { get; private set; }
 
     internal PasswordHash PasswordHash { get; private set; }
 
