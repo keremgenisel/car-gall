@@ -38,13 +38,13 @@ internal sealed class LeadConfiguration : IEntityTypeConfiguration<Lead>
 
         builder.Property(lead => lead.IdempotencyKey)
             .HasColumnName("idempotency_key")
-            .HasMaxLength(100);
+            .HasMaxLength(Lead.MaximumIdempotencyKeyLength);
 
         // R17/AC-35 — aynı anahtarla ikinci kayıt OLUŞAMAZ. Kural uygulamada değil
         // veritabanında dayatılır: iki eşzamanlı istek arasındaki yarışı bir SELECT
         // kazanamaz, tekil indeks kazanır.
         builder.HasIndex(lead => lead.IdempotencyKey)
-            .HasDatabaseName("ux_leads_idempotency_key")
+            .HasDatabaseName(LeadPersistence.IdempotencyKeyIndexName)
             .IsUnique();
 
         builder.ComplexProperty(lead => lead.Contact, contact =>

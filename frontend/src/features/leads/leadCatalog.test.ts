@@ -49,6 +49,7 @@ const SUNUCU_HATA_KODLARI = [
   'lead.invalid_email',
   'lead.email_too_long',
   'lead.message_too_long',
+  'lead.idempotency_key_too_long',
 ]
 
 describe('AC-41: Form etiketleri, talep tipi adları ve onay metni TR, AR ve EN locale lerinde kendi dilinde görünür', () => {

@@ -15,6 +15,15 @@ namespace CarGallery.Modules.Leads.Domain;
 /// </summary>
 internal sealed class Lead : AggregateRoot<LeadId>
 {
+    /// <summary>
+    /// `leads.idempotency_key` kolonunun genişliği. Doğrulama bu sınırın ÖNÜNDE durur:
+    /// aşan bir anahtar doğrudan veritabanına giderse PostgreSQL patlar, istisna tekil
+    /// indeks çakışmasına benzemediği için yakalanmaz ve ziyaretçi sebebini öğrenemeden
+    /// talebini kaybeder. Ad, e-posta ve mesaj sınırları zaten burada sayılıyordu;
+    /// anahtar tek doğrulanmayan alandı.
+    /// </summary>
+    internal const int MaximumIdempotencyKeyLength = 100;
+
     private Lead(
         LeadId id,
         LeadType type,
@@ -101,6 +110,11 @@ internal sealed class Lead : AggregateRoot<LeadId>
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             return Result.Failure<Lead>(new Error(LeadErrors.MissingIdempotencyKey));
+        }
+
+        if (idempotencyKey.Trim().Length > MaximumIdempotencyKeyLength)
+        {
+            return Result.Failure<Lead>(new Error(LeadErrors.IdempotencyKeyTooLong));
         }
 
         Lead lead = new(

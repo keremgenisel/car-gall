@@ -141,5 +141,6 @@
   "lead.error.invalid_phone": "Telefonu ülke koduyla yazın: +905321112233",
   "lead.error.invalid_email": "E-posta adresini kontrol edin.",
   "lead.error.email_too_long": "E-posta adresi çok uzun; lütfen kısaltın.",
-  "lead.error.message_too_long": "Mesajınız çok uzun; lütfen kısaltın."
+  "lead.error.message_too_long": "Mesajınız çok uzun; lütfen kısaltın.",
+  "lead.error.idempotency_key_too_long": "Talebiniz gönderilemedi. Lütfen sayfayı yenileyip tekrar deneyin."
 }

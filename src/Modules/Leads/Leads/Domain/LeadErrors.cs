@@ -27,6 +27,7 @@ internal static class LeadErrors
     internal const string ListingUnavailable = "lead.listing_unavailable";
     internal const string ListingReserved = "lead.listing_reserved";
     internal const string MissingIdempotencyKey = "lead.idempotency_key_missing";
+    internal const string IdempotencyKeyTooLong = "lead.idempotency_key_too_long";
     internal const string RateLimited = "lead.rate_limited";
     internal const string EmptyModelName = "lead.empty_model_name";
 

@@ -141,5 +141,6 @@
   "lead.error.invalid_phone": "اكتب رقم الهاتف مع رمز الدولة: ‎+905321112233",
   "lead.error.invalid_email": "تحقق من البريد الإلكتروني.",
   "lead.error.email_too_long": "البريد الإلكتروني طويل جدًا؛ يرجى اختصاره.",
-  "lead.error.message_too_long": "رسالتك طويلة جدًا؛ يرجى اختصارها."
+  "lead.error.message_too_long": "رسالتك طويلة جدًا؛ يرجى اختصارها.",
+  "lead.error.idempotency_key_too_long": "تعذّر إرسال طلبك. يرجى تحديث الصفحة وإعادة المحاولة."
 }

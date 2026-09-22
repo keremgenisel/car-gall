@@ -131,6 +131,40 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         Assert.Equal(1, await context.Leads.CountAsync());
     }
 
+    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    public async Task Doner201_SinirdakiAnahtarBasligiyla()
+    {
+        await database.ResetAsync();
+        await using ModuleApi api = await ModuleApi.StartAsync(database);
+
+        HttpResponseMessage yanit = await GonderAsync(api, Govde(), new string('k', 100));
+
+        Assert.Equal(HttpStatusCode.Created, yanit.StatusCode);
+    }
+
+    /// <summary>
+    /// Sınırı aşan anahtar eskiden `500` üretiyordu: kolon `character varying(100)` ve
+    /// aşan değer PostgreSQL'de patlıyor, istisna tekil indeks çakışmasına benzemediği
+    /// için yakalanmıyordu. Ziyaretçi sebebini öğrenemeden talebini kaybediyordu.
+    /// </summary>
+    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    public async Task Doner422_AnahtarBasligiCokUzunsa()
+    {
+        await database.ResetAsync();
+        await using ModuleApi api = await ModuleApi.StartAsync(database);
+
+        foreach (int uzunluk in new[] { 101, 5000 })
+        {
+            HttpResponseMessage yanit = await GonderAsync(api, Govde(), new string('k', uzunluk));
+
+            Assert.Equal(HttpStatusCode.UnprocessableContent, yanit.StatusCode);
+            Assert.Equal("lead.idempotency_key_too_long", await HataKoduAsync(yanit));
+        }
+
+        await using LeadsDbContext context = database.CreateContext();
+        Assert.Equal(0, await context.Leads.CountAsync());
+    }
+
     [Fact(DisplayName = "AC-34: Reddedilen istekte ziyaretçiye teknik ayrıntı gösterilmez")]
     public async Task IcermezTeknikAyrinti_ReddedilenYanit()
     {
