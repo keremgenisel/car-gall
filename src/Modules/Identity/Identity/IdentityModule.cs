@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Threading.RateLimiting;
 using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Outbox;
+using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Identity.Application;
 using CarGallery.Modules.Identity.Contracts;
 using CarGallery.Modules.Identity.Contracts.Setup;
@@ -61,6 +62,15 @@ public static class IdentityModule
         services.AddSingleton<IPasswordHasher>(provider =>
             new Pbkdf2PasswordHasher(provider.GetRequiredService<IdentityOptions>()));
 
+        // Şema kaydı diğer üç modülle AYNI desen: uygulayan kurulum adımıdır, çalışan
+        // uygulama yalnız doğrular (docs/decisions/0002). Bu satır olmadan `identity`
+        // şeması kurulum adımında hiç uygulanmaz ve eksikliği yalnız ilk girişte,
+        // "tablo yok" diye görünürdü.
+        services.AddScoped<IModuleSchema>(provider =>
+            new ModuleSchema<IdentityDbContext>(
+                provider.GetRequiredService<IdentityDbContext>(),
+                "Identity"));
+
         services.AddScoped<IOutboxWriter, OutboxWriter<IdentityDbContext>>();
         services.AddScoped<IdentityUnitOfWork>();
         services.AddScoped<IBranchValidator, BranchValidator>();
@@ -109,18 +119,20 @@ public static class IdentityModule
     }
 
     /// <summary>
-    /// Şemayı uygular ve kurulum Yönetici hesabını garanti eder (D2). İdempotenttir:
-    /// hesap varsa dokunulmaz.
+    /// Kurulum Yönetici hesabını garanti eder (D2). İdempotenttir: hesap varsa dokunulmaz.
+    ///
+    /// Şemayı UYGULAMAZ — o iş kurulum adımınındır (docs/decisions/0002) ve bu modül
+    /// şemasını `IModuleSchema` ile oraya kaydeder. Burada kalan tek şey bir satırlık
+    /// DML'dir: hesap olmadan hiç kimse giriş yapamaz ve sistem kalıcı olarak kapalı
+    /// kalırdı (0006/D2, Tuzak 1).
     /// </summary>
-    public static async Task MigrateIdentityAsync(
+    public static async Task EnsureSeedAdministratorAsync(
         this IServiceProvider services,
         CancellationToken cancellationToken = default)
     {
         using IServiceScope scope = services.CreateScope();
 
         IdentityDbContext context = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-        await context.Database.MigrateAsync(cancellationToken);
-
         IdentitySetup setup = scope.ServiceProvider.GetRequiredService<IdentitySetup>();
 
         await SeedAdministrator.EnsureAsync(

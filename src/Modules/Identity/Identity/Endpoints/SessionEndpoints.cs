@@ -91,9 +91,12 @@ internal static class SessionEndpoints
 
     /// <summary>
     /// Kilitlenme sayacını bölen anahtar. Kaynak KİŞİSEL VERİDİR: yalnız sayaçta durur,
-    /// loga yazılmaz (docs/conventions.md § 12). `X-Forwarded-For` burada okunmaz; ters
-    /// proxy arkasında doğru adresi `ForwardedHeaders` ara katmanı yazar ve o yalnızca
-    /// AÇIKÇA listelenmiş proxy'lere güvenir (src/Host/ForwardedHeadersSetup.cs).
+    /// loga yazılmaz (docs/conventions.md § 12).
+    ///
+    /// `X-Forwarded-For` burada OKUNMAZ: güvenilmeyen bir başlığa göre bölmek, sayacı
+    /// istemcinin kendisinin kapatabilmesi demektir. Uygulama ters proxy arkasına
+    /// konulursa gerçek adresi yazma işi boru hattının (Host) sorumluluğudur ve yalnızca
+    /// açıkça listelenmiş proxy'lere güvenilerek yapılmalıdır.
     /// </summary>
     private static string ResolveClientKey(HttpContext httpContext) =>
         httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";

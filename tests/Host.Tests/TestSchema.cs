@@ -1,6 +1,8 @@
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Host.Schema;
 using CarGallery.Modules.Dealership;
+using CarGallery.Modules.Identity;
+using CarGallery.Modules.Identity.Contracts.Setup;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,24 @@ internal static class TestSchema
         services.AddVehicleCatalog(connectionString, "tr", ["tr", "ar", "en"]);
         services.AddVehicleReference(connectionString);
         services.AddDealership(connectionString, "tr");
+
+        // 0006 ile `identity` de bir modül şemasıdır; listeden düşerse Host başlangıçta
+        // "şema güncel değil" diyerek reddeder ve Host.Tests'in tamamı kırılır.
+        services.AddIdentity(new IdentitySetup(
+            connectionString,
+            "tr",
+            ["tr", "ar", "en"],
+            IdentityTestSettings.SeedAdminLoginId,
+            IdentityTestSettings.SeedAdminPassword,
+            "Kurulum Yöneticisi",
+            AccessLifetimeMinutes: 30,
+            RefreshLifetimeDays: 14,
+            FailedAttemptThreshold: 5,
+            LockoutMinutes: 15,
+            MinimumPasswordLength: 12,
+            PasswordIterations: 1000,
+            LoginRequestLimit: 20,
+            LoginRequestWindowMinutes: 10));
 
         await using ServiceProvider provider = services.BuildServiceProvider();
 

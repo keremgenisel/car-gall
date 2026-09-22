@@ -139,6 +139,11 @@ jobs:
           ConnectionStrings__VehicleCatalog: Host=localhost;Port=5432;Database=cargallery;Username=postgres;Password=cionly
           Development__SeedShowcase: 'true'
           Development__SeedListingCount: '200'
+          # D2/AC-53 — parola yapılandırmadan gelir ve repoda durmaz; yoksa uygulama
+          # hiç başlamaz. Bu değer yalnız CI'ın tek kullanımlık veritabanı içindir.
+          Identity__SeedAdmin__Password: ci-kurulum-parolasi
+          # Kanıt üretimi her girişte 210.000 iterasyon beklemesin.
+          Identity__PasswordIterations: '1000'
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Migration'ı çalışan uygulama değil, bu tek seferlik kurulum adımı uygular

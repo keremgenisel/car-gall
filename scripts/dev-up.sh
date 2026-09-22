@@ -19,13 +19,23 @@ echo "==> Frontend build (çıktı: src/Host/wwwroot)"
 
 # Migration'ı ÇALIŞAN uygulama değil, bu tek seferlik kurulum adımı uygular
 # (docs/decisions/0002). Uygulama yalnız doğrular ve şema eksikse hiç başlamaz.
+# Kurulum adımı da uygulamayı KURDUĞU için Identity yapılandırmasını ister; parola
+# olmadan DI kaydı hata verir ve kurulum adımı hiç koşamaz (D2/AC-53).
 echo "==> Kurulum adımı (şema)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
+Identity__SeedAdmin__Password="${SEED_ADMIN_PASSWORD:-gelistirme-parolasi}" \
+Identity__PasswordIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
   dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release -- --migrate
 
+# D2/AC-53 — başlangıç Yönetici parolası YAPILANDIRMADAN gelir ve repoda durmaz
+# (docs/conventions.md § 11). Yoksa uygulama hiç başlamaz.
+# Parola özetleme maliyeti geliştirmede düşük tutulur: her giriş için 210.000
+# iterasyon beklemek kanıt üretimini yavaşlatır. Üretim değeri appsettings.json'dadır.
 echo "==> Host ($SEED_COUNT ilanla seed edilerek)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
 Development__SeedShowcase=true \
 Development__SeedListingCount="$SEED_COUNT" \
+Identity__SeedAdmin__Password="${SEED_ADMIN_PASSWORD:-gelistirme-parolasi}" \
+Identity__PasswordIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
 ASPNETCORE_URLS="http://localhost:5080" \
   dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release

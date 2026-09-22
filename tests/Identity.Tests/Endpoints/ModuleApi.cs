@@ -1,3 +1,4 @@
+using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Identity.Application;
 using CarGallery.Modules.Identity.Contracts.Setup;
 using CarGallery.Modules.Identity.Tests.Integration;
@@ -73,7 +74,23 @@ internal sealed class ModuleApi : IAsyncDisposable
         app.MapIdentity();
 
         await app.StartAsync();
-        await app.Services.MigrateIdentityAsync();
+
+        // Modül testinin kendi kurulum adımı: önce şema, sonra kurulum hesabı.
+        // Uygulamanın kendisi artık şema UYGULAMAZ (docs/decisions/0002), bu yüzden
+        // test de iki adımı ayrı ayrı yapar.
+        //
+        // Şema modülün KENDİ IModuleSchema kaydından uygulanıyor; Host'un kurulum
+        // yardımcısı kullanılmıyor çünkü modül testi Host'a referans vermez
+        // (docs/architecture.md § 5).
+        using (IServiceScope scope = app.Services.CreateScope())
+        {
+            foreach (IModuleSchema schema in scope.ServiceProvider.GetServices<IModuleSchema>())
+            {
+                await schema.ApplyAsync(CancellationToken.None);
+            }
+        }
+
+        await app.Services.EnsureSeedAdministratorAsync();
 
         return new ModuleApi(app);
     }

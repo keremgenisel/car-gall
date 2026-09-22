@@ -2,6 +2,8 @@ using CarGallery.Host;
 using CarGallery.Host.Localization;
 using CarGallery.Host.Schema;
 using CarGallery.Modules.Dealership;
+using CarGallery.Modules.Identity;
+using CarGallery.Modules.Identity.Contracts.Setup;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
 
@@ -60,10 +62,39 @@ builder.Services.AddVehicleReference(connectionString);
 // host onu göremez — sınırın doğru yerde durduğunun işareti.
 builder.Services.AddDealership(connectionString, localization.DefaultLocale);
 
+// 0006 — personel kimliği. Süreler ve eşikler DAĞITIM YAPILANDIRMASINDAN gelir (C20);
+// kabul kriterleri yapılandırılan değeri doğrular, koda gömülü bir sabiti değil.
+//
+// Başlangıç Yönetici parolası appsettings'te DEĞİL, ortam değişkenindedir: sır repoda
+// durmaz (docs/conventions.md § 11). Yoksa uygulama başlamaz (D2, AC-53) — üretilmiş bir
+// varsayılan, bilinen parolalı bir Yönetici hesabı demektir.
+builder.Services.AddIdentity(new IdentitySetup(
+    connectionString,
+    localization.DefaultLocale,
+    localization.EnabledLocales,
+    builder.Configuration["Identity:SeedAdmin:LoginId"] ?? "yonetici@cargallery.local",
+    builder.Configuration["Identity:SeedAdmin:Password"] ?? string.Empty,
+    builder.Configuration["Identity:SeedAdmin:DisplayName"] ?? "Kurulum Yöneticisi",
+    builder.Configuration.GetValue<int?>("Identity:AccessLifetimeMinutes") ?? 30,
+    builder.Configuration.GetValue<int?>("Identity:RefreshLifetimeDays") ?? 14,
+    builder.Configuration.GetValue<int?>("Identity:FailedAttemptThreshold") ?? 5,
+    builder.Configuration.GetValue<int?>("Identity:LockoutMinutes") ?? 15,
+    builder.Configuration.GetValue<int?>("Identity:MinimumPasswordLength") ?? 12,
+    builder.Configuration.GetValue<int?>("Identity:PasswordIterations") ?? 210_000,
+    builder.Configuration.GetValue<int?>("Identity:LoginRequestLimit") ?? 20,
+    builder.Configuration.GetValue<int?>("Identity:LoginRequestWindowMinutes") ?? 10));
+
+// İlk yazma uçları ilk hata sözleşmesini getirdi. `500` yanıtı ASLA iç detay taşımaz:
+// stack trace, SQL, dosya yolu, tip adı yok (docs/conventions.md § 5, AC-59).
+builder.Services.AddProblemDetails();
+
 builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocale, localization.EnabledLocales));
 builder.Services.AddSingleton<IndexHtmlRenderer>();
+builder.Services.AddSingleton<AdminShellRenderer>();
 
 WebApplication app = builder.Build();
+
+app.UseExceptionHandler();
 
 // KURULUM ADIMI. Migration'ı çalışan uygulama değil, bu tek seferlik koşu uygular
 // (docs/decisions/0002). Süreç uygular ve biter; sunucu hiç açılmaz.
@@ -84,10 +115,21 @@ app.UseStaticFiles();
 
 // Yönlendirme, locale katmanından ÖNCE çalışır ki eşleşen endpoint'ler bilinsin.
 app.UseRouting();
+
+app.UseRateLimiter();
+
+// Kimlik doğrulama BORU HATTINDA yaşar; modül yalnız şemayı ve politikaları tanımlar.
+// Bu üç satır silinirse yönetim yüzeyinin koruması SESSİZCE kaybolur — `Host.Tests`
+// bunu gerçek boru hattında sınıyor.
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseIdentity();
+
 app.UseMiddleware<LocalePrefixMiddleware>();
 
 app.MapVehicleCatalog();
 app.MapVehicleReference();
+app.MapIdentity();
 
 // Geliştirme ve görsel kanıt üretimi yolu. Bayrak kapalıyken hiçbir şey kaydedilmez
 // ve bu uç noktalar hiç tanımlanmaz; üretimde erişilebilir bir yüzeyi yoktur.
@@ -122,6 +164,14 @@ if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
     int seedCount = builder.Configuration.GetValue<int?>("Development:SeedListingCount") ?? 200;
     await app.Services.SeedVehicleCatalogForDevelopmentAsync(seedCount, seedModelId);
 }
+
+// Kurulum Yönetici hesabı olmadan hiç kimse giriş yapamaz ve sistem kalıcı olarak
+// kapalı kalır (0006/D2, Tuzak 1). İdempotenttir: hesap varsa dokunulmaz.
+//
+// Bu bir DDL DEĞİL, tek satırlık DML'dir; ADR 0002'nin "çalışan uygulama migration
+// uygulamaz" kuralını delmez. `identity` şemasının kendisi artık diğer üç modül gibi
+// IModuleSchema üzerinden kurulum adımında uygulanıyor ve yukarıda doğrulanıyor.
+await app.Services.EnsureSeedAdministratorAsync();
 
 await app.RunAsync();
 
