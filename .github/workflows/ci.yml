@@ -145,7 +145,16 @@ jobs:
           # (docs/decisions/0002). Uygulama yalnız doğrular; adım atlanırsa hiç başlamaz.
           dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release -- --migrate
           dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release &
-          until curl -sf -o /dev/null http://localhost:5080/api/catalog/field-settings; do sleep 1; done
+          # SINIRLI bekleme. Sınırsız `until` döngüsü, başlamayı REDDEDEN bir Host'ta
+          # (kurulum adımı atlanmış, eksik yapılandırma) işi GitHub'ın 6 saatlik
+          # sınırına kadar asılı bırakıyor — sessiz bir maliyet. Bu PR'ın kendisi
+          # "başlamayı reddetme" davranışını getirdiği için burası artık şart.
+          for _ in $(seq 120); do
+            curl -sf -o /dev/null http://localhost:5080/api/catalog/field-settings && exit 0
+            sleep 1
+          done
+          echo "Host 120 saniyede ayağa kalkmadı." >&2
+          exit 1
 
       - name: E2E testleri (mobil + masaüstü)
         working-directory: frontend
