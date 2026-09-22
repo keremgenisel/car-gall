@@ -20,9 +20,15 @@ internal interface IListingSnapshotSource
 /// sözleşmesini `Leads`'in iç katmanlarına sızdırırdı; sınır boyunca tekrar bilinçlidir
 /// (Yasak Listesi 10).
 /// </summary>
+/// <param name="Price">
+/// <c>null</c> = fiyat ÇÖZÜLEMEDİ. "Fiyat sorunuz" bu değildir: o, P4'te tanımlı bir iş
+/// durumudur ve <see cref="PriceSnapshot.OnRequest"/> ile taşınır. İkisini aynı değere
+/// indirmek, fiyatı olan bir aracın talebini kalıcı olarak "fiyat sorunuz" gösterirdi ve
+/// danışman bunu galerinin KARARI sanırdı — kopya sonradan düzeltilemez (L2).
+/// </param>
 internal sealed record ListingSnapshot(
     Guid ListingId,
     bool IsReserved,
     Guid VehicleModelId,
-    PriceSnapshot Price,
+    PriceSnapshot? Price,
     Guid BranchId);

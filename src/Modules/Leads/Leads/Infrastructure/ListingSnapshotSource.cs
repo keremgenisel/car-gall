@@ -31,20 +31,30 @@ internal sealed class ListingSnapshotSource(IListingSnapshotQueries queries) : I
     }
 
     /// <summary>
-    /// "Fiyat sorunuz" hâli KOPYALANIR; tutar `0`'a çevrilmez (P4, C7). Tutar varken
-    /// `Money` kurulamıyorsa bu sessizce düzeltilecek bir durum değildir — kaynak bozuk
-    /// demektir ve talebin yanlış bir kopya taşımasındansa "fiyat sorunuz" taşıması
-    /// dürüsttür.
+    /// "Fiyat sorunuz" hâli KOPYALANIR; tutar `0`'a çevrilmez (P4, C7).
+    ///
+    /// Tutar VARKEN `Money` kurulamıyorsa (negatif tutar, ISO 4217 biçimine uymayan kod,
+    /// üssü aşan hassasiyet) sonuç <c>null</c>'dır — "fiyat sorunuz" DEĞİL. Eskiden bu
+    /// durum sessizce "fiyat sorunuz"a düşürülüyordu ve fiyatı olan bir araç için
+    /// bırakılan talep kalıcı olarak yanlış bir gerçeği taşıyordu; danışman onu galerinin
+    /// kararı sanardı. Çağıran bu <c>null</c>'ı, model adı çözülemediğindeki gibi, talebi
+    /// REDDETMEK için kullanır: yanlış bir gerçeği kaydetmektense hiç kaydetmemek, R9'un
+    /// zaten seçtiği yoldur.
     /// </summary>
-    private static PriceSnapshot ToPrice(ShowcasePriceDto price)
+    private static PriceSnapshot? ToPrice(ShowcasePriceDto price)
     {
-        if (price.OnRequest || price.Amount is null || price.CurrencyCode is null || price.MinorUnitExponent is null)
+        if (price.OnRequest)
         {
             return PriceSnapshot.OnRequest();
         }
 
+        if (price.Amount is null || price.CurrencyCode is null || price.MinorUnitExponent is null)
+        {
+            return null;
+        }
+
         Result<Money> money = Money.Create(price.Amount.Value, price.CurrencyCode, price.MinorUnitExponent.Value);
 
-        return money.IsSuccess ? PriceSnapshot.Of(money.Value) : PriceSnapshot.OnRequest();
+        return money.IsSuccess ? PriceSnapshot.Of(money.Value) : null;
     }
 }

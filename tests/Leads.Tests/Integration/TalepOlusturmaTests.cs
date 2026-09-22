@@ -232,6 +232,56 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         Assert.Equal(3, okunan.Vehicle.PriceMinorUnitExponent);
     }
 
+    /// <summary>
+    /// Fiyat ÇÖZÜLEMEZSE talep reddedilir — model adı çözülemediğindeki gibi. Eskiden
+    /// sessizce "fiyat sorunuz"a düşülüyordu ve fiyatı olan bir araç için bırakılan
+    /// talep kalıcı olarak yanlış bir gerçeği taşıyordu (L2).
+    /// </summary>
+    [Fact(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    public async Task Reddedilir_FiyatCozulemezse()
+    {
+        await database.ResetAsync();
+        TalepOlusturmaHarness harness = new(database);
+        harness.Ilanlar.FiyatiCozulemezYap();
+
+        Result<Guid> sonuc = await harness.CalistirAsync(TalepOlusturmaHarness.Komut());
+
+        Assert.True(sonuc.IsFailure);
+        Assert.Equal(LeadErrors.ListingUnavailable, sonuc.Error.Code);
+        await KayitOlusmadiginiDogrulaAsync();
+    }
+
+    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    public async Task Kaydedilir_SinirdakiIdempotentlikAnahtariyla()
+    {
+        await database.ResetAsync();
+        TalepOlusturmaHarness harness = new(database);
+
+        Result<Guid> sonuc = await harness.CalistirAsync(
+            TalepOlusturmaHarness.Komut(anahtar: new string('k', Lead.MaximumIdempotencyKeyLength)));
+
+        Assert.True(sonuc.IsSuccess);
+    }
+
+    /// <summary>
+    /// Kolon `character varying(100)`. Doğrulama olmadan aşan anahtar doğrudan
+    /// PostgreSQL'e gider, orada patlar, tekil indeks çakışmasına benzemediği için
+    /// yakalanmaz ve ziyaretçi 500 alıp talebini KAYBEDER.
+    /// </summary>
+    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    public async Task Reddedilir_SiniriAsanIdempotentlikAnahtari()
+    {
+        await database.ResetAsync();
+        TalepOlusturmaHarness harness = new(database);
+
+        Result<Guid> sonuc = await harness.CalistirAsync(
+            TalepOlusturmaHarness.Komut(anahtar: new string('k', Lead.MaximumIdempotencyKeyLength + 1)));
+
+        Assert.True(sonuc.IsFailure);
+        Assert.Equal(LeadErrors.IdempotencyKeyTooLong, sonuc.Error.Code);
+        await KayitOlusmadiginiDogrulaAsync();
+    }
+
     [Fact(DisplayName = "AC-23: Araca bağlı talep, o aracın şubesine bağlanır")]
     public async Task Baglanir_IlaninSubesine()
     {
