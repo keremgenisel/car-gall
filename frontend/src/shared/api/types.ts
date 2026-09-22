@@ -106,4 +106,33 @@ export interface AddStaffRequest {
   readonly role: StaffRole
   readonly preferredLocale: string
   readonly branchId: string | null
+ * Talep tipleri backend sözleşmesinin kapalı kümesidir (0005 R3). Uç kendi listesini
+ * uydurmaz: burada olmayan bir değer sunucuda `lead.invalid_type` ile reddedilir.
+ *
+ * `trade_in` BİLEREK yok: takas sistemde tanınan bir tiptir ama bu spec'te kabul
+ * edilmez (AC-10) ve ziyaretçiye seçtirilecek bir şey değildir.
+ */
+export const LEAD_TYPES = [
+  'information_request',
+  'call_back',
+  'test_drive',
+  'price_offer',
+  'financing_consultation',
+] as const
+
+export type LeadType = (typeof LEAD_TYPES)[number]
+
+export interface CaptureLeadRequest {
+  readonly listingSlug: string
+  readonly leadType: LeadType
+  readonly locale: string
+  readonly fullName: string
+  readonly phone: string | null
+  readonly email: string | null
+  readonly message: string | null
+  readonly consentGiven: boolean
+}
+
+export interface CaptureLeadResponse {
+  readonly leadId: string
 }

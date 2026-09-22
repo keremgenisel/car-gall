@@ -39,6 +39,49 @@ export class ApiError extends Error {
 
 const DEFAULT_ERROR_CODE = 'api.unavailable'
 
+/**
+ * Yazma isteği. `Idempotency-Key` ZORUNLUDUR (docs/conventions.md § 3): ağ hatası isteğin
+ * sunucuya ulaşmasından *sonra* olduysa, "tekrar dene" aynı anahtarı yeniden gönderir ve
+ * ikinci bir kayıt oluşmaz. Anahtarı client üretmez — çağıran üretir ve formun ömrü
+ * boyunca saklar; burada üretilseydi her deneme yeni bir anahtar alırdı ve koruma
+ * tam da işe yarayacağı anda kaybolurdu.
+ */
+export async function postJson<TResponse>(
+  path: string,
+  body: unknown,
+  locale: AppLocale,
+  idempotencyKey: string,
+  signal?: AbortSignal,
+): Promise<TResponse> {
+  let response: Response
+
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      signal,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Accept-Language': locale,
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify(body),
+    })
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === 'AbortError') {
+      throw cause
+    }
+
+    throw new ApiError(DEFAULT_ERROR_CODE, null)
+  }
+
+  if (!response.ok) {
+    throw await toApiError(response)
+  }
+
+  return (await response.json()) as TResponse
+}
+
 export async function getJson<TResponse>(
   path: string,
   locale: AppLocale,
