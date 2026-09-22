@@ -9,9 +9,15 @@ namespace CarGallery.Modules.Identity.Endpoints.Authentication;
 /// R10/AC-33 — **zorunlu parola değişimi bekleyen personelin yalnızca parola değiştirme
 /// ve çıkış istekleri çalışır; diğer her yönetim isteği reddedilir.**
 ///
-/// İzin verilen iki yol AÇIKÇA sayılır ve yönetim kökünün altındaki başka her yol
-/// kapalıdır. Tersi (yasaklananları saymak) bir sonraki panel spec'i yeni bir uç
-/// eklediğinde onu sessizce açık bırakırdı.
+/// Kapı YALNIZCA yönetim kökünü (`/api/admin`) yönetir ve o kökün altında izin verilen
+/// tek yol AÇIKÇA sayılır: kendi parolasını değiştirme. Tersi (yasaklananları saymak)
+/// bir sonraki panel spec'i yeni bir uç eklediğinde onu sessizce açık bırakırdı.
+///
+/// **Çıkış burada sayılmaz** çünkü buraya hiç uğramaz: `/api/identity/sessions/current`
+/// yönetim kökünün DIŞINDADIR ve ilk koşuldan geçemez. Bir zamanlar burada onu da
+/// muaf tutan bir koşul vardı; hiçbir zaman `false` olamıyordu ve okuyana var olmayan
+/// bir koruma vaat ediyordu. Çıkışın çalışması kapının izninden değil, kapının
+/// kapsamından geliyor.
 ///
 /// Karşılık `403`'tür, `401` değil: kimlik VARDIR, yalnız bu hâlde yetkisi yoktur.
 /// `401` dönseydi uç giriş ekranına yönlendirir ve personel giriş–yönlendirme
@@ -20,7 +26,6 @@ namespace CarGallery.Modules.Identity.Endpoints.Authentication;
 internal sealed class PasswordChangeGate(RequestDelegate next)
 {
     internal const string OwnPasswordPath = $"{AdminSurface.RoutePrefix}/me/password";
-    internal const string LogoutPath = "/api/identity/sessions/current";
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -53,7 +58,6 @@ internal sealed class PasswordChangeGate(RequestDelegate next)
             return false;
         }
 
-        return !context.Request.Path.StartsWithSegments(OwnPasswordPath)
-            && !context.Request.Path.StartsWithSegments(LogoutPath);
+        return !context.Request.Path.StartsWithSegments(OwnPasswordPath);
     }
 }

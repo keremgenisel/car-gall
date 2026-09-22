@@ -3,6 +3,7 @@ using CarGallery.Modules.Identity.Application;
 using CarGallery.Modules.Identity.Domain;
 using CarGallery.Modules.Identity.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CarGallery.Modules.Identity.Tests.Integration;
 
@@ -214,6 +215,61 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.NotEmpty(liste);
     }
 
+    /// <summary>
+    /// AC-50'nin ikinci yarısı: özet yanıtta olmamakla kalmaz, veritabanından HİÇ
+    /// ÇIKMAZ. Projeksiyon bellekte yapılsaydı yanıt yine doğru olurdu — bu yüzden
+    /// alan adlarına bakan test bunu göremezdi; ölçülmesi gereken şey ÜRETİLEN SQL.
+    ///
+    /// C6 parola malzemesini mümkün olan en dar yerde tutmayı istiyor ve liste sorgusu
+    /// için o yer "hiç" — özete ihtiyaç duymuyor.
+    /// </summary>
+    [Fact(DisplayName = "AC-50: Personel listesi sorgusu parola özeti kolonunu veritabanından hiç çekmez")]
+    public async Task CekmezOzetKolonunu_PersonelListesiSorgusu()
+    {
+        IdentityHarness harness = await KurAsync();
+
+        YakalayanLogger logger = new();
+
+        await using IdentityDbContext context = LogluContext(logger);
+
+        StaffCommands komutlar = new(
+            context,
+            IdentityDatabase.CreateUnitOfWork(context, harness.Saat),
+            new Pbkdf2PasswordHasher(harness.Secenekler),
+            new FakeBranchValidator(),
+            harness.Localeler,
+            harness.Secenekler,
+            harness.Saat);
+
+        IReadOnlyList<StaffListItem> liste = await komutlar.ListAsync(CancellationToken.None);
+
+        // Boş liste üzerinde her iddia bedava doğru olurdu.
+        Assert.NotEmpty(liste);
+        Assert.NotEmpty(logger.Kayitlar);
+
+        // Kolon ÜRETİLEN SQL'de geçmiyor: `SELECT` listesine hiç girmedi.
+        Assert.DoesNotContain(
+            logger.Kayitlar,
+            kayit => kayit.Contains("password_hash", StringComparison.OrdinalIgnoreCase));
+
+        // Liste yine de gerçekten dolduruluyor — sorgu boşa çıkmış değil.
+        Assert.All(liste, item => Assert.False(string.IsNullOrWhiteSpace(item.LoginId)));
+    }
+
+    private IdentityDbContext LogluContext(YakalayanLogger logger)
+    {
+        DbContextOptionsBuilder<IdentityDbContext> builder = new();
+
+        builder
+            .UseNpgsql(
+                database.ConnectionString,
+                npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", IdentityDbContext.Schema))
+            .UseLoggerFactory(LoggerFactory.Create(logging =>
+                logging.AddProvider(logger).SetMinimumLevel(LogLevel.Debug)));
+
+        return new IdentityDbContext(builder.Options);
+    }
+
     [Fact(DisplayName = "AC-42: Galerideki son aktif Yönetici pasifleştirilemez; girişim reddedilir")]
     public async Task Reddedilir_SonAktifYoneticiyiPasiflestirme()
     {
@@ -301,6 +357,52 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
 
         Assert.True((await harness.KomutAsync(
             k => k.ChangeRoleAsync(birinci, "content_editor", CancellationToken.None))).IsSuccess);
+    }
+
+    /// <summary>
+    /// R12/AC-42 — invariant EŞZAMANLILIK altında da tutar.
+    ///
+    /// Kilitsiz oku-karar-ver-yaz deseninde iki eşzamanlı pasifleştirme isteği, İKİSİ de
+    /// "benden başka bir Yönetici var" okuyup ikisi de geçiyordu; sonuç sıfır aktif
+    /// Yönetici, yani sistemin kalıcı olarak kapanmasıydı (Tuzak 1) — ve kurulum hesabı
+    /// idempotent olduğu için (var olan hesaba dokunmaz) oradan dönüş yoktu.
+    ///
+    /// Yarış tek turda her zaman gerçekleşmez; test bu yüzden turu TEKRARLIYOR. Doğru
+    /// koddaki sonuç her turda aynı: tam olarak biri geçer. Yanlış kodda bir turun
+    /// kaçması kaçınılmaz değil — birkaç tur onu güvenilir biçimde yakalıyor.
+    /// </summary>
+    [Fact(DisplayName = "AC-42: İki Yönetici aynı anda pasifleştirilmek istendiğinde yalnızca biri geçer; galeride her zaman en az bir aktif Yönetici kalır")]
+    public async Task Korunur_SonAktifYonetici_EsZamanliPasiflestirmede()
+    {
+        for (int tur = 0; tur < 5; tur++)
+        {
+            IdentityHarness harness = await KurAsync();
+            await harness.PersonelEkleAsync(IdentityHarness.EkleKomutu(kimlik: "ikinci@ornek.com", rol: "manager"));
+
+            IReadOnlyList<StaffListItem> liste =
+                await harness.KomutAsync(k => k.ListAsync(CancellationToken.None));
+
+            Guid birinci = liste.Single(item => item.LoginId == "yonetici@ornek.com").StaffId;
+            Guid ikinci = liste.Single(item => item.LoginId == "ikinci@ornek.com").StaffId;
+
+            // İki AYRI istek, iki ayrı `DbContext` — `KomutAsync` her çağrıda kendi
+            // bağlamını açar. Gerçek boru hattındaki iki eşzamanlı isteğin karşılığı.
+            Task<Result> a = harness.KomutAsync(k => k.DeactivateAsync(birinci, CancellationToken.None));
+            Task<Result> b = harness.KomutAsync(k => k.DeactivateAsync(ikinci, CancellationToken.None));
+
+            Result[] sonuclar = await Task.WhenAll(a, b);
+
+            Assert.Equal(1, sonuclar.Count(sonuc => sonuc.IsSuccess));
+
+            Result reddedilen = sonuclar.Single(sonuc => sonuc.IsFailure);
+            Assert.Equal(IdentityErrors.LastActiveManager, reddedilen.Error.Code);
+
+            // Asıl iddia: galeri açık kaldı.
+            IReadOnlyList<StaffListItem> kalan =
+                await harness.KomutAsync(k => k.ListAsync(CancellationToken.None));
+
+            Assert.Single(kalan, item => item.Role == "manager" && item.Status == "active");
+        }
     }
 
     private async Task<IdentityHarness> KurAsync()

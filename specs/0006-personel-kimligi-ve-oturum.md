@@ -471,8 +471,8 @@ adına kopyalanan sabit sayı, yapılandırma değiştiği gün yalan söylerdi.
 | Ölçüt | Değer | Not |
 |---|---|---|
 | **Spec revizyon sayısı** | **1** | 2026-09-22, AP-08. Uygulama başlamadan önceki CLARIFY turu: 19 açık soru, hepsi onaylanıp işlendi. Kriter sayısı 41 → 61. Altısının sonucu doğrudan güvenlikti; en pahalısı, ayırt edilemezlik kuralının kilitlenme kanalından geri açılmasıydı. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | 6 / 0 | Uygulama sırasında çıkan altı bulgunun altısı da gerçekti: (1) `/admin` bugüne kadar `404` dönüyordu — locale ara katmanı ilk segmenti dil sanıyordu; (2) giriş istemci tarafında olduğu için panel personelin dilinde AÇILMIYORDU; (3) Satış Danışmanı panelde "getirilemedi, tekrar dene" hatası görüyor ve personel ekleme formu ona da basılıyordu; (4) `TypedResults.Problem` gövdeye çevrilmiş İngilizce `title` koyuyordu; (5) kurulum Yönetici hesabını migration'ın İÇİNE koymak teknik olarak imkânsızdı (migration çalışma anı yapılandırmasını okuyamaz); (6) E2E yardımcılarında iki yarış — `isVisible()` beklemiyor ve `page.goto` tam gezinmeyi yarıda kesiyordu. |
+| **Düzeltme turu sayısı** | **2** | (1) CI'ın E2E ve frontend işleri kırmızıydı: kurulum parolası iki yerde ayrı ayrı yazılmıştı ve ölü fonksiyon temizliği çalışan iki yardımcıyı da silmişti. (2) Triyajdan dört gerçek bulgu geldi — hepsi düzeltildi. |
+| **Bulgu gerçek/gürültü oranı** | 11 / 0 | Uygulama sırasında çıkan altı bulgunun altısı da gerçekti: (1) `/admin` bugüne kadar `404` dönüyordu — locale ara katmanı ilk segmenti dil sanıyordu; (2) giriş istemci tarafında olduğu için panel personelin dilinde AÇILMIYORDU; (3) Satış Danışmanı panelde "getirilemedi, tekrar dene" hatası görüyor ve personel ekleme formu ona da basılıyordu; (4) `TypedResults.Problem` gövdeye çevrilmiş İngilizce `title` koyuyordu; (5) kurulum Yönetici hesabını migration'ın İÇİNE koymak teknik olarak imkânsızdı (migration çalışma anı yapılandırmasını okuyamaz); (6) E2E yardımcılarında iki yarış — `isVisible()` beklemiyor ve `page.goto` tam gezinmeyi yarıda kesiyordu; (7) "Performans" iş akışı 0006'nın değiştirdiği başlangıç sözleşmesi yüzünden hiç tamamlanmıyordu ve sınırsız bekleme döngüsü bunu SESSİZ bırakıyordu. **Triyajdan dört bulgu daha, dördü de gerçek:** (8) Host `dealership` şemasını hiç uygulamıyordu — şubeli personel ekleme temiz kurulumda 500 veriyordu ve AC-38'in iki testi de sahte doğrulayıcı kullandığı için bunu göremiyordu; (9) son aktif Yönetici koruması eşzamanlı iki isteğe açıktı — ikisi de geçebiliyor ve galeri kalıcı olarak kapanabiliyordu; (10) personel listesi bütün `Staff` entity'sini, parola özeti dâhil, belleğe çekiyordu; (11) `PasswordChangeGate`'te hiçbir zaman çalışmayan bir koşul, yorumun vaat ettiği korumayla çelişiyordu. |
 | **Regresyon sayısı** | 1 | `LocaleYonlendirmeTests` kırıldı: Host artık başlangıçta `identity` şemasını uygulayıp kurulum hesabını garanti ediyor ve o testler veritabanına hiç dokunmuyordu. Teste özel bir bayrakla atlamak yerine fabrikaya gerçek veritabanı verildi — bayrak, üretimde kapalı kalabilecek bir yol açardı. |
 | **Kaçan hata** | - | Henüz bilinmiyor. |
 
@@ -483,6 +483,13 @@ iki parçaya bölündü: şema ve politikalar modülde, boru hattı Host'ta. Mod
 silinse yönetim yüzeyinin tamamı korumasız kalırdı ve hiçbiri kırmızıya dönmezdi. Bunu
 gösteren tek test, rotaları tarayıp gerçek boru hattına istek atan Host testi oldu; sonda
 olarak gruba takılmamış korumasız bir uç eklendiğinde de yalnızca o kırmızı verdi.
+
+Üçüncü yarısını triyaj yazdırdı ve aynı cümlenin tersi: **sahte bir komşu, kabloyu test
+etmez.** AC-38'in iki testi de `FakeBranchValidator` kullanıyordu; sözleşmeyi doğruluyor
+ama `Identity` → `Dealership` atlamasını hiç geçmiyorlardı. Şemanın üretim yolunda hiç
+uygulanmadığı, ancak gerçek boru hattına gerçek bir istek atıldığında görüldü — ve o istek
+`42P01` ile çöküyordu. Modül sınırı testte sahtelemeyi ZORUNLU kılıyor (`docs/testing.md`
+§ 1); o zaman kabloyu sınayan testin `Host.Tests`'te yaşaması da zorunlu.
 
 İkinci yarısı aynı derse ait: **sayılamayan bir ifade hiçbir testi kırmaz.** Intent'in
 ölçüsü "korumasız kalmış tek bir yönetim yüzeyi kalmaması"ydı ve bu, uçları elle sayan

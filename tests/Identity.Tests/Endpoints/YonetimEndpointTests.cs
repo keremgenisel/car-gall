@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using CarGallery.Modules.Identity.Contracts;
 using CarGallery.Modules.Identity.Tests.Integration;
+using Microsoft.AspNetCore.Http;
 
 namespace CarGallery.Modules.Identity.Tests.Endpoints;
 
@@ -102,18 +103,31 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
             (await api.Client.GetAsync($"{AdminSurface.RoutePrefix}/staff")).StatusCode);
     }
 
+    /// <summary>
+    /// Çıkışın çalışması bir İZİNDEN değil, kapının KAPSAMINDAN geliyor: çıkış yolu
+    /// yönetim kökünün dışında ve `PasswordChangeGate` o kökle sınırlı. Bu ayrımın
+    /// yazılı olması önemli — bir zamanlar kapıda çıkışı muaf tutan bir koşul vardı,
+    /// hiçbir zaman çalışmıyordu ve okuyana var olmayan bir koruma vaat ediyordu.
+    /// </summary>
     [Fact(DisplayName = "AC-33: Zorunlu parola değişimi bekleyen personelin yalnızca parola değiştirme ve çıkış istekleri çalışır; diğer her yönetim isteği reddedilir")]
     public async Task Calisir_ParolaDegisimiBekleyeninCikisi()
     {
+        // Çıkış yolu yönetim kökünün DIŞINDA: kapı onu hiç görmüyor. Yol bir gün kökün
+        // altına taşınırsa bu satır kırmızıya döner ve muafiyet açıkça yazılmak zorunda
+        // kalır — sessizce kilitlenen bir çıkış yerine kırmızı bir test.
+        Assert.False(new PathString(CikisYolu).StartsWithSegments(AdminSurface.RoutePrefix));
+
         await database.ResetAsync();
         await using ModuleApi api = await ModuleApi.StartAsync(database);
 
         await GirisAsync(api, ModuleApi.SeedYoneticiKimligi, ModuleApi.SeedYoneticiParolasi);
 
-        HttpResponseMessage cikis = await api.Client.DeleteAsync("/api/identity/sessions/current");
+        HttpResponseMessage cikis = await api.Client.DeleteAsync(CikisYolu);
 
         Assert.Equal(HttpStatusCode.NoContent, cikis.StatusCode);
     }
+
+    private const string CikisYolu = "/api/identity/sessions/current";
 
     /// <summary>
     /// C17/AC-29 — token yanıt GÖVDESİNE hiç girmez ve çerez `HttpOnly`'dir; sayfadaki

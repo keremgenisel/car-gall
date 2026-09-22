@@ -2,6 +2,7 @@ using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Identity.Domain;
 using CarGallery.Modules.Identity.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace CarGallery.Modules.Identity.Application;
 
@@ -98,12 +99,19 @@ internal sealed class StaffCommands(
         return Result.Success(staff.Value.Id.Value);
     }
 
+    /// <summary>
+    /// AC-43 — son aktif Yöneticinin rolü düşürülemez. Okuma, karar ve yazma TEK
+    /// transaction içinde ve kilit altında yapılır; gerekçesi `StaffQueries`'te.
+    /// </summary>
     internal async Task<Result> ChangeRoleAsync(Guid staffId, string? role, CancellationToken cancellationToken)
     {
         if (!StaffRoleCode.TryParse(role, out StaffRole parsed))
         {
             return Result.Failure(Error.With(IdentityErrors.StaffNotFound, "field", "role"));
         }
+
+        await using IDbContextTransaction transaction =
+            await context.Database.BeginTransactionAsync(cancellationToken);
 
         Staff? staff = await FindAsync(staffId, cancellationToken);
 
@@ -113,7 +121,7 @@ internal sealed class StaffCommands(
         }
 
         int otherActiveManagers =
-            await StaffQueries.CountOtherActiveManagersAsync(context, staff.Id, cancellationToken);
+            await StaffQueries.LockAndCountOtherActiveManagersAsync(context, staff.Id, cancellationToken);
 
         Result result = staff.ChangeRole(parsed, otherActiveManagers);
 
@@ -123,12 +131,20 @@ internal sealed class StaffCommands(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result.Success();
     }
 
+    /// <summary>
+    /// AC-42 — son aktif Yönetici pasifleştirilemez. Okuma, karar ve yazma TEK
+    /// transaction içinde ve kilit altında yapılır; gerekçesi `StaffQueries`'te.
+    /// </summary>
     internal async Task<Result> DeactivateAsync(Guid staffId, CancellationToken cancellationToken)
     {
+        await using IDbContextTransaction transaction =
+            await context.Database.BeginTransactionAsync(cancellationToken);
+
         Staff? staff = await FindAsync(staffId, cancellationToken);
 
         if (staff is null)
@@ -137,7 +153,7 @@ internal sealed class StaffCommands(
         }
 
         int otherActiveManagers =
-            await StaffQueries.CountOtherActiveManagersAsync(context, staff.Id, cancellationToken);
+            await StaffQueries.LockAndCountOtherActiveManagersAsync(context, staff.Id, cancellationToken);
 
         Result result = staff.Deactivate(otherActiveManagers);
 
@@ -152,6 +168,7 @@ internal sealed class StaffCommands(
         await RevokeSessionsAsync(staff.Id, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result.Success();
     }
@@ -219,24 +236,45 @@ internal sealed class StaffCommands(
         return Result.Success();
     }
 
+    /// <summary>
+    /// AC-50 — parola ve parola özeti bu listede BULUNMAZ; alan olarak da yoktur.
+    ///
+    /// Projeksiyon SORGUYA yazılır, belleğe değil: bütün `Staff` entity'si çekilseydi
+    /// `password_hash` hiç gerekmediği hâlde her liste isteğinde veritabanından süreç
+    /// belleğine inerdi. Yanıt yine doğru olurdu ama parola malzemesi mümkün olandan
+    /// geniş bir alanda dolaşırdı — C6 tam olarak bunu daraltmayı istiyor ve burada
+    /// daraltmanın bedeli sıfır.
+    ///
+    /// Rol ve durum KODU bellekte üretiliyor: sözlük araması SQL'e çevrilemez. Çevrilen
+    /// satırlar yalnızca yukarıda sayılan kolonlardır.
+    /// </summary>
     internal async Task<IReadOnlyList<StaffListItem>> ListAsync(CancellationToken cancellationToken)
     {
-        List<Staff> staff = await context.Staff
+        var rows = await context.Staff
             .AsNoTracking()
             .OrderBy(item => item.DisplayName)
+            .Select(item => new
+            {
+                item.Id,
+                item.DisplayName,
+                item.LoginId,
+                item.Role,
+                item.Status,
+                item.PreferredLocale,
+                item.BranchId,
+            })
             .ToListAsync(cancellationToken);
 
-        // AC-50 — parola ve parola özeti bu listede BULUNMAZ; alan olarak da yoktur.
         return
         [
-            .. staff.Select(item => new StaffListItem(
-                item.Id.Value,
-                item.DisplayName,
-                item.LoginId.Value,
-                StaffRoleCode.ToCode(item.Role),
-                StaffStatusCode.ToCode(item.Status),
-                item.PreferredLocale.Code,
-                item.BranchId))
+            .. rows.Select(row => new StaffListItem(
+                row.Id.Value,
+                row.DisplayName,
+                row.LoginId.Value,
+                StaffRoleCode.ToCode(row.Role),
+                StaffStatusCode.ToCode(row.Status),
+                row.PreferredLocale.Code,
+                row.BranchId))
         ];
     }
 
