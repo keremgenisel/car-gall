@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Application;
 using CarGallery.Modules.Identity.Contracts.Sessions;
 using CarGallery.Modules.Identity.Infrastructure;
@@ -107,5 +108,6 @@ internal sealed class IdentityHarness(IdentityDatabase database)
         new FakeBranchValidator(),
         Localeler,
         Secenekler,
+        InvariantGuardOptions.Default,
         Saat);
 }

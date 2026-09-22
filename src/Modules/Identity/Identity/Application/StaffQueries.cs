@@ -1,54 +1,24 @@
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Domain;
 using CarGallery.Modules.Identity.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarGallery.Modules.Identity.Application;
 
 /// <summary>
-/// Son Yönetici korumasının (D3) sayısı. Sayıya YALNIZCA durumu aktif olanlar girer;
-/// geçici kilitlenme burada hiç görünmez, çünkü kilit ayrı bir tabloda yaşar (AC-45).
+/// Son Yönetici korumasının (D3) kilit kümesi. Kümeye YALNIZCA durumu aktif olanlar girer;
+/// geçici kilitlenme burada hiç görünmez, çünkü kilit ayrı bir tabloda yaşar (0006/AC-45).
 ///
-/// **Sayım kilitleyerek okur.** R12 "galeride her zaman en az bir aktif Yönetici bulunur"
-/// diyor; bir invariant dar bir pencerede bile delinebiliyorsa invariant değildir. Kilitsiz
-/// oku-karar-ver-yaz, iki eşzamanlı pasifleştirme isteğinin İKİSİNİN de "benden başka bir
-/// Yönetici var" görmesine ve ikisinin de geçmesine izin veriyordu — sonuç sıfır aktif
-/// Yönetici, yani sistemin kalıcı olarak kapanması (Tuzak 1). Kurulum hesabı idempotent
-/// olduğu için (var olan hesaba dokunmaz) o durumdan kurtarmaz.
+/// Kilidi bu dosya ALMAZ — tarifi verir, `InvariantGuard` uygular (0007 R3). Kilidin nasıl
+/// alındığı, neden hedefin de kilitlendiği ve agregatın neden kilitten sonra okunduğu tek
+/// bir yerde yazılı: `BuildingBlocks/Concurrency/InvariantGuard.cs`.
+///
+/// Yüklem `const`'tur ve değerler parametredir; dizeye gömülmez (bkz. `InvariantLock`).
 /// </summary>
 internal static class StaffQueries
 {
-    /// <summary>
-    /// Aktif Yönetici satırlarının HEPSİNİ — hedef dâhil — `FOR UPDATE` ile kilitler ve
-    /// sonra sayar. Kilit çağıranın transaction'ı boyunca sürer; ikinci istek burada
-    /// bekler, birinci commit edince YENİDEN okur ve kararını güncel sayıyla verir.
-    ///
-    /// `ORDER BY id`: eşzamanlı iki istek satırları aynı sırada kilitler, karşılıklı
-    /// kilitlenme (deadlock) oluşmaz.
-    ///
-    /// Hedef satır da kilit kümesindedir: dışlanan yalnız SAYIdan düşülür, kilitten değil.
-    /// Aksi hâlde iki istek iki ayrı satır kilitler ve hiç serileşmezlerdi.
-    /// </summary>
-    internal static async Task<int> LockAndCountOtherActiveManagersAsync(
-        IdentityDbContext context,
-        StaffId excluded,
-        CancellationToken cancellationToken)
-    {
-        List<Guid> activeManagers = await context.Database
-            .SqlQueryRaw<Guid>(LockActiveManagersSql, (int)StaffRole.Manager, (int)StaffStatus.Active)
-            .ToListAsync(cancellationToken);
-
-        return activeManagers.Count(id => id != excluded.Value);
-    }
-
-    /// <summary>
-    /// `Value` takma adı EF'in skaler `SqlQuery` sözleşmesidir. Şema adı parametre
-    /// olamaz; sabitten gelir, kullanıcı girdisinden değil.
-    /// </summary>
-    private const string LockActiveManagersSql = $$"""
-        SELECT id AS "Value"
-        FROM {{IdentityDbContext.Schema}}.staff
-        WHERE role = {0} AND status = {1}
-        ORDER BY id
-        FOR UPDATE
-        """;
+    internal static readonly InvariantLock ActiveManagers = new(
+        IdentityDbContext.Schema,
+        "staff",
+        "role = {0} AND status = {1}",
+        [(int)StaffRole.Manager, (int)StaffStatus.Active]);
 }

@@ -114,7 +114,7 @@ R4 yalnızca bu tabloya uygulanır.
 
 | Kural | Yer | Bugünkü durum |
 |---|---|---|
-| **R12** — en az bir aktif Yönetici (pasifleştirme) | `Identity/Application/StaffCommands.cs` `DeactivateAsync` | **Korumalı** — `BeginTransaction` + `LockAndCountOtherActiveManagersAsync` |
+| **R12** — en az bir aktif Yönetici (pasifleştirme) | `Identity/Application/StaffCommands.cs` `DeactivateAsync` | **Yarı korumalı** — kilit var, ama agregat kilitten ÖNCE okunuyor (AC-3) |
 | **R12** — en az bir aktif Yönetici (rol düşürme) | `Identity/Application/StaffCommands.cs` `ChangeRoleAsync` | **Korumalı** — aynı kilidi kullanıyor |
 | **B5** — en az bir aktif şube | `Dealership/Domain/Branch.cs` `Close` | **Korumasız ve ulaşılamaz** — `Close` hiçbir yerden çağrılmıyor (`grep '.Close('` → sıfır isabet); `0003` § D1 gereği `Dealership`'in yazma ucu yok |
 
@@ -126,11 +126,14 @@ Envanterin ilk iki satırı **bugün zaten yeşildir**: `0006`'nın nokta çöz�
 pasifleştirmeyi hem rol düşürmeyi kilitle koruyor (doğrulandı:
 [StaffCommands.cs:114-126](src/Modules/Identity/Identity/Application/StaffCommands.cs#L114-L126),
 [StaffQueries.cs:52](src/Modules/Identity/Identity/Application/StaffQueries.cs#L52)).
-Dolayısıyla bu spec'in yeni davranışı üç kalemdir:
+Dolayısıyla bu spec'in yeni davranışı dört kalemdir:
 
-1. **Şube tarafı** — bugün korumasız; kapatma komutu hiç yok (D2).
-2. **Ortak desen** — üç yerde üç çözüm olmasın diye (D1).
-3. **Mimari test** — deseni atlayan yolu bildiren kapı (R5).
+1. **Bayat agregat** — kilit doğru alınıyor ama karar, kilitten ÖNCE okunmuş bayat bir
+   kopyayla veriliyor; aynı hedefe gelen ikinci istek kaydı yeniden yazıyor (AC-3).
+   *Ölçüldü: A grubunun referans koşusunda kırmızı.*
+2. **Şube tarafı** — bugün korumasız; kapatma komutu hiç yok (D2).
+3. **Ortak desen** — üç yerde üç çözüm olmasın diye (D1).
+4. **Mimari test** — deseni atlayan yolu bildiren kapı (R5).
 
 Kabul kriterleri bu ayrımı korur: **A grubu** var olan davranışın regresyon koruması,
 **B–E grupları** yeni davranıştır.
@@ -180,18 +183,24 @@ durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
 
 ### A. Bugün karşılanıyor — regresyon koruması
 
+> **AC-3 buradan çıkarıldı.** Ölçüldü ve karşılanmıyordu: aynı Yöneticiyi hedefleyen iki
+> eşzamanlı istekte ikisi de başarılı oluyordu. B grubuna taşındı — bu spec'in yeni
+> davranışı. Numarası korundu; kriter numaraları yeniden kullanılmaz.
+
+
 - **AC-1.** İki eşzamanlı istek son iki aktif Yöneticiden **farklı** ikisini pasifleştirmeye
   çalıştığında yalnızca biri başarılı olur; diğeri `identity.last_active_manager` ile
   reddedilir.
 - **AC-2.** AC-1'in ardından galeride **tam olarak bir** aktif Yönetici kalır.
-- **AC-3.** İki eşzamanlı istek **aynı** Yöneticiyi pasifleştirmeye çalıştığında ikincisi
-  hiçbir kaydı değiştirmez ve kararlı bir hata koduyla döner.
 - **AC-4.** İki eşzamanlı istek son iki aktif Yöneticiden farklı ikisinin rolünü düşürmeye
   çalıştığında yalnızca biri başarılı olur.
 - **AC-5.** Pasifleştirme ve rol düşürme **birbirine karşı da** serileşir: biri
   pasifleştirirken diğeri rol düşürüyorsa ikisi birden geçemez.
 
-### B. Yeni davranış — şube tarafı
+### B. Yeni davranış — bayat agregat ve şube tarafı
+
+- **AC-3.** İki eşzamanlı istek **aynı** Yöneticiyi pasifleştirmeye çalıştığında ikincisi
+  hiçbir kaydı değiştirmez ve kararlı bir hata koduyla döner.
 
 - **AC-6.** İki eşzamanlı istek son iki aktif şubeden farklı ikisini kapatmaya çalıştığında
   yalnızca biri başarılı olur; diğeri `branch.last_active_branch` ile reddedilir.
@@ -267,7 +276,7 @@ durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
+| **Spec revizyon sayısı** | **1** | AC-3 A grubundan B grubuna taşındı: "bugün karşılanıyor" diye işaretlenmişti, ölçüldü ve karşılanmıyordu. Kriterin metni değişmedi, sınıflandırması değişti. Onaylanan 2. karar. — Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
 | **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
 | **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
 | **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |

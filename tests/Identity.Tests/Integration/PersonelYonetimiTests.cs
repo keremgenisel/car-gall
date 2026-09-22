@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Application;
 using CarGallery.Modules.Identity.Domain;
 using CarGallery.Modules.Identity.Infrastructure;
@@ -239,6 +240,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
             new FakeBranchValidator(),
             harness.Localeler,
             harness.Secenekler,
+            InvariantGuardOptions.Default,
             harness.Saat);
 
         IReadOnlyList<StaffListItem> liste = await komutlar.ListAsync(CancellationToken.None);
