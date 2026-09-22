@@ -34,6 +34,10 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
     {
         await container.StartAsync();
 
+        // Kurulum adımı uygulamadan ÖNCE koşar: uygulama artık şema UYGULAMAZ, yalnız
+        // güncel mi diye bakar ve eksikse başlamayı reddeder (docs/decisions/0002).
+        await TestSchema.ApplyAsync(container.GetConnectionString());
+
         factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));

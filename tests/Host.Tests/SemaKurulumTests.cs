@@ -92,6 +92,11 @@ public sealed class SemaKurulumTests : IAsyncLifetime
             {
                 builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
                 builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
+
+                // 0006 başlangıç sözleşmesini değiştirdi: başlangıç Yönetici parolası
+                // olmadan uygulama HİÇ kurulmaz ve şema doğrulamasına bile gelemez.
+                // Bu testlerin ölçtüğü şey şema kapısı, o yüzden bu ayar verilmeli.
+                IdentityTestSettings.Apply(builder);
             });
 
         InvalidOperationException hata = Assert.Throws<InvalidOperationException>(
@@ -113,6 +118,11 @@ public sealed class SemaKurulumTests : IAsyncLifetime
             {
                 builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
                 builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
+
+                // 0006 başlangıç sözleşmesini değiştirdi: başlangıç Yönetici parolası
+                // olmadan uygulama HİÇ kurulmaz ve şema doğrulamasına bile gelemez.
+                // Bu testlerin ölçtüğü şey şema kapısı, o yüzden bu ayar verilmeli.
+                IdentityTestSettings.Apply(builder);
             });
 
         HttpResponseMessage yanit = await factory.CreateClient().GetAsync("/api/catalog/field-settings");
