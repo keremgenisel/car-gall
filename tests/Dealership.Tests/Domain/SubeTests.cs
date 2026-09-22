@@ -8,7 +8,7 @@ public sealed class SubeTests
 {
     private static readonly Locale VarsayilanLocale = Locale.Create("tr").Value;
 
-    [Fact(DisplayName = "AC-3: Bir şube; görünen ad, adres, koordinat, telefon, WhatsApp numarası, e-posta, saat dilimi, durum, slug ve görsel medya referansları alanlarıyla kaydedilir")]
+    [Fact(DisplayName = "0003/AC-3: Bir şube; görünen ad, adres, koordinat, telefon, WhatsApp numarası, e-posta, saat dilimi, durum, slug ve görsel medya referansları alanlarıyla kaydedilir")]
     public void Kaydedilir_TumAlanlarla()
     {
         Branch sube = Ac().Value;
@@ -26,7 +26,7 @@ public sealed class SubeTests
         Assert.Single(sube.MediaAssetIds);
     }
 
-    [Fact(DisplayName = "AC-4: Şubenin görünen adı ve adresi locale başına saklanır; aynı şube için TR ve AR adları birbirinden bağımsız okunur")]
+    [Fact(DisplayName = "0003/AC-4: Şubenin görünen adı ve adresi locale başına saklanır; aynı şube için TR ve AR adları birbirinden bağımsız okunur")]
     public void BagimsizOkunur_TrVeArAdlari()
     {
         Branch sube = Ac(Adlar("Kadıköy Şubesi", "فرع كاديكوي")).Value;
@@ -35,7 +35,7 @@ public sealed class SubeTests
         Assert.Equal("فرع كاديكوي", sube.Names.Resolve(Locale.Create("ar").Value, VarsayilanLocale));
     }
 
-    [Fact(DisplayName = "AC-5: Ziyaretçinin locale'inde karşılığı olmayan bir şube adı istendiğinde varsayılan locale'deki ad döner; boş değer dönmez")]
+    [Fact(DisplayName = "0003/AC-5: Ziyaretçinin locale'inde karşılığı olmayan bir şube adı istendiğinde varsayılan locale'deki ad döner; boş değer dönmez")]
     public void VarsayilanaDuser_CevirisiOlmayanLocale()
     {
         Branch sube = Ac(Adlar("Kadıköy Şubesi", null)).Value;
@@ -45,7 +45,7 @@ public sealed class SubeTests
         Assert.Equal("Kadıköy Şubesi", ad);
     }
 
-    [Fact(DisplayName = "AC-6: Varsayılan locale'deki görünen adı veya adresi olmayan bir şube kaydedilemez")]
+    [Fact(DisplayName = "0003/AC-6: Varsayılan locale'deki görünen adı veya adresi olmayan bir şube kaydedilemez")]
     public void Kaydedilemez_VarsayilanLocaleAdiYoksa()
     {
         LocalizedText yalnizArapca = LocalizedText.From(
@@ -57,7 +57,7 @@ public sealed class SubeTests
         Assert.Equal(Branch.DefaultLocaleNameRequired, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-7: Koordinat, WhatsApp numarası ve e-posta zorunlu değildir; üçü de boş bırakılarak bir şube kaydedilebilir")]
+    [Fact(DisplayName = "0003/AC-7: Koordinat, WhatsApp numarası ve e-posta zorunlu değildir; üçü de boş bırakılarak bir şube kaydedilebilir")]
     public void Kaydedilir_OpsiyonelAlanlarBosken()
     {
         Branch sube = Ac().Value;
@@ -67,7 +67,7 @@ public sealed class SubeTests
         Assert.Null(sube.Email);
     }
 
-    [Fact(DisplayName = "AC-16: Galerideki son aktif şube kapatılamaz; girişim reddedilir")]
+    [Fact(DisplayName = "0003/AC-16: Galerideki son aktif şube kapatılamaz; girişim reddedilir")]
     public void Kapatilamaz_SonAktifSube()
     {
         Branch sube = Ac().Value;
@@ -79,7 +79,7 @@ public sealed class SubeTests
         Assert.Equal(BranchStatus.Active, sube.Status);
     }
 
-    [Fact(DisplayName = "AC-17: İki aktif şubeden biri kapatıldığında işlem başarılı olur ve geriye bir aktif şube kalır")]
+    [Fact(DisplayName = "0003/AC-17: İki aktif şubeden biri kapatıldığında işlem başarılı olur ve geriye bir aktif şube kalır")]
     public void Kapatilir_BaskaAktifSubeVarken()
     {
         Branch sube = Ac().Value;
@@ -90,7 +90,7 @@ public sealed class SubeTests
         Assert.Equal(BranchStatus.Closed, sube.Status);
     }
 
-    [Fact(DisplayName = "AC-18: Bir şubenin geçici kapalı yapılması, o şube tek aktif şube olsa bile reddedilmez")]
+    [Fact(DisplayName = "0003/AC-18: Bir şubenin geçici kapalı yapılması, o şube tek aktif şube olsa bile reddedilmez")]
     public void Reddedilmez_TekAktifSubeGeciciKapali()
     {
         Branch sube = Ac().Value;
@@ -101,7 +101,7 @@ public sealed class SubeTests
         Assert.Equal(BranchStatus.TemporarilyClosed, sube.Status);
     }
 
-    [Fact(DisplayName = "AC-19: Kapatılmış bir şube yeniden aktif edilemez; girişim reddedilir")]
+    [Fact(DisplayName = "0003/AC-19: Kapatılmış bir şube yeniden aktif edilemez; girişim reddedilir")]
     public void YenidenAktifEdilemez_KapatilmisSube()
     {
         Branch sube = Ac().Value;
@@ -123,7 +123,7 @@ public sealed class SubeTests
         Assert.Equal(BranchStatus.Active, sube.Status);
     }
 
-    [Fact(DisplayName = "AC-20: Yeni bir şube açıldığında BranchOpened duyurusu üretilir ve şube kimliğiyle locale başına adları taşır")]
+    [Fact(DisplayName = "0003/AC-20: Yeni bir şube açıldığında BranchOpened duyurusu üretilir ve şube kimliğiyle locale başına adları taşır")]
     public void OlayUretilir_SubeAcildiginda()
     {
         Branch sube = Ac().Value;
@@ -131,7 +131,7 @@ public sealed class SubeTests
         Assert.Single(sube.DomainEvents.OfType<BranchWasOpened>());
     }
 
-    [Fact(DisplayName = "AC-21: Şubenin görünen adı değiştiğinde BranchDetailsChanged duyurusu üretilir ve locale başına güncel adları taşır")]
+    [Fact(DisplayName = "0003/AC-21: Şubenin görünen adı değiştiğinde BranchDetailsChanged duyurusu üretilir ve locale başına güncel adları taşır")]
     public void OlayUretilir_GorunenAdDegistiginde()
     {
         Branch sube = Ac().Value;
@@ -143,7 +143,7 @@ public sealed class SubeTests
         Assert.Equal("Bostancı Şubesi", sube.Names.Resolve(VarsayilanLocale, VarsayilanLocale));
     }
 
-    [Fact(DisplayName = "AC-22: Şubenin adresi, telefonu, koordinatı, saat dilimi veya slug'ı değiştiğinde BranchDetailsChanged duyurusu üretilmez")]
+    [Fact(DisplayName = "0003/AC-22: Şubenin adresi, telefonu, koordinatı, saat dilimi veya slug'ı değiştiğinde BranchDetailsChanged duyurusu üretilmez")]
     public void OlayUretilmez_AdDisindakiAlanlarDegistiginde()
     {
         Branch sube = Ac().Value;
@@ -158,7 +158,7 @@ public sealed class SubeTests
         Assert.Empty(sube.DomainEvents);
     }
 
-    [Fact(DisplayName = "AC-23: Bir şube kapatılmış durumuna geçtiğinde BranchDeactivated duyurusu üretilir")]
+    [Fact(DisplayName = "0003/AC-23: Bir şube kapatılmış durumuna geçtiğinde BranchDeactivated duyurusu üretilir")]
     public void OlayUretilir_SubeKapatildiginda()
     {
         Branch sube = Ac().Value;
@@ -169,7 +169,7 @@ public sealed class SubeTests
         Assert.Single(sube.DomainEvents.OfType<BranchWasClosed>());
     }
 
-    [Fact(DisplayName = "AC-24: Bir şube geçici kapalı yapıldığında BranchDeactivated duyurusu üretilmez")]
+    [Fact(DisplayName = "0003/AC-24: Bir şube geçici kapalı yapıldığında BranchDeactivated duyurusu üretilmez")]
     public void OlayUretilmez_GeciciKapaliYapildiginda()
     {
         Branch sube = Ac().Value;

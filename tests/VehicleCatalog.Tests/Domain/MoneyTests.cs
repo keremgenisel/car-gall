@@ -4,7 +4,7 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Domain;
 
 public sealed class MoneyTests
 {
-    [Fact(DisplayName = "AC-22: Kurulum para birimi KWD iken 1250,500 tutarlı ilanın kartında tutar üç ondalıkla gösterilir; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0001/AC-22: Kurulum para birimi KWD iken 1250,500 tutarlı ilanın kartında tutar üç ondalıkla gösterilir; yuvarlama veya kesme yapılmaz")]
     public void UcOndalikKorunur_KwdTutarinda()
     {
         Result<Money> result = Money.Create(1250.500m, "KWD", minorUnitExponent: 3);

@@ -14,7 +14,7 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
 {
     private const string Parola = "cok-guclu-parola";
 
-    [Fact(DisplayName = "AC-16: Süresi dolmuş erişim oturumu, geçerli bir yenileme hakkı varken sessizce yenilenir ve personel işini kaybetmez")]
+    [Fact(DisplayName = "0006/AC-16: Süresi dolmuş erişim oturumu, geçerli bir yenileme hakkı varken sessizce yenilenir ve personel işini kaybetmez")]
     public async Task SessizceYenilenir_ErisimSuresiDolduktanSonra()
     {
         (IdentityHarness harness, string token, _) = await GirisAsync();
@@ -28,7 +28,7 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
         Assert.NotNull(await harness.OturumCozAsync(token));
     }
 
-    [Fact(DisplayName = "AC-17: Yenileme hakkı yapılandırılan süre sonunda geçerliliğini yitirir; personel yeniden giriş yapar")]
+    [Fact(DisplayName = "0006/AC-17: Yenileme hakkı yapılandırılan süre sonunda geçerliliğini yitirir; personel yeniden giriş yapar")]
     public async Task GecerliliginiYitirir_YenilemeSuresiDolunca()
     {
         (IdentityHarness harness, string token, _) = await GirisAsync();
@@ -38,7 +38,7 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
         Assert.Null(await harness.OturumCozAsync(token));
     }
 
-    [Fact(DisplayName = "AC-18: Personel çıkış yaptığında o oturumun yenileme hakkı geçersizleşir ve aynı hakla yeni oturum alınamaz")]
+    [Fact(DisplayName = "0006/AC-18: Personel çıkış yaptığında o oturumun yenileme hakkı geçersizleşir ve aynı hakla yeni oturum alınamaz")]
     public async Task Gecersizlesir_Cikista()
     {
         (IdentityHarness harness, string token, StaffSessionDto oturum) = await GirisAsync();
@@ -52,7 +52,7 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
     /// R5 — çıkış YALNIZ o cihazın oturumunu kapatır. Damga dönseydi tüm cihazlar
     /// düşerdi ve bu kriter kırılırdı; iki mekanizma bilerek ayrı.
     /// </summary>
-    [Fact(DisplayName = "AC-19: Çıkış yalnızca o oturumu kapatır; aynı personelin başka bir cihazdaki oturumu çalışmaya devam eder")]
+    [Fact(DisplayName = "0006/AC-19: Çıkış yalnızca o oturumu kapatır; aynı personelin başka bir cihazdaki oturumu çalışmaya devam eder")]
     public async Task Surer_DigerCihazinOturumu()
     {
         (IdentityHarness harness, string birinciToken, StaffSessionDto birinci) = await GirisAsync();
@@ -65,7 +65,7 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
         Assert.NotNull(await harness.OturumCozAsync(ikinciToken));
     }
 
-    [Fact(DisplayName = "AC-20: Bir personel pasifleştirildiğinde açık oturumu derhal geçersizleşir; sonraki ilk istekte yönetim yüzeyine erişemez")]
+    [Fact(DisplayName = "0006/AC-20: Bir personel pasifleştirildiğinde açık oturumu derhal geçersizleşir; sonraki ilk istekte yönetim yüzeyine erişemez")]
     public async Task Gecersizlesir_PasiflestirmeAninda()
     {
         (IdentityHarness harness, _, _) = await GirisAsync();
@@ -84,7 +84,7 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
         Assert.Null(await harness.OturumCozAsync(danismanToken));
     }
 
-    [Fact(DisplayName = "AC-21: Bir personelin rolü düşürüldüğünde eski rolün yetkisi sonraki ilk istekte çalışmaz")]
+    [Fact(DisplayName = "0006/AC-21: Bir personelin rolü düşürüldüğünde eski rolün yetkisi sonraki ilk istekte çalışmaz")]
     public async Task Yansir_RolDegisikligi_SonrakiIlkIstekte()
     {
         (IdentityHarness harness, _, _) = await GirisAsync();
@@ -106,7 +106,7 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
     /// R11 — parolası sızmış personel parolasını değiştirdiğinde saldırganın açık
     /// oturumu da düşmelidir. Aksi hâlde parola değiştirmek hiçbir şey çözmez.
     /// </summary>
-    [Fact(DisplayName = "AC-22: Bir personelin parolası değiştiğinde o personelin tüm yenileme hakları geçersizleşir; başka cihazdaki oturumu da yenilenemez")]
+    [Fact(DisplayName = "0006/AC-22: Bir personelin parolası değiştiğinde o personelin tüm yenileme hakları geçersizleşir; başka cihazdaki oturumu da yenilenemez")]
     public async Task Gecersizlesir_TumOturumlar_ParolaDegisince()
     {
         (IdentityHarness harness, string birinciToken, _) = await GirisAsync();
@@ -121,7 +121,7 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
         Assert.Null(await harness.OturumCozAsync(ikinciToken));
     }
 
-    [Fact(DisplayName = "AC-29: Oturum bilgisi, sayfadaki JavaScript'ten okunabilir bir yerde tutulmaz")]
+    [Fact(DisplayName = "0006/AC-29: Oturum bilgisi, sayfadaki JavaScript'ten okunabilir bir yerde tutulmaz")]
     public async Task Cozulemez_UyduralanToken()
     {
         (IdentityHarness harness, _, _) = await GirisAsync();

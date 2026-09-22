@@ -11,7 +11,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
 {
     // Tip PARAMETRE olarak kod ile geçiyor, enum ile değil: `LeadType` internal'dır ve
     // xUnit'in `[Theory]` imzası public erişim ister. Kodun kendisi zaten sözleşmedir.
-    [Theory(DisplayName = "AC-9: Talep tipi bilgi talebi, geri arama, test sürüşü, fiyat teklifi ve kredi görüşmesi değerlerinden birini alır; bu beşi dışında bir tiple talep kaydedilmez")]
+    [Theory(DisplayName = "0005/AC-9: Talep tipi bilgi talebi, geri arama, test sürüşü, fiyat teklifi ve kredi görüşmesi değerlerinden birini alır; bu beşi dışında bir tiple talep kaydedilmez")]
     [InlineData("information_request")]
     [InlineData("call_back")]
     [InlineData("test_drive")]
@@ -28,7 +28,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         Assert.Equal(kod, LeadTypeCode.ToCode((await OkuAsync(sonuc.Value))!.Type));
     }
 
-    [Theory(DisplayName = "AC-9: Talep tipi bilgi talebi, geri arama, test sürüşü, fiyat teklifi ve kredi görüşmesi değerlerinden birini alır; bu beşi dışında bir tiple talep kaydedilmez")]
+    [Theory(DisplayName = "0005/AC-9: Talep tipi bilgi talebi, geri arama, test sürüşü, fiyat teklifi ve kredi görüşmesi değerlerinden birini alır; bu beşi dışında bir tiple talep kaydedilmez")]
     [InlineData("randevu")]
     [InlineData("InformationRequest")]
     [InlineData("")]
@@ -50,7 +50,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
     /// şu an kabul edilmiyor" karşılığı alır. İki kriter (AC-9, AC-10) bu yüzden iki ayrı
     /// koda düşer.
     /// </summary>
-    [Fact(DisplayName = "AC-10: Talep tipi takas olarak gönderilen istek reddedilir; takas sistemde tanınan bir tiptir ama bu spec'te kabul edilmez")]
+    [Fact(DisplayName = "0005/AC-10: Talep tipi takas olarak gönderilen istek reddedilir; takas sistemde tanınan bir tiptir ama bu spec'te kabul edilmez")]
     public async Task Reddedilir_TakasTipiyle()
     {
         await database.ResetAsync();
@@ -64,7 +64,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         await KayitOlusmadiginiDogrulaAsync();
     }
 
-    [Fact(DisplayName = "AC-12: `Rezerve` durumundaki bir ilan için gönderilen talep sunucuda reddedilir ve kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-12: `Rezerve` durumundaki bir ilan için gönderilen talep sunucuda reddedilir ve kayıt oluşmaz")]
     public async Task Reddedilir_IlanRezerveyse()
     {
         await database.ResetAsync();
@@ -78,7 +78,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         await KayitOlusmadiginiDogrulaAsync();
     }
 
-    [Fact(DisplayName = "AC-13: Vitrinde görünür olmayan bir ilan için gönderilen talep reddedilir ve kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-13: Vitrinde görünür olmayan bir ilan için gönderilen talep reddedilir ve kayıt oluşmaz")]
     public async Task Reddedilir_IlanVitrindeGorunmuyorsa()
     {
         await database.ResetAsync();
@@ -92,7 +92,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         await KayitOlusmadiginiDogrulaAsync();
     }
 
-    [Fact(DisplayName = "AC-14: Hiç var olmayan bir ilan için gönderilen talep ile görünür olmayan bir ilan için gönderilen talep aynı karşılığı alır: aynı hata kodu, aynı gövde")]
+    [Fact(DisplayName = "0005/AC-14: Hiç var olmayan bir ilan için gönderilen talep ile görünür olmayan bir ilan için gönderilen talep aynı karşılığı alır: aynı hata kodu, aynı gövde")]
     public async Task AyniHata_VarOlmayanVeGorunmeyenIlan()
     {
         await database.ResetAsync();
@@ -111,7 +111,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         await KayitOlusmadiginiDogrulaAsync();
     }
 
-    [Fact(DisplayName = "AC-16: Talep, bırakıldığı locale ile kaydedilir; Arapça sayfadan bırakılan talebin locale'i `ar` olur")]
+    [Fact(DisplayName = "0005/AC-16: Talep, bırakıldığı locale ile kaydedilir; Arapça sayfadan bırakılan talebin locale'i `ar` olur")]
     public async Task Kaydedilir_ArapcaSayfadanBirakildiginda()
     {
         await database.ResetAsync();
@@ -123,7 +123,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         Assert.Equal("ar", (await OkuAsync(sonuc.Value))!.SubmittedLocale.Code);
     }
 
-    [Theory(DisplayName = "AC-16: Talep, bırakıldığı locale ile kaydedilir; Arapça sayfadan bırakılan talebin locale'i `ar` olur")]
+    [Theory(DisplayName = "0005/AC-16: Talep, bırakıldığı locale ile kaydedilir; Arapça sayfadan bırakılan talebin locale'i `ar` olur")]
     [InlineData("de")]
     [InlineData("TR")]
     [InlineData("")]
@@ -140,7 +140,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         await KayitOlusmadiginiDogrulaAsync();
     }
 
-    [Fact(DisplayName = "AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
+    [Fact(DisplayName = "0005/AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
     public async Task Reddedilir_ModelAdiCozulemezse()
     {
         await database.ResetAsync();
@@ -160,7 +160,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
     /// veritabanından YENİDEN OKUNUYOR. Talebe yalnız bir kimlik koyup fiyatı okuma
     /// anında çekseydik, bu test ikinci tutarı görürdü (Bilinen tuzak 1).
     /// </summary>
-    [Fact(DisplayName = "AC-19: Talep oluşturulduktan sonra aracın fiyatı değiştirildiğinde talepteki fiyat değişmez")]
+    [Fact(DisplayName = "0005/AC-19: Talep oluşturulduktan sonra aracın fiyatı değiştirildiğinde talepteki fiyat değişmez")]
     public async Task Degismez_AracinFiyatiDegistiginde()
     {
         await database.ResetAsync();
@@ -182,7 +182,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         Assert.Equal(1_250_000m, (await OkuAsync(sonuc.Value))!.Vehicle.PriceAmount);
     }
 
-    [Fact(DisplayName = "AC-20: Talep oluşturulduktan sonra araç arşivlendiğinde talep okunabilir kalır ve model adı ile fiyatını göstermeye devam eder")]
+    [Fact(DisplayName = "0005/AC-20: Talep oluşturulduktan sonra araç arşivlendiğinde talep okunabilir kalır ve model adı ile fiyatını göstermeye devam eder")]
     public async Task OkunabilirKalir_AracArsivlendiginde()
     {
         await database.ResetAsync();
@@ -201,7 +201,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         Assert.Equal(1_250_000m, okunan.Vehicle.PriceAmount);
     }
 
-    [Fact(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    [Fact(DisplayName = "0005/AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
     public async Task Kopyalar_FiyatSorunuzDurumunu()
     {
         await database.ResetAsync();
@@ -216,7 +216,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         Assert.Null(okunan.Vehicle.PriceAmount);
     }
 
-    [Fact(DisplayName = "AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0005/AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
     public async Task Kopyalar_KwdTutarini_Kesmeden()
     {
         await database.ResetAsync();
@@ -237,7 +237,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
     /// sessizce "fiyat sorunuz"a düşülüyordu ve fiyatı olan bir araç için bırakılan
     /// talep kalıcı olarak yanlış bir gerçeği taşıyordu (L2).
     /// </summary>
-    [Fact(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    [Fact(DisplayName = "0005/AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
     public async Task Reddedilir_FiyatCozulemezse()
     {
         await database.ResetAsync();
@@ -251,7 +251,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         await KayitOlusmadiginiDogrulaAsync();
     }
 
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task Kaydedilir_SinirdakiIdempotentlikAnahtariyla()
     {
         await database.ResetAsync();
@@ -268,7 +268,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
     /// PostgreSQL'e gider, orada patlar, tekil indeks çakışmasına benzemediği için
     /// yakalanmaz ve ziyaretçi 500 alıp talebini KAYBEDER.
     /// </summary>
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task Reddedilir_SiniriAsanIdempotentlikAnahtari()
     {
         await database.ResetAsync();
@@ -282,7 +282,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         await KayitOlusmadiginiDogrulaAsync();
     }
 
-    [Fact(DisplayName = "AC-23: Araca bağlı talep, o aracın şubesine bağlanır")]
+    [Fact(DisplayName = "0005/AC-23: Araca bağlı talep, o aracın şubesine bağlanır")]
     public async Task Baglanir_IlaninSubesine()
     {
         await database.ResetAsync();
@@ -293,7 +293,7 @@ public sealed class TalepOlusturmaTests(LeadsDatabase database)
         Assert.Equal(FakeListingSnapshotSource.SubeId, (await OkuAsync(sonuc.Value))!.BranchId);
     }
 
-    [Fact(DisplayName = "AC-31: Talep kaydedilmediğinde kaydedilmiş bir `LeadCaptured` duyurusu kalmaz")]
+    [Fact(DisplayName = "0005/AC-31: Talep kaydedilmediğinde kaydedilmiş bir `LeadCaptured` duyurusu kalmaz")]
     public async Task Duyurulmaz_TalepReddedildiginde()
     {
         await database.ResetAsync();

@@ -13,7 +13,7 @@ namespace CarGallery.Modules.Leads.Tests.Integration;
 [Collection(LeadsDatabaseCollection.Name)]
 public sealed class AnlikGoruntuTests(LeadsDatabase database)
 {
-    [Fact(DisplayName = "AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
+    [Fact(DisplayName = "0005/AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
     public async Task Tasir_OAndakiModelAdiniVeFiyatini()
     {
         await database.ResetAsync();
@@ -29,7 +29,7 @@ public sealed class AnlikGoruntuTests(LeadsDatabase database)
         Assert.Equal(2, okunan.Vehicle.PriceMinorUnitExponent);
     }
 
-    [Fact(DisplayName = "AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
+    [Fact(DisplayName = "0005/AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
     public async Task Saklanir_KanonikLatinAd_ArapcaSayfadanBirakildiginda()
     {
         await database.ResetAsync();
@@ -44,7 +44,7 @@ public sealed class AnlikGoruntuTests(LeadsDatabase database)
         Assert.All(okunan.Vehicle.CanonicalModelName, karakter => Assert.True(karakter < 0x0600));
     }
 
-    [Fact(DisplayName = "AC-20: Talep oluşturulduktan sonra araç arşivlendiğinde talep okunabilir kalır ve model adı ile fiyatını göstermeye devam eder")]
+    [Fact(DisplayName = "0005/AC-20: Talep oluşturulduktan sonra araç arşivlendiğinde talep okunabilir kalır ve model adı ile fiyatını göstermeye devam eder")]
     public async Task OkunabilirKalir_AracArsivlendiginde()
     {
         await database.ResetAsync();
@@ -62,7 +62,7 @@ public sealed class AnlikGoruntuTests(LeadsDatabase database)
         Assert.False(okunan.Vehicle.PriceOnRequest);
     }
 
-    [Fact(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    [Fact(DisplayName = "0005/AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
     public async Task Tasir_FiyatSorunuzDurumunu()
     {
         await database.ResetAsync();
@@ -90,7 +90,7 @@ public sealed class AnlikGoruntuTests(LeadsDatabase database)
         Assert.Null(tutar);
     }
 
-    [Fact(DisplayName = "AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0005/AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
     public async Task UcOndalikSaklanir_KwdTutari()
     {
         await database.ResetAsync();
@@ -115,7 +115,7 @@ public sealed class AnlikGoruntuTests(LeadsDatabase database)
     /// sayıdır. Gidiş-dönüşün gerçekten kesmediği yalnız üçüncü ondalığı sıfır OLMAYAN
     /// bir tutarla görülür — `decimal(_,2)` hatası tam olarak burada kırmızı verir.
     /// </summary>
-    [Fact(DisplayName = "AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0005/AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
     public async Task KesilmezVeYuvarlanmaz_UcuncuOndaligiSifirOlmayanKwdTutari()
     {
         await database.ResetAsync();

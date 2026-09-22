@@ -22,7 +22,7 @@ public sealed class ProjectionTests
         ["en"] = "Main Branch",
     };
 
-    [Fact(DisplayName = "AC-2: Rezerve durumundaki bir ilan listede görünür ve üzerinde rezerve rozeti bulunur")]
+    [Fact(DisplayName = "0001/AC-2: Rezerve durumundaki bir ilan listede görünür ve üzerinde rezerve rozeti bulunur")]
     public void Listelenir_RezerveIlanRozetBilgisiyle()
     {
         Vehicle vehicle = new VehicleBuilder().Build();
@@ -36,7 +36,7 @@ public sealed class ProjectionTests
         Assert.True(row.IsReserved);
     }
 
-    [Theory(DisplayName = "AC-3: Satıldı, Taslak, Arşiv durumundaki ve \"lokasyon ataması bekliyor\" durumundaki ilanlar listede yer almaz")]
+    [Theory(DisplayName = "0001/AC-3: Satıldı, Taslak, Arşiv durumundaki ve \"lokasyon ataması bekliyor\" durumundaki ilanlar listede yer almaz")]
     [InlineData("Draft")]
     [InlineData("Sold")]
     [InlineData("Archived")]

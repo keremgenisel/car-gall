@@ -10,7 +10,7 @@ namespace CarGallery.Modules.Identity.Tests.Integration;
 [Collection(IdentityDatabaseCollection.Name)]
 public sealed class PersonelYonetimiTests(IdentityDatabase database)
 {
-    [Fact(DisplayName = "AC-31: Yönetici bir personel eklediğinde personel listede görünür ve verilen kimlikle giriş yapabilir")]
+    [Fact(DisplayName = "0006/AC-31: Yönetici bir personel eklediğinde personel listede görünür ve verilen kimlikle giriş yapabilir")]
     public async Task Listelenir_VeGirisYapabilir_EklenenPersonel()
     {
         IdentityHarness harness = await KurAsync();
@@ -29,7 +29,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
     /// Tekillik NORMALİZE kolon üzerindeki indekste yaşar. Gerçek PostgreSQL olmadan bu
     /// kriter kanıtlanamaz: in-memory bir sağlayıcı indeksi taklit eder (docs/testing.md § 1).
     /// </summary>
-    [Fact(DisplayName = "AC-12: `Ali@x.com` kayıtlıyken `ali@x.com` ile ikinci bir personel eklenemez")]
+    [Fact(DisplayName = "0006/AC-12: `Ali@x.com` kayıtlıyken `ali@x.com` ile ikinci bir personel eklenemez")]
     public async Task Eklenemez_AyniKimlikFarkliYazimla()
     {
         IdentityHarness harness = await KurAsync();
@@ -45,7 +45,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(1, await context.Staff.CountAsync(staff => staff.NormalizedLoginId == "ali@x.com"));
     }
 
-    [Theory(DisplayName = "AC-14: Geçerli biçimde olmayan bir e-posta ile personel eklenemez")]
+    [Theory(DisplayName = "0006/AC-14: Geçerli biçimde olmayan bir e-posta ile personel eklenemez")]
     [InlineData("ayse")]
     [InlineData("@ornek.com")]
     [InlineData("ayse@ornek")]
@@ -60,7 +60,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.InvalidLoginId, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-36: Yapılandırılan asgari uzunluktan kısa bir parola kabul edilmez")]
+    [Fact(DisplayName = "0006/AC-36: Yapılandırılan asgari uzunluktan kısa bir parola kabul edilmez")]
     public async Task Eklenemez_KisaParolayla()
     {
         IdentityHarness harness = await KurAsync();
@@ -73,7 +73,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.PasswordTooShort, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-36: Yapılandırılan asgari uzunluktan kısa bir parola kabul edilmez")]
+    [Fact(DisplayName = "0006/AC-36: Yapılandırılan asgari uzunluktan kısa bir parola kabul edilmez")]
     public async Task Eklenir_SinirdakiParolayla()
     {
         IdentityHarness harness = await KurAsync();
@@ -85,7 +85,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.True(sonuc.IsSuccess);
     }
 
-    [Fact(DisplayName = "AC-38: Personel bir şubeye bağlanarak eklenebilir; var olmayan bir şube kimliğiyle eklenemez")]
+    [Fact(DisplayName = "0006/AC-38: Personel bir şubeye bağlanarak eklenebilir; var olmayan bir şube kimliğiyle eklenemez")]
     public async Task Eklenir_GecerliSubeyle()
     {
         IdentityHarness harness = await KurAsync();
@@ -100,7 +100,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(FakeBranchValidator.GecerliSubeId, personel.BranchId);
     }
 
-    [Fact(DisplayName = "AC-38: Personel bir şubeye bağlanarak eklenebilir; var olmayan bir şube kimliğiyle eklenemez")]
+    [Fact(DisplayName = "0006/AC-38: Personel bir şubeye bağlanarak eklenebilir; var olmayan bir şube kimliğiyle eklenemez")]
     public async Task Eklenemez_VarOlmayanSubeyle()
     {
         IdentityHarness harness = await KurAsync();
@@ -112,7 +112,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.BranchNotFound, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-39: Şubesiz personel eklenebilir; şube zorunlu değildir")]
+    [Fact(DisplayName = "0006/AC-39: Şubesiz personel eklenebilir; şube zorunlu değildir")]
     public async Task Eklenir_Subesiz()
     {
         IdentityHarness harness = await KurAsync();
@@ -123,7 +123,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.True(sonuc.IsSuccess);
     }
 
-    [Theory(DisplayName = "AC-40: Etkin locale listesinde olmayan bir tercih edilen dille personel eklenemez")]
+    [Theory(DisplayName = "0006/AC-40: Etkin locale listesinde olmayan bir tercih edilen dille personel eklenemez")]
     [InlineData("de")]
     [InlineData("TR")]
     [InlineData("zzzz")]
@@ -138,7 +138,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.LocaleNotEnabled, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-41: Tercih edilen dil verilmeden eklenen personele kurulum varsayılan dili atanır")]
+    [Fact(DisplayName = "0006/AC-41: Tercih edilen dil verilmeden eklenen personele kurulum varsayılan dili atanır")]
     public async Task Atanir_VarsayilanDil_Verilmediginde()
     {
         IdentityHarness harness = await KurAsync();
@@ -153,7 +153,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal("tr", personel.PreferredLocale.Code);
     }
 
-    [Fact(DisplayName = "AC-34: Personel kendi parolasını mevcut parolasını vererek değiştirir; mevcut parola yanlış verildiğinde değişiklik reddedilir")]
+    [Fact(DisplayName = "0006/AC-34: Personel kendi parolasını mevcut parolasını vererek değiştirir; mevcut parola yanlış verildiğinde değişiklik reddedilir")]
     public async Task Degistirir_KendiParolasini()
     {
         IdentityHarness harness = await KurAsync();
@@ -166,7 +166,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.True((await harness.GirisAsync("yonetici@ornek.com", "yepyeni-parola-123")).IsSuccess);
     }
 
-    [Fact(DisplayName = "AC-34: Personel kendi parolasını mevcut parolasını vererek değiştirir; mevcut parola yanlış verildiğinde değişiklik reddedilir")]
+    [Fact(DisplayName = "0006/AC-34: Personel kendi parolasını mevcut parolasını vererek değiştirir; mevcut parola yanlış verildiğinde değişiklik reddedilir")]
     public async Task Reddedilir_MevcutParolaYanlissa()
     {
         IdentityHarness harness = await KurAsync();
@@ -179,7 +179,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.CurrentPasswordInvalid, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-35: Yönetici bir personelin parolasını sıfırlar; personel sıfırlanan parolayla giriş yaptığında kendisinden parola değiştirmesi istenir")]
+    [Fact(DisplayName = "0006/AC-35: Yönetici bir personelin parolasını sıfırlar; personel sıfırlanan parolayla giriş yaptığında kendisinden parola değiştirmesi istenir")]
     public async Task Sifirlar_VeZorunluDegisimIsaretler()
     {
         IdentityHarness harness = await KurAsync();
@@ -200,7 +200,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.True((await harness.OturumCozAsync(giris.Value.Token))!.MustChangePassword);
     }
 
-    [Fact(DisplayName = "AC-50: Personel kaydının döndüğü hiçbir yanıt parolayı veya parola özetini içermez")]
+    [Fact(DisplayName = "0006/AC-50: Personel kaydının döndüğü hiçbir yanıt parolayı veya parola özetini içermez")]
     public async Task IcermezParola_PersonelListesi()
     {
         IdentityHarness harness = await KurAsync();
@@ -223,7 +223,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
     /// C6 parola malzemesini mümkün olan en dar yerde tutmayı istiyor ve liste sorgusu
     /// için o yer "hiç" — özete ihtiyaç duymuyor.
     /// </summary>
-    [Fact(DisplayName = "AC-50: Personel listesi sorgusu parola özeti kolonunu veritabanından hiç çekmez")]
+    [Fact(DisplayName = "0006/AC-50: Personel listesi sorgusu parola özeti kolonunu veritabanından hiç çekmez")]
     public async Task CekmezOzetKolonunu_PersonelListesiSorgusu()
     {
         IdentityHarness harness = await KurAsync();
@@ -270,7 +270,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         return new IdentityDbContext(builder.Options);
     }
 
-    [Fact(DisplayName = "AC-42: Galerideki son aktif Yönetici pasifleştirilemez; girişim reddedilir")]
+    [Fact(DisplayName = "0006/AC-42: Galerideki son aktif Yönetici pasifleştirilemez; girişim reddedilir")]
     public async Task Reddedilir_SonAktifYoneticiyiPasiflestirme()
     {
         IdentityHarness harness = await KurAsync();
@@ -282,7 +282,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.LastActiveManager, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-44: İki aktif Yöneticiden biri pasifleştirildiğinde işlem başarılı olur ve geriye bir aktif Yönetici kalır")]
+    [Fact(DisplayName = "0006/AC-44: İki aktif Yöneticiden biri pasifleştirildiğinde işlem başarılı olur ve geriye bir aktif Yönetici kalır")]
     public async Task Basarili_IkiYoneticidenBiri()
     {
         IdentityHarness harness = await KurAsync();
@@ -300,7 +300,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(1, aktifYonetici);
     }
 
-    [Fact(DisplayName = "AC-43: Galerideki son aktif Yöneticinin rolü başka bir role düşürülemez; girişim reddedilir")]
+    [Fact(DisplayName = "0006/AC-43: Galerideki son aktif Yöneticinin rolü başka bir role düşürülemez; girişim reddedilir")]
     public async Task Reddedilir_SonAktifYoneticininRolunuDusurme()
     {
         IdentityHarness harness = await KurAsync();
@@ -318,7 +318,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
     /// hâlde ikisinden biri kilitliyken diğerini pasifleştirmek galeriyi yöneticisiz
     /// bırakırdı.
     /// </summary>
-    [Fact(DisplayName = "AC-45: Geçici olarak kilitlenmiş bir Yönetici aktif sayılır: iki Yöneticiden biri kilitliyken diğeri pasifleştirilemez")]
+    [Fact(DisplayName = "0006/AC-45: Geçici olarak kilitlenmiş bir Yönetici aktif sayılır: iki Yöneticiden biri kilitliyken diğeri pasifleştirilemez")]
     public async Task AktifSayilir_GeciciKilitliYonetici()
     {
         IdentityHarness harness = await KurAsync();
@@ -346,7 +346,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.LastActiveManager, son.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-46: Bir Yönetici kendi hesabını pasifleştirebilir ve kendi rolünü düşürebilir — son aktif Yönetici olmadığı sürece")]
+    [Fact(DisplayName = "0006/AC-46: Bir Yönetici kendi hesabını pasifleştirebilir ve kendi rolünü düşürebilir — son aktif Yönetici olmadığı sürece")]
     public async Task Yapabilir_KendiHesabinda_SonAktifDegilse()
     {
         IdentityHarness harness = await KurAsync();
@@ -371,7 +371,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
     /// koddaki sonuç her turda aynı: tam olarak biri geçer. Yanlış kodda bir turun
     /// kaçması kaçınılmaz değil — birkaç tur onu güvenilir biçimde yakalıyor.
     /// </summary>
-    [Fact(DisplayName = "AC-42: İki Yönetici aynı anda pasifleştirilmek istendiğinde yalnızca biri geçer; galeride her zaman en az bir aktif Yönetici kalır")]
+    [Fact(DisplayName = "0006/AC-42: İki Yönetici aynı anda pasifleştirilmek istendiğinde yalnızca biri geçer; galeride her zaman en az bir aktif Yönetici kalır")]
     public async Task Korunur_SonAktifYonetici_EsZamanliPasiflestirmede()
     {
         for (int tur = 0; tur < 5; tur++)

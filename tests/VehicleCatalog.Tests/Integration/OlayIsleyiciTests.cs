@@ -57,7 +57,7 @@ public sealed class OlayIsleyiciTests(ShowcaseDatabase database)
         Assert.All(page.Items, item => Assert.Equal("Bostancı Şubesi", item.BranchName));
     }
 
-    [Fact(DisplayName = "AC-3: \"lokasyon ataması bekliyor\" durumundaki ilanlar listede yer almaz")]
+    [Fact(DisplayName = "0001/AC-3: \"lokasyon ataması bekliyor\" durumundaki ilanlar listede yer almaz")]
     public async Task VitrindenDuser_SubeKapatildiginda()
     {
         await database.ResetAsync();

@@ -65,7 +65,7 @@ async function yoneticiOlarakGirAsync(page: Page) {
   await expect(page.getByTestId('admin-shell')).toBeVisible()
 }
 
-test('AC-24: oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranı gelir', async ({
+test('0006/AC-24: oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranı gelir', async ({
   page,
 }) => {
   await page.goto('/admin')
@@ -74,7 +74,7 @@ test('AC-24: oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranı 
   await expect(page.getByTestId('admin-shell')).toHaveCount(0)
 })
 
-test('AC-32: ilk parolasıyla giren personelden parolasını değiştirmesi istenir', async ({
+test('0006/AC-32: ilk parolasıyla giren personelden parolasını değiştirmesi istenir', async ({
   page,
 }) => {
   const kimlik = benzersizKimlik('yeni')
@@ -97,7 +97,9 @@ test('AC-32: ilk parolasıyla giren personelden parolasını değiştirmesi iste
   await expect(page.getByTestId('admin-shell')).toHaveCount(0)
 })
 
-test('AC-1, AC-31: Yönetici giriş yapar ve personel listesini görür', async ({ page }) => {
+test('0006/AC-1, 0006/AC-31: Yönetici giriş yapar ve personel listesini görür', async ({
+  page,
+}) => {
   await yoneticiOlarakGirAsync(page)
 
   const tablo = page.getByTestId('staff-table')
@@ -108,7 +110,9 @@ test('AC-1, AC-31: Yönetici giriş yapar ve personel listesini görür', async 
   await expect(tablo.getByRole('cell', { name: 'Kurulum Yöneticisi' })).toBeVisible()
 })
 
-test('AC-55: Arapça tercih eden personel için panel dir="rtl" ile basılır', async ({ page }) => {
+test('0006/AC-55: Arapça tercih eden personel için panel dir="rtl" ile basılır', async ({
+  page,
+}) => {
   const kimlik = benzersizKimlik('arapca')
   const ilkParola = 'ilk-parola-1234'
   const yeniParola = 'arapca-parola-12'
@@ -151,7 +155,7 @@ test('AC-55: Arapça tercih eden personel için panel dir="rtl" ile basılır', 
   await expect(page.getByTestId('add-staff-form')).toHaveCount(0)
 })
 
-test('AC-54: ziyaretçinin vitrin dili paneli etkilemez', async ({ page }) => {
+test('0006/AC-54: ziyaretçinin vitrin dili paneli etkilemez', async ({ page }) => {
   await yoneticiOlarakGirAsync(page)
 
   // Arapça vitrine uğra, sonra panele dön.

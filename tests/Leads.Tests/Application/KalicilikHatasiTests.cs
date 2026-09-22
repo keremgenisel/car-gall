@@ -13,7 +13,7 @@ namespace CarGallery.Modules.Leads.Tests.Application;
 /// </summary>
 public sealed class KalicilikHatasiTests
 {
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public void Tanimaz_MetninIcindeIndeksAdiGecenBaskaHata()
     {
         // Metne bakan eski uygulama bunu ÇAKIŞMA sanırdı ve var olmayan bir kaydı
@@ -26,7 +26,7 @@ public sealed class KalicilikHatasiTests
         Assert.False(LeadPersistence.IsIdempotencyKeyConflict(baskaHata));
     }
 
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public void Tanimaz_IcHatasiOlmayanKaydetmeHatasi() =>
         Assert.False(LeadPersistence.IsIdempotencyKeyConflict(new DbUpdateException("kaydetme başarısız")));
 }

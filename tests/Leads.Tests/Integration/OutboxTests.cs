@@ -16,7 +16,7 @@ namespace CarGallery.Modules.Leads.Tests.Integration;
 [Collection(LeadsDatabaseCollection.Name)]
 public sealed class OutboxTests(LeadsDatabase database)
 {
-    [Fact(DisplayName = "AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
+    [Fact(DisplayName = "0005/AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
     public async Task Yazilir_LeadCaptured_TalepKaydedildiginde()
     {
         await database.ResetAsync();
@@ -38,7 +38,7 @@ public sealed class OutboxTests(LeadsDatabase database)
         Assert.Equal("ar", duyuru.SubmittedLocale);
     }
 
-    [Fact(DisplayName = "AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
+    [Fact(DisplayName = "0005/AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
     public async Task TasimazKisiselVeri_OutboxGovdesi()
     {
         await database.ResetAsync();
@@ -64,7 +64,7 @@ public sealed class OutboxTests(LeadsDatabase database)
         Assert.DoesNotContain("Hafta sonu", satir.Payload, StringComparison.Ordinal);
     }
 
-    [Fact(DisplayName = "AC-31: Talep kaydedilmediğinde kaydedilmiş bir `LeadCaptured` duyurusu kalmaz")]
+    [Fact(DisplayName = "0005/AC-31: Talep kaydedilmediğinde kaydedilmiş bir `LeadCaptured` duyurusu kalmaz")]
     public async Task Kalmaz_Duyuru_TalepKaydedilmediginde()
     {
         await database.ResetAsync();

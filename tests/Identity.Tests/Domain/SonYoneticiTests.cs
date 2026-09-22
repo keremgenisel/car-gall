@@ -12,7 +12,7 @@ namespace CarGallery.Modules.Identity.Tests.Domain;
 /// </summary>
 public sealed class SonYoneticiTests
 {
-    [Fact(DisplayName = "AC-42: Galerideki son aktif Yönetici pasifleştirilemez; girişim reddedilir")]
+    [Fact(DisplayName = "0006/AC-42: Galerideki son aktif Yönetici pasifleştirilemez; girişim reddedilir")]
     public void Reddedilir_SonAktifYoneticiyiPasiflestirme()
     {
         Staff yonetici = new StaffBuilder().Rol(StaffRole.Manager).Kur();
@@ -24,7 +24,7 @@ public sealed class SonYoneticiTests
         Assert.True(yonetici.IsActive);
     }
 
-    [Fact(DisplayName = "AC-43: Galerideki son aktif Yöneticinin rolü başka bir role düşürülemez; girişim reddedilir")]
+    [Fact(DisplayName = "0006/AC-43: Galerideki son aktif Yöneticinin rolü başka bir role düşürülemez; girişim reddedilir")]
     public void Reddedilir_SonAktifYoneticininRolunuDusurme()
     {
         Staff yonetici = new StaffBuilder().Rol(StaffRole.Manager).Kur();
@@ -36,7 +36,7 @@ public sealed class SonYoneticiTests
         Assert.Equal(StaffRole.Manager, yonetici.Role);
     }
 
-    [Fact(DisplayName = "AC-44: İki aktif Yöneticiden biri pasifleştirildiğinde işlem başarılı olur ve geriye bir aktif Yönetici kalır")]
+    [Fact(DisplayName = "0006/AC-44: İki aktif Yöneticiden biri pasifleştirildiğinde işlem başarılı olur ve geriye bir aktif Yönetici kalır")]
     public void Basarili_IkiYoneticidenBiriPasiflestirilince()
     {
         Staff yonetici = new StaffBuilder().Rol(StaffRole.Manager).Kur();
@@ -52,7 +52,7 @@ public sealed class SonYoneticiTests
     /// DEĞİLDİR; ayrı bir sayaçta yaşar. Bu ayrım kriterin kendisidir: kilitli Yönetici
     /// "pasif" sayılsaydı, diğerini pasifleştirmek galeriyi yöneticisiz bırakırdı.
     /// </summary>
-    [Fact(DisplayName = "AC-45: Geçici olarak kilitlenmiş bir Yönetici aktif sayılır: iki Yöneticiden biri kilitliyken diğeri pasifleştirilemez")]
+    [Fact(DisplayName = "0006/AC-45: Geçici olarak kilitlenmiş bir Yönetici aktif sayılır: iki Yöneticiden biri kilitliyken diğeri pasifleştirilemez")]
     public void AktifSayilir_GeciciKilitliYonetici()
     {
         Staff kilitli = new StaffBuilder().Kimlik("kilitli@ornek.com").Rol(StaffRole.Manager).Kur();
@@ -79,7 +79,7 @@ public sealed class SonYoneticiTests
         Assert.True(kilitli.Deactivate(otherActiveManagerCount: 0).IsFailure);
     }
 
-    [Fact(DisplayName = "AC-46: Bir Yönetici kendi hesabını pasifleştirebilir ve kendi rolünü düşürebilir — son aktif Yönetici olmadığı sürece")]
+    [Fact(DisplayName = "0006/AC-46: Bir Yönetici kendi hesabını pasifleştirebilir ve kendi rolünü düşürebilir — son aktif Yönetici olmadığı sürece")]
     public void Yapabilir_KendiHesabinda_SonAktifDegilse()
     {
         Staff yonetici = new StaffBuilder().Rol(StaffRole.Manager).Kur();
@@ -92,7 +92,7 @@ public sealed class SonYoneticiTests
     }
 
     /// <summary>Yönetici olmayan personel için son-Yönetici koruması hiç devreye girmez.</summary>
-    [Fact(DisplayName = "AC-44: İki aktif Yöneticiden biri pasifleştirildiğinde işlem başarılı olur ve geriye bir aktif Yönetici kalır")]
+    [Fact(DisplayName = "0006/AC-44: İki aktif Yöneticiden biri pasifleştirildiğinde işlem başarılı olur ve geriye bir aktif Yönetici kalır")]
     public void Etkilenmez_YoneticiOlmayanPersonel()
     {
         Staff danisman = new StaffBuilder().Rol(StaffRole.SalesAdvisor).Kur();

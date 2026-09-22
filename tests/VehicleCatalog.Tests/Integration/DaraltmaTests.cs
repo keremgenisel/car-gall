@@ -7,7 +7,7 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Integration;
 [Collection(ShowcaseDatabaseCollection.Name)]
 public sealed class DaraltmaTests(ShowcaseDatabase database)
 {
-    [Fact(DisplayName = "AC-6: Tek bir kasa tipi seçildiğinde liste yalnızca o kasa tipindeki yayında ilanları gösterir")]
+    [Fact(DisplayName = "0001/AC-6: Tek bir kasa tipi seçildiğinde liste yalnızca o kasa tipindeki yayında ilanları gösterir")]
     public async Task Daraltilir_TekKasaTipiSecildiginde()
     {
         await database.ResetAsync();
@@ -19,7 +19,7 @@ public sealed class DaraltmaTests(ShowcaseDatabase database)
         Assert.Equal(3, page.Items.Count);
     }
 
-    [Fact(DisplayName = "AC-7: İki kasa tipi seçildiğinde liste, bu iki kasa tipinden herhangi birine uyan yayında ilanları gösterir")]
+    [Fact(DisplayName = "0001/AC-7: İki kasa tipi seçildiğinde liste, bu iki kasa tipinden herhangi birine uyan yayında ilanları gösterir")]
     public async Task Daraltilir_IkiKasaTipininHerhangiBirineUyanlarla()
     {
         await database.ResetAsync();
@@ -30,7 +30,7 @@ public sealed class DaraltmaTests(ShowcaseDatabase database)
         Assert.Equal(5, page.TotalCount);
     }
 
-    [Fact(DisplayName = "AC-9: Seçim temizlendiğinde liste, daraltma öncesindeki tüm yayında ilan kümesine döner")]
+    [Fact(DisplayName = "0001/AC-9: Seçim temizlendiğinde liste, daraltma öncesindeki tüm yayında ilan kümesine döner")]
     public async Task Daraltmasiz_TumYayindaIlanlar_SecimTemizlendiginde()
     {
         await database.ResetAsync();
@@ -43,7 +43,7 @@ public sealed class DaraltmaTests(ShowcaseDatabase database)
         Assert.Equal(9, temizlenmis.TotalCount);
     }
 
-    [Fact(DisplayName = "AC-17: Tanınmayan bir kasa tipi değeri istendiğinde o değer yok sayılır; tanınan değerler varsa onlarla daraltma yapılır, hiç tanınan değer yoksa daraltmasız liste gösterilir")]
+    [Fact(DisplayName = "0001/AC-17: Tanınmayan bir kasa tipi değeri istendiğinde o değer yok sayılır; tanınan değerler varsa onlarla daraltma yapılır, hiç tanınan değer yoksa daraltmasız liste gösterilir")]
     public async Task YokSayar_TaninmayanKasaTipiDegerini()
     {
         await database.ResetAsync();
@@ -56,7 +56,7 @@ public sealed class DaraltmaTests(ShowcaseDatabase database)
         Assert.Equal(4, karisik.TotalCount);
     }
 
-    [Fact(DisplayName = "AC-17: Tanınmayan bir kasa tipi değeri istendiğinde o değer yok sayılır; hiç tanınan değer yoksa daraltmasız liste gösterilir")]
+    [Fact(DisplayName = "0001/AC-17: Tanınmayan bir kasa tipi değeri istendiğinde o değer yok sayılır; hiç tanınan değer yoksa daraltmasız liste gösterilir")]
     public async Task Daraltmasiz_KanonikKumedeOlmayanDeger()
     {
         await database.ResetAsync();
@@ -69,7 +69,7 @@ public sealed class DaraltmaTests(ShowcaseDatabase database)
         Assert.Equal(9, page.TotalCount);
     }
 
-    [Fact(DisplayName = "AC-17: Tanınan değerler varsa onlarla daraltma yapılır")]
+    [Fact(DisplayName = "0001/AC-17: Tanınan değerler varsa onlarla daraltma yapılır")]
     public async Task YalnizKanonikDegerleDaraltir_KarisikIstekte()
     {
         await database.ResetAsync();
@@ -81,7 +81,7 @@ public sealed class DaraltmaTests(ShowcaseDatabase database)
         Assert.Equal(4, page.TotalCount);
     }
 
-    [Fact(DisplayName = "AC-17: Eşleştirme harfe duyarlıdır: ?bodyType=SUV tanınmayan değerdir")]
+    [Fact(DisplayName = "0001/AC-17: Eşleştirme harfe duyarlıdır: ?bodyType=SUV tanınmayan değerdir")]
     public async Task HarfeDuyarlidir_KasaTipiEslestirmesi()
     {
         await database.ResetAsync();

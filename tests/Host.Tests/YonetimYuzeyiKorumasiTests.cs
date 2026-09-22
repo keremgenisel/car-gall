@@ -18,7 +18,7 @@ namespace CarGallery.Host.Tests;
 /// </summary>
 public sealed partial class YonetimYuzeyiKorumasiTests(HostFactory factory) : IClassFixture<HostFactory>
 {
-    [Fact(DisplayName = "AC-23: Yönetim rota kökü altındaki her endpoint, oturumsuz istekte `401` döner; bu, rotaları tarayan bir testle doğrulanır")]
+    [Fact(DisplayName = "0006/AC-23: Yönetim rota kökü altındaki her endpoint, oturumsuz istekte `401` döner; bu, rotaları tarayan bir testle doğrulanır")]
     public async Task Doner401_YonetimKokuAltindakiHerUc()
     {
         HttpClient client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
@@ -59,7 +59,7 @@ public sealed partial class YonetimYuzeyiKorumasiTests(HostFactory factory) : IC
     /// Giriş ucu kökün DIŞINDADIR ve oturumsuz çalışmak zorundadır; taramanın onu
     /// yanlışlıkla kapsamadığını da doğruluyoruz.
     /// </summary>
-    [Fact(DisplayName = "AC-23: Yönetim rota kökü altındaki her endpoint, oturumsuz istekte `401` döner; bu, rotaları tarayan bir testle doğrulanır")]
+    [Fact(DisplayName = "0006/AC-23: Yönetim rota kökü altındaki her endpoint, oturumsuz istekte `401` döner; bu, rotaları tarayan bir testle doğrulanır")]
     public void KapsamazGirisUcunu_Tarama()
     {
         Assert.DoesNotContain(YonetimUclari(), uc => uc.Path.StartsWith("/api/identity", StringComparison.Ordinal));

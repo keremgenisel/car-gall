@@ -16,7 +16,7 @@ public sealed class OturumTests
     /// `Active` değildir. Bunun 401'e dönüşüp dönüşmeyeceği yenileme hakkının olup
     /// olmamasına bağlıdır (AC-16 / AC-17) ve o ayrım Host boru hattında sınanır.
     /// </summary>
-    [Fact(DisplayName = "AC-15: Erişim oturumu yapılandırılan süre sonunda geçerliliğini yitirir")]
+    [Fact(DisplayName = "0006/AC-15: Erişim oturumu yapılandırılan süre sonunda geçerliliğini yitirir")]
     public void GecerliliginiYitirir_ErisimSuresiDolunca()
     {
         Session oturum = Ac();
@@ -25,7 +25,7 @@ public sealed class OturumTests
         Assert.NotEqual(SessionValidity.Active, oturum.Validate(An.Add(ErisimSuresi)));
     }
 
-    [Fact(DisplayName = "AC-16: Süresi dolmuş erişim oturumu, geçerli bir yenileme hakkı varken sessizce yenilenir ve personel işini kaybetmez")]
+    [Fact(DisplayName = "0006/AC-16: Süresi dolmuş erişim oturumu, geçerli bir yenileme hakkı varken sessizce yenilenir ve personel işini kaybetmez")]
     public void SessizceYenilenir_YenilemeHakkiVarken()
     {
         Session oturum = Ac();
@@ -42,7 +42,7 @@ public sealed class OturumTests
     /// Yenileme yalnız ERİŞİM penceresini uzatır; mutlak yenileme sınırına dokunmaz.
     /// Aksi hâlde sürekli çalışan bir oturum hiç bitmezdi ve AC-17 anlamsız olurdu.
     /// </summary>
-    [Fact(DisplayName = "AC-17: Yenileme hakkı yapılandırılan süre sonunda geçerliliğini yitirir; personel yeniden giriş yapar")]
+    [Fact(DisplayName = "0006/AC-17: Yenileme hakkı yapılandırılan süre sonunda geçerliliğini yitirir; personel yeniden giriş yapar")]
     public void UzatmazMutlakSinir_Yenileme()
     {
         Session oturum = Ac();
@@ -53,7 +53,7 @@ public sealed class OturumTests
         Assert.Equal(mutlakSinir, oturum.RefreshExpiresAt);
     }
 
-    [Fact(DisplayName = "AC-17: Yenileme hakkı yapılandırılan süre sonunda geçerliliğini yitirir; personel yeniden giriş yapar")]
+    [Fact(DisplayName = "0006/AC-17: Yenileme hakkı yapılandırılan süre sonunda geçerliliğini yitirir; personel yeniden giriş yapar")]
     public void GecerliliginiYitirir_YenilemeSuresiDolunca()
     {
         Session oturum = Ac();
@@ -61,7 +61,7 @@ public sealed class OturumTests
         Assert.Equal(SessionValidity.Expired, oturum.Validate(An.Add(YenilemeSuresi)));
     }
 
-    [Fact(DisplayName = "AC-18: Personel çıkış yaptığında o oturumun yenileme hakkı geçersizleşir ve aynı hakla yeni oturum alınamaz")]
+    [Fact(DisplayName = "0006/AC-18: Personel çıkış yaptığında o oturumun yenileme hakkı geçersizleşir ve aynı hakla yeni oturum alınamaz")]
     public void Gecersizlesir_CikistanSonra()
     {
         Session oturum = Ac();
@@ -77,7 +77,7 @@ public sealed class OturumTests
     /// Çerezde taşınan token satırda AÇIK durmaz: sızan bir veritabanı yedeği doğrudan
     /// oturum açmaya yetmesin.
     /// </summary>
-    [Fact(DisplayName = "AC-29: Oturum bilgisi, sayfadaki JavaScript'ten okunabilir bir yerde tutulmaz")]
+    [Fact(DisplayName = "0006/AC-29: Oturum bilgisi, sayfadaki JavaScript'ten okunabilir bir yerde tutulmaz")]
     public void SaklanmazAcikToken_OturumSatirinda()
     {
         string token = Session.GenerateToken();
@@ -87,7 +87,7 @@ public sealed class OturumTests
         Assert.Equal(Session.HashToken(token), oturum.TokenHash);
     }
 
-    [Fact(DisplayName = "AC-29: Oturum bilgisi, sayfadaki JavaScript'ten okunabilir bir yerde tutulmaz")]
+    [Fact(DisplayName = "0006/AC-29: Oturum bilgisi, sayfadaki JavaScript'ten okunabilir bir yerde tutulmaz")]
     public void BenzersizdirHerCagride_Token()
     {
         HashSet<string> uretilenler = [.. Enumerable.Range(0, 64).Select(_ => Session.GenerateToken())];

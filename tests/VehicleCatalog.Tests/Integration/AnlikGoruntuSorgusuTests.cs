@@ -14,7 +14,7 @@ public sealed class AnlikGoruntuSorgusuTests(ShowcaseDatabase database)
 {
     private const string Slug = "toyota-corolla-2019-abc123";
 
-    [Fact(DisplayName = "AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
+    [Fact(DisplayName = "0005/AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
     public async Task Doner_KimlikFiyatVeSube_GorunurIlanIcin()
     {
         Guid modelId = Guid.CreateVersion7();
@@ -43,7 +43,7 @@ public sealed class AnlikGoruntuSorgusuTests(ShowcaseDatabase database)
         Assert.Equal(2, anlikGoruntu.Price.MinorUnitExponent);
     }
 
-    [Fact(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    [Fact(DisplayName = "0005/AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
     public async Task Doner_FiyatSorunuzDurumu_TutarSifirDegil()
     {
         await database.ResetAsync();
@@ -59,7 +59,7 @@ public sealed class AnlikGoruntuSorgusuTests(ShowcaseDatabase database)
         Assert.Null(anlikGoruntu.Price.Amount);
     }
 
-    [Fact(DisplayName = "AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0005/AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
     public async Task Doner_UcOndalikliKwdTutarini_Kesmeden()
     {
         await database.ResetAsync();
@@ -75,7 +75,7 @@ public sealed class AnlikGoruntuSorgusuTests(ShowcaseDatabase database)
         Assert.Equal(3, anlikGoruntu.Price.MinorUnitExponent);
     }
 
-    [Fact(DisplayName = "AC-12: `Rezerve` durumundaki bir ilan için gönderilen talep sunucuda reddedilir ve kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-12: `Rezerve` durumundaki bir ilan için gönderilen talep sunucuda reddedilir ve kayıt oluşmaz")]
     public async Task Bildirir_RezerveOldugunu()
     {
         await database.ResetAsync();
@@ -90,7 +90,7 @@ public sealed class AnlikGoruntuSorgusuTests(ShowcaseDatabase database)
         Assert.True(anlikGoruntu.IsReserved);
     }
 
-    [Fact(DisplayName = "AC-14: Hiç var olmayan bir ilan için gönderilen talep ile görünür olmayan bir ilan için gönderilen talep aynı karşılığı alır: aynı hata kodu, aynı gövde")]
+    [Fact(DisplayName = "0005/AC-14: Hiç var olmayan bir ilan için gönderilen talep ile görünür olmayan bir ilan için gönderilen talep aynı karşılığı alır: aynı hata kodu, aynı gövde")]
     public async Task AyniSonuc_VarOlmayanVeGorunmeyenIlan()
     {
         await database.ResetAsync();

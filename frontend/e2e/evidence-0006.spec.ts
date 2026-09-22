@@ -62,7 +62,9 @@ async function yoneticiOlarakGirAsync(page: Page) {
   await expect(page.getByTestId('admin-shell')).toBeVisible()
 }
 
-test('AC-24, AC-61: oturumsuz yönetim ekranı giriş ekranına düşer (TR)', async ({ page }) => {
+test('0006/AC-24, 0006/AC-61: oturumsuz yönetim ekranı giriş ekranına düşer (TR)', async ({
+  page,
+}) => {
   await page.goto('/admin')
   await expect(page.getByTestId('login-form')).toBeVisible()
 
@@ -70,7 +72,7 @@ test('AC-24, AC-61: oturumsuz yönetim ekranı giriş ekranına düşer (TR)', a
   await kanit(page, '[data-testid="login-form"]', '0006-ac61-tr.png')
 })
 
-test('AC-56: giriş yapılırken düğme yükleniyor hâlinde', async ({ page }) => {
+test('0006/AC-56: giriş yapılırken düğme yükleniyor hâlinde', async ({ page }) => {
   await page.goto('/admin')
   await expect(page.getByTestId('login-form')).toBeVisible()
 
@@ -88,7 +90,7 @@ test('AC-56: giriş yapılırken düğme yükleniyor hâlinde', async ({ page })
   await kanit(page, '[data-testid="login-form"]', '0006-ac56.png')
 })
 
-test('AC-57: giriş başarısız olduğunda kimlik kalır, parola temizlenir', async ({ page }) => {
+test('0006/AC-57: giriş başarısız olduğunda kimlik kalır, parola temizlenir', async ({ page }) => {
   await girisYap(page, SEED_KIMLIK, 'kesinlikle-yanlis-parola')
 
   await expect(page.getByTestId('login-error')).toBeVisible()
@@ -98,7 +100,9 @@ test('AC-57: giriş başarısız olduğunda kimlik kalır, parola temizlenir', a
   await kanit(page, '[data-testid="login-form"]', '0006-ac57.png')
 })
 
-test('AC-58: eşik kadar başarısız denemeden sonra kilitlenme metni çıkar', async ({ page }) => {
+test('0006/AC-58: eşik kadar başarısız denemeden sonra kilitlenme metni çıkar', async ({
+  page,
+}) => {
   // Kayıtlı OLMAYAN bir kimlik kullanılıyor: metin AC-8 gereği onun için de aynı çıkar
   // ve gerçek bir hesabı kilitlemez.
   const kimlik = `hic-yok-${Date.now()}@ornek.com`
@@ -117,7 +121,7 @@ test('AC-58: eşik kadar başarısız denemeden sonra kilitlenme metni çıkar',
   await kanit(page, '[data-testid="login-form"]', '0006-ac58.png')
 })
 
-test('AC-32: zorunlu parola değişimi ekranı', async ({ page }) => {
+test('0006/AC-32: zorunlu parola değişimi ekranı', async ({ page }) => {
   const kimlik = `zorunlu-${Date.now()}@ornek.com`
 
   await yoneticiOlarakGirAsync(page)
@@ -137,7 +141,7 @@ test('AC-32: zorunlu parola değişimi ekranı', async ({ page }) => {
   await kanit(page, '[data-testid="password-form"]', '0006-ac32.png')
 })
 
-test('AC-54, AC-60, AC-61: panel personelin dilinde, personel listesiyle (TR)', async ({
+test('0006/AC-54, 0006/AC-60, 0006/AC-61: panel personelin dilinde, personel listesiyle (TR)', async ({
   page,
 }) => {
   await yoneticiOlarakGirAsync(page)
@@ -150,7 +154,9 @@ test('AC-54, AC-60, AC-61: panel personelin dilinde, personel listesiyle (TR)', 
   await kanit(page, '[data-testid="add-staff-form"]', '0006-ac61-tr-panel.png')
 })
 
-test('AC-55, AC-61: Arapça tercih eden personel için panel RTL (AR)', async ({ page }) => {
+test('0006/AC-55, 0006/AC-61: Arapça tercih eden personel için panel RTL (AR)', async ({
+  page,
+}) => {
   const kimlik = `arapca-${Date.now()}@ornek.com`
   const ilkParola = 'ilk-parola-1234'
   const yeniParola = 'arapca-parola-12'
@@ -187,7 +193,7 @@ test('AC-55, AC-61: Arapça tercih eden personel için panel RTL (AR)', async ({
   await kanit(page, '[data-testid="admin-shell"]', '0006-ac55.png')
 })
 
-test('AC-61: giriş ekranı İngilizce', async ({ page }) => {
+test('0006/AC-61: giriş ekranı İngilizce', async ({ page }) => {
   // Panel dili oturumdan gelir; oturumsuzken kurulum varsayılanıdır. İngilizce kanıt
   // için Kabul-Dili değil, İNGİLİZCE tercih eden bir personelin oturumu gerekir.
   const kimlik = `ingilizce-${Date.now()}@ornek.com`

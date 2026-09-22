@@ -51,7 +51,7 @@ test('ziyaretçi ilan detayından talep bırakır ve talebinin alındığı bild
   await expect(page.getByText('Talebiniz alındı')).toBeVisible()
 })
 
-test('AC-42: Arapça locale de form dir="rtl" ile basılır', async ({ page }) => {
+test('0005/AC-42: Arapça locale de form dir="rtl" ile basılır', async ({ page }) => {
   const slug = await ilkSlug(page, 'ar')
 
   await page.goto(`/ar/cars/${slug}`)
@@ -72,7 +72,7 @@ test('AC-42: Arapça locale de form dir="rtl" ile basılır', async ({ page }) =
   expect(yon).toBe('rtl')
 })
 
-test('AC-15: sayfa açıldıktan sonra ilan vitrinden düşerse bilgiler kaybolmaz', async ({
+test('0005/AC-15: sayfa açıldıktan sonra ilan vitrinden düşerse bilgiler kaybolmaz', async ({
   page,
 }) => {
   const slug = await ilkSlug(page)
@@ -100,7 +100,7 @@ test('AC-15: sayfa açıldıktan sonra ilan vitrinden düşerse bilgiler kaybolm
   await expect(page.getByTestId('lead-form').getByLabel('Adınız')).toHaveValue('Mehmet Demir')
 })
 
-test('AC-11: rezerve ilanda form gösterilmez, yerinde neden kapalı olduğu yazar', async ({
+test('0005/AC-11: rezerve ilanda form gösterilmez, yerinde neden kapalı olduğu yazar', async ({
   page,
 }) => {
   const slug = await ilkSlug(page)

@@ -13,7 +13,7 @@ namespace CarGallery.Modules.VehicleReference.Tests;
 [Collection(ReferenceDatabaseCollection.Name)]
 public sealed class KanonikAdTests(ReferenceDatabase database)
 {
-    [Fact(DisplayName = "AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
+    [Fact(DisplayName = "0005/AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
     public async Task DonerKanonikAd_CevirisiVarken()
     {
         await using VehicleReferenceDbContext context = database.CreateContext();
@@ -36,7 +36,7 @@ public sealed class KanonikAdTests(ReferenceDatabase database)
         Assert.NotNull(arapca);
     }
 
-    [Fact(DisplayName = "AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
+    [Fact(DisplayName = "0005/AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
     public async Task DonerBos_KimlikListesiBossa()
     {
         await using VehicleReferenceDbContext context = database.CreateContext();
@@ -48,7 +48,7 @@ public sealed class KanonikAdTests(ReferenceDatabase database)
         Assert.Empty(sonuc);
     }
 
-    [Fact(DisplayName = "AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
+    [Fact(DisplayName = "0005/AC-18: Anlık görüntüdeki model adı kanonik Latin adıdır; Arapça sayfadan bırakılan talepte de kanonik ad saklanır")]
     public async Task DonerBos_BilinmeyenModelIcin()
     {
         await using VehicleReferenceDbContext context = database.CreateContext();

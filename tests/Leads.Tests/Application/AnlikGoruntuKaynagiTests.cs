@@ -17,7 +17,7 @@ public sealed class AnlikGoruntuKaynagiTests
 {
     private static readonly Guid ListingId = Guid.Parse("0192c000-0000-7000-8000-0000000000b1");
 
-    [Fact(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    [Fact(DisplayName = "0005/AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
     public async Task Kopyalar_FiyatSorunuzDurumunu()
     {
         ListingSnapshot? sonuc = await CozAsync(ShowcasePriceDto.OnRequestPrice());
@@ -27,7 +27,7 @@ public sealed class AnlikGoruntuKaynagiTests
         Assert.True(sonuc.Price.Value.IsOnRequest);
     }
 
-    [Fact(DisplayName = "AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
+    [Fact(DisplayName = "0005/AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
     public async Task Kopyalar_GecerliFiyati()
     {
         ListingSnapshot? sonuc = await CozAsync(new ShowcasePriceDto(false, 1_250_000m, "TRY", 2));
@@ -42,7 +42,7 @@ public sealed class AnlikGoruntuKaynagiTests
     /// Bu üç kaynak da `Money.Create`'i reddettirir. Eskiden üçü de sessizce "fiyat
     /// sorunuz"a düşüyordu; artık çözülemediğini söylüyor ve çağıran talebi reddediyor.
     /// </summary>
-    [Theory(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    [Theory(DisplayName = "0005/AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
     [InlineData(-1, "TRY", 2)]
     [InlineData(1250, "TRYX", 2)]
     [InlineData(1250, "try", 2)]
@@ -55,7 +55,7 @@ public sealed class AnlikGoruntuKaynagiTests
         Assert.Null(sonuc.Price);
     }
 
-    [Theory(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    [Theory(DisplayName = "0005/AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
     [InlineData(false, true, true)]
     [InlineData(true, false, true)]
     [InlineData(true, true, false)]

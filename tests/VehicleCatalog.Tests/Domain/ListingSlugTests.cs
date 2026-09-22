@@ -7,7 +7,7 @@ public sealed class ListingSlugTests
 {
     private static readonly ListingId Kimlik = new(Guid.Parse("0192c0de-0000-7000-8000-000000000001"));
 
-    [Fact(DisplayName = "AC-4: Aynı ilanın TR, AR ve EN adresleri aynı Latin slug'ı taşır; yalnızca dil öneki farklıdır")]
+    [Fact(DisplayName = "0002/AC-4: Aynı ilanın TR, AR ve EN adresleri aynı Latin slug'ı taşır; yalnızca dil öneki farklıdır")]
     public void AyniSlugUretilir_DildenBagimsiz()
     {
         // Slug kanonik Latin addan üretilir; locale hiç girdi değildir.

@@ -6,7 +6,7 @@ public sealed class ParolaTests
 {
     private const int Iterasyon = StaffBuilder.TestIterasyon;
 
-    [Fact(DisplayName = "AC-37: Aynı parolayı kullanan iki personelin saklanan parola özetleri birbirinden farklıdır")]
+    [Fact(DisplayName = "0006/AC-37: Aynı parolayı kullanan iki personelin saklanan parola özetleri birbirinden farklıdır")]
     public void FarklidirOzet_AyniParolayiKullananIkiPersonel()
     {
         PasswordHash birinci = PasswordHash.Create("ayni-parola-12", Iterasyon);
@@ -19,7 +19,7 @@ public sealed class ParolaTests
         Assert.True(ikinci.Matches("ayni-parola-12"));
     }
 
-    [Fact(DisplayName = "AC-50: Personel kaydının döndüğü hiçbir yanıt parolayı veya parola özetini içermez")]
+    [Fact(DisplayName = "0006/AC-50: Personel kaydının döndüğü hiçbir yanıt parolayı veya parola özetini içermez")]
     public void SizdirmazOzet_ToStringCagrisi()
     {
         PasswordHash ozet = PasswordHash.Create("cok-guclu-parola", Iterasyon);
@@ -29,7 +29,7 @@ public sealed class ParolaTests
         Assert.DoesNotContain("pbkdf2", ozet.ToString(), StringComparison.Ordinal);
     }
 
-    [Fact(DisplayName = "AC-37: Aynı parolayı kullanan iki personelin saklanan parola özetleri birbirinden farklıdır")]
+    [Fact(DisplayName = "0006/AC-37: Aynı parolayı kullanan iki personelin saklanan parola özetleri birbirinden farklıdır")]
     public void Reddedilir_YanlisParola()
     {
         PasswordHash ozet = PasswordHash.Create("dogru-parola-12", Iterasyon);
@@ -43,7 +43,7 @@ public sealed class ParolaTests
     /// İleride Argon2id'ye geçilirken saklanmış satırlar eski algoritmayla doğrulanmaya
     /// devam edebilsin diye (C6).
     /// </summary>
-    [Fact(DisplayName = "AC-37: Aynı parolayı kullanan iki personelin saklanan parola özetleri birbirinden farklıdır")]
+    [Fact(DisplayName = "0006/AC-37: Aynı parolayı kullanan iki personelin saklanan parola özetleri birbirinden farklıdır")]
     public void TasirAlgoritmaVeMaliyet_SaklananOzet()
     {
         string[] parcalar = PasswordHash.Create("cok-guclu-parola", 4321).Value.Split('$');
@@ -55,7 +55,7 @@ public sealed class ParolaTests
         Assert.NotEmpty(parcalar[3]);
     }
 
-    [Fact(DisplayName = "AC-37: Aynı parolayı kullanan iki personelin saklanan parola özetleri birbirinden farklıdır")]
+    [Fact(DisplayName = "0006/AC-37: Aynı parolayı kullanan iki personelin saklanan parola özetleri birbirinden farklıdır")]
     public void DogrularFarkliMaliyetle_SaklananOzet()
     {
         // Maliyet yapılandırmadan gelir ve zamanla artar; eski satır eski maliyetiyle

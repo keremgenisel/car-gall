@@ -5,7 +5,7 @@ namespace CarGallery.Modules.Dealership.Tests.Domain;
 
 public sealed class DegerTipiTests
 {
-    [Theory(DisplayName = "AC-9: Telefon ve WhatsApp numarası E.164 biçiminde değilse şube kaydedilemez")]
+    [Theory(DisplayName = "0003/AC-9: Telefon ve WhatsApp numarası E.164 biçiminde değilse şube kaydedilemez")]
     [InlineData("0216 555 44 33")]
     [InlineData("+90 216 555 44 33")]
     [InlineData("+00216555443")]
@@ -28,7 +28,7 @@ public sealed class DegerTipiTests
         Assert.True(PhoneNumber.Create(numara).IsSuccess);
     }
 
-    [Theory(DisplayName = "AC-10: Verilen e-posta geçerli biçimde değilse şube kaydedilemez")]
+    [Theory(DisplayName = "0003/AC-10: Verilen e-posta geçerli biçimde değilse şube kaydedilemez")]
     [InlineData("sube")]
     [InlineData("sube@")]
     [InlineData("@galeri.com")]
@@ -50,7 +50,7 @@ public sealed class DegerTipiTests
         Assert.True(EmailAddress.Create("kadikoy@otogaleri.com.tr").IsSuccess);
     }
 
-    [Theory(DisplayName = "AC-12: Slug küçük harfli ASCII slug biçiminde değilse şube kaydedilemez")]
+    [Theory(DisplayName = "0003/AC-12: Slug küçük harfli ASCII slug biçiminde değilse şube kaydedilemez")]
     [InlineData("Kadıköy-Şubesi")]
     [InlineData("Kadikoy-Subesi")]
     [InlineData("kadikoy subesi")]
@@ -73,7 +73,7 @@ public sealed class DegerTipiTests
         Assert.Equal("kadikoy-subesi", BranchSlug.Create("kadikoy-subesi").Value.Value);
     }
 
-    [Theory(DisplayName = "AC-13: Saat dilimi IANA bölge kimliği değilse şube kaydedilemez; +03:00 reddedilir, Europe/Istanbul kabul edilir")]
+    [Theory(DisplayName = "0003/AC-13: Saat dilimi IANA bölge kimliği değilse şube kaydedilemez; +03:00 reddedilir, Europe/Istanbul kabul edilir")]
     [InlineData("+03:00")]
     [InlineData("03:00")]
     [InlineData("UTC")]

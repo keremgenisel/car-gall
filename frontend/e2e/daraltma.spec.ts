@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Kasa tipine göre daraltma', () => {
-  test("AC-10: Seçili kasa tipi sayısı ekranda görünür; seçimi temizle eylemi klavyeyle odaklanabilir ve üç locale'de erişilebilir adı vardır", async ({
+  test("0001/AC-10: Seçili kasa tipi sayısı ekranda görünür; seçimi temizle eylemi klavyeyle odaklanabilir ve üç locale'de erişilebilir adı vardır", async ({
     page,
   }) => {
     const locales = [
@@ -57,7 +57,7 @@ test.describe('Kasa tipine göre daraltma', () => {
     }
   })
 
-  test('AC-11: Daraltma çubuğu yalnızca kasa tipi eksenini sunar', async ({ page }) => {
+  test('0001/AC-11: Daraltma çubuğu yalnızca kasa tipi eksenini sunar', async ({ page }) => {
     await page.goto('/tr/')
 
     await expect(page.getByTestId('body-type-filter')).toBeVisible()
@@ -65,7 +65,7 @@ test.describe('Kasa tipine göre daraltma', () => {
     await expect(page.locator('fieldset')).toHaveCount(1)
   })
 
-  test('AC-7: İki kasa tipi seçildiğinde liste, herhangi birine uyan ilanları gösterir', async ({
+  test('0001/AC-7: İki kasa tipi seçildiğinde liste, herhangi birine uyan ilanları gösterir', async ({
     page,
   }) => {
     await page.goto('/tr/')
@@ -80,7 +80,7 @@ test.describe('Kasa tipine göre daraltma', () => {
     expect(new URL(page.url()).searchParams.getAll('bodyType')).toEqual(['suv', 'sedan'])
   })
 
-  test('AC-9: Seçim temizlendiğinde liste daraltma öncesi kümeye döner', async ({ page }) => {
+  test('0001/AC-9: Seçim temizlendiğinde liste daraltma öncesi kümeye döner', async ({ page }) => {
     await page.goto('/tr/')
     const tumu = await okunanToplam(page)
 
@@ -91,7 +91,7 @@ test.describe('Kasa tipine göre daraltma', () => {
     expect(await okunanToplam(page)).toBe(tumu)
   })
 
-  test('AC-12: Kasa tipi alanı public değilken daraltma çubuğu hiç gösterilmez; liste daraltmasız çalışır', async ({
+  test('0001/AC-12: Kasa tipi alanı public değilken daraltma çubuğu hiç gösterilmez; liste daraltmasız çalışır', async ({
     page,
   }) => {
     await page.route('**/api/catalog/field-settings', async (route) => {

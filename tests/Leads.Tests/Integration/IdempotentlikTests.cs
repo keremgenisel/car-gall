@@ -13,7 +13,7 @@ namespace CarGallery.Modules.Leads.Tests.Integration;
 [Collection(LeadsDatabaseCollection.Name)]
 public sealed class IdempotentlikTests(LeadsDatabase database)
 {
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task IkinciKayitOlusmaz_AyniAnahtarla()
     {
         await database.ResetAsync();
@@ -41,7 +41,7 @@ public sealed class IdempotentlikTests(LeadsDatabase database)
     /// İki eşzamanlı istek yukarıdaki okumayı ikisi de geçebilir; yarışı SELECT değil,
     /// tekil indeks kapatır. Bu testin sahnelediği durum tam olarak budur.
     /// </summary>
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task IkinciKayitOlusmaz_EszamanliIkiIstek()
     {
         await database.ResetAsync();
@@ -62,7 +62,7 @@ public sealed class IdempotentlikTests(LeadsDatabase database)
         Assert.Equal(1, await context.Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task IkiKayitOlusur_FarkliAnahtarlarla()
     {
         await database.ResetAsync();
@@ -75,7 +75,7 @@ public sealed class IdempotentlikTests(LeadsDatabase database)
         Assert.Equal(2, await context.Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task Reddedilir_AnahtarsizIstek()
     {
         await database.ResetAsync();

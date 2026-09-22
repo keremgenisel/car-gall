@@ -12,7 +12,7 @@ public sealed class KilitlenmeTests
     private static readonly TimeSpan KilitSuresi = TimeSpan.FromMinutes(15);
     private static readonly DateTimeOffset An = StaffBuilder.VarsayilanAn;
 
-    [Fact(DisplayName = "AC-6: Yapılandırılan eşik kadar arka arkaya başarısız giriş denemesinden sonra hesap yapılandırılan süre boyunca giriş denemesine kapanır; bu süre içinde doğru parola girilse de giriş reddedilir")]
+    [Fact(DisplayName = "0006/AC-6: Yapılandırılan eşik kadar arka arkaya başarısız giriş denemesinden sonra hesap yapılandırılan süre boyunca giriş denemesine kapanır; bu süre içinde doğru parola girilse de giriş reddedilir")]
     public void Kapanir_EsikKadarBasarisizDenemeden()
     {
         LockoutState sayac = Sayac();
@@ -29,7 +29,7 @@ public sealed class KilitlenmeTests
         Assert.True(sayac.IsLockedAt(An.Add(KilitSuresi) - TimeSpan.FromSeconds(1)));
     }
 
-    [Fact(DisplayName = "AC-7: Kilitlenme süresi dolduktan sonra doğru parolayla giriş başarılı olur")]
+    [Fact(DisplayName = "0006/AC-7: Kilitlenme süresi dolduktan sonra doğru parolayla giriş başarılı olur")]
     public void Acilir_KilitSuresiDolunca()
     {
         LockoutState sayac = Kilitli();
@@ -41,7 +41,7 @@ public sealed class KilitlenmeTests
     /// Kilitten dönen personel TEK yanlış denemede yeniden kilitlenmemelidir: eski
     /// kilitten arta kalan sayaç sıfırlanır.
     /// </summary>
-    [Fact(DisplayName = "AC-7: Kilitlenme süresi dolduktan sonra doğru parolayla giriş başarılı olur")]
+    [Fact(DisplayName = "0006/AC-7: Kilitlenme süresi dolduktan sonra doğru parolayla giriş başarılı olur")]
     public void SayacSifirlanir_KilitSuresiDolduktanSonrakiIlkHatada()
     {
         LockoutState sayac = Kilitli();
@@ -57,7 +57,7 @@ public sealed class KilitlenmeTests
     /// R6 — yalnız hesaba bağlı bir kilit, e-postasını bilen birinin o kişiyi kasten
     /// dışarıda tutmasına izin verirdi; son Yönetici dâhil.
     /// </summary>
-    [Fact(DisplayName = "AC-9: Kilitlenme sayacı hesap ve kaynak IP birlikte anahtarlanır: bir kaynaktan kilitlenen hesaba, kilitli olmayan başka bir kaynaktan doğru parolayla giriş yapılabilir")]
+    [Fact(DisplayName = "0006/AC-9: Kilitlenme sayacı hesap ve kaynak IP birlikte anahtarlanır: bir kaynaktan kilitlenen hesaba, kilitli olmayan başka bir kaynaktan doğru parolayla giriş yapılabilir")]
     public void BagimsizdirKaynakBasina_Sayac()
     {
         LoginId kimlik = LoginId.Create("ayse@ornek.com").Value;
@@ -80,7 +80,7 @@ public sealed class KilitlenmeTests
     /// kilitlenme cevabının gelip gelmemesi hangi e-postaların kayıtlı olduğunu tam
     /// olarak sızdırırdı (Tuzak 7).
     /// </summary>
-    [Fact(DisplayName = "AC-8: Kayıtlı olmayan bir kimlikle eşik sayıda başarısız denemeden sonra dönen cevap, kayıtlı bir kimlik için dönenle ayırt edilemez")]
+    [Fact(DisplayName = "0006/AC-8: Kayıtlı olmayan bir kimlikle eşik sayıda başarısız denemeden sonra dönen cevap, kayıtlı bir kimlik için dönenle ayırt edilemez")]
     public void Islenir_KayitliOlmayanKimlikIcinDe()
     {
         LockoutState sayac = LockoutState.For(
@@ -96,7 +96,7 @@ public sealed class KilitlenmeTests
         Assert.Equal(IdentityErrors.InvalidCredentials, sayac.EnsureNotLocked(An).Error.Code);
     }
 
-    [Fact(DisplayName = "AC-6: Yapılandırılan eşik kadar arka arkaya başarısız giriş denemesinden sonra hesap yapılandırılan süre boyunca giriş denemesine kapanır; bu süre içinde doğru parola girilse de giriş reddedilir")]
+    [Fact(DisplayName = "0006/AC-6: Yapılandırılan eşik kadar arka arkaya başarısız giriş denemesinden sonra hesap yapılandırılan süre boyunca giriş denemesine kapanır; bu süre içinde doğru parola girilse de giriş reddedilir")]
     public void Temizlenir_BasariliGiriste()
     {
         LockoutState sayac = Sayac();

@@ -13,7 +13,7 @@ namespace CarGallery.Modules.Leads.Tests.Integration;
 [Collection(LeadsDatabaseCollection.Name)]
 public sealed class SilmeTests(LeadsDatabase database)
 {
-    [Fact(DisplayName = "AC-28: Kaydedilmiş bir talep silinmez; silme girişimi reddedilir")]
+    [Fact(DisplayName = "0005/AC-28: Kaydedilmiş bir talep silinmez; silme girişimi reddedilir")]
     public async Task Reddedilir_EfUzerindenSilmeGirisimi()
     {
         await database.ResetAsync();
@@ -34,7 +34,7 @@ public sealed class SilmeTests(LeadsDatabase database)
         Assert.Equal(1, await dogrulama.Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-28: Kaydedilmiş bir talep silinmez; silme girişimi reddedilir")]
+    [Fact(DisplayName = "0005/AC-28: Kaydedilmiş bir talep silinmez; silme girişimi reddedilir")]
     public async Task Reddedilir_HamSqlIleSilmeGirisimi()
     {
         await database.ResetAsync();
@@ -57,7 +57,7 @@ public sealed class SilmeTests(LeadsDatabase database)
     /// Reddedilen şey silme SONUCU değil, silme GİRİŞİMİDİR: hiçbir satıra denk gelmeyen
     /// bir `DELETE` de reddedilir. Tetikleyici bu yüzden satır değil DEYİM seviyesinde.
     /// </summary>
-    [Fact(DisplayName = "AC-28: Kaydedilmiş bir talep silinmez; silme girişimi reddedilir")]
+    [Fact(DisplayName = "0005/AC-28: Kaydedilmiş bir talep silinmez; silme girişimi reddedilir")]
     public async Task Reddedilir_HicbirSatiraDenkGelmeyenSilmeGirisimi()
     {
         await database.ResetAsync();

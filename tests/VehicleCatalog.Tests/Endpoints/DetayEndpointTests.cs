@@ -9,7 +9,7 @@ public sealed class DetayEndpointTests(ShowcaseDatabase database)
 {
     private const string Slug = "toyota-corolla-2019-abc123";
 
-    [Fact(DisplayName = "AC-1: Yayında durumundaki bir ilanın adresi istendiğinde o ilanın detayı döner")]
+    [Fact(DisplayName = "0002/AC-1: Yayında durumundaki bir ilanın adresi istendiğinde o ilanın detayı döner")]
     public async Task Doner200_YayindakiIlanAdresinde()
     {
         await database.ResetAsync();
@@ -21,7 +21,7 @@ public sealed class DetayEndpointTests(ShowcaseDatabase database)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    [Theory(DisplayName = "AC-5, AC-6, AC-7: Var olmayan, Taslak, Arşiv, Satıldı veya lokasyon ataması bekleyen bir ilanın adresi istendiğinde sistem \"bulunamadı\" karşılığı verir")]
+    [Theory(DisplayName = "0002/AC-5, 0002/AC-6, 0002/AC-7: Var olmayan, Taslak, Arşiv, Satıldı veya lokasyon ataması bekleyen bir ilanın adresi istendiğinde sistem \"bulunamadı\" karşılığı verir")]
     [InlineData("hic-var-olmayan-ilan-999999")]
     [InlineData("taslak-ilan-000001")]
     [InlineData("arsiv-ilan-000002")]
@@ -38,7 +38,7 @@ public sealed class DetayEndpointTests(ShowcaseDatabase database)
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    [Fact(DisplayName = "AC-8: Var olan ama gizlenen bir ilan ile hiç var olmayan bir ilan için dönen karşılık birbirinden ayırt edilemez: aynı hata kodu, aynı gövde")]
+    [Fact(DisplayName = "0002/AC-8: Var olan ama gizlenen bir ilan ile hiç var olmayan bir ilan için dönen karşılık birbirinden ayırt edilemez: aynı hata kodu, aynı gövde")]
     public async Task AyirtEdilemez_GizlenenVeVarOlmayan()
     {
         await database.ResetAsync();
@@ -57,7 +57,7 @@ public sealed class DetayEndpointTests(ShowcaseDatabase database)
             hicYok.Content.Headers.ContentType?.ToString());
     }
 
-    [Fact(DisplayName = "AC-14: Detay yanıtı şase, plaka ve iç notlar alanlarını hiç içermez; bu alanlar boş değer olarak da bulunmaz")]
+    [Fact(DisplayName = "0002/AC-14: Detay yanıtı şase, plaka ve iç notlar alanlarını hiç içermez; bu alanlar boş değer olarak da bulunmaz")]
     public async Task Bulunmaz_SaseVePlakaVeIcNotlar()
     {
         await database.ResetAsync();
@@ -72,7 +72,7 @@ public sealed class DetayEndpointTests(ShowcaseDatabase database)
         }
     }
 
-    [Fact(DisplayName = "AC-12, AC-13: Kapalı veya Gizli işaretli bir opsiyonel alan detay yanıtında hiç bulunmaz; boş değer olarak da bulunmaz")]
+    [Fact(DisplayName = "0002/AC-12, 0002/AC-13: Kapalı veya Gizli işaretli bir opsiyonel alan detay yanıtında hiç bulunmaz; boş değer olarak da bulunmaz")]
     public async Task Bulunmaz_KapaliVeGizliAlanlar()
     {
         await database.ResetAsync();
@@ -91,7 +91,7 @@ public sealed class DetayEndpointTests(ShowcaseDatabase database)
         Assert.DoesNotContain("damage_record_amount", anahtarlar);
     }
 
-    [Fact(DisplayName = "AC-2: Vitrin listesindeki bir ilan kartı, o ilanın detay adresine giden bir bağlantı taşır")]
+    [Fact(DisplayName = "0002/AC-2: Vitrin listesindeki bir ilan kartı, o ilanın detay adresine giden bir bağlantı taşır")]
     public async Task ListeYanitiAdresiTasir()
     {
         await database.ResetAsync();

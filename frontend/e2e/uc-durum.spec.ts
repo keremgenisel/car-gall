@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
  * API yanıtı araya girilerek kurulur; ekranın kendisi gerçek bileşendir.
  */
 test.describe('Üç durum', () => {
-  test('AC-25: Liste verisi yüklenirken ekranda iskelet gösterilir', async ({ page }) => {
+  test('0001/AC-25: Liste verisi yüklenirken ekranda iskelet gösterilir', async ({ page }) => {
     await page.route('**/api/catalog/showcase-listings*', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1500))
       await route.continue()
@@ -16,7 +16,7 @@ test.describe('Üç durum', () => {
     await expect(page.getByTestId('list-skeleton')).toBeVisible()
   })
 
-  test('AC-26: Daraltma sonucu boşken ekran seçime uyan ilan olmadığını bildirir ve seçimi temizle eylemini sunar', async ({
+  test('0001/AC-26: Daraltma sonucu boşken ekran seçime uyan ilan olmadığını bildirir ve seçimi temizle eylemini sunar', async ({
     page,
   }) => {
     await page.route('**/api/catalog/showcase-listings*', async (route) => {
@@ -40,7 +40,7 @@ test.describe('Üç durum', () => {
     ).toBeVisible()
   })
 
-  test('AC-27: Vitrinde hiç yayında ilan yokken — daraltma seçili olsa da — ekran araç bulunmadığını bildirir ve seçimi temizle eylemi gösterilmez', async ({
+  test('0001/AC-27: Vitrinde hiç yayında ilan yokken — daraltma seçili olsa da — ekran araç bulunmadığını bildirir ve seçimi temizle eylemi gösterilmez', async ({
     page,
   }) => {
     await page.route('**/api/catalog/showcase-listings*', async (route) => {
@@ -56,7 +56,7 @@ test.describe('Üç durum', () => {
     await expect(page.getByTestId('empty-by-filter')).toHaveCount(0)
   })
 
-  test('AC-28: Liste verisi alınamadığında ekran çeviri kataloğundaki mesajı ve tekrar dene eylemini gösterir; teknik detay göstermez', async ({
+  test('0001/AC-28: Liste verisi alınamadığında ekran çeviri kataloğundaki mesajı ve tekrar dene eylemini gösterir; teknik detay göstermez', async ({
     page,
   }) => {
     await page.route('**/api/catalog/showcase-listings*', async (route) => {
