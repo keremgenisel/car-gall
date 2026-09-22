@@ -1,8 +1,8 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Domain;
 using CarGallery.Modules.Identity.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace CarGallery.Modules.Identity.Application;
 
@@ -35,6 +35,7 @@ internal sealed class StaffCommands(
     IBranchValidator branches,
     IdentityLocaleOptions locales,
     IdentityOptions options,
+    InvariantGuardOptions guardOptions,
     IClock clock)
 {
     internal async Task<Result<Guid>> AddAsync(AddStaffCommand command, CancellationToken cancellationToken)
@@ -100,78 +101,83 @@ internal sealed class StaffCommands(
     }
 
     /// <summary>
-    /// AC-43 — son aktif Yöneticinin rolü düşürülemez. Okuma, karar ve yazma TEK
-    /// transaction içinde ve kilit altında yapılır; gerekçesi `StaffQueries`'te.
+    /// AC-43 — son aktif Yöneticinin rolü düşürülemez. Koruma ortak desenden gelir
+    /// (0007 R3); gerekçeleri `InvariantGuard`'ta.
     /// </summary>
-    internal async Task<Result> ChangeRoleAsync(Guid staffId, string? role, CancellationToken cancellationToken)
+    internal Task<Result> ChangeRoleAsync(Guid staffId, string? role, CancellationToken cancellationToken)
     {
         if (!StaffRoleCode.TryParse(role, out StaffRole parsed))
         {
-            return Result.Failure(Error.With(IdentityErrors.StaffNotFound, "field", "role"));
+            return Task.FromResult(Result.Failure(Error.With(IdentityErrors.StaffNotFound, "field", "role")));
         }
 
-        await using IDbContextTransaction transaction =
-            await context.Database.BeginTransactionAsync(cancellationToken);
+        return InvariantGuard.ExecuteAsync(
+            context,
+            StaffQueries.ActiveManagers,
+            staffId,
+            async (otherActiveManagers, ct) =>
+            {
+                Staff? staff = await FindAsync(staffId, ct);
 
-        Staff? staff = await FindAsync(staffId, cancellationToken);
+                if (staff is null)
+                {
+                    return Result.Failure(new Error(IdentityErrors.StaffNotFound));
+                }
 
-        if (staff is null)
-        {
-            return Result.Failure(new Error(IdentityErrors.StaffNotFound));
-        }
+                Result result = staff.ChangeRole(parsed, otherActiveManagers);
 
-        int otherActiveManagers =
-            await StaffQueries.LockAndCountOtherActiveManagersAsync(context, staff.Id, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return result;
+                }
 
-        Result result = staff.ChangeRole(parsed, otherActiveManagers);
+                await unitOfWork.SaveChangesAsync(ct);
 
-        if (result.IsFailure)
-        {
-            return result;
-        }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        return Result.Success();
+                return Result.Success();
+            },
+            guardOptions,
+            cancellationToken);
     }
 
     /// <summary>
-    /// AC-42 — son aktif Yönetici pasifleştirilemez. Okuma, karar ve yazma TEK
-    /// transaction içinde ve kilit altında yapılır; gerekçesi `StaffQueries`'te.
+    /// AC-42 — son aktif Yönetici pasifleştirilemez. Koruma ortak desenden gelir
+    /// (0007 R3); gerekçeleri `InvariantGuard`'ta.
     /// </summary>
-    internal async Task<Result> DeactivateAsync(Guid staffId, CancellationToken cancellationToken)
-    {
-        await using IDbContextTransaction transaction =
-            await context.Database.BeginTransactionAsync(cancellationToken);
+    internal Task<Result> DeactivateAsync(Guid staffId, CancellationToken cancellationToken) =>
+        InvariantGuard.ExecuteAsync(
+            context,
+            StaffQueries.ActiveManagers,
+            staffId,
+            async (otherActiveManagers, ct) =>
+            {
+                // Agregat KİLİTTEN SONRA okunuyor. Önce okunsaydı bekleyen isteğin
+                // elindeki kopya bayat kalır, `AlreadyDeactivated` koruması hiç
+                // tetiklenmez ve kayıt ikinci kez yazılırdı (0007/AC-3).
+                Staff? staff = await FindAsync(staffId, ct);
 
-        Staff? staff = await FindAsync(staffId, cancellationToken);
+                if (staff is null)
+                {
+                    return Result.Failure(new Error(IdentityErrors.StaffNotFound));
+                }
 
-        if (staff is null)
-        {
-            return Result.Failure(new Error(IdentityErrors.StaffNotFound));
-        }
+                Result result = staff.Deactivate(otherActiveManagers);
 
-        int otherActiveManagers =
-            await StaffQueries.LockAndCountOtherActiveManagersAsync(context, staff.Id, cancellationToken);
+                if (result.IsFailure)
+                {
+                    return result;
+                }
 
-        Result result = staff.Deactivate(otherActiveManagers);
+                // R14 — açık oturumlar DERHAL geçersizleşir. Damga zaten döndü; satırları
+                // da iptal ediyoruz. İki katman, çünkü pasifleştirme bir güvenlik
+                // işlemidir ve tek bir yolun unutulması onu sessizce etkisiz bırakır.
+                await RevokeSessionsAsync(staff.Id, ct);
 
-        if (result.IsFailure)
-        {
-            return result;
-        }
+                await unitOfWork.SaveChangesAsync(ct);
 
-        // R14 — açık oturumlar DERHAL geçersizleşir. Damga zaten döndü; satırları da
-        // iptal ediyoruz. İki katman, çünkü pasifleştirme bir güvenlik işlemidir ve tek
-        // bir yolun unutulması onu sessizce etkisiz bırakır.
-        await RevokeSessionsAsync(staff.Id, cancellationToken);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        return Result.Success();
-    }
+                return Result.Success();
+            },
+            guardOptions,
+            cancellationToken);
 
     internal async Task<Result> ResetPasswordAsync(
         Guid staffId,

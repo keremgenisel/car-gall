@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Application;
 using CarGallery.Modules.Identity.Contracts.Sessions;
 using CarGallery.Modules.Identity.Infrastructure;
@@ -67,11 +68,18 @@ internal sealed class IdentityHarness(IdentityDatabase database)
         return await Komutlar(context).AddAsync(komut, CancellationToken.None);
     }
 
-    internal async Task<TSonuc> KomutAsync<TSonuc>(Func<StaffCommands, Task<TSonuc>> islem)
+    /// <summary>
+    /// Her çağrı KENDİ bağlamını açar: eşzamanlılık testleri iki ayrı isteği temsil eden
+    /// iki ayrı bağlantıya ihtiyaç duyar. `guardOptions` yalnız kilit süresini ölçen
+    /// testlerde verilir.
+    /// </summary>
+    internal async Task<TSonuc> KomutAsync<TSonuc>(
+        Func<StaffCommands, Task<TSonuc>> islem,
+        InvariantGuardOptions? guardOptions = null)
     {
         await using IdentityDbContext context = database.CreateContext();
 
-        return await islem(Komutlar(context));
+        return await islem(Komutlar(context, guardOptions));
     }
 
     internal async Task<StaffSessionDto?> OturumCozAsync(string? token)
@@ -100,12 +108,13 @@ internal sealed class IdentityHarness(IdentityDatabase database)
 
     private Pbkdf2PasswordHasher Ozetleyici() => new(Secenekler);
 
-    private StaffCommands Komutlar(IdentityDbContext context) => new(
+    private StaffCommands Komutlar(IdentityDbContext context, InvariantGuardOptions? guardOptions = null) => new(
         context,
         IdentityDatabase.CreateUnitOfWork(context, Saat),
         Ozetleyici(),
         new FakeBranchValidator(),
         Localeler,
         Secenekler,
+        guardOptions ?? InvariantGuardOptions.Default,
         Saat);
 }

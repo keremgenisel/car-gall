@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Identity.Application;
@@ -77,6 +78,9 @@ public static class IdentityModule
         services.AddScoped<IStaffSessionQueries, StaffSessionQueries>();
         services.AddScoped<Login>();
         services.AddScoped<Logout>();
+        // 0007 — invariant koruması ortak desenden gelir; kilit süresi bir iş kuralı
+        // değil bir güvenlik marjıdır, bu yüzden yapılandırmadan değil varsayılandan.
+        services.AddSingleton(InvariantGuardOptions.Default);
         services.AddScoped<StaffCommands>();
 
         // Dağıtıcı modülün kendi kaydıdır: outbox tablosu bu modülün şemasındadır.

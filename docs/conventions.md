@@ -184,8 +184,8 @@ Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod ek
 - Yapılandırma `IEntityTypeConfiguration<T>` sınıflarıyla; data annotation kullanılmaz.
 - Okuma sorgularında `AsNoTracking()` varsayılan.
 - Lazy loading **kapalı**. `Include` açıkça yazılır.
-- Ham SQL yalnızca performans gerekçesiyle ve **kendi şeması üzerinde**;
-  gerekçe kod yorumunda yazılır.
+- Ham SQL yalnızca **performans** veya **LINQ ile ifade edilemeyen doğruluk** gerekçesiyle
+  (satır kilidi gibi) ve **kendi şeması üzerinde**; gerekçe kod yorumunda yazılır.
 - `SaveChanges` çağrısı istek başına bir kez, bir modülde (`docs/architecture.md` § 2.D).
 - Entegrasyon olayı **iş verisiyle aynı transaction'da** outbox'a yazılır.
 - Çeviriler owned collection olarak agregatın parçasıdır; ayrı agregat değildir.

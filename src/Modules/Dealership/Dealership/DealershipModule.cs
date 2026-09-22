@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Dealership.Application;
@@ -40,6 +41,11 @@ public static class DealershipModule
         services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<IOutboxWriter, OutboxWriter<DealershipDbContext>>();
         services.AddScoped<DealershipUnitOfWork>();
+
+        // 0007 — invariant koruması ortak desenden gelir; süre yapılandırmadan değil
+        // varsayılandan, çünkü kilit süresi bir iş kuralı değil bir güvenlik marjıdır.
+        services.AddSingleton(InvariantGuardOptions.Default);
+        services.AddScoped<BranchCommands>();
         services.AddScoped(provider => new OutboxDispatcher<DealershipDbContext>(
             provider.GetRequiredService<DealershipDbContext>(),
             provider,

@@ -15,10 +15,15 @@ export const EMPTY_LOGIN_FORM: LoginFormValues = { loginId: '', password: '' }
 
 /**
  * Hata kodunu çeviri anahtarına çevirir. Bilinmeyen kod için GENEL mesaja düşülür ve
- * kodun kendisi ziyaretçiye ASLA gösterilmez (docs/frontend.md § 3.1, AC-59).
+ * kodun kendisi ziyaretçiye ASLA gösterilmez (docs/frontend.md § 3.1, 0006/AC-59).
+ *
+ * `identity.` öneki düşer; kalan noktalar alt çizgiye döner. İkincisi 0007 ile gerekti:
+ * `concurrency.lost` modül önekli değil — eşzamanlılık kaybının "alanı" mekanizmadır ve
+ * hangi modülde olduğu ziyaretçiye hiçbir şey söylemez.
  */
 export function messageKeyFor(errorCode: string, prefix: string, locale: AppLocale): string {
-  const candidate = `${prefix}.${errorCode.replace(/^identity\./, '')}`
+  const suffix = errorCode.replace(/^identity\./, '').replace(/\./g, '_')
+  const candidate = `${prefix}.${suffix}`
 
   return catalogKeys(locale).includes(candidate) ? candidate : `${prefix}.generic`
 }

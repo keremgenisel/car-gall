@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
+| **Durum** | Onaylandı |
 | **Sahip** | Developer (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `BuildingBlocks` (ortak desen) · `Identity` · `Dealership` |
@@ -38,7 +38,7 @@ yapar; ve deseni izlemeyen yeni bir yazma yolu eklendiğinde bunu **bir test sö
   olabilirdi. Tanımın nerede duracağı **C2**'dedir.)*
 - **R4.** Koruma, Context § Invariant envanteri tablosunda sayılan **her** kurala uygulanır.
   Envanter kapalıdır: orada olmayan bir kural bu spec'in kapsamında değildir.
-  *(Veritabanı tekil indeksiyle korunan kurallar için bkz. X5.)*
+  *(Veritabanı tekil indeksiyle korunan kurallar için bkz. X4.)*
 - **R5.** Invariant kararına giren sayı **yalnızca ortak desenin ürettiği değer** üzerinden
   elde edilebilir. Deseni atlayan bir yazma yolu eklendiğinde bunu bir test bildirir; koruma
   gözden geçirmeye bırakılmaz. Testin arayacağı işaret budur — ham sayım ile yazmanın aynı
@@ -114,7 +114,7 @@ R4 yalnızca bu tabloya uygulanır.
 
 | Kural | Yer | Bugünkü durum |
 |---|---|---|
-| **R12** — en az bir aktif Yönetici (pasifleştirme) | `Identity/Application/StaffCommands.cs` `DeactivateAsync` | **Korumalı** — `BeginTransaction` + `LockAndCountOtherActiveManagersAsync` |
+| **R12** — en az bir aktif Yönetici (pasifleştirme) | `Identity/Application/StaffCommands.cs` `DeactivateAsync` | **Yarı korumalı** — kilit var, ama agregat kilitten ÖNCE okunuyor (AC-3) |
 | **R12** — en az bir aktif Yönetici (rol düşürme) | `Identity/Application/StaffCommands.cs` `ChangeRoleAsync` | **Korumalı** — aynı kilidi kullanıyor |
 | **B5** — en az bir aktif şube | `Dealership/Domain/Branch.cs` `Close` | **Korumasız ve ulaşılamaz** — `Close` hiçbir yerden çağrılmıyor (`grep '.Close('` → sıfır isabet); `0003` § D1 gereği `Dealership`'in yazma ucu yok |
 
@@ -126,11 +126,14 @@ Envanterin ilk iki satırı **bugün zaten yeşildir**: `0006`'nın nokta çöz�
 pasifleştirmeyi hem rol düşürmeyi kilitle koruyor (doğrulandı:
 [StaffCommands.cs:114-126](src/Modules/Identity/Identity/Application/StaffCommands.cs#L114-L126),
 [StaffQueries.cs:52](src/Modules/Identity/Identity/Application/StaffQueries.cs#L52)).
-Dolayısıyla bu spec'in yeni davranışı üç kalemdir:
+Dolayısıyla bu spec'in yeni davranışı dört kalemdir:
 
-1. **Şube tarafı** — bugün korumasız; kapatma komutu hiç yok (D2).
-2. **Ortak desen** — üç yerde üç çözüm olmasın diye (D1).
-3. **Mimari test** — deseni atlayan yolu bildiren kapı (R5).
+1. **Bayat agregat** — kilit doğru alınıyor ama karar, kilitten ÖNCE okunmuş bayat bir
+   kopyayla veriliyor; aynı hedefe gelen ikinci istek kaydı yeniden yazıyor (AC-3).
+   *Ölçüldü: A grubunun referans koşusunda kırmızı.*
+2. **Şube tarafı** — bugün korumasız; kapatma komutu hiç yok (D2).
+3. **Ortak desen** — üç yerde üç çözüm olmasın diye (D1).
+4. **Mimari test** — deseni atlayan yolu bildiren kapı (R5).
 
 Kabul kriterleri bu ayrımı korur: **A grubu** var olan davranışın regresyon koruması,
 **B–E grupları** yeni davranıştır.
@@ -180,18 +183,24 @@ durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
 
 ### A. Bugün karşılanıyor — regresyon koruması
 
+> **AC-3 buradan çıkarıldı.** Ölçüldü ve karşılanmıyordu: aynı Yöneticiyi hedefleyen iki
+> eşzamanlı istekte ikisi de başarılı oluyordu. B grubuna taşındı — bu spec'in yeni
+> davranışı. Numarası korundu; kriter numaraları yeniden kullanılmaz.
+
+
 - **AC-1.** İki eşzamanlı istek son iki aktif Yöneticiden **farklı** ikisini pasifleştirmeye
   çalıştığında yalnızca biri başarılı olur; diğeri `identity.last_active_manager` ile
   reddedilir.
 - **AC-2.** AC-1'in ardından galeride **tam olarak bir** aktif Yönetici kalır.
-- **AC-3.** İki eşzamanlı istek **aynı** Yöneticiyi pasifleştirmeye çalıştığında ikincisi
-  hiçbir kaydı değiştirmez ve kararlı bir hata koduyla döner.
 - **AC-4.** İki eşzamanlı istek son iki aktif Yöneticiden farklı ikisinin rolünü düşürmeye
   çalıştığında yalnızca biri başarılı olur.
 - **AC-5.** Pasifleştirme ve rol düşürme **birbirine karşı da** serileşir: biri
   pasifleştirirken diğeri rol düşürüyorsa ikisi birden geçemez.
 
-### B. Yeni davranış — şube tarafı
+### B. Yeni davranış — bayat agregat ve şube tarafı
+
+- **AC-3.** İki eşzamanlı istek **aynı** Yöneticiyi pasifleştirmeye çalıştığında ikincisi
+  hiçbir kaydı değiştirmez ve kararlı bir hata koduyla döner.
 
 - **AC-6.** İki eşzamanlı istek son iki aktif şubeden farklı ikisini kapatmaya çalıştığında
   yalnızca biri başarılı olur; diğeri `branch.last_active_branch` ile reddedilir.
@@ -238,26 +247,26 @@ durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] **A grubundaki kriterlerin bu spec'ten önce de yeşil olduğu** PR'da açıkça yazıldı;
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] **A grubundaki kriterlerin bu spec'ten önce de yeşil olduğu** PR'da açıkça yazıldı;
       yeni davranışın kanıtı B–E gruplarıdır.
-- [ ] **D1 taşıması sırasında A grubu kesintisiz yeşil kaldı** — taşımadan önceki ve sonraki
+- [x] **D1 taşıması sırasında A grubu kesintisiz yeşil kaldı** — taşımadan önceki ve sonraki
       koşu çıktıları PR'da.
-- [ ] **Korumanın doğru sebeple yeşil olduğunun kanıtı:** koruma geçici olarak devre dışı
+- [x] **Korumanın doğru sebeple yeşil olduğunun kanıtı:** koruma geçici olarak devre dışı
       bırakılarak koşulan turun çıktısı PR'a eklendi ve hangi kriterlerin kırmızıya döndüğü
       yazıldı. *(Korumasız yol depoda kalıcı olarak bırakılmaz.)*
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok; AC-8, AC-9 ve AC-11 mimari testle
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — modül sınırı ihlali yok; AC-8, AC-9 ve AC-11 mimari testle
       doğrulanıyor.
-- [ ] Yeni migration varsa yalnızca kendi şemasına dokunuyor.
-- [ ] Bu spec'in ürettiği hata kodlarının çeviri anahtarları TR/AR/EN üçünde de eklendi;
+- [x] Yeni migration varsa yalnızca kendi şemasına dokunuyor.
+- [x] Bu spec'in ürettiği hata kodlarının çeviri anahtarları TR/AR/EN üçünde de eklendi;
       eksik anahtar kontrolü yeşil (AC-17).
-- [ ] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] **Eşzamanlılık kararı `docs/architecture.md` § Karar Defteri'ne yazıldı.**
-- [ ] Görsel kanıt: bu spec'te **arayüz kriteri yoktur**; görsel kanıt maddesi
+- [x] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+- [x] **Eşzamanlılık kararı `docs/architecture.md` § Karar Defteri'ne yazıldı.**
+- [x] Görsel kanıt: bu spec'te **arayüz kriteri yoktur**; görsel kanıt maddesi
       **uygulanabilir değildir**. AC-17 bir çeviri kapısıdır, arayüz kriteri değildir.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
@@ -267,10 +276,29 @@ durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Spec revizyon sayısı** | **1** | AC-3 A grubundan B grubuna taşındı: "bugün karşılanıyor" diye işaretlenmişti, ölçüldü ve karşılanmıyordu. Kriterin metni değişmedi, sınıflandırması değişti. Onaylanan 2. karar. — Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
+| **Düzeltme turu sayısı** | **0** | PR #18 gözden geçirmeden henüz geri dönmedi. CI bir kez kırmızı verdi (Prettier kapısı) ama bu bir gözden geçirme turu değil, benim atladığım bir kapının bedeli. |
+| **Bulgu gerçek/gürültü oranı** | — / — | **Henüz ölçülemez:** gözden geçirme yapılmadı. Ölçüt "gözden geçirmede çıkan bulgular" diyor; uygulama sırasında kendi bulduğum iki hata (aşağıda) bu tanıma girmiyor. 0006'nın kartında bu ayrım yapılmamış ve uygulama içi bulgular sayılmıştı — iki spec'in sayısı bu yüzden karşılaştırılabilir değil. Tanımın netleşmesini öneriyorum (bkz. Açık konular). |
+| **Regresyon sayısı** | **2** | `0003/AC-15` ve `0003/AC-31`. `SubeKapatmaTests` ilk hâlinde paylaşılan fikstürde koşuyor ve seed şubelerini kapatıyordu. **Üretim davranışı bozulmadı** — bozulan test seviyesiydi; yine de daha önce yeşil olan iki kriter kırmızıya döndü ve sayılması gerekiyor (0006'da `LocaleYonlendirmeTests` aynı biçimde sayılmıştı). Merge'den önce düzeltildi. |
+| **Kaçan hata** | — | Henüz bilinmiyor; merge'den sonra doldurulur. |
 
 **Bu spec'ten çıkarılan ders:**
+**Bir testin yeşil olması, ölçtüğünü sandığın şeyi ölçtüğü anlamına gelmez.** Bu spec'te
+üç kez aynı yere düştük ve üçü de farklı kılıkta geldi:
+
+1. 0006'nın kilidi doğruydu ve testi yeşildi — ama karar, kilitten **önce** okunmuş bayat
+   bir kopyayla veriliyordu. Test bunu göremiyordu çünkü hiç *aynı* hedefe iki istek
+   göndermemişti (AC-3).
+2. `SubeKapatmaTests` yeşildi — ama yalnız tek başına koşarken. Paylaşılan seed'i
+   mutasyona uğratıyor ve başka iki testi düşürüyordu.
+3. AC-11'in mimari testi yeşildi — ve **hiçbir zaman kırmızıya dönemezdi**: dosyada
+   `InvariantGuard` alt dizesini arıyordu, ama `InvariantGuardOptions` parametresi o
+   dizeyi zaten geçiriyordu.
+
+Üçünü de yeşil test değil, **sonda** yakaladı: korumayı bilerek bozup hangi kriterlerin
+kırmızıya döndüğüne bakmak. Yeşil bir test bir iddiadır; sonda o iddianın kanıtıdır. Bu
+yüzden sonda turu bu spec'te DoD şartıydı ve öyle kalmalı.
+
+İkinci ders, birincinin ucuz hâli: **kapı listesinin tamamı koşulmadan "yerelde yeşil"
+denmez.** Lint, tip kontrolü, çeviri anahtarı ve birim testleri koştum; `format:check`'i
+atladım ve CI onu buldu.

@@ -475,3 +475,4 @@ altındaki ADR'lerdedir.
 | Coğrafi arama | PostGIS yok |
 | Şube bazlı yetki | Yok (V1) |
 | Personel oturumu | Sunucu tarafı opak oturum çerezi; JWT yok (rol ve durum her istekte kaynaktan) |
+| Eşzamanlılık | Invariant koruması: satır kilidi + tek transaction (`InvariantGuard`); iyimser eşzamanlılık yok |

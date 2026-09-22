@@ -102,6 +102,7 @@
   "staff.add.error.branch_not_found": "The selected branch was not found.",
   "staff.add.error.locale_not_enabled": "The selected language is not enabled in this installation.",
   "staff.add.error.last_active_manager": "At least one active Manager must remain in the dealership.",
+  "staff.add.error.concurrency_lost": "Another change happened while this action was running. Please try again.",
   "staff.add.error.generic": "The action could not be completed right now. Please try again.",
   "admin.noAccess.title": "You do not have access to this area",
   "admin.noAccess.body": "There is no admin screen your role can open yet. New screens will appear here as they are added.",

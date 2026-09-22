@@ -200,6 +200,72 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
         Assert.Equal("identity.invalid_credentials", await HataKoduAsync(yanit));
     }
 
+    /// <summary>
+    /// 0007 — iki red türünün UÇTAKİ karşılığı. Kural gereği red burada gerçek bir istekle
+    /// üretiliyor; eşzamanlılık kaybının uçtaki eşlemesi ise `IdentityProblems`'ta aynı
+    /// satırda duruyor ve ikisi de `409`.
+    ///
+    /// `Dealership`'in kapatma komutunun HTTP ucu YOKTUR (0007 D2), bu yüzden şube
+    /// tarafının durum kodu uçtan uca kanıtlanamaz — ölçüm sınırı budur.
+    /// </summary>
+    [Fact(DisplayName = "0007/AC-13: Her iki red de `409` durum koduyla döner")]
+    public async Task Doner409_KuralGeregiRed()
+    {
+        await database.ResetAsync();
+        await using ModuleApi api = await ModuleApi.StartAsync(database);
+
+        await GirisAsync(api, ModuleApi.SeedYoneticiKimligi, ModuleApi.SeedYoneticiParolasi);
+        await ParolaDegistirVeYenidenGirAsync(
+            api, ModuleApi.SeedYoneticiKimligi, ModuleApi.SeedYoneticiParolasi, Parola);
+
+        // Kurulum hesabı galerideki tek aktif Yönetici; kendini pasifleştiremez.
+        Guid kendisi = await KendiKimligiAsync(api);
+
+        HttpResponseMessage yanit = await api.Client.PostAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/staff/{kendisi}/deactivate", new { });
+
+        Assert.Equal(HttpStatusCode.Conflict, yanit.StatusCode);
+        Assert.Equal("identity.last_active_manager", await HataKoduAsync(yanit));
+    }
+
+    [Fact(DisplayName = "0007/AC-14: Reddedilen yanıtın gövdesi kararlı `errorCode` taşır; çevrilmiş metin, yığın izi, SQL metni veya kilit/transaction terimi taşımaz")]
+    public async Task IcermezTeknikAyrinti_CakismaGovdesi()
+    {
+        await database.ResetAsync();
+        await using ModuleApi api = await ModuleApi.StartAsync(database);
+
+        await GirisAsync(api, ModuleApi.SeedYoneticiKimligi, ModuleApi.SeedYoneticiParolasi);
+        await ParolaDegistirVeYenidenGirAsync(
+            api, ModuleApi.SeedYoneticiKimligi, ModuleApi.SeedYoneticiParolasi, Parola);
+
+        Guid kendisi = await KendiKimligiAsync(api);
+
+        HttpResponseMessage yanit = await api.Client.PostAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/staff/{kendisi}/deactivate", new { });
+
+        string govde = await yanit.Content.ReadAsStringAsync();
+
+        // Kilit ve transaction terimleri gövdeye sızarsa uç, altyapıyı ziyaretçiye anlatmış olur.
+        foreach (string isaret in
+            new[] { "Exception", "   at ", "Npgsql", "SELECT", "FOR UPDATE", "lock", "transaction", "title", "detail" })
+        {
+            Assert.DoesNotContain(isaret, govde, StringComparison.OrdinalIgnoreCase);
+        }
+
+        Assert.Equal("identity.last_active_manager", await HataKoduAsync(yanit));
+    }
+
+    private static async Task<Guid> KendiKimligiAsync(ModuleApi api)
+    {
+        HttpResponseMessage yanit = await api.Client.GetAsync($"{AdminSurface.RoutePrefix}/staff");
+        JsonElement liste = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync()).RootElement;
+
+        return liste.EnumerateArray()
+            .Single(item => item.GetProperty("loginId").GetString() == ModuleApi.SeedYoneticiKimligi)
+            .GetProperty("staffId")
+            .GetGuid();
+    }
+
     private static Task<HttpResponseMessage> GirisAsync(ModuleApi api, string kimlik, string parola) =>
         api.Client.PostAsJsonAsync("/api/identity/sessions", new { loginId = kimlik, password = parola });
 
