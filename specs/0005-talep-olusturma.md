@@ -413,7 +413,7 @@ bilmez. *Elenen alternatif:* sözü vermeye devam edip D5'i hızlandırmak.
 - [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
 - [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
 - [x] Ekran `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
