@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Geliştiriliyor |
+| **Durum** | **Tamamlandı** |
 | **Sahip** | Developer (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Identity` (yeni — bugün hiç yok) · `frontend/` yönetim paneli kabuğu |
@@ -461,8 +461,8 @@ adına kopyalanan sabit sayı, yapılandırma değiştiği gün yalan söylerdi.
 - [x] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
 - [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] Takım Yöneticisi onayladı ve squash-merge edildi.
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 

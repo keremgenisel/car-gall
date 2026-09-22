@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Geliştiriliyor |
+| **Durum** | **Tamamlandı** |
 | **Sahip** | Developer (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Leads` (yeni — bugün hiç yok) · `VehicleCatalog.Contracts` (talep anlık görüntüsü için genişler) · `frontend/` public vitrin |
@@ -427,8 +427,8 @@ bilmez. *Elenen alternatif:* sözü vermeye devam edip D5'i hızlandırmak.
 - [x] Ekran `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
 - [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] Takım Yöneticisi onayladı ve squash-merge edildi.
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
