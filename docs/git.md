@@ -50,6 +50,14 @@ Spec yoksa:
 - Branch `main`'den açılır ve `main`'e döner.
 - Bir branch **bir spec'e** hizmet eder. İki spec tek branch'te ilerlemez.
 - Uzun süren branch'ler `main` ile **rebase** edilerek güncel tutulur (merge commit ile değil).
+- **Bir günden fazla `main`'den kopmuş bir daldan PR açılmaz.** Önce `main`'e rebase edilir
+  ve CI yeniden koşturulur.
+
+  Bu kural ölçülmüş bir zarardan doğdu: ilk altı spec'in üç regresyonu **yalnız birleşimde**
+  çıktı ve üç dalın üçü de `main`'den günlerce kopuktu. Dalın kendi CI'ı yeşildi, çünkü
+  çarpışacağı kod o dalda yoktu — global bir kanca (`OnRejected`), eksik bir şema kaydı ve
+  bir test fabrikasının eksik kurulumu ancak dallar birleşince göründü.
+  Ayrıntı: `specs/done/SCORECARD-ANALIZ.md` § Bulgu 2.
 - Merge edilen branch silinir.
 
 ---

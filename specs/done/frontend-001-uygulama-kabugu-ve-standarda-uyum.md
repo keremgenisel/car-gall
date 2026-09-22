@@ -207,10 +207,10 @@ token'ları ve bileşen envanteri dosyada yazdığı gibi olur.
 | Ölçüt | Değer | Not |
 |---|---|---|
 | **Spec revizyon sayısı** | **0** | Onaydan (`3445f9b`) sonra spec dosyasına hiç dokunulmadı. Kriterler uygulama boyunca değişmedi. |
-| **Düzeltme turu sayısı** | **0** | PR açılmadı; gözden geçirme turu olmadı. Bu satır merge akışı işlediğinde anlam kazanır. |
+| **Düzeltme turu sayısı** | **—** | **Ölçülmedi** (`—`, 0 değil): PR açılmadı, gözden geçirme turu hiç olmadı. |
 | **Bulgu gerçek/gürültü oranı** | **— / —** | Dış gözden geçirme yapılmadı. Aşağıdaki kusurları testlerin ve kendi doğrulamamın bulduğu not edilmelidir; bu sütunun yerine geçmez. |
 | **Regresyon sayısı** | **2** | (1) Kabuk eklenince sayfada iki `<main>` oluştu — AC-1 testi yakaladı. (2) Dil değiştirici de `<nav>` olduğu için AC-30'un kanıt locator'ı belirsizleşti ve daha önce yeşil olan test kırıldı. İkisi de merge öncesi kapandı. |
-| **Kaçan hata** | **-** | Merge edilmedi. |
+| **Kaçan hata** | **0** | *2026-09-22 itibarıyla* — **izleniyor**. Merge sonrası bulunan her kusur buraya tarihiyle eklenir. |
 
 **Bu spec'ten çıkarılan ders:**
 Mekanik dönüşüm, derlenen ama anlamı yanlış kod üretir. Token geçişinde dört kusur çıktı ve
