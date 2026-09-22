@@ -1,4 +1,5 @@
 using CarGallery.Modules.VehicleReference.Application;
+using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.VehicleReference.Contracts;
 using CarGallery.Modules.VehicleReference.Endpoints;
 using CarGallery.Modules.VehicleReference.Domain;
@@ -18,6 +19,10 @@ public static class VehicleReferenceModule
                 connectionString,
                 npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", VehicleReferenceDbContext.Schema)));
 
+        services.AddScoped<IModuleSchema>(provider => new ModuleSchema<VehicleReferenceDbContext>(
+            provider.GetRequiredService<VehicleReferenceDbContext>(),
+            "VehicleReference"));
+
         services.AddScoped<IBodyTypeQueries, BodyTypeQueries>();
         services.AddScoped<IVehicleModelQueries, VehicleModelQueries>();
         services.AddScoped<IReferenceTermQueries, ReferenceTermQueries>();
@@ -33,8 +38,6 @@ public static class VehicleReferenceModule
     {
         using IServiceScope scope = services.CreateScope();
         VehicleReferenceDbContext context = scope.ServiceProvider.GetRequiredService<VehicleReferenceDbContext>();
-
-        await context.Database.MigrateAsync(cancellationToken);
 
         if (await context.VehicleModels.AnyAsync(model => model.Id == vehicleModelId, cancellationToken))
         {

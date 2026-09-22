@@ -17,6 +17,12 @@ docker exec "$CONTAINER" sh -c 'for i in $(seq 1 30); do pg_isready -U postgres 
 echo "==> Frontend build (çıktı: src/Host/wwwroot)"
 (cd frontend && npm ci --silent && npm run build --silent)
 
+# Migration'ı ÇALIŞAN uygulama değil, bu tek seferlik kurulum adımı uygular
+# (docs/decisions/0002). Uygulama yalnız doğrular ve şema eksikse hiç başlamaz.
+echo "==> Kurulum adımı (şema)"
+ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
+  dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release -- --migrate
+
 echo "==> Host ($SEED_COUNT ilanla seed edilerek)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
 Development__SeedShowcase=true \

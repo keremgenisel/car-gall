@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Schema;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.VehicleCatalog.Application.Detail;
@@ -47,6 +48,12 @@ public static class VehicleCatalogModule
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();
         services.AddScoped<IBodyTypeCatalog, BodyTypeCatalog>();
         services.AddScoped<IReferenceLabelResolver, ReferenceLabelResolver>();
+        // Şema Host'a ENJEKSİYONLA görünür; elle tutulan bir liste yok. Yeni bir
+        // modül eklendiğinde kurulum ve doğrulama yollarına kendiliğinden katılır.
+        services.AddScoped<IModuleSchema>(provider => new ModuleSchema<VehicleCatalogDbContext>(
+            provider.GetRequiredService<VehicleCatalogDbContext>(),
+            "VehicleCatalog"));
+
         services.AddScoped<IShowcaseListingQueries, ShowcaseListingQueries>();
         services.AddScoped<IShowcaseListingDetailQueries, ShowcaseListingDetailQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
@@ -67,8 +74,6 @@ public static class VehicleCatalogModule
         using IServiceScope scope = services.CreateScope();
 
         VehicleCatalogDbContext context = scope.ServiceProvider.GetRequiredService<VehicleCatalogDbContext>();
-        await context.Database.MigrateAsync(cancellationToken);
-
         ShowcaseSeeder seeder = new(context, scope.ServiceProvider.GetRequiredService<IClock>());
         await seeder.SeedAsync(listingCount, vehicleModelId, cancellationToken);
     }

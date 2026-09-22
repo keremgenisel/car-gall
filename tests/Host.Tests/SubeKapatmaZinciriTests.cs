@@ -33,13 +33,17 @@ public sealed class SubeKapatmaZinciriTests : IAsyncLifetime
     {
         await container.StartAsync();
 
+        // Kurulum adımı fabrikadan ÖNCE koşar: uygulama şemanın güncel olduğunu
+        // başlangıçta doğruluyor ve eksikse ayağa kalkmıyor (docs/decisions/0002).
+        await TestSchema.ApplyAsync(container.GetConnectionString());
+
         factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
             builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
         });
 
-        await MigrateAsync();
+        await SeedReferansVerisiAsync();
     }
 
     public async Task DisposeAsync()
@@ -71,13 +75,14 @@ public sealed class SubeKapatmaZinciriTests : IAsyncLifetime
         Assert.Equal(1, await SayAsync(AcikKalanSube));
     }
 
-    private async Task MigrateAsync()
+    /// <summary>
+    /// Yalnız DEMO VERİSİ; şema kurulum adımında uygulandı. İkisinin ayrılması bu
+    /// kararın görünür sonucu: eskiden seed metodu yan etki olarak migration da
+    /// uyguluyordu ve hiçbir test kurulum adımına bağımlı değildi.
+    /// </summary>
+    private async Task SeedReferansVerisiAsync()
     {
-        // Üç şema da uygulanır: Dealership yayıncı, VehicleCatalog alıcı, VehicleReference
-        // ise liste sorgusunun bağımlılığı. Host başlangıçta migrate etmiyor; test ortamı
-        // bunu açıkça yapar ve neyin uygulandığı görünür kalır.
-        await factory!.Services.MigrateDealershipAsync();
-        await factory.Services.SeedVehicleReferenceForDevelopmentAsync(Guid.CreateVersion7());
+        await factory!.Services.SeedVehicleReferenceForDevelopmentAsync(Guid.CreateVersion7());
         await factory.Services.SeedVehicleCatalogForDevelopmentAsync(0, Guid.CreateVersion7());
     }
 

@@ -1,5 +1,6 @@
 using CarGallery.Host;
 using CarGallery.Host.Localization;
+using CarGallery.Host.Schema;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
@@ -64,6 +65,19 @@ builder.Services.AddSingleton<IndexHtmlRenderer>();
 
 WebApplication app = builder.Build();
 
+// KURULUM ADIMI. Migration'ı çalışan uygulama değil, bu tek seferlik koşu uygular
+// (docs/decisions/0002). Süreç uygular ve biter; sunucu hiç açılmaz.
+if (args.Contains(ModuleSchemaOperations.MigrateArgument, StringComparer.Ordinal))
+{
+    return await app.Services.ApplyModuleSchemasAsync(
+        app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("CarGallery.Schema"));
+}
+
+// Çalışan uygulama migration UYGULAMAZ, yalnız uygulanmış mı diye bakar. Eksikse
+// açıkça reddeder: sessizce devam etmek hatayı ilk ziyaretçiye ertelerdi ve o hata
+// "tablo yok" diye okunurdu, "kurulum adımı atlandı" diye değil.
+await app.Services.EnsureModuleSchemasAreCurrentAsync();
+
 // Sıkıştırma statik dosya servisinden ÖNCE gelmeli, yoksa dosyalar ham geçer.
 app.UseResponseCompression();
 app.UseStaticFiles();
@@ -102,12 +116,16 @@ if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
                 """,
                 "image/svg+xml"));
 
+    // Demo VERİSİ; şema değil. Şemayı kurulum adımı uygular ve yukarıdaki doğrulama
+    // buraya gelinmeden önce eksikse zaten reddetmiştir.
     await app.Services.SeedVehicleReferenceForDevelopmentAsync(seedModelId);
     int seedCount = builder.Configuration.GetValue<int?>("Development:SeedListingCount") ?? 200;
     await app.Services.SeedVehicleCatalogForDevelopmentAsync(seedCount, seedModelId);
 }
 
-app.Run();
+await app.RunAsync();
+
+return 0;
 
 /// <summary>Entegrasyon testlerinin giriş noktası olarak görebilmesi için.</summary>
 public partial class Program;
