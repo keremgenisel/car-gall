@@ -8,6 +8,7 @@ using CarGallery.Modules.Leads;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
 
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 
@@ -85,14 +86,16 @@ builder.Services.AddIdentity(new IdentitySetup(
     builder.Configuration.GetValue<int?>("Identity:LoginRequestLimit") ?? 20,
     builder.Configuration.GetValue<int?>("Identity:LoginRequestWindowMinutes") ?? 10));
 
-// 0005 — talep modülü. Hız sınırının eşiği yapılandırmadan gelir; VARSAYILAN spec'in
-// kendi sayısıdır (C17: 10 dakikada 5). Yapılandırılabilir olmasının tek nedeni kanıt
-// üretimidir: görsel kanıt üç locale'de başarılı gönderim ve hata senaryoları ister ve
-// bunlar aynı IP'den kolayca eşiği aşar.
+// 0005 — talep modülü. İKİ eşik var: `CapturedLeadLimit` C17'nin sayısıdır (10 dakikada
+// 5) ve yalnız KAYIT OLUŞAN isteği sayar; `RequestLimit` kaba tekrarı kesen daha gevşek
+// istek sınırıdır. İkisi ayrı, çünkü C17'yi boru hattına koymak formu birkaç kez yanlış
+// dolduran dürüst ziyaretçiyi kilitlerdi. Yapılandırılabilir olmalarının tek nedeni
+// kanıt üretimidir.
 builder.Services.AddLeads(
     connectionString,
     localization.EnabledLocales,
-    builder.Configuration.GetValue<int?>("Leads:RateLimit:PermitLimit") ?? 5,
+    builder.Configuration.GetValue<int?>("Leads:RateLimit:CapturedLeadLimit") ?? 5,
+    builder.Configuration.GetValue<int?>("Leads:RateLimit:RequestLimit") ?? 30,
     builder.Configuration.GetValue<int?>("Leads:RateLimit:WindowMinutes") ?? 10);
 
 // İlk yazma uçları ilk hata sözleşmesini getirdi. `500` yanıtı ASLA iç detay taşımaz:
@@ -121,6 +124,16 @@ if (args.Contains(ModuleSchemaOperations.MigrateArgument, StringComparer.Ordinal
 // açıkça reddeder: sessizce devam etmek hatayı ilk ziyaretçiye ertelerdi ve o hata
 // "tablo yok" diye okunurdu, "kurulum adımı atlandı" diye değil.
 await app.Services.EnsureModuleSchemasAreCurrentAsync();
+
+// Ters proxy arkasında ziyaretçinin gerçek adresi — 0005'in hız sınırı doğru bölünsün
+// diye. Proxy AÇIKÇA listelenmemişse ara katman hiç eklenmez ve X-Forwarded-For yok
+// sayılır: güvenilmeyen başlığa güvenmek, sınırı istemcinin kapatabilmesi demektir.
+ForwardedHeadersOptions? forwardedHeaders = ForwardedHeadersSetup.Build(builder.Configuration);
+
+if (forwardedHeaders is not null)
+{
+    app.UseForwardedHeaders(forwardedHeaders);
+}
 
 // Sıkıştırma statik dosya servisinden ÖNCE gelmeli, yoksa dosyalar ham geçer.
 app.UseResponseCompression();

@@ -130,6 +130,18 @@ kendi gerçeğini korur.
   loga yazılmaz (`docs/conventions.md` § 12). *(Not: `docs/conventions.md` § 5'in durum kodu
   listesinde `429` bulunmuyor; oraya eklenmesi ayrıca önerilmiştir.)*
 
+  **Eşik TALEP sayar, istek değil.** "Aynı IP'den 10 dakikada 5" ifadesi *kaydedilen*
+  talepler içindir: doğrulamaya takılan istek bu bütçeyi tüketmez. Aksi hâlde formu
+  birkaç kez yanlış dolduran dürüst bir ziyaretçi hiç talep bırakamadan kilitlenirdi ve
+  bu, Intent'in önlemek için yazıldığı kaybın ta kendisi olurdu. Kaba tekrarı kesen ayrı
+  ve daha gevşek bir **istek** sınırı vardır; sayısı bu kriterin konusu değildir.
+
+  **"Aynı kaynak" ziyaretçinin IP'sidir.** Uygulama, istekleri doğrudan istemciden
+  aldığını varsayar. Ters proxy arkasına konursa gerçek adres yalnızca **açıkça
+  listelenmiş** proxy'lere güvenilerek çözülür (`ForwardedHeaders:KnownProxies`);
+  yapılandırılmazsa sayaç tüm ziyaretçileri tek bütçeye indirir ve bu sınır yeniden
+  değerlendirilmelidir.
+
 ### KAPSAM DIŞI
 
 - **X1.** **Takas talebi** (`docs/domain.md` **T1–T3**) — *neden:* takas, müşterinin kendi

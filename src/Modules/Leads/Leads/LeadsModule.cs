@@ -28,7 +28,8 @@ public static class LeadsModule
         this IServiceCollection services,
         string connectionString,
         IReadOnlyList<string> enabledLocales,
-        int rateLimitPermitLimit = LeadRateLimitOptions.DefaultPermitLimit,
+        int capturedLeadLimit = LeadRateLimitOptions.DefaultCapturedLeadLimit,
+        int requestLimit = LeadRateLimitOptions.DefaultRequestLimit,
         int rateLimitWindowMinutes = LeadRateLimitOptions.DefaultWindowMinutes)
     {
         services.AddDbContext<LeadsDbContext>(options =>
@@ -68,11 +69,21 @@ public static class LeadsModule
             provider.GetRequiredService<IServiceScopeFactory>(),
             provider.GetRequiredService<ILogger<OutboxDispatcherHostedService<LeadsDbContext>>>()));
 
-        AddRateLimiting(services, new LeadRateLimitOptions
+        LeadRateLimitOptions rateLimits = new()
         {
-            PermitLimit = rateLimitPermitLimit,
+            CapturedLeadLimit = capturedLeadLimit,
+            RequestLimit = requestLimit,
             WindowMinutes = rateLimitWindowMinutes,
-        });
+        };
+
+        // C17'nin sayacı KAYIT başına ilerler; tekil olmalıdır, çünkü pencere süreç
+        // ömrü boyunca yaşar.
+        services.AddSingleton<ILeadCaptureQuota>(provider => new LeadCaptureQuota(
+            provider.GetRequiredService<IClock>(),
+            rateLimits.CapturedLeadLimit,
+            TimeSpan.FromMinutes(rateLimits.WindowMinutes)));
+
+        AddRateLimiting(services, rateLimits);
 
         return services;
     }
@@ -80,13 +91,16 @@ public static class LeadsModule
     public static void MapLeads(this IEndpointRouteBuilder builder) => builder.MapLeadEndpoints();
 
     /// <summary>
-    /// C17 — aynı IP'den 10 dakikada en çok 5 talep; altıncı istek reddedilir.
+    /// Boru hattındaki İSTEK sınırı — C17'nin talep sınırı DEĞİL.
+    ///
+    /// Ayrım şu: bu sınır permit'i handler'dan önce tüketir, yani geçersiz istekleri de
+    /// sayar. C17'nin "10 dakikada 5 talep"i buraya konulsaydı, sunucu doğrulamasına
+    /// düşen dürüst bir ziyaretçi beş denemede kilitlenir ve hiç talep bırakamazdı.
+    /// Burası yalnız KABA TEKRARI keser (R16, Karar D4) ve bu yüzden eşiği gevşektir;
+    /// kaydedilen talebin sayacı <see cref="ILeadCaptureQuota"/>'dadır.
     ///
     /// IP KİŞİSEL VERİDİR: yalnızca bellekteki sayaçta bölüm anahtarı olarak durur, kalıcı
-    /// kayda ve loga YAZILMAZ (docs/conventions.md § 12). `X-Forwarded-For` okunmaz —
-    /// güvenilmeyen bir başlığa göre bölmek, sınırı istemcinin kapatabilmesi demektir.
-    ///
-    /// Sınır, handler'dan ÖNCE reddeder: reddedilen istek için kayıt oluşmaz (AC-32).
+    /// kayda ve loga YAZILMAZ (docs/conventions.md § 12).
     /// </summary>
     private static void AddRateLimiting(IServiceCollection services, LeadRateLimitOptions options)
     {
@@ -96,7 +110,7 @@ public static class LeadsModule
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = options.PermitLimit,
+                    PermitLimit = options.RequestLimit,
                     Window = TimeSpan.FromMinutes(options.WindowMinutes),
                     QueueLimit = 0,
                 }));

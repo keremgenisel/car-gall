@@ -18,7 +18,12 @@ internal sealed record CaptureLeadCommand(
     string? Email,
     string? Message,
     bool ConsentGiven,
-    string? IdempotencyKey);
+    string? IdempotencyKey,
+    /// <summary>
+    /// C17'nin sayacını bölen OPAK anahtar (bugün ziyaretçinin IP'si). Application onu
+    /// yalnız bir dize olarak görür; nereden geldiği uç katmanın bilgisidir.
+    /// </summary>
+    string ClientKey);
 
 /// <summary>
 /// R1–R17'nin tek uygulama yolu. Sıra rastgele değil: önce ziyaretçinin kendi girdisi
@@ -33,6 +38,7 @@ internal sealed class CaptureLead(
     LeadsUnitOfWork unitOfWork,
     IListingSnapshotSource listings,
     ICanonicalModelNameSource modelNames,
+    ILeadCaptureQuota quota,
     LeadLocaleOptions locales,
     IClock clock)
 {
@@ -43,6 +49,13 @@ internal sealed class CaptureLead(
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
         {
             return Result.Failure<Guid>(new Error(LeadErrors.MissingIdempotencyKey));
+        }
+
+        // Kolon `character varying(100)`; aşan değer doğrulanmadan geçerse PostgreSQL
+        // patlar ve ziyaretçi 500 alıp talebini kaybeder. Sınır kolonun ÖNÜNDE duruyor.
+        if (command.IdempotencyKey.Trim().Length > Lead.MaximumIdempotencyKeyLength)
+        {
+            return Result.Failure<Guid>(new Error(LeadErrors.IdempotencyKeyTooLong));
         }
 
         if (!LeadTypeCode.TryParse(command.LeadType, out LeadType type))
@@ -101,13 +114,22 @@ internal sealed class CaptureLead(
             return Result.Failure<Guid>(new Error(LeadErrors.ListingReserved));
         }
 
+        // Fiyatı ÇÖZÜLEMEYEN ilan da talebe kaynak olamaz. "Fiyat sorunuz" bu değildir:
+        // o, P4'te tanımlı bir iş durumudur ve buraya `PriceSnapshot.OnRequest` olarak
+        // gelir. Çözülemeyen fiyatı "fiyat sorunuz"a düşürmek, talebe yanlış bir gerçeği
+        // KALICI olarak yazmak olurdu (L2) — model adıyla aynı hizada davranıyoruz.
+        if (listing.Price is null)
+        {
+            return Result.Failure<Guid>(new Error(LeadErrors.ListingUnavailable));
+        }
+
         string? canonicalModelName =
             await modelNames.FindAsync(listing.VehicleModelId, cancellationToken);
 
         Result<VehicleSnapshot> snapshot = VehicleSnapshot.Create(
             listing.ListingId,
             canonicalModelName,
-            listing.Price);
+            listing.Price.Value);
 
         if (snapshot.IsFailure)
         {
@@ -132,13 +154,25 @@ internal sealed class CaptureLead(
             return Result.Failure<Guid>(lead.Error);
         }
 
+        // AC-32 — bütçe BURADA, yazmanın hemen öncesinde tüketilir. Yukarıdaki her ret
+        // (geçersiz tip, geçersiz telefon, çözülemeyen ilan, rezerve ilan) sayaca HİÇ
+        // dokunmadan döndü: kriter "5 talep kaydedildikten sonra" diyor, "5 denemeden
+        // sonra" değil.
+        if (!quota.TryAcquire(command.ClientKey))
+        {
+            return Result.Failure<Guid>(new Error(LeadErrors.RateLimited));
+        }
+
         context.Leads.Add(lead.Value);
+
+        bool captured = false;
 
         try
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
+            captured = true;
         }
-        catch (DbUpdateException exception) when (IsIdempotencyKeyConflict(exception))
+        catch (DbUpdateException exception) when (LeadPersistence.IsIdempotencyKeyConflict(exception))
         {
             // Eşzamanlı ikinci istek yukarıdaki okumayı geçmiş ama tekil indekse takılmış.
             // Kayıt oluşmadı; ilkinin kimliği döner (AC-35).
@@ -150,10 +184,17 @@ internal sealed class CaptureLead(
 
             return Result.Success(winner.Id.Value);
         }
+        finally
+        {
+            // Kayıt oluşmadıysa bütçe harcanmamıştır — çakışan ikinci istek de,
+            // beklenmeyen bir hata da ziyaretçinin hakkını yemez.
+            if (!captured)
+            {
+                quota.Release(command.ClientKey);
+            }
+        }
 
         return Result.Success(lead.Value.Id.Value);
     }
 
-    private static bool IsIdempotencyKeyConflict(DbUpdateException exception) =>
-        exception.InnerException?.Message.Contains("ux_leads_idempotency_key", StringComparison.Ordinal) == true;
 }

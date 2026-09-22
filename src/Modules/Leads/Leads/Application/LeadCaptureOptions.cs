@@ -44,17 +44,29 @@ internal sealed class LeadLocaleOptions(IReadOnlyList<Locale> enabled)
 }
 
 /// <summary>
-/// C17'nin eşiği ve R4'ün üst sınırları. Varsayılanlar spec'in kendi sayılarıdır;
-/// yapılandırılabilir olmalarının tek nedeni kanıt üretimidir: görsel kanıt TR/AR/EN'de
-/// başarılı gönderim ve hata senaryoları ister ve bunlar aynı IP'den kolayca eşiği aşar.
-/// Spec'in sayısı varsayılan olarak KALIR ve AC-32/AC-33 o varsayılanla sınanır.
+/// İKİ AYRI eşik, çünkü iki ayrı şeyi koruyorlar:
+///
+/// <list type="bullet">
+/// <item><see cref="CapturedLeadLimit"/> — C17'nin sayısı (10 dakikada 5). Yalnız KAYIT
+/// OLUŞAN istek bu bütçeyi tüketir; AC-32'nin "kaydedildikten sonra" ifadesi bunu
+/// söylüyor.</item>
+/// <item><see cref="RequestLimit"/> — kaba tekrarı kesen daha gevşek istek sınırı (R16,
+/// Karar D4). Boru hattında yaşar ve geçersiz istekleri de sayar; sayısı, formu birkaç
+/// kez yanlış dolduran dürüst bir ziyaretçiyi kilitlemeyecek kadar yüksektir.</item>
+/// </list>
+///
+/// Varsayılanlar spec'in kendi sayılarıdır; yapılandırılabilir olmalarının tek nedeni
+/// kanıt üretimidir. AC-32/AC-33 varsayılanla sınanır.
 /// </summary>
 internal sealed class LeadRateLimitOptions
 {
-    internal const int DefaultPermitLimit = 5;
+    internal const int DefaultCapturedLeadLimit = 5;
+    internal const int DefaultRequestLimit = 30;
     internal const int DefaultWindowMinutes = 10;
 
-    internal int PermitLimit { get; init; } = DefaultPermitLimit;
+    internal int CapturedLeadLimit { get; init; } = DefaultCapturedLeadLimit;
+
+    internal int RequestLimit { get; init; } = DefaultRequestLimit;
 
     internal int WindowMinutes { get; init; } = DefaultWindowMinutes;
 }

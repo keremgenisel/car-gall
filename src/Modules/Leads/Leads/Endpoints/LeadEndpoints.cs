@@ -32,6 +32,18 @@ internal static class LeadEndpoints
             .ProducesProblem(StatusCodes.Status429TooManyRequests);
     }
 
+    /// <summary>
+    /// C17'nin sayacını bölen anahtar. IP KİŞİSEL VERİDİR: yalnız bellekteki sayaca
+    /// girer, kalıcı kayda ve loga yazılmaz (docs/conventions.md § 12).
+    ///
+    /// `X-Forwarded-For` burada OKUNMAZ: güvenilmeyen bir başlığa göre bölmek, sınırı
+    /// istemcinin kapatabilmesi demektir. Ters proxy arkasında doğru IP'yi
+    /// `ForwardedHeaders` ara katmanı yazar ve o, yalnızca AÇIKÇA listelenmiş proxy'lere
+    /// güvenir (src/Host/Program.cs).
+    /// </summary>
+    private static string ResolveClientKey(HttpContext httpContext) =>
+        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
     private static async Task<Results<Created<CaptureLeadResponse>, JsonHttpResult<Dictionary<string, object?>>>> CaptureAsync(
         CaptureLeadRequest request,
         HttpContext httpContext,
@@ -52,7 +64,8 @@ internal static class LeadEndpoints
                 request.Email,
                 request.Message,
                 request.ConsentGiven,
-                idempotencyKey),
+                idempotencyKey,
+                ResolveClientKey(httpContext)),
             cancellationToken);
 
         if (result.IsFailure)

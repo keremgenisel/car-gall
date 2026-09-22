@@ -68,6 +68,59 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
         await container.DisposeAsync();
     }
 
+    /// <summary>
+    /// BULGU-1'in regresyon testi. Eskiden bütçeyi boru hattındaki istek sınırı
+    /// tüketiyordu ve İSTEK sayıyordu: sunucu doğrulamasına düşen beş deneme bütçeyi
+    /// bitiriyor, ardından gelen TAMAMEN GEÇERLİ talep 429 alıp kayboluyordu. Hiç talep
+    /// kaydedilmemiş olmasına rağmen.
+    ///
+    /// Spec'in Intent'i tam olarak bu kaybı önlemek için yazılmış; AC-32'nin
+    /// "kaydedildikten sonra" ifadesi de bu yüzden bilinçli.
+    /// </summary>
+    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    public async Task Kabul_GecerliTalep_BesReddedilenIstektenSonra()
+    {
+        HttpClient client = factory!.CreateClient();
+
+        for (int sira = 1; sira <= 5; sira++)
+        {
+            HttpResponseMessage reddedilen = await GonderAsync(client, $"rl-gecersiz-{sira}", ad: null);
+
+            Assert.Equal(HttpStatusCode.UnprocessableContent, reddedilen.StatusCode);
+        }
+
+        Assert.Equal(0, await TalepSayisiAsync());
+
+        HttpResponseMessage gecerli = await GonderAsync(client, "rl-gecerli-1");
+
+        Assert.Equal(HttpStatusCode.Created, gecerli.StatusCode);
+        Assert.Equal(1, await TalepSayisiAsync());
+    }
+
+    /// <summary>
+    /// Sayacın bölüm anahtarı bağlantının GERÇEK adresidir. `X-Forwarded-For`
+    /// yapılandırılmamış bir dağıtımda okunmaz: okunsaydı istemci her istekte başka bir
+    /// değer göndererek sınırı kendisi kapatırdı.
+    /// </summary>
+    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    public async Task Asilamaz_XForwardedForBasligiyla()
+    {
+        HttpClient client = factory!.CreateClient();
+
+        for (int sira = 1; sira <= 5; sira++)
+        {
+            Assert.Equal(HttpStatusCode.Created, (await GonderAsync(client, $"xff-{sira}")).StatusCode);
+        }
+
+        HttpRequestMessage istek = Istek("xff-6");
+        istek.Headers.Add("X-Forwarded-For", "198.51.100.77");
+
+        HttpResponseMessage altinci = await client.SendAsync(istek);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, altinci.StatusCode);
+        Assert.Equal(5, await TalepSayisiAsync());
+    }
+
     [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
     public async Task Reddedilir_AltinciIstek_AyniIpten()
     {
@@ -129,7 +182,13 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
         Assert.DoesNotContain("::1", govde, StringComparison.Ordinal);
     }
 
-    private static async Task<HttpResponseMessage> GonderAsync(HttpClient client, string anahtar)
+    private static async Task<HttpResponseMessage> GonderAsync(
+        HttpClient client,
+        string anahtar,
+        string? ad = "Ayşe Yılmaz") =>
+        await client.SendAsync(Istek(anahtar, ad));
+
+    private static HttpRequestMessage Istek(string anahtar, string? ad = "Ayşe Yılmaz")
     {
         HttpRequestMessage istek = new(HttpMethod.Post, "/api/leads")
         {
@@ -138,7 +197,7 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
                 listingSlug = Slug,
                 leadType = "information_request",
                 locale = "tr",
-                fullName = "Ayşe Yılmaz",
+                fullName = ad,
                 phone = "+905321112233",
                 email = (string?)null,
                 message = (string?)null,
@@ -148,7 +207,7 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
 
         istek.Headers.Add("Idempotency-Key", anahtar);
 
-        return await client.SendAsync(istek);
+        return istek;
     }
 
     private async Task<int> TalepSayisiAsync()
