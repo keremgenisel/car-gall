@@ -71,7 +71,14 @@ const TEKRAR_DENE: Readonly<Record<AppLocale, RegExp>> = {
 }
 
 /** Ziyaretçiye sızmaması gereken teknik izler (0007/AC-15). */
-const TEKNIK_IZLER = [/\b[45]\d{2}\b/, /errorCode/i, /traceId/i, /\/api\//, /Exception/i, /\bSQL\b/i]
+const TEKNIK_IZLER = [
+  /\b[45]\d{2}\b/,
+  /errorCode/i,
+  /traceId/i,
+  /\/api\//,
+  /Exception/i,
+  /\bSQL\b/i,
+]
 
 describe('AC-61: Giriş ekranı ve personel yönetimi ekranındaki tüm metinler TR, AR ve EN locale lerinde kendi dilinde görünür; hiçbir locale de çeviri anahtarı ham hâliyle görünmez', () => {
   it.each(LOCALES)('%s katalogunda görünen anahtarların hepsi dolu', (locale) => {
@@ -100,17 +107,23 @@ describe('AC-61: Giriş ekranı ve personel yönetimi ekranındaki tüm metinler
     }
   })
 
-  it.each(LOCALES)('0007/AC-16 — %s: kural gereği red "tekrar deneyin" demez, eşzamanlılık kaybı der', (locale) => {
-    const t = createTranslator(locale)
+  it.each(LOCALES)(
+    '0007/AC-16 — %s: kural gereği red "tekrar deneyin" demez, eşzamanlılık kaybı der',
+    (locale) => {
+      const t = createTranslator(locale)
 
-    expect(t('staff.add.error.last_active_manager')).not.toMatch(TEKRAR_DENE[locale])
-    expect(t('staff.add.error.concurrency_lost')).toMatch(TEKRAR_DENE[locale])
-  })
+      expect(t('staff.add.error.last_active_manager')).not.toMatch(TEKRAR_DENE[locale])
+      expect(t('staff.add.error.concurrency_lost')).toMatch(TEKRAR_DENE[locale])
+    },
+  )
 
   it.each(LOCALES)('0007/AC-15 — %s: gösterilen metinlerde teknik iz yok', (locale) => {
     const t = createTranslator(locale)
 
-    for (const key of [...GORUNEN_ANAHTARLAR, ...SUNUCU_HATA_KODLARI.map((h) => `${h.prefix}.${h.code}`)]) {
+    for (const key of [
+      ...GORUNEN_ANAHTARLAR,
+      ...SUNUCU_HATA_KODLARI.map((h) => `${h.prefix}.${h.code}`),
+    ]) {
       for (const iz of TEKNIK_IZLER) {
         expect(t(key), `${locale}: ${key}`).not.toMatch(iz)
       }
