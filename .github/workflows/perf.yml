@@ -47,6 +47,13 @@ jobs:
           ConnectionStrings__VehicleCatalog: Host=localhost;Port=5432;Database=cargallery;Username=postgres;Password=cionly
           Development__SeedShowcase: 'true'
           Development__SeedListingCount: '500'
+          # D2/AC-53 — uygulama bu parola olmadan HİÇ başlamaz. Ölçüm işi giriş
+          # yapmaz ama Host'u ayağa kaldırmak zorunda; bu değer yalnız CI'ın tek
+          # kullanımlık veritabanı içindir.
+          Identity__SeedAdmin__Password: perf-kurulum-parolasi
+          # Kurulum hesabı bir kez özetleniyor; ölçüm başlangıcını 210.000 iterasyon
+          # beklememeli.
+          Identity__PasswordIterations: '1000'
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Kurulum adımı (ADR 0002): şemayı uygulayan budur. Bu iş onu çalıştırmıyordu,
@@ -54,9 +61,9 @@ jobs:
           dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release -- --migrate
           dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release &
           # SINIRLI bekleme. Sınırsız `until` döngüsü, başlamayı REDDEDEN bir Host'ta
-          # (kurulum adımı atlanmış, eksik yapılandırma) işi GitHub'ın 6 saatlik
-          # sınırına kadar asılı bırakıyor — sessiz bir maliyet. Bu PR'ın kendisi
-          # "başlamayı reddetme" davranışını getirdiği için burası artık şart.
+          # (kurulum adımı atlanmış, eksik yapılandırma, eksik şema) işi GitHub'ın
+          # 6 saatlik sınırına kadar asılı bırakır — sessiz bir maliyet.
+          # Başlamıyorsa iki dakikada, gürültüyle düşsün.
           for _ in $(seq 120); do
             curl -sf -o /dev/null http://localhost:5080/api/catalog/field-settings && exit 0
             sleep 1
