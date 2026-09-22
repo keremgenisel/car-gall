@@ -437,9 +437,9 @@ bilmez. *Elenen alternatif:* sözü vermeye devam edip D5'i hızlandırmak.
 | Ölçüt | Değer | Not |
 |---|---|---|
 | **Spec revizyon sayısı** | **2** | (1) 2026-09-22, AP-08. Uygulama başlamadan önce yapılan CLARIFY turu: 16 açık soru, hepsi onaylanıp işlendi. Kriter sayısı 28 → 43. En pahalı bulgu: spec `0002` § X1'in bu spec'e devrettiği `docs/domain.md` **R6** kuralı ("rezerve araçta iletişim formu kapalı") hiçbir bölümde yoktu. (2) 2026-09-22, uygulama sırasında. QA'nın BULGU-1 ve BULGU-3'ü **C17**'ye iki açıklayıcı not ekletti: eşiğin *istek* değil **talep** saydığı ve "aynı kaynak"ın proxy topolojisine bağlı olduğu. Kriterler değişmedi; kural metni netleşti. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
+| **Düzeltme turu sayısı** | **2** | (1) PR öncesi kendi triyajım: beş bulgu, hepsi tek turda kapandı (BULGU-1…5). (2) PR sonrası **entegrasyon turu**: dal güncel `main`'e alınınca üç sorun çıktı ve düzeltildi. Bu ikinci tur, işin büyüklüğünden değil dalın 17 saat `main`'den kopuk kalmasından doğdu. |
 | **Bulgu gerçek/gürültü oranı** | 4 / 0 | Uygulama sırasında kendi çıkardığım dört bulgunun dördü de gerçekti: (1) AC-22'nin verdiği `1250,500` sayısı kesmeyi yakalayamaz — iki ondalığa kesilse de aynı sayıdır; (2) AC-19'un ilk testi "kaynak değişti" kısmını hiç canlandırmıyordu ve hiçbir şey kanıtlamıyordu; (3) `TypedResults.Problem` hata gövdesine İngilizce `title` koyuyordu (Yasak Listesi 23); (4) form giriş metni TR ve EN'de Karar D6'nın yasakladığı ulaşma sözünü veriyordu. |
-| **Regresyon sayısı** | 0 | Var olan 219 backend ve 44 frontend testinin hiçbiri kırılmadı. |
+| **Regresyon sayısı** | **1** | Kendi dalında 0'dı: var olan 219 backend ve 44 frontend testinin hiçbiri kırılmadı. Ama `0006` ile birleşince `Host.Tests` AC-10 kırıldı — giriş ucu `identity.rate_limited` yerine `lead.rate_limited` döndürüyordu. `RateLimiterOptions.OnRejected` global tek bir kancadır ve iki modül de onu kuruyordu; son kayıt hepsini bastırıyordu. Red politikaya bağlandı, her modül kendi hata kodunu kendi taşıyor. |
 | **Kaçan hata** | - | Henüz bilinmiyor. |
 
 **Bu spec'ten çıkarılan ders:**
@@ -452,3 +452,10 @@ formun giriş cümlesindeki sözü göremedi ve hata ancak görsel kanıta bakar
 İkisinin ortak dersi şu: **testi kriterin metnine değil, kriterin KORUDUĞU ŞEYE göre
 yazmak gerekir.** Kriterin örneğini kopyalamak testi yazdırır, ama yeşil kalmasını
 sağlayan şey çoğu zaman kuralın kendisi değil, örneğin zayıflığıdır.
+
+**Entegrasyondan çıkan üçüncü ders:** İki dalın ayrı ayrı yeşil olması, birleşimlerinin
+yeşil olacağını göstermez. `OnRejected` gibi **global tek kancalar** modüler bir sistemde
+sessiz çarpışma noktalarıdır: her modül kendi içinde doğru davranır, son kayıt kazanır ve
+kimse fark etmez. Bunu yakalayan şey bir test değil, dalların birleştirilmesi oldu —
+dolayısıyla asıl ders şu: **dal `main`'den ne kadar uzun kopuk kalırsa, bu sınıftan hata o
+kadar geç ve o kadar toplu çıkar.**
