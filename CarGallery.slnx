@@ -12,6 +12,10 @@
     <Project Path="src/Modules/Identity/Identity.Contracts/Identity.Contracts.csproj" />
     <Project Path="src/Modules/Identity/Identity/Identity.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Leads/">
+    <Project Path="src/Modules/Leads/Leads.Contracts/Leads.Contracts.csproj" />
+    <Project Path="src/Modules/Leads/Leads/Leads.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Media/">
     <Project Path="src/Modules/Media/Media.Contracts/Media.Contracts.csproj" />
   </Folder>
@@ -28,6 +32,7 @@
     <Project Path="tests/Dealership.Tests/Dealership.Tests.csproj" />
     <Project Path="tests/Host.Tests/Host.Tests.csproj" />
     <Project Path="tests/Identity.Tests/Identity.Tests.csproj" />
+    <Project Path="tests/Leads.Tests/Leads.Tests.csproj" />
     <Project Path="tests/VehicleCatalog.Tests/VehicleCatalog.Tests.csproj" />
     <Project Path="tests/VehicleReference.Tests/VehicleReference.Tests.csproj" />
   </Folder>
