@@ -38,5 +38,6 @@ Development__SeedListingCount="$SEED_COUNT" \
 Identity__SeedAdmin__Password="${SEED_ADMIN_PASSWORD:-gelistirme-parolasi}" \
 Identity__PasswordIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
 Identity__LoginRequestLimit="${LOGIN_REQUEST_LIMIT:-500}" \
+Leads__RateLimit__PermitLimit="${LEAD_RATE_LIMIT:-200}" \
 ASPNETCORE_URLS="http://localhost:5080" \
   dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release

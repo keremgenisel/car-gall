@@ -106,7 +106,7 @@
   "admin.noAccess.title": "You do not have access to this area",
   "admin.noAccess.body": "There is no admin screen your role can open yet. New screens will appear here as they are added.",
   "lead.title": "Interested in this car?",
-  "lead.intro": "Leave your details and the dealership will get back to you.",
+  "lead.intro": "You can leave a request about this car.",
   "lead.field.type": "Request type",
   "lead.type.information_request": "Information request",
   "lead.type.call_back": "Call back",

@@ -99,15 +99,33 @@ describe('AC-37: Talep başarıyla kaydedildiğinde ziyaretçiye talebinin alın
    * şeydir (Karar D6). Ölçülebilen şey: onay metni ziyaretçiye bir ZAMAN ya da
    * GERİ DÖNÜŞ taahhüdü içeren kalıpları kullanmıyor mu.
    */
-  it.each<[AppLocale, readonly RegExp[]]>([
-    ['tr', [/ulaşacak/i, /dönecek/i, /arayacak/i, /saat içinde/i]],
-    ['en', [/will contact/i, /will get back/i, /will call/i, /within \d/i]],
-    ['ar', [/سيتواصل/, /سنتواصل/, /خلال \d/]],
-  ])('%s: onay metni ulaşma sözü vermez', (locale, yasakKaliplar) => {
-    const metin = createTranslator(locale)('lead.success.body')
+  /**
+   * Söz YALNIZ onay ekranında değil, ziyaretçinin gördüğü HER metinde aranır. İlk yazımda
+   * yalnız `lead.success.body` kontrol ediliyordu ve form girişindeki "galeri size dönsün"
+   * cümlesi kanıt görüntüsünde fark edildi: kapsamı dar tutulmuş bir test, kuralın
+   * çiğnendiği yeri göstermez.
+   */
+  const SOZ_ARANAN_ANAHTARLAR = [
+    'lead.intro',
+    'lead.title',
+    'lead.success.title',
+    'lead.success.body',
+    'lead.closed.body',
+  ] as const
 
-    for (const kalip of yasakKaliplar) {
-      expect(metin, `${locale}: "${metin}"`).not.toMatch(kalip)
+  it.each<[AppLocale, readonly RegExp[]]>([
+    ['tr', [/ulaşacak/i, /dönecek/i, /dönsün/i, /arayacak/i, /saat içinde/i, /en kısa sürede/i]],
+    ['en', [/will contact/i, /will get back/i, /will call/i, /within \d/i, /as soon as/i]],
+    ['ar', [/سيتواصل/, /سنتواصل/, /سنعاود/, /خلال \d/]],
+  ])('%s: ziyaretçiye gösterilen hiçbir metin ulaşma sözü vermez', (locale, yasakKaliplar) => {
+    const t = createTranslator(locale)
+
+    for (const key of SOZ_ARANAN_ANAHTARLAR) {
+      const metin = t(key)
+
+      for (const kalip of yasakKaliplar) {
+        expect(metin, `${locale}: ${key} = "${metin}"`).not.toMatch(kalip)
+      }
     }
   })
 })

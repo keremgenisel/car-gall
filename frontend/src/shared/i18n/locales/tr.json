@@ -106,7 +106,7 @@
   "admin.noAccess.title": "Bu alan için yetkiniz yok",
   "admin.noAccess.body": "Rolünüzle görüntülenebilecek bir yönetim ekranı henüz yok. Yeni ekranlar eklendiğinde burada görünecek.",
   "lead.title": "Bu araçla ilgileniyor musunuz?",
-  "lead.intro": "Bilgilerinizi bırakın, galeri size dönsün.",
+  "lead.intro": "İlgilendiğiniz bu araç için talebinizi bırakabilirsiniz.",
   "lead.field.type": "Talep tipi",
   "lead.type.information_request": "Bilgi talebi",
   "lead.type.call_back": "Geri arama",

@@ -158,6 +158,11 @@ jobs:
           # İSTEK sınırı (R6'nın ikinci yarısı) testleri birbirini zehirlemesin.
           # Hesap KİLİDİ varsayılan eşikte kalır ve AC-6/AC-7 onu sınar.
           Identity__LoginRequestLimit: '500'
+          # C17'nin eşiği (10 dakikada 5) üretim varsayılanıdır ve Host.Tests onu
+          # varsayılan hâliyle sınar. Kanıt üretimi üç locale'de başarılı gönderim ve
+          # hata senaryoları ister; aynı IP'den bu sayı kolayca aşılır ve testler
+          # birbirini zehirlerdi. Sınırın KENDİSİ burada değil, Host.Tests'te sınanıyor.
+          Leads__RateLimit__PermitLimit: '200'
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Migration'ı çalışan uygulama değil, bu tek seferlik kurulum adımı uygular
