@@ -441,26 +441,26 @@ adına kopyalanan sabit sayı, yapılandırma değiştiği gün yalan söylerdi.
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
       (`docs/evidence/0006-ac<n>.png`), hata ve kilitlenme durumları dâhil; AC-55 için
       Arapça görüntü de var.
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — `Identity` başka modülün tablosuna, internal tipine veya
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — `Identity` başka modülün tablosuna, internal tipine veya
       `DbContext`'ine erişmiyor; `Identity → Dealership` tek atlama.
-- [ ] Yeni migration yalnızca `Identity` şemasına dokunuyor.
-- [ ] Seed edilen ilk Yönetici hesabının parolası dağıtım yapılandırmasından geliyor ve ilk
+- [x] Yeni migration yalnızca `Identity` şemasına dokunuyor.
+- [x] Seed edilen ilk Yönetici hesabının parolası dağıtım yapılandırmasından geliyor ve ilk
       girişte değiştirilmesi zorunlu (D2).
-- [ ] Parolanın yanıtta, logda ve hata metninde görünmediği testle gösterildi (AC-50, AC-51).
-- [ ] Yönetim rota kökü altındaki her endpoint'in korumalı olduğu, rotaları **tarayan** bir
+- [x] Parolanın yanıtta, logda ve hata metninde görünmediği testle gösterildi (AC-50, AC-51).
+- [x] Yönetim rota kökü altındaki her endpoint'in korumalı olduğu, rotaları **tarayan** bir
       testle gösterildi (C18, AC-23) — tek tek sayılan uçlarla değil.
-- [ ] Süre ve eşik değerleri dağıtım yapılandırmasından okunuyor; hiçbiri koda gömülü değil
+- [x] Süre ve eşik değerleri dağıtım yapılandırmasından okunuyor; hiçbiri koda gömülü değil
       (C20).
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
-- [ ] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
+- [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
+- [x] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
 - [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
@@ -472,8 +472,20 @@ adına kopyalanan sabit sayı, yapılandırma değiştiği gün yalan söylerdi.
 |---|---|---|
 | **Spec revizyon sayısı** | **1** | 2026-09-22, AP-08. Uygulama başlamadan önceki CLARIFY turu: 19 açık soru, hepsi onaylanıp işlendi. Kriter sayısı 41 → 61. Altısının sonucu doğrudan güvenlikti; en pahalısı, ayırt edilemezlik kuralının kilitlenme kanalından geri açılmasıydı. |
 | **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Bulgu gerçek/gürültü oranı** | 6 / 0 | Uygulama sırasında çıkan altı bulgunun altısı da gerçekti: (1) `/admin` bugüne kadar `404` dönüyordu — locale ara katmanı ilk segmenti dil sanıyordu; (2) giriş istemci tarafında olduğu için panel personelin dilinde AÇILMIYORDU; (3) Satış Danışmanı panelde "getirilemedi, tekrar dene" hatası görüyor ve personel ekleme formu ona da basılıyordu; (4) `TypedResults.Problem` gövdeye çevrilmiş İngilizce `title` koyuyordu; (5) kurulum Yönetici hesabını migration'ın İÇİNE koymak teknik olarak imkânsızdı (migration çalışma anı yapılandırmasını okuyamaz); (6) E2E yardımcılarında iki yarış — `isVisible()` beklemiyor ve `page.goto` tam gezinmeyi yarıda kesiyordu. |
+| **Regresyon sayısı** | 1 | `LocaleYonlendirmeTests` kırıldı: Host artık başlangıçta `identity` şemasını uygulayıp kurulum hesabını garanti ediyor ve o testler veritabanına hiç dokunmuyordu. Teste özel bir bayrakla atlamak yerine fabrikaya gerçek veritabanı verildi — bayrak, üretimde kapalı kalabilecek bir yol açardı. |
+| **Kaçan hata** | - | Henüz bilinmiyor. |
 
 **Bu spec'ten çıkarılan ders:**
+**Bir güvenlik kuralı, kablolandığı yerde test edilmezse yalnızca niyettir.** 0006'da koruma
+iki parçaya bölündü: şema ve politikalar modülde, boru hattı Host'ta. Modül testleri
+şemanın doğru olduğunu gösteriyordu ve hepsi yeşildi — ama `UseAuthentication()` satırı
+silinse yönetim yüzeyinin tamamı korumasız kalırdı ve hiçbiri kırmızıya dönmezdi. Bunu
+gösteren tek test, rotaları tarayıp gerçek boru hattına istek atan Host testi oldu; sonda
+olarak gruba takılmamış korumasız bir uç eklendiğinde de yalnızca o kırmızı verdi.
+
+İkinci yarısı aynı derse ait: **sayılamayan bir ifade hiçbir testi kırmaz.** Intent'in
+ölçüsü "korumasız kalmış tek bir yönetim yüzeyi kalmaması"ydı ve bu, uçları elle sayan
+bir testle karşılanamazdı — bir sonraki panel spec'i yeni bir uç eklediğinde o test
+görmeden yeşil kalırdı. Tarama, hiç uç bulamadığında da yeşil kalacağı için bulduğu uç
+sayısının sıfır olmadığını da doğrulamak zorunda.
