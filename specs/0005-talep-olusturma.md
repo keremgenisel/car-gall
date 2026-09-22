@@ -397,24 +397,24 @@ bilmez. *Elenen alternatif:* sözü vermeye devam edip D5'i hızlandırmak.
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
       (`docs/evidence/0005-ac<n>.png`), başarılı ve hata durumları dâhil; AC-42 için Arapça
       görüntü de var.
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — `Leads` başka modülün tablosuna, internal tipine veya
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — `Leads` başka modülün tablosuna, internal tipine veya
       `DbContext`'ine erişmiyor.
-- [ ] Yeni migration yalnızca `Leads` şemasına dokunuyor.
-- [ ] `VehicleCatalog.Contracts`'a eklenen okuma yüzeyi yalnızca talep anlık görüntüsü için
+- [x] Yeni migration yalnızca `Leads` şemasına dokunuyor.
+- [x] `VehicleCatalog.Contracts`'a eklenen okuma yüzeyi yalnızca talep anlık görüntüsü için
       gereken alanları taşıyor; gizli alan sızdırmıyor.
-- [ ] `LeadCaptured` outbox'a talep kaydıyla **aynı transaction'da** yazılıyor (AC-30, AC-31).
-- [ ] Hız sınırı sayacı IP'yi kalıcı kayda veya loga yazmıyor (C17,
+- [x] `LeadCaptured` outbox'a talep kaydıyla **aynı transaction'da** yazılıyor (AC-30, AC-31).
+- [x] Hız sınırı sayacı IP'yi kalıcı kayda veya loga yazmıyor (C17,
       `docs/conventions.md` § 12).
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
-- [ ] Ekran `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
+- [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
+- [x] Ekran `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
 - [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
@@ -426,8 +426,17 @@ bilmez. *Elenen alternatif:* sözü vermeye devam edip D5'i hızlandırmak.
 |---|---|---|
 | **Spec revizyon sayısı** | **1** | 2026-09-22, AP-08. Uygulama başlamadan önce yapılan CLARIFY turu: 16 açık soru, hepsi onaylanıp işlendi. Kriter sayısı 28 → 43. En pahalı bulgu: spec `0002` § X1'in bu spec'e devrettiği `docs/domain.md` **R6** kuralı ("rezerve araçta iletişim formu kapalı") hiçbir bölümde yoktu. |
 | **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Bulgu gerçek/gürültü oranı** | 4 / 0 | Uygulama sırasında kendi çıkardığım dört bulgunun dördü de gerçekti: (1) AC-22'nin verdiği `1250,500` sayısı kesmeyi yakalayamaz — iki ondalığa kesilse de aynı sayıdır; (2) AC-19'un ilk testi "kaynak değişti" kısmını hiç canlandırmıyordu ve hiçbir şey kanıtlamıyordu; (3) `TypedResults.Problem` hata gövdesine İngilizce `title` koyuyordu (Yasak Listesi 23); (4) form giriş metni TR ve EN'de Karar D6'nın yasakladığı ulaşma sözünü veriyordu. |
+| **Regresyon sayısı** | 0 | Var olan 219 backend ve 44 frontend testinin hiçbiri kırılmadı. |
+| **Kaçan hata** | - | Henüz bilinmiyor. |
 
 **Bu spec'ten çıkarılan ders:**
+**Bir kriterin verdiği örnek, o kriteri kanıtlayamayabilir.** AC-22 "üç ondalıkla saklar,
+kesme yapılmaz" diyor ve örnek olarak `1250,500` veriyor — ama o sayı iki ondalığa
+kesildiğinde de aynı sayıdır. Spec'in cümlesi doğru, örneği testi körleştiriyordu. Aynı
+şey AC-37'de de oldu: "söz verilmez" kuralını yalnız onay metninde arayan bir test,
+formun giriş cümlesindeki sözü göremedi ve hata ancak görsel kanıta bakarken çıktı.
+
+İkisinin ortak dersi şu: **testi kriterin metnine değil, kriterin KORUDUĞU ŞEYE göre
+yazmak gerekir.** Kriterin örneğini kopyalamak testi yazdırır, ama yeşil kalmasını
+sağlayan şey çoğu zaman kuralın kendisi değil, örneğin zayıflığıdır.
