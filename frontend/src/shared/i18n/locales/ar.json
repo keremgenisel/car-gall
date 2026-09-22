@@ -102,5 +102,7 @@
   "staff.add.error.branch_not_found": "لم يُعثر على الفرع المحدد.",
   "staff.add.error.locale_not_enabled": "اللغة المحددة غير مفعّلة في هذا التثبيت.",
   "staff.add.error.last_active_manager": "يجب أن يبقى في المعرض مدير نشط واحد على الأقل.",
-  "staff.add.error.generic": "تعذّر إتمام العملية الآن. يرجى إعادة المحاولة."
+  "staff.add.error.generic": "تعذّر إتمام العملية الآن. يرجى إعادة المحاولة.",
+  "admin.noAccess.title": "ليس لديك صلاحية لهذا القسم",
+  "admin.noAccess.body": "لا توجد بعد شاشة إدارة يمكن لدورك فتحها. ستظهر الشاشات الجديدة هنا عند إضافتها."
 }

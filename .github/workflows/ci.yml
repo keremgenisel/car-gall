@@ -148,6 +148,10 @@ jobs:
           Identity__SeedAdmin__Password: ci-kurulum-parolasi
           # Kanıt üretimi her girişte 210.000 iterasyon beklemesin.
           Identity__PasswordIterations: '1000'
+          # Kanıt üretimi ve E2E akışları çok sayıda giriş yapar; giriş ucunun
+          # İSTEK sınırı (R6'nın ikinci yarısı) testleri birbirini zehirlemesin.
+          # Hesap KİLİDİ varsayılan eşikte kalır ve AC-6/AC-7 onu sınar.
+          Identity__LoginRequestLimit: '500'
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Migration'ı çalışan uygulama değil, bu tek seferlik kurulum adımı uygular

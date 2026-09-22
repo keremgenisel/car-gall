@@ -102,5 +102,7 @@
   "staff.add.error.branch_not_found": "Seçilen şube bulunamadı.",
   "staff.add.error.locale_not_enabled": "Seçilen dil bu kurulumda etkin değil.",
   "staff.add.error.last_active_manager": "Galeride en az bir aktif Yönetici kalmalıdır.",
-  "staff.add.error.generic": "İşlem şu anda tamamlanamadı. Lütfen tekrar deneyin."
+  "staff.add.error.generic": "İşlem şu anda tamamlanamadı. Lütfen tekrar deneyin.",
+  "admin.noAccess.title": "Bu alan için yetkiniz yok",
+  "admin.noAccess.body": "Rolünüzle görüntülenebilecek bir yönetim ekranı henüz yok. Yeni ekranlar eklendiğinde burada görünecek."
 }

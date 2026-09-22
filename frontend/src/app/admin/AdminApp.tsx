@@ -3,9 +3,11 @@ import { useLocale } from '../localeContext'
 import { ApiError } from '../../shared/api/client'
 import { fetchCurrentSession, logout } from '../../shared/api/identity'
 import type { CurrentSession } from '../../shared/api/types'
+import { adminPath } from '../../shared/lib/route'
 import { ForcePasswordChangePage } from '../../features/identity/ForcePasswordChangePage'
 import { LoginPage } from '../../features/identity/LoginPage'
 import { StaffListPage } from '../../features/identity/StaffListPage'
+import { EmptyState } from '../../shared/ui'
 
 type Gate =
   | { readonly kind: 'checking' }
@@ -66,13 +68,14 @@ export function AdminApp() {
   if (gate.kind === 'signedOut') {
     return (
       <LoginPage
-        onSignedIn={(session) =>
-          setGate(
-            session.mustChangePassword
-              ? { kind: 'mustChangePassword' }
-              : { kind: 'signedIn', session },
-          )
-        }
+        onSignedIn={() => {
+          // TAM GEZİNME, istemci tarafı geçiş değil: panelin dili `<html lang dir>` ile
+          // SUNUCUDAN basılır (R16, AC-54, AC-55) ve o ancak oturum varken personelin
+          // tercihine göre çözülebilir. İstemci tarafında geçilseydi panel, giriş
+          // ekranının dilinde — yani kurulum varsayılanında — kalırdı ve uçta yeniden
+          // hesaplamak `docs/frontend.md` § 6'yı ihlal ederdi.
+          window.location.assign(adminPath())
+        }}
       />
     )
   }
@@ -93,7 +96,10 @@ export function AdminApp() {
           className="ui-button ui-button--text"
           onClick={async () => {
             await logout(locale)
-            setGate({ kind: 'signedOut' })
+
+            // Çıkışta da tam gezinme: oturum gittiği için kabuk artık kurulum
+            // varsayılan diliyle basılmalı.
+            window.location.assign(adminPath())
           }}
         >
           {t('admin.logout')}
@@ -101,7 +107,29 @@ export function AdminApp() {
       </header>
 
       <main className="admin-shell__content">
-        <StaffListPage />
+        {/*
+          R8 — erişilebilen işlemler ROLE göre belirlenir. Personel yönetimi yalnız
+          Yöneticinindir (R9); başka rollerin bu ekranda yapabileceği bir şey yok.
+
+          Ekranı yine de basıp sunucunun `403`'üne güvenmek YANLIŞ olurdu: liste ucu
+          reddedince ekran "getirilemedi, tekrar dene" derdi ve bu yalan olurdu — istek
+          başarısız olmadı, izin yok. `docs/frontend.md` § 3 boş durumun NEDENİNİ ve
+          kullanıcının ne yapabileceğini söylemeyi zorunlu kılıyor.
+
+          Bu bir güvenlik sınırı DEĞİL, dürüstlük meselesidir: sınır sunucuda ve
+          AC-25/AC-26 onu orada sınıyor.
+        */}
+        {gate.session.role === 'manager' ? (
+          <StaffListPage />
+        ) : (
+          <div className="admin-page">
+            <EmptyState
+              title={t('admin.noAccess.title')}
+              description={t('admin.noAccess.body')}
+              testId="admin-no-access"
+            />
+          </div>
+        )}
       </main>
     </div>
   )
