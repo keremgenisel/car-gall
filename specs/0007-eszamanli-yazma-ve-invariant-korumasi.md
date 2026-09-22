@@ -5,7 +5,7 @@
 | **Durum** | Taslak |
 | **Sahip** | Developer (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `Dealership` · `VehicleCatalog` · `Identity` · `Leads` · `BuildingBlocks` |
+| **Modül(ler)** | `BuildingBlocks` (ortak desen) · `Identity` · `Dealership` |
 | **Bağımlı spec'ler** | `0003` (şubeler, tamamlandı) · `0006` (kimlik — bir örneği orada nokta çözümle kapatıldı) |
 
 ---
@@ -33,17 +33,25 @@ yapar; ve deseni izlemeyen yeni bir yazma yolu eklendiğinde bunu **bir test sö
   korur: iki istek aynı anda son elemanı kaldırmaya çalıştığında **yalnızca biri** geçer.
 - **R2.** Koruma, okuma–karar–yazma üçlüsünü **bölünemez** kılar. Kararın dayandığı sayı,
   yazma anında hâlâ geçerli olmak zorundadır.
-- **R3.** Koruma **evin tek bir deseniyle** kurulur ve o desen `BuildingBlocks`'ta yaşar;
-  her modül kendi çözümünü yazmaz. *(Gerekçe: bugün üç modülde aynı kural üç kez yazılmış
-  olsaydı, üçü de ayrı ayrı yanlış olabilirdi.)*
-- **R4.** Desen, geriye dönük olarak **var olan tüm invariant korumalarına** uygulanır:
-  `Identity`'nin son aktif Yönetici koruması (R12) ve `Dealership`'in son aktif şube
-  koruması (B5) dâhil.
-- **R5.** Deseni izlemeyen bir yazma yolu eklendiğinde bunu bir test bildirir; koruma
-  gözden geçirmeye bırakılmaz.
-- **R6.** Çakışma hâlinde kaybeden istek, ziyaretçiye/personele **anlaşılır ve kararlı bir
-  hata kodu** ile döner; teknik ayrıntı sızdırmaz ve "tekrar deneyin" dışında bir şey
-  vaat etmez.
+- **R3.** Koruma **tek bir yerde tanımlanır** ve her modül onu kullanır; hiçbir modül kendi
+  kopyasını yazmaz. *(Gerekçe: aynı kural üç yerde yazılsaydı, üçü de ayrı ayrı yanlış
+  olabilirdi. Tanımın nerede duracağı **C2**'dedir.)*
+- **R4.** Koruma, Context § Invariant envanteri tablosunda sayılan **her** kurala uygulanır.
+  Envanter kapalıdır: orada olmayan bir kural bu spec'in kapsamında değildir.
+  *(Veritabanı tekil indeksiyle korunan kurallar için bkz. X5.)*
+- **R5.** Invariant kararına giren sayı **yalnızca ortak desenin ürettiği değer** üzerinden
+  elde edilebilir. Deseni atlayan bir yazma yolu eklendiğinde bunu bir test bildirir; koruma
+  gözden geçirmeye bırakılmaz. Testin arayacağı işaret budur — ham sayım ile yazmanın aynı
+  komutta yan yana gelmesi.
+- **R6.** Reddedilen istek, **iki farklı red türünü ayırt eden** kararlı bir hata koduyla
+  döner:
+  - **Kural gereği red** — kural gerçekten ihlal ediliyor (gerçekten son Yönetici/şube).
+    Kalıcıdır; kullanıcıya "tekrar deneyin" **denmez**.
+  - **Eşzamanlılık kaybı** — karar anındaki sayı yazma anında değişmiş. Tekrar denemek işe
+    yarayabilir; kullanıcıya "tekrar deneyin" denir.
+
+  İkisi de teknik ayrıntı sızdırmaz. *(Gerekçe: tek kod kullanılırsa, kural gereği reddedilen
+  kullanıcıya sonsuza kadar denemesi söylenmiş olur.)*
 
 ---
 
@@ -56,10 +64,17 @@ yapar; ve deseni izlemeyen yeni bir yazma yolu eklendiğinde bunu **bir test sö
 - **C2.** Modül sınırı korunur: ortak desen `BuildingBlocks`'ta, kullanımı her modülün
   kendi Application katmanında (`docs/architecture.md` § 2.B).
 - **C3.** Yeni migration yalnız kendi şemasına dokunur.
-- **C4.** Çözüm, uygulama rolünün kalıcı DDL yetkisine ihtiyaç duymamalı — `architecture.md`
-  § 5 şema başına ayrı rol istiyor.
+- **C4.** Çözüm **çalışma zamanında DDL üretmez**; şema değişikliği yalnızca migration ile
+  yapılır. Uygulama rolünün kalıcı DDL yetkisine ihtiyacı olmaz — `architecture.md` § 5 şema
+  başına ayrı rol istiyor. *(C3 ile çelişmez: C3 migration'ın kapsamını, C4 çalışma zamanını
+  sınırlar.)*
 - **C5.** Hata gövdesi çevrilmiş metin taşımaz; uç kendi kataloğundan çevirir
   (Yasak Listesi 23).
+- **C6.** **Hata kodu bir API sözleşmesidir, bir gösterim değildir.** Yanıt gövdesi kararlı
+  `errorCode` taşır; ziyaretçiye ne kod ne de teknik ayrıntı gösterilir, uç kendi
+  kataloğundan çevirir. → `docs/frontend.md` § 3.1.
+- **C7.** Her iki red türü de `409` (durum çakışması) ile döner.
+  → `docs/conventions.md` § 5.
 
 ### KAPSAM DIŞI
 
@@ -71,17 +86,21 @@ yapar; ve deseni izlemeyen yeni bir yazma yolu eklendiğinde bunu **bir test sö
   `architecture.md`'nin sadeliğini bozar.
 - **X3.** Outbox dağıtıcısının eşzamanlılığı — *neden:* teslimat zaten en-az-bir-kez ve
   idempotent; ayrı bir konu.
-- **X4.** `Identity`'de 0006 ile kapatılan noktanın yeniden yazılması **zorunlu değildir** —
-  *neden:* orada satır kilidiyle çalışan bir çözüm var ve testi yeşil. Bu spec onu ortak
-  desene taşır, ama taşımanın bedeli faydasını aşarsa olduğu gibi bırakmak da bir sonuçtur;
-  karar burada, ölçüyle verilir.
+- **X4.** **Tekillik kuralları** — aynı slug'a sahip ikinci şube (`0003`), aynı giriş
+  kimliğiyle ikinci personel (`0006`) — *neden:* bunlar sayma–karar–yazma deseni değildir;
+  tek bir yazmada veritabanı tekil indeksiyle kırılırlar. Farklı bir mekanizma, farklı bir
+  kriter kümesi.
+- **X5.** **Kaybeden istekten sonra ekranın davranışı** (listenin tazelenmesi, seçimin
+  korunması) — *neden:* bu spec sunucu tarafındaki korumayı ve hata sözleşmesini üretir;
+  ekran davranışı `0006`'nın personel yönetimi ekranının kendi işidir.
+  *(Hata kodlarının üç dildeki karşılığı bu spec'tedir — AC-17.)*
 
 ---
 
 ## Context
 
-**Mevcut davranış.** Depoda hiçbir modülde `Serializable` izolasyon, `RowVersion` veya
-`IsConcurrencyToken` yok. İnvariant korumaları şu desende yazılmış:
+**Mevcut davranış — doğrulandı.** Depoda hiçbir modülde `Serializable` izolasyon,
+`RowVersion` veya `IsConcurrencyToken` yok. İnvariant korumalarının klasik deseni şudur:
 
 ```csharp
 int otherActiveManagers = await StaffQueries...CountAsync(...);   // oku
@@ -89,15 +108,39 @@ Result result = staff.Deactivate(otherActiveManagers);            // karar ver
 await unitOfWork.SaveChangesAsync(ct);                            // yaz
 ```
 
-**Etkilenen yerler:**
+### Invariant envanteri — kapalı liste
+
+R4 yalnızca bu tabloya uygulanır.
 
 | Kural | Yer | Bugünkü durum |
 |---|---|---|
-| R12 — en az bir aktif Yönetici | `Identity/Application/StaffCommands.cs`, `StaffQueries.cs` | **0006'da nokta çözümle kapatıldı**: `SELECT … FOR UPDATE` + tek transaction |
-| B5 — en az bir aktif şube | `Dealership/Domain/Branch.cs:163` (`Close`) | **Açık, ama bugün ulaşılamaz**: `D1` gereği `Dealership`'in yazma ucu yok; `Close` üretim yolundan çağrılmıyor |
+| **R12** — en az bir aktif Yönetici (pasifleştirme) | `Identity/Application/StaffCommands.cs` `DeactivateAsync` | **Korumalı** — `BeginTransaction` + `LockAndCountOtherActiveManagersAsync` |
+| **R12** — en az bir aktif Yönetici (rol düşürme) | `Identity/Application/StaffCommands.cs` `ChangeRoleAsync` | **Korumalı** — aynı kilidi kullanıyor |
+| **B5** — en az bir aktif şube | `Dealership/Domain/Branch.cs` `Close` | **Korumasız ve ulaşılamaz** — `Close` hiçbir yerden çağrılmıyor (`grep '.Close('` → sıfır isabet); `0003` § D1 gereği `Dealership`'in yazma ucu yok |
 
-Yani bugün **canlı** bir açık yok; ama `Dealership`'e yazma ucu geldiği gün (şube yönetimi
-spec'i) aynı hata onunla birlikte doğar. Bu spec, o gün gelmeden deseni yerine koymak için.
+Tekillik kuralları bu tabloda **yoktur** ve kapsam dışıdır (X4).
+
+### Bu spec'in gerçek teslimatı
+
+Envanterin ilk iki satırı **bugün zaten yeşildir**: `0006`'nın nokta çözümü hem
+pasifleştirmeyi hem rol düşürmeyi kilitle koruyor (doğrulandı:
+[StaffCommands.cs:114-126](src/Modules/Identity/Identity/Application/StaffCommands.cs#L114-L126),
+[StaffQueries.cs:52](src/Modules/Identity/Identity/Application/StaffQueries.cs#L52)).
+Dolayısıyla bu spec'in yeni davranışı üç kalemdir:
+
+1. **Şube tarafı** — bugün korumasız; kapatma komutu hiç yok (D2).
+2. **Ortak desen** — üç yerde üç çözüm olmasın diye (D1).
+3. **Mimari test** — deseni atlayan yolu bildiren kapı (R5).
+
+Kabul kriterleri bu ayrımı korur: **A grubu** var olan davranışın regresyon koruması,
+**B–E grupları** yeni davranıştır.
+
+### Bu daldaki durum
+
+Bu spec `feature/0006-personel-kimligi-ve-oturum` dalında yazıldı. **`Leads` modülü bu dalda
+yoktur** (yalnız `feature/0005-talep-olusturma` dalında; `main`'de de yok) ve bu spec'te
+`Leads`'e dokunan tek bir gereksinim veya kriter yoktur — bu yüzden başlıktaki modül
+listesinden çıkarıldı. `VehicleCatalog` da aynı nedenle çıkarıldı.
 
 **Önceki kararlar.** `docs/architecture.md` § 7 Karar Defteri'nde eşzamanlılık üzerine bir
 satır **yok** — bu spec'in çıktılarından biri o satırdır.
@@ -107,48 +150,112 @@ satırı kilitler ve hiç serileşmezler. Kilit kümesi, karara giren **tüm** s
 ve sabit bir sırada alınmalı (`ORDER BY id`), yoksa karşılıklı kilitlenme oluşur. 0006'daki
 nokta çözüm bunu böyle yapıyor; ortak desen de yapmak zorunda.
 
+### Verilen kararlar
+
+İkisi de Takım Yöneticisi tarafından onaylandı.
+
+**D1 — `Identity`'nin nokta çözümü ortak desene taşınır.**
+*Gerekçe:* R3'ün tek gerekçesi "aynı kural birden çok yerde birden çok kez yazılmasın";
+istisnayı ilk günden açmak deseni daha doğmadan deler. *Bilerek ödenen bedel:* çalışan ve
+testi yeşil bir kodu değiştirme riski — bu yüzden taşıma, A grubundaki kriterlerin
+**kesintisiz yeşil kalmasıyla** yapılır ve bu DoD'de aranır.
+*Elenen alternatif:* "taşımanın bedeli faydasını aşarsa olduğu gibi bırakmak" — ölçüsü
+tanımlanmamış bir kapsam kararını uygulama anına bırakır; kapsam kararı üyeye ait değildir.
+
+**D2 — `Dealership`'e iç bir şube kapatma komutu eklenir; HTTP ucu yoktur.**
+*Gerekçe:* B5'in koruması Application katmanında yaşar, ama bugün şube kapatan bir komut
+yok — `Close` hiçbir yerden çağrılmıyor. Komut olmadan AC-6/AC-7 yalnızca testin kendi
+kurduğu düzeneği doğrular, korumayı değil. *Sınır:* komut modül içinden ve testten
+çağrılabilir; **HTTP ucu yayınlanmaz**, böylece `0003` § D1 (korumasız yazma ucu yok)
+korunur. *Bilerek ödenen bedel:* üretim kodunda bugün hiçbir yerden çağrılmayan bir komut
+durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
+
 ---
 
 ## Acceptance Criteria
 
-- **AC-1.** İki eşzamanlı istek son aktif Yöneticiyi pasifleştirmeye çalıştığında yalnızca
-  biri başarılı olur; diğeri `identity.last_active_manager` ile reddedilir.
+> **A grubu bugün zaten karşılanıyor** ve regresyon koruması olarak durur; yeni davranışın
+> kanıtı **B–E** gruplarıdır (Context § Bu spec'in gerçek teslimatı). Bu spec'te arayüz
+> kriteri yoktur.
+
+### A. Bugün karşılanıyor — regresyon koruması
+
+- **AC-1.** İki eşzamanlı istek son iki aktif Yöneticiden **farklı** ikisini pasifleştirmeye
+  çalıştığında yalnızca biri başarılı olur; diğeri `identity.last_active_manager` ile
+  reddedilir.
 - **AC-2.** AC-1'in ardından galeride **tam olarak bir** aktif Yönetici kalır.
-- **AC-3.** İki eşzamanlı istek son aktif Yöneticinin rolünü düşürmeye çalıştığında yalnızca
-  biri başarılı olur.
-- **AC-4.** Pasifleştirme ve rol düşürme **birbirine karşı da** serileşir: biri
+- **AC-3.** İki eşzamanlı istek **aynı** Yöneticiyi pasifleştirmeye çalıştığında ikincisi
+  hiçbir kaydı değiştirmez ve kararlı bir hata koduyla döner.
+- **AC-4.** İki eşzamanlı istek son iki aktif Yöneticiden farklı ikisinin rolünü düşürmeye
+  çalıştığında yalnızca biri başarılı olur.
+- **AC-5.** Pasifleştirme ve rol düşürme **birbirine karşı da** serileşir: biri
   pasifleştirirken diğeri rol düşürüyorsa ikisi birden geçemez.
-- **AC-5.** İki eşzamanlı istek son aktif şubeyi kapatmaya çalıştığında yalnızca biri
-  başarılı olur; diğeri `branch.last_active_branch` ile reddedilir.
-- **AC-6.** AC-5'in ardından galeride **tam olarak bir** aktif şube kalır.
-- **AC-7.** Reddedilen istek, başarısız olduğunu **kararlı bir hata koduyla** bildirir;
-  gövdede yığın izi, SQL metni veya kilit/transaction terimi geçmez.
-- **AC-8.** Karara giren satırlar sabit bir sırada kilitlenir; eşzamanlı iki istek karşılıklı
-  kilitlenmeye (deadlock) düşmez — test bunu tekrarlı turlarla doğrular.
-- **AC-9.** Korumanın olmadığı hâlde test **kırmızıya döner**: kilit kaldırıldığında en az
-  bir kriter düşer. *(Testin doğru sebeple yeşil olduğunun kanıtı.)*
-- **AC-10.** Ortak desen `BuildingBlocks`'ta tek bir yerde yaşar; modüller onu çağırır,
-  kendi kopyalarını yazmaz — mimari test bunu doğrular.
-- **AC-11.** Invariant koruyan bir komut ortak deseni kullanmadan eklendiğinde bir test
-  bunu bildirir.
-- **AC-12.** Koruma, işlem başarısız olduğunda **hiçbir yan etki bırakmaz**: reddedilen
-  istekte ne satır değişir ne outbox'a duyuru düşer.
-- **AC-13.** Eşzamanlılık testleri gerçek PostgreSQL üzerinde koşar ve rastgele kırılmaz
-  (AP-03): aynı test art arda beş turda da aynı sonucu verir.
+
+### B. Yeni davranış — şube tarafı
+
+- **AC-6.** İki eşzamanlı istek son iki aktif şubeden farklı ikisini kapatmaya çalıştığında
+  yalnızca biri başarılı olur; diğeri `branch.last_active_branch` ile reddedilir.
+- **AC-7.** AC-6'nın ardından galeride **tam olarak bir** aktif şube kalır.
+- **AC-8.** Şube kapatma komutunun HTTP ucu yoktur; komut yalnızca modül içinden
+  çağrılabilir — mimari test bunu doğrular (D2).
+
+### C. Yeni davranış — ortak desen
+
+- **AC-9.** Ortak desen tek bir yerde yaşar; modüller onu çağırır, kendi kopyalarını yazmaz
+  — mimari test bunu doğrular.
+- **AC-10.** `Identity`'nin son aktif Yönetici koruması ortak deseni kullanır; modül içinde
+  ayrı bir kopyası kalmaz (D1).
+- **AC-11.** Invariant kararına giren sayı yalnızca ortak desenin ürettiği değer üzerinden
+  elde edilir; modüllerin Application katmanında ham sayım ile yazmanın aynı komutta yan yana
+  geldiği bir yol bulunmaz — mimari test bunu doğrular.
+
+### D. Çakışma ve hata sözleşmesi
+
+- **AC-12.** Kural gereği red ile eşzamanlılık kaybı **farklı** hata kodlarıyla döner; iki
+  durum hata kodundan ayırt edilebilir.
+- **AC-13.** Her iki red de `409` durum koduyla döner.
+- **AC-14.** Reddedilen yanıtın gövdesi kararlı `errorCode` taşır; çevrilmiş metin, yığın
+  izi, SQL metni veya kilit/transaction terimi taşımaz.
+- **AC-15.** Ziyaretçiye/personele HTTP durum kodu, hata kodu, `traceId`, endpoint yolu veya
+  istisna metni gösterilmez; gösterilen mesaj çeviri kataloğundan gelir.
+- **AC-16.** Kural gereği reddin kullanıcıya gösterilen metni "tekrar deneyin" demez;
+  eşzamanlılık kaybınınki der.
+- **AC-17.** Bu spec'in ürettiği her hata kodunun TR, AR ve EN karşılığı vardır; hiçbir
+  locale'de çeviri anahtarı ham hâliyle görünmez.
+
+### E. Yan etkisizlik ve kilit davranışı
+
+- **AC-18.** Reddedilen istekte hiçbir yan etki kalmaz: ne satır değişir ne outbox'a duyuru
+  düşer.
+- **AC-19.** Karara giren satırlar sabit bir sırada kilitlenir; eşzamanlı iki istek karşılıklı
+  kilitlenmeye (deadlock) düşmez. Tur sayısı **AC-21**'dedir.
+- **AC-20.** Test, çakışmanın gerçekten kurulduğunu gözler: ikinci isteğin birinci commit
+  edene kadar **beklediği** doğrulanır.
+- **AC-21.** Eşzamanlılık testleri gerçek PostgreSQL üzerinde koşar ve art arda **beş** turda
+  da aynı sonucu verir (AP-03).
 
 ---
 
 ## Definition of Done
 
 - [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Arayüz kriterlerinin **görsel kanıtı** eklendi — *bu spec'te arayüz kriteri yoksa
-      "yok" yazılır.*
+- [ ] **A grubundaki kriterlerin bu spec'ten önce de yeşil olduğu** PR'da açıkça yazıldı;
+      yeni davranışın kanıtı B–E gruplarıdır.
+- [ ] **D1 taşıması sırasında A grubu kesintisiz yeşil kaldı** — taşımadan önceki ve sonraki
+      koşu çıktıları PR'da.
+- [ ] **Korumanın doğru sebeple yeşil olduğunun kanıtı:** koruma geçici olarak devre dışı
+      bırakılarak koşulan turun çıktısı PR'a eklendi ve hangi kriterlerin kırmızıya döndüğü
+      yazıldı. *(Korumasız yol depoda kalıcı olarak bırakılmaz.)*
 - [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok.
+- [ ] Mimari testler yeşil — modül sınırı ihlali yok; AC-8, AC-9 ve AC-11 mimari testle
+      doğrulanıyor.
 - [ ] Yeni migration varsa yalnızca kendi şemasına dokunuyor.
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [ ] Bu spec'in ürettiği hata kodlarının çeviri anahtarları TR/AR/EN üçünde de eklendi;
+      eksik anahtar kontrolü yeşil (AC-17).
 - [ ] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [ ] **Eşzamanlılık kararı `docs/architecture.md` § Karar Defteri'ne yazıldı.**
+- [ ] Görsel kanıt: bu spec'te **arayüz kriteri yoktur**; görsel kanıt maddesi
+      **uygulanabilir değildir**. AC-17 bir çeviri kapısıdır, arayüz kriteri değildir.
 - [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
