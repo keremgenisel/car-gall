@@ -468,6 +468,7 @@ altındaki ADR'lerdedir.
 | SSR | Yok; sunucu tarafı meta + JSON-LD enjeksiyonu |
 | Admin paneli | Tek Vite uygulaması, `/admin` rota ağacı, lazy-load |
 | Veritabanı | PostgreSQL, şema başına ayrı rol |
+| Migration uygulama | Tek seferlik kurulum adımı (`--migrate`); çalışan uygulama yalnız doğrular |
 | Medya | S3-uyumlu (R2/MinIO) + CDN, ilk günden |
 | Teklif/pazarlık | Yalnızca bir `Lead` tipi; durum makinesi yok |
 | Ekspertiz modeli | Türkiye modeli, alanlar yapılandırılabilir |
