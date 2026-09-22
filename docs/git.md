@@ -128,7 +128,14 @@ sonra force push edilmez.
 
 Bir PR şu şartların **hepsini** sağlamadan merge edilmez:
 
-1. **Bir spec'e dayanır.** PR başlığı spec numarasını taşır.
+1. **Bir spec'e ya da bir ADR'ye dayanır.** PR başlığı spec numarasını taşır.
+
+   ADR istisnası § 1'in `chore/` iznini işler kılar: kabul kriteri üretmeyen ama mimariyi
+   değiştiren işler (dağıtım stratejisi, araç zinciri, kural düzeltmesi) spec'e sığmaz.
+   Onlara spec numarası açmak spec kavramını sulandırırdı — dayanakları
+   `docs/decisions/` altındaki ADR'dir ve PR onu referans gösterir.
+
+   **Hiçbir dayanağı olmayan PR açılmaz.** İstisna dayanağın biçimindedir, varlığında değil.
 2. **PR şablonu doldurulmuştur** (§ 5). Boş bırakılan alan yoktur.
 3. **Pipeline yeşildir.** Kırmızı pipeline ile merge yoktur — "sonra düzeltiriz" yoktur.
    Pipeline şunları içerir:
