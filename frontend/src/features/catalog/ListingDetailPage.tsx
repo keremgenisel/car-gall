@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLocale } from '../../app/localeContext'
 import { fetchListingDetail } from '../../shared/api/catalog'
 import type { ShowcaseListingDetail } from '../../shared/api/types'
@@ -14,7 +14,21 @@ type LoadState =
   | { readonly kind: 'notFound' }
   | { readonly kind: 'ready'; readonly detail: ShowcaseListingDetail }
 
-export function ListingDetailPage({ slug }: { readonly slug: string }) {
+interface Props {
+  readonly slug: string
+  /**
+   * Talep formunun yeri. Form `features/leads`'e aittir ve bu feature onu IMPORT EDEMEZ:
+   * bir feature başka bir feature'ın iç dosyasını import etmez (docs/frontend.md § 1,
+   * `scripts/check-structure.mjs` bunu CI'da kırar). Slot'u kabuk (`app/`) doldurur.
+   *
+   * Render prop, `detail` yüklendikten SONRA çağrılır: form `isReserved`'a ihtiyaç duyar
+   * (AC-11) ve o bilgi bu sayfanın zaten yaptığı istekten gelir — ikinci bir istek
+   * gerekmez.
+   */
+  readonly renderLead?: (detail: ShowcaseListingDetail) => ReactNode
+}
+
+export function ListingDetailPage({ slug, renderLead }: Props) {
   const { locale, t } = useLocale()
   const [result, setResult] = useState<{ readonly key: string; readonly value: LoadState } | null>(
     null,
@@ -128,6 +142,8 @@ export function ListingDetailPage({ slug }: { readonly slug: string }) {
           </dl>
         </div>
       </Card>
+
+      {renderLead === undefined ? null : renderLead(detail)}
     </div>
   )
 }

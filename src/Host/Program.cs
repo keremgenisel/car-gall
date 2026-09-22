@@ -4,9 +4,11 @@ using CarGallery.Host.Schema;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Identity.Contracts.Setup;
+using CarGallery.Modules.Leads;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
 
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 
@@ -84,8 +86,22 @@ builder.Services.AddIdentity(new IdentitySetup(
     builder.Configuration.GetValue<int?>("Identity:LoginRequestLimit") ?? 20,
     builder.Configuration.GetValue<int?>("Identity:LoginRequestWindowMinutes") ?? 10));
 
+// 0005 — talep modülü. İKİ eşik var: `CapturedLeadLimit` C17'nin sayısıdır (10 dakikada
+// 5) ve yalnız KAYIT OLUŞAN isteği sayar; `RequestLimit` kaba tekrarı kesen daha gevşek
+// istek sınırıdır. İkisi ayrı, çünkü C17'yi boru hattına koymak formu birkaç kez yanlış
+// dolduran dürüst ziyaretçiyi kilitlerdi. Yapılandırılabilir olmalarının tek nedeni
+// kanıt üretimidir.
+builder.Services.AddLeads(
+    connectionString,
+    localization.EnabledLocales,
+    builder.Configuration.GetValue<int?>("Leads:RateLimit:CapturedLeadLimit") ?? 5,
+    builder.Configuration.GetValue<int?>("Leads:RateLimit:RequestLimit") ?? 30,
+    builder.Configuration.GetValue<int?>("Leads:RateLimit:WindowMinutes") ?? 10);
+
 // İlk yazma uçları ilk hata sözleşmesini getirdi. `500` yanıtı ASLA iç detay taşımaz:
-// stack trace, SQL, dosya yolu, tip adı yok (docs/conventions.md § 5, AC-59).
+// stack trace, SQL, dosya yolu, tip adı yok — yalnız `traceId`
+// (docs/conventions.md § 5, 0005/AC-39, 0006/AC-59). Bu olmadan geliştirme ortamında
+// istisna metni ziyaretçiye giderdi.
 builder.Services.AddProblemDetails();
 
 builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocale, localization.EnabledLocales));
@@ -109,6 +125,16 @@ if (args.Contains(ModuleSchemaOperations.MigrateArgument, StringComparer.Ordinal
 // "tablo yok" diye okunurdu, "kurulum adımı atlandı" diye değil.
 await app.Services.EnsureModuleSchemasAreCurrentAsync();
 
+// Ters proxy arkasında ziyaretçinin gerçek adresi — 0005'in hız sınırı doğru bölünsün
+// diye. Proxy AÇIKÇA listelenmemişse ara katman hiç eklenmez ve X-Forwarded-For yok
+// sayılır: güvenilmeyen başlığa güvenmek, sınırı istemcinin kapatabilmesi demektir.
+ForwardedHeadersOptions? forwardedHeaders = ForwardedHeadersSetup.Build(builder.Configuration);
+
+if (forwardedHeaders is not null)
+{
+    app.UseForwardedHeaders(forwardedHeaders);
+}
+
 // Sıkıştırma statik dosya servisinden ÖNCE gelmeli, yoksa dosyalar ham geçer.
 app.UseResponseCompression();
 app.UseStaticFiles();
@@ -116,20 +142,24 @@ app.UseStaticFiles();
 // Yönlendirme, locale katmanından ÖNCE çalışır ki eşleşen endpoint'ler bilinsin.
 app.UseRouting();
 
+// Hız sınırı BORU HATTINDA yaşar; modül yalnız politikayı tanımlar. Bu satır silinirse
+// 0005/C17'nin sınırı sessizce kaybolur — Host.Tests bunu gerçek boru hattında sınıyor.
 app.UseRateLimiter();
 
-// Kimlik doğrulama BORU HATTINDA yaşar; modül yalnız şemayı ve politikaları tanımlar.
+// Kimlik doğrulama da BORU HATTINDA yaşar; modül yalnız şemayı ve politikaları tanımlar.
 // Bu üç satır silinirse yönetim yüzeyinin koruması SESSİZCE kaybolur — `Host.Tests`
 // bunu gerçek boru hattında sınıyor.
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseIdentity();
 
+
 app.UseMiddleware<LocalePrefixMiddleware>();
 
 app.MapVehicleCatalog();
 app.MapVehicleReference();
 app.MapIdentity();
+app.MapLeads();
 
 // Geliştirme ve görsel kanıt üretimi yolu. Bayrak kapalıyken hiçbir şey kaydedilmez
 // ve bu uç noktalar hiç tanımlanmaz; üretimde erişilebilir bir yüzeyi yoktur.

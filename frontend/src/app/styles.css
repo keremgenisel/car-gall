@@ -434,3 +434,112 @@ body {
   padding-block: var(--space-5);
   border-block-end: var(--border-width) solid var(--color-border);
 }
+
+/* --- Talep formu (0005) --- */
+
+.lead-form__title {
+  margin-block: var(--space-0) var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.lead-form__intro {
+  margin-block: var(--space-0) var(--space-6);
+  color: var(--color-ink-muted);
+}
+
+.lead-form__form {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.lead-form__field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.lead-form__label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.lead-form__hint {
+  margin-block: var(--space-0);
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+.lead-form__control {
+  min-block-size: var(--form-control-min-block-size);
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
+
+.lead-form__control--message {
+  min-block-size: auto;
+  resize: vertical;
+}
+
+.lead-form__control[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.lead-form__field-error {
+  margin-block: var(--space-0);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.lead-form__consent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-4);
+  align-items: start;
+}
+
+.lead-form__checkbox {
+  inline-size: var(--space-6);
+  block-size: var(--space-6);
+  margin-block-start: var(--space-1);
+}
+
+.lead-form__consent-label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.lead-form__consent-text {
+  grid-column: 1 / -1;
+  margin-block: var(--space-0);
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+.lead-form__error {
+  margin-block-end: var(--space-6);
+  padding-block: var(--space-5);
+  padding-inline: var(--space-6);
+  border: var(--border-width) solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-surface);
+}
+
+.lead-form__error-title {
+  margin-block: var(--space-0) var(--space-2);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-danger);
+}
+
+.lead-form__error-body {
+  margin-block: var(--space-0) var(--space-5);
+}
+
+.lead-form__error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}

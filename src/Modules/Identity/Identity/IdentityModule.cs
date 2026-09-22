@@ -174,33 +174,13 @@ public static class IdentityModule
     /// Hesap kilidinden farklıdır — o, hesap başına ve doğru parolayı da reddeder;
     /// bu, kaynak başına ve isteği hiç işlemeden keser.
     /// </summary>
-    private static void AddLoginRateLimiting(IServiceCollection services, IdentitySetup setup) =>
-        services.AddRateLimiter(limiter =>
-        {
-            limiter.AddPolicy(SessionEndpoints.RateLimitPolicy, context =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = setup.LoginRequestLimit,
-                        Window = TimeSpan.FromMinutes(setup.LoginRequestWindowMinutes),
-                        QueueLimit = 0,
-                    }));
+    private static void AddLoginRateLimiting(IServiceCollection services, IdentitySetup setup)
+    {
+        services.AddRateLimiter(limiter => limiter.AddPolicy<string, LoginRateLimitPolicy>(
+            SessionEndpoints.RateLimitPolicy));
 
-            limiter.OnRejected = async (context, cancellationToken) =>
-            {
-                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                context.HttpContext.Response.ContentType = "application/problem+json";
-
-                await context.HttpContext.Response.WriteAsync(
-                    JsonSerializer.Serialize(new Dictionary<string, object?>(StringComparer.Ordinal)
-                    {
-                        ["status"] = StatusCodes.Status429TooManyRequests,
-                        ["errorCode"] = IdentityErrors.RateLimited,
-                    }),
-                    cancellationToken);
-            };
-        });
+        // IdentitySetup zaten singleton olarak kayıtlı; politika onu DI'dan alır.
+    }
 
     private static IdentityLocaleOptions BuildLocaleOptions(string defaultLocale, IReadOnlyList<string> enabled)
     {

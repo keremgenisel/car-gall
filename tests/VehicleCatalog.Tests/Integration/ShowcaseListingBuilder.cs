@@ -27,6 +27,8 @@ internal sealed class ShowcaseListingBuilder
     private string? priceCurrencyCode = "TRY";
     private int? priceMinorUnitExponent = 2;
     private bool priceOnRequest;
+    private Guid vehicleModelId = Guid.CreateVersion7();
+    private Guid branchId = Guid.CreateVersion7();
     private Dictionary<string, string> branchNames = new()
     {
         ["tr"] = "Merkez Şube",
@@ -127,6 +129,20 @@ internal sealed class ShowcaseListingBuilder
         return this;
     }
 
+    /// <summary>0005 AC-18 — kanonik adın anahtarı anlık görüntüye kopyalanır.</summary>
+    internal ShowcaseListingBuilder WithVehicleModelId(Guid id)
+    {
+        vehicleModelId = id;
+        return this;
+    }
+
+    /// <summary>0005 AC-23 — talep aracın şubesine bağlanır.</summary>
+    internal ShowcaseListingBuilder WithBranchId(Guid id)
+    {
+        branchId = id;
+        return this;
+    }
+
     internal ShowcaseListingBuilder WithBranchNames(Dictionary<string, string> names)
     {
         branchNames = names;
@@ -150,14 +166,14 @@ internal sealed class ShowcaseListingBuilder
         TrimLevelSlug = trimLevelSlug,
         ColorNames = colorNames,
         OptionalValues = optionalValues,
-        VehicleModelId = Guid.CreateVersion7(),
+        VehicleModelId = vehicleModelId,
         ModelYear = modelYear,
         MileageKilometers = mileageKilometers,
         PriceAmount = priceAmount,
         PriceCurrencyCode = priceCurrencyCode,
         PriceMinorUnitExponent = priceMinorUnitExponent,
         PriceOnRequest = priceOnRequest,
-        BranchId = Guid.CreateVersion7(),
+        BranchId = branchId,
         BranchNames = branchNames,
         CoverAssetId = Guid.CreateVersion7(),
         CoverMediaUrl = "https://cdn.example.test/cover.webp",

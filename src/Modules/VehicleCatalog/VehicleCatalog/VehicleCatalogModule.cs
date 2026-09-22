@@ -6,9 +6,11 @@ using CarGallery.Modules.VehicleCatalog.Application.Detail;
 using CarGallery.Modules.VehicleCatalog.Application.Development;
 using CarGallery.Modules.VehicleCatalog.Application.EventHandlers;
 using CarGallery.Modules.VehicleCatalog.Application.FieldSettings;
+using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 using CarGallery.Modules.VehicleCatalog.Contracts.FieldSettings;
+using CarGallery.Modules.VehicleCatalog.Contracts.Listings;
 using CarGallery.Modules.VehicleCatalog.Contracts.Showcase;
 using CarGallery.Modules.VehicleCatalog.Endpoints;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
@@ -57,6 +59,9 @@ public static class VehicleCatalogModule
         services.AddScoped<IShowcaseListingQueries, ShowcaseListingQueries>();
         services.AddScoped<IShowcaseListingDetailQueries, ShowcaseListingDetailQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
+
+        // 0005 R7/R8 — talep anlık görüntüsünün kaynağı. Locale almaz, çeviri çözmez.
+        services.AddScoped<IListingSnapshotQueries, ListingSnapshotQueries>();
 
         return services;
     }

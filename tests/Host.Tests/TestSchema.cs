@@ -2,6 +2,7 @@ using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Host.Schema;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
+using CarGallery.Modules.Leads;
 using CarGallery.Modules.Identity.Contracts.Setup;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
@@ -51,6 +52,9 @@ internal static class TestSchema
             PasswordIterations: 1000,
             LoginRequestLimit: 20,
             LoginRequestWindowMinutes: 10));
+
+        // 0005 ile `leads` de bir modül şemasıdır.
+        services.AddLeads(connectionString, ["tr", "ar", "en"], 5, 10);
 
         await using ServiceProvider provider = services.BuildServiceProvider();
 

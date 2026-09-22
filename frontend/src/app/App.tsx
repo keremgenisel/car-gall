@@ -3,6 +3,7 @@ import { AppShell } from './AppShell'
 import { LocaleProvider } from './LocaleProvider'
 import { ListingDetailPage } from '../features/catalog/ListingDetailPage'
 import { ShowcaseListPage } from '../features/catalog/ShowcaseListPage'
+import { LeadForm } from '../features/leads/LeadForm'
 import type { AppLocale } from '../shared/lib/locale'
 import { parseRoute } from '../shared/lib/route'
 
@@ -37,7 +38,21 @@ export function App({ locale }: { readonly locale: AppLocale }) {
   return (
     <LocaleProvider locale={locale}>
       <AppShell>
-        {route.kind === 'detail' ? <ListingDetailPage slug={route.slug} /> : <ShowcaseListPage />}
+        {route.kind === 'detail' ? (
+          <ListingDetailPage
+            slug={route.slug}
+            /*
+              Talep formunu KABUK bağlar: `features/catalog` ile `features/leads`
+              birbirini import edemez (docs/frontend.md § 1). İki feature'ı birlikte
+              tanıyabilen tek yer burasıdır.
+            */
+            renderLead={(detail) => (
+              <LeadForm listingSlug={detail.slug} isReserved={detail.isReserved} />
+            )}
+          />
+        ) : (
+          <ShowcaseListPage />
+        )}
       </AppShell>
     </LocaleProvider>
   )
