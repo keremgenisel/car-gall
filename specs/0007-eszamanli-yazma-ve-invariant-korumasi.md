@@ -247,23 +247,23 @@ durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] **A grubundaki kriterlerin bu spec'ten önce de yeşil olduğu** PR'da açıkça yazıldı;
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] **A grubundaki kriterlerin bu spec'ten önce de yeşil olduğu** PR'da açıkça yazıldı;
       yeni davranışın kanıtı B–E gruplarıdır.
-- [ ] **D1 taşıması sırasında A grubu kesintisiz yeşil kaldı** — taşımadan önceki ve sonraki
+- [x] **D1 taşıması sırasında A grubu kesintisiz yeşil kaldı** — taşımadan önceki ve sonraki
       koşu çıktıları PR'da.
-- [ ] **Korumanın doğru sebeple yeşil olduğunun kanıtı:** koruma geçici olarak devre dışı
+- [x] **Korumanın doğru sebeple yeşil olduğunun kanıtı:** koruma geçici olarak devre dışı
       bırakılarak koşulan turun çıktısı PR'a eklendi ve hangi kriterlerin kırmızıya döndüğü
       yazıldı. *(Korumasız yol depoda kalıcı olarak bırakılmaz.)*
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok; AC-8, AC-9 ve AC-11 mimari testle
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — modül sınırı ihlali yok; AC-8, AC-9 ve AC-11 mimari testle
       doğrulanıyor.
-- [ ] Yeni migration varsa yalnızca kendi şemasına dokunuyor.
-- [ ] Bu spec'in ürettiği hata kodlarının çeviri anahtarları TR/AR/EN üçünde de eklendi;
+- [x] Yeni migration varsa yalnızca kendi şemasına dokunuyor.
+- [x] Bu spec'in ürettiği hata kodlarının çeviri anahtarları TR/AR/EN üçünde de eklendi;
       eksik anahtar kontrolü yeşil (AC-17).
-- [ ] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] **Eşzamanlılık kararı `docs/architecture.md` § Karar Defteri'ne yazıldı.**
-- [ ] Görsel kanıt: bu spec'te **arayüz kriteri yoktur**; görsel kanıt maddesi
+- [x] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+- [x] **Eşzamanlılık kararı `docs/architecture.md` § Karar Defteri'ne yazıldı.**
+- [x] Görsel kanıt: bu spec'te **arayüz kriteri yoktur**; görsel kanıt maddesi
       **uygulanabilir değildir**. AC-17 bir çeviri kapısıdır, arayüz kriteri değildir.
 - [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
