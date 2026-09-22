@@ -1,21 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
+import { kanit } from './kanit'
 import { YONETICI_PAROLA } from './global-setup'
 
-/**
- * Spec 0006'nın görsel kanıtları (docs/testing.md § 3). Görüntü KRİTERİN karşılandığını
- * gösterir, ekranın genel görünümünü değil. Yalnız masaüstü profilinde koşar — mobil
- * profil aynı dosyaları üzerine yazardı (playwright.config.ts testIgnore).
- */
-const KANIT = '../docs/evidence'
-
 const SEED_KIMLIK = 'yonetici@cargallery.local'
-
-async function kanit(page: Page, selector: string, dosya: string) {
-  await page
-    .locator(selector)
-    .first()
-    .screenshot({ path: `${KANIT}/${dosya}` })
-}
 
 async function sonucBekle(page: Page) {
   const shell = page.getByTestId('admin-shell')

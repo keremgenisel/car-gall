@@ -119,6 +119,22 @@ Detaylı konvansiyonlar: **`docs/frontend.md`**. Burada yalnızca kanıt ve kap�
 
 Arayüz işlerinde her kabul kriteri için **ekran görüntüsü** üretilir ve PR'a eklenir.
 
+**Kanıt yazma açıkça istenir:**
+
+```
+npm run evidence      # yalnız bu komut dosyaya yazar
+npm run test:e2e      # assert'ler koşar, hiçbir dosya değişmez
+```
+
+*Neden:* Ekran görüntüsü üretimi deterministik **değil**. Ölçüldü: aynı Host, aynı
+veritabanı ve hiç değişmeyen veriyle art arda koşulan iki turda 78 görselin **8'i**
+yine değişti. Kaynak seed verisi değil, tarayıcı render'ı ve PNG kodlaması — sabit
+tohum bunu çözmez. Her e2e koşusu çalışma ağacını kirletiyordu ve **gerçek** bir görsel
+değişikliği bu gürültünün içinde görünmüyordu.
+
+Testlerin assert'leri her koşuda çalışır; değişen tek şey dosyaya yazılıp yazılmadığıdır.
+Kanıt üretimini kapatmak hiçbir kriteri kapısız bırakmaz.
+
 - Konum: `docs/evidence/<spec-no>-ac<n>.png`
   (birden çok görsel gerekiyorsa `-a`, `-b` soneki).
 - Görüntü **kriterin karşılandığını gösterir**, ekranın genel görünümünü değil.

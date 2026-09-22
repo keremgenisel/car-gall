@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:structure": "node scripts/check-structure.mjs",
-    "check:session": "node scripts/check-no-session-storage.mjs"
+    "check:session": "node scripts/check-no-session-storage.mjs",
+    "evidence": "EVIDENCE_WRITE=1 playwright test --project=masaustu"
   },
   "dependencies": {
     "intl-messageformat": "^12.1.2",

@@ -1,26 +1,13 @@
-import { expect, test, type Page } from '@playwright/test'
-
-/**
- * Kanıt üretimi (docs/testing.md § 3). Görüntü KRİTERİN karşılandığını gösterir,
- * ekranın genel görünümünü değil; bu yüzden çoğu görüntü ilgili öğenin kendisidir.
- * Yalnız masaüstü profilinde koşar — mobil profil aynı dosyaları üzerine yazardı.
- */
-const KANIT = '../docs/evidence'
+import { expect, test } from '@playwright/test'
+import { kanit, kanitSayfa } from './kanit'
 
 // Yalnız `--project=masaustu` ile çağrılır; iki profilde koşmak aynı dosyaları üzerine yazardı.
-
-async function kanit(page: Page, selector: string, dosya: string) {
-  await page
-    .locator(selector)
-    .first()
-    .screenshot({ path: `${KANIT}/${dosya}` })
-}
 
 test('0001/AC-2: rezerve rozeti', async ({ page }) => {
   await page.goto('/tr/')
   const rezerveKart = page.getByTestId('listing-card').filter({ hasText: 'Rezerve' }).first()
   await expect(rezerveKart).toBeVisible()
-  await rezerveKart.screenshot({ path: `${KANIT}/0001-ac2.png` })
+  await kanit(page, rezerveKart, '0001-ac2.png')
 })
 
 test('0001/AC-10: seçili sayı ve seçimi temizle — üç locale', async ({ page }) => {
@@ -45,7 +32,7 @@ test('0001/AC-12: kasa tipi public değilken çubuk gösterilmez', async ({ page
   })
   await page.goto('/tr/')
   await expect(page.getByTestId('listing-card').first()).toBeVisible()
-  await page.locator('.page').screenshot({ path: `${KANIT}/0001-ac12.png` })
+  await kanit(page, '.page', '0001-ac12.png')
 })
 
 test('0001/AC-20: kart alanları ve sayı biçimlendirmesi — üç locale', async ({ page }) => {
@@ -59,7 +46,7 @@ test('0001/AC-21: fiyat sorunuz', async ({ page }) => {
   await page.goto('/tr/')
   const kart = page.getByTestId('listing-card').filter({ hasText: 'Fiyat sorunuz' }).first()
   await expect(kart).toBeVisible()
-  await kart.screenshot({ path: `${KANIT}/0001-ac21.png` })
+  await kanit(page, kart, '0001-ac21.png')
 })
 
 test('0001/AC-22: KWD üç ondalık — üç locale', async ({ page }) => {
@@ -139,13 +126,13 @@ test('0001/AC-30: Arapça RTL — ızgara ve sayfalama', async ({ page }) => {
 
   // Kriter ızgarayı VE sayfalama denetimlerini kapsıyor; tek kadraj ikisini birden
   // almıyordu (QA D11). İki kanıt üretilir.
-  await page.screenshot({ path: `${KANIT}/0001-ac30-ar.png`, fullPage: false })
+  await kanitSayfa(page, '0001-ac30-ar.png')
 
   // Kabuk geldikten sonra sayfada iki <nav> var (dil değiştirici + sayfalama).
   const sayfalama = page.locator('.pagination')
   await sayfalama.scrollIntoViewIfNeeded()
   await expect(sayfalama).toBeVisible()
-  await sayfalama.screenshot({ path: `${KANIT}/0001-ac30-ar-b.png` })
+  await kanit(page, sayfalama, '0001-ac30-ar-b.png')
 })
 
 test('0001/AC-31: sonuç sayısı ICU çoğul — Arapça', async ({ page }) => {

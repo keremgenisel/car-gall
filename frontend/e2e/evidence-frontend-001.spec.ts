@@ -1,14 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
-
-/** frontend-001 kanıt üretimi. Yalnız `--project=masaustu` ile çağrılır. */
-const KANIT = '../docs/evidence'
-
-async function kanit(page: Page, selector: string, dosya: string) {
-  await page
-    .locator(selector)
-    .first()
-    .screenshot({ path: `${KANIT}/${dosya}` })
-}
+import { expect, test } from '@playwright/test'
+import { kanit } from './kanit'
 
 test('frontend-001/AC-1: üst bar ve içerik alanı', async ({ page }) => {
   await page.goto('/tr/')
@@ -36,7 +27,7 @@ test('frontend-001/AC-7: rezerve rozeti', async ({ page }) => {
   await page.goto('/tr/')
   const kart = page.getByTestId('listing-card').filter({ hasText: 'Rezerve' }).first()
   await expect(kart).toBeVisible()
-  await kart.screenshot({ path: `${KANIT}/frontend-001-ac7.png` })
+  await kanit(page, kart, 'frontend-001-ac7.png')
 })
 
 test('frontend-001/AC-8: sayfalama kontrolü', async ({ page }) => {
@@ -84,6 +75,6 @@ test('frontend-001/AC-12, frontend-001/AC-13: hata durumu — üç locale', asyn
       expect(govde).not.toContain(sizinti)
     }
 
-    await hata.screenshot({ path: `${KANIT}/frontend-001-ac13-${locale}.png` })
+    await kanit(page, hata, `frontend-001-ac13-${locale}.png`)
   }
 })
