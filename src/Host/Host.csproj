@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Modules\VehicleReference\VehicleReference\VehicleReference.csproj" />
     <ProjectReference Include="..\Modules\Dealership\Dealership\Dealership.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity\Identity.csproj" />
+    <ProjectReference Include="..\Modules\Leads\Leads\Leads.csproj" />
   </ItemGroup>
 
   <ItemGroup>

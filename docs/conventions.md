@@ -125,7 +125,7 @@ Domain → (hiçbir şey; yalnızca BuildingBlocks primitive'leri)
 - `500` yanıtı asla iç detay taşımaz: stack trace, SQL, dosya yolu, tip adı yok.
   Yalnızca bir `traceId` döner; detay loga yazılır.
 - Doğrulama hataları `422`, bulunamadı `404`, yetki `403`, kimlik `401`,
-  durum çakışması `409`.
+  durum çakışması `409`, **hız sınırı `429`**.
 
 **`errorCode` adlandırması:** `<alan>.<durum>[.<ayrıntı>]`, hepsi snake_case, nokta ayraçlı.
 Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod eklenir.

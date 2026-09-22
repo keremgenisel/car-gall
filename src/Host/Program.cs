@@ -4,6 +4,7 @@ using CarGallery.Host.Schema;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Identity.Contracts.Setup;
+using CarGallery.Modules.Leads;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
 
@@ -84,8 +85,20 @@ builder.Services.AddIdentity(new IdentitySetup(
     builder.Configuration.GetValue<int?>("Identity:LoginRequestLimit") ?? 20,
     builder.Configuration.GetValue<int?>("Identity:LoginRequestWindowMinutes") ?? 10));
 
+// 0005 — talep modülü. Hız sınırının eşiği yapılandırmadan gelir; VARSAYILAN spec'in
+// kendi sayısıdır (C17: 10 dakikada 5). Yapılandırılabilir olmasının tek nedeni kanıt
+// üretimidir: görsel kanıt üç locale'de başarılı gönderim ve hata senaryoları ister ve
+// bunlar aynı IP'den kolayca eşiği aşar.
+builder.Services.AddLeads(
+    connectionString,
+    localization.EnabledLocales,
+    builder.Configuration.GetValue<int?>("Leads:RateLimit:PermitLimit") ?? 5,
+    builder.Configuration.GetValue<int?>("Leads:RateLimit:WindowMinutes") ?? 10);
+
 // İlk yazma uçları ilk hata sözleşmesini getirdi. `500` yanıtı ASLA iç detay taşımaz:
-// stack trace, SQL, dosya yolu, tip adı yok (docs/conventions.md § 5, AC-59).
+// stack trace, SQL, dosya yolu, tip adı yok — yalnız `traceId`
+// (docs/conventions.md § 5, 0005/AC-39, 0006/AC-59). Bu olmadan geliştirme ortamında
+// istisna metni ziyaretçiye giderdi.
 builder.Services.AddProblemDetails();
 
 builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocale, localization.EnabledLocales));
@@ -116,20 +129,24 @@ app.UseStaticFiles();
 // Yönlendirme, locale katmanından ÖNCE çalışır ki eşleşen endpoint'ler bilinsin.
 app.UseRouting();
 
+// Hız sınırı BORU HATTINDA yaşar; modül yalnız politikayı tanımlar. Bu satır silinirse
+// 0005/C17'nin sınırı sessizce kaybolur — Host.Tests bunu gerçek boru hattında sınıyor.
 app.UseRateLimiter();
 
-// Kimlik doğrulama BORU HATTINDA yaşar; modül yalnız şemayı ve politikaları tanımlar.
+// Kimlik doğrulama da BORU HATTINDA yaşar; modül yalnız şemayı ve politikaları tanımlar.
 // Bu üç satır silinirse yönetim yüzeyinin koruması SESSİZCE kaybolur — `Host.Tests`
 // bunu gerçek boru hattında sınıyor.
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseIdentity();
 
+
 app.UseMiddleware<LocalePrefixMiddleware>();
 
 app.MapVehicleCatalog();
 app.MapVehicleReference();
 app.MapIdentity();
+app.MapLeads();
 
 // Geliştirme ve görsel kanıt üretimi yolu. Bayrak kapalıyken hiçbir şey kaydedilmez
 // ve bu uç noktalar hiç tanımlanmaz; üretimde erişilebilir bir yüzeyi yoktur.

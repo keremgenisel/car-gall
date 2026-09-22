@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Threading.RateLimiting;
 using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Outbox;
+using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Leads.Application;
 using CarGallery.Modules.Leads.Domain;
 using CarGallery.Modules.Leads.Endpoints;
@@ -38,6 +39,15 @@ public static class LeadsModule
         services.AddSingleton(BuildLocaleOptions(enabledLocales));
         services.AddSingleton<IClock, SystemClock>();
 
+        // Şema kaydı diğer modüllerle AYNI desen: uygulayan kurulum adımıdır, çalışan
+        // uygulama yalnız doğrular (docs/decisions/0002). Bu satır olmadan `leads`
+        // şeması kurulum adımında hiç uygulanmaz ve eksikliği yalnız ilk talepte,
+        // "tablo yok" diye görünürdü.
+        services.AddScoped<IModuleSchema>(provider =>
+            new ModuleSchema<LeadsDbContext>(
+                provider.GetRequiredService<LeadsDbContext>(),
+                "Leads"));
+
         services.AddScoped<IOutboxWriter, OutboxWriter<LeadsDbContext>>();
         services.AddScoped<LeadsUnitOfWork>();
         services.AddScoped<IListingSnapshotSource, ListingSnapshotSource>();
@@ -68,21 +78,6 @@ public static class LeadsModule
     }
 
     public static void MapLeads(this IEndpointRouteBuilder builder) => builder.MapLeadEndpoints();
-
-    /// <summary>
-    /// Şemayı uygular. Üretimde migration'ın nasıl uygulanacağı henüz kararlaştırılmamış
-    /// bir konudur (0003'ten devrediyor); bu çağrı bugün geliştirme ve kanıt üretimi
-    /// yolundan çağrılır.
-    /// </summary>
-    public static async Task MigrateLeadsAsync(
-        this IServiceProvider services,
-        CancellationToken cancellationToken = default)
-    {
-        using IServiceScope scope = services.CreateScope();
-        LeadsDbContext context = scope.ServiceProvider.GetRequiredService<LeadsDbContext>();
-
-        await context.Database.MigrateAsync(cancellationToken);
-    }
 
     /// <summary>
     /// C17 — aynı IP'den 10 dakikada en çok 5 talep; altıncı istek reddedilir.
