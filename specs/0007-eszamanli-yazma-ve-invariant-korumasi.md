@@ -265,8 +265,8 @@ durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
 - [x] **Eşzamanlılık kararı `docs/architecture.md` § Karar Defteri'ne yazıldı.**
 - [x] Görsel kanıt: bu spec'te **arayüz kriteri yoktur**; görsel kanıt maddesi
       **uygulanabilir değildir**. AC-17 bir çeviri kapısıdır, arayüz kriteri değildir.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
@@ -277,9 +277,28 @@ durur; karşılığında şube yönetimi spec'i geldiğinde koruma hazır olur.
 | Ölçüt | Değer | Not |
 |---|---|---|
 | **Spec revizyon sayısı** | **1** | AC-3 A grubundan B grubuna taşındı: "bugün karşılanıyor" diye işaretlenmişti, ölçüldü ve karşılanmıyordu. Kriterin metni değişmedi, sınıflandırması değişti. Onaylanan 2. karar. — Onaylandıktan sonra spec kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Düzeltme turu sayısı** | **0** | PR #18 gözden geçirmeden henüz geri dönmedi. CI bir kez kırmızı verdi (Prettier kapısı) ama bu bir gözden geçirme turu değil, benim atladığım bir kapının bedeli. |
+| **Bulgu gerçek/gürültü oranı** | — / — | **Henüz ölçülemez:** gözden geçirme yapılmadı. Ölçüt "gözden geçirmede çıkan bulgular" diyor; uygulama sırasında kendi bulduğum iki hata (aşağıda) bu tanıma girmiyor. 0006'nın kartında bu ayrım yapılmamış ve uygulama içi bulgular sayılmıştı — iki spec'in sayısı bu yüzden karşılaştırılabilir değil. Tanımın netleşmesini öneriyorum (bkz. Açık konular). |
+| **Regresyon sayısı** | **2** | `0003/AC-15` ve `0003/AC-31`. `SubeKapatmaTests` ilk hâlinde paylaşılan fikstürde koşuyor ve seed şubelerini kapatıyordu. **Üretim davranışı bozulmadı** — bozulan test seviyesiydi; yine de daha önce yeşil olan iki kriter kırmızıya döndü ve sayılması gerekiyor (0006'da `LocaleYonlendirmeTests` aynı biçimde sayılmıştı). Merge'den önce düzeltildi. |
+| **Kaçan hata** | — | Henüz bilinmiyor; merge'den sonra doldurulur. |
 
 **Bu spec'ten çıkarılan ders:**
+**Bir testin yeşil olması, ölçtüğünü sandığın şeyi ölçtüğü anlamına gelmez.** Bu spec'te
+üç kez aynı yere düştük ve üçü de farklı kılıkta geldi:
+
+1. 0006'nın kilidi doğruydu ve testi yeşildi — ama karar, kilitten **önce** okunmuş bayat
+   bir kopyayla veriliyordu. Test bunu göremiyordu çünkü hiç *aynı* hedefe iki istek
+   göndermemişti (AC-3).
+2. `SubeKapatmaTests` yeşildi — ama yalnız tek başına koşarken. Paylaşılan seed'i
+   mutasyona uğratıyor ve başka iki testi düşürüyordu.
+3. AC-11'in mimari testi yeşildi — ve **hiçbir zaman kırmızıya dönemezdi**: dosyada
+   `InvariantGuard` alt dizesini arıyordu, ama `InvariantGuardOptions` parametresi o
+   dizeyi zaten geçiriyordu.
+
+Üçünü de yeşil test değil, **sonda** yakaladı: korumayı bilerek bozup hangi kriterlerin
+kırmızıya döndüğüne bakmak. Yeşil bir test bir iddiadır; sonda o iddianın kanıtıdır. Bu
+yüzden sonda turu bu spec'te DoD şartıydı ve öyle kalmalı.
+
+İkinci ders, birincinin ucuz hâli: **kapı listesinin tamamı koşulmadan "yerelde yeşil"
+denmez.** Lint, tip kontrolü, çeviri anahtarı ve birim testleri koştum; `format:check`'i
+atladım ve CI onu buldu.
