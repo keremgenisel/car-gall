@@ -6,6 +6,12 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
+  /**
+   * Kurulum hesabının parolasını bir kez çalışır hâle getirir. Testler bunu kendi
+   * başlarına yapsaydı her deneme bir başarısız giriş sayılır ve hesap kilitlenirdi
+   * (0006 R6) — CI'da tam olarak bu oldu.
+   */
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,

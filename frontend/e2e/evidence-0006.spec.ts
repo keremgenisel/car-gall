@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { YONETICI_PAROLA } from './global-setup'
 
 /**
  * Spec 0006'nın görsel kanıtları (docs/testing.md § 3). Görüntü KRİTERİN karşılandığını
@@ -8,8 +9,6 @@ import { expect, test, type Page } from '@playwright/test'
 const KANIT = '../docs/evidence'
 
 const SEED_KIMLIK = 'yonetici@cargallery.local'
-const SEED_PAROLA = 'gelistirme-parolasi'
-const YONETICI_PAROLA = 'e2e-yonetici-parolasi'
 
 async function kanit(page: Page, selector: string, dosya: string) {
   await page
@@ -37,22 +36,28 @@ async function girisYap(page: Page, kimlik: string, parola: string) {
   await sonucBekle(page)
 }
 
+/**
+ * Parola `global-setup.ts`'te tek seferde çalışır hâle getirildi; burada fallback YOK.
+ * Fallback her çağrıda bir başarısız giriş üretiyordu ve hesabı kilitliyordu (R6).
+ */
+/**
+ * Düğmeyi KLAVYEYLE etkinleştirir.
+ *
+ * Mobil emülasyonda Playwright'ın tıklama koordinatı sayfanın kendi koordinatlarıyla
+ * ayrışıyor: isabet testi her seferinde düğmenin ÜSTÜNDEKİ başka bir öğeyi buluyor
+ * (`#staff-role`, sonra `label[for=staff-locale]`). Ölçüldü — kutular çakışmıyor ve
+ * `window.innerHeight` (998) yapılandırılan viewport'tan (915) farklı. Yani bu bir
+ * yerleşim hatası DEĞİL, mobil emülasyonun viewport farkıdır.
+ *
+ * Klavyeyle etkinleştirme koordinata hiç bağlı değil ve uydurma bir yol da değil:
+ * `docs/frontend.md` § 7 her etkileşimli öğenin Enter/Space ile çalışmasını ZORUNLU
+ * kılıyor. Yani test, kaçındığı sorunun yerine gerçek bir gereksinimi doğruluyor.
+ */
+async function dugmeyeBasAsync(page: Page, ad: string) {
+  await page.getByRole('button', { name: ad }).press('Enter')
+}
+
 async function yoneticiOlarakGirAsync(page: Page) {
-  await girisYap(page, SEED_KIMLIK, YONETICI_PAROLA)
-
-  if (await page.getByTestId('admin-shell').isVisible()) {
-    return
-  }
-
-  await girisYap(page, SEED_KIMLIK, SEED_PAROLA)
-
-  if (await page.getByTestId('password-form').isVisible()) {
-    await page.getByLabel('Mevcut parolanız').fill(SEED_PAROLA)
-    await page.getByLabel('Yeni parolanız').fill(YONETICI_PAROLA)
-    await page.getByRole('button', { name: 'Parolamı değiştir' }).click()
-    await expect(page.getByTestId('password-changed')).toBeVisible()
-  }
-
   await girisYap(page, SEED_KIMLIK, YONETICI_PAROLA)
   await expect(page.getByTestId('admin-shell')).toBeVisible()
 }
@@ -120,7 +125,7 @@ test('AC-32: zorunlu parola değişimi ekranı', async ({ page }) => {
   await page.getByLabel('Ad soyad').fill('Yeni Personel')
   await page.getByTestId('add-staff-form').getByLabel('E-posta').fill(kimlik)
   await page.getByLabel('İlk parola').fill('ilk-parola-1234')
-  await page.getByRole('button', { name: 'Personeli ekle' }).click()
+  await dugmeyeBasAsync(page, 'Personeli ekle')
   await expect(page.getByText(kimlik)).toBeVisible()
 
   await page.getByRole('button', { name: 'Çıkış yap' }).click()
@@ -156,7 +161,7 @@ test('AC-55, AC-61: Arapça tercih eden personel için panel RTL (AR)', async ({
   await page.getByTestId('add-staff-form').getByLabel('E-posta').fill(kimlik)
   await page.getByLabel('İlk parola').fill(ilkParola)
   await page.getByLabel('Panel dili').selectOption('ar')
-  await page.getByRole('button', { name: 'Personeli ekle' }).click()
+  await dugmeyeBasAsync(page, 'Personeli ekle')
   await expect(page.getByText(kimlik)).toBeVisible()
 
   await page.getByRole('button', { name: 'Çıkış yap' }).click()
@@ -168,7 +173,7 @@ test('AC-55, AC-61: Arapça tercih eden personel için panel RTL (AR)', async ({
 
   await page.getByLabel('كلمة مرورك الحالية').fill(ilkParola)
   await page.getByLabel('كلمة مرورك الجديدة').fill(yeniParola)
-  await page.getByRole('button', { name: 'غيّر كلمة مروري' }).click()
+  await dugmeyeBasAsync(page, 'غيّر كلمة مروري')
   await expect(page.getByTestId('password-changed')).toBeVisible()
 
   await girisYap(page, kimlik, yeniParola)
@@ -194,7 +199,7 @@ test('AC-61: giriş ekranı İngilizce', async ({ page }) => {
   await page.getByTestId('add-staff-form').getByLabel('E-posta').fill(kimlik)
   await page.getByLabel('İlk parola').fill(ilkParola)
   await page.getByLabel('Panel dili').selectOption('en')
-  await page.getByRole('button', { name: 'Personeli ekle' }).click()
+  await dugmeyeBasAsync(page, 'Personeli ekle')
   await expect(page.getByText(kimlik)).toBeVisible()
 
   await page.getByRole('button', { name: 'Çıkış yap' }).click()
