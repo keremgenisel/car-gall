@@ -101,6 +101,12 @@ jobs:
     name: E2E — kritik akışlar, üç durum ve RTL
     runs-on: ubuntu-latest
 
+    env:
+      # TEK KAYNAK. Host'un kurulum hesabı ile E2E'nin globalSetup'ı aynı parolayı
+      # kullanmak ZORUNDA: ikisi ayrı ayrı yazıldığında globalSetup 401 alıyor ve
+      # bütün E2E paketi düşüyor. İkisi de buradan okur.
+      SEED_ADMIN_PASSWORD: ci-kurulum-parolasi
+
     # 8 kriterin (AC-10, 14, 18, 19, 26, 27, 28, 30) CI'da koşan tek testi buradadır;
     # bu iş olmadan o kriterler kapısız kalır.
     services:
@@ -145,7 +151,7 @@ jobs:
           Development__SeedListingCount: '200'
           # D2/AC-53 — parola yapılandırmadan gelir ve repoda durmaz; yoksa uygulama
           # hiç başlamaz. Bu değer yalnız CI'ın tek kullanımlık veritabanı içindir.
-          Identity__SeedAdmin__Password: ci-kurulum-parolasi
+          Identity__SeedAdmin__Password: ${{ env.SEED_ADMIN_PASSWORD }}
           # Kanıt üretimi her girişte 210.000 iterasyon beklemesin.
           Identity__PasswordIterations: '1000'
           # Kanıt üretimi ve E2E akışları çok sayıda giriş yapar; giriş ucunun
@@ -171,6 +177,8 @@ jobs:
 
       - name: E2E testleri (mobil + masaüstü)
         working-directory: frontend
+        env:
+          E2E_SEED_ADMIN_PASSWORD: ${{ env.SEED_ADMIN_PASSWORD }}
         run: npm run test:e2e
 
       - name: Kanıt görüntülerindeki değişikliği yükle

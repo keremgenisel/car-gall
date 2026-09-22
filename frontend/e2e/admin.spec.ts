@@ -14,61 +14,6 @@ function benzersizKimlik(onek: string) {
 }
 
 /**
- * Girişten sonra ÜÇ sonuçtan biri gelir; hangisi olduğunu beklemek zorundayız.
- *
- * Başarılı giriş TAM GEZİNME yapar (panelin dili sunucudan basılır); beklemeden bir
- * sonraki `page.goto` çağrısı o gezinmeyi yarıda keser ve `ERR_ABORTED` verir.
- */
-async function sonucBekle(page: Page) {
-  const shell = page.getByTestId('admin-shell')
-  const password = page.getByTestId('password-form')
-  const error = page.getByTestId('login-error')
-
-  await expect(shell.or(password).or(error)).toBeVisible()
-}
-
-async function girisYap(page: Page, kimlik: string, parola: string) {
-  await page.goto('/admin')
-  await expect(page.getByTestId('login-form')).toBeVisible()
-
-  await page.getByLabel('E-posta').fill(kimlik)
-  await page.getByLabel('Parola').fill(parola)
-  await page.getByRole('button', { name: 'Giriş yap' }).click()
-
-  await sonucBekle(page)
-}
-
-async function girisSonucuAsync(page: Page): Promise<'shell' | 'password' | 'error'> {
-  if (await page.getByTestId('admin-shell').isVisible()) return 'shell'
-
-  return (await page.getByTestId('password-form').isVisible()) ? 'password' : 'error'
-}
-
-/** Çıkış da tam gezinme yapar; giriş ekranı basılana kadar beklenir. */
-async function cikisYap(page: Page) {
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
-}
-
-async function parolaDegistir(page: Page, mevcut: string, yeni: string) {
-  await expect(page.getByTestId('password-form')).toBeVisible()
-
-  await page.getByLabel('Mevcut parolanız').fill(mevcut)
-  await page.getByLabel('Yeni parolanız').fill(yeni)
-  await dugmeyeBasAsync(page, 'Parolamı değiştir')
-
-  await expect(page.getByTestId('password-changed')).toBeVisible()
-}
-
-/**
- * Çalışan bir Yönetici oturumu açar.
- *
- * Parola `global-setup.ts`'te, testler başlamadan önce ve TEK SEFERDE çalışır hâle
- * getirildi. Buradaki fallback'i (önce dene, olmazsa değiştir) kaldırmak zorundaydık:
- * her deneme bir BAŞARISIZ GİRİŞ sayılıyor ve eşiğe ulaşınca hesap kilitleniyordu
- * (R6). İki profil × on sekiz çağrı, CI'da tam olarak bunu yaptı.
- */
-/**
  * Düğmeyi KLAVYEYLE etkinleştirir.
  *
  * Mobil emülasyonda Playwright'ın tıklama koordinatı sayfanın kendi koordinatlarıyla
@@ -85,6 +30,36 @@ async function dugmeyeBasAsync(page: Page, ad: string) {
   await page.getByRole('button', { name: ad }).press('Enter')
 }
 
+async function girisYap(page: Page, kimlik: string, parola: string) {
+  await page.goto('/admin')
+  await expect(page.getByTestId('login-form')).toBeVisible()
+
+  await page.getByLabel('E-posta').fill(kimlik)
+  await page.getByLabel('Parola').fill(parola)
+  await page.getByRole('button', { name: 'Giriş yap' }).click()
+
+  // Başarılı giriş TAM GEZİNME yapar (panelin dili sunucudan basılır); beklemeden bir
+  // sonraki `page.goto` çağrısı o gezinmeyi yarıda keser ve ERR_ABORTED verir.
+  const shell = page.getByTestId('admin-shell')
+  const password = page.getByTestId('password-form')
+  const error = page.getByTestId('login-error')
+
+  await expect(shell.or(password).or(error)).toBeVisible()
+}
+
+/** Çıkış da tam gezinme yapar; giriş ekranı basılana kadar beklenir. */
+async function cikisYap(page: Page) {
+  await page.getByRole('button', { name: 'Çıkış yap' }).click()
+  await expect(page.getByTestId('login-form')).toBeVisible()
+}
+
+/**
+ * Çalışan bir Yönetici oturumu açar.
+ *
+ * Parola `global-setup.ts`'te, testler başlamadan ÖNCE ve tek seferde çalışır hâle
+ * getirildi. Buradaki fallback'i (önce dene, olmazsa değiştir) kaldırmak zorundaydık:
+ * her deneme bir BAŞARISIZ GİRİŞ sayılıyor ve eşiğe ulaşınca hesap kilitleniyordu (R6).
+ */
 async function yoneticiOlarakGirAsync(page: Page) {
   await girisYap(page, SEED_KIMLIK, YONETICI_PAROLA)
   await expect(page.getByTestId('admin-shell')).toBeVisible()
