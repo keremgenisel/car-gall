@@ -56,7 +56,22 @@ const SUNUCU_HATA_KODLARI: readonly { readonly code: string; readonly prefix: st
   { code: 'branch_not_found', prefix: 'staff.add.error' },
   { code: 'locale_not_enabled', prefix: 'staff.add.error' },
   { code: 'last_active_manager', prefix: 'staff.add.error' },
+  { code: 'concurrency_lost', prefix: 'staff.add.error' },
 ]
+
+/**
+ * 0007 R6 — iki red türü ayrı yazılır. Kural gereği red KALICIDIR: o kullanıcıya tekrar
+ * denemesi söylenirse sonsuza kadar denemesi söylenmiş olur. Eşzamanlılık kaybı geçicidir
+ * ve tekrar denemek gerçekten işe yarar.
+ */
+const TEKRAR_DENE: Readonly<Record<AppLocale, RegExp>> = {
+  tr: /tekrar dene/i,
+  ar: /أعد المحاولة/,
+  en: /try again/i,
+}
+
+/** Ziyaretçiye sızmaması gereken teknik izler (0007/AC-15). */
+const TEKNIK_IZLER = [/\b[45]\d{2}\b/, /errorCode/i, /traceId/i, /\/api\//, /Exception/i, /\bSQL\b/i]
 
 describe('AC-61: Giriş ekranı ve personel yönetimi ekranındaki tüm metinler TR, AR ve EN locale lerinde kendi dilinde görünür; hiçbir locale de çeviri anahtarı ham hâliyle görünmez', () => {
   it.each(LOCALES)('%s katalogunda görünen anahtarların hepsi dolu', (locale) => {
@@ -82,6 +97,23 @@ describe('AC-61: Giriş ekranı ve personel yönetimi ekranındaki tüm metinler
 
       expect(keys, `${locale}: ${key}`).toContain(key)
       expect(t(key)).not.toBe('')
+    }
+  })
+
+  it.each(LOCALES)('0007/AC-16 — %s: kural gereği red "tekrar deneyin" demez, eşzamanlılık kaybı der', (locale) => {
+    const t = createTranslator(locale)
+
+    expect(t('staff.add.error.last_active_manager')).not.toMatch(TEKRAR_DENE[locale])
+    expect(t('staff.add.error.concurrency_lost')).toMatch(TEKRAR_DENE[locale])
+  })
+
+  it.each(LOCALES)('0007/AC-15 — %s: gösterilen metinlerde teknik iz yok', (locale) => {
+    const t = createTranslator(locale)
+
+    for (const key of [...GORUNEN_ANAHTARLAR, ...SUNUCU_HATA_KODLARI.map((h) => `${h.prefix}.${h.code}`)]) {
+      for (const iz of TEKNIK_IZLER) {
+        expect(t(key), `${locale}: ${key}`).not.toMatch(iz)
+      }
     }
   })
 
