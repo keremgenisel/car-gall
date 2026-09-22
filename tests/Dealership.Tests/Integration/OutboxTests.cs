@@ -16,7 +16,7 @@ public sealed class OutboxTests(DealershipDatabase database)
     private static readonly Locale Tr = Locale.Create("tr").Value;
     private static readonly DateTimeOffset Simdi = new(2026, 4, 1, 10, 0, 0, TimeSpan.Zero);
 
-    [Fact(DisplayName = "AC-25: Şube değişikliği kaydedildiğinde duyurusu da kaydedilmiştir; değişiklik geri alındığında kaydedilmiş bir duyuru kalmaz")]
+    [Fact(DisplayName = "0003/AC-25: Şube değişikliği kaydedildiğinde duyurusu da kaydedilmiştir; değişiklik geri alındığında kaydedilmiş bir duyuru kalmaz")]
     public async Task BirlikteKalici_DegisiklikVeDuyuru()
     {
         await TemizleAsync();
@@ -51,7 +51,7 @@ public sealed class OutboxTests(DealershipDatabase database)
         }
     }
 
-    [Fact(DisplayName = "AC-26: Aynı duyuru alıcıya iki kez ulaştığında ikinci işleme ek bir etki üretmez; koruma duyurunun kimliğine dayanır")]
+    [Fact(DisplayName = "0003/AC-26: Aynı duyuru alıcıya iki kez ulaştığında ikinci işleme ek bir etki üretmez; koruma duyurunun kimliğine dayanır")]
     public async Task EkEtkiYok_AyniDuyuruIkiKez()
     {
         await TemizleAsync();
@@ -69,7 +69,7 @@ public sealed class OutboxTests(DealershipDatabase database)
         Assert.Equal(1, alici.CagrilmaSayisi);
     }
 
-    [Fact(DisplayName = "AC-27: İki duyuru üretildikleri sıranın tersine işlendiğinde sonuç yine yayıncının son hâline yakınsar; hiçbir alıcı sıraya bağımlı değildir")]
+    [Fact(DisplayName = "0003/AC-27: İki duyuru üretildikleri sıranın tersine işlendiğinde sonuç yine yayıncının son hâline yakınsar; hiçbir alıcı sıraya bağımlı değildir")]
     public async Task YakinsarSonHale_TersSirada()
     {
         await TemizleAsync();
@@ -111,7 +111,7 @@ public sealed class OutboxTests(DealershipDatabase database)
         return alici.HandleAsync(duyuru, CancellationToken.None);
     }
 
-    [Fact(DisplayName = "AC-28: Bir alıcı duyuruyu işlerken hata verdiğinde duyuru teslim edilmiş sayılmaz ve yeniden denenir; denemeler tükendiğinde duyuru başarısız olarak işaretlenir ve loglanır")]
+    [Fact(DisplayName = "0003/AC-28: Bir alıcı duyuruyu işlerken hata verdiğinde duyuru teslim edilmiş sayılmaz ve yeniden denenir; denemeler tükendiğinde duyuru başarısız olarak işaretlenir ve loglanır")]
     public async Task YenidenDenenir_SonraBasarisizIsaretlenir()
     {
         await TemizleAsync();
@@ -142,7 +142,7 @@ public sealed class OutboxTests(DealershipDatabase database)
         Assert.Contains("HepHataVerenAlici", mesaj.LastError);
     }
 
-    [Fact(DisplayName = "AC-29: Bir alıcının başarısızlığı diğer alıcıların aynı duyuruyu işlemesini engellemez")]
+    [Fact(DisplayName = "0003/AC-29: Bir alıcının başarısızlığı diğer alıcıların aynı duyuruyu işlemesini engellemez")]
     public async Task EngellemezDigerAlicilari()
     {
         await TemizleAsync();
@@ -157,7 +157,7 @@ public sealed class OutboxTests(DealershipDatabase database)
         Assert.Equal(1, saglam.CagrilmaSayisi);
     }
 
-    [Fact(DisplayName = "AC-30: Duyuru üretimi, alıcı modülün hazır olup olmamasından bağımsız çalışır; Dealership alıcıyı tanımaz")]
+    [Fact(DisplayName = "0003/AC-30: Duyuru üretimi, alıcı modülün hazır olup olmamasından bağımsız çalışır; Dealership alıcıyı tanımaz")]
     public async Task Uretir_AliciHicYokken()
     {
         await TemizleAsync();

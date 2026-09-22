@@ -14,7 +14,7 @@ namespace CarGallery.Modules.Leads.Tests.Integration;
 [Collection(LeadsDatabaseCollection.Name)]
 public sealed class HizSiniriTests(LeadsDatabase database)
 {
-    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
     public async Task Tuketilmez_ReddedilenIsteklerde()
     {
         await database.ResetAsync();
@@ -40,7 +40,7 @@ public sealed class HizSiniriTests(LeadsDatabase database)
         Assert.Equal(1, await context.Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
     public async Task Reddedilir_AltinciTalep_BesTalepKaydedildiktenSonra()
     {
         await database.ResetAsync();
@@ -67,7 +67,7 @@ public sealed class HizSiniriTests(LeadsDatabase database)
     /// <summary>
     /// Sayaç İSTEMCİ BAŞINADIR: bir ziyaretçinin bütçesini bitirmesi ötekini etkilemez.
     /// </summary>
-    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
     public async Task Etkilenmez_BaskaIstemci()
     {
         await database.ResetAsync();
@@ -88,7 +88,7 @@ public sealed class HizSiniriTests(LeadsDatabase database)
     /// Aynı anahtarla gelen ikinci istek KAYIT OLUŞTURMAZ (AC-35); bu yüzden bütçeyi de
     /// tüketmemelidir. Aksi hâlde uçtaki "tekrar dene" ziyaretçinin hakkını yerdi.
     /// </summary>
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task Tuketilmez_AyniAnahtarliIkinciIstek()
     {
         await database.ResetAsync();
@@ -114,7 +114,7 @@ public sealed class HizSiniriTests(LeadsDatabase database)
         Assert.Equal(5, await database.CreateContext().Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
     public async Task Yenilenir_PencereDolunca()
     {
         await database.ResetAsync();

@@ -30,12 +30,18 @@ Spec'teki her kabul kriterinin (`AC-n`) karşılığı olan en az bir test bulun
 kriteri **adıyla** belirtir:
 
 ```csharp
-[Fact(DisplayName = "AC-3: Görseli olmayan araç yayına alınamaz")]
+[Fact(DisplayName = "0001/AC-3: Görseli olmayan araç yayına alınamaz")]
 public void Yayinlanamaz_GorselYoksa() { … }
 ```
 
-- `DisplayName` **`AC-<n>: <kriterin metni>`** biçimindedir. Metin spec'ten **kopyalanır**,
-  yeniden yazılmaz — böylece spec değişince test çıktısı yalan söylemez.
+- `DisplayName` **`<spec-no>/AC-<n>: <kriterin metni>`** biçimindedir. Metin spec'ten
+  **kopyalanır**, yeniden yazılmaz — böylece spec değişince test çıktısı yalan söylemez.
+- **Spec numarası zorunludur.** Kriter numaraları spec'ler arasında tekrar eder: altı spec
+  biriktiğinde `AC-17` on beş ayrı testin adı oldu ve kriter → test eşlemesi izlenemez hâle
+  geldi. Önek olmadan "bu kriterin testi var mı" sorusu cevaplanamaz.
+- Bir test birden çok spec'in kriterini karşılıyorsa her biri kendi önekiyle yazılır
+  (`0002/AC-12, 0002/AC-13: …`). İki FARKLI spec'in kriterini karşılayan tek test ise
+  genellikle yanlış yazılmış bir testtir.
 - Bir kriter birden çok test gerektirebilir; hepsi aynı `AC-n` önekini taşır.
 - Bir test birden çok kriteri karşılamaz. Karşılıyorsa kriterler yanlış yazılmıştır.
 

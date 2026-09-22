@@ -23,7 +23,7 @@ public sealed class IlanAnlikGoruntusuTests
     /// <summary>F4 — şase, plaka ve iç notlar public yanıtta HİÇ bulunmaz.</summary>
     private static readonly string[] YasakParcalar = ["vin", "chassis", "plate", "plaka", "note", "internal"];
 
-    [Fact(DisplayName = "AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
+    [Fact(DisplayName = "0005/AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
     public void TasirYalnizBeklenenAlanlari_IlanAnlikGoruntusu()
     {
         string[] alanlar =
@@ -38,7 +38,7 @@ public sealed class IlanAnlikGoruntusuTests
         Assert.Equal([.. BeklenenAlanlar.Order()], alanlar);
     }
 
-    [Fact(DisplayName = "AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
+    [Fact(DisplayName = "0005/AC-17: Talep, ilgilenilen aracın o andaki model adını ve fiyatını kendi içinde taşır")]
     public void SizdirmazGizliAlan_IlanAnlikGoruntusu()
     {
         foreach (PropertyInfo property in typeof(ListingSnapshotDto).GetProperties())

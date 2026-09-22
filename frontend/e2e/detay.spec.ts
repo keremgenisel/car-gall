@@ -15,14 +15,14 @@ async function ilkIlaninAdresi(page: Page, locale = 'tr') {
 }
 
 test.describe('İlan detayı', () => {
-  test('AC-2: Vitrin listesindeki ilan kartı, detay adresine giden bir bağlantı taşır', async ({
+  test('0002/AC-2: Vitrin listesindeki ilan kartı, detay adresine giden bir bağlantı taşır', async ({
     page,
   }) => {
     const href = await ilkIlaninAdresi(page)
     expect(href).toMatch(/^\/tr\/cars\/[a-z0-9-]+$/)
   })
 
-  test('AC-1: Yayında durumundaki bir ilanın adresi istendiğinde o ilanın detayı döner', async ({
+  test('0002/AC-1: Yayında durumundaki bir ilanın adresi istendiğinde o ilanın detayı döner', async ({
     page,
   }) => {
     await page.goto('/tr/')
@@ -35,7 +35,7 @@ test.describe('İlan detayı', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(model)
   })
 
-  test('AC-3: Detay adresi yeni bir oturumda doğrudan açıldığında aynı ilan görünür', async ({
+  test('0002/AC-3: Detay adresi yeni bir oturumda doğrudan açıldığında aynı ilan görünür', async ({
     page,
     context,
   }) => {
@@ -47,7 +47,7 @@ test.describe('İlan detayı', () => {
     await yeniSayfa.close()
   })
 
-  test('AC-4: Üç locale aynı Latin slug ile aynı ilana gider, yalnız dil öneki değişir', async ({
+  test('0002/AC-4: Üç locale aynı Latin slug ile aynı ilana gider, yalnız dil öneki değişir', async ({
     page,
   }) => {
     const href = await ilkIlaninAdresi(page)
@@ -60,7 +60,7 @@ test.describe('İlan detayı', () => {
     }
   })
 
-  test('AC-5, AC-8: Var olmayan ilan bulunamadı ekranı verir ve nedenini söylemez', async ({
+  test('0002/AC-5, 0002/AC-8: Var olmayan ilan bulunamadı ekranı verir ve nedenini söylemez', async ({
     page,
   }) => {
     await page.goto('/tr/cars/boyle-bir-ilan-yok-000000')
@@ -75,7 +75,7 @@ test.describe('İlan detayı', () => {
     }
   })
 
-  test('AC-17: Detay verisi yüklenirken ekranda iskelet gösterilir', async ({ page }) => {
+  test('0002/AC-17: Detay verisi yüklenirken ekranda iskelet gösterilir', async ({ page }) => {
     const href = await ilkIlaninAdresi(page)
 
     await page.route('**/api/catalog/showcase-listings/*', async (route) => {
@@ -87,7 +87,7 @@ test.describe('İlan detayı', () => {
     await expect(page.getByTestId('detail-skeleton')).toBeVisible()
   })
 
-  test('AC-19, AC-20: Detay alınamadığında tekrar dene sunulur, teknik detay gösterilmez', async ({
+  test('0002/AC-19, 0002/AC-20: Detay alınamadığında tekrar dene sunulur, teknik detay gösterilmez', async ({
     page,
   }) => {
     const href = await ilkIlaninAdresi(page)
@@ -111,7 +111,7 @@ test.describe('İlan detayı', () => {
     }
   })
 
-  test('AC-22: Arapça detay sayfası rtl yönü ve ar dili ile basılır', async ({ page }) => {
+  test('0002/AC-22: Arapça detay sayfası rtl yönü ve ar dili ile basılır', async ({ page }) => {
     const href = await ilkIlaninAdresi(page, 'ar')
     await page.goto(href)
 
@@ -120,7 +120,7 @@ test.describe('İlan detayı', () => {
     await expect(page.getByTestId('listing-detail')).toBeVisible()
   })
 
-  test('AC-23: Arapça gövdede Latin model adı karışık yönlü metin olarak işaretlenir', async ({
+  test('0002/AC-23: Arapça gövdede Latin model adı karışık yönlü metin olarak işaretlenir', async ({
     page,
   }) => {
     const href = await ilkIlaninAdresi(page, 'ar')
@@ -134,7 +134,7 @@ test.describe('İlan detayı', () => {
     await expect(deger).toHaveAttribute('dir', 'auto')
   })
 
-  test('AC-21: Detay etiketleri üç locale de kendi dilinde görünür, ham anahtar görünmez', async ({
+  test('0002/AC-21: Detay etiketleri üç locale de kendi dilinde görünür, ham anahtar görünmez', async ({
     page,
   }) => {
     const href = await ilkIlaninAdresi(page)
@@ -148,7 +148,9 @@ test.describe('İlan detayı', () => {
     }
   })
 
-  test('AC-25: Kapak görselinin alt metni ziyaretçinin dilinden üretilir', async ({ page }) => {
+  test('0002/AC-25: Kapak görselinin alt metni ziyaretçinin dilinden üretilir', async ({
+    page,
+  }) => {
     const href = await ilkIlaninAdresi(page)
     await page.goto(href)
 

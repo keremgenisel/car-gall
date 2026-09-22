@@ -21,19 +21,19 @@ async function ilkSlug(page: Page, locale = 'tr') {
   return (href as string).split('/').pop() as string
 }
 
-test('AC-2: karttan detaya giden bağlantı', async ({ page }) => {
+test('0002/AC-2: karttan detaya giden bağlantı', async ({ page }) => {
   await page.goto('/tr/')
   await kanit(page, '[data-testid="listing-card"]', '0002-ac2.png')
 })
 
-test('AC-10, AC-11: detay alanları ve çözülmüş etiketler', async ({ page }) => {
+test('0002/AC-10, 0002/AC-11: detay alanları ve çözülmüş etiketler', async ({ page }) => {
   const slug = await ilkSlug(page)
   await page.goto(`/tr/cars/${slug}`)
   await expect(page.getByTestId('listing-detail')).toBeVisible()
   await kanit(page, '[data-testid="listing-detail"]', '0002-ac10.png')
 })
 
-test('AC-9: rezerve rozeti detayda', async ({ page }) => {
+test('0002/AC-9: rezerve rozeti detayda', async ({ page }) => {
   const slug = await ilkSlug(page)
 
   await page.route(`**/api/catalog/showcase-listings/${slug}*`, async (route) => {
@@ -46,7 +46,7 @@ test('AC-9: rezerve rozeti detayda', async ({ page }) => {
   await kanit(page, '[data-testid="listing-detail"]', '0002-ac9.png')
 })
 
-test('AC-15: fiyat sorunuz', async ({ page }) => {
+test('0002/AC-15: fiyat sorunuz', async ({ page }) => {
   const slug = await ilkSlug(page)
 
   await page.route(`**/api/catalog/showcase-listings/${slug}*`, async (route) => {
@@ -64,7 +64,7 @@ test('AC-15: fiyat sorunuz', async ({ page }) => {
   await kanit(page, '[data-testid="detail-price"]', '0002-ac15.png')
 })
 
-test('AC-16: KWD üç ondalık — üç locale', async ({ page }) => {
+test('0002/AC-16: KWD üç ondalık — üç locale', async ({ page }) => {
   const slug = await ilkSlug(page)
 
   await page.route(`**/api/catalog/showcase-listings/${slug}*`, async (route) => {
@@ -84,7 +84,7 @@ test('AC-16: KWD üç ondalık — üç locale', async ({ page }) => {
   }
 })
 
-test('AC-17: yükleniyor iskeleti', async ({ page }) => {
+test('0002/AC-17: yükleniyor iskeleti', async ({ page }) => {
   const slug = await ilkSlug(page)
 
   await page.route('**/api/catalog/showcase-listings/*', async (route) => {
@@ -97,7 +97,7 @@ test('AC-17: yükleniyor iskeleti', async ({ page }) => {
   await kanit(page, '[data-testid="detail-skeleton"]', '0002-ac17.png')
 })
 
-test('AC-18: bulunamadı — üç locale', async ({ page }) => {
+test('0002/AC-18: bulunamadı — üç locale', async ({ page }) => {
   for (const locale of ['tr', 'ar', 'en'] as const) {
     await page.goto(`/${locale}/cars/boyle-bir-ilan-yok-000000`)
     await expect(page.getByTestId('detail-not-found')).toBeVisible()
@@ -105,7 +105,7 @@ test('AC-18: bulunamadı — üç locale', async ({ page }) => {
   }
 })
 
-test('AC-19, AC-20: hata durumu — üç locale', async ({ page }) => {
+test('0002/AC-19, 0002/AC-20: hata durumu — üç locale', async ({ page }) => {
   const slug = await ilkSlug(page)
 
   await page.route('**/api/catalog/showcase-listings/*', async (route) => {
@@ -122,7 +122,9 @@ test('AC-19, AC-20: hata durumu — üç locale', async ({ page }) => {
   }
 })
 
-test('AC-21, AC-22, AC-23: Arapça detay — RTL ve karışık yönlü model adı', async ({ page }) => {
+test('0002/AC-21, 0002/AC-22, 0002/AC-23: Arapça detay — RTL ve karışık yönlü model adı', async ({
+  page,
+}) => {
   const slug = await ilkSlug(page, 'ar')
   await page.goto(`/ar/cars/${slug}`)
 
@@ -131,7 +133,7 @@ test('AC-21, AC-22, AC-23: Arapça detay — RTL ve karışık yönlü model ad�
   await kanit(page, '[data-testid="listing-detail"]', '0002-ac22-ar.png')
 })
 
-test('AC-21: detay etiketleri — üç locale', async ({ page }) => {
+test('0002/AC-21: detay etiketleri — üç locale', async ({ page }) => {
   const slug = await ilkSlug(page)
 
   for (const locale of ['tr', 'ar', 'en'] as const) {

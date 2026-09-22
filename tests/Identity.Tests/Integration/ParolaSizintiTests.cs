@@ -19,7 +19,7 @@ public sealed class ParolaSizintiTests(IdentityDatabase database)
 {
     private const string Parola = "sizmamasi-gereken-parola";
 
-    [Fact(DisplayName = "AC-51: Parola hiçbir log kaydında görünmez")]
+    [Fact(DisplayName = "0006/AC-51: Parola hiçbir log kaydında görünmez")]
     public async Task GorunmezParola_LogKayitlarinda()
     {
         await database.ResetAsync();
@@ -50,7 +50,7 @@ public sealed class ParolaSizintiTests(IdentityDatabase database)
             kayit => kayit.Contains("yanlis-parola-123", StringComparison.Ordinal));
     }
 
-    [Fact(DisplayName = "AC-51: Parola hiçbir log kaydında görünmez")]
+    [Fact(DisplayName = "0006/AC-51: Parola hiçbir log kaydında görünmez")]
     public async Task GorunmezOzet_LogKayitlarinda()
     {
         await database.ResetAsync();

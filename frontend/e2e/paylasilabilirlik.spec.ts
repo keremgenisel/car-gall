@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Paylaşılabilirlik ve geri tuşu', () => {
-  test('AC-18: Daraltılmış ve ikinci sayfadaki bir listenin bağlantısı yeni bir oturumda açıldığında aynı daraltma ve aynı sayfa görünür', async ({
+  test('0001/AC-18: Daraltılmış ve ikinci sayfadaki bir listenin bağlantısı yeni bir oturumda açıldığında aynı daraltma ve aynı sayfa görünür', async ({
     browser,
     request,
   }) => {
@@ -29,7 +29,7 @@ test.describe('Paylaşılabilirlik ve geri tuşu', () => {
     await context.close()
   })
 
-  test('AC-19: İkinci sayfadayken bir kasa tipi seçildikten sonra geri tuşu TEK hareketle daraltmasız ikinci sayfa hâline döner', async ({
+  test('0001/AC-19: İkinci sayfadayken bir kasa tipi seçildikten sonra geri tuşu TEK hareketle daraltmasız ikinci sayfa hâline döner', async ({
     page,
   }) => {
     await page.goto('/tr/?page=2')
@@ -49,7 +49,7 @@ test.describe('Paylaşılabilirlik ve geri tuşu', () => {
     expect(url.searchParams.get('page')).toBe('2')
   })
 
-  test('AC-14: Son sayfanın ötesinde bir sayfa istendiğinde ilk sayfa gösterilir ve adres kanonik biçime düzeltilir', async ({
+  test('0001/AC-14: Son sayfanın ötesinde bir sayfa istendiğinde ilk sayfa gösterilir ve adres kanonik biçime düzeltilir', async ({
     page,
   }) => {
     await page.goto('/tr/?page=999')

@@ -5,7 +5,7 @@ namespace CarGallery.Architecture.Tests;
 /// <summary>spec 0003 — AC-33 ve AC-35.</summary>
 public sealed partial class DealershipBoundaryTests
 {
-    [Fact(DisplayName = "AC-33: Dealership dışındaki hiçbir modül galeri veya şube tablosuna erişmez; mimari test bu ihlali kırar")]
+    [Fact(DisplayName = "0003/AC-33: Dealership dışındaki hiçbir modül galeri veya şube tablosuna erişmez; mimari test bu ihlali kırar")]
     public void ErisilmezDisaridan_GaleriVeSubeTablolari()
     {
         List<string> violations = [];
@@ -36,7 +36,7 @@ public sealed partial class DealershipBoundaryTests
             $"Galeri ve şube verisinin tek yazma sahibi Dealership'tir (Yasak Listesi 1):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
     }
 
-    [Fact(DisplayName = "AC-35: Mimari test, kod tabanında sabit hafta sonu günü adı, sabit çalışma günü sayısı ve varsayılan açılış/kapanış saati sabiti bulunmadığını doğrular")]
+    [Fact(DisplayName = "0003/AC-35: Mimari test, kod tabanında sabit hafta sonu günü adı, sabit çalışma günü sayısı ve varsayılan açılış/kapanış saati sabiti bulunmadığını doğrular")]
     public void BulunmazSabit_HaftaSonuVeMesaiVarsayimi()
     {
         List<string> violations = [];

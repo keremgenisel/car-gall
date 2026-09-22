@@ -15,7 +15,7 @@ public sealed class GirisTests(IdentityDatabase database)
     private const string Kimlik = "ayse@ornek.com";
     private const string Parola = "cok-guclu-parola";
 
-    [Fact(DisplayName = "AC-1: Geçerli kimlik ve parolayla giriş yapan personel yönetim paneline erişir")]
+    [Fact(DisplayName = "0006/AC-1: Geçerli kimlik ve parolayla giriş yapan personel yönetim paneline erişir")]
     public async Task Acilir_GecerliKimlikVeParolayla()
     {
         IdentityHarness harness = await KurAsync();
@@ -27,7 +27,7 @@ public sealed class GirisTests(IdentityDatabase database)
         Assert.NotNull(await harness.OturumCozAsync(sonuc.Value.Token));
     }
 
-    [Fact(DisplayName = "AC-2: Kayıtlı olmayan bir kimlikle giriş denendiğinde giriş reddedilir")]
+    [Fact(DisplayName = "0006/AC-2: Kayıtlı olmayan bir kimlikle giriş denendiğinde giriş reddedilir")]
     public async Task Reddedilir_KayitliOlmayanKimlik()
     {
         IdentityHarness harness = await KurAsync();
@@ -38,7 +38,7 @@ public sealed class GirisTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.InvalidCredentials, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-3: Kayıtlı bir kimlikle yanlış parola girildiğinde giriş reddedilir")]
+    [Fact(DisplayName = "0006/AC-3: Kayıtlı bir kimlikle yanlış parola girildiğinde giriş reddedilir")]
     public async Task Reddedilir_YanlisParola()
     {
         IdentityHarness harness = await KurAsync();
@@ -49,7 +49,7 @@ public sealed class GirisTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.InvalidCredentials, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-4: Pasifleştirilmiş bir personel giriş yapamaz")]
+    [Fact(DisplayName = "0006/AC-4: Pasifleştirilmiş bir personel giriş yapamaz")]
     public async Task Reddedilir_PasiflestirilmisPersonel()
     {
         IdentityHarness harness = await KurAsync();
@@ -75,7 +75,7 @@ public sealed class GirisTests(IdentityDatabase database)
     /// olduğunu sızdırır. Üç ret de AYNI koddan geçer ve aralarında ayrım yapan bir dal
     /// yoktur.
     /// </summary>
-    [Fact(DisplayName = "AC-5: AC-2, AC-3 ve AC-4'te dönen cevap birbirinden ayırt edilemez: aynı hata kodu, aynı gövde")]
+    [Fact(DisplayName = "0006/AC-5: 0006/AC-2, 0006/AC-3 ve 0006/AC-4'te dönen cevap birbirinden ayırt edilemez: aynı hata kodu, aynı gövde")]
     public async Task AyirtEdilemez_UcRetSebebi()
     {
         IdentityHarness harness = await KurAsync();
@@ -94,7 +94,7 @@ public sealed class GirisTests(IdentityDatabase database)
         Assert.Null(kayitliDegil.Parameters);
     }
 
-    [Fact(DisplayName = "AC-6: Yapılandırılan eşik kadar arka arkaya başarısız giriş denemesinden sonra hesap yapılandırılan süre boyunca giriş denemesine kapanır; bu süre içinde doğru parola girilse de giriş reddedilir")]
+    [Fact(DisplayName = "0006/AC-6: Yapılandırılan eşik kadar arka arkaya başarısız giriş denemesinden sonra hesap yapılandırılan süre boyunca giriş denemesine kapanır; bu süre içinde doğru parola girilse de giriş reddedilir")]
     public async Task Kapanir_EsikKadarBasarisizDenemeden()
     {
         IdentityHarness harness = await KurAsync();
@@ -111,7 +111,7 @@ public sealed class GirisTests(IdentityDatabase database)
         Assert.Equal(IdentityErrors.InvalidCredentials, kilitli.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-7: Kilitlenme süresi dolduktan sonra doğru parolayla giriş başarılı olur")]
+    [Fact(DisplayName = "0006/AC-7: Kilitlenme süresi dolduktan sonra doğru parolayla giriş başarılı olur")]
     public async Task Acilir_KilitSuresiDolunca()
     {
         IdentityHarness harness = await KurAsync();
@@ -133,7 +133,7 @@ public sealed class GirisTests(IdentityDatabase database)
     /// e-postaların kayıtlı olduğunu TAM OLARAK sızdırır. Sayaç bu yüzden kayıtlı olmayan
     /// kimlikler için de işler.
     /// </summary>
-    [Fact(DisplayName = "AC-8: Kayıtlı olmayan bir kimlikle eşik sayıda başarısız denemeden sonra dönen cevap, kayıtlı bir kimlik için dönenle ayırt edilemez")]
+    [Fact(DisplayName = "0006/AC-8: Kayıtlı olmayan bir kimlikle eşik sayıda başarısız denemeden sonra dönen cevap, kayıtlı bir kimlik için dönenle ayırt edilemez")]
     public async Task AyirtEdilemez_KayitliOlmayanKimliginKilitlenmesi()
     {
         IdentityHarness harness = await KurAsync();
@@ -150,7 +150,7 @@ public sealed class GirisTests(IdentityDatabase database)
         Assert.Equal(kayitliOlmayan, kayitli);
     }
 
-    [Fact(DisplayName = "AC-9: Kilitlenme sayacı hesap ve kaynak IP birlikte anahtarlanır: bir kaynaktan kilitlenen hesaba, kilitli olmayan başka bir kaynaktan doğru parolayla giriş yapılabilir")]
+    [Fact(DisplayName = "0006/AC-9: Kilitlenme sayacı hesap ve kaynak IP birlikte anahtarlanır: bir kaynaktan kilitlenen hesaba, kilitli olmayan başka bir kaynaktan doğru parolayla giriş yapılabilir")]
     public async Task Acilir_BaskaKaynaktan()
     {
         IdentityHarness harness = await KurAsync();
@@ -164,7 +164,7 @@ public sealed class GirisTests(IdentityDatabase database)
         Assert.True((await harness.GirisAsync(Kimlik, Parola, "198.51.100.4")).IsSuccess);
     }
 
-    [Fact(DisplayName = "AC-11: `Ali@x.com` kimliğiyle eklenen personel `ali@x.com` yazarak giriş yapar")]
+    [Fact(DisplayName = "0006/AC-11: `Ali@x.com` kimliğiyle eklenen personel `ali@x.com` yazarak giriş yapar")]
     public async Task Acilir_FarkliBuyukKucukHarfle()
     {
         IdentityHarness harness = await KurAsync(kimlik: "Ali@x.com");

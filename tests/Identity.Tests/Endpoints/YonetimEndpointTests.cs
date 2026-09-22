@@ -16,7 +16,7 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
 {
     private const string Parola = "cok-guclu-parola";
 
-    [Fact(DisplayName = "AC-23: Yönetim rota kökü altındaki her endpoint, oturumsuz istekte `401` döner; bu, rotaları tarayan bir testle doğrulanır")]
+    [Fact(DisplayName = "0006/AC-23: Yönetim rota kökü altındaki her endpoint, oturumsuz istekte `401` döner; bu, rotaları tarayan bir testle doğrulanır")]
     public async Task Doner401_OturumsuzIstek()
     {
         await database.ResetAsync();
@@ -27,7 +27,7 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
     }
 
-    [Fact(DisplayName = "AC-28: Yönetici rolündeki personel, personel ekleme ve rol değiştirme işlemlerini yapar")]
+    [Fact(DisplayName = "0006/AC-28: Yönetici rolündeki personel, personel ekleme ve rol değiştirme işlemlerini yapar")]
     public async Task Yapar_YoneticiRolu()
     {
         await database.ResetAsync();
@@ -50,7 +50,7 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
         Assert.Equal(HttpStatusCode.NoContent, rol.StatusCode);
     }
 
-    [Theory(DisplayName = "AC-25: Satış Danışmanı rolündeki personel, personel ekleme ve rol değiştirme işlemlerini yapamaz; istek `403` ile reddedilir")]
+    [Theory(DisplayName = "0006/AC-25: Satış Danışmanı rolündeki personel, personel ekleme ve rol değiştirme işlemlerini yapamaz; istek `403` ile reddedilir")]
     [InlineData("sales_advisor")]
     [InlineData("content_editor")]
     public async Task Doner403_YoneticiOlmayanRoller(string rol)
@@ -77,7 +77,7 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
     /// R10/AC-33 — zorunlu parola değişimi bekleyen personelin YALNIZCA parola değiştirme
     /// ve çıkış istekleri çalışır. Kurulum hesabı tam olarak bu durumda doğar (D2).
     /// </summary>
-    [Fact(DisplayName = "AC-33: Zorunlu parola değişimi bekleyen personelin yalnızca parola değiştirme ve çıkış istekleri çalışır; diğer her yönetim isteği reddedilir")]
+    [Fact(DisplayName = "0006/AC-33: Zorunlu parola değişimi bekleyen personelin yalnızca parola değiştirme ve çıkış istekleri çalışır; diğer her yönetim isteği reddedilir")]
     public async Task Reddedilir_ParolaDegisimiBekleyenDigerIstekler()
     {
         await database.ResetAsync();
@@ -109,7 +109,7 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
     /// yazılı olması önemli — bir zamanlar kapıda çıkışı muaf tutan bir koşul vardı,
     /// hiçbir zaman çalışmıyordu ve okuyana var olmayan bir koruma vaat ediyordu.
     /// </summary>
-    [Fact(DisplayName = "AC-33: Zorunlu parola değişimi bekleyen personelin yalnızca parola değiştirme ve çıkış istekleri çalışır; diğer her yönetim isteği reddedilir")]
+    [Fact(DisplayName = "0006/AC-33: Zorunlu parola değişimi bekleyen personelin yalnızca parola değiştirme ve çıkış istekleri çalışır; diğer her yönetim isteği reddedilir")]
     public async Task Calisir_ParolaDegisimiBekleyeninCikisi()
     {
         // Çıkış yolu yönetim kökünün DIŞINDA: kapı onu hiç görmüyor. Yol bir gün kökün
@@ -133,7 +133,7 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
     /// C17/AC-29 — token yanıt GÖVDESİNE hiç girmez ve çerez `HttpOnly`'dir; sayfadaki
     /// JavaScript onu okuyamaz.
     /// </summary>
-    [Fact(DisplayName = "AC-29: Oturum bilgisi, sayfadaki JavaScript'ten okunabilir bir yerde tutulmaz")]
+    [Fact(DisplayName = "0006/AC-29: Oturum bilgisi, sayfadaki JavaScript'ten okunabilir bir yerde tutulmaz")]
     public async Task HttpOnlyCerez_VeGovdedeTokenYok()
     {
         await database.ResetAsync();
@@ -157,7 +157,7 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
         Assert.DoesNotContain("pbkdf2", govde, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact(DisplayName = "AC-30: Durum değiştiren bir yönetim isteği başka bir kökenden tetiklendiğinde reddedilir")]
+    [Fact(DisplayName = "0006/AC-30: Durum değiştiren bir yönetim isteği başka bir kökenden tetiklendiğinde reddedilir")]
     public async Task Reddedilir_BaskaKokendenDurumDegistirenIstek()
     {
         await database.ResetAsync();
@@ -183,7 +183,7 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
         Assert.Equal(HttpStatusCode.Forbidden, yanit.StatusCode);
     }
 
-    [Fact(DisplayName = "AC-59: Giriş ve personel yönetimi ekranlarının hiçbir hata durumunda HTTP durum kodu, hata kodu, `traceId`, endpoint yolu veya istisna metni görünmez")]
+    [Fact(DisplayName = "0006/AC-59: Giriş ve personel yönetimi ekranlarının hiçbir hata durumunda HTTP durum kodu, hata kodu, `traceId`, endpoint yolu veya istisna metni görünmez")]
     public async Task IcermezTeknikAyrinti_HataGovdesi()
     {
         await database.ResetAsync();

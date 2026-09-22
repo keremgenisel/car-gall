@@ -59,7 +59,7 @@ public sealed class GirisHizSiniriTests : IAsyncLifetime
         await container.DisposeAsync();
     }
 
-    [Fact(DisplayName = "AC-10: Giriş ucuna aynı kaynak IP'den yapılandırılan hız sınırının üzerinde istek geldiğinde sonraki istekler reddedilir")]
+    [Fact(DisplayName = "0006/AC-10: Giriş ucuna aynı kaynak IP'den yapılandırılan hız sınırının üzerinde istek geldiğinde sonraki istekler reddedilir")]
     public async Task Reddedilir_EsikUstuIstek()
     {
         HttpClient client = factory!.CreateClient();
@@ -79,7 +79,7 @@ public sealed class GirisHizSiniriTests : IAsyncLifetime
         Assert.Equal("identity.rate_limited", govde.GetProperty("errorCode").GetString());
     }
 
-    [Fact(DisplayName = "AC-59: Giriş ve personel yönetimi ekranlarının hiçbir hata durumunda HTTP durum kodu, hata kodu, `traceId`, endpoint yolu veya istisna metni görünmez")]
+    [Fact(DisplayName = "0006/AC-59: Giriş ve personel yönetimi ekranlarının hiçbir hata durumunda HTTP durum kodu, hata kodu, `traceId`, endpoint yolu veya istisna metni görünmez")]
     public async Task IcermezTeknikAyrinti_HizSinirYaniti()
     {
         HttpClient client = factory!.CreateClient();

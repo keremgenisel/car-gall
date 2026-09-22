@@ -21,7 +21,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         "/api/leads", "LeadsDbContext", "CaptureLead",
     ];
 
-    [Fact(DisplayName = "AC-1: İlan detay sayfasından, adı ve telefonu girilmiş bir bilgi talebi bırakıldığında talep kaydedilir")]
+    [Fact(DisplayName = "0005/AC-1: İlan detay sayfasından, adı ve telefonu girilmiş bir bilgi talebi bırakıldığında talep kaydedilir")]
     public async Task Doner201_AdVeTelefonVerildiginde()
     {
         await database.ResetAsync();
@@ -35,7 +35,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         Assert.Equal(1, await context.Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-14: Hiç var olmayan bir ilan için gönderilen talep ile görünür olmayan bir ilan için gönderilen talep aynı karşılığı alır: aynı hata kodu, aynı gövde")]
+    [Fact(DisplayName = "0005/AC-14: Hiç var olmayan bir ilan için gönderilen talep ile görünür olmayan bir ilan için gönderilen talep aynı karşılığı alır: aynı hata kodu, aynı gövde")]
     public async Task AyniGovde_VarOlmayanVeGorunmeyenIlan()
     {
         await database.ResetAsync();
@@ -55,7 +55,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         Assert.Equal("lead.listing_unavailable", await HataKoduAsync(hicYokYanit));
     }
 
-    [Fact(DisplayName = "AC-12: `Rezerve` durumundaki bir ilan için gönderilen talep sunucuda reddedilir ve kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-12: `Rezerve` durumundaki bir ilan için gönderilen talep sunucuda reddedilir ve kayıt oluşmaz")]
     public async Task Doner422_RezerveIlanIcin()
     {
         await database.ResetAsync();
@@ -71,7 +71,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         Assert.Equal(0, await context.Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-10: Talep tipi takas olarak gönderilen istek reddedilir; takas sistemde tanınan bir tiptir ama bu spec'te kabul edilmez")]
+    [Fact(DisplayName = "0005/AC-10: Talep tipi takas olarak gönderilen istek reddedilir; takas sistemde tanınan bir tiptir ama bu spec'te kabul edilmez")]
     public async Task Doner422_TakasTipiyle()
     {
         await database.ResetAsync();
@@ -88,7 +88,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
     /// hatalı olduğunu söyleyen YAPISAL bir parametre gönderir; metni uç kendi
     /// kataloğundan üretir (C10, Yasak Listesi 23).
     /// </summary>
-    [Fact(DisplayName = "AC-40: Doğrulama hatası olan alan ziyaretçiye işaretlenir ve hatanın ne olduğu ziyaretçinin dilinde yazılır")]
+    [Fact(DisplayName = "0005/AC-40: Doğrulama hatası olan alan ziyaretçiye işaretlenir ve hatanın ne olduğu ziyaretçinin dilinde yazılır")]
     public async Task Bildirir_HataliAlanAdini()
     {
         await database.ResetAsync();
@@ -103,7 +103,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         Assert.Equal("phone", govde.GetProperty("field").GetString());
     }
 
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task Doner422_AnahtarBasligiYoksa()
     {
         await database.ResetAsync();
@@ -115,7 +115,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         Assert.Equal("lead.idempotency_key_missing", await HataKoduAsync(yanit));
     }
 
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task TekKayit_AyniAnahtarliIkiIstek()
     {
         await database.ResetAsync();
@@ -131,7 +131,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         Assert.Equal(1, await context.Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task Doner201_SinirdakiAnahtarBasligiyla()
     {
         await database.ResetAsync();
@@ -147,7 +147,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
     /// aşan değer PostgreSQL'de patlıyor, istisna tekil indeks çakışmasına benzemediği
     /// için yakalanmıyordu. Ziyaretçi sebebini öğrenemeden talebini kaybediyordu.
     /// </summary>
-    [Fact(DisplayName = "AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
+    [Fact(DisplayName = "0005/AC-35: Aynı idempotentlik anahtarıyla gönderilen ikinci istek yeni bir talep kaydı oluşturmaz")]
     public async Task Doner422_AnahtarBasligiCokUzunsa()
     {
         await database.ResetAsync();
@@ -165,7 +165,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
         Assert.Equal(0, await context.Leads.CountAsync());
     }
 
-    [Fact(DisplayName = "AC-34: Reddedilen istekte ziyaretçiye teknik ayrıntı gösterilmez")]
+    [Fact(DisplayName = "0005/AC-34: Reddedilen istekte ziyaretçiye teknik ayrıntı gösterilmez")]
     public async Task IcermezTeknikAyrinti_ReddedilenYanit()
     {
         await database.ResetAsync();
@@ -186,7 +186,7 @@ public sealed class TalepEndpointTests(LeadsDatabase database)
     /// dâhil. ASP.NET'in varsayılan İngilizce başlığı ("Unprocessable Content") bırakılsa,
     /// uçta yanlışlıkla basılabilecek bir metin olurdu (Yasak Listesi 23).
     /// </summary>
-    [Fact(DisplayName = "AC-34: Reddedilen istekte ziyaretçiye teknik ayrıntı gösterilmez")]
+    [Fact(DisplayName = "0005/AC-34: Reddedilen istekte ziyaretçiye teknik ayrıntı gösterilmez")]
     public async Task TasimazCevrilmisMetin_HataGovdesi()
     {
         await database.ResetAsync();

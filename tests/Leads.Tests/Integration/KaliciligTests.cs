@@ -8,7 +8,7 @@ namespace CarGallery.Modules.Leads.Tests.Integration;
 [Collection(LeadsDatabaseCollection.Name)]
 public sealed class KaliciligTests(LeadsDatabase database)
 {
-    [Fact(DisplayName = "AC-1: İlan detay sayfasından, adı ve telefonu girilmiş bir bilgi talebi bırakıldığında talep kaydedilir")]
+    [Fact(DisplayName = "0005/AC-1: İlan detay sayfasından, adı ve telefonu girilmiş bir bilgi talebi bırakıldığında talep kaydedilir")]
     public async Task Kaydedilir_AdVeTelefonVerildiginde()
     {
         await database.ResetAsync();
@@ -31,7 +31,7 @@ public sealed class KaliciligTests(LeadsDatabase database)
         Assert.Equal(LeadStatus.New, okunan.Status);
     }
 
-    [Fact(DisplayName = "AC-16: Talep, bırakıldığı locale ile kaydedilir; Arapça sayfadan bırakılan talebin locale'i `ar` olur")]
+    [Fact(DisplayName = "0005/AC-16: Talep, bırakıldığı locale ile kaydedilir; Arapça sayfadan bırakılan talebin locale'i `ar` olur")]
     public async Task Kaydedilir_BirakildigiLocaleIle()
     {
         await database.ResetAsync();
@@ -45,7 +45,7 @@ public sealed class KaliciligTests(LeadsDatabase database)
         Assert.Equal("ar", okunan.SubmittedLocale.Code);
     }
 
-    [Fact(DisplayName = "AC-23: Araca bağlı talep, o aracın şubesine bağlanır")]
+    [Fact(DisplayName = "0005/AC-23: Araca bağlı talep, o aracın şubesine bağlanır")]
     public async Task Baglanir_AracinSubesine()
     {
         Guid subeId = Guid.CreateVersion7();
@@ -61,7 +61,7 @@ public sealed class KaliciligTests(LeadsDatabase database)
         Assert.Equal(subeId, okunan.BranchId);
     }
 
-    [Fact(DisplayName = "AC-24: İletişim izni verilerek bırakılan talepte izin verildi olarak kaydedilir")]
+    [Fact(DisplayName = "0005/AC-24: İletişim izni verilerek bırakılan talepte izin verildi olarak kaydedilir")]
     public async Task Kaydedilir_IzinVerildi()
     {
         await database.ResetAsync();
@@ -72,7 +72,7 @@ public sealed class KaliciligTests(LeadsDatabase database)
         Assert.True((await OkuAsync(talep.Id))!.ConsentGiven);
     }
 
-    [Fact(DisplayName = "AC-25: İletişim izni verilmeden bırakılan talepte izin verilmedi olarak kaydedilir; talep yine de kaydedilir")]
+    [Fact(DisplayName = "0005/AC-25: İletişim izni verilmeden bırakılan talepte izin verilmedi olarak kaydedilir; talep yine de kaydedilir")]
     public async Task Kaydedilir_IzinVerilmedi()
     {
         await database.ResetAsync();
@@ -86,7 +86,7 @@ public sealed class KaliciligTests(LeadsDatabase database)
         Assert.False(okunan.ConsentGiven);
     }
 
-    [Fact(DisplayName = "AC-29: Talebin kişisel alanları (ad, telefon, e-posta, mesaj) ile istatistiksel alanları (tip, şube, locale, tarih, anlık görüntü) ayrı ayrı okunabilir; kişisel alanlar boşaltıldığında kayıt ve istatistiksel alanları bozulmadan kalır")]
+    [Fact(DisplayName = "0005/AC-29: Talebin kişisel alanları (ad, telefon, e-posta, mesaj) ile istatistiksel alanları (tip, şube, locale, tarih, anlık görüntü) ayrı ayrı okunabilir; kişisel alanlar boşaltıldığında kayıt ve istatistiksel alanları bozulmadan kalır")]
     public async Task Korunur_Kayit_KisiselAlanlarBosaltildiginda()
     {
         await database.ResetAsync();

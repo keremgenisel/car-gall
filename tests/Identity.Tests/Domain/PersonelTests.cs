@@ -6,7 +6,7 @@ namespace CarGallery.Modules.Identity.Tests.Domain;
 
 public sealed class PersonelTests
 {
-    [Fact(DisplayName = "AC-32: İlk parolasıyla giriş yapan personelden parolasını değiştirmesi istenir; değiştirmeden yönetim yüzeyinde çalışamaz")]
+    [Fact(DisplayName = "0006/AC-32: İlk parolasıyla giriş yapan personelden parolasını değiştirmesi istenir; değiştirmeden yönetim yüzeyinde çalışamaz")]
     public void ZorunluDegisimIsaretliDogar_YeniPersonel()
     {
         Staff personel = new StaffBuilder().Kur();
@@ -14,7 +14,7 @@ public sealed class PersonelTests
         Assert.True(personel.MustChangePassword);
     }
 
-    [Fact(DisplayName = "AC-34: Personel kendi parolasını mevcut parolasını vererek değiştirir; mevcut parola yanlış verildiğinde değişiklik reddedilir")]
+    [Fact(DisplayName = "0006/AC-34: Personel kendi parolasını mevcut parolasını vererek değiştirir; mevcut parola yanlış verildiğinde değişiklik reddedilir")]
     public void Degistirir_MevcutParolaDogruVerildiginde()
     {
         Staff personel = new StaffBuilder().Parola("eski-parola-123").Kur();
@@ -32,7 +32,7 @@ public sealed class PersonelTests
         Assert.NotEqual(oncekiDamga, personel.SecurityStamp);
     }
 
-    [Fact(DisplayName = "AC-34: Personel kendi parolasını mevcut parolasını vererek değiştirir; mevcut parola yanlış verildiğinde değişiklik reddedilir")]
+    [Fact(DisplayName = "0006/AC-34: Personel kendi parolasını mevcut parolasını vererek değiştirir; mevcut parola yanlış verildiğinde değişiklik reddedilir")]
     public void Reddedilir_MevcutParolaYanlisVerildiginde()
     {
         Staff personel = new StaffBuilder().Parola("eski-parola-123").Kur();
@@ -48,7 +48,7 @@ public sealed class PersonelTests
         Assert.Equal(oncekiDamga, personel.SecurityStamp);
     }
 
-    [Fact(DisplayName = "AC-35: Yönetici bir personelin parolasını sıfırlar; personel sıfırlanan parolayla giriş yaptığında kendisinden parola değiştirmesi istenir")]
+    [Fact(DisplayName = "0006/AC-35: Yönetici bir personelin parolasını sıfırlar; personel sıfırlanan parolayla giriş yaptığında kendisinden parola değiştirmesi istenir")]
     public void ZorunluDegisimIsaretler_ParolaSifirlama()
     {
         Staff personel = new StaffBuilder().Kur();
@@ -64,7 +64,7 @@ public sealed class PersonelTests
         Assert.NotEqual(oncekiDamga, personel.SecurityStamp);
     }
 
-    [Fact(DisplayName = "AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
+    [Fact(DisplayName = "0006/AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
     public void Duyurulur_Pasiflestirildiginde()
     {
         Staff personel = new StaffBuilder().Rol(StaffRole.SalesAdvisor).Kur();
@@ -80,7 +80,7 @@ public sealed class PersonelTests
     /// R14 — pasifleştirme bir GÜVENLİK işlemidir. Damganın dönmesi, o personelin bütün
     /// oturumlarını bir sonraki istekte geçersiz kılar (Tuzak 4).
     /// </summary>
-    [Fact(DisplayName = "AC-20: Bir personel pasifleştirildiğinde açık oturumu derhal geçersizleşir; sonraki ilk istekte yönetim yüzeyine erişemez")]
+    [Fact(DisplayName = "0006/AC-20: Bir personel pasifleştirildiğinde açık oturumu derhal geçersizleşir; sonraki ilk istekte yönetim yüzeyine erişemez")]
     public void DamgaDoner_Pasiflestirildiginde()
     {
         Staff personel = new StaffBuilder().Rol(StaffRole.SalesAdvisor).Kur();
@@ -91,7 +91,7 @@ public sealed class PersonelTests
         Assert.NotEqual(oncekiDamga, personel.SecurityStamp);
     }
 
-    [Fact(DisplayName = "AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
+    [Fact(DisplayName = "0006/AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
     public void Reddedilir_IkinciKezPasiflestirme()
     {
         Staff personel = new StaffBuilder().Rol(StaffRole.SalesAdvisor).Kur();
@@ -105,7 +105,7 @@ public sealed class PersonelTests
         Assert.Empty(personel.DomainEvents);
     }
 
-    [Fact(DisplayName = "AC-31: Yönetici bir personel eklediğinde personel listede görünür ve verilen kimlikle giriş yapabilir")]
+    [Fact(DisplayName = "0006/AC-31: Yönetici bir personel eklediğinde personel listede görünür ve verilen kimlikle giriş yapabilir")]
     public void Eklenemez_AdiBossa()
     {
         Result<Staff> sonuc = new StaffBuilder().Ad("   ").Olustur();
@@ -114,7 +114,7 @@ public sealed class PersonelTests
         Assert.Equal(IdentityErrors.EmptyDisplayName, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-39: Şubesiz personel eklenebilir; şube zorunlu değildir")]
+    [Fact(DisplayName = "0006/AC-39: Şubesiz personel eklenebilir; şube zorunlu değildir")]
     public void Eklenir_Subesiz()
     {
         Staff personel = new StaffBuilder().Sube(null).Kur();

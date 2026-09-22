@@ -6,7 +6,7 @@ namespace CarGallery.Modules.VehicleReference.Tests;
 [Collection(ReferenceDatabaseCollection.Name)]
 public sealed class ReferansTerimTests(ReferenceDatabase database)
 {
-    [Theory(DisplayName = "AC-21: Detay sayfasındaki tüm etiketler TR, AR ve EN locale'lerinde kendi dilinde görünür; hiçbir locale'de çeviri anahtarı ham hâliyle görünmez")]
+    [Theory(DisplayName = "0002/AC-21: Detay sayfasındaki tüm etiketler TR, AR ve EN locale'lerinde kendi dilinde görünür; hiçbir locale'de çeviri anahtarı ham hâliyle görünmez")]
     [InlineData("tr", "FuelType", "diesel", "Dizel")]
     [InlineData("ar", "FuelType", "diesel", "ديزل")]
     [InlineData("en", "FuelType", "diesel", "Diesel")]

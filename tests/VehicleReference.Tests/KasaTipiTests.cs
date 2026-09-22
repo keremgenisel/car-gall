@@ -8,7 +8,7 @@ namespace CarGallery.Modules.VehicleReference.Tests;
 [Collection(ReferenceDatabaseCollection.Name)]
 public sealed class KasaTipiTests(ReferenceDatabase database)
 {
-    [Theory(DisplayName = "AC-29: Daraltma çubuğundaki kasa tipi etiketleri TR, AR ve EN locale'lerinde kendi dilinde görünür; hiçbir locale'de çeviri anahtarı ham hâliyle görünmez")]
+    [Theory(DisplayName = "0001/AC-29: Daraltma çubuğundaki kasa tipi etiketleri TR, AR ve EN locale'lerinde kendi dilinde görünür; hiçbir locale'de çeviri anahtarı ham hâliyle görünmez")]
     [InlineData("tr", "suv", "SUV")]
     [InlineData("ar", "suv", "دفع رباعي")]
     [InlineData("en", "suv", "SUV")]

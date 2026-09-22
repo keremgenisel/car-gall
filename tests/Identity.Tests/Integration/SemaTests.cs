@@ -15,7 +15,7 @@ public sealed class SemaTests(IdentityDatabase database)
     /// C7/Yasak Listesi 22 — kod saklanır, çevrilmiş ad değil. Kolonun TİPİNE bakmak
     /// yetmez; içine yazılan değere bakılır.
     /// </summary>
-    [Fact(DisplayName = "AC-52: Veritabanında rol ve durum kod olarak saklanır; çevrilmiş adları saklanmaz")]
+    [Fact(DisplayName = "0006/AC-52: Veritabanında rol ve durum kod olarak saklanır; çevrilmiş adları saklanmaz")]
     public async Task KodOlarakSaklanir_RolVeDurum()
     {
         await database.ResetAsync();
@@ -47,7 +47,7 @@ public sealed class SemaTests(IdentityDatabase database)
         }
     }
 
-    [Fact(DisplayName = "AC-12: `Ali@x.com` kayıtlıyken `ali@x.com` ile ikinci bir personel eklenemez")]
+    [Fact(DisplayName = "0006/AC-12: `Ali@x.com` kayıtlıyken `ali@x.com` ile ikinci bir personel eklenemez")]
     public async Task TekilIndeksVar_NormalizeGirisKimliginde()
     {
         await database.ResetAsync();
@@ -64,7 +64,7 @@ public sealed class SemaTests(IdentityDatabase database)
         Assert.Equal(1, indeks);
     }
 
-    [Fact(DisplayName = "AC-50: Personel kaydının döndüğü hiçbir yanıt parolayı veya parola özetini içermez")]
+    [Fact(DisplayName = "0006/AC-50: Personel kaydının döndüğü hiçbir yanıt parolayı veya parola özetini içermez")]
     public async Task SaklanmazAcikParola_StaffTablosunda()
     {
         await database.ResetAsync();

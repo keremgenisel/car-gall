@@ -79,7 +79,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
         await container.DisposeAsync();
     }
 
-    [Fact(DisplayName = "AC-1: Geçerli kimlik ve parolayla giriş yapan personel yönetim paneline erişir")]
+    [Fact(DisplayName = "0006/AC-1: Geçerli kimlik ve parolayla giriş yapan personel yönetim paneline erişir")]
     public async Task Erisir_GecerliGiristenSonra()
     {
         HttpClient client = Istemci();
@@ -90,7 +90,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
     }
 
-    [Fact(DisplayName = "AC-16: Süresi dolmuş erişim oturumu, geçerli bir yenileme hakkı varken sessizce yenilenir ve personel işini kaybetmez")]
+    [Fact(DisplayName = "0006/AC-16: Süresi dolmuş erişim oturumu, geçerli bir yenileme hakkı varken sessizce yenilenir ve personel işini kaybetmez")]
     public async Task SessizceYenilenir_ErisimSuresiDolduktanSonra()
     {
         HttpClient client = Istemci();
@@ -102,7 +102,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"{AdminSurface.RoutePrefix}/me")).StatusCode);
     }
 
-    [Fact(DisplayName = "AC-17: Yenileme hakkı yapılandırılan süre sonunda geçerliliğini yitirir; personel yeniden giriş yapar")]
+    [Fact(DisplayName = "0006/AC-17: Yenileme hakkı yapılandırılan süre sonunda geçerliliğini yitirir; personel yeniden giriş yapar")]
     public async Task Doner401_YenilemeSuresiDolunca()
     {
         HttpClient client = Istemci();
@@ -115,7 +115,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
             (await client.GetAsync($"{AdminSurface.RoutePrefix}/me")).StatusCode);
     }
 
-    [Fact(DisplayName = "AC-18: Personel çıkış yaptığında o oturumun yenileme hakkı geçersizleşir ve aynı hakla yeni oturum alınamaz")]
+    [Fact(DisplayName = "0006/AC-18: Personel çıkış yaptığında o oturumun yenileme hakkı geçersizleşir ve aynı hakla yeni oturum alınamaz")]
     public async Task Doner401_CikistanSonra()
     {
         HttpClient client = Istemci();
@@ -130,7 +130,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
             (await client.GetAsync($"{AdminSurface.RoutePrefix}/me")).StatusCode);
     }
 
-    [Fact(DisplayName = "AC-19: Çıkış yalnızca o oturumu kapatır; aynı personelin başka bir cihazdaki oturumu çalışmaya devam eder")]
+    [Fact(DisplayName = "0006/AC-19: Çıkış yalnızca o oturumu kapatır; aynı personelin başka bir cihazdaki oturumu çalışmaya devam eder")]
     public async Task Surer_DigerCihaz()
     {
         HttpClient birinci = Istemci();
@@ -145,7 +145,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, (await ikinci.GetAsync($"{AdminSurface.RoutePrefix}/me")).StatusCode);
     }
 
-    [Fact(DisplayName = "AC-24: Oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranına yönlendirilir")]
+    [Fact(DisplayName = "0006/AC-24: Oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranına yönlendirilir")]
     public async Task Doner401_OturumsuzYonetimIstegi()
     {
         Assert.Equal(
@@ -157,7 +157,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
     /// AC-54/AC-55'in SUNUCU yarısı: panel kabuğu personelin tercih ettiği dille basılır
     /// ve ziyaretçinin o anki vitrin dili paneli etkilemez.
     /// </summary>
-    [Fact(DisplayName = "AC-54: Yönetim paneli, giriş yapan personelin tercih ettiği dilde açılır; ziyaretçinin o anki vitrin dili paneli etkilemez")]
+    [Fact(DisplayName = "0006/AC-54: Yönetim paneli, giriş yapan personelin tercih ettiği dilde açılır; ziyaretçinin o anki vitrin dili paneli etkilemez")]
     public async Task Basar_PersonelinDiliyle()
     {
         HttpClient client = Istemci();
@@ -177,7 +177,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
         Assert.Contains("lang=\"tr\"", panelYine, StringComparison.Ordinal);
     }
 
-    [Fact(DisplayName = "AC-24: Oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranına yönlendirilir")]
+    [Fact(DisplayName = "0006/AC-24: Oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranına yönlendirilir")]
     public async Task Basar_VarsayilanDille_OturumYokken()
     {
         string panel = await (await Istemci().GetAsync("/admin")).Content.ReadAsStringAsync();

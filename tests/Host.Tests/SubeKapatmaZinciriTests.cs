@@ -56,7 +56,7 @@ public sealed class SubeKapatmaZinciriTests : IAsyncLifetime
         await container.DisposeAsync();
     }
 
-    [Fact(DisplayName = "AC-32: BranchDeactivated duyurusu VehicleCatalog tarafından alındığında o şubedeki araçlar vitrinden düşer")]
+    [Fact(DisplayName = "0003/AC-32: BranchDeactivated duyurusu VehicleCatalog tarafından alındığında o şubedeki araçlar vitrinden düşer")]
     public async Task VitrindenDuser_SubeKapatildiginda()
     {
         await SeedShowcaseAsync();

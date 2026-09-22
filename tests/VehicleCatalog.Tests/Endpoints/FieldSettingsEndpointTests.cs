@@ -10,7 +10,7 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Endpoints;
 [Collection(ShowcaseDatabaseCollection.Name)]
 public sealed class FieldSettingsEndpointTests(ShowcaseDatabase database)
 {
-    [Fact(DisplayName = "AC-11: Daraltma çubuğu yalnızca kasa tipi eksenini sunar; alan ayarları yanıtındaki başka hiçbir alan eksen olarak sunulmaz")]
+    [Fact(DisplayName = "0001/AC-11: Daraltma çubuğu yalnızca kasa tipi eksenini sunar; alan ayarları yanıtındaki başka hiçbir alan eksen olarak sunulmaz")]
     public async Task YalnizKasaTipiFiltrelenebilir_AlanAyarlariYanitinda()
     {
         await database.ResetAsync();
@@ -33,7 +33,7 @@ public sealed class FieldSettingsEndpointTests(ShowcaseDatabase database)
         Assert.Equal(["body_type"], filterable);
     }
 
-    [Fact(DisplayName = "AC-24: Gizli işaretli bir opsiyonel alan liste yanıtında hiç bulunmaz — boş değer olarak da bulunmaz — ve daraltma ekseni olarak da sunulmaz; gizleme VehicleCatalog'un sorgu tarafında uygulanır")]
+    [Fact(DisplayName = "0001/AC-24: Gizli işaretli bir opsiyonel alan liste yanıtında hiç bulunmaz — boş değer olarak da bulunmaz — ve daraltma ekseni olarak da sunulmaz; gizleme VehicleCatalog'un sorgu tarafında uygulanır")]
     public async Task EksenOlarakSunulmaz_GizliOpsiyonelAlan()
     {
         await database.ResetAsync();
@@ -50,7 +50,7 @@ public sealed class FieldSettingsEndpointTests(ShowcaseDatabase database)
         Assert.False(tramer.GetProperty("isFilterable").GetBoolean());
     }
 
-    [Fact(DisplayName = "AC-12: Kasa tipi alanı alan ayarlarında public değilken daraltma çubuğu hiç gösterilmez; liste daraltmasız çalışmaya devam eder")]
+    [Fact(DisplayName = "0001/AC-12: Kasa tipi alanı alan ayarlarında public değilken daraltma çubuğu hiç gösterilmez; liste daraltmasız çalışmaya devam eder")]
     public async Task FiltrelenemezBildirilir_KasaTipiPublicDegilken()
     {
         await database.ResetAsync();

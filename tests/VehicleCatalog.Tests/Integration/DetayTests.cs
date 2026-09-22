@@ -11,7 +11,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
 {
     private const string Slug = "toyota-corolla-2019-abc123";
 
-    [Fact(DisplayName = "AC-1: Yayında durumundaki bir ilanın adresi istendiğinde o ilanın detayı döner")]
+    [Fact(DisplayName = "0002/AC-1: Yayında durumundaki bir ilanın adresi istendiğinde o ilanın detayı döner")]
     public async Task Doner_YayindakiIlanDetayi()
     {
         await database.ResetAsync();
@@ -24,7 +24,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.Equal(2019, detay.ModelYear);
     }
 
-    [Fact(DisplayName = "AC-5: Var olmayan bir ilan adresi istendiğinde sistem \"bulunamadı\" karşılığı verir")]
+    [Fact(DisplayName = "0002/AC-5: Var olmayan bir ilan adresi istendiğinde sistem \"bulunamadı\" karşılığı verir")]
     public async Task Bulunamadi_VarOlmayanAdres()
     {
         await database.ResetAsync();
@@ -33,7 +33,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.Null(await FindAsync("hic-var-olmayan-ilan-999999"));
     }
 
-    [Fact(DisplayName = "AC-6: Taslak, Arşiv ve Satıldı durumundaki bir ilanın adresi istendiğinde sistem \"bulunamadı\" karşılığı verir")]
+    [Fact(DisplayName = "0002/AC-6: Taslak, Arşiv ve Satıldı durumundaki bir ilanın adresi istendiğinde sistem \"bulunamadı\" karşılığı verir")]
     public async Task Bulunamadi_VitrindeGorunmeyenIlan()
     {
         await database.ResetAsync();
@@ -45,7 +45,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.Null(await FindAsync(Slug));
     }
 
-    [Fact(DisplayName = "AC-8: Var olan ama gizlenen bir ilan ile hiç var olmayan bir ilan için dönen karşılık birbirinden ayırt edilemez: aynı hata kodu, aynı gövde")]
+    [Fact(DisplayName = "0002/AC-8: Var olan ama gizlenen bir ilan ile hiç var olmayan bir ilan için dönen karşılık birbirinden ayırt edilemez: aynı hata kodu, aynı gövde")]
     public async Task AyirtEdilemez_GizlenenVeVarOlmayan()
     {
         await database.ResetAsync();
@@ -61,7 +61,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.Null(hicYok);
     }
 
-    [Fact(DisplayName = "AC-9: Rezerve durumundaki ilanın detayı açılır ve sayfada rezerve rozeti görünür")]
+    [Fact(DisplayName = "0002/AC-9: Rezerve durumundaki ilanın detayı açılır ve sayfada rezerve rozeti görünür")]
     public async Task RozetBilgisiTasir_RezerveIlan()
     {
         await database.ResetAsync();
@@ -73,7 +73,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.True(detay.IsReserved);
     }
 
-    [Fact(DisplayName = "AC-10: Detay sayfası model adını, yılı, kasa tipini, donanım paketini, kilometreyi, yakıtı, vitesi, çekişi, rengi, şube adını ve kapak görselini gösterir")]
+    [Fact(DisplayName = "0002/AC-10: Detay sayfası model adını, yılı, kasa tipini, donanım paketini, kilometreyi, yakıtı, vitesi, çekişi, rengi, şube adını ve kapak görselini gösterir")]
     public async Task Gosterilir_CekirdekAlanlar()
     {
         await database.ResetAsync();
@@ -95,7 +95,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.Contains("color", anahtarlar);
     }
 
-    [Fact(DisplayName = "AC-11: Alan ayarlarında açık ve public işaretli bir opsiyonel alanın değeri detay sayfasında görünür")]
+    [Fact(DisplayName = "0002/AC-11: Alan ayarlarında açık ve public işaretli bir opsiyonel alanın değeri detay sayfasında görünür")]
     public async Task Gosterilir_AcikVePublicOpsiyonelAlan()
     {
         await database.ResetAsync();
@@ -108,7 +108,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.Contains(detay.Attributes, item => item.Key == "warranty_status" && item.Value == "2 yıl garanti");
     }
 
-    [Fact(DisplayName = "AC-13: Alan ayarlarında Gizli işaretli bir opsiyonel alan detay yanıtında hiç bulunmaz; boş değer olarak da bulunmaz")]
+    [Fact(DisplayName = "0002/AC-13: Alan ayarlarında Gizli işaretli bir opsiyonel alan detay yanıtında hiç bulunmaz; boş değer olarak da bulunmaz")]
     public async Task Bulunmaz_GizliOpsiyonelAlan()
     {
         await database.ResetAsync();
@@ -122,7 +122,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.DoesNotContain(detay.Attributes, item => item.Key == "damage_record_amount");
     }
 
-    [Fact(DisplayName = "AC-15: \"Fiyat sorunuz\" işaretli ilanın detayında tutar yerine \"fiyat sorunuz\" karşılığı gösterilir; 0 veya boş tutar gösterilmez")]
+    [Fact(DisplayName = "0002/AC-15: \"Fiyat sorunuz\" işaretli ilanın detayında tutar yerine \"fiyat sorunuz\" karşılığı gösterilir; 0 veya boş tutar gösterilmez")]
     public async Task FiyatSorunuz_TutarTasimaz()
     {
         await database.ResetAsync();
@@ -134,7 +134,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.Null(detay.Price.Amount);
     }
 
-    [Fact(DisplayName = "AC-16: Kurulum para birimi KWD iken 1250,500 tutarlı ilanın detayında tutar üç ondalıkla gösterilir; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0002/AC-16: Kurulum para birimi KWD iken 1250,500 tutarlı ilanın detayında tutar üç ondalıkla gösterilir; yuvarlama veya kesme yapılmaz")]
     public async Task UcOndalikKorunur_KwdTutarinda()
     {
         await database.ResetAsync();
@@ -146,7 +146,7 @@ public sealed class DetayTests(ShowcaseDatabase database)
         Assert.Equal(3, detay.Price.MinorUnitExponent);
     }
 
-    [Theory(DisplayName = "AC-21: Detay sayfasındaki tüm etiketler TR, AR ve EN locale'lerinde kendi dilinde görünür")]
+    [Theory(DisplayName = "0002/AC-21: Detay sayfasındaki tüm etiketler TR, AR ve EN locale'lerinde kendi dilinde görünür")]
     [InlineData("tr", "Dizel")]
     [InlineData("ar", "ديزل")]
     [InlineData("en", "Diesel")]

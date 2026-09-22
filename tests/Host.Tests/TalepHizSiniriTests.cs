@@ -77,7 +77,7 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
     /// Spec'in Intent'i tam olarak bu kaybı önlemek için yazılmış; AC-32'nin
     /// "kaydedildikten sonra" ifadesi de bu yüzden bilinçli.
     /// </summary>
-    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
     public async Task Kabul_GecerliTalep_BesReddedilenIstektenSonra()
     {
         HttpClient client = factory!.CreateClient();
@@ -102,7 +102,7 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
     /// yapılandırılmamış bir dağıtımda okunmaz: okunsaydı istemci her istekte başka bir
     /// değer göndererek sınırı kendisi kapatırdı.
     /// </summary>
-    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
     public async Task Asilamaz_XForwardedForBasligiyla()
     {
         HttpClient client = factory!.CreateClient();
@@ -121,7 +121,7 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
         Assert.Equal(5, await TalepSayisiAsync());
     }
 
-    [Fact(DisplayName = "AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
+    [Fact(DisplayName = "0005/AC-32: Aynı IP'den 10 dakika içinde 5 talep kaydedildikten sonra altıncı istek reddedilir ve bu istek için kayıt oluşmaz")]
     public async Task Reddedilir_AltinciIstek_AyniIpten()
     {
         HttpClient client = factory!.CreateClient();
@@ -140,7 +140,7 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
         Assert.Equal(5, await TalepSayisiAsync());
     }
 
-    [Fact(DisplayName = "AC-33: Hız sınırına takılan istek `429` durum kodu ve `lead.rate_limited` hata kodu ile reddedilir")]
+    [Fact(DisplayName = "0005/AC-33: Hız sınırına takılan istek `429` durum kodu ve `lead.rate_limited` hata kodu ile reddedilir")]
     public async Task Doner429_Ve_RateLimitedKodu()
     {
         HttpClient client = factory!.CreateClient();
@@ -157,7 +157,7 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
         Assert.Equal("lead.rate_limited", govde.GetProperty("errorCode").GetString());
     }
 
-    [Fact(DisplayName = "AC-34: Reddedilen istekte ziyaretçiye teknik ayrıntı gösterilmez")]
+    [Fact(DisplayName = "0005/AC-34: Reddedilen istekte ziyaretçiye teknik ayrıntı gösterilmez")]
     public async Task IcermezTeknikAyrinti_HizSinirYaniti()
     {
         HttpClient client = factory!.CreateClient();

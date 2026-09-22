@@ -14,7 +14,7 @@ public sealed class LocaleYonlendirmeTests : IClassFixture<HostFactory>
         AllowAutoRedirect = false,
     });
 
-    [Fact(DisplayName = "AC-33: Öneksiz / isteği kurulum varsayılan locale'ine 301 ile yönlendirilir")]
+    [Fact(DisplayName = "0001/AC-33: Öneksiz / isteği kurulum varsayılan locale'ine 301 ile yönlendirilir")]
     public async Task Yonlendirir301_OneksizIstekte()
     {
         HttpResponseMessage response = await CreateClient().GetAsync("/");
@@ -23,7 +23,7 @@ public sealed class LocaleYonlendirmeTests : IClassFixture<HostFactory>
         Assert.Equal("/tr/", response.Headers.Location?.ToString());
     }
 
-    [Fact(DisplayName = "AC-33: Etkin olmayan bir locale öneki (/de/) 404 döner ve varsayılan locale'e yönlendirilmez")]
+    [Fact(DisplayName = "0001/AC-33: Etkin olmayan bir locale öneki (/de/) 404 döner ve varsayılan locale'e yönlendirilmez")]
     public async Task Doner404_EtkinOlmayanLocaleOnekinde()
     {
         HttpResponseMessage response = await CreateClient().GetAsync("/de/");

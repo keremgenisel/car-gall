@@ -9,7 +9,7 @@ public sealed class VitrinListesiTests(ShowcaseDatabase database)
 {
     private static readonly DateTimeOffset Yayin = new(2026, 3, 1, 9, 0, 0, TimeSpan.Zero);
 
-    [Fact(DisplayName = "AC-1: Vitrinde 30 adet Yayında ilan varken liste ilk sayfada 24 ilan gösterir")]
+    [Fact(DisplayName = "0001/AC-1: Vitrinde 30 adet Yayında ilan varken liste ilk sayfada 24 ilan gösterir")]
     public async Task IlkSayfa24IlanDoner_30YayindaIlanVarken()
     {
         await database.ResetAsync();
@@ -22,7 +22,7 @@ public sealed class VitrinListesiTests(ShowcaseDatabase database)
         Assert.Equal(1, page.Page);
     }
 
-    [Fact(DisplayName = "AC-4: Liste, vitrin sıralama ağırlığı azalan sırada gelir; ağırlığı eşit iki ilandan yayın tarihi daha yeni olan önce gelir; ağırlığı ve yayın tarihi de eşit iki ilandan ilan kimliği küçük olan önce gelir")]
+    [Fact(DisplayName = "0001/AC-4: Liste, vitrin sıralama ağırlığı azalan sırada gelir; ağırlığı eşit iki ilandan yayın tarihi daha yeni olan önce gelir; ağırlığı ve yayın tarihi de eşit iki ilandan ilan kimliği küçük olan önce gelir")]
     public async Task Siralanir_AgirlikSonraYayinTarihiSonraIlanKimligi()
     {
         await database.ResetAsync();
@@ -45,7 +45,7 @@ public sealed class VitrinListesiTests(ShowcaseDatabase database)
         Assert.Equal(yuksekKimlik, page.Items[3].ListingId);
     }
 
-    [Fact(DisplayName = "AC-5: Vitrin sıralama ağırlığı ve yayın tarihi aynı olan 30 ilan varken birinci ve ikinci sayfa birlikte 30 farklı ilan içerir; tekrar eden veya kaybolan ilan yoktur")]
+    [Fact(DisplayName = "0001/AC-5: Vitrin sıralama ağırlığı ve yayın tarihi aynı olan 30 ilan varken birinci ve ikinci sayfa birlikte 30 farklı ilan içerir; tekrar eden veya kaybolan ilan yoktur")]
     public async Task TekrarEtmez_EsitAgirlikVeTarihte_IkiSayfada30Farkli()
     {
         await database.ResetAsync();
@@ -68,7 +68,7 @@ public sealed class VitrinListesiTests(ShowcaseDatabase database)
         Assert.Equal(listings.Select(listing => listing.ListingId).OrderBy(id => id), hepsi.OrderBy(id => id));
     }
 
-    [Fact(DisplayName = "AC-13: Vitrinde 49 yayında ilan varken liste 3 sayfa üretir ve üçüncü sayfa 1 ilan gösterir")]
+    [Fact(DisplayName = "0001/AC-13: Vitrinde 49 yayında ilan varken liste 3 sayfa üretir ve üçüncü sayfa 1 ilan gösterir")]
     public async Task UcSayfaUretilir_49IlandaUcuncuSayfada1Ilan()
     {
         await database.ResetAsync();

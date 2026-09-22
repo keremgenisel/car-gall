@@ -21,7 +21,7 @@ public sealed class StaffDeactivatedSekliTests
     private static readonly string[] YasakParcalar =
         ["name", "email", "login", "password", "hash", "phone", "locale", "role"];
 
-    [Fact(DisplayName = "AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
+    [Fact(DisplayName = "0006/AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
     public void TasirYalnizBeklenenAlanlari_StaffDeactivated()
     {
         string[] alanlar =
@@ -36,7 +36,7 @@ public sealed class StaffDeactivatedSekliTests
         Assert.Equal([.. BeklenenAlanlar.Order()], alanlar);
     }
 
-    [Fact(DisplayName = "AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
+    [Fact(DisplayName = "0006/AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
     public void TasimazKisiselAlan_StaffDeactivated()
     {
         foreach (PropertyInfo property in typeof(StaffDeactivated).GetProperties())
@@ -50,7 +50,7 @@ public sealed class StaffDeactivatedSekliTests
         }
     }
 
-    [Fact(DisplayName = "AC-49: Üretilen her duyuru benzersiz bir duyuru kimliği taşır")]
+    [Fact(DisplayName = "0006/AC-49: Üretilen her duyuru benzersiz bir duyuru kimliği taşır")]
     public void EntegrasyonOlayidir_StaffDeactivated() =>
         Assert.True(typeof(IIntegrationEvent).IsAssignableFrom(typeof(StaffDeactivated)));
 }

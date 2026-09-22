@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Uygulama kabuğu', () => {
-  test("AC-1: Vitrin sayfasında üst bar görünür ve marka adını taşır; içerik alanı <main> öğesidir ve sayfanın tek <h1>'i içerik alanındadır", async ({
+  test("frontend-001/AC-1: Vitrin sayfasında üst bar görünür ve marka adını taşır; içerik alanı <main> öğesidir ve sayfanın tek <h1>'i içerik alanındadır", async ({
     page,
   }) => {
     await page.goto('/tr/')
@@ -14,7 +14,7 @@ test.describe('Uygulama kabuğu', () => {
     await expect(page.locator('main h1')).toBeVisible()
   })
 
-  test("AC-2: Üst bardaki dil değiştirici üç etkin locale'i sunar; /tr/ sayfasında Arapça seçildiğinde adres /ar/ önekine döner ve içerik Arapça gelir", async ({
+  test("frontend-001/AC-2: Üst bardaki dil değiştirici üç etkin locale'i sunar; /tr/ sayfasında Arapça seçildiğinde adres /ar/ önekine döner ve içerik Arapça gelir", async ({
     page,
   }) => {
     await page.goto('/tr/')
@@ -30,7 +30,7 @@ test.describe('Uygulama kabuğu', () => {
     await expect(page.getByTestId('body-type-filter')).toContainText('دفع رباعي')
   })
 
-  test('AC-3: Dil değiştiriciyle locale değiştirildiğinde daraltma ve sayfa korunur', async ({
+  test('frontend-001/AC-3: Dil değiştiriciyle locale değiştirildiğinde daraltma ve sayfa korunur', async ({
     page,
   }) => {
     await page.goto('/tr/?bodyType=suv&page=2')
@@ -47,7 +47,7 @@ test.describe('Uygulama kabuğu', () => {
     expect(url.searchParams.get('page')).toBe('2')
   })
 
-  test("AC-4: Arapça locale'de üst bar sağdan sola akar: marka satırın başında (sağda), dil değiştirici sonunda (solda)", async ({
+  test("frontend-001/AC-4: Arapça locale'de üst bar sağdan sola akar: marka satırın başında (sağda), dil değiştirici sonunda (solda)", async ({
     page,
   }) => {
     await page.goto('/ar/')
@@ -60,7 +60,7 @@ test.describe('Uygulama kabuğu', () => {
     expect(marka!.x).toBeGreaterThan(secici!.x)
   })
 
-  test('AC-5: Dil değiştirici çerez veya localStorage yazmaz; seçim yalnız adrese yansır', async ({
+  test('frontend-001/AC-5: Dil değiştirici çerez veya localStorage yazmaz; seçim yalnız adrese yansır', async ({
     page,
   }) => {
     await page.goto('/tr/')

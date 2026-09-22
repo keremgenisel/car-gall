@@ -5,7 +5,7 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Domain;
 
 public sealed class ListingPriceTests
 {
-    [Fact(DisplayName = "AC-21: \"Fiyat sorunuz\" işaretli ilanın kartında tutar yerine \"fiyat sorunuz\" karşılığı gösterilir; 0 veya boş tutar gösterilmez")]
+    [Fact(DisplayName = "0001/AC-21: \"Fiyat sorunuz\" işaretli ilanın kartında tutar yerine \"fiyat sorunuz\" karşılığı gösterilir; 0 veya boş tutar gösterilmez")]
     public void TutarTasimaz_FiyatSorunuzDurumunda()
     {
         ListingPrice price = ListingPrice.OnRequest();

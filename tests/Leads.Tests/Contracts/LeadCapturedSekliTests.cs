@@ -23,7 +23,7 @@ public sealed class LeadCapturedSekliTests
         nameof(LeadCaptured.SubmittedLocale),
     ];
 
-    [Fact(DisplayName = "AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
+    [Fact(DisplayName = "0005/AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
     public void TasirYalnizBeklenenAlanlari_LeadCaptured()
     {
         string[] alanlar =
@@ -38,7 +38,7 @@ public sealed class LeadCapturedSekliTests
         Assert.Equal([.. BeklenenAlanlar.Order()], alanlar);
     }
 
-    [Fact(DisplayName = "AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
+    [Fact(DisplayName = "0005/AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
     public void TasimazKiselAlan_LeadCaptured()
     {
         string[] yasakParcalar = ["name", "phone", "email", "message", "contact", "consent"];
@@ -54,7 +54,7 @@ public sealed class LeadCapturedSekliTests
         }
     }
 
-    [Fact(DisplayName = "AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
+    [Fact(DisplayName = "0005/AC-30: Talep kaydedildiğinde `LeadCaptured` duyurusu üretilir")]
     public void EntegrasyonOlayidir_LeadCaptured() =>
         Assert.True(typeof(IIntegrationEvent).IsAssignableFrom(typeof(LeadCaptured)));
 }

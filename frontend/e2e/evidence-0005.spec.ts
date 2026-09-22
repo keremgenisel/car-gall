@@ -32,7 +32,9 @@ async function formaGit(page: Page, locale: keyof typeof ETIKET) {
   await expect(page.getByTestId('lead-form')).toBeVisible()
 }
 
-test('AC-26, AC-27, AC-41: form, işaretsiz izin kutusu ve izin metni (TR)', async ({ page }) => {
+test('0005/AC-26, 0005/AC-27, 0005/AC-41: form, işaretsiz izin kutusu ve izin metni (TR)', async ({
+  page,
+}) => {
   await formaGit(page, 'tr')
 
   await expect(page.getByRole('checkbox')).not.toBeChecked()
@@ -41,14 +43,14 @@ test('AC-26, AC-27, AC-41: form, işaretsiz izin kutusu ve izin metni (TR)', asy
   await kanit(page, '[data-testid="lead-form"]', '0005-ac41-tr.png')
 })
 
-test('AC-27, AC-41: izin metni ve form (EN)', async ({ page }) => {
+test('0005/AC-27, 0005/AC-41: izin metni ve form (EN)', async ({ page }) => {
   await formaGit(page, 'en')
 
   await kanit(page, '.lead-form__consent', '0005-ac27-en.png')
   await kanit(page, '[data-testid="lead-form"]', '0005-ac41-en.png')
 })
 
-test('AC-27, AC-41, AC-42: izin metni, form ve RTL (AR)', async ({ page }) => {
+test('0005/AC-27, 0005/AC-41, 0005/AC-42: izin metni, form ve RTL (AR)', async ({ page }) => {
   await formaGit(page, 'ar')
 
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
@@ -57,7 +59,7 @@ test('AC-27, AC-41, AC-42: izin metni, form ve RTL (AR)', async ({ page }) => {
   await kanit(page, '[data-testid="lead-form"]', '0005-ac42.png')
 })
 
-test('AC-11: rezerve ilanda form kapalı', async ({ page }) => {
+test('0005/AC-11: rezerve ilanda form kapalı', async ({ page }) => {
   const slug = await ilkSlug(page)
 
   await page.route(`**/api/catalog/showcase-listings/${slug}*`, async (route) => {
@@ -70,7 +72,7 @@ test('AC-11: rezerve ilanda form kapalı', async ({ page }) => {
   await kanit(page, '[data-testid="lead-closed"]', '0005-ac11.png')
 })
 
-test('AC-36: gönderim sırasında yükleniyor hâli', async ({ page }) => {
+test('0005/AC-36: gönderim sırasında yükleniyor hâli', async ({ page }) => {
   await formaGit(page, 'tr')
 
   // Yanıt bilerek geciktiriliyor: yükleniyor hâli ancak açıkken görüntülenebilir.
@@ -87,7 +89,7 @@ test('AC-36: gönderim sırasında yükleniyor hâli', async ({ page }) => {
   await kanit(page, '[data-testid="lead-form"]', '0005-ac36.png')
 })
 
-test('AC-37: talebin alındığı bildirilir', async ({ page }) => {
+test('0005/AC-37: talebin alındığı bildirilir', async ({ page }) => {
   await formaGit(page, 'tr')
 
   await page.route('**/api/leads', async (route) => {
@@ -102,7 +104,7 @@ test('AC-37: talebin alındığı bildirilir', async ({ page }) => {
   await kanit(page, '[data-testid="lead-success"]', '0005-ac37.png')
 })
 
-test('AC-38: hata durumu, tekrar dene ve korunan bilgiler', async ({ page }) => {
+test('0005/AC-38: hata durumu, tekrar dene ve korunan bilgiler', async ({ page }) => {
   await formaGit(page, 'tr')
 
   await page.route('**/api/leads', async (route) => {
@@ -117,7 +119,9 @@ test('AC-38: hata durumu, tekrar dene ve korunan bilgiler', async ({ page }) => 
   await kanit(page, '[data-testid="lead-form"]', '0005-ac38.png')
 })
 
-test('AC-15: ilan vitrinden düştüğünde bilgiler kalır, listeye dönme sunulur', async ({ page }) => {
+test('0005/AC-15: ilan vitrinden düştüğünde bilgiler kalır, listeye dönme sunulur', async ({
+  page,
+}) => {
   await formaGit(page, 'tr')
 
   await page.route('**/api/leads', async (route) => {
@@ -137,7 +141,7 @@ test('AC-15: ilan vitrinden düştüğünde bilgiler kalır, listeye dönme sunu
   await kanit(page, '[data-testid="lead-form"]', '0005-ac15.png')
 })
 
-test('AC-40: doğrulama hatası olan alan işaretlenir', async ({ page }) => {
+test('0005/AC-40: doğrulama hatası olan alan işaretlenir', async ({ page }) => {
   await formaGit(page, 'tr')
 
   await page.getByTestId('lead-form').getByLabel(ETIKET.tr.ad).fill('Ayşe Yılmaz')

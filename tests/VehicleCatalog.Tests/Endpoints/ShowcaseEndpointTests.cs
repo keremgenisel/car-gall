@@ -8,7 +8,7 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Endpoints;
 [Collection(ShowcaseDatabaseCollection.Name)]
 public sealed class ShowcaseEndpointTests(ShowcaseDatabase database)
 {
-    [Fact(DisplayName = "AC-15: Son sayfanın ötesinde bir sayfa istendiğinde API 200 ve ilk sayfanın içeriğini döner; 4xx dönmez")]
+    [Fact(DisplayName = "0001/AC-15: Son sayfanın ötesinde bir sayfa istendiğinde API 200 ve ilk sayfanın içeriğini döner; 4xx dönmez")]
     public async Task Doner200VeIlkSayfa_SonSayfaOtesiIstendiginde()
     {
         await database.ResetAsync();
@@ -23,7 +23,7 @@ public sealed class ShowcaseEndpointTests(ShowcaseDatabase database)
         Assert.Equal(await ReadIdsAsync(ilkSayfa), await ReadIdsAsync(otesi));
     }
 
-    [Theory(DisplayName = "AC-16: Sayfa numarası olarak 0, negatif bir sayı veya sayı olmayan bir değer istendiğinde liste ilk sayfayı gösterir, API 200 döner ve ziyaretçiye hata metni gösterilmez")]
+    [Theory(DisplayName = "0001/AC-16: Sayfa numarası olarak 0, negatif bir sayı veya sayı olmayan bir değer istendiğinde liste ilk sayfayı gösterir, API 200 döner ve ziyaretçiye hata metni gösterilmez")]
     [InlineData("0")]
     [InlineData("-3")]
     [InlineData("abc")]
@@ -43,7 +43,7 @@ public sealed class ShowcaseEndpointTests(ShowcaseDatabase database)
         Assert.DoesNotContain("error", body, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact(DisplayName = "AC-17: ?bodyType=SUV&bodyType=sedan isteği yalnızca sedan ile daraltır")]
+    [Fact(DisplayName = "0001/AC-17: ?bodyType=SUV&bodyType=sedan isteği yalnızca sedan ile daraltır")]
     public async Task YalnizTaninanDegerleDaraltir_KarisikKasaTipiIsteginde()
     {
         await database.ResetAsync();
@@ -60,7 +60,7 @@ public sealed class ShowcaseEndpointTests(ShowcaseDatabase database)
         Assert.Equal(4, await ReadTotalCountAsync(response));
     }
 
-    [Fact(DisplayName = "AC-23: Liste yanıtı şase, plaka ve iç notlar alanlarını hiç içermez; bu alanlar boş değer olarak da bulunmaz")]
+    [Fact(DisplayName = "0001/AC-23: Liste yanıtı şase, plaka ve iç notlar alanlarını hiç içermez; bu alanlar boş değer olarak da bulunmaz")]
     public async Task Bulunmaz_SaseVePlakaVeIcNotlar_YanitAnahtarlarinda()
     {
         await database.ResetAsync();
@@ -75,7 +75,7 @@ public sealed class ShowcaseEndpointTests(ShowcaseDatabase database)
         }
     }
 
-    [Fact(DisplayName = "AC-24: Gizli işaretli bir opsiyonel alan liste yanıtında hiç bulunmaz — boş değer olarak da bulunmaz — ve daraltma ekseni olarak da sunulmaz; gizleme VehicleCatalog'un sorgu tarafında uygulanır")]
+    [Fact(DisplayName = "0001/AC-24: Gizli işaretli bir opsiyonel alan liste yanıtında hiç bulunmaz — boş değer olarak da bulunmaz — ve daraltma ekseni olarak da sunulmaz; gizleme VehicleCatalog'un sorgu tarafında uygulanır")]
     public async Task YanitSekliSabittir_YalnizKartAlanlari()
     {
         await database.ResetAsync();

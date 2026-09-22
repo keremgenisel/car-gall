@@ -5,7 +5,7 @@ namespace CarGallery.Modules.Leads.Tests.Domain;
 
 public sealed class DegerTipiTests
 {
-    [Theory(DisplayName = "AC-4: E.164 biçiminde olmayan bir telefon numarasıyla talep kaydedilmez")]
+    [Theory(DisplayName = "0005/AC-4: E.164 biçiminde olmayan bir telefon numarasıyla talep kaydedilmez")]
     [InlineData("05321112233")]
     [InlineData("+0532111223")]
     [InlineData("+90 532 111 22 33")]
@@ -19,7 +19,7 @@ public sealed class DegerTipiTests
         Assert.Equal(LeadErrors.InvalidPhone, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-4: E.164 biçiminde olmayan bir telefon numarasıyla talep kaydedilmez")]
+    [Fact(DisplayName = "0005/AC-4: E.164 biçiminde olmayan bir telefon numarasıyla talep kaydedilmez")]
     public void Kaydedilir_TelefonE164Ise()
     {
         Result<Lead> sonuc = new LeadBuilder().Telefon("+905321112233").Olustur();
@@ -28,7 +28,7 @@ public sealed class DegerTipiTests
         Assert.Equal("+905321112233", sonuc.Value.Contact.Phone);
     }
 
-    [Theory(DisplayName = "AC-5: Geçerli biçimde olmayan bir e-posta ile talep kaydedilmez")]
+    [Theory(DisplayName = "0005/AC-5: Geçerli biçimde olmayan bir e-posta ile talep kaydedilmez")]
     [InlineData("ayse")]
     [InlineData("ayse@")]
     [InlineData("@ornek.com")]
@@ -43,7 +43,7 @@ public sealed class DegerTipiTests
         Assert.Equal(LeadErrors.InvalidEmail, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-5: Geçerli biçimde olmayan bir e-posta ile talep kaydedilmez")]
+    [Fact(DisplayName = "0005/AC-5: Geçerli biçimde olmayan bir e-posta ile talep kaydedilmez")]
     public void Kaydedilir_YalnizcaEpostaVerildiginde()
     {
         Result<Lead> sonuc = new LeadBuilder().Telefon(null).Eposta("ayse@ornek.com").Olustur();
@@ -53,7 +53,7 @@ public sealed class DegerTipiTests
         Assert.Null(sonuc.Value.Contact.Phone);
     }
 
-    [Fact(DisplayName = "AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
+    [Fact(DisplayName = "0005/AC-21: Fiyatı \"fiyat sorunuz\" olan bir araç için bırakılan talebin anlık görüntüsü \"fiyat sorunuz\" durumunu taşır; tutar `0` olarak kopyalanmaz")]
     public void KopyalanmazSifir_FiyatSorunuzAracinda()
     {
         VehicleSnapshot anlikGoruntu = LeadBuilder.FiyatSorunuzAnlikGoruntusu();
@@ -65,7 +65,7 @@ public sealed class DegerTipiTests
         Assert.True(anlikGoruntu.ReadPrice().IsOnRequest);
     }
 
-    [Fact(DisplayName = "AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0005/AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
     public void UcOndalikTasir_KwdTutari()
     {
         VehicleSnapshot anlikGoruntu = LeadBuilder.KuveytAnlikGoruntusu();
@@ -81,7 +81,7 @@ public sealed class DegerTipiTests
     /// yalnız niyeti gösterir. Bu yüzden aynı kriter için üçüncü ondalığı SIFIR OLMAYAN
     /// bir tutarla ikinci bir test var: kesme burada, yalnız burada görünür.
     /// </summary>
-    [Fact(DisplayName = "AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0005/AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
     public void KesilmezVeYuvarlanmaz_UcuncuOndaligiSifirOlmayanKwdTutari()
     {
         VehicleSnapshot anlikGoruntu = VehicleSnapshot.Create(
@@ -94,7 +94,7 @@ public sealed class DegerTipiTests
         Assert.NotEqual(1250.51m, anlikGoruntu.PriceAmount);
     }
 
-    [Fact(DisplayName = "AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
+    [Fact(DisplayName = "0005/AC-22: Kurulum para birimi KWD iken `1250,500` tutarlı bir araç için bırakılan talebin anlık görüntüsü tutarı üç ondalıkla saklar; yuvarlama veya kesme yapılmaz")]
     public void Kurulamaz_UssuAsanHassasiyetliKwdTutari()
     {
         Result<Money> sonuc = Money.Create(1250.5051m, "KWD", 3);

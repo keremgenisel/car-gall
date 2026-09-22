@@ -5,7 +5,7 @@ namespace CarGallery.Modules.Identity.Tests.Domain;
 
 public sealed class GirisKimligiTests
 {
-    [Fact(DisplayName = "AC-11: `Ali@x.com` kimliğiyle eklenen personel `ali@x.com` yazarak giriş yapar")]
+    [Fact(DisplayName = "0006/AC-11: `Ali@x.com` kimliğiyle eklenen personel `ali@x.com` yazarak giriş yapar")]
     public void EslesirNormalizeDeger_FarkliBuyukKucukHarfle()
     {
         LoginId eklenen = LoginId.Create("Ali@x.com").Value;
@@ -15,7 +15,7 @@ public sealed class GirisKimligiTests
         Assert.Equal(eklenen.Normalized, girilen.Normalized);
     }
 
-    [Fact(DisplayName = "AC-12: `Ali@x.com` kayıtlıyken `ali@x.com` ile ikinci bir personel eklenemez")]
+    [Fact(DisplayName = "0006/AC-12: `Ali@x.com` kayıtlıyken `ali@x.com` ile ikinci bir personel eklenemez")]
     public void AyniNormalizeDeger_IkiYazimIcin()
     {
         Assert.Equal(
@@ -29,7 +29,7 @@ public sealed class GirisKimligiTests
     /// `ali@x.com` ayrı hesaplara düşer. Bedeli bir liste hatası değil, İKİ KİŞİNİN AYNI
     /// HESABA DÜŞMESİDİR (Yasak Listesi 27, Tuzak 9).
     /// </summary>
-    [Fact(DisplayName = "AC-13: `İ` içeren bir giriş kimliği kendi yazımıyla eşleşir ve `i` içeren başka bir hesaba düşmez")]
+    [Fact(DisplayName = "0006/AC-13: `İ` içeren bir giriş kimliği kendi yazımıyla eşleşir ve `i` içeren başka bir hesaba düşmez")]
     public void Karismaz_TurkceNoktaliBuyukI()
     {
         LoginId noktali = LoginId.Create("İsmail@x.com").Value;
@@ -42,7 +42,7 @@ public sealed class GirisKimligiTests
         Assert.Equal(noktali.Normalized, LoginId.Create("İSMAIL@x.com").Value.Normalized);
     }
 
-    [Fact(DisplayName = "AC-13: `İ` içeren bir giriş kimliği kendi yazımıyla eşleşir ve `i` içeren başka bir hesaba düşmez")]
+    [Fact(DisplayName = "0006/AC-13: `İ` içeren bir giriş kimliği kendi yazımıyla eşleşir ve `i` içeren başka bir hesaba düşmez")]
     public void Karismaz_TurkceNoktasizKucukI()
     {
         // `I`nın kültüre duyarsız küçüğü `i`dir; Türkçe kültürde `ı` olurdu ve
@@ -56,7 +56,7 @@ public sealed class GirisKimligiTests
             LoginId.Create("ali@x.com").Value.Normalized);
     }
 
-    [Theory(DisplayName = "AC-14: Geçerli biçimde olmayan bir e-posta ile personel eklenemez")]
+    [Theory(DisplayName = "0006/AC-14: Geçerli biçimde olmayan bir e-posta ile personel eklenemez")]
     [InlineData("ayse")]
     [InlineData("ayse@")]
     [InlineData("@ornek.com")]
@@ -73,7 +73,7 @@ public sealed class GirisKimligiTests
         Assert.Equal(IdentityErrors.InvalidLoginId, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "AC-14: Geçerli biçimde olmayan bir e-posta ile personel eklenemez")]
+    [Fact(DisplayName = "0006/AC-14: Geçerli biçimde olmayan bir e-posta ile personel eklenemez")]
     public void Reddedilir_UstSiniriAsanKimlik()
     {
         Result<LoginId> sonuc = LoginId.Create($"{new string('a', 250)}@ornek.com");

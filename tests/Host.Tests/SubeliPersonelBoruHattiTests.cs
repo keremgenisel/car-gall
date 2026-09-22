@@ -74,7 +74,7 @@ public sealed class SubeliPersonelBoruHattiTests : IAsyncLifetime
         await container.DisposeAsync();
     }
 
-    [Fact(DisplayName = "AC-38: Var olmayan şubeyle personel eklenemez — gerçek Dealership doğrulaması, sahte doğrulayıcı olmadan")]
+    [Fact(DisplayName = "0006/AC-38: Var olmayan şubeyle personel eklenemez — gerçek Dealership doğrulaması, sahte doğrulayıcı olmadan")]
     public async Task Reddedilir_VarOlmayanSubeyle_GercekBoruHattinda()
     {
         HttpClient client = await GirisYapmisIstemciAsync();
@@ -93,7 +93,7 @@ public sealed class SubeliPersonelBoruHattiTests : IAsyncLifetime
         Assert.Equal("branchId", govde.GetProperty("field").GetString());
     }
 
-    [Fact(DisplayName = "AC-38: Gerçekten var olan bir şubeyle personel eklenir — Host `dealership` şemasını uyguluyor")]
+    [Fact(DisplayName = "0006/AC-38: Gerçekten var olan bir şubeyle personel eklenir — Host `dealership` şemasını uyguluyor")]
     public async Task Eklenir_SeedEdilmisSubeyle_GercekBoruHattinda()
     {
         HttpClient client = await GirisYapmisIstemciAsync();
@@ -107,7 +107,7 @@ public sealed class SubeliPersonelBoruHattiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Created, yanit.StatusCode);
     }
 
-    [Fact(DisplayName = "AC-39: Şube verilmeyen personel eklenebilir; doğrulama yalnız şube verildiğinde çalışır")]
+    [Fact(DisplayName = "0006/AC-39: Şube verilmeyen personel eklenebilir; doğrulama yalnız şube verildiğinde çalışır")]
     public async Task Eklenir_Subesiz_GercekBoruHattinda()
     {
         HttpClient client = await GirisYapmisIstemciAsync();

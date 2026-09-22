@@ -15,7 +15,7 @@ namespace CarGallery.Host.Tests;
 /// </summary>
 public sealed class KurulumTests
 {
-    [Fact(DisplayName = "AC-53: Başlangıç Yönetici parolası dağıtım yapılandırmasında yokken uygulama başlamaz; üretilmiş bir varsayılan parolayla açılmaz")]
+    [Fact(DisplayName = "0006/AC-53: Başlangıç Yönetici parolası dağıtım yapılandırmasında yokken uygulama başlamaz; üretilmiş bir varsayılan parolayla açılmaz")]
     public void Baslamaz_BaslangicParolasiYokken()
     {
         using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>()
@@ -31,7 +31,7 @@ public sealed class KurulumTests
         Assert.Contains("SeedAdmin", hata.Message, StringComparison.Ordinal);
     }
 
-    [Fact(DisplayName = "AC-53: Başlangıç Yönetici parolası dağıtım yapılandırmasında yokken uygulama başlamaz; üretilmiş bir varsayılan parolayla açılmaz")]
+    [Fact(DisplayName = "0006/AC-53: Başlangıç Yönetici parolası dağıtım yapılandırmasında yokken uygulama başlamaz; üretilmiş bir varsayılan parolayla açılmaz")]
     public void IcermezVarsayilanParola_Yapilandirma()
     {
         string appsettings = File.ReadAllText(

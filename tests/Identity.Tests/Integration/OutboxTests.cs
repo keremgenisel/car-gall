@@ -17,7 +17,7 @@ namespace CarGallery.Modules.Identity.Tests.Integration;
 [Collection(IdentityDatabaseCollection.Name)]
 public sealed class OutboxTests(IdentityDatabase database)
 {
-    [Fact(DisplayName = "AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
+    [Fact(DisplayName = "0006/AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
     public async Task Yazilir_StaffDeactivated_PersonelKimligiyle()
     {
         IdentityHarness harness = await KurAsync();
@@ -35,7 +35,7 @@ public sealed class OutboxTests(IdentityDatabase database)
         Assert.Equal(personelId, duyuru.StaffId);
     }
 
-    [Fact(DisplayName = "AC-49: Üretilen her duyuru benzersiz bir duyuru kimliği taşır")]
+    [Fact(DisplayName = "0006/AC-49: Üretilen her duyuru benzersiz bir duyuru kimliği taşır")]
     public async Task Benzersiz_DuyuruKimligi()
     {
         IdentityHarness harness = await KurAsync();
@@ -67,7 +67,7 @@ public sealed class OutboxTests(IdentityDatabase database)
     /// Yönetici korumasının işi bitirmeden reddetmesiyle canlandırılıyor: hiçbir şey
     /// kaydedilmediği için outbox da boş kalır.
     /// </summary>
-    [Fact(DisplayName = "AC-48: Personel değişikliği kaydedildiğinde duyurusu da kaydedilmiştir; değişiklik geri alındığında kaydedilmiş bir duyuru kalmaz")]
+    [Fact(DisplayName = "0006/AC-48: Personel değişikliği kaydedildiğinde duyurusu da kaydedilmiştir; değişiklik geri alındığında kaydedilmiş bir duyuru kalmaz")]
     public async Task Kalmaz_Duyuru_DegisiklikGeriAlindiginda()
     {
         IdentityHarness harness = await KurAsync();
@@ -85,7 +85,7 @@ public sealed class OutboxTests(IdentityDatabase database)
             (await context.Staff.SingleAsync(staff => staff.Id == new StaffId(yoneticiId))).Status);
     }
 
-    [Fact(DisplayName = "AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
+    [Fact(DisplayName = "0006/AC-47: Bir personel pasifleştirildiğinde `StaffDeactivated` duyurusu üretilir ve personelin kimliğini taşır")]
     public async Task TasimazKisiselVeri_OutboxGovdesi()
     {
         IdentityHarness harness = await KurAsync();
