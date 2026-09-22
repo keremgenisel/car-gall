@@ -167,7 +167,34 @@ kayıt ve istatistik korunur.
 **L7.** İletişim izni (`ConsentGiven`) talep anında kaydedilir. İzin yoksa pazarlama
 bildirimi gönderilmez; yalnızca talebin kendisine dair işlemsel bildirim gönderilir.
 
-### 2.5 Takas
+### 2.5 Personel ve Kimlik
+
+**S1.** Galeride her zaman **en az bir aktif Yönetici** bulunur. Son aktif Yönetici
+pasifleştirilemez ve rolü düşürülemez. *(**B5**'in kimlik tarafındaki karşılığıdır: son
+aktif şube kapatılamazsa, son aktif Yönetici de düşürülemez — aksi hâlde galeri
+yönetilemez hâle gelir.)*
+**"Aktif" durumu aktif olmak demektir**; geçici kilitlenme aktifliği etkilemez. Bir
+Yönetici kendi hesabını pasifleştirebilir ve kendi rolünü düşürebilir — son aktif
+Yönetici olmadığı sürece.
+
+**S2.** Giriş kimliği **kültüre duyarsız** biçimde küçük harfe normalize edilerek
+saklanır; tekillik bu normalize değer üzerinden kurulur. *(Türkçe collation altında
+`lower()` `I → ı` üretir; bedeli bir liste hatası değil, iki kişinin aynı hesaba
+düşmesidir — Yasak Listesi 27.)*
+
+**S3.** Başarısız her giriş denemesi **ayırt edilemez** bir karşılık üretir: kimliğin
+kayıtlı olup olmadığı, parolanın yanlış olduğu, hesabın pasif olduğu veya hesabın
+kilitli olduğu bilgisi sızmaz. Ayırt edilemezlik **tüm yanıt yüzeyinde** geçerlidir —
+kilitlenme kanalı dâhil.
+
+**S4.** Hesabın durumu ve rolü **her istekte kaynaktan** doğrulanır. Pasifleştirme, rol
+değişikliği ve parola değişikliği bir sonraki istekte etkilidir; oturumun kalan süresi
+bunu geciktiremez.
+
+**S5.** Parola değiştiğinde o personelin **tüm** oturumları geçersizleşir. Çıkış ise
+yalnızca **o cihazın** oturumunu kapatır.
+
+### 2.6 Takas
 
 **T1.** Takas bir **talep tipidir**, ayrı bir varlık değildir. Müşterinin aracı
 `VehicleReference` sözlüğünden seçilir; galerinin stoğuna girmez.
@@ -177,7 +204,7 @@ bildirimi gönderilmez; yalnızca talebin kendisine dair işlemsel bildirim gön
 **T3.** Takasa konu araç galeriye alınırsa, bu **ayrı bir araç kaydı** olarak elle açılır.
 Talepten araç kaydına otomatik dönüşüm yoktur.
 
-### 2.6 Kampanya *(kupon kavramının bu projedeki karşılığı)*
+### 2.7 Kampanya *(kupon kavramının bu projedeki karşılığı)*
 
 **K1.** Kampanya bir **duyurudur**, hesaplanan bir indirim değildir. Fiyatı değiştirmez.
 
@@ -193,7 +220,7 @@ kampanya o araç için otomatik geçersizleşir.
 **K5.** İndirim uygulanacaksa **fiyat düşürülür** (ve fiyat geçmişine yazılır, A6).
 Sistemde "indirim kodu", "kupon" veya hesaplanan indirim mekanizması yoktur.
 
-### 2.7 Şube ve Çalışma Saatleri
+### 2.8 Şube ve Çalışma Saatleri
 
 **B1.** Bir şubenin çalışma programı **gün başına 0..N zaman aralığı** taşır.
 Tek açılış/kapanış varsayımı yapılmaz (çift mesai yaygındır).
@@ -208,7 +235,7 @@ ezer.
 
 **B5.** Bir galerinin en az bir şubesi vardır. Son aktif şube kapatılamaz.
 
-### 2.8 Para ve Fiyat
+### 2.9 Para ve Fiyat
 
 **P1.** Tüm para ve yüzde alanları `decimal`'dir. `double`/`float` kullanılmaz.
 
