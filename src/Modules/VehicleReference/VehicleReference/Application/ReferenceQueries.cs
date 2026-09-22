@@ -50,6 +50,27 @@ internal sealed class VehicleModelQueries(VehicleReferenceDbContext context) : I
             model => model.Translations.FirstOrDefault(translation => translation.Locale == locale)?.Name
                 ?? model.CanonicalName);
     }
+
+    /// <summary>
+    /// Çevirilere HİÇ bakmaz. `Include` da yapmaz: kanonik ad modelin kendi kolonundadır
+    /// ve çeviri satırlarını okumak burada yalnız maliyet olurdu.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<Guid, string>> ResolveCanonicalNamesAsync(
+        IReadOnlyCollection<Guid> vehicleModelIds,
+        CancellationToken cancellationToken)
+    {
+        if (vehicleModelIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        List<VehicleModel> models = await context.VehicleModels
+            .AsNoTracking()
+            .Where(model => vehicleModelIds.Contains(model.Id))
+            .ToListAsync(cancellationToken);
+
+        return models.ToDictionary(model => model.Id, model => model.CanonicalName);
+    }
 }
 
 internal sealed class ReferenceTermQueries(VehicleReferenceDbContext context) : IReferenceTermQueries
