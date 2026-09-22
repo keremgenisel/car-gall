@@ -83,6 +83,78 @@ public sealed partial class MigrationSchemaTests
             $"DbContext taşıyan modülün migration zinciri olmalıdır:{Environment.NewLine}{string.Join(Environment.NewLine, missing)}");
     }
 
+    /// <summary>
+    /// Migration zincirinin VAR olması yetmez; birinin onu UYGULAMASI gerekir.
+    ///
+    /// İki kaçan hata bu boşluktan çıktı (`specs/done/SCORECARD-ANALIZ.md` § Bulgu 3):
+    /// `Dealership`'in `MigrateDealershipAsync`'i tanımlıydı ama hiçbir yerden
+    /// çağrılmıyordu; `VehicleCatalog` ve `VehicleReference` şemaları yalnız bir
+    /// geliştirme bayrağıyla uygulanıyordu. İkisi de var olan her testi geçiyordu,
+    /// çünkü hiçbir test "bu yol gerçekten koşuluyor mu" diye sormuyordu.
+    ///
+    /// Tespit BİLEREK dar: yalnız somut modül `DbContext`'leri ve yalnız
+    /// `ModuleSchema&lt;TContext&gt;` kaydı aranır. `0003`'ün regresyonu, fazla geniş bir
+    /// tespitin arayüz dosyalarını da modül sanmasından doğmuştu.
+    /// </summary>
+    [Fact(DisplayName = "Kurulum adımına kayıtsız modül DbContext'i bulunamaz")]
+    public void KurulumAdiminaKayitlidir_HerModulDbContexti()
+    {
+        List<string> unregistered = [];
+        IReadOnlyList<string> sources = SolutionLayout.SourceFiles();
+
+        foreach (string file in ModuleDbContextFiles(sources))
+        {
+            string contextType = Path.GetFileNameWithoutExtension(file);
+            string moduleRoot = Path.GetDirectoryName(Path.GetDirectoryName(file))!;
+            string kayit = $"ModuleSchema<{contextType}>";
+
+            bool registered = sources
+                .Where(candidate => candidate.StartsWith(moduleRoot, StringComparison.Ordinal))
+                .Any(candidate => File.ReadAllText(candidate).Contains(kayit, StringComparison.Ordinal));
+
+            if (!registered)
+            {
+                unregistered.Add($"{SolutionLayout.Relative(file)} → {kayit} kaydı yok");
+            }
+        }
+
+        Assert.True(
+            unregistered.Count == 0,
+            "Migration zinciri olan her modül IModuleSchema kaydetmelidir; aksi hâlde kurulum "
+            + "adımı o şemayı hiç uygulamaz ve eksiklik yalnız ilk sorguda görünür "
+            + $"(docs/decisions/0002):{Environment.NewLine}{string.Join(Environment.NewLine, unregistered)}");
+    }
+
+    /// <summary>
+    /// Somut modül `DbContext` dosyaları. Arayüz dosyaları (`IOutboxDbContext`) ve
+    /// `BuildingBlocks` altyapısı hariç — ikisi de migration taşımaz.
+    /// </summary>
+    private static IEnumerable<string> ModuleDbContextFiles(IReadOnlyList<string> sources)
+    {
+        foreach (string file in sources)
+        {
+            string fileName = Path.GetFileName(file);
+
+            if (!fileName.EndsWith("DbContext.cs", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (fileName.Length > 1 && fileName[0] == 'I' && char.IsUpper(fileName[1]))
+            {
+                continue;
+            }
+
+            if (!SolutionLayout.IsModuleProject(file)
+                && !SolutionLayout.Relative(file).StartsWith("src/Modules/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            yield return file;
+        }
+    }
+
     private static string ToSnakeCase(string pascalCase)
     {
         StringBuilder builder = new();
