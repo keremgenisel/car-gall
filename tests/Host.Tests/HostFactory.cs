@@ -9,10 +9,12 @@ namespace CarGallery.Host.Tests;
 /// enjeksiyonunu doğrular, paketlenmiş bundle'ı değil; bu yüzden sabit bir test kökü
 /// kullanırlar ve frontend'in derlenmiş olmasına bağımlı DEĞİLLERDİR.
 ///
-/// Veritabanı GEREKLİ: uygulama artık başlangıçta şemanın güncel olduğunu doğruluyor ve
-/// eksikse açıkça reddediyor (docs/decisions/0002). Bu doğrulamayı teste özel bir
-/// bayrakla atlamak, üretimde atlanabilecek bir yol açardı — testin veritabanı alması
-/// daha ucuz.
+/// Veritabanı GEREKLİ ve bunun iki ayrı sebebi var:
+/// (1) uygulama başlangıçta şemanın güncel olduğunu doğruluyor ve eksikse açıkça
+/// reddediyor (docs/decisions/0002); (2) kurulum Yönetici hesabı garanti ediliyor,
+/// aksi hâlde hiç kimse giriş yapamaz ve sistem kalıcı olarak kapalı kalır (0006/D2).
+/// İkisini de teste özel bir bayrakla atlamak, üretimde atlanabilecek bir yol açardı —
+/// testin veritabanı alması daha ucuz.
 /// </summary>
 public sealed class HostFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -38,5 +40,6 @@ public sealed class HostFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
         builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
+        IdentityTestSettings.Apply(builder);
     }
 }

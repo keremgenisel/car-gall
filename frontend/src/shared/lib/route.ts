@@ -8,7 +8,19 @@ import { isAppLocale, type AppLocale } from './locale'
  */
 export const LISTING_SEGMENT = 'cars'
 
-export type Route = { readonly kind: 'list' } | { readonly kind: 'detail'; readonly slug: string }
+/**
+ * Yönetim panelinin kökü (0006 C13: ayrı bir uygulama değil, aynı Vite uygulamasında
+ * `/admin` rota ağacı, lazy-load). Locale ÖNEKİ TAŞIMAZ: panelin dili URL'den değil
+ * personelin tercihinden gelir (0006 R16) ve sunucu `<html lang>` ile basar.
+ */
+export const ADMIN_SEGMENT = 'admin'
+
+export type AdminView = 'staff' | 'password'
+
+export type Route =
+  | { readonly kind: 'list' }
+  | { readonly kind: 'detail'; readonly slug: string }
+  | { readonly kind: 'admin'; readonly view: AdminView }
 
 /**
  * Rota adresten okunur; router kütüphanesi yoktur (0001'den gelen yapı).
@@ -21,6 +33,11 @@ export function parseRoute(pathname: string): Route {
   const [localeSegment, sectionSegment, slugSegment] = pathname
     .split('/')
     .filter((segment) => segment.length > 0)
+
+  // Panel locale önekinin DIŞINDADIR; bu dal locale kontrolünden önce gelmek zorunda.
+  if (localeSegment === ADMIN_SEGMENT) {
+    return { kind: 'admin', view: sectionSegment === 'password' ? 'password' : 'staff' }
+  }
 
   if (localeSegment === undefined || !isAppLocale(localeSegment)) {
     return { kind: 'list' }
@@ -36,4 +53,9 @@ export function parseRoute(pathname: string): Route {
 /** Karttan detaya giden adres (AC-2, AC-4). */
 export function listingPath(locale: AppLocale, slug: string): string {
   return `/${locale}/${LISTING_SEGMENT}/${encodeURIComponent(slug)}`
+}
+
+/** Panel içindeki adres. Giriş ekranının ayrı bir adresi yoktur: oturumsuz `/admin` odur. */
+export function adminPath(view: AdminView = 'staff'): string {
+  return view === 'staff' ? `/${ADMIN_SEGMENT}` : `/${ADMIN_SEGMENT}/${view}`
 }

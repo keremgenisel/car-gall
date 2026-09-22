@@ -16,6 +16,11 @@
   --color-accent: #1f5fd0;
   --color-border: #d9dde4;
 
+  /* Doğrulama ve hata. Renk TEK BAŞINA anlam taşımaz (docs/frontend.md § 7): hatalı
+     alan ayrıca metinle ve `aria-invalid` ile anlatılır. */
+  --color-danger: #a4231f;
+  --color-danger-surface: #fdf1f0;
+
   /* --- Aralık --- (4px tabanlı ölçek) */
   --space-0: 0;
   --space-1: 2px;
@@ -55,4 +60,5 @@
   /* Daraltma çubuğunun ölçülmüş yüksekliği: legend + seçenek satırı + özet satırı.
      İskelet bu yüksekliği baştan tutar, yoksa çubuk belirince düzen kayar (CLS). */
   --filter-bar-min-block-size: 132px;
+  --form-control-min-block-size: 44px;
 }

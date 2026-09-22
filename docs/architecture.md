@@ -474,3 +474,4 @@ altındaki ADR'lerdedir.
 | Ekspertiz modeli | Türkiye modeli, alanlar yapılandırılabilir |
 | Coğrafi arama | PostGIS yok |
 | Şube bazlı yetki | Yok (V1) |
+| Personel oturumu | Sunucu tarafı opak oturum çerezi; JWT yok (rol ve durum her istekte kaynaktan) |

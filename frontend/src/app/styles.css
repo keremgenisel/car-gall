@@ -286,3 +286,151 @@ body {
 .listing-card__link:focus-visible {
   text-decoration: underline;
 }
+
+/* --- Yönetim paneli (0006) --- */
+
+.admin-shell {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100vh;
+}
+
+.admin-shell__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  padding-block: var(--space-5);
+  padding-inline: var(--space-6);
+  border-block-end: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.admin-shell__brand {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
+}
+
+.admin-shell__user {
+  margin-inline-start: auto;
+  color: var(--color-ink-muted);
+}
+
+.admin-shell__content {
+  flex: 1;
+}
+
+.admin-page {
+  max-inline-size: var(--layout-max-inline-size);
+  margin-inline: auto;
+  padding-block: var(--space-7);
+  padding-inline: var(--space-6);
+  display: grid;
+  gap: var(--space-7);
+}
+
+.admin-page--narrow {
+  max-inline-size: 30rem;
+}
+
+.admin-page__title {
+  margin-block: var(--space-0);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.admin-form {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.admin-form__title {
+  margin-block: var(--space-0) var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.admin-form__intro {
+  margin-block: var(--space-0) var(--space-6);
+  color: var(--color-ink-muted);
+}
+
+.admin-form__field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.admin-form__label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.admin-form__hint {
+  margin-block: var(--space-0);
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+.admin-form__control {
+  min-block-size: var(--form-control-min-block-size);
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
+
+.admin-form__control[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.admin-form__field-error {
+  margin-block: var(--space-0);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.admin-form__error,
+.admin-form__notice {
+  margin-block-end: var(--space-6);
+  padding-block: var(--space-5);
+  padding-inline: var(--space-6);
+  border: var(--border-width) solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-surface);
+}
+
+.admin-form__notice {
+  border-color: var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.admin-form__error-title {
+  margin-block: var(--space-0) var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.admin-form__error-body {
+  margin-block: var(--space-0);
+}
+
+.staff-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  text-align: start;
+}
+
+.staff-table th,
+.staff-table td {
+  padding-block: var(--space-5);
+  padding-inline: var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-border);
+  text-align: start;
+}
+
+.staff-table__row {
+  padding-block: var(--space-5);
+  border-block-end: var(--border-width) solid var(--color-border);
+}

@@ -67,3 +67,43 @@ export interface FieldSetting {
 export interface FieldSettings {
   readonly fields: readonly FieldSetting[]
 }
+
+/**
+ * Rol kodları backend sözleşmesinin kapalı kümesidir (0006 R2). Kod ÇEVRİLMEZ; görünen
+ * ad çeviri kataloğundan gelir (C7, Yasak Listesi 22).
+ */
+export const STAFF_ROLES = ['manager', 'sales_advisor', 'content_editor'] as const
+
+export type StaffRole = (typeof STAFF_ROLES)[number]
+
+export interface LoginRequest {
+  readonly loginId: string
+  readonly password: string
+}
+
+/** Oturum bilgisi. Token BULUNMAZ: o yalnız HttpOnly çerezde taşınır (C17, AC-29). */
+export interface CurrentSession {
+  readonly displayName: string
+  readonly role: StaffRole
+  readonly preferredLocale: string
+  readonly mustChangePassword: boolean
+}
+
+export interface StaffListItem {
+  readonly staffId: string
+  readonly displayName: string
+  readonly loginId: string
+  readonly role: StaffRole
+  readonly status: 'active' | 'deactivated'
+  readonly preferredLocale: string
+  readonly branchId: string | null
+}
+
+export interface AddStaffRequest {
+  readonly displayName: string
+  readonly loginId: string
+  readonly initialPassword: string
+  readonly role: StaffRole
+  readonly preferredLocale: string
+  readonly branchId: string | null
+}
