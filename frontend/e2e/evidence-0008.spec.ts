@@ -196,6 +196,15 @@ test('0008/AC-23: başarılı işlemden sonra kaydırma konumu korunur', async (
 
   const satir = await baskaSatirAsync(page)
 
+  /*
+   * Görünüm alanı KASTEN kısaltılıyor. İlk hâli sayfanın uzun olmasına güveniyordu ve
+   * benim geliştirme veritabanım birikmiş satırlarla uzundu; CI'ın temiz veritabanında
+   * tablo ekrana sığıyor, `scrollY` hiç sıfırdan çıkmıyor ve test "kaydırılamıyor" diye
+   * düşüyordu. Testin kaydırılabilir bir sayfaya ihtiyacı var ama o sayfanın KAÇ SATIR
+   * içerdiğine ihtiyacı yok (docs/testing.md § 4).
+   */
+  await page.setViewportSize({ width: 900, height: 300 })
+
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
   await satir.getByRole('button', { name: 'Pasifleştir' }).press('Enter')
   await expect(page.getByTestId('confirm-deactivate')).toBeVisible()
