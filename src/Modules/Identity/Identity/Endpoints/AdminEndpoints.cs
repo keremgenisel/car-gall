@@ -75,8 +75,15 @@ internal static class AdminEndpoints
             .Produces(StatusCodes.Status204NoContent);
     }
 
+    /// <summary>
+    /// 0008 D1 — yanıt personelin kimliğini taşır. Değer claim'den okunuyor; oturum zaten
+    /// doğrulanmış olduğu için ikinci bir sorgu gerekmiyor.
+    /// </summary>
     private static Ok<CurrentSessionResponse> GetCurrent(HttpContext httpContext) =>
         TypedResults.Ok(new CurrentSessionResponse(
+            Guid.TryParse(httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid staffId)
+                ? staffId
+                : Guid.Empty,
             httpContext.User.FindFirstValue(ClaimTypes.Name) ?? string.Empty,
             httpContext.User.FindFirstValue(ClaimTypes.Role) ?? string.Empty,
             httpContext.User.FindFirstValue(SessionAuthenticationHandler.PreferredLocaleClaim) ?? string.Empty,
