@@ -36,6 +36,20 @@ export const ACTION_ERROR_CODES: Readonly<Record<StaffAction, readonly string[]>
 }
 
 /**
+ * UÇ TARAFI doğrulama anahtarları — sunucu kodu DEĞİL.
+ *
+ * `ACTION_ERROR_CODES`'a eklenmiyorlar, çünkü o sabit "sunucunun gerçekten dönebileceği
+ * kodlar" demek ve bu ikisi hiçbir zaman sunucudan gelmiyor. Ama kataloğa girmeleri
+ * gerekiyor ve AC-27'nin kapısı onları da gezmeli: eksik anahtar KIRMIZI TEST ÜRETMİYOR,
+ * yalnız boş bir mesaj gösteriyor (Tuzak 4) ve `check:locales` üç katalogun birbirine
+ * eşitliğini ölçtüğü için üçünden birden silinen anahtarı göremiyor. Ölçüldü:
+ * `staff.password.error.required` üç katalogdan da silindiğinde bütün kapılar yeşil kaldı.
+ */
+export const CLIENT_ERROR_CODES: Readonly<Record<string, readonly string[]>> = {
+  password: ['required', 'mismatch'],
+}
+
+/**
  * Bir reddin ekrana yansıması.
  *
  * `refresh` ve `retryable` ayrı iki sorudur ve birlikte hareket etmezler:

@@ -42,11 +42,26 @@ export function StaffRowActions({
   const [password, setPassword] = useState({ value: '', confirmation: '' })
   const [fieldError, setFieldError] = useState<string | null>(null)
 
+  /**
+   * Seçili rol diyalog AÇILIRKEN prop'tan tazelenir.
+   *
+   * Mount anında bir kez alıp bırakmak yetmiyor: satır anahtarı `staffId` olduğu için
+   * tazeleme satırı yeniden MOUNT ETMİYOR, dolayısıyla state eski kalıyordu. Yönetici
+   * rolü değiştirip diyaloğu ikinci kez açtığında ekranda "İçerik Editörü" görüp
+   * diyalogda "Satış Danışmanı" seçili buluyordu — dokunmadan onaylamak, az önce
+   * yaptığı değişikliği sessizce geri alırdı.
+   *
+   * Diyalog ekranın parçası ve R6 tazelemeden sonra ekranın tutarlı kalmasını istiyor.
+   */
+  function openRole() {
+    setRole(member.role)
+    setOpen('role')
+  }
+
   function close() {
     setOpen(null)
     setFieldError(null)
     setPassword({ value: '', confirmation: '' })
-    setRole(member.role)
   }
 
   async function run(action: StaffAction, call: () => Promise<unknown>) {
@@ -108,7 +123,7 @@ export function StaffRowActions({
           variant="secondary"
           loading={busy('role')}
           disabled={pending !== null}
-          onClick={() => setOpen('role')}
+          onClick={openRole}
           data-testid={`role-${member.staffId}`}
         >
           {busy('role') ? t('staff.action.working') : t('staff.action.role')}

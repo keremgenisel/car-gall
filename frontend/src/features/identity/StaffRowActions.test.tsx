@@ -375,3 +375,44 @@ describe('0008/AC-33: Aynı personel başka biri tarafından zaten pasifleştiri
     await waitFor(() => expect(vi.mocked(fetchStaff).mock.calls.length).toBeGreaterThan(1))
   })
 })
+
+describe('0008/AC-8: Yönetici bir personelin rolünü değiştirdiğinde liste yeni rolü gösterir', () => {
+  /**
+   * Diyalog ekranın PARÇASI: tazelemeden sonra satırda görünen rol ile diyalogda seçili
+   * rol aynı olmalı (R6). Değilse Yönetici diyaloğu açıp dokunmadan onayladığında başka
+   * birinin yaptığı değişikliği sessizce geri alır.
+   *
+   * Senaryo rolü DIŞARIDAN değiştiriyor — kullanıcının kendi seçimiyle değil. Sebep
+   * ölçüldü: "kendi değiştirdi, yeniden açtı" senaryosu ayrım kurmuyor, çünkü diyalogda
+   * kalan state zaten kullanıcının seçtiği doğru değer. Hatayı ancak satırın rolü
+   * diyaloğa dokunulmadan değiştiğinde görebiliyoruz.
+   */
+  it('satırın rolü dışarıdan değiştiğinde diyalog GÜNCEL rolü seçili açar', async () => {
+    await ekran()
+    vi.mocked(deactivateStaff).mockResolvedValue(null)
+
+    // Tazeleme, o satırı farklı bir rolle geri getirecek.
+    vi.mocked(fetchStaff).mockResolvedValue([
+      LISTE[0]!,
+      { ...LISTE[1]!, role: 'content_editor' as const },
+    ])
+
+    // Rol diyaloğuna HİÇ dokunulmadan tazeleme tetikleniyor.
+    ac(`deactivate-${BASKASI}`)
+    ac('confirm-deactivate-submit')
+
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId(`role-${BASKASI}`).closest('tr')!).getByText('İçerik Editörü'),
+      ).not.toBeNull(),
+    )
+
+    ac(`role-${BASKASI}`)
+
+    const secili = within(screen.getByTestId('confirm-role')).getByLabelText(
+      'Rol',
+    ) as HTMLSelectElement
+
+    expect(secili.value).toBe('content_editor')
+  })
+})

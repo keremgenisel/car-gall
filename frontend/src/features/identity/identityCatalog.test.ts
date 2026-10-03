@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { catalogKeys, createTranslator } from '../../shared/i18n/i18n'
 import { STAFF_ROLES } from '../../shared/api/types'
 import type { AppLocale } from '../../shared/lib/locale'
-import { ACTION_ERROR_CODES, ACTION_PREFIX, type StaffAction } from './staffActionState'
+import {
+  ACTION_ERROR_CODES,
+  ACTION_PREFIX,
+  CLIENT_ERROR_CODES,
+  type StaffAction,
+} from './staffActionState'
 
 const LOCALES: readonly AppLocale[] = ['tr', 'ar', 'en']
 
@@ -156,6 +161,25 @@ describe('0008/AC-27: Üç eylemin her biri için anahtarlar TR, AR ve EN katalo
 
         expect(keys, `${locale}: ${key}`).toContain(key)
         expect(t(key, { name: 'Ayşe' }).trim(), `${locale}: ${key}`).not.toBe('')
+      }
+    }
+  })
+
+  /**
+   * Uç tarafı doğrulama anahtarları da kapının içinde. Dışarıda bırakıldıklarında
+   * `staff.password.error.required` üç katalogdan birden silinse bile hiçbir test
+   * görmüyordu — ölçüldü.
+   */
+  it.each(LOCALES)('%s: uç tarafı doğrulama anahtarları dolu', (locale) => {
+    const keys = catalogKeys(locale)
+    const t = createTranslator(locale)
+
+    for (const [action, codes] of Object.entries(CLIENT_ERROR_CODES)) {
+      for (const code of codes) {
+        const key = `${ACTION_PREFIX[action as StaffAction]}.${code}`
+
+        expect(keys, `${locale}: ${key}`).toContain(key)
+        expect(t(key).trim(), `${locale}: ${key}`).not.toBe('')
       }
     }
   })
