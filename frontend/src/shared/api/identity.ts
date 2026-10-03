@@ -57,3 +57,16 @@ export function changeStaffRole(
 export function deactivateStaff(staffId: string, locale: AppLocale): Promise<unknown> {
   return sendJson('POST', `${ADMIN}/staff/${staffId}/deactivate`, undefined, locale)
 }
+
+/**
+ * Parolayı YÖNETİCİ belirler; sistem üretmez (0008 D2). Uç gövdesiz `204` döner —
+ * gösterilecek bir parola yoktur ve `0006` C6 parolanın API yanıtında bulunmasını
+ * zaten yasaklıyor.
+ */
+export function resetStaffPassword(
+  staffId: string,
+  newPassword: string,
+  locale: AppLocale,
+): Promise<unknown> {
+  return sendJson('POST', `${ADMIN}/staff/${staffId}/password-reset`, { newPassword }, locale)
+}

@@ -96,9 +96,11 @@ kaybettirmez.
   |---|---|
   | `staff.deactivate.error` | `last_active_manager`, `already_deactivated`, `concurrency_lost`, `generic` |
   | `staff.role.error` | `last_active_manager`, `concurrency_lost`, `generic` |
-  | `staff.password.error` | `password_too_short`, `generic` |
+  | `staff.password.error` | `password_too_short`, `generic`, **`required`**, **`mismatch`** |
 
-  **11 anahtar × 3 dil = 33.** Parola sıfırlamada `concurrency_lost` **yoktur**: o uç
+  **11 anahtar × 3 dil = 33.** Son ikisi sunucu kodu değil, **uç tarafı doğrulama**
+  anahtarıdır: AC-12 eşleşmeyen parolanın hatasını alanda göstermeyi istiyor ve o mesajın
+  da kataloğu var. Parola sıfırlamada `concurrency_lost` **yoktur**: o uç
   `InvariantGuard`'dan geçmiyor ve kodu hiç üretemiyor — ulaşılamayan koda çeviri yazmak,
   ölü kodun katalog hâlidir (`0007`'de tek `concurrency.lost` kodunu aynı gerekçeyle
   seçmiştik). Buna karşılık `password_too_short` **zorunludur**: AC-14 onu ziyaretçinin

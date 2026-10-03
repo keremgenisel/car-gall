@@ -16,6 +16,7 @@ const { fetchCurrentSession, fetchStaff } = await import('../../shared/api/ident
 
 function oturum(overrides: Partial<CurrentSession> = {}): CurrentSession {
   return {
+    staffId: '0192c000-0000-7000-8000-00000000a001',
     displayName: 'Ayşe Yılmaz',
     role: 'manager',
     preferredLocale: 'tr',
