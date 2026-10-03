@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { catalogKeys, createTranslator } from '../../shared/i18n/i18n'
 import { STAFF_ROLES } from '../../shared/api/types'
 import type { AppLocale } from '../../shared/lib/locale'
+import { ACTION_ERROR_CODES, ACTION_PREFIX, type StaffAction } from './staffActionState'
 
 const LOCALES: readonly AppLocale[] = ['tr', 'ar', 'en']
 
@@ -141,4 +142,90 @@ describe('AC-61: Giriş ekranı ve personel yönetimi ekranındaki tüm metinler
     expect(t('staff.error.retry')).not.toBe('')
     expect(t('password.changed.action')).not.toBe('')
   })
+})
+
+describe('0008/AC-27: Üç eylemin her biri için anahtarlar TR, AR ve EN kataloglarında bulunur; hiçbir locale de çeviri anahtarı ham hâliyle görünmez', () => {
+  /** Tablo TEK KAYNAKTAN okunuyor; test sabit bir sayı saymıyor (C5). */
+  it.each(LOCALES)('%s: her eylemin her hata anahtarı dolu', (locale) => {
+    const keys = catalogKeys(locale)
+    const t = createTranslator(locale)
+
+    for (const [action, codes] of Object.entries(ACTION_ERROR_CODES)) {
+      for (const code of codes) {
+        const key = `${ACTION_PREFIX[action as StaffAction]}.${code}`
+
+        expect(keys, `${locale}: ${key}`).toContain(key)
+        expect(t(key, { name: 'Ayşe' }).trim(), `${locale}: ${key}`).not.toBe('')
+      }
+    }
+  })
+
+  it.each(LOCALES)('%s: onay kutusunun metinleri dolu', (locale) => {
+    const t = createTranslator(locale)
+
+    for (const key of [
+      'staff.column.actions',
+      'staff.action.deactivate',
+      'staff.action.role',
+      'staff.action.password',
+      'staff.action.self',
+      'staff.action.working',
+      'staff.confirm.cancel',
+      'staff.confirm.deactivate.title',
+      'staff.confirm.deactivate.submit',
+      'staff.confirm.deactivate.self',
+      'staff.confirm.role.title',
+      'staff.confirm.role.submit',
+      'staff.confirm.role.self',
+      'staff.confirm.password.title',
+      'staff.confirm.password.field.new',
+      'staff.confirm.password.field.confirm',
+      'staff.confirm.password.submit',
+    ]) {
+      expect(t(key, { name: 'Ayşe' }).trim(), `${locale}: ${key}`).not.toBe('')
+    }
+  })
+})
+
+describe('0008/AC-20: AC-18 ve AC-19`un metinleri birbirinden farklıdır ve hiçbiri hata kodunu, durum kodunu, `traceId`yi, endpoint yolunu veya istisna metnini içermez', () => {
+  it.each(LOCALES)('%s: iki red metni FARKLIDIR', (locale) => {
+    const t = createTranslator(locale)
+
+    for (const prefix of ['staff.deactivate.error', 'staff.role.error']) {
+      expect(t(`${prefix}.last_active_manager`)).not.toBe(t(`${prefix}.concurrency_lost`))
+    }
+  })
+
+  it.each(LOCALES)('%s: 0008`in metinlerinde teknik iz yok', (locale) => {
+    const t = createTranslator(locale)
+
+    for (const [action, codes] of Object.entries(ACTION_ERROR_CODES)) {
+      for (const code of codes) {
+        const metin = t(`${ACTION_PREFIX[action as StaffAction]}.${code}`)
+
+        for (const iz of TEKNIK_IZLER) {
+          expect(metin, `${locale}: ${action}.${code}`).not.toMatch(iz)
+        }
+      }
+    }
+  })
+
+  /**
+   * R5/AC-16'nın metin yarısı: kural gereği red KALICIDIR ve o kullanıcıya tekrar
+   * denemesi söylenirse sonsuza kadar denemesi söylenmiş olur.
+   */
+  it.each(LOCALES)(
+    '%s: kural gereği red tekrar denemeyi önermez, eşzamanlılık kaybı önerir',
+    (locale) => {
+      const t = createTranslator(locale)
+
+      for (const prefix of ['staff.deactivate.error', 'staff.role.error']) {
+        expect(t(`${prefix}.last_active_manager`)).not.toMatch(TEKRAR_DENE[locale])
+        expect(t(`${prefix}.concurrency_lost`)).toMatch(TEKRAR_DENE[locale])
+      }
+
+      // AC-33 — zaten pasifleştirilmiş de tekrar denemeyi önermez.
+      expect(t('staff.deactivate.error.already_deactivated')).not.toMatch(TEKRAR_DENE[locale])
+    },
+  )
 })

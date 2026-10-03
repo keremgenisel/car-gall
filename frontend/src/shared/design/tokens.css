@@ -21,6 +21,11 @@
   --color-danger: #a4231f;
   --color-danger-surface: #fdf1f0;
 
+  /* 0008 — vurgu yüzeyi ve modal arkaplanı. Arkaplan yarı saydam: altındaki tablo
+     görünür kalır ve ziyaretçi bağlamını kaybetmez. */
+  --color-accent-surface: #e8effb;
+  --color-backdrop: #16191d66;
+
   /* --- Aralık --- (4px tabanlı ölçek) */
   --space-0: 0;
   --space-1: 2px;
@@ -61,4 +66,9 @@
      İskelet bu yüksekliği baştan tutar, yoksa çubuk belirince düzen kayar (CLS). */
   --filter-bar-min-block-size: 132px;
   --form-control-min-block-size: 44px;
+
+  /* 0008 — onay kutusu. Genişlik okunabilir satır uzunluğunu aşmaz; katman sırası
+     tek yerde tanımlı olsun diye token. */
+  --size-dialog: 420px;
+  --z-dialog: 100;
 }

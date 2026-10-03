@@ -120,7 +120,7 @@ export function AdminApp() {
           AC-25/AC-26 onu orada sınıyor.
         */}
         {gate.session.role === 'manager' ? (
-          <StaffListPage />
+          <StaffListPage session={gate.session} />
         ) : (
           <div className="admin-page">
             <EmptyState

@@ -33,7 +33,9 @@ describe('0008/AC-19: `concurrency.lost` döndüğünde ekran eşzamanlılık me
 
 describe('0008/AC-24: Kural gereği reddedilen bir işlemden sonra liste tazelenmez; seçim ve kaydırma konumu korunur, liste başa sarmaz', () => {
   it('kural gereği red listeyi TAZELEMEZ', () => {
-    expect(rejectionFor('deactivate', 'identity.last_active_manager', 409, 'tr').refresh).toBe(false)
+    expect(rejectionFor('deactivate', 'identity.last_active_manager', 409, 'tr').refresh).toBe(
+      false,
+    )
   })
 })
 

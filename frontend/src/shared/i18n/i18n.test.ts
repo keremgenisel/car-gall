@@ -48,6 +48,8 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           kilometers: 1000,
           page: 1,
           totalPages: 2,
+          // 0008 — onay metinleri personelin adını taşıyor (AC-5).
+          name: 'Ayşe Yılmaz',
         })
         expect(value).not.toBe(key)
         expect(value.trim()).not.toBe('')

@@ -87,6 +87,57 @@ describe('AC-27: `403` alan uç giriş ekranına yönlendirmez; personel bulundu
   })
 })
 
+describe('0008/AC-2: Satış Danışmanı rolündeki personel bu ekrana gittiğinde liste gelmez; ekran erişim yok durumunu gösterir ve giriş ekranına yönlendirilmez', () => {
+  it('Satış Danışmanı listeyi görmez, giriş ekranına da gitmez', async () => {
+    vi.mocked(fetchCurrentSession).mockResolvedValue(oturum({ role: 'sales_advisor' }))
+
+    ekran()
+
+    expect(await screen.findByTestId('admin-no-access')).not.toBeNull()
+    expect(screen.queryByTestId('staff-table')).toBeNull()
+    expect(screen.queryByTestId('login-form')).toBeNull()
+  })
+})
+
+describe('0008/AC-3: İçerik Editörü rolündeki personel için AC-2 ile aynı davranış geçerlidir', () => {
+  it('İçerik Editörü listeyi görmez, giriş ekranına da gitmez', async () => {
+    vi.mocked(fetchCurrentSession).mockResolvedValue(oturum({ role: 'content_editor' }))
+
+    ekran()
+
+    expect(await screen.findByTestId('admin-no-access')).not.toBeNull()
+    expect(screen.queryByTestId('staff-table')).toBeNull()
+    expect(screen.queryByTestId('login-form')).toBeNull()
+  })
+})
+
+describe('0008/AC-4: Yönetici olmayan personelin panelinde personel yönetimine götüren hiçbir bağlantı veya eylem bulunmaz', () => {
+  /**
+   * Kriter NEGATİF bir iddiadır: panelde bugün navigasyon yok, dolayısıyla "bağlantı
+   * görünmez" tek başına boş bir kümeyi doğrulardı. Ölçülen şey, personel yönetimine
+   * götüren HİÇBİR şeyin basılmaması — tablo, ekleme formu ve satır eylemleri dâhil.
+   */
+  it.each(['sales_advisor', 'content_editor'] as const)(
+    '%s için personel yönetimine götüren hiçbir şey basılmaz',
+    async (role) => {
+      vi.mocked(fetchCurrentSession).mockResolvedValue(oturum({ role }))
+
+      ekran()
+
+      await screen.findByTestId('admin-no-access')
+
+      expect(screen.queryByTestId('staff-table')).toBeNull()
+      expect(screen.queryByTestId('add-staff-form')).toBeNull()
+      expect(screen.queryByRole('link')).toBeNull()
+
+      // Satır eylemleri `deactivate-`, `role-`, `password-` önekli test kimlikleri taşır.
+      for (const prefix of ['deactivate-', 'role-', 'password-']) {
+        expect(document.querySelector(`[data-testid^="${prefix}"]`), prefix).toBeNull()
+      }
+    },
+  )
+})
+
 describe('AC-32: İlk parolasıyla giriş yapan personelden parolasını değiştirmesi istenir; değiştirmeden yönetim yüzeyinde çalışamaz', () => {
   it('zorunlu değişim bekleyen personel parola ekranını görür', async () => {
     vi.mocked(fetchCurrentSession).mockResolvedValue(oturum({ mustChangePassword: true }))

@@ -3,10 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../../app/LocaleProvider'
 import { ApiError } from '../../shared/api/client'
 import { StaffListPage } from './StaffListPage'
-import type { StaffListItem } from '../../shared/api/types'
+import type { CurrentSession, StaffListItem } from '../../shared/api/types'
 import type { AppLocale } from '../../shared/lib/locale'
 
-vi.mock('../../shared/api/identity', () => ({ fetchStaff: vi.fn(), addStaff: vi.fn() }))
+vi.mock('../../shared/api/identity', () => ({
+  fetchStaff: vi.fn(),
+  addStaff: vi.fn(),
+  deactivateStaff: vi.fn(),
+  changeStaffRole: vi.fn(),
+  resetStaffPassword: vi.fn(),
+}))
 
 const { fetchStaff } = await import('../../shared/api/identity')
 
@@ -20,10 +26,19 @@ const personel: StaffListItem = {
   branchId: null,
 }
 
-function ekran(locale: AppLocale = 'tr') {
+/** 0008 D1 — ekran kendi satırını oturumdaki kimlikten tanır. */
+const oturum: CurrentSession = {
+  staffId: '0192c000-0000-7000-8000-000000000001',
+  displayName: 'Ayşe Yılmaz',
+  role: 'manager',
+  preferredLocale: 'tr',
+  mustChangePassword: false,
+}
+
+function ekran(locale: AppLocale = 'tr', session: CurrentSession = oturum) {
   render(
     <LocaleProvider locale={locale}>
-      <StaffListPage />
+      <StaffListPage session={session} />
     </LocaleProvider>,
   )
 }
@@ -113,5 +128,29 @@ describe('AC-59: Hiçbir hata durumunda HTTP durum kodu, hata kodu, traceId, end
     for (const isaret of ['401', 'identity.no_session', 'trace-x', '/api/admin']) {
       expect(metin).not.toContain(isaret)
     }
+  })
+})
+
+describe('0008/AC-15: Ekran, listedeki kendi satırını ayırt eder', () => {
+  it('kendi satırı işaretlenir, başkasınınki işaretlenmez', async () => {
+    const baskasi: StaffListItem = {
+      ...personel,
+      staffId: '0192c000-0000-7000-8000-00000000b002',
+      displayName: 'Mehmet Demir',
+      loginId: 'mehmet@ornek.com',
+    }
+
+    vi.mocked(fetchStaff).mockResolvedValue([personel, baskasi])
+
+    ekran()
+
+    const kendi = await screen.findByTestId('staff-row-self')
+
+    // Ayrım KİMLİKTEN geliyor, addan değil: ad tekil değil (D1).
+    expect(within(kendi).getByText('Ayşe Yılmaz')).not.toBeNull()
+    expect(screen.getAllByTestId('staff-row-self')).toHaveLength(1)
+
+    // Renk tek başına anlam taşımaz: satır ayrıca METİNLE de işaretli.
+    expect(within(kendi).getByText('Siz')).not.toBeNull()
   })
 })

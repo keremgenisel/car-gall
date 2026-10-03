@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocale } from '../../app/localeContext'
 import { fetchStaff } from '../../shared/api/identity'
-import type { StaffListItem } from '../../shared/api/types'
+import type { CurrentSession, StaffListItem } from '../../shared/api/types'
+import { adminPath } from '../../shared/lib/route'
 import { AddStaffForm } from './AddStaffForm'
+import { StaffRowActions, type ActionOutcome } from './StaffRowActions'
 import { StaffListEmpty, StaffListError, StaffListSkeleton } from './states/StaffListStates'
 
 type LoadState =
@@ -10,15 +12,25 @@ type LoadState =
   | { readonly kind: 'error' }
   | { readonly kind: 'ready'; readonly staff: readonly StaffListItem[] }
 
-export function StaffListPage() {
+export function StaffListPage({ session }: { readonly session: CurrentSession }) {
   const { locale, t } = useLocale()
   const [result, setResult] = useState<{ readonly key: string; readonly value: LoadState } | null>(
     null,
   )
   const [reloadToken, setReloadToken] = useState(0)
 
-  // Yükleniyor durumu efekt içinde setState ile kurulmaz, istek anahtarından TÜRETİLİR:
-  // senkron setState zincirleme render tetikler ve iskelet bir kare geç görünür.
+  /** Son eylemin mesajı. Tazeleme onu SİLMEZ (R8/AC-25): veri bayattı, mesaj değil. */
+  const [actionMessage, setActionMessage] = useState<string | null>(null)
+
+  /**
+   * AC-23 — tazelemeden sonra odak işlem yapılan SATIRA döner.
+   *
+   * Satır kimliği tutuluyor, düğme referansı değil: tazeleme satırları yeniden basıyor ve
+   * eski referans o anda DOM'dan düşmüş oluyor. Kimlikten yeniden bulmak, hangi düğmenin
+   * hangi satıra ait olduğunu bilmekle aynı şey.
+   */
+  const focusTarget = useRef<string | null>(null)
+
   const requestKey = `${locale}|${reloadToken}`
   const load: LoadState =
     result !== null && result.key === requestKey ? result.value : { kind: 'loading' }
@@ -39,9 +51,50 @@ export function StaffListPage() {
     return () => controller.abort()
   }, [locale, reloadToken, requestKey])
 
+  // Liste basıldıktan SONRA odak iade edilir; önce denenirse hedef henüz DOM'da değildir.
+  //
+  // Bağımlılık `load` DEĞİL `load.kind`: `load` her render'da türetilen yeni bir nesne ve
+  // onu bağımlılık yapmak efekti her render'da koşturur. Odak iadesi yalnız durum
+  // 'ready'ye döndüğünde gerekiyor.
+  const loadKind = load.kind
+
+  useEffect(() => {
+    if (loadKind !== 'ready' || focusTarget.current === null) {
+      return
+    }
+
+    document
+      .querySelector<HTMLElement>(`[data-testid="deactivate-${focusTarget.current}"]`)
+      ?.focus()
+    focusTarget.current = null
+  }, [loadKind, reloadToken])
+
+  function onOutcome(staffId: string, outcome: ActionOutcome) {
+    if (outcome.signedOut) {
+      // AC-22 — oturum düştüyse gösterilecek bir ekran kalmadı. Tam gezinme, çünkü panelin
+      // dili sunucudan basılıyor (0006 R16).
+      window.location.assign(adminPath())
+      return
+    }
+
+    setActionMessage(outcome.messageKey)
+    focusTarget.current = staffId
+
+    // R7 — KURAL GEREĞİ redde liste tazelenmez; ziyaretçinin konumu korunur.
+    if (outcome.refresh) {
+      setReloadToken((token) => token + 1)
+    }
+  }
+
   return (
     <div className="admin-page">
       <h1 className="admin-page__title">{t('staff.title')}</h1>
+
+      {actionMessage === null ? null : (
+        <div className="admin-form__error" role="alert" data-testid="staff-action-error">
+          <p className="admin-form__error-body">{t(actionMessage)}</p>
+        </div>
+      )}
 
       {load.kind === 'loading' ? <StaffListSkeleton /> : null}
       {load.kind === 'error' ? (
@@ -58,18 +111,42 @@ export function StaffListPage() {
               <th scope="col">{t('staff.column.loginId')}</th>
               <th scope="col">{t('staff.column.role')}</th>
               <th scope="col">{t('staff.column.status')}</th>
+              <th scope="col">{t('staff.column.actions')}</th>
             </tr>
           </thead>
           <tbody>
-            {load.staff.map((member) => (
-              <tr key={member.staffId}>
-                <td dir="auto">{member.displayName}</td>
-                <td dir="ltr">{member.loginId}</td>
-                {/* Rol ve durum KOD olarak gelir; görünen ad uçta çevrilir (C7). */}
-                <td>{t(`staff.role.${member.role}`)}</td>
-                <td>{t(`staff.status.${member.status}`)}</td>
-              </tr>
-            ))}
+            {load.staff.map((member) => {
+              // AC-15 — kendi satırı KİMLİKTEN tanınır; ad tekil değil (D1).
+              const isSelf = member.staffId === session.staffId
+
+              return (
+                <tr
+                  key={member.staffId}
+                  className={
+                    isSelf ? 'staff-table__row staff-table__row--self' : 'staff-table__row'
+                  }
+                  data-testid={isSelf ? 'staff-row-self' : undefined}
+                >
+                  <td dir="auto">
+                    {member.displayName}
+                    {isSelf ? (
+                      <span className="staff-table__self-badge">{t('staff.action.self')}</span>
+                    ) : null}
+                  </td>
+                  <td dir="ltr">{member.loginId}</td>
+                  {/* Rol ve durum KOD olarak gelir; görünen ad uçta çevrilir (0006 C7). */}
+                  <td>{t(`staff.role.${member.role}`)}</td>
+                  <td>{t(`staff.status.${member.status}`)}</td>
+                  <td>
+                    <StaffRowActions
+                      member={member}
+                      isSelf={isSelf}
+                      onOutcome={(outcome) => onOutcome(member.staffId, outcome)}
+                    />
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       ) : null}
