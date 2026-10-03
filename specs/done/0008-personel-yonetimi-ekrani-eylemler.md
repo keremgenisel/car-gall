@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | Tamamlandı |
 | **Sahip** | Developer (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` personel yönetimi ekranı · `Identity` (var olan uçlar + `/me` yanıtına `staffId` — bkz. **D1**) |
@@ -337,9 +337,9 @@ onay isterse `shared/ui/ConfirmDialog` olarak terfi önerilir. *Elenen alternati
 - [x] Yeni domain terimi **yok**.
 - [x] Mimari karar verilmedi; `docs/architecture.md` § Karar Defteri değişmedi (doğrulandı).
 - [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
@@ -347,10 +347,26 @@ onay isterse `shared/ui/ConfirmDialog` olarak terfi önerilir. *Elenen alternati
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? |
-| **Bulgu gerçek/gürültü oranı** | / | Gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu? |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. |
+| **Spec revizyon sayısı** | **1** | **C5**, onay sonrası bir kez değişti: tablo dokuz sunucu anahtarı sayıyordu ama metin on bir diyordu. AC-12'nin alan hatası için gereken iki uç tarafı doğrulama anahtarı (`required`, `mismatch`) tabloya eklendi. Onay commit'indeki dört karar SAYILMADI: onayın kendisiyle aynı anda işlendiler, sonrasında değil. |
+| **Düzeltme turu sayısı** | **1** | Triyaj iki bulguyla döndü; ikisi de kapatıldı. CI ayrıca bir kez kırmızı verdi (AC-23'ün sayfa yüksekliğine bağımlılığı) ama bu bir gözden geçirme turu değil, benim kaçırdığım bir veri bağımlılığının bedeli. |
+| **Bulgu gerçek/gürültü oranı** | **2 / 0** | Gözden geçirme bulgusu: rol diyaloğunun bayat seçili değeri ve AC-27 kapısının iki anahtarı gezmemesi. İkisi de doğrulandı — ikincisi anahtar üç katalogdan birden silinerek ölçüldü ve hiçbir kapının görmediği teyit edildi. **Ayrıca uygulama içinde beş bulgu** çıktı (ikisi ürün hatası, üçü süreç); ölçüt "gözden geçirmede çıkan" dediği için onlar bu orana GİRMİYOR — 0007'de bu tanım belirsizliğini bildirmiştim, öneri hâlâ açık. |
+| **Regresyon sayısı** | **1** | `i18n.test.ts`'in "her anahtar her locale'de boş olmayan bir metin üretir" testi kırmızıya döndü: yeni onay metinleri `{name}` değişkeni taşıyor ve testin sabit değişken torbasında o yoktu. Üretim davranışı bozulmadı; bozulan test fikstürüydü. `AdminApp.test.tsx` ve `LoginPage.test.tsx` de güncellendi ama onlar DERLEME hatasıydı — kırmızı test değil, sözleşme değişikliğinin doğal sonucu — ve sayılmadı. |
+| **Kaçan hata** | — | Henüz bilinmiyor; #25 merge edilmedi. |
 
 **Bu spec'ten çıkarılan ders:**
+**Bir bulgunun tarif ettiği testi birebir yazmak, o bulguyu kapattığını kanıtlamaz.**
+Triyajın BULGU-1'i için önerilen senaryoyu yazdım: test kırmızı doğdu, düzeltmeden sonra
+yeşile döndü, her şey doğru göründü. Sonda düzeltmeyi geri alınca **test yine yeşil
+kaldı** — çünkü o senaryoda diyalogda kalan değer zaten kullanıcının seçtiği doğru
+değerdi ve düzeltmenin iki yarısından biri tek başına senaryoyu kapatıyordu. Ayrımı
+ancak satırın rolü DIŞARIDAN değiştiğinde kurabildik.
+
+Testi yazarken doğru soru "bulgunun anlattığı adımlar neydi" değil, **"bu testi hangi
+hata kırmızıya döndürür"**. İkisi aynı şey değil ve birincisi PR'da dolu görünen ama
+kapı olmayan bir satır üretir.
+
+İkinci ders ucuz ve tekrar eden cinsten: **kendi makinemde yeşil olan şey, benim
+verimde yeşil olan şeydir.** AC-23 testi sayfanın kaydırılabilecek kadar uzun olmasına
+güveniyordu; benim geliştirme veritabanım önceki koşulardan birikmiş satırlarla uzundu,
+CI'ın temiz veritabanında tablo ekrana sığıyordu. `docs/testing.md` § 4'ü kanıt
+testlerinde özellikle gözetmiştim — sonra aynı tuzağa görünüm alanı tarafından düştüm.
