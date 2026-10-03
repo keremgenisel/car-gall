@@ -356,7 +356,8 @@ aksi hâlde DoD'deki "yeni domain terimi yok" maddesi dürüstçe işaretlenemez
 |---|---|---|
 | **Spec revizyon sayısı** | **1** | Onaydan sonra tek değişiklik: Durum alanının `Geliştiriliyor`a alınması (`a519581`). Kriterlerin kendisi hiç değişmedi — PLAN gözden geçirmesinde çıkan altı belirsizlik (E7–E12) spec onaylanmadan önce karara bağlanmıştı. |
 | **Düzeltme turu sayısı** | **0** | PR açıldığında kapılar ilk koşuda yeşildi. Bu sayı düşük çünkü iş iki oturuma bölündü ve backend tarafı ayrı doğrulanmıştı; tek turda bitmiş bir iş değil, ikiye bölünmüş bir iş. |
-| **Bulgu gerçek/gürültü oranı** | **— (dış gözden geçirme yok)** | Uygulama sırasında kendi bulduklarım: (1) AC-2'nin backend testi kriteri karşılamıyordu — yalnız yanıtta `slug` var mı diye bakıyordu, kartın bağlantı taşıdığını doğrulamıyordu; (2) AC-23'ün kanıt görseli vardı ama testi yoktu, `dir="auto"` kaldırılsa hiçbir şey kırılmazdı; (3) `ApiError` durum kodu taşımadığı için 404 ile 500 ayırt edilemiyordu ve "bulunamadı" ekranı hiç gösterilemezdi. Üçü de dış gözden geçirme olmadan bulundu; bu sütun gerçek bir QA turuyla daha anlamlı olur. |
+| **Dış bulgu (gerçek/gürültü)** | **— (dış gözden geçirme yok)** | Bu spec triyajdan geçmedi. |
+| **Uygulama içi bulgu** | **3** | Uygulama sırasında kendi bulduklarım: (1) AC-2'nin backend testi kriteri karşılamıyordu — yalnız yanıtta `slug` var mı diye bakıyordu, kartın bağlantı taşıdığını doğrulamıyordu; (2) AC-23'ün kanıt görseli vardı ama testi yoktu, `dir="auto"` kaldırılsa hiçbir şey kırılmazdı; (3) `ApiError` durum kodu taşımadığı için 404 ile 500 ayırt edilemiyordu ve "bulunamadı" ekranı hiç gösterilemezdi. |
 | **Regresyon sayısı** | **1** | `ShowcaseListing` tipine `slug` eklenince `ShowcaseListPage.test.tsx`'in fixture'ı derlenmedi. Tip kontrolü yakaladı, commit öncesi kapandı. |
 | **Kaçan hata** | **0** | *2026-09-22 itibarıyla* — **izleniyor**. Merge sonrası bulunan her kusur buraya tarihiyle eklenir. |
 
