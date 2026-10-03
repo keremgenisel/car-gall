@@ -146,6 +146,19 @@ Bir PR şu şartların **hepsini** sağlamadan merge edilmez:
    **Hiçbir dayanağı olmayan PR açılmaz.** İstisna dayanağın biçimindedir, varlığında değil.
 2. **PR şablonu doldurulmuştur** (§ 5). Boş bırakılan alan yoktur.
 3. **Pipeline yeşildir.** Kırmızı pipeline ile merge yoktur — "sonra düzeltiriz" yoktur.
+
+   **CI doğrulaması merge'den AYRI bir adımdır; aynı komuta zincirlenmez.** Önce sonuç
+   okunur, sonra merge kararı verilir. Bu kural bir hatadan doğdu: CI kontrolü ile
+   `gh pr merge` tek satırda zincirlenmişti ve dört kapı da kırmızıyken merge gerçekleşti;
+   sonuç ancak merge olduktan sonra okundu. O gün zarar yoktu — merge edilen şey bir dosya
+   taşımaydı ve kırmızı da geçici bir altyapı sorunuydu — ama kod içeren bir PR'da aynı
+   hata `main`'i kırardı.
+
+   Aynı disiplin test çıktısı için de geçerlidir: **çıkış kodu ve özet satırı birlikte
+   okunur.** Çıktıyı kısaltan bir boru (`tail -3` gibi), Playwright'ın özet satırını kesip
+   altı kırmızı testi "130 passed" diye gösterdi. Yeşil görünen çıktı yeşil değildir;
+   yeşil olan çıkış kodudur.
+
    Pipeline şunları içerir:
    - backend build + xUnit (`docs/testing.md`)
    - **mimari testler** (modül sınırı ihlalleri)
