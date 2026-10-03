@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocale } from '../../app/localeContext'
 import { fetchStaff } from '../../shared/api/identity'
 import type { CurrentSession, StaffListItem } from '../../shared/api/types'
+import type { AppLocale } from '../../shared/lib/locale'
 import { adminPath } from '../../shared/lib/route'
 import { AddStaffForm } from './AddStaffForm'
 import { StaffRowActions, type ActionOutcome } from './StaffRowActions'
@@ -31,15 +32,41 @@ export function StaffListPage({ session }: { readonly session: CurrentSession })
    */
   const focusTarget = useRef<string | null>(null)
 
+  /**
+   * Son BAŞARILI liste, ait olduğu locale ile birlikte.
+   *
+   * İskelete düşmek yalnız İLK yüklemede doğru. Bir eylemden sonraki tazelemede tabloyu
+   * kaldırmak sayfayı kısaltıyor, tarayıcı kaydırmayı sıfırlıyor ve ziyaretçi yerini
+   * kaybediyor — AC-23'ün "kaydırma konumu korunur" yarısı tam olarak böyle düşüyordu.
+   *
+   * Locale ile BİRLİKTE tutuluyor: dil değiştiğinde elimizdeki liste artık o dile ait
+   * değil ve iskelet doğru olan. Ayrı bir efektle temizlemek yerine anahtarlamak, bir
+   * render turu daha kazandırıyor.
+   */
+  const [retained, setRetained] = useState<{
+    readonly locale: AppLocale
+    readonly staff: readonly StaffListItem[]
+  } | null>(null)
+
   const requestKey = `${locale}|${reloadToken}`
-  const load: LoadState =
+  const fresh: LoadState =
     result !== null && result.key === requestKey ? result.value : { kind: 'loading' }
+
+  const retainedStaff = retained !== null && retained.locale === locale ? retained.staff : null
+
+  const load: LoadState =
+    fresh.kind === 'loading' && retainedStaff !== null
+      ? { kind: 'ready', staff: retainedStaff }
+      : fresh
 
   useEffect(() => {
     const controller = new AbortController()
 
     fetchStaff(locale, controller.signal)
-      .then((staff) => setResult({ key: requestKey, value: { kind: 'ready', staff } }))
+      .then((staff) => {
+        setRetained({ locale, staff })
+        setResult({ key: requestKey, value: { kind: 'ready', staff } })
+      })
       .catch((cause: unknown) => {
         if (cause instanceof DOMException && cause.name === 'AbortError') {
           return
@@ -63,9 +90,13 @@ export function StaffListPage({ session }: { readonly session: CurrentSession })
       return
     }
 
+    // `preventScroll`: `focus()` varsayılan olarak öğeyi görünür alana ÇEKER ve
+    // ziyaretçinin kaydırma konumunu ezer. AC-23 ikisini birden istiyor — odak satıra
+    // dönsün AMA konum korunsun — ve konum ziyaretçinin seçimidir. Ölçüldü: bu bayrak
+    // olmadan kaydırma 1242 → 0 düşüyordu.
     document
       .querySelector<HTMLElement>(`[data-testid="deactivate-${focusTarget.current}"]`)
-      ?.focus()
+      ?.focus({ preventScroll: true })
     focusTarget.current = null
   }, [loadKind, reloadToken])
 

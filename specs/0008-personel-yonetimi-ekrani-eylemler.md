@@ -321,22 +321,22 @@ onay isterse `shared/ui/ConfirmDialog` olarak terfi önerilir. *Elenen alternati
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] `[görsel]` işaretli **her** kriterin görsel kanıtı eklendi
       (`docs/evidence/0008-ac<n>.png`), hata durumları dâhil; AC-31 için Arapça görüntü de var.
-- [ ] **D1'in sözleşme değişikliği dışında yeni sunucu ucu eklenmedi** (C1); `/me` yanıtına
+- [x] **D1'in sözleşme değişikliği dışında yeni sunucu ucu eklenmedi** (C1); `/me` yanıtına
       yalnızca `staffId` eklendi.
-- [ ] **`0006`'nın oturum ve yetki testleri kesintisiz yeşil kaldı** — D1 öncesi ve sonrası
+- [x] **`0006`'nın oturum ve yetki testleri kesintisiz yeşil kaldı** — D1 öncesi ve sonrası
       koşu çıktıları PR'da (AC-17).
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`) — yeni uç yok; `/me` sözleşme
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`) — yeni uç yok; `/me` sözleşme
       testi güncellendi.
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok; yönetim rota kökünü tarayan test
+- [x] Mimari testler yeşil — modül sınırı ihlali yok; yönetim rota kökünü tarayan test
       (`0006` C18) hâlâ yeşil.
-- [ ] Yeni migration **yok**.
-- [ ] C5'in tablosundaki 11 anahtar üç dilde eklendi (33); eksik çeviri anahtarı kontrolü yeşil (AC-27).
-- [ ] Yeni domain terimi **yok**.
-- [ ] Mimari karar verilmedi; `docs/architecture.md` § Karar Defteri değişmedi (doğrulandı).
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] Yeni migration **yok**.
+- [x] C5'in tablosundaki 11 anahtar üç dilde eklendi (33); eksik çeviri anahtarı kontrolü yeşil (AC-27).
+- [x] Yeni domain terimi **yok**.
+- [x] Mimari karar verilmedi; `docs/architecture.md` § Karar Defteri değişmedi (doğrulandı).
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.

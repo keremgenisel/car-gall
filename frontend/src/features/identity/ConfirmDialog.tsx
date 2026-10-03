@@ -39,11 +39,15 @@ export function ConfirmDialog({
 
     // AC-28 — odak kutunun İÇİNE girer. İlk odaklanabilir öğe seçiliyor; panelin kendisi
     // odaklansaydı Tab sırası kutunun dışından başlardı.
-    ilkOdaklanabilir(panel.current)?.focus()
+    //
+    // `preventScroll` her iki yönde de gerekli: `focus()` varsayılan olarak öğeyi görünür
+    // alana çeker ve ziyaretçinin kaydırma konumunu ezer. Kutu zaten `position: fixed` ve
+    // ekranda; kapanışta tetikleyiciye dönerken de konum ziyaretçinin seçimidir (AC-23).
+    ilkOdaklanabilir(panel.current)?.focus({ preventScroll: true })
 
     return () => {
       if (trigger.current instanceof HTMLElement) {
-        trigger.current.focus()
+        trigger.current.focus({ preventScroll: true })
       }
     }
   }, [])
