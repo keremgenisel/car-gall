@@ -484,3 +484,6 @@ altındaki ADR'lerdedir.
 | Personel oturumu | Sunucu tarafı opak oturum çerezi; JWT yok (rol ve durum her istekte kaynaktan) |
 | Eşzamanlılık | Invariant koruması: satır kilidi + tek transaction (`InvariantGuard`); iyimser eşzamanlılık yok |
 | Bildirim gönderimi | Veritabanı kuyruğu + arka plan servisi; gönderici port arkasında (V1: SMTP/MailKit) |
+| Tema (renk) | Dağıtım yapılandırmasından, **ya tam ya hiç**; panelden düzenlenmez |
+| Kontrast güvencesi | Başlangıçta doğrulanır — karşılanmazsa uygulama ayağa kalkmaz; varsayılan palet için ayrıca CI testi |
+| Tipografi | V1'de yapılandırılamaz; yazı tipleri kendi kaynağımızdan servis edilir |
