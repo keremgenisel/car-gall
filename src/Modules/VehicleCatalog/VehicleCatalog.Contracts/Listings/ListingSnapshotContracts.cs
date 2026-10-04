@@ -28,6 +28,27 @@ public sealed record ListingSnapshotDto(
     ShowcasePriceDto Price,
     Guid BranchId);
 
+/// <summary>
+/// 0009 D5 — ilanın detay sayfası adresini kurmak için gereken slug.
+///
+/// <para>Ayrı bir arayüz: <see cref="IListingSnapshotQueries"/> 0005'in talep yolu için
+/// yazıldı ve orada her alanın gerekçesi var. Slug oraya eklenseydi talep yolu hiç
+/// kullanmayacağı bir alan taşırdı.</para>
+///
+/// <para><b>Neden dondurulmuş bir kopya değil.</b> Bir bildirim bağlantısının işi
+/// TIKLANDIĞINDA çalışmaktır ve e-posta günler sonra açılabilir; talep anında dondurulan
+/// bir slug, ilan yeniden adlandırıldığında sessizce 404 verirdi. Anlık görüntü kuralının
+/// amacı kaydın yalan söylememesi, bağlantının amacı okuyanın gidebilmesi — iki ayrı şey.</para>
+/// </summary>
+public interface IListingSlugQueries
+{
+    /// <summary>
+    /// İlan kaldırılmışsa veya hiç yoksa <c>null</c>. Çağıran bunu bir hata değil,
+    /// bağlantının kurulamayacağı biçiminde okur (0009 AC-32).
+    /// </summary>
+    Task<string?> FindSlugAsync(Guid listingId, CancellationToken cancellationToken);
+}
+
 public interface IListingSnapshotQueries
 {
     /// <summary>

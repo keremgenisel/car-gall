@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.Dealership.Contracts.Branches;
 using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.Dealership.Domain;
 using CarGallery.Modules.Dealership.Infrastructure;
@@ -10,8 +11,35 @@ namespace CarGallery.Modules.Dealership.Application;
 /// C3 — `Dealership` başka modüle senkron çağrı YAPMAZ. Bu sorgu yalnızca kendi verisini
 /// okur; ziyaretçi locale'i parametre olarak gelir, başka bir modülden sorulmaz.
 /// </summary>
-internal sealed class BranchQueries(DealershipDbContext context, Locale defaultLocale) : IBranchQueries
+internal sealed class BranchQueries(DealershipDbContext context, Locale defaultLocale)
+    : IBranchQueries, IBranchContactQueries
 {
+    /// <summary>
+    /// 0009 D2 — galeri bildiriminin hedefi. E-posta null olabilir (0003 zorunlu kılmıyor);
+    /// kurulum adresine düşme kararı çağıranın, burası yalnız olguyu söyler.
+    /// </summary>
+    public async Task<BranchNotificationContactDto?> FindContactAsync(
+        Guid branchId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        Branch? branch = await context.Branches
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == new BranchId(branchId), cancellationToken);
+
+        if (branch is null)
+        {
+            return null;
+        }
+
+        Result<Locale> requested = Locale.Create(locale);
+        Locale resolved = requested.IsSuccess ? requested.Value : defaultLocale;
+
+        string name = branch.Names.Resolve(resolved, defaultLocale) ?? string.Empty;
+
+        return new BranchNotificationContactDto(branch.Id.Value, name, branch.Email?.Value);
+    }
+
     public async Task<BranchSummaryDto?> FindAsync(
         Guid branchId,
         string locale,

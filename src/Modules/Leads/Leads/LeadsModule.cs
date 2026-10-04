@@ -5,6 +5,7 @@ using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Leads.Application;
+using CarGallery.Modules.Leads.Contracts.Notifications;
 using CarGallery.Modules.Leads.Domain;
 using CarGallery.Modules.Leads.Endpoints;
 using CarGallery.Modules.Leads.Infrastructure;
@@ -44,6 +45,9 @@ public static class LeadsModule
         // uygulama yalnız doğrular (docs/decisions/0002). Bu satır olmadan `leads`
         // şeması kurulum adımında hiç uygulanmaz ve eksikliği yalnız ilk talepte,
         // "tablo yok" diye görünürdü.
+        // 0009 D1 — bildirim gövdesinin dar okuma yüzeyi.
+        services.AddScoped<ILeadNotificationQueries, LeadNotificationQueries>();
+
         services.AddScoped<IModuleSchema>(provider =>
             new ModuleSchema<LeadsDbContext>(
                 provider.GetRequiredService<LeadsDbContext>(),

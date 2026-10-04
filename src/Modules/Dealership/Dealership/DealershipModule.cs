@@ -3,6 +3,7 @@ using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Dealership.Application;
+using CarGallery.Modules.Dealership.Contracts.Branches;
 using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.Dealership.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +61,11 @@ public static class DealershipModule
             provider.GetRequiredService<ILogger<OutboxDispatcherHostedService<DealershipDbContext>>>()));
 
         services.AddScoped<IBranchQueries>(provider => new BranchQueries(
+            provider.GetRequiredService<DealershipDbContext>(),
+            parsed.Value));
+
+        // 0009 D2 — aynı sınıf, ayrı ve dar bir yüzey (D7).
+        services.AddScoped<IBranchContactQueries>(provider => new BranchQueries(
             provider.GetRequiredService<DealershipDbContext>(),
             parsed.Value));
 
