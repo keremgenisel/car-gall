@@ -185,6 +185,77 @@ tartışmasına dönüşür ve o tartışmanın hakemi olmaz.
 
 ---
 
+## Ek 1 — Sıranın tamamlanması ve ondan sapmalar
+
+*2026-10-04. Unsur 7'nin dokuz adımı, o yazıldığında var olmayan üç spec'i kapsamıyordu.
+ADR "kapsam kararı olmadan değişmez" dediği için yerleşimleri burada kayda geçiyor.
+Ayrıca bir adım sırasının dışında yapıldı; onu gizlemek bu ADR'nin varlık sebebini
+ortadan kaldırırdı.*
+
+### Sıraya eklenen üç spec
+
+| Spec | Yeri | Gerekçe |
+|---|---|---|
+| **`frontend-002`** görsel dil ve marka teması | Unsur 7 **#2'den ÖNCE** | Token katmanına dokunuyor; panel ekranları (#2) ondan sonra yazılmazsa aynı ekranlar iki kez boyanır ve `frontend-002` onları da taşımak zorunda kalır. Spec'in Intent'i bugünkü `#1f5fd0` vurgu rengini *"hiç kimsenin verdiği bir karar değil"* diye tanımlıyor ve `docs/frontend.md` § 4.1'in yasak saydığı türden olduğunu söylüyor. |
+| **`0008`** personel yönetimi eylemleri | Unsur 7 #2'den **sonra** olmalıydı — **sıradan önce yapıldı**, aşağıya bkz. | Araç ekleyemeyen bir galeride personel pasifleştirme ikincil kalır; ayrıca #2 panelde yazma akışının desenini kurar ve `0008` onu yeniden kullanır. |
+| **`0004`** SEO meta ve yapısal veri | Unsur 7 **#4'ten (ana sayfa) sonra** | SEO'nun değeri indekslenecek sayfa sayısıyla artıyor; ana sayfa ve liste eksenleri yoksa indekslenecek az şey var. Spec'in Intent'i hâlâ boş: *"başarı neye benziyor"* sorusu Takım Yöneticisi'nde. |
+
+### Sapma — `0008` sıradan önce yapıldı
+
+`0008` bu ADR'de #2'den sonraya konmuştu. Fiiliyatta **#2'den önce** uygulandı ve
+`main`'e merge edildi (PR #25, 2026-10-04): 37 dosya, 42 kriter, CI 4/4 yeşil.
+
+**Neden kayda geçiyor:** sıra bir tahmin değil, verilmiş bir karardı. Sapma zararsız
+çıktı — `0008` yalnız `Identity` ve panel ekranına dokundu, `0010`'un dokunacağı
+`VehicleCatalog` yazma yüzeyiyle hiç kesişmedi (37 dosyaya karşı `main`'in 81 dosyası,
+ortak dosya yok) — ama zararsız olduğu **önceden bilinmiyordu**. Sıranın gerekçesi
+bağımlılık değil değer önceliğiydi ve o gerekçe hâlâ geçerli: galeri bugün hâlâ araç
+ekleyemiyor.
+
+**Çıkarılan ders:** paralel çalışan oturumlar bu ADR'nin sırasını okumuyor. Sıra bir
+belgede duruyor ama hiçbir mekanizma onu dayatmıyor. Bir sonraki sapma aynı şansı
+taşımayabilir.
+
+### `0010`'un kendi dilimlemesi — unsur 7 #2 ikiye bölündü
+
+`0010`'un **D1** kararı, unsur 7'nin 2. maddesini üç dilime ayırıyor ve ilk dilimi kendisi
+üstleniyor:
+
+| # | Dilim | Durum |
+|---|---|---|
+| 1 | Araç kaydı, düzenleme, taslak ilan, ilan listesi (okuma) | `0010` (Taslak) |
+| 2 | `Media`: yükleme, türev üretimi, filigran, depolama | spec yok |
+| 3 | Yayın ve durum eylemleri + toplu eylemler | spec yok |
+
+**Bu, unsur 7'yi reddetmez; 2. maddesini ikiye böler ve `Media`'yı (#3) yayın işinin
+önüne çeker.** Gerekçesi doğrulanmış bir teknik kısıt: `Vehicle.EnsurePublishable()` en az
+bir medya varlığı istiyor ve `MediaAssetReady` olayını yayan hiçbir şey yok. Yani panel
+#2 olarak kalabilir ama **yalnızca taslak** teslim edebilir.
+
+Sonucu: `0010` bittiğinde galeri araç girebilir ama **hiçbirini yayına alamaz**; vitrin
+hâlâ seed'e bağlı kalır. `0010` bu bedeli açıkça yazıyor.
+
+### Güncellenen sıra
+
+| # | İş | Spec |
+|---|---|---|
+| 1 | Talep bildirimi | `0009` ✅ tamamlandı |
+| — | Personel yönetimi eylemleri *(sıra dışı yapıldı)* | `0008` ✅ tamamlandı |
+| 2 | **Görsel dil ve marka teması** | `frontend-002` (Taslak) |
+| 3 | **Panel: araç kaydı ve taslak ilan** | `0010` (Taslak) |
+| 4 | `Media`: yükleme, türev, filigran | spec yok |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | spec yok |
+| 6 | İki adımlı doğrulama (unsur 2) | spec yok |
+| 7 | Ana sayfa | spec yok |
+| 8 | SEO meta ve yapısal veri | `0004` (Taslak, Intent boş) |
+| 9 | Liste: sıralama + filtre eksenleri | spec yok |
+| 10 | Medya galerisi + parça haritası şeması | spec yok |
+| 11 | `Content` sayfaları | spec yok |
+| 12 | Favori + karşılaştırma | spec yok |
+| 13 | Bülten aboneliği | spec yok |
+
+---
+
 ## Takip işleri
 
 Bu ADR kararın **neden**ini taşır. Kararın **ne** olduğunu söyleyen tek satırlık kayıtlar
