@@ -60,6 +60,19 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Rezervasyon** | `Reservation` | Bir aracın belirli bir müşteri için vitrinde tutulması. |
 | **Kampanya** | `Campaign` | Ana sayfada veya ilanda gösterilen tanıtım/indirim duyurusu. |
 
+### Bildirim
+
+| Terim | Kod karşılığı | Tanım |
+|---|---|---|
+| **Bildirim Şablonu** | `NotificationTemplate` | (anahtar, locale) çifti başına konu + gövde. Çeviri verisidir; kodda metin durmaz. |
+| **Gönderim Kaydı** | `NotificationMessage` | Gönderilecek tek mesaj. Kuyruk satırı VE geçmiş kaydı aynı şeydir; iki tablo tutulmaz. |
+| **Gönderim Durumu** | `NotificationStatus` | `Kuyrukta` · `Gönderildi` · `Başarısız` · `KanalYok` |
+| **Kanal Yok** | `NoChannel` | Alıcının o kanaldan adresi olmadığı için gönderim HİÇ DENENMEDİ. Bir hata değildir. |
+| **Geçici Hata** | `Transient` | Yeniden denemenin düzeltebileceği hata: ağ, zaman aşımı, sağlayıcının `4xx`'i. |
+| **Kalıcı Hata** | `Permanent` | Yeniden denemenin düzeltemeyeceği hata: adres reddedildi, şablon yok, sağlayıcının `5xx`'i. |
+| **Taşıyıcı** | `INotificationTransport` | Sağlayıcıyla konuşan port. Tekrar denemez; hatanın SINIFINI söyler. |
+| **Kurulum Bildirim Adresi** | `SetupNotificationAddress` | Şubenin e-postası yokken galeri bildiriminin gittiği adres. Yapılandırmadan gelir. |
+
 ### Teknik ortak terimler
 
 | Terim | Kod karşılığı | Tanım |
