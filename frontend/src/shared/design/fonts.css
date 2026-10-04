@@ -1,0 +1,38 @@
+/*
+ * Yazı tipi tanımlarının TEK yeri (C8, R12, D8).
+ *
+ * **Kendi kaynağımızdan servis edilir; üçüncü taraf sağlayıcı kullanılmaz.** Mockup'lar
+ * yazı tiplerini Google Fonts `<link>`'i ile yüklüyordu ve o `<link>`, vitrini açan her
+ * ziyaretçinin IP adresini sağlayıcıya gönderir. Bu projede KVKK bir ek değil, ürünün
+ * içinde: aydınlatma metni, iletişim izni kaydı (L7) ve talep anonimleştirmesi (L6) hep
+ * kapsamda. Ziyaretçinin IP'sini font indirmek için üçüncü tarafa göndermek o özenin
+ * yanında tutarsız kalır. `check:tokens` kapısı bunu kırıyor (AC-8).
+ *
+ * Dosyalar `@fontsource/*` paketlerinden geliyor — üçü de OFL-1.1 ve lisans metni
+ * paketin içinde. Depoya ikili dosya girmiyor; Vite onları build çıktısına kopyalıyor ve
+ * **aynı origin'den** servis ediliyorlar.
+ *
+ * **Neden ağırlık dosyaları (`400.css`), alt küme dosyaları (`latin-400.css`) değil:**
+ * ağırlık dosyası bütün alt kümeleri `unicode-range` ile tanımlıyor, yani tarayıcı yalnız
+ * BASTIĞI glif için indirme yapıyor. Alt küme dosyasını tek tek almak iki şeyi bozardı:
+ * `unicode-range` olmadan aynı aile+ağırlık ikinci kez tanımlanınca birincisi gölgelenir,
+ * ve Türkçe `latin-ext`'e düşüyor (ş, ğ, İ) — yalnız `latin` alınsa Türkçe metin başka
+ * fonta kayardı.
+ *
+ * Ağırlıklar token katmanının kullandığı ikisi: 400 ve 600 (`--font-weight-*`).
+ * Üçüncü bir ağırlık eklemek dosya eklemek demektir (D8'in bilerek ödenen bedeli).
+ */
+
+/* Latin yığını (--font-family-base) */
+@import url('@fontsource/space-grotesk/400.css');
+@import url('@fontsource/space-grotesk/600.css');
+
+/* Arapça yığını (--font-family-arabic). Readex Pro Latin glifleri de taşıyor: Arapça
+   sayfadaki Latin marka adı aynı aileden basılır ve AC-1 bozulmaz. */
+@import url('@fontsource/readex-pro/400.css');
+@import url('@fontsource/readex-pro/600.css');
+
+/* Yedek — tasarımcı notu `s4` ikisini birlikte veriyor. Readex Pro'nun kapsamadığı bir
+   glif çıkmadıkça indirilmez: `@font-face` tembeldir. */
+@import url('@fontsource/ibm-plex-sans-arabic/400.css');
+@import url('@fontsource/ibm-plex-sans-arabic/600.css');
