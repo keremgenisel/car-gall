@@ -400,11 +400,12 @@ açardı.
 - [x] Pipeline tamamen yeşil (`docs/git.md` § 4). *PR #27'de dört kapının dördü de `pass`:
       Backend (build + xUnit + mimari testler + migration şema kontrolü), Frontend
       (lint + tip + test + build + çeviri anahtarları), E2E ve C3 eşikleri.*
-- [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
+- [x] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
-      **KARŞILANMADI** — `docs/roles/qa.md` § 8: "QA kendi yazdığı kodu gözden geçirmez;
-      Developer → QA şapka geçişi yapılmaz." Bu maddeyi kendim işaretleyemem. PR, Takım
-      Yöneticisi'nin açık talimatıyla QA oturumundan ÖNCE açıldı.
+      *Sıra tersine döndü — PR, Takım Yöneticisi'nin talimatıyla QA oturumundan ÖNCE
+      açıldı — ama gözden geçirme YAPILDI ve bir kritik bulgu verdi: bozuk bir alıcı
+      adresi kuyruğu kalıcı olarak tıkıyordu (`49e1e35`). Bulgu, yalnız sahte taşıyıcıyla
+      koşan testlerin göremediği bir yerden geldi; dar bakışın değeri tam olarak bu.*
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [x] **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır).
@@ -423,9 +424,9 @@ kodun ne kadar açık yazıldığını, diğeri yazarın kendi işini ne kadar s
 | Ölçüt | Değer | Not |
 |---|---|---|
 | **Spec revizyon sayısı** | **1** | Onay anında: planın kararları (D1–D7) spec'e işlendi, R2'nin yanlış iddiası düzeltildi ve AC-32 eklendi — kriter sayısı **17 → 32**. Şablonun harfi "onaylandıktan SONRA" diyor ve bu değişiklik onayla aynı commit'te (`3af6905`); harfiyen okunursa **0** yazılırdı. **1** yazıyorum çünkü ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabı. 0006 da onay öncesi CLARIFY turunu aynı şekilde saymıştı (41 → 61); iki kartın karşılaştırılabilir kalması için aynı okuma sürdürülüyor. |
-| **Düzeltme turu sayısı** | **1** | Triyaj turu (`d3ff5d5`): beş bulgu geldi, beşi de kapatıldı. Tur **açık bir PR üzerinde değil, dal üzerinde** döndü — PR bu turdan sonra açıldı; şablonun "PR kaç kez geri döndü" ifadesi harfiyen karşılanmıyor ama işi geri gönderen bir gözden geçirme turuydu ve sayılması gerekiyor. |
-| **Dış bulgu (gerçek/gürültü)** | **5 / —** | Triyajdan bana **beş** bulgu ulaştı ve beşi de gerçekti: (1) mimari test kırmızıydı — `NotificationsDbContext` kurulum adımına kayıtlı değildi ve ben commit'ten önce yalnız `dotnet build` koşmuştum, test takımını koşmamıştım (`docs/git.md` § 4 bu vakayı zaten kodlamıştı); (2) dokuz test adı AC-3/4/5/11/19/24/32 iddia ediyordu ama testler o kriterleri kanıtlamıyordu; (3) `git add -A` yabancı dosyaları iki kez dala süpürdü; (4) şube iletişim sorgusu bütün entity'yi belleğe çekiyordu; (5) bir bakım bulgusu. **Gürültü sayısı bu kartta yazılamaz:** gürültü işaretini Takım Yöneticisi yaptı ve işaretlenenler bana hiç ulaşmadı — oranın bölenini bilmiyorum ve tahmin etmek ölçütün amacını bozar. |
-| **Uygulama içi bulgu** | **8** | (1) Spec'in R2'si **olgusal olarak yanlıştı** — ilan slug'ı hiçbir yerde yoktu (`VehicleSnapshot` yalnız `ListingId` tutuyor ve kendisi "okuma yolu DEĞİLDİR" diyor); D5 ve AC-32 bu bulgudan doğdu. (2) `TestSchema`'ya `notifications` eklenmeyince Host.Tests'in 31 testi birden düştü. (3) Kriter ↔ test eşlemesini sayarken **AC-24'ün hiç kapısı olmadığını** gördüm. (4) AC-26'nın test adı spec metnini birebir kopyalamıyordu. (5) AC-30'un ilk hâli üç yanlış pozitif veriyordu. (6) Bir sonda `str.replace` ile yazılmıştı, hiçbir şey eşleşmedi ve ben başarı bastım — sonda "geçti" ama hiçbir şeyi değiştirmemişti. (7) `if (false)` sondası bu depoda **kullanılamaz**: CS0162 + `TreatWarningsAsErrors` build'i düşürüyor ve `--no-build` sonra bayat assembly'yi koşup "hiçbir şey bozulmadı" diye yanlış rapor veriyor. (8) İki sonda yorum satırı olarak yazıldı; her iki test de yorumları atlıyor ve sondalar **yanlış yeşil** verdi. *Sayılmayanlar:* MailKit 4.14.0'ın bilinen açığı (NU1902), seed migration'ının satır sonlarıyla bozulan raw-string'i ve CS9107 — üçü de derleme/bağımlılık sürtünmesi, iş ürününde kusur değil. |
+| **Düzeltme turu sayısı** | **2** | (1) Triyaj turu (`d3ff5d5`): beş bulgu, beşi de kapatıldı — tur açık bir PR üzerinde değil **dal üzerinde** döndü. (2) QA turu (`49e1e35`): PR #27 açıldıktan sonra bir kritik bulgu geldi ve kapatıldı. İlk tur için şablonun "PR kaç kez geri döndü" ifadesi harfiyen karşılanmıyor ama işi geri gönderen bir gözden geçirme turuydu ve sayılması gerekiyor. |
+| **Dış bulgu (gerçek/gürültü)** | **6 / —** | İki turda altı bulgu, altısı da gerçek. **QA turu (1):** `MailboxAddress.Parse` bozuk bir adreste fırlatıyor, istisna `Compose` çağrısı `try` dışında olduğu için taşıyıcıdan kaçıyor, gönderici onu yakalamıyor, `SaveChanges` hiç çalışmıyor ve parti `Queued`/`AttemptCount=0` kalıyordu — arka plan servisi aynı partiyi yeniden okuyup **kuyruğu kalıcı olarak tıkıyordu**. Giriş yolu teorik değil: 0005'in `EmailAddress` doğrulaması `<@ornek.com`'u geçiriyor. AC-12 doğrudan, AC-2/16/17 sonucu olarak ihlal ediliyordu. **Triyaj turu (5):** (1) mimari test kırmızıydı — `NotificationsDbContext` kurulum adımına kayıtlı değildi ve ben commit'ten önce yalnız `dotnet build` koşmuştum, test takımını koşmamıştım (`docs/git.md` § 4 bu vakayı zaten kodlamıştı); (2) dokuz test adı AC-3/4/5/11/19/24/32 iddia ediyordu ama testler o kriterleri kanıtlamıyordu; (3) `git add -A` yabancı dosyaları iki kez dala süpürdü; (4) şube iletişim sorgusu bütün entity'yi belleğe çekiyordu; (5) bir bakım bulgusu. **Gürültü sayısı bu kartta yazılamaz:** gürültü işaretini Takım Yöneticisi yaptı ve işaretlenenler bana hiç ulaşmadı — oranın bölenini bilmiyorum ve tahmin etmek ölçütün amacını bozar. |
+| **Uygulama içi bulgu** | **9** | (1) Spec'in R2'si **olgusal olarak yanlıştı** — ilan slug'ı hiçbir yerde yoktu (`VehicleSnapshot` yalnız `ListingId` tutuyor ve kendisi "okuma yolu DEĞİLDİR" diyor); D5 ve AC-32 bu bulgudan doğdu. (2) `TestSchema`'ya `notifications` eklenmeyince Host.Tests'in 31 testi birden düştü. (3) Kriter ↔ test eşlemesini sayarken **AC-24'ün hiç kapısı olmadığını** gördüm. (4) AC-26'nın test adı spec metnini birebir kopyalamıyordu. (5) AC-30'un ilk hâli üç yanlış pozitif veriyordu. (6) Bir sonda `str.replace` ile yazılmıştı, hiçbir şey eşleşmedi ve ben başarı bastım — sonda "geçti" ama hiçbir şeyi değiştirmemişti. (7) `if (false)` sondası bu depoda **kullanılamaz**: CS0162 + `TreatWarningsAsErrors` build'i düşürüyor ve `--no-build` sonra bayat assembly'yi koşup "hiçbir şey bozulmadı" diye yanlış rapor veriyor. (8) İki sonda yorum satırı olarak yazıldı; her iki test de yorumları atlıyor ve sondalar **yanlış yeşil** verdi. (9) QA'in bulgusu için yazdığım ilk AC-12 iddiası **yanlıştı**: `Status != Queued` bekliyordum, ama geçici hatada deneme hakkı varken `Queued` kalmak doğru davranış — asıl ayırt edici `NextAttemptAt`'in ilerlemesi. *Sayılmayanlar:* MailKit 4.14.0'ın bilinen açığı (NU1902), seed migration'ının satır sonlarıyla bozulan raw-string'i ve CS9107 — üçü de derleme/bağımlılık sürtünmesi, iş ürününde kusur değil. |
 | **Regresyon sayısı** | **1** | Host artık başlangıçta `notifications` şemasının güncel olduğunu da doğruluyor; `TestSchema` o modülü kurmadığı sürece daha önce yeşil olan **31 Host testi** kırmızıya döndü. Tek bir neden, tek bir başlangıç sözleşmesi değişikliği. Üretim davranışı hiç bozulmadı ve commit'ten önce yerelde yakalandı — 0006 `identity` ile tam olarak aynı şekli **1** saymıştı, aynı okuma sürdürülüyor. |
 | **Kaçan hata** | **0** | *2026-10-04 itibarıyla* — **izleniyor**. Merge sonrası bulunan her kusur buraya tarihiyle eklenir (`specs/TEMPLATE.md` § SCORECARD). |
 
@@ -447,6 +448,19 @@ Alınan ders yöntem düzeyinde: **sonda, uygulandığını KENDİSİ kanıtlama
 Eşleşme sayısı doğrulanmadan `replace` çağrılmaz; sonda derlenebilir olmalıdır
 (`== -1` gibi), build'i düşüren bir mutasyon sonda değil gürültüdür; ve sondanın
 yerleştiği satır, testin baktığı satır olmalıdır.
+
+Üçüncü ders QA'den geldi ve ilk ikisinin kör noktasını gösterdi: **sonda, korumayı
+bozmayı dener — bağımlılığın sözleşmesini bozmayı denemez.** On sondamın hepsi aynı
+kalıptaydı: üretim kodundan bir satır çıkar, hangi test kırmızıya dönüyor diye bak. Hiçbiri
+şunu sormadı: *ya bağımlılık sonuç döndürmek yerine fırlatırsa?* Yazdığım dört sahte
+taşıyıcının dördü de sözleşmeye UYUYORDU — biri bile `SendResult` döndürme sözünü
+tutmazlık etmedi. Oysa gerçek taşıyıcı, ilk bozuk adreste tam olarak bunu yapıyordu ve
+sonucu kuyruğun kalıcı olarak tıkanmasıydı.
+
+Genelleştirmesi: **bir portun sözleşmesi, onu zorlayan bir şey olmadıkça bir varsayımdır.**
+"Fırlatmaz" diye yazılmış bir port, fırlatan bir gerçekleştirimle birlikte yaşayabilir ve
+sahte gerçekleştirimler bunu asla göstermez. Bundan sonra her port için en az bir test,
+sahtenin sözleşmeyi İHLAL ETTİĞİ hâli ölçmeli.
 
 İkinci ders ucuz ama pahalıya mal olurdu: **kriter ↔ test eşlemesi SAYILIR, varsayılmaz.**
 32 kriterin 31'inin kapısı vardı ve bunu hiçbir şey söylemiyordu; AC-24'ün kapısız
