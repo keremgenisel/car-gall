@@ -63,6 +63,9 @@ public static class VehicleCatalogModule
         // 0005 R7/R8 — talep anlık görüntüsünün kaynağı. Locale almaz, çeviri çözmez.
         services.AddScoped<IListingSnapshotQueries, ListingSnapshotQueries>();
 
+        // 0009 D5 — bildirimdeki detay bağlantısının slug'ı.
+        services.AddScoped<IListingSlugQueries, ListingSlugQueries>();
+
         return services;
     }
 

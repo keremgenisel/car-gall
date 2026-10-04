@@ -50,6 +50,7 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
 
             // 0006 başlangıç sözleşmesi: parola olmadan uygulama hiç kurulmaz.
             IdentityTestSettings.Apply(builder);
+            NotificationsTestSettings.Apply(builder);
         });
 
         await factory.Services.SeedVehicleReferenceForDevelopmentAsync(ModelId);

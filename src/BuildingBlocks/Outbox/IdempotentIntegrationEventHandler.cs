@@ -18,6 +18,13 @@ public abstract class IdempotentIntegrationEventHandler<TEvent, TDbContext>(TDbC
 
     protected TDbContext Context => context;
 
+    /// <summary>
+    /// Alt sınıflar saate ihtiyaç duyabilir (zaman damgası yazan bir alıcı gibi). Taban
+    /// sınıf onu zaten tutuyor; ayrıca yakalamak CS9107 üretir ve aynı bağımlılığın iki
+    /// kopyasını doğururdu.
+    /// </summary>
+    protected IClock Clock => clock;
+
     public async Task HandleAsync(TEvent integrationEvent, CancellationToken cancellationToken)
     {
         bool alreadyProcessed = await context.InboxEntries.AnyAsync(

@@ -3,6 +3,8 @@ using CarGallery.Host.Schema;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Leads;
+using CarGallery.Modules.Notifications;
+using CarGallery.Modules.Notifications.Contracts.Setup;
 using CarGallery.Modules.Identity.Contracts.Setup;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
@@ -55,6 +57,24 @@ internal static class TestSchema
 
         // 0005 ile `leads` de bir modül şemasıdır.
         services.AddLeads(connectionString, ["tr", "ar", "en"], 5, 10);
+
+        // 0009 ile `notifications` de bir modül şemasıdır. Bu satır olmadan Host
+        // başlangıçta "şema güncel değil" diyerek reddediyordu ve Host.Tests'in 31 testi
+        // birden düştü — ADR 0002'nin doğrulamasının amacı tam olarak buydu.
+        services.AddNotifications(new NotificationsSetup(
+            connectionString,
+            "tr",
+            "galeri@ornek.com",
+            "http://localhost",
+            "bildirim@ornek.com",
+            SmtpHost: "localhost",
+            SmtpPort: 1025,
+            SmtpUser: "test",
+            SmtpPassword: "test",
+            SmtpUseStartTls: false,
+            MaximumAttempts: 5,
+            RetryBaseSeconds: 30,
+            SendTimeoutSeconds: 20));
 
         await using ServiceProvider provider = services.BuildServiceProvider();
 

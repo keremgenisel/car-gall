@@ -23,6 +23,15 @@ jobs:
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
 
+      # 0009 — bildirim kuyruğu gerçekten SMTP konuşuyor. Sunucu olmadan kuyruk her
+      # turda geçici hatayla döner ve CI logları anlamsız gürültüyle dolardı.
+      mailpit:
+        image: axllent/mailpit:v1.21
+        env:
+          MP_SMTP_AUTH_ACCEPT_ANY: 'true'
+          MP_SMTP_AUTH_ALLOW_INSECURE: 'true'
+        ports: ['1025:1025', '8025:8025']
+
     steps:
       - uses: actions/checkout@v4
 
@@ -54,6 +63,13 @@ jobs:
           # Kurulum hesabı bir kez özetleniyor; ölçüm başlangıcını 210.000 iterasyon
           # beklememeli.
           Identity__PasswordIterations: '1000'
+          # 0009 — uygulama sağlayıcı kimlik bilgileri olmadan HİÇ başlamaz (AC-28).
+          # Bu değerler mailpit servisinin kabul ettiği tek kullanımlık değerlerdir.
+          Notifications__Smtp__Host: localhost
+          Notifications__Smtp__Port: '1025'
+          Notifications__Smtp__User: ci
+          Notifications__Smtp__Password: ci
+          Notifications__PublicBaseUrl: http://localhost:5080
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Kurulum adımı (ADR 0002): şemayı uygulayan budur. Bu iş onu çalıştırmıyordu,

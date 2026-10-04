@@ -5,6 +5,8 @@ using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Identity.Contracts.Setup;
 using CarGallery.Modules.Leads;
+using CarGallery.Modules.Notifications;
+using CarGallery.Modules.Notifications.Contracts.Setup;
 using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleReference;
 
@@ -97,6 +99,30 @@ builder.Services.AddLeads(
     builder.Configuration.GetValue<int?>("Leads:RateLimit:CapturedLeadLimit") ?? 5,
     builder.Configuration.GetValue<int?>("Leads:RateLimit:RequestLimit") ?? 30,
     builder.Configuration.GetValue<int?>("Leads:RateLimit:WindowMinutes") ?? 10);
+
+// 0009 — talep bildirimi. Sistemden dışarı posta gönderen TEK modül (C1, Yasak Listesi 17).
+//
+// Hiçbir alan için `??` ile üretilmiş bir varsayılan YOK (AC-26, AC-27, AC-28). Eksik
+// yapılandırma burada patlar ve uygulama hiç ayağa kalkmaz; bu bilinçli: üretilmiş bir
+// bildirim adresi, her talebin sessizce kimseye gitmemesi demektir ve o sessizlik tam
+// olarak bu spec'in varlık nedeni. Kurulum parolasında (0006 D2) verilen karar aynısıdır.
+//
+// SMTP kullanıcı adı ve parolası appsettings'te DEĞİL, ortam değişkenindedir — sır repoda
+// durmaz (docs/conventions.md § 11). Geliştirmede user-secrets.
+builder.Services.AddNotifications(new NotificationsSetup(
+    connectionString,
+    localization.DefaultLocale,
+    builder.Configuration["Notifications:SetupNotificationAddress"] ?? string.Empty,
+    builder.Configuration["Notifications:PublicBaseUrl"] ?? string.Empty,
+    builder.Configuration["Notifications:SenderAddress"] ?? string.Empty,
+    builder.Configuration["Notifications:Smtp:Host"] ?? string.Empty,
+    builder.Configuration.GetValue<int?>("Notifications:Smtp:Port") ?? 0,
+    builder.Configuration["Notifications:Smtp:User"] ?? string.Empty,
+    builder.Configuration["Notifications:Smtp:Password"] ?? string.Empty,
+    builder.Configuration.GetValue<bool?>("Notifications:Smtp:UseStartTls") ?? true,
+    builder.Configuration.GetValue<int?>("Notifications:MaximumAttempts") ?? 0,
+    builder.Configuration.GetValue<int?>("Notifications:RetryBaseSeconds") ?? 0,
+    builder.Configuration.GetValue<int?>("Notifications:SendTimeoutSeconds") ?? 0));
 
 // İlk yazma uçları ilk hata sözleşmesini getirdi. `500` yanıtı ASLA iç detay taşımaz:
 // stack trace, SQL, dosya yolu, tip adı yok — yalnız `traceId`
