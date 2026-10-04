@@ -11,6 +11,16 @@
   box-sizing: border-box;
 }
 
+/*
+ * Arapça sayfa Arapça yığınla basılır (R4, D7, AC-29). TEK kural ve seçici `lang`:
+ * dil sunucudan `<html lang>` ile basılı geliyor ve uçta yeniden hesaplanmıyor
+ * (docs/frontend.md § 6). `:lang()` veya JS ile ikinci bir seçim mekanizması kurmak,
+ * Arapça metin içindeki Latin marka adını da yanlış yığına iterdi (AC-1).
+ */
+html[lang='ar'] {
+  font-family: var(--font-family-arabic);
+}
+
 body {
   margin: 0;
   background: var(--color-surface-muted);
@@ -72,9 +82,12 @@ body {
   cursor: pointer;
 }
 
+/* Metin TAŞIYAN bir öğenin kenarlığı metin vurgusuna bağlanır, dolguya değil: dolgu
+   limon ve beyaz zeminde kenarlık olarak da görünmez. Seçili hâl ayrıca RENKSİZ olarak da
+   okunur — pilin içinde gerçek bir `<input type="checkbox">` var (docs/frontend.md § 7). */
 .filter-chip--selected {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--color-accent-text);
+  color: var(--color-accent-text);
 }
 
 .filter-bar__summary {
@@ -85,7 +98,7 @@ body {
 }
 
 :focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-accent);
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
   outline-offset: var(--space-1);
 }
 
@@ -195,7 +208,7 @@ body {
 }
 
 .top-bar__locale--current {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   font-weight: var(--font-weight-semibold);
   text-decoration: underline;
 }
@@ -565,7 +578,7 @@ body {
   padding-inline: var(--space-3);
   border-radius: var(--radius-sm);
   background: var(--color-accent-surface);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   font-size: var(--font-size-sm);
 }
 

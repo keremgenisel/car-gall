@@ -40,6 +40,11 @@ module.exports = {
       },
       { message: 'Gömülü hex veya ham piksel yasak; token kullan (docs/frontend.md § 4.1).' },
     ],
+    // frontend-002 C11 — renk biçimi TEK TİPTİR: altı haneli hex (alfa taşıyanlar sekiz).
+    // stylelint-config-standard varsayılanı KISA biçim istiyor ve bu, C11'in tersi.
+    // Kısaltmaya izin vermek, `index.html`'e enjekte edilen değerin doğrulamasını
+    // ayrıştırma varsayımına bağlardı; kontrast hesabı da öyle.
+    'color-hex-length': 'long',
     'custom-property-pattern': null,
     'selector-class-pattern': null,
   },
