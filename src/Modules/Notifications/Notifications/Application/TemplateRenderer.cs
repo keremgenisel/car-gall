@@ -19,16 +19,44 @@ internal static class TemplateRenderer
     {
         ArgumentNullException.ThrowIfNull(values);
 
-        string sonuc = template;
+        // AC-32 — değeri BOŞ olan bir yer tutucunun bulunduğu satır tamamen düşer.
+        //
+        // Gerekçe: ilan kaldırılmışsa slug çözülemez ve bildirim bağlantısız gider. Boş
+        // değeri olduğu gibi koysaydık e-postada "İlan: " diye sarkan bir etiket kalırdı;
+        // etiketi koda yazıp gizlemek ise C6'yı ihlal ederdi (kullanıcıya görünen metin
+        // koda gömülmez). Satırı düşürmek, kararı ŞABLONDA bırakır.
+        string[] satirlar = template.Split('\n');
+        List<string> kalan = [];
 
-        foreach (KeyValuePair<string, string> value in values)
+        foreach (string satir in satirlar)
         {
-            sonuc = sonuc.Replace(
-                string.Create(CultureInfo.InvariantCulture, $"{{{value.Key}}}"),
-                value.Value,
-                StringComparison.Ordinal);
+            string islenmis = satir;
+            bool bosDustu = false;
+
+            foreach (KeyValuePair<string, string> value in values)
+            {
+                string yerTutucu = string.Create(CultureInfo.InvariantCulture, $"{{{value.Key}}}");
+
+                if (!islenmis.Contains(yerTutucu, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (value.Value.Length == 0)
+                {
+                    bosDustu = true;
+                    break;
+                }
+
+                islenmis = islenmis.Replace(yerTutucu, value.Value, StringComparison.Ordinal);
+            }
+
+            if (!bosDustu)
+            {
+                kalan.Add(islenmis);
+            }
         }
 
-        return sonuc;
+        return string.Join('\n', kalan).TrimEnd();
     }
 }

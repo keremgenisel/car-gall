@@ -12,4 +12,7 @@ internal static class NotificationErrors
 
     /// <summary>Sonucu zaten yazılmış bir mesajı yeniden işaretleme girişimi.</summary>
     internal const string AlreadyCompleted = "notification.already_completed";
+
+    /// <summary>Yapılandırılan gönderim zaman aşımı aşıldı — GEÇİCİ hata (AC-18).</summary>
+    internal const string SendTimedOut = "notification.send_timed_out";
 }
