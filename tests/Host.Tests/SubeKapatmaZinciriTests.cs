@@ -41,6 +41,7 @@ public sealed class SubeKapatmaZinciriTests : IAsyncLifetime
             builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
             builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
             IdentityTestSettings.Apply(builder);
+            NotificationsTestSettings.Apply(builder);
         });
 
         await SeedReferansVerisiAsync();

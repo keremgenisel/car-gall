@@ -45,6 +45,7 @@ public sealed class SubeliPersonelBoruHattiTests : IAsyncLifetime
             builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
             builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
             IdentityTestSettings.Apply(builder);
+            NotificationsTestSettings.Apply(builder);
         });
 
         // Kurulum hesabı zorunlu parola değişimi bekleyerek doğar (D2); o hâldeyken

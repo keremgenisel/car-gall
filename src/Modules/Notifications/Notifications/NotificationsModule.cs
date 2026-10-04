@@ -6,6 +6,7 @@ using CarGallery.Modules.Notifications.Contracts.Setup;
 using CarGallery.Modules.Notifications.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CarGallery.Modules.Notifications;
 
@@ -57,6 +58,12 @@ public static class NotificationsModule
         // satırı değiştirir, kuyruk ve tekrar deneme hiç dokunulmadan kalır.
         services.AddScoped<INotificationTransport, SmtpNotificationTransport>();
         services.AddScoped<NotificationDispatcher>();
+
+        // R10/AC-14 — kuyruğu işleyen arka plan servisi. Kayıt veritabanında durduğu için
+        // yeniden başlatma bekleyen gönderimleri kaybetmez.
+        services.AddHostedService(provider => new NotificationQueueHostedService(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILogger<NotificationQueueHostedService>>()));
 
         // Olay dağıtıcısı hedefleri DI'dan çözüyor; `Leads`'in dağıtıcısı bu kaydı bulur.
         services.AddScoped<IIntegrationEventDispatchTarget, LeadCapturedNotificationHandler>();

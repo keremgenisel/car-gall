@@ -39,6 +39,7 @@ public sealed class GirisHizSiniriTests : IAsyncLifetime
             builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
             builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
             IdentityTestSettings.Apply(builder);
+            NotificationsTestSettings.Apply(builder);
 
             // Eşik YAPILANDIRMADAN gelir; test onu sabitleyip doğruluyor, koda gömülü bir
             // sabiti değil (C20).
