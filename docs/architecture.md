@@ -114,7 +114,14 @@ ANA VERİ
 
 YAPRAK (hiçbir modül onlara senkron bağımlı değil)
   Content · Notifications · Audit · Engagement
+  Notifications   ──►  Leads, Dealership, VehicleCatalog   (yalnız OKUMA, tek atlama)
 ```
+
+`Notifications` yaprak olmaya devam eder: ok **ondan dışarı** çıkar, ona doğru gelmez.
+Okuduğu üç yüzeyin hiçbiri kendisi başka bir modüle uzanmaz — zincir tek atlamadır ve
+bunu bir mimari test koruyor (0009/AC-31). Gönderilecek mesajın kişisel verisi olayın
+gövdesinden değil kaynaktan okunur: olay gövdesinde taşınan kişisel veri, silinme
+talebinden sonra outbox'ta yaşamaya devam ederdi.
 
 Olay akışı (outbox, tek yön):
 
@@ -476,3 +483,4 @@ altındaki ADR'lerdedir.
 | Şube bazlı yetki | Yok (V1) |
 | Personel oturumu | Sunucu tarafı opak oturum çerezi; JWT yok (rol ve durum her istekte kaynaktan) |
 | Eşzamanlılık | Invariant koruması: satır kilidi + tek transaction (`InvariantGuard`); iyimser eşzamanlılık yok |
+| Bildirim gönderimi | Veritabanı kuyruğu + arka plan servisi; gönderici port arkasında (V1: SMTP/MailKit) |
