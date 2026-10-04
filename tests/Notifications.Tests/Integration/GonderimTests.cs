@@ -274,6 +274,50 @@ public sealed class GonderimTests(NotificationsDatabase database)
         Assert.Equal(NotificationStatus.Sent, (await MesajlarAsync())[0].Status);
     }
 
+    /// <summary>
+    /// Taşıyıcı sözleşmesini İHLAL EDİP fırlatırsa bile iki mesaj birbirinden bağımsız
+    /// kalmalı. Sözleşmeye güvenmek yetmez: bir port, onu uygulayan sınıfın hatasıyla
+    /// sözleşmesini bozabilir ve o an bütün kuyruk tek bir mesaja takılır.
+    ///
+    /// <para>Ölçülen üç şey: (1) sağlam adresli mesaj GÖNDERİLİR, (2) fırlatan mesajın
+    /// sonucu KAYDEDİLİR — `Queued`/`AttemptCount=0` kalmaz, (3) tur istisna
+    /// SIZDIRMAZ. Üçüncüsü olmadan arka plan servisi aynı partiyi sonsuza kadar yeniden
+    /// okur ve kuyruk kalıcı olarak tıkanır.</para>
+    /// </summary>
+    [Fact(DisplayName = "0009/AC-12: Ziyaretçi karşılığının başarısız olması galeri bildirimini engellemez; galeri bildiriminin başarısız olması da ziyaretçi karşılığını engellemez")]
+    public async Task Engellemez_FirlatanMesaj_Digerini()
+    {
+        await database.ResetMessagesAsync();
+        await KuyrugaAsync(TemplateKeys.LeadReceivedGallery, "tr");
+        await KuyrugaAsync(TemplateKeys.LeadReceivedVisitor, "tr");
+
+        // Galeri bildiriminde fırlatıyor; ziyaretçi karşılığında normal çalışıyor.
+        FirlatanTasiyici tasiyici = new(konuIcerir: "Yeni talep");
+
+        await IsleAsync(tasiyici);
+
+        List<NotificationMessage> mesajlar = await MesajlarAsync();
+
+        NotificationMessage galeri = mesajlar.Single(m => m.TemplateKey == TemplateKeys.LeadReceivedGallery);
+        NotificationMessage ziyaretci = mesajlar.Single(m => m.TemplateKey == TemplateKeys.LeadReceivedVisitor);
+
+        Assert.Equal(NotificationStatus.Sent, ziyaretci.Status);
+
+        // Fırlatan mesaj DENENMİŞ sayılır ve sonucu yazılır. `AttemptCount=0` kalması,
+        // mesajın hiç denenmemiş görünmesi ve deneme sayısının hiç tükenmemesi demekti.
+        Assert.Equal(1, galeri.AttemptCount);
+        Assert.NotNull(galeri.FailureCode);
+
+        // Asıl ayırt edici bu: KUYRUK İLERLEDİ. `NextAttemptAt` yerinde kalsaydı arka plan
+        // servisi sonraki turda aynı partiyi hemen yeniden okur, aynı istisnayı üretir ve
+        // kuyruk kalıcı olarak tıkanırdı. Durumun `Queued` kalması ise DOĞRU: geçici hatada
+        // deneme hakkı varken mesaj sıradan düşmez (R11).
+        Assert.NotNull(galeri.NextAttemptAt);
+        Assert.True(
+            galeri.NextAttemptAt > An,
+            $"NextAttemptAt ilerlememiş ({galeri.NextAttemptAt:o}); kuyruk aynı partiye takılır.");
+    }
+
     private async Task KuyrugaAsync(string templateKey, string locale)
     {
         await using NotificationsDbContext context = database.CreateContext();
@@ -350,6 +394,24 @@ public sealed class GonderimTests(NotificationsDatabase database)
             }
 
             return Task.FromResult(sonuc);
+        }
+    }
+
+    /// <summary>Sözleşmeyi ihlal eden taşıyıcı: sonuç döndürmek yerine fırlatıyor.</summary>
+    private sealed class FirlatanTasiyici(string konuIcerir) : INotificationTransport
+    {
+        internal List<OutboundMessage> Gonderilenler { get; } = [];
+
+        public Task<SendResult> SendAsync(OutboundMessage message, CancellationToken cancellationToken)
+        {
+            if (message.Subject.Contains(konuIcerir, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("taşıyıcı sözleşmesini ihlal etti");
+            }
+
+            Gonderilenler.Add(message);
+
+            return Task.FromResult(SendResult.Success());
         }
     }
 

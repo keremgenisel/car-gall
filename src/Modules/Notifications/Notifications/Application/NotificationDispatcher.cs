@@ -53,7 +53,37 @@ internal sealed class NotificationDispatcher(
 
         foreach (NotificationMessage message in due)
         {
-            await DispatchOneAsync(message, cancellationToken);
+            try
+            {
+                await DispatchOneAsync(message, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+#pragma warning disable CA1031 // Tek mesajın hatası turu düşürmemeli (AC-12).
+            catch (Exception exception)
+#pragma warning restore CA1031
+            {
+                // AC-12 — mesajlar BİRBİRİNDEN BAĞIMSIZDIR. Burada yakalamazsak ilk
+                // beklenmeyen istisna döngüyü koparır, `SaveChanges` hiç çalışmaz ve
+                // partinin tamamı `Queued`/`AttemptCount=0` olarak kalır: hiç denenmemiş
+                // görünür. Arka plan servisi sonraki turda aynı partiyi okur, aynı
+                // istisnayı üretir ve kuyruk KALICI OLARAK tıkanır — o andan sonra hiçbir
+                // talep için bildirim gitmez.
+                //
+                // Mesaj GEÇİCİ başarısız işaretlenir, sessizce bırakılmaz. Geçici, çünkü
+                // beklenmeyen bir istisnanın sınıfı bilinmiyor; işaretlemek zorunlu, çünkü
+                // `AttemptCount` ilerlemeden deneme sayısı hiç tükenmez ve döngü sınırsız
+                // kalır. Deneme sayısı tükendiğinde AC-16 devreye girer: `Failed` + log.
+                logger.LogError(
+                    exception,
+                    "Bildirim işlenirken beklenmeyen hata; mesaj geçici başarısız işaretlendi: {MessageId} {TemplateKey}",
+                    message.Id,
+                    message.TemplateKey);
+
+                Finish(message, SendFailureKind.Transient, NotificationErrors.SendFailed);
+            }
         }
 
         await context.SaveChangesAsync(cancellationToken);

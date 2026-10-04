@@ -36,12 +36,16 @@ internal sealed class SmtpNotificationTransport(
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        MimeMessage mime = Compose(message);
-
         using SmtpClient client = new();
 
         try
         {
+            // Adres çözümü try'ın İÇİNDE olmak zorunda: `MailboxAddress.Parse` bozuk bir
+            // adreste `ParseException` fırlatır ve bu istisna dışarı sızdığında kuyruğun
+            // tamamı tek bir mesaja takılır. Yol teorik değil — 0005'in `EmailAddress`
+            // doğrulaması bilinçli olarak dardır ve `<@ornek.com` onu GEÇER.
+            MimeMessage mime = Compose(message);
+
             await client.ConnectAsync(
                 options.SmtpHost,
                 options.SmtpPort,
@@ -53,6 +57,18 @@ internal sealed class SmtpNotificationTransport(
             await client.DisconnectAsync(quit: true, cancellationToken);
 
             return SendResult.Success();
+        }
+        catch (ParseException exception)
+        {
+            // Bozuk adres KALICIDIR (AC-17): yeniden denemek aynı adresi aynı şekilde
+            // reddeder. Sağlayıcının reddiyle aynı sınıf, çünkü sonuç aynı — mesaj bu
+            // alıcıya hiçbir zaman gitmeyecek.
+            logger.LogWarning(
+                exception,
+                "Adres ayrıştırılamadı; mesaj kalıcı olarak başarısız: {Offset}",
+                exception.TokenIndex);
+
+            return SendResult.Permanent(NotificationErrors.RecipientRejected);
         }
         catch (SmtpCommandException exception)
         {

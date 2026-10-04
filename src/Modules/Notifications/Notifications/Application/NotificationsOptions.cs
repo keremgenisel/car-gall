@@ -1,5 +1,6 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Notifications.Contracts.Setup;
+using MimeKit;
 
 namespace CarGallery.Modules.Notifications.Application;
 
@@ -38,11 +39,24 @@ internal sealed class NotificationsOptions
 
     internal required TimeSpan SendTimeout { get; init; }
 
+    /// <summary>
+    /// "Var mı" değil, <b>kullanılabilir mi</b>. Boş olmayan ama ayrıştırılamayan bir adres
+    /// doğrulamayı geçer, sonra çalışma anında taşıyıcıyı fırlatır — yani C9'un önlemeye
+    /// çalıştığı şeyin tam olarak kendisi, bir adım geriden.
+    ///
+    /// <para>Denetim, adresi GERÇEKTEN TÜKETECEK ayrıştırıcıyla yapılıyor. Elle yazılmış
+    /// bir kontrol tek bir otorite daha üretir ve ikisi ayrıştığı an aynı deliği geri açar:
+    /// `&lt;@ornek.com` tek `@` taşır, iki yanı da boş değildir ve basit bir kontrolü
+    /// geçerdi — MimeKit onu reddediyor.</para>
+    /// </summary>
+    private static bool IsSendableAddress(string value) =>
+        !string.IsNullOrWhiteSpace(value) && MailboxAddress.TryParse(value, out _);
+
     internal static Result<NotificationsOptions> Create(NotificationsSetup setup)
     {
         ArgumentNullException.ThrowIfNull(setup);
 
-        if (string.IsNullOrWhiteSpace(setup.SetupNotificationAddress))
+        if (!IsSendableAddress(setup.SetupNotificationAddress))
         {
             return Result.Failure<NotificationsOptions>(
                 new Error("notification.setup_address_missing"));
@@ -53,7 +67,7 @@ internal sealed class NotificationsOptions
             return Result.Failure<NotificationsOptions>(new Error("notification.base_url_missing"));
         }
 
-        if (string.IsNullOrWhiteSpace(setup.SenderAddress))
+        if (!IsSendableAddress(setup.SenderAddress))
         {
             return Result.Failure<NotificationsOptions>(new Error("notification.sender_missing"));
         }
