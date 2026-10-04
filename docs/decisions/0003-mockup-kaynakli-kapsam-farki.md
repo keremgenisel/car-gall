@@ -1,0 +1,275 @@
+# ADR 0003 — Mockup Kaynaklı Kapsam Farkının Yönetimi
+
+| | |
+|---|---|
+| **Durum** | Kabul edildi |
+| **Tarih** | 2026-10-04 |
+| **Karar veren** | Takım Yöneticisi |
+| **İlgili** | `docs/architecture.md` § 4, § 6, § 7; `docs/domain.md` § 1, § 2.4; `specs/done/0001`, `0002`, `0005`, `0006`; ADR 0001 |
+
+---
+
+## Bağlam
+
+Ürünün frontend mockup'ları tamamlandı: tek bir tasarım tuvalinde **10 artboard** —
+ana sayfa, araç listesi, ilan detayı, mobil ilan detayı, Arapça (RTL) ana sayfa, panel girişi,
+iki adımlı doğrulama, panel ilan listesi, panel yeni ilan formu ve panel talepler ekranı.
+
+Mockup'lar incelendiğinde **ürün hedefinin, bugüne kadar teslim edilenin belirgin biçimde
+ötesinde olduğu** görüldü. Daha önemlisi: mockup'lar, tamamlanmış dört spec'in **bilinçli
+olarak kapsam dışı bıraktığı** yedi şeyi geri açıyor.
+
+**Doğrulanmış çelişkiler**
+
+| Mockup'ta olan | Hangi karara aykırı |
+|---|---|
+| Ziyaretçi seçimli sıralama (8 seçenek) | `0001` **X4** + **AC-4**: sıralama sabit |
+| 8 filtre ekseni (marka, yıl, km, yakıt, vites, fiyat, tramer) | `0001` **X2**, **X3**: yalnızca kasa tipi |
+| Marka arama kutusu | `0001` **X1**: serbest metin arama yok |
+| Favori sayacı ve kart üzerinde favori düğmesi | `0001` **X5**; § 6: favoriler `localStorage` |
+| Medya galerisi (1/18 + şerit) | `0002` **X2** |
+| 13 parçalık boyalı/değişen görsel şeması | `0002` **X3** |
+| Benzer araçlar bölümü | `0002` **X5** |
+| Takas talebi formu | `0005` **D3**, **X1** |
+| Talep paneli (liste, detay, iç not, durum) | `0005` **X5** |
+| İki adımlı doğrulama (TOTP + kurtarma kodu) | `0006` **X2** |
+| "Kullanıcı adı" ile giriş | `0006` **R1**: giriş kimliği e-posta |
+| 8 hatalı denemede kilit | `0006` **D4**: 5 deneme |
+| "Sahip" rolü; "fiyat alanı kilitli" | `0006` **R2**; architecture § 1: üç rol |
+| Talep durumları: Okundu / Görüşüldü / Kapandı—satıldı / Kapandı—ilgilenmedi | `docs/domain.md` **L4**: `Yeni → Atandı → İletişimde → Sonuçlandı` |
+| Müşterinin yazdığı mesaj alanı | `0005` **R4**: ad + iletişim kanalı; mesaj yok |
+| "Pazar profili: Türkiye" | Sözlükte böyle bir terim yok |
+
+**Doğrulanmış boşluk — en kritik olanı**
+
+`VehicleCatalog`'un **tek bir yazma ucu yoktur.** Projedeki tüm `MapPost`/`MapPut` uçları
+`Identity` (personel) ve `Leads` (talep) modüllerine ait; araç migration'ları arasında araç
+seed'i de yok. **Galeri bugün sisteme araç ekleyemez.** Mockup'ın "yeni ilan" ve "panel ilan
+listesi" artboard'ları tam bu boşluğu dolduruyor.
+
+Spec'i hiç olmayan diğerleri: ana sayfa, bülten aboneliği, markalar sayfası, `Content`
+sayfaları (Hakkımızda/İletişim/KVKK/Çerez), karşılaştırma, `Media` (filigran + 1600/800/400
+WebP türevleri), toplu eylemler, çeviri eksiği sütunu, dışa aktar, şube çalışma saatleri.
+
+**Asıl gerilim**
+
+Dört spec tamamlandı, kodu merge edildi ve SCORECARD'ları dolduruldu. Mockup'lar o spec'lerin
+kapsam dışı kararlarını geçersiz kılıyor. İki yanlış yol var: onaylı ve kapanmış spec'leri
+geriye dönük değiştirip tarihi silmek, ya da mockup'ları yok sayıp ürün hedefini
+tasarımdan koparmak.
+
+---
+
+## Karar
+
+**Mockup'lar ürün hedefinin gerçek kaynağıdır. Tamamlanmış spec'ler geriye dönük
+değiştirilmez; aradaki fark yeni spec'lerle kapatılır.**
+
+Kararın bağlayıcı unsurları:
+
+1. **Tamamlanmış spec dokunulmazdır.** `specs/done/` altındaki bir spec'in Requirements,
+   Acceptance Criteria veya KAPSAM DIŞI bölümü, mockup'a uydurmak için değiştirilmez. Bir
+   kapsam dışı karar geri açılıyorsa, onu açan **yeni spec** bunu kendi Context'inde
+   *"şu spec'in şu X maddesini geri açıyor"* diye adıyla yazar.
+2. **İki adımlı doğrulama kapsama girer.** `0006` § X2 kararı açılmıştır. 2FA (TOTP,
+   kurtarma kodu, sahip tarafından sıfırlama) **ayrı bir spec**'tir ve `Notifications`
+   modülünden **sonra** yapılır; kurtarma ve sıfırlama akışları bildirim gerektirir.
+3. **Dördüncü rol eklenmez.** Mockup'taki "Sahip" rolünün işlevini mevcut **Yönetici**
+   rolü taşır. Roller `docs/architecture.md` § 1'de yazılı üç tanedir. Mockup'taki
+   "fiyat alanı kilitlidir" ise **alan düzeyi yetki** demektir ve bu **ayrı bir karardır** —
+   § 6'nın "şube bazlı yetkilendirme / kayıt seviyesi izin" kararına komşudur, onunla
+   birlikte ele alınır.
+4. **Sözlük kazanır.** Talep durumları `docs/domain.md` **L4**'teki dörttür. Mockup'taki
+   "Okundu" bir **durum değildir**; durumdan bağımsız bir **damga**dır (kim, ne zaman okudu) —
+   mockup'ın kendisi de bunu "[KULLANICI ADI] tarafından okundu · 16:58" diye ayrı gösterir.
+   Panelin durum seçicisi sözlüğe göre etiketlenir.
+5. **Talebe mesaj alanı eklenir.** Müşterinin yazdığı serbest metin, geldiği dilde saklanır.
+   Bu, `0005` tamamlandığı için **yeni bir spec**'te yapılır (unsur 1).
+6. **"Pazar profili" bir terim değildir.** Mockup'ta o adla görünen şey, **Alan Ayarı**
+   (`VehicleFormSettings`) ile kurulum yapılandırmasının birleşimidir; panelde "Alan ayarları"
+   olarak etiketlenir. Aynı kavrama ikinci bir isim verilmez. Profil seçimiyle alan kümesinin
+   değişmesi, § 4'ün *"kullanıcı yeni alan tanımlayamaz"* kalıcı sınırına fazla yaklaşır.
+7. **Sıra şudur** ve kapsam kararı olmadan değişmez:
+
+   | # | İş | Neden bu sırada |
+   |---|---|---|
+   | 1 | Talep bildirimi (`0009`, Taslak) | `0005`/D5'in borcu; talepler birikiyor, kimse görmüyor |
+   | 2 | **Panel: araç/ilan yönetimi** (yeni ilan + ilan listesi) | Galeri araç ekleyemiyor; vitrin bu olmadan beslenemez |
+   | 3 | `Media` (filigran, WebP türevleri, R2) | 2'nin fotoğraf akışı buna dayanır |
+   | 4 | Ana sayfa | Vitrinin girişi |
+   | 5 | Liste: sıralama + filtre eksenleri | `0001` X2/X3/X4'ü açar |
+   | 6 | Medya galerisi + parça haritası şeması | `0002` X2/X3'ü açar |
+   | 7 | `Content` sayfaları | Hakkımızda/İletişim/KVKK/Çerez |
+   | 8 | Favori + karşılaştırma | `0001` X5'i açar |
+   | 9 | Bülten aboneliği | `Notifications` + abonelikten çıkma |
+
+---
+
+## Sonuçlar
+
+### İyi taraf
+
+- **Tarih yalan söylemez.** Tamamlanmış spec'lerin SCORECARD'ları, o iş yapılırken neyin
+  bilindiğini göstermeye devam eder. "0001 neden sıralama içermiyor" sorusunun cevabı
+  spec'in kendisinde kalır.
+- **Fark izlenebilir.** Her geri açılan kapsam dışı madde, onu açan spec'te adıyla yazılı
+  olur; iki yıl sonra "bu neden değişti" sorusu tek bir dosyaya gider.
+- **Sıra, görünür değere göre değil bağımlılığa göre kurulur.** Galeri araç ekleyemezken
+  favori veya ana sayfa yapmak vitrini boş bırakır; unsur 7 bunu engeller.
+- **Sözlük tek kalır.** Unsur 4 ve 6, mockup'ın getirdiği iki yeni ismi sözlüğe sokmadan
+  karşılar.
+
+### Bedel
+
+- **Spec sayısı artar.** Aynı ekrana iki spec dokunur: biri onu kuran, diğeri genişleten.
+  Bir ekranın bugünkü davranışını anlamak için iki dosya okumak gerekir.
+- **`0006` iki kez açılır.** 2FA (unsur 2) giriş akışını yeniden test ettirir; `0006`'nın
+  kabul kriterlerinin bir kısmı yeni spec'te tekrar doğrulanır.
+- **Mockup ile ürün bir süre ayrışık kalır.** Unsur 7'nin sırası gereği ziyaretçi tarafındaki
+  görünür iyileştirmeler (sıralama, filtre, galeri, favori) panel işinin arkasına düşer;
+  mockup'ı gören biri ürünü eksik bulur. Bu bilerek ödeniyor.
+- **Mockup'ın üç metni değişir.** "Sahip" (unsur 3), durum etiketleri (unsur 4) ve
+  "Pazar profili" (unsur 6) tasarım tarafında güncellenmelidir; aksi hâlde tasarım,
+  yapılmayacak bir şeyi vaat eder.
+
+### Ne zaman yeniden değerlendirilir
+
+- **Mockup yeniden çizilirse** ve bu ADR'nin unsur 3, 4 veya 6'sına aykırı bir şey getirirse:
+  karar yeniden açılır, mockup sessizce kazanmaz.
+- **Unsur 7'nin sırası bozulmak istenirse:** bu bir kapsam kararıdır, Takım Yöneticisi açar.
+- **Alan düzeyi yetki (unsur 3) gerçekten gerekirse** — örneğin "danışman fiyatı
+  değiştiremesin" somut bir talebe dönüşürse — § 6'nın izin motoru tetikleyicisiyle birlikte
+  değerlendirilir.
+- **Tamamlanmış bir spec'in kodu mockup'la uyumsuz çalışıyorsa** (kriterine aykırı davranış),
+  bu kapsam değil **hata**dır: `fix/` branch'i ve `AP-06` yolu geçerlidir, bu ADR devreye girmez.
+
+---
+
+## Değerlendirilen Alternatifler
+
+### 1. Tamamlanmış spec'leri revize etmek
+
+`0001`, `0002`, `0005`, `0006` yeniden açılır; kapsam dışı maddeler silinir, yeni
+Requirements ve kriterler eklenir.
+
+**Neden elendi:** dördünün de SCORECARD'ı dolu ve kodu merge edilmiş. Revizyon, o
+scorecard'ları anlamsız kılar — "spec revizyon sayısı" iş bittikten haftalar sonra artar ve
+ölçüt neyi ölçtüğünü kaybeder. Ayrıca `specs/done/` arşiv olmaktan çıkar: bir dosya hem
+"tamamlandı" hem "değişiyor" olamaz.
+
+### 2. Mockup'ları kararlara uydurup kırpmak
+
+Sıralama, filtreler, favori, galeri, 2FA mockup'tan çıkarılır; tasarım mevcut kapsama
+indirilir.
+
+**Neden elendi:** mockup'lar ürün hedefini taşıyor, mevcut teslimi değil. Tasarımı teslime
+indirmek, hedefi teslimin boyuna kırpmak olur — ve bu ürünü bir daha büyütmez. Ayrıca
+mockup'taki bazı şeyler (araç ekleme paneli) kırpılamaz: onlar olmadan ürün çalışmıyor.
+
+### 3. Tek büyük "v2" spec'i
+
+Tüm fark tek bir spec'te toplanır.
+
+**Neden elendi:** dokuz ekran, altı modül, iki yeni modül (`Media`, `Content`) ve bir
+altyapı işi. `AGENTS.md` § Çalışma Disiplini 4'ün "küçük dilimler" kuralını ihlal eder;
+kabul kriterleri ortak bir hakeme bağlanamaz ve tek PR'a sığmaz. Bu, `0006`'nın
+"destek modülleri" isteğinde zaten bir kez elenmiş bir biçim.
+
+### 4. Mockup'ları keşif sayıp kayda geçirmemek
+
+Tasarım ilham olarak kalır; spec'ler mevcut kararlarla yürür.
+
+**Neden elendi:** mockup'lar somut vaatler içeriyor — giriş ekranındaki "ikinci adımda
+doğrulama kodu istenir" metni gibi. Kayda geçirilmeyen vaat, altı ay sonra "bunu yapacaktık"
+tartışmasına dönüşür ve o tartışmanın hakemi olmaz.
+
+---
+
+## Ek 1 — Sıranın tamamlanması ve ondan sapmalar
+
+*2026-10-04. Unsur 7'nin dokuz adımı, o yazıldığında var olmayan üç spec'i kapsamıyordu.
+ADR "kapsam kararı olmadan değişmez" dediği için yerleşimleri burada kayda geçiyor.
+Ayrıca bir adım sırasının dışında yapıldı; onu gizlemek bu ADR'nin varlık sebebini
+ortadan kaldırırdı.*
+
+### Sıraya eklenen üç spec
+
+| Spec | Yeri | Gerekçe |
+|---|---|---|
+| **`frontend-002`** görsel dil ve marka teması | Unsur 7 **#2'den ÖNCE** | Token katmanına dokunuyor; panel ekranları (#2) ondan sonra yazılmazsa aynı ekranlar iki kez boyanır ve `frontend-002` onları da taşımak zorunda kalır. Spec'in Intent'i bugünkü `#1f5fd0` vurgu rengini *"hiç kimsenin verdiği bir karar değil"* diye tanımlıyor ve `docs/frontend.md` § 4.1'in yasak saydığı türden olduğunu söylüyor. |
+| **`0008`** personel yönetimi eylemleri | Unsur 7 #2'den **sonra** olmalıydı — **sıradan önce yapıldı**, aşağıya bkz. | Araç ekleyemeyen bir galeride personel pasifleştirme ikincil kalır; ayrıca #2 panelde yazma akışının desenini kurar ve `0008` onu yeniden kullanır. |
+| **`0004`** SEO meta ve yapısal veri | Unsur 7 **#4'ten (ana sayfa) sonra** | SEO'nun değeri indekslenecek sayfa sayısıyla artıyor; ana sayfa ve liste eksenleri yoksa indekslenecek az şey var. Spec'in Intent'i hâlâ boş: *"başarı neye benziyor"* sorusu Takım Yöneticisi'nde. |
+
+### Sapma — `0008` sıradan önce yapıldı
+
+`0008` bu ADR'de #2'den sonraya konmuştu. Fiiliyatta **#2'den önce** uygulandı ve
+`main`'e merge edildi (PR #25, 2026-10-04): 37 dosya, 42 kriter, CI 4/4 yeşil.
+
+**Neden kayda geçiyor:** sıra bir tahmin değil, verilmiş bir karardı. Sapma zararsız
+çıktı — `0008` yalnız `Identity` ve panel ekranına dokundu, `0010`'un dokunacağı
+`VehicleCatalog` yazma yüzeyiyle hiç kesişmedi (37 dosyaya karşı `main`'in 81 dosyası,
+ortak dosya yok) — ama zararsız olduğu **önceden bilinmiyordu**. Sıranın gerekçesi
+bağımlılık değil değer önceliğiydi ve o gerekçe hâlâ geçerli: galeri bugün hâlâ araç
+ekleyemiyor.
+
+**Çıkarılan ders:** paralel çalışan oturumlar bu ADR'nin sırasını okumuyor. Sıra bir
+belgede duruyor ama hiçbir mekanizma onu dayatmıyor. Bir sonraki sapma aynı şansı
+taşımayabilir.
+
+### `0010`'un kendi dilimlemesi — unsur 7 #2 ikiye bölündü
+
+`0010`'un **D1** kararı, unsur 7'nin 2. maddesini üç dilime ayırıyor ve ilk dilimi kendisi
+üstleniyor:
+
+| # | Dilim | Durum |
+|---|---|---|
+| 1 | Araç kaydı, düzenleme, taslak ilan, ilan listesi (okuma) | `0010` (Taslak) |
+| 2 | `Media`: yükleme, türev üretimi, filigran, depolama | spec yok |
+| 3 | Yayın ve durum eylemleri + toplu eylemler | spec yok |
+
+**Bu, unsur 7'yi reddetmez; 2. maddesini ikiye böler ve `Media`'yı (#3) yayın işinin
+önüne çeker.** Gerekçesi doğrulanmış bir teknik kısıt: `Vehicle.EnsurePublishable()` en az
+bir medya varlığı istiyor ve `MediaAssetReady` olayını yayan hiçbir şey yok. Yani panel
+#2 olarak kalabilir ama **yalnızca taslak** teslim edebilir.
+
+Sonucu: `0010` bittiğinde galeri araç girebilir ama **hiçbirini yayına alamaz**; vitrin
+hâlâ seed'e bağlı kalır. `0010` bu bedeli açıkça yazıyor.
+
+### Güncellenen sıra
+
+| # | İş | Spec |
+|---|---|---|
+| 1 | Talep bildirimi | `0009` ✅ tamamlandı |
+| — | Personel yönetimi eylemleri *(sıra dışı yapıldı)* | `0008` ✅ tamamlandı |
+| 2 | **Görsel dil ve marka teması** | `frontend-002` (Taslak) |
+| 3 | **Panel: araç kaydı ve taslak ilan** | `0010` (Taslak) |
+| 4 | `Media`: yükleme, türev, filigran | spec yok |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | spec yok |
+| 6 | İki adımlı doğrulama (unsur 2) | spec yok |
+| 7 | Ana sayfa | spec yok |
+| 8 | SEO meta ve yapısal veri | `0004` (Taslak, Intent boş) |
+| 9 | Liste: sıralama + filtre eksenleri | spec yok |
+| 10 | Medya galerisi + parça haritası şeması | spec yok |
+| 11 | `Content` sayfaları | spec yok |
+| 12 | Favori + karşılaştırma | spec yok |
+| 13 | Bülten aboneliği | spec yok |
+
+---
+
+## Takip işleri
+
+Bu ADR kararın **neden**ini taşır. Kararın **ne** olduğunu söyleyen tek satırlık kayıtlar
+`docs/architecture.md` § 7 Karar Defteri'ne eklenmelidir:
+
+| Konu | Karar |
+|---|---|
+| İki adımlı doğrulama | Kapsamda; `Notifications` sonrası ayrı spec (ADR 0003) |
+| Personel rolleri | Üç rol; "Sahip" diye dördüncü rol yok (ADR 0003) |
+| Alan düzeyi yetki | Ayrı karar; § 6'nın izin motoru tetikleyicisiyle birlikte (ADR 0003) |
+| Tamamlanmış spec | Geriye dönük değiştirilmez; fark yeni spec'le kapanır (ADR 0003) |
+
+`docs/domain.md` sözlüğünde **değişiklik gerekmez**: unsur 4 ve 6 yeni terim eklememe
+kararıdır. Panelin durum etiketleri mevcut **Talep Durumu** değerlerine eşlenir.
+
+*Bu tabloyu Analist yazmaz — § 7 güncellemesi, o kararı kapsayan spec'in
+Definition of Done maddesidir.*
