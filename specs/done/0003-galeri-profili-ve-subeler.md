@@ -430,7 +430,8 @@ kalsın. *Bilerek ödenen bedel:* bugün çözülemeyen, yalnızca saklanan bir 
 |---|---|---|
 | **Spec revizyon sayısı** | **1** | C14 ve AC-34, **onay anında** düzeltildi (R-1): "yalnızca `Dealership` şemasına" diyorlardı ve D4 ile çelişiyorlardı. Onaydan **sonra** spec'e hiç dokunulmadı; kriterler uygulama boyunca değişmedi. |
 | **Düzeltme turu sayısı** | **—** | **Ölçülmedi** (`—`, 0 değil): PR bu kayıtla birlikte açıldı, gözden geçirme turu hiç olmadı. |
-| **Bulgu gerçek/gürültü oranı** | **— / —** | Dış gözden geçirme yapılmadı. Aşağıdaki üç kusuru testlerin ve kendi doğrulamamın bulduğu ayrıca not edilmelidir; bu sütunun yerine geçmez. |
+| **Dış bulgu (gerçek/gürültü)** | **— (dış gözden geçirme yok)** | Bu spec triyajdan geçmedi; PR bu kayıtla birlikte açıldı. |
+| **Uygulama içi bulgu** | **3** | Üç kusuru testler ve kendi doğrulamam buldu; ayrıntıları aşağıdaki derste. |
 | **Regresyon sayısı** | **1** | `MigrationTasir_HerDbContextSahibiModul` daha önce yeşildi ve `IOutboxDbContext.cs` eklenince kırmızıya döndü — testin kuralı değil TESPİTİ fazla genişti. Merge öncesi kapandı (`8502c84`). |
 | **Kaçan hata** | **1** | *2026-09-22:* `MigrateDealershipAsync` tanımlıydı ama **hiçbir yerden çağrılmıyordu**. Temiz bir kurulumda şubeli personel ekleme `42P01: relation "dealership.branches" does not exist` ile düşüyordu. `0006` üzerinde çalışılırken bulundu; `Dealership` artık `IModuleSchema` üzerinden kurulum adımına kayıtlı. |
 

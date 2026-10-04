@@ -11,6 +11,18 @@ görmeye yetiyor.
 
 ## Tablo
 
+> **Bu tablo 2026-09-22 tarihli anlık görüntüdür ve bugün kartlarla ÇELİŞİR.** Sonradan iki
+> şey değişti: (1) "Bulgu gerçek/gürültü oranı" ölçütü **dış bulgu** ve **uygulama içi bulgu**
+> diye ikiye ayrıldı — ikisi farklı şey ölçüyordu ve tek sütunda toplanınca ikisi de
+> okunamıyordu; (2) `0005` ile `0006`'nın kartları "dış gözden geçirme yok" diyordu, oysa ikisi
+> de triyaj almıştı (beş ve dört bulguyla, her biri kendi commit'iyle kapatılmış).
+>
+> Tablo **düzeltilmedi**, çünkü tarihli bir analizi sonradan yeniden yazmak o analizin ne zaman
+> neyi gördüğünü siler. Güncel sayılar için kartların kendisine bakılmalı. Aşağıdaki bulgular
+> sayıların kendisine değil, ölçütlerin işleyişine dair oldukları için geçerliliğini koruyor —
+> nitekim **Bulgu 1'in teşhisi** ("ölçütler ölü") bu düzeltmelerin sebebi oldu.
+
+
 | Spec | Revizyon | Düzeltme turu | Gerçek/gürültü | Regresyon | Kaçan hata |
 |---|---|---|---|---|---|
 | `0001` Vitrin listesi | 1 | 1 | 12 / 0 | 1 | *(aşağıda)* |

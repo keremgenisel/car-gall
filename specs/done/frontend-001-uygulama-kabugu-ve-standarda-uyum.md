@@ -208,7 +208,8 @@ token'ları ve bileşen envanteri dosyada yazdığı gibi olur.
 |---|---|---|
 | **Spec revizyon sayısı** | **0** | Onaydan (`3445f9b`) sonra spec dosyasına hiç dokunulmadı. Kriterler uygulama boyunca değişmedi. |
 | **Düzeltme turu sayısı** | **—** | **Ölçülmedi** (`—`, 0 değil): PR açılmadı, gözden geçirme turu hiç olmadı. |
-| **Bulgu gerçek/gürültü oranı** | **— / —** | Dış gözden geçirme yapılmadı. Aşağıdaki kusurları testlerin ve kendi doğrulamamın bulduğu not edilmelidir; bu sütunun yerine geçmez. |
+| **Dış bulgu (gerçek/gürültü)** | **— (dış gözden geçirme yok)** | PR açılmadı, gözden geçirme turu hiç olmadı. |
+| **Uygulama içi bulgu** | **—** | Kusurları testler ve kendi doğrulamam buldu ama kayıtta sayılmamış; kartın yazıldığı sırada bu ölçüt ayrı değildi. |
 | **Regresyon sayısı** | **2** | (1) Kabuk eklenince sayfada iki `<main>` oluştu — AC-1 testi yakaladı. (2) Dil değiştirici de `<nav>` olduğu için AC-30'un kanıt locator'ı belirsizleşti ve daha önce yeşil olan test kırıldı. İkisi de merge öncesi kapandı. |
 | **Kaçan hata** | **0** | *2026-09-22 itibarıyla* — **izleniyor**. Merge sonrası bulunan her kusur buraya tarihiyle eklenir. |
 

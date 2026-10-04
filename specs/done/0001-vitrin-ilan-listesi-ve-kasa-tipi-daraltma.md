@@ -364,7 +364,8 @@ kurar. Bu spec yazılırken kod okunmamıştır; okunacak kod yoktur.
 |---|---|---|
 | **Spec revizyon sayısı** | **1** | Onay (`ef7051f`) sonrası tek değişiklik: X10'un eklenmesi (`0bc3191`). Yazma yolu hiçbir X maddesiyle dışlanmıyordu; "yapılmadı" ile "kapsam dışı" ayırt edilemiyordu. Kriterlerin kendisi hiç değişmedi. |
 | **Düzeltme turu sayısı** | **1** | PR henüz açılmadı; tur PR öncesi QA gözden geçirmesidir. 12 bulgu, hepsi tek turda kapandı. |
-| **Bulgu gerçek/gürültü oranı** | **— (dış gözden geçirme yok)** | Gürültü bulgu yok. Yalnız D2'nin önerdiği NEDEN yanlıştı (katlama üstü lazy görsel); bulgunun kendisi — LCP eşiği kırmızı — gerçekti ve ölçümle kapandı. |
+| **Dış bulgu (gerçek/gürültü)** | **12 / 0** | PR öncesi **QA gözden geçirmesi**; on ikisi de tek turda kapandı. Gürültü bulgu yok. Yalnız D2'nin önerdiği NEDEN yanlıştı (katlama üstü lazy görsel); bulgunun kendisi — LCP eşiği kırmızı — gerçekti ve ölçümle kapandı. |
+| **Uygulama içi bulgu** | **—** | Kayıtta ayrıca sayılmamış. Kartın yazıldığı sırada iki bulgu türü tek sütunda toplanıyordu; geriye dönük ayrıştırılabilen tek sayı QA turununki. |
 | **Regresyon sayısı** | **1** | CLS düzeltmesi iskelete `.listing-card` sınıfını verince, daha önce yeşil olan e2e seçicileri iskeletle eşleşmeye başladı. Testler yakaladı, merge öncesi kapandı (`data-testid="listing-card"`). |
 | **Kaçan hata** | **1** | *2026-09-22:* Şemalar yalnız `Development:SeedShowcase` bayrağıyla uygulanıyordu. Bayrak kapalı bir dağıtımda hiçbir tablo oluşmuyor, uygulama **sağlıklı görünerek** ayağa kalkıyor ve ilk ziyaretçinin ilk isteğinde "tablo yok" ile düşüyordu — `main` beş spec boyunca üretime çıkarılamaz hâldeydi ve bunu söyleyen tek bir test yoktu. ADR 0002 ile kapatıldı (#12). |
 
