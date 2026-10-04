@@ -30,6 +30,30 @@ async function hesaplanan(page: import('@playwright/test').Page, token: string):
   )
 }
 
+/**
+ * **A grubu — bu spec'ten ÖNCE de yeşildi.** `dir="auto"` 0001/0002'de kuruldu; bu test
+ * yeni davranışın kanıtı değil, font değişiminin onu bozmadığının kanıtı.
+ *
+ * Ölçtüğü iki şey: yön mekanizması yerinde mi (`dir="auto"`), ve Arapça sayfada fiyat
+ * LATİN rakamla mı basılıyor. İkincisi `docs/frontend.md` § 5'in uyardığı yer — `ar`
+ * locale'inin ICU varsayılanı ortama göre Hint-Arap rakamı olabilir ve yeni bir yazı tipi
+ * yığını bu hatayı görünür kılacak ilk şeydir.
+ */
+test('frontend-002/AC-1: Latin marka adları ve fiyatlar Arapça metin içinde doğru yönde görünür', async ({
+  page,
+}) => {
+  await page.goto('/ar/')
+
+  const kart = page.getByTestId('listing-card').first()
+  await expect(kart.locator('.listing-card__model')).toHaveAttribute('dir', 'auto')
+
+  const fiyat = (await kart.locator('.listing-card__price').textContent())?.trim() ?? ''
+
+  expect(fiyat).toMatch(/[0-9]/)
+  // Hint-Arap rakamları (U+0660–U+0669) BULUNMAZ: rakam sistemi sabitlenmiş.
+  expect(fiyat).not.toMatch(/[\u0660-\u0669]/)
+})
+
 test("frontend-002/AC-6: türetilmiş token'ların hesaplanan değeri", async ({ page }) => {
   await page.goto('/tr/')
 
