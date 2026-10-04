@@ -1,5 +1,7 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.BuildingBlocks.Schema;
+using CarGallery.Modules.Notifications.Application;
 using CarGallery.Modules.Notifications.Contracts.Setup;
 using CarGallery.Modules.Notifications.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +38,23 @@ public static class NotificationsModule
             "Notifications"));
 
         services.AddSingleton<IClock, SystemClock>();
-        services.AddSingleton(setup);
+
+        // C9/AC-27 — yapılandırma KURULUŞTA doğrulanır. Eksikse burada patlar ve uygulama
+        // hiç ayağa kalkmaz; çalışma anında patlamaz. Bildirim adresi yapılandırılmamışsa
+        // her talep sessizce kaybolur — bu spec'in varlık nedeni tam olarak o durum.
+        Result<NotificationsOptions> options = NotificationsOptions.Create(setup);
+
+        if (options.IsFailure)
+        {
+            throw new InvalidOperationException(
+                $"Notifications yapılandırması eksik veya geçersiz: {options.Error.Code}");
+        }
+
+        services.AddSingleton(options.Value);
+        services.AddScoped<TemplateResolver>();
+
+        // Olay dağıtıcısı hedefleri DI'dan çözüyor; `Leads`'in dağıtıcısı bu kaydı bulur.
+        services.AddScoped<IIntegrationEventDispatchTarget, LeadCapturedNotificationHandler>();
 
         return services;
     }
