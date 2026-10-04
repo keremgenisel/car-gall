@@ -11,13 +11,19 @@ namespace CarGallery.Modules.Dealership.Tests.Integration;
 /// 0009 D2 — galeri bildiriminin hedefi. Seed şubelerinden biri e-posta taşıyor, diğeri
 /// taşımıyor; ikisi de kurulum verisi olarak migration'dan geliyor ve ikisi de gerçek bir
 /// kenar durumu temsil ediyor.
+///
+/// <para><b>Bunlar SÖZLEŞME YÜZEYİ testleridir, kriter testi DEĞİL.</b> Kriterlerin
+/// tarif ettiği davranış — e-posta gönderimi, kuyruk, idempotentlik, gönderim geçmişi —
+/// `Notifications` modülünde yaşıyor ve orada eşlenir. Buradaki testler yalnız yüzeyin
+/// doğru veriyi verdiğini gösterir; bu yüzden `AC-` öneki taşımazlar (`CodeRuleTests`
+/// deseni). Kanıtlamadığı kriteri iddia eden bir ad, kriter → test tablosunu yalancı yapar.</para>
 /// </summary>
 [Collection(DealershipDatabaseCollection.Name)]
 public sealed class SubeIletisimSorgusuTests(DealershipDatabase database)
 {
     private static readonly Locale Tr = Locale.Create("tr").Value;
 
-    [Fact(DisplayName = "0009/AC-4: Şubenin e-posta adresi varsa bildirim o adrese gider")]
+    [Fact]
     public async Task Doner_SubeEpostasi_Varsa()
     {
         BranchNotificationContactDto? iletisim = await SorAsync("kadikoy-subesi");
@@ -27,7 +33,7 @@ public sealed class SubeIletisimSorgusuTests(DealershipDatabase database)
         Assert.Equal("Kadıköy Şubesi", iletisim.Name);
     }
 
-    [Fact(DisplayName = "0009/AC-5: Şubenin e-posta adresi yoksa bildirim kurulum bildirim adresine gider")]
+    [Fact]
     public async Task Doner_NullEposta_Yoksa()
     {
         BranchNotificationContactDto? iletisim = await SorAsync("atasehir-subesi");
@@ -37,7 +43,7 @@ public sealed class SubeIletisimSorgusuTests(DealershipDatabase database)
         Assert.Equal("Ataşehir Şubesi", iletisim.Name);
     }
 
-    [Fact(DisplayName = "0009/AC-5: Şubenin e-posta adresi yoksa bildirim kurulum bildirim adresine gider")]
+    [Fact]
     public async Task Doner_Null_VarOlmayanSube()
     {
         await using DealershipDbContext context = database.CreateContext();

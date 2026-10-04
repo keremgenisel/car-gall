@@ -9,11 +9,17 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Contracts;
 /// <summary>
 /// 0009 D5 — bildirimdeki detay bağlantısının slug'ı. Kaldırılmış ilan için `null` döner
 /// ve bu bir hata değildir: bağlantı kurulamaz, bildirim yine gider (AC-32).
+///
+/// <para><b>Bunlar SÖZLEŞME YÜZEYİ testleridir, kriter testi DEĞİL.</b> Kriterlerin
+/// tarif ettiği davranış — e-posta gönderimi, kuyruk, idempotentlik, gönderim geçmişi —
+/// `Notifications` modülünde yaşıyor ve orada eşlenir. Buradaki testler yalnız yüzeyin
+/// doğru veriyi verdiğini gösterir; bu yüzden `AC-` öneki taşımazlar (`CodeRuleTests`
+/// deseni). Kanıtlamadığı kriteri iddia eden bir ad, kriter → test tablosunu yalancı yapar.</para>
 /// </summary>
 [Collection(ShowcaseDatabaseCollection.Name)]
 public sealed class IlanSlugSorgusuTests(ShowcaseDatabase database)
 {
-    [Fact(DisplayName = "0009/AC-3: Gönderilen e-posta talebin şubesinin adını, aracın model adını ve ilanın detay sayfasına giden mutlak bağlantıyı taşır")]
+    [Fact]
     public async Task Doner_Slug_YayindakiIlanIcin()
     {
         await database.ResetAsync();
@@ -30,7 +36,7 @@ public sealed class IlanSlugSorgusuTests(ShowcaseDatabase database)
         Assert.Equal("toyota-corolla-2019-abc123", slug);
     }
 
-    [Fact(DisplayName = "0009/AC-32: İlanın slug'ı çözülemediğinde — ilan kaldırılmışsa — galeri bildirimi bağlantısız gönderilir ve gönderim başarısız sayılmaz")]
+    [Fact]
     public async Task Doner_Null_KaldirilmisIlanIcin()
     {
         await database.ResetAsync();

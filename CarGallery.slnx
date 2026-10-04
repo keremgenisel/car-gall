@@ -34,6 +34,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
     <Project Path="tests/Dealership.Tests/Dealership.Tests.csproj" />
+    <Project Path="tests/Notifications.Tests/Notifications.Tests.csproj" />
     <Project Path="tests/Host.Tests/Host.Tests.csproj" />
     <Project Path="tests/Identity.Tests/Identity.Tests.csproj" />
     <Project Path="tests/Leads.Tests/Leads.Tests.csproj" />

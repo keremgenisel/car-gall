@@ -12,11 +12,18 @@ namespace CarGallery.Modules.Leads.Tests.Contracts;
 /// Sözleşmenin DARLIĞI da sınanıyor, yalnız doğruluğu değil: ad ve telefon bu DTO'da
 /// bulunmamalı. Bir alan sonradan eklemek ucuz, geçmişten silmek imkânsız — ve bu yüzey
 /// bir modül sınırını geçiyor.
+///
+/// <para><b>Bunlar SÖZLEŞME YÜZEYİ testleridir, kriter testi DEĞİL.</b> Kriterlerin
+/// tarif ettiği davranış — e-posta gönderimi, kuyruk, idempotentlik, gönderim geçmişi —
+/// `Notifications` modülünde yaşıyor ve orada eşlenir. Buradaki testler yalnız yüzeyin
+/// doğru veriyi doğru şekilde verdiğini gösterir; bu yüzden `AC-` öneki taşımazlar
+/// (`CodeRuleTests` deseni). Kanıtlamadığı kriteri iddia eden bir ad, kriter → test
+/// tablosunu yalancı yapar.</para>
 /// </summary>
 [Collection(LeadsDatabaseCollection.Name)]
 public sealed class LeadBildirimSorgusuTests(LeadsDatabase database)
 {
-    [Fact(DisplayName = "0009/AC-3: Gönderilen e-posta talebin şubesinin adını, aracın model adını ve ilanın detay sayfasına giden mutlak bağlantıyı taşır")]
+    [Fact]
     public async Task Doner_ModelAdi_Sube_VeIlan()
     {
         await database.ResetAsync();
@@ -44,7 +51,7 @@ public sealed class LeadBildirimSorgusuTests(LeadsDatabase database)
         Assert.Equal("ar", okunan.SubmittedLocale);
     }
 
-    [Fact(DisplayName = "0009/AC-11: E-posta adresi olmayan — yalnız telefon bırakılmış — bir talepte ziyaretçi karşılığı gönderilmez; gönderim geçmişine \"kanal yok\" sonucuyla kaydedilir")]
+    [Fact]
     public async Task Doner_NullEposta_YalnizTelefonVarken()
     {
         await database.ResetAsync();
@@ -58,7 +65,7 @@ public sealed class LeadBildirimSorgusuTests(LeadsDatabase database)
         Assert.Null(okunan.Email);
     }
 
-    [Fact(DisplayName = "0009/AC-24: Gönderim geçmişi alıcının adını, e-posta adresini veya telefonunu hiç tutmaz")]
+    [Fact]
     public async Task TasimazKisiselVeri_SozlesmeYuzeyi()
     {
         string[] alanlar = [.. typeof(LeadNotificationDto).GetProperties().Select(property => property.Name)];
@@ -71,7 +78,7 @@ public sealed class LeadBildirimSorgusuTests(LeadsDatabase database)
         Assert.DoesNotContain(alanlar, ad => ad.Contains("Message", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact(DisplayName = "0009/AC-19: Aynı `LeadCaptured` olayı iki kez işlendiğinde ikinci bir gönderim kaydı oluşmaz")]
+    [Fact]
     public async Task Doner_Null_VarOlmayanTalepIcin()
     {
         await database.ResetAsync();

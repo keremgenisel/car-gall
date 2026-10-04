@@ -30,8 +30,15 @@ internal sealed class NotificationMessage
 
     internal required string TemplateKey { get; init; }
 
-    /// <summary>Gönderimin ÇÖZÜLEN locale'i — istenen değil, kullanılan (R9).</summary>
-    internal required string Locale { get; set; }
+    /// <summary>
+    /// Talebin bırakıldığı locale (L1). Şablon çözümü bunun üzerinden yapılır ve istenen
+    /// dilde şablon yoksa varsayılana düşülür (R9) — düşüş LOGLANIR (AC-20).
+    ///
+    /// `init`: kuyruk satırının dili kuyruğa girerken bellidir ve sonradan değişmez. Açık
+    /// bir setter bırakmak, onu kimin ne zaman değiştirebileceğini belirsiz yapardı; diğer
+    /// değişken alanların hepsi zaten `private set`.
+    /// </summary>
+    internal required string Locale { get; init; }
 
     internal NotificationChannel Channel { get; init; }
 
@@ -90,13 +97,27 @@ internal sealed class NotificationMessage
             CompletedAt = now,
         };
 
-    internal void MarkSent(DateTimeOffset now)
+    /// <summary>
+    /// Tamamlanmış bir mesaj yeniden işaretlenemez. Koruma olmasaydı geç gelen bir sonuç
+    /// `CompletedAt`'ı ezer ve geçmiş sessizce yalan söylerdi.
+    /// </summary>
+    internal Result MarkSent(DateTimeOffset now)
     {
+        if (IsCompleted)
+        {
+            return Result.Failure(new Error(NotificationErrors.AlreadyCompleted));
+        }
+
         Status = NotificationStatus.Sent;
         NextAttemptAt = null;
         FailureCode = null;
         CompletedAt = now;
+
+        return Result.Success();
     }
+
+    /// <summary>Sonucu yazılmış mesaj: `Sent`, `Failed` veya `NoChannel`.</summary>
+    private bool IsCompleted => Status is not NotificationStatus.Queued;
 
     /// <summary>
     /// R11 — geçici hata yapılandırılan sayıda, ARTAN aralıkla yeniden denenir; denemeler
@@ -110,6 +131,11 @@ internal sealed class NotificationMessage
         TimeSpan baseDelay,
         DateTimeOffset now)
     {
+        if (IsCompleted)
+        {
+            return Result.Failure(new Error(NotificationErrors.AlreadyCompleted));
+        }
+
         AttemptCount++;
         FailureCode = failureCode;
 

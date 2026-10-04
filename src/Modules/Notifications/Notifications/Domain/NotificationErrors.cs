@@ -9,4 +9,7 @@ internal static class NotificationErrors
     internal const string TemplateMissing = "notification.template_missing";
     internal const string NoChannel = "notification.no_channel";
     internal const string SendFailed = "notification.send_failed";
+
+    /// <summary>Sonucu zaten yazılmış bir mesajı yeniden işaretleme girişimi.</summary>
+    internal const string AlreadyCompleted = "notification.already_completed";
 }

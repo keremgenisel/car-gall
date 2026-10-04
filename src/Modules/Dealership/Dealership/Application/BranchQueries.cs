@@ -23,11 +23,17 @@ internal sealed class BranchQueries(DealershipDbContext context, Locale defaultL
         string locale,
         CancellationToken cancellationToken)
     {
-        Branch? branch = await context.Branches
+        // Projeksiyon SORGUYA yazılıyor, belleğe değil: DTO yalnız ad ve e-posta taşıyor,
+        // oysa bütün agregat çekilseydi adres, koordinat, telefon, WhatsApp, saat dilimi ve
+        // slug da süreç belleğine inerdi. Kardeş sorgu `LeadNotificationQueries` bunu zaten
+        // böyle yapıyor; iki yüzeyin zıt davranması gerekçesiz bir tutarsızlıktı.
+        var row = await context.Branches
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == new BranchId(branchId), cancellationToken);
+            .Where(item => item.Id == new BranchId(branchId))
+            .Select(item => new { item.Id, item.Names, item.Email })
+            .SingleOrDefaultAsync(cancellationToken);
 
-        if (branch is null)
+        if (row is null)
         {
             return null;
         }
@@ -35,9 +41,10 @@ internal sealed class BranchQueries(DealershipDbContext context, Locale defaultL
         Result<Locale> requested = Locale.Create(locale);
         Locale resolved = requested.IsSuccess ? requested.Value : defaultLocale;
 
-        string name = branch.Names.Resolve(resolved, defaultLocale) ?? string.Empty;
+        // `Names` jsonb kolonu; çözüm yine bellekte ama yalnız O kolon üzerinde.
+        string name = row.Names.Resolve(resolved, defaultLocale) ?? string.Empty;
 
-        return new BranchNotificationContactDto(branch.Id.Value, name, branch.Email?.Value);
+        return new BranchNotificationContactDto(row.Id.Value, name, row.Email?.Value);
     }
 
     public async Task<BranchSummaryDto?> FindAsync(
