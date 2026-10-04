@@ -81,8 +81,10 @@ export interface LoginRequest {
   readonly password: string
 }
 
-/** Oturum bilgisi. Token BULUNMAZ: o yalnız HttpOnly çerezde taşınır (C17, AC-29). */
+/** Oturum bilgisi. Token BULUNMAZ: o yalnız HttpOnly çerezde taşınır (0006 C17, AC-29). */
 export interface CurrentSession {
+  /** 0008 D1 — ekran listedeki kendi satırını bununla tanır; ad tekil değil. */
+  readonly staffId: string
   readonly displayName: string
   readonly role: StaffRole
   readonly preferredLocale: string

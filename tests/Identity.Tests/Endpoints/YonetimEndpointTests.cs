@@ -266,6 +266,44 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
             .GetGuid();
     }
 
+    /// <summary>
+    /// 0008 D1 — ekranın kendi satırını tanıması için gereken tek alan. Kimlik oturumda
+    /// zaten claim olarak duruyordu; eksik olan onu yanıta koymaktı.
+    ///
+    /// Test kimliğin yalnız VAR olduğunu değil, DOĞRU olduğunu da ölçüyor: listedeki
+    /// kurulum hesabının kimliğiyle eşleşmeli. Yalnız "boş değil" denseydi, sabit bir
+    /// `Guid` döndüren bir hata da yeşil kalırdı.
+    /// </summary>
+    [Fact(DisplayName = "0008/AC-17: `GET /api/admin/me` yanıtı personelin kimliğini taşır (D1); `0006`'nın oturum kriterleri bu değişiklikten sonra da karşılanır")]
+    public async Task Tasir_PersonelKimligini_MeYaniti()
+    {
+        await database.ResetAsync();
+        await using ModuleApi api = await ModuleApi.StartAsync(database);
+
+        await GirisAsync(api, ModuleApi.SeedYoneticiKimligi, ModuleApi.SeedYoneticiParolasi);
+        await ParolaDegistirVeYenidenGirAsync(
+            api, ModuleApi.SeedYoneticiKimligi, ModuleApi.SeedYoneticiParolasi, Parola);
+
+        JsonElement ben = JsonDocument.Parse(
+            await (await api.Client.GetAsync($"{AdminSurface.RoutePrefix}/me")).Content.ReadAsStringAsync())
+            .RootElement;
+
+        Guid kimlik = ben.GetProperty("staffId").GetGuid();
+
+        Assert.NotEqual(Guid.Empty, kimlik);
+
+        JsonElement liste = JsonDocument.Parse(
+            await (await api.Client.GetAsync($"{AdminSurface.RoutePrefix}/staff")).Content.ReadAsStringAsync())
+            .RootElement;
+
+        Guid listedeki = liste.EnumerateArray()
+            .Single(item => item.GetProperty("loginId").GetString() == ModuleApi.SeedYoneticiKimligi)
+            .GetProperty("staffId")
+            .GetGuid();
+
+        Assert.Equal(listedeki, kimlik);
+    }
+
     private static Task<HttpResponseMessage> GirisAsync(ModuleApi api, string kimlik, string parola) =>
         api.Client.PostAsJsonAsync("/api/identity/sessions", new { loginId = kimlik, password = parola });
 

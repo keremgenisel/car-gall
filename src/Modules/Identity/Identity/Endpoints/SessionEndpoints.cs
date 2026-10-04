@@ -14,8 +14,23 @@ namespace CarGallery.Modules.Identity.Endpoints;
 
 internal sealed record LoginRequest(string? LoginId, string? Password);
 
-/// <summary>Oturumun yanıt gövdesi. Token BULUNMAZ: o yalnız HttpOnly çerezde taşınır (AC-29).</summary>
+/// <summary>
+/// Oturumun yanıt gövdesi. Token BULUNMAZ: o yalnız HttpOnly çerezde taşınır (0006/AC-29).
+///
+/// <para><b>`StaffId` (0008 D1).</b> Ekranın listedeki KENDİ satırını tanıması gerekiyor:
+/// "bu işlemden sonra panele erişemeyeceksiniz" uyarısı ancak böyle yazılabilir. `DisplayName`
+/// tekil değil ve `LoginId` bu yanıtta hiç yok, yani başka güvenilir bir işaret kalmıyor.
+/// Kimlik sunucuda zaten `ClaimTypes.NameIdentifier` olarak duruyor; yanıta konması yeni bir
+/// uç değil, var olan bir yanıtın alanıdır.</para>
+///
+/// <para>Alan GİRİŞ yanıtında da görünüyor, yalnız `/me`'de değil: bu kayıt ikisi tarafından
+/// paylaşılıyor ve uçtaki tek `CurrentSession` tipi ikisini birden tipliyor. Ayrı tutsaydık
+/// tip, giriş yanıtının taşımadığı bir alanı taşıyormuş gibi gösterirdi — `docs/frontend.md`
+/// § 2'nin "tip ile sözleşmenin ayrıştığı yer sessiz hata üreten yerdir" dediği durum.
+/// Personelin kendi kimliğini kendisine söylemek bir sızıntı değil.</para>
+/// </summary>
 internal sealed record CurrentSessionResponse(
+    Guid StaffId,
     string DisplayName,
     string Role,
     string PreferredLocale,
@@ -66,6 +81,7 @@ internal static class SessionEndpoints
         SessionCookie.Write(httpContext, result.Value.Token, result.Value.Session.RefreshExpiresAt);
 
         return TypedResults.Ok(new CurrentSessionResponse(
+            result.Value.Staff.Id.Value,
             result.Value.Staff.DisplayName,
             StaffRoleCode.ToCode(result.Value.Staff.Role),
             result.Value.Staff.PreferredLocale.Code,

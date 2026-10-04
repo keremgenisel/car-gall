@@ -47,8 +47,12 @@ function inspect(path) {
       }
     }
 
-    // >Metin< biçimindeki çıplak JSX metni
-    const bare = />\s*[^<>{}\n]*\p{L}[^<>{}\n]*\s*</u.exec(line)
+    // >Metin< biçimindeki çıplak JSX metni.
+    //
+    // `=>` ARDINDAN gelen `>` sayılmaz: `(call: () => Promise<unknown>)` gibi bir tip
+    // imzası JSX metni değildir ve kapı onu "gömülü metin" diye bildiriyordu. Yanlış
+    // pozitif, kapıyı gürültüye boğar ve bir sonraki GERÇEK ihlali gizler.
+    const bare = /(?<!=)>\s*[^<>{}\n]*\p{L}[^<>{}\n]*\s*</u.exec(line)
     if (bare !== null) {
       violations.push(`${path}:${index + 1}  ${bare[0].trim()}`)
     }

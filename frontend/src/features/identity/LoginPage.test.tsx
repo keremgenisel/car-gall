@@ -151,6 +151,7 @@ describe('AC-61: Giriş ekranındaki tüm metinler TR, AR ve EN locale lerinde k
 describe('AC-1: Geçerli kimlik ve parolayla giriş yapan personel yönetim paneline erişir', () => {
   it('başarılı girişte oturum yukarı bildirilir', async () => {
     vi.mocked(login).mockResolvedValue({
+      staffId: '0192c000-0000-7000-8000-00000000a001',
       displayName: 'Ayşe Yılmaz',
       role: 'manager',
       preferredLocale: 'tr',
