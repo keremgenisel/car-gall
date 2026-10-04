@@ -15,4 +15,10 @@ internal static class NotificationErrors
 
     /// <summary>Yapılandırılan gönderim zaman aşımı aşıldı — GEÇİCİ hata (AC-18).</summary>
     internal const string SendTimedOut = "notification.send_timed_out";
+
+    /// <summary>Sağlayıcı geçici bir koşul bildirdi (`4xx`), bağlantı veya ağ düştü.</summary>
+    internal const string ProviderUnavailable = "notification.provider_unavailable";
+
+    /// <summary>Sağlayıcı mesajı kalıcı olarak reddetti (`5xx`) veya adres geçersiz.</summary>
+    internal const string RecipientRejected = "notification.recipient_rejected";
 }

@@ -12,12 +12,21 @@ namespace CarGallery.Modules.Notifications.Contracts.Setup;
 /// varlık nedeni tam olarak o durumdur ve bu kez çalıştığı sanılır. Taban URL eksikse
 /// e-postadaki bağlantı göreli kalır ve tıklanamaz.</para>
 /// </summary>
+/// <param name="SmtpPassword">
+/// C8 — sır repoda DURMAZ; geliştirmede user-secrets, üretimde ortam değişkeni
+/// (`docs/conventions.md` § 11). Eksikse uygulama ayağa kalkmaz (AC-28).
+/// </param>
 public sealed record NotificationsSetup(
     string ConnectionString,
     string DefaultLocale,
     string SetupNotificationAddress,
     string PublicBaseUrl,
     string SenderAddress,
+    string SmtpHost,
+    int SmtpPort,
+    string SmtpUser,
+    string SmtpPassword,
+    bool SmtpUseStartTls,
     int MaximumAttempts,
     int RetryBaseSeconds,
     int SendTimeoutSeconds);

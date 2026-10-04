@@ -22,6 +22,16 @@ internal sealed class NotificationsOptions
 
     internal required string SenderAddress { get; init; }
 
+    internal required string SmtpHost { get; init; }
+
+    internal required int SmtpPort { get; init; }
+
+    internal required string SmtpUser { get; init; }
+
+    internal required string SmtpPassword { get; init; }
+
+    internal required bool SmtpUseStartTls { get; init; }
+
     internal required int MaximumAttempts { get; init; }
 
     internal required TimeSpan RetryBaseDelay { get; init; }
@@ -48,6 +58,17 @@ internal sealed class NotificationsOptions
             return Result.Failure<NotificationsOptions>(new Error("notification.sender_missing"));
         }
 
+        // AC-28 — sağlayıcı kimlik bilgileri eksikse uygulama ayağa kalkmaz. Kimlik
+        // doğrulaması olmayan bir relay bu kriterin kapsamı DIŞINDADIR ve bu bilinçli:
+        // üretimde kimliksiz relay, galerinin adresinden herkesin posta atabilmesi demek.
+        if (string.IsNullOrWhiteSpace(setup.SmtpHost)
+            || setup.SmtpPort < 1
+            || string.IsNullOrWhiteSpace(setup.SmtpUser)
+            || string.IsNullOrWhiteSpace(setup.SmtpPassword))
+        {
+            return Result.Failure<NotificationsOptions>(new Error("notification.provider_credentials_missing"));
+        }
+
         if (setup.MaximumAttempts < 1 || setup.RetryBaseSeconds < 1 || setup.SendTimeoutSeconds < 1)
         {
             return Result.Failure<NotificationsOptions>(new Error("notification.invalid_retry_policy"));
@@ -59,6 +80,11 @@ internal sealed class NotificationsOptions
             SetupNotificationAddress = setup.SetupNotificationAddress,
             PublicBaseUrl = baseUrl,
             SenderAddress = setup.SenderAddress,
+            SmtpHost = setup.SmtpHost,
+            SmtpPort = setup.SmtpPort,
+            SmtpUser = setup.SmtpUser,
+            SmtpPassword = setup.SmtpPassword,
+            SmtpUseStartTls = setup.SmtpUseStartTls,
             MaximumAttempts = setup.MaximumAttempts,
             RetryBaseDelay = TimeSpan.FromSeconds(setup.RetryBaseSeconds),
             SendTimeout = TimeSpan.FromSeconds(setup.SendTimeoutSeconds),

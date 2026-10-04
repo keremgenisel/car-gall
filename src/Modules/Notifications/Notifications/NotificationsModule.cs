@@ -53,6 +53,11 @@ public static class NotificationsModule
         services.AddSingleton(options.Value);
         services.AddScoped<TemplateResolver>();
 
+        // D4 — gönderici soyutlamanın arkasında. Bugün SMTP; sağlayıcıya geçiş bu tek
+        // satırı değiştirir, kuyruk ve tekrar deneme hiç dokunulmadan kalır.
+        services.AddScoped<INotificationTransport, SmtpNotificationTransport>();
+        services.AddScoped<NotificationDispatcher>();
+
         // Olay dağıtıcısı hedefleri DI'dan çözüyor; `Leads`'in dağıtıcısı bu kaydı bulur.
         services.AddScoped<IIntegrationEventDispatchTarget, LeadCapturedNotificationHandler>();
 

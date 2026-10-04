@@ -318,6 +318,11 @@ public sealed class GonderimTests(NotificationsDatabase database)
             SetupNotificationAddress: "galeri@ornek.com",
             PublicBaseUrl: "https://ornek.com",
             SenderAddress: "bildirim@ornek.com",
+            SmtpHost: "localhost",
+            SmtpPort: 25,
+            SmtpUser: "kullanici",
+            SmtpPassword: "sir",
+            SmtpUseStartTls: false,
             MaximumAttempts: 3,
             RetryBaseSeconds: 10,
             SendTimeoutSeconds: zamanAsimiSaniye)).Value;
