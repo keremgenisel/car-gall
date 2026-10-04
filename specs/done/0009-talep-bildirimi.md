@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
-| **Sahip** | — |
+| **Durum** | **Tamamlandı** |
+| **Sahip** | Developer (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Notifications` (yeni) · `Leads.Contracts` (sorgu yüzeyi — **D1**) · `Dealership.Contracts` (şube iletişimi — **D2**) · `VehicleCatalog.Contracts` (ilan slug'ı — **D5**) |
 | **Bağımlı spec'ler** | `0005` (talep oluşturma — tamamlandı) · `0003` (şubeler — tamamlandı) |
@@ -408,6 +408,9 @@ açardı.
       koşan testlerin göremediği bir yerden geldi; dar bakışın değeri tam olarak bu.*
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
+      *PR #27 açık ve `MERGEABLE / CLEAN`; CI'ın dört kapısı dalın ucunda (`a146cb0`)
+      yeşil. `docs/git.md` § 4.6 gereği merge'i ajan yapamaz, bu yüzden kutu açık —
+      spec, taşıma talimatıyla merge'den ÖNCE arşive alındı.*
 - [x] **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır).
 
 ---
