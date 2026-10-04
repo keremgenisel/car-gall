@@ -12,16 +12,6 @@
   box-sizing: border-box;
 }
 
-/*
- * Arapça sayfa Arapça yığınla basılır (R4, D7, AC-29). TEK kural ve seçici `lang`:
- * dil sunucudan `<html lang>` ile basılı geliyor ve uçta yeniden hesaplanmıyor
- * (docs/frontend.md § 6). `:lang()` veya JS ile ikinci bir seçim mekanizması kurmak,
- * Arapça metin içindeki Latin marka adını da yanlış yığına iterdi (AC-1).
- */
-html[lang='ar'] {
-  font-family: var(--font-family-arabic);
-}
-
 body {
   margin: 0;
   background: var(--color-surface-muted);
@@ -143,7 +133,10 @@ body {
   margin: 0;
 }
 
+/* Fiyat METİN VURGUSUYLA basılır (AC-7): mockup'ın "koyu zeytin fiyat metni". Dolgu
+   vurgusu kullanılamaz — limon beyaz zeminde metin olarak okunmuyor (1.26:1). */
 .listing-card__price {
+  color: var(--color-accent-text);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
@@ -245,7 +238,10 @@ body {
   margin: 0;
 }
 
+/* Detay fiyatı 1.5rem = 24px, yani Token tablosunun "büyük metin" sütununun tam
+   karşılığı. Eşiği yine 4.5:1 okunuyor (AC-21) ve metin vurgusu onu geçiyor: 6.11:1. */
 .listing-detail__price {
+  color: var(--color-accent-text);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   margin: 0;

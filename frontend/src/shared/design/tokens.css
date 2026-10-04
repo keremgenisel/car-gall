@@ -114,3 +114,24 @@
   --size-dialog: 420px;
   --z-dialog: 100;
 }
+
+/*
+ * Arapça sayfa Arapça yığınla basılır (R4, D7, AC-29).
+ *
+ * **Kural `font-family` değil TOKEN'ı yeniden tanımlıyor** ve bu bir düzeltmenin
+ * sonucu: ilk hâli `html[lang='ar'] { font-family: ... }` idi ve HİÇ ÇALIŞMADI. Sebep
+ * `body`nin kendi `font-family: var(--font-family-base)` bildirimi — `html` üzerindeki
+ * bildirim ona ulaşmıyor. Yani Arapça sayfa sessizce Latin yığınına düşüyordu: tuzak 3'ün
+ * tam kendisi, bu kez kendi düzeltmemizin içinde. E2E testi yakaladı.
+ *
+ * Token'ı yeniden tanımlamak özgüllük kavgasını da bitiriyor: `--font-family-base`'i
+ * tüketen her yer — bugünkü `body` ve yarın eklenecek her kural — Arapça sayfada Arapça
+ * yığını alıyor.
+ *
+ * Seçici `lang`, çünkü dil sunucudan `<html lang>` ile basılı geliyor ve uçta yeniden
+ * hesaplanmıyor (docs/frontend.md § 6). Kural burada yaşıyor çünkü token DEĞERLERİNİN
+ * tek yeri bu dosya (§ 4.1); koşullu bir değer de bir değerdir.
+ */
+html[lang='ar'] {
+  --font-family-base: var(--font-family-arabic);
+}
