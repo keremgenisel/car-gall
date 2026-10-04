@@ -150,7 +150,16 @@ public sealed partial class VarsayilanPaletTests
         return cozulmus;
     }
 
-    /// <summary>`tokens.css`'teki ham bildirimler — `var()` çözülmemiş hâliyle.</summary>
+    /// <summary>
+    /// `tokens.css`'in <c>:root</c> bloğundaki ham bildirimler — `var()` çözülmemiş hâliyle.
+    ///
+    /// <para><b>Yalnız `:root`</b>, ve bu bir düzeltmenin sonucu: ilk hâli dosyanın
+    /// TAMAMINI tarıyordu ve Arapça yığınını devreye sokan
+    /// <c>html[lang='ar'] { --font-family-base: … }</c> bloğu <c>:root</c> değerini
+    /// gölgeliyordu. Sözlükte son bildirim kazanıyor ve Latin yığını "var(--font-family-arabic)"
+    /// olarak okunuyordu. Varsayılan palet <c>:root</c>'tur; koşullu override'lar onun
+    /// parçası değildir.</para>
+    /// </summary>
     private static Dictionary<string, string> Ham()
     {
         string path = Path.Combine(
@@ -159,9 +168,13 @@ public sealed partial class VarsayilanPaletTests
 
         Assert.True(File.Exists(path), path);
 
+        Match root = RootBlogu().Match(File.ReadAllText(path));
+
+        Assert.True(root.Success, ":root bloğu bulunamadı");
+
         Dictionary<string, string> tokens = new(StringComparer.Ordinal);
 
-        foreach (Match match in Bildirim().Matches(File.ReadAllText(path)))
+        foreach (Match match in Bildirim().Matches(root.Groups["body"].Value))
         {
             tokens[match.Groups["name"].Value] = match.Groups["value"].Value.Trim();
         }
@@ -176,4 +189,7 @@ public sealed partial class VarsayilanPaletTests
 
     [GeneratedRegex(@"^var\(\s*--(?<token>[\w-]+)\s*\)$")]
     private static partial Regex VarReferansi();
+
+    [GeneratedRegex(@":root\s*\{(?<body>[^}]*)\}")]
+    private static partial Regex RootBlogu();
 }
