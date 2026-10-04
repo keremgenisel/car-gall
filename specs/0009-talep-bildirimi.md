@@ -397,8 +397,9 @@ açardı.
       § 7 Karar Defteri'ne satır eklendi (D1, D2, D5). *(Harita bugün `Notifications`'ı ok çıkmayan bir yaprak olarak
       gösteriyor; güncellenmezse bir sonraki modül yanlış haritaya bakar.)*
 - [x] D4 ADR'ye bağlandıysa `docs/decisions/` altına yazıldı.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4). *(Yerelde 542 test yeşil; CI sonucu PR
-      açıldıktan sonra okunacak — `docs/git.md` § 4.3 gereği doğrulama merge'den ayrı adım.)*
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4). *PR #27'de dört kapının dördü de `pass`:
+      Backend (build + xUnit + mimari testler + migration şema kontrolü), Frontend
+      (lint + tip + test + build + çeviri anahtarları), E2E ve C3 eşikleri.*
 - [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
       **KARŞILANMADI** — `docs/roles/qa.md` § 8: "QA kendi yazdığı kodu gözden geçirmez;
