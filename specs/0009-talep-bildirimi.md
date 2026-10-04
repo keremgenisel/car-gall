@@ -381,39 +381,73 @@ açardı.
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] **A grubundaki kriterin bu spec'ten önce de yeşil olduğu** PR'da açıkça yazıldı;
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] **A grubundaki kriterin bu spec'ten önce de yeşil olduğu** PR'da açıkça yazıldı;
       yeni davranışın kanıtı B–H gruplarıdır.
-- [ ] Arayüz kriteri **yok**; görsel kanıt bu spec için uygulanabilir değildir (X5).
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok (AC-29, AC-30, AC-31).
-- [ ] Yeni migration yalnızca `notifications` şemasına dokunuyor.
-- [ ] Şablonlar seed migration ile geldi ve TR/AR/EN üçünde de var; eksik anahtar kontrolü
+- [x] Arayüz kriteri **yok**; görsel kanıt bu spec için uygulanabilir değildir (X5).
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — modül sınırı ihlali yok (AC-29, AC-30, AC-31).
+- [x] Yeni migration yalnızca `notifications` şemasına dokunuyor.
+- [x] Şablonlar seed migration ile geldi ve TR/AR/EN üçünde de var; eksik anahtar kontrolü
       **backend testiyle** yeşil (C13, AC-22). *(Frontend'in `check:locales` kapısı bu
       şablonları kapsamaz.)*
-- [ ] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] **`docs/architecture.md` § 1 bağımlılık haritası güncellendi:** `Notifications → Leads`
+- [x] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+- [x] **`docs/architecture.md` § 1 bağımlılık haritası güncellendi:** `Notifications → Leads`
       `Notifications → Dealership` ve `Notifications → VehicleCatalog` kenarları yazıldı ve
       § 7 Karar Defteri'ne satır eklendi (D1, D2, D5). *(Harita bugün `Notifications`'ı ok çıkmayan bir yaprak olarak
       gösteriyor; güncellenmezse bir sonraki modül yanlış haritaya bakar.)*
-- [ ] D4 ADR'ye bağlandıysa `docs/decisions/` altına yazıldı.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] D4 ADR'ye bağlandıysa `docs/decisions/` altına yazıldı.
+- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4). *(Yerelde 542 test yeşil; CI sonucu PR
+      açıldıktan sonra okunacak — `docs/git.md` § 4.3 gereği doğrulama merge'den ayrı adım.)*
 - [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+      **KARŞILANMADI** — `docs/roles/qa.md` § 8: "QA kendi yazdığı kodu gözden geçirmez;
+      Developer → QA şapka geçişi yapılmaz." Bu maddeyi kendim işaretleyemem. PR, Takım
+      Yöneticisi'nin açık talimatıyla QA oturumundan ÖNCE açıldı.
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır).
+- [x] **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır).
 
 ---
 
 ## SCORECARD
 
+<!--
+Bulgu ölçütü bu kartta İKİYE AYRILMIŞ hâlde: `specs/TEMPLATE.md`'de tek sütun olan
+"Bulgu gerçek/gürültü oranı", Takım Yöneticisi'nin onayıyla "Dış bulgu" ve "Uygulama içi
+bulgu" olarak ayrıldı (PR #26, henüz merge edilmedi). İkisi farklı şey ölçer: biri spec ve
+kodun ne kadar açık yazıldığını, diğeri yazarın kendi işini ne kadar sorguladığını.
+-->
+
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | |
-| **Düzeltme turu sayısı** | | |
-| **Bulgu gerçek/gürültü oranı** | / | |
-| **Regresyon sayısı** | | |
-| **Kaçan hata** | | |
+| **Spec revizyon sayısı** | **1** | Onay anında: planın kararları (D1–D7) spec'e işlendi, R2'nin yanlış iddiası düzeltildi ve AC-32 eklendi — kriter sayısı **17 → 32**. Şablonun harfi "onaylandıktan SONRA" diyor ve bu değişiklik onayla aynı commit'te (`3af6905`); harfiyen okunursa **0** yazılırdı. **1** yazıyorum çünkü ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabı. 0006 da onay öncesi CLARIFY turunu aynı şekilde saymıştı (41 → 61); iki kartın karşılaştırılabilir kalması için aynı okuma sürdürülüyor. |
+| **Düzeltme turu sayısı** | **1** | Triyaj turu (`d3ff5d5`): beş bulgu geldi, beşi de kapatıldı. Tur **açık bir PR üzerinde değil, dal üzerinde** döndü — PR bu turdan sonra açıldı; şablonun "PR kaç kez geri döndü" ifadesi harfiyen karşılanmıyor ama işi geri gönderen bir gözden geçirme turuydu ve sayılması gerekiyor. |
+| **Dış bulgu (gerçek/gürültü)** | **5 / —** | Triyajdan bana **beş** bulgu ulaştı ve beşi de gerçekti: (1) mimari test kırmızıydı — `NotificationsDbContext` kurulum adımına kayıtlı değildi ve ben commit'ten önce yalnız `dotnet build` koşmuştum, test takımını koşmamıştım (`docs/git.md` § 4 bu vakayı zaten kodlamıştı); (2) dokuz test adı AC-3/4/5/11/19/24/32 iddia ediyordu ama testler o kriterleri kanıtlamıyordu; (3) `git add -A` yabancı dosyaları iki kez dala süpürdü; (4) şube iletişim sorgusu bütün entity'yi belleğe çekiyordu; (5) bir bakım bulgusu. **Gürültü sayısı bu kartta yazılamaz:** gürültü işaretini Takım Yöneticisi yaptı ve işaretlenenler bana hiç ulaşmadı — oranın bölenini bilmiyorum ve tahmin etmek ölçütün amacını bozar. |
+| **Uygulama içi bulgu** | **8** | (1) Spec'in R2'si **olgusal olarak yanlıştı** — ilan slug'ı hiçbir yerde yoktu (`VehicleSnapshot` yalnız `ListingId` tutuyor ve kendisi "okuma yolu DEĞİLDİR" diyor); D5 ve AC-32 bu bulgudan doğdu. (2) `TestSchema`'ya `notifications` eklenmeyince Host.Tests'in 31 testi birden düştü. (3) Kriter ↔ test eşlemesini sayarken **AC-24'ün hiç kapısı olmadığını** gördüm. (4) AC-26'nın test adı spec metnini birebir kopyalamıyordu. (5) AC-30'un ilk hâli üç yanlış pozitif veriyordu. (6) Bir sonda `str.replace` ile yazılmıştı, hiçbir şey eşleşmedi ve ben başarı bastım — sonda "geçti" ama hiçbir şeyi değiştirmemişti. (7) `if (false)` sondası bu depoda **kullanılamaz**: CS0162 + `TreatWarningsAsErrors` build'i düşürüyor ve `--no-build` sonra bayat assembly'yi koşup "hiçbir şey bozulmadı" diye yanlış rapor veriyor. (8) İki sonda yorum satırı olarak yazıldı; her iki test de yorumları atlıyor ve sondalar **yanlış yeşil** verdi. *Sayılmayanlar:* MailKit 4.14.0'ın bilinen açığı (NU1902), seed migration'ının satır sonlarıyla bozulan raw-string'i ve CS9107 — üçü de derleme/bağımlılık sürtünmesi, iş ürününde kusur değil. |
+| **Regresyon sayısı** | **1** | Host artık başlangıçta `notifications` şemasının güncel olduğunu da doğruluyor; `TestSchema` o modülü kurmadığı sürece daha önce yeşil olan **31 Host testi** kırmızıya döndü. Tek bir neden, tek bir başlangıç sözleşmesi değişikliği. Üretim davranışı hiç bozulmadı ve commit'ten önce yerelde yakalandı — 0006 `identity` ile tam olarak aynı şekli **1** saymıştı, aynı okuma sürdürülüyor. |
+| **Kaçan hata** | **0** | *2026-10-04 itibarıyla* — **izleniyor**. Merge sonrası bulunan her kusur buraya tarihiyle eklenir (`specs/TEMPLATE.md` § SCORECARD). |
 
 **Bu spec'ten çıkarılan ders:**
+**Sonda da bir testtir — ve o da yanlış olabilir.** 0007'nin dersi "yeşil bir test,
+ölçtüğünü sandığın şeyi ölçtüğü anlamına gelmez"di ve çözüm sondaydı: korumayı bilerek
+bozup hangi kriterin kırmızıya döndüğüne bakmak. 0009 bir kat daha derinini gösterdi:
+**sondanın kendisi de yeşil görünerek yalan söyleyebilir.** Bu spec'te üç kez oldu ve
+üçü de farklı kılıkta geldi:
+
+1. `str.replace` hiçbir şeyle eşleşmedi, sessizce hiçbir şeyi değiştirmedi ve ben
+   başarıyı koşulsuz bastım. Sonda "geçti" — çünkü hiç uygulanmamıştı.
+2. `if (false)` sondası CS0162 üretti, `TreatWarningsAsErrors` build'i düşürdü ve
+   `--no-build` bayat assembly'yi koşup "hiçbir şey bozulmadı" dedi.
+3. İki sonda **yorum satırı** olarak yazıldı; iki mimari test de yorumları bilerek
+   atlıyor, dolayısıyla sondalar yanlış yeşil verdi.
+
+Alınan ders yöntem düzeyinde: **sonda, uygulandığını KENDİSİ kanıtlamak zorundadır.**
+Eşleşme sayısı doğrulanmadan `replace` çağrılmaz; sonda derlenebilir olmalıdır
+(`== -1` gibi), build'i düşüren bir mutasyon sonda değil gürültüdür; ve sondanın
+yerleştiği satır, testin baktığı satır olmalıdır.
+
+İkinci ders ucuz ama pahalıya mal olurdu: **kriter ↔ test eşlemesi SAYILIR, varsayılmaz.**
+32 kriterin 31'inin kapısı vardı ve bunu hiçbir şey söylemiyordu; AC-24'ün kapısız
+olduğunu yalnızca kriterleri tek tek sayan bir komut gösterdi. Eşlemeyi gözle okumak,
+olmayan satırı göremez.
