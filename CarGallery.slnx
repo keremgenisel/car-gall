@@ -4,6 +4,10 @@
     <Project Path="src/Host/Host.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/Notifications.Contracts/Notifications.Contracts.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications/Notifications.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Dealership/">
     <Project Path="src/Modules/Dealership/Dealership.Contracts/Dealership.Contracts.csproj" />
     <Project Path="src/Modules/Dealership/Dealership/Dealership.csproj" />

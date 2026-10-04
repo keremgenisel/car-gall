@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CarGallery.Modules.Notifications</RootNamespace>
+    <AssemblyName>CarGallery.Modules.Notifications</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Notifications.Contracts/Notifications.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.csproj" />
+    <!--
+      0009 D1/D2/D5 — tüketilen üç yüzey. YALNIZCA `X.Contracts`; modül projelerine
+      referans verilmiyor (Yasak Listesi 7) ve mimari test bunu kırıyor.
+    -->
+    <ProjectReference Include="../../Leads/Leads.Contracts/Leads.Contracts.csproj" />
+    <ProjectReference Include="../../Dealership/Dealership.Contracts/Dealership.Contracts.csproj" />
+    <ProjectReference Include="../../VehicleCatalog/VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- 0009 D6 — backend'in ilk üçüncü parti çalışma zamanı bağımlılığı. -->
+    <PackageReference Include="MailKit" Version="4.18.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Notifications.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>
