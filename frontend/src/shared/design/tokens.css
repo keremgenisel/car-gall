@@ -7,13 +7,43 @@
  */
 
 :root {
-  /* --- Renk --- */
-  --color-surface: #fff;
-  --color-surface-muted: #f4f5f7;
-  --color-ink: #16191d;
+  /* --- Renk ---
+     Adlar ANLAMSALDIR, değer temelli değil (C6): `--color-accent-fill` yazılır,
+     `--color-lemon` yazılmaz. Galeri kimliği değiştiğinde ad değişmez — `--color-lemon`
+     müşterinin rengi mavi olduğu gün yalan söylerdi.
+
+     Biçim TEK TİPTİR (C11): altı haneli hex, alfa taşıyan token sekiz haneli. `#fff`
+     kısaltması da kaldırıldı — iki biçime izin vermek, enjekte edilen değerin
+     doğrulamasını ayrıştırma varsayımına bağlar. */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f3f4f1;
+  --color-ink: #0b0c0e;
+  --color-ink-inverse: #ffffff;
+
+  /* DÖRT AYRI VURGU TOKEN'I (R3, D2, AC-2). Tek bir `--color-accent` yedi çağrı yerinde
+     ÜÇ farklı anlamda kullanılıyordu: metin, dolgu, kenarlık ve odak halkası. Dolguyu
+     limon yapıp odak halkasını ona bağlamak, halkanın beyaz zeminde kaybolması demekti.
+
+     Limon YALNIZCA DOLGU: beyaz üzerinde metin olarak okunmuyor (1.26:1). Metin vurgusu
+     ayrı bir koyu zeytin. */
+  --color-accent-fill: #cdf564;
+  --color-accent-text: #4f6b00;
+
+  /* Dolgu üzerindeki metin dolgudan TÜRETİLMEZ, gövde metnine bağlanır: dolgudan
+     türetmek limon dolgunun üstüne limon metin yazmak olurdu. */
+  --color-on-accent-fill: var(--color-ink);
+
+  /* Odak halkası kendi token'ı (R11, AC-2). `--color-accent-fill`'e bağlanamaz: halka
+     limon zemin üzerinde görünmezse klavye kullanıcısı nerede olduğunu yitirir. */
+  --color-focus-ring: var(--color-accent-text);
+
+  /* --- D4 ONAY BEKLİYOR ---
+     Aşağıdaki altı değer Token tablosunda "tasarımcıdan bekleniyor" durumunda ve
+     BUGÜNKÜ değerleriyle duruyor; mockup paleti onların karşılığını vermiyor. Kontrast
+     kapısını geçiyorlar (AC-24 bunu ölçüyor) ama görsel olarak eski mavi aileye ait:
+     `--color-accent-surface` soluk MAVİ, `--color-border` mavimsi gri. D4 onaylanınca
+     bu blok tasarımcının değerleriyle değişir ve AC-6 ile AC-7 ancak o zaman karşılanır. */
   --color-ink-muted: #5b6270;
-  --color-ink-inverse: #fff;
-  --color-accent: #1f5fd0;
   --color-border: #d9dde4;
 
   /* Doğrulama ve hata. Renk TEK BAŞINA anlam taşımaz (docs/frontend.md § 7): hatalı
@@ -37,8 +67,20 @@
   --space-7: 24px;
   --space-8: 32px;
 
-  /* --- Tipografi --- */
-  --font-family-base: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* --- Tipografi ---
+     İKİ YIGIN (R4, D7, AC-5). Space Grotesk'te Arapça karakter YOKTUR; Arapça metni
+     Latin yığınına bırakmak, tarayıcının sessizce başka bir fonta düşmesi ve Arapça
+     sayfanın tipografik olarak bozulması demektir (tuzak 3).
+
+     Yığın hangi sayfada kullanılacağını bilmez; onu `styles.css`'teki tek bir
+     `html[lang='ar']` kuralı seçer. Dil sunucudan basılı geliyor (docs/frontend.md § 6),
+     uçta hesap yok.
+
+     Dosyalar `fonts.css`'te tanımlı ve UYGULAMANIN KENDİ kaynağından servis edilir (D8,
+     R12): üçüncü taraf font sağlayıcısı, vitrini açan her ziyaretçinin IP adresini o
+     sağlayıcıya gönderir. */
+  --font-family-base: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family-arabic: 'Readex Pro', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
