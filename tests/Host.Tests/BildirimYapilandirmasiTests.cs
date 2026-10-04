@@ -17,7 +17,7 @@ namespace CarGallery.Host.Tests;
 /// </summary>
 public sealed class BildirimYapilandirmasiTests
 {
-    [Theory(DisplayName = "0009/AC-26: Kurulum bildirim adresi, taban URL, yeniden deneme sayısı ve gönderim zaman aşımı dağıtım yapılandırmasından gelir")]
+    [Theory(DisplayName = "0009/AC-26: Kurulum bildirim adresi, taban URL, yeniden deneme sayısı ve gönderim zaman aşımı dağıtım yapılandırmasından okunur; hiçbiri koda gömülü değildir")]
     [InlineData("Notifications:SetupNotificationAddress")]
     [InlineData("Notifications:PublicBaseUrl")]
     [InlineData("Notifications:MaximumAttempts")]
