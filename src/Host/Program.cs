@@ -206,6 +206,7 @@ app.UseIdentity();
 app.UseMiddleware<LocalePrefixMiddleware>();
 
 app.MapVehicleCatalog();
+app.MapDealership();
 app.MapVehicleReference();
 app.MapIdentity();
 app.MapLeads();

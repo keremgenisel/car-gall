@@ -141,3 +141,43 @@ export interface CaptureLeadRequest {
 export interface CaptureLeadResponse {
   readonly leadId: string
 }
+
+/** 0010a — referans veri seçenekleri. Etiket personelin locale'inde gelir (AC-13). */
+export interface ReferenceOption {
+  readonly value: string
+  readonly label: string
+}
+
+export interface VehicleAdminPrice {
+  readonly isOnRequest: boolean
+  readonly amount: number | null
+  readonly currencyCode: string | null
+  readonly minorUnitExponent: number | null
+}
+
+export interface VehicleAdminListItem {
+  readonly vehicleId: string
+  readonly modelName: string
+  readonly modelYear: number
+  readonly mileageKilometers: number
+  readonly price: VehicleAdminPrice
+  readonly listingStatus: string
+  readonly vin: string
+}
+
+/** Para BİRİMİ yok: kurulum başına sabit ve panelden değiştirilemez (C3, P3). */
+export interface CreateVehicleRequest {
+  readonly branchId: string
+  readonly vehicleModelId: string
+  readonly bodyType: string
+  readonly fuelType: string
+  readonly transmissionType: string
+  readonly drivetrainType: string
+  readonly trimLevel: string
+  readonly color: Record<string, string>
+  readonly modelYear: number
+  readonly mileageKilometers: number
+  readonly priceAmount: number | null
+  readonly priceOnRequest: boolean
+  readonly vin: string
+}

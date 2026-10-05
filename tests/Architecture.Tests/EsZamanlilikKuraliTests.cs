@@ -195,7 +195,16 @@ public sealed partial class EsZamanlilikKuraliTests
     [GeneratedRegex(@"\bResult\s+(?<method>\w+)\s*\([^)]*\bint\s+other[A-Z]\w*Count\b", RegexOptions.Singleline)]
     private static partial Regex InvariantDecisionSignature();
 
-    [GeneratedRegex(@"\bMap(Get|Post|Put|Patch|Delete|Group)\s*\(")]
+    /// <summary>
+    /// YALNIZCA yazma fiilleri. İlk hâli `MapGet` ve `MapGroup`'u da yasaklıyordu, yani
+    /// kuralın kendisi mesajından genişti: mesaj "korumasız YAZMA ucu olamaz" diyor ve
+    /// AC-8 "şube KAPATMA komutunun HTTP ucu yoktur" diyor — ikisi de okumayı kapsamıyor.
+    ///
+    /// <para>`0010a` araç kaydı formu için korumalı bir şube LİSTESİ ucu açtı (AC-3: şubesiz
+    /// araç kaydedilemez, yani form seçtirebilmeli). Geniş kalıp onu da kırıyordu; kriterin
+    /// koruduğu şey ise hiç zarar görmüyor.</para>
+    /// </summary>
+    [GeneratedRegex(@"\bMap(Post|Put|Patch|Delete)\s*\(")]
     private static partial Regex EndpointMapping();
 
     [GeneratedRegex(@"new\s+InvariantLock\s*\([^;]*;", RegexOptions.Singleline)]

@@ -7,6 +7,8 @@ using CarGallery.Modules.Dealership.Contracts.Branches;
 using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.Dealership.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using CarGallery.Modules.Dealership.Endpoints;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -71,4 +73,10 @@ public static class DealershipModule
 
         return services;
     }
+
+    /// <summary>
+    /// 0010a — modülün İLK uç kaydı. `0003` bilinçli olarak hiç uç açmamıştı; araç kaydı
+    /// formu şube seçimi istediği için açıldı.
+    /// </summary>
+    public static void MapDealership(this IEndpointRouteBuilder builder) => builder.MapBranchEndpoints();
 }

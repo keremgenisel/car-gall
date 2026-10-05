@@ -11,6 +11,9 @@ internal sealed class SahteSubeSorgusu(bool bulunur = true) : IBranchQueries
 {
     public Task<BranchSummaryDto?> FindAsync(Guid branchId, string locale, CancellationToken cancellationToken) =>
         Task.FromResult(bulunur ? new BranchSummaryDto(branchId, "Merkez Şube", "Active") : null);
+
+    public Task<IReadOnlyList<BranchSummaryDto>> ListAsync(string locale, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<BranchSummaryDto>>([]);
 }
 
 internal sealed class SahteKasaSorgusu(bool bulunur = true) : IBodyTypeQueries

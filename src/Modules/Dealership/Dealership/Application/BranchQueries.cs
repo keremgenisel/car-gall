@@ -47,6 +47,28 @@ internal sealed class BranchQueries(DealershipDbContext context, Locale defaultL
         return new BranchNotificationContactDto(row.Id.Value, name, row.Email?.Value);
     }
 
+    public async Task<IReadOnlyList<BranchSummaryDto>> ListAsync(
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        Result<Locale> requested = Locale.Create(locale);
+        Locale resolved = requested.IsSuccess ? requested.Value : defaultLocale;
+
+        List<Branch> branches = await context.Branches
+            .AsNoTracking()
+            .OrderBy(branch => branch.Id)
+            .ToListAsync(cancellationToken);
+
+        return
+        [
+            .. branches.Select(branch => new BranchSummaryDto(
+                branch.Id.Value,
+                branch.Names.Resolve(resolved, defaultLocale) ?? string.Empty,
+                // C11 — çevrilmiş durum adı değil KOD; çeviri uçta yapılır.
+                branch.Status.ToString()))
+        ];
+    }
+
     public async Task<BranchSummaryDto?> FindAsync(
         Guid branchId,
         string locale,
