@@ -45,4 +45,17 @@ public interface IBranchQueries
     /// ad için varsayılan locale'deki ad döner; boş ad DÖNMEZ (R5, AC-5).
     /// </summary>
     Task<BranchSummaryDto?> FindAsync(Guid branchId, string locale, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// 0010a — panelin şube seçimi. Her aracın TAM OLARAK BİR şubesi vardır (A1) ve
+    /// şubesiz araç kaydedilemez (AC-3); form bu listeyi gösterebilmek zorunda.
+    ///
+    /// <para>Bu yüzeyin bugüne kadar hiç olmaması bir eksiklikti: personel formu bile
+    /// `branchId: null` gönderiyordu çünkü seçtirecek bir listesi yoktu.</para>
+    ///
+    /// <para><b>Kapatılmış şubeler de dönüyor</b> ve ayıklama çağırana ait: durum alanı
+    /// yanıtta var. Burada süzmek, "kapalı şubedeki araçları göster" gibi başka bir
+    /// tüketiciyi hiçbir seçeneği olmadan bırakırdı.</para>
+    /// </summary>
+    Task<IReadOnlyList<BranchSummaryDto>> ListAsync(string locale, CancellationToken cancellationToken);
 }

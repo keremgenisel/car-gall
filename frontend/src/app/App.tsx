@@ -29,7 +29,8 @@ export function App({ locale }: { readonly locale: AppLocale }) {
     return (
       <LocaleProvider locale={locale}>
         <Suspense fallback={<div className="admin-page admin-page--narrow" />}>
-          <AdminApp />
+          {/* Panelin alt yüzeyi adresten geliyor; kabuk onu propla alıyor (0010a). */}
+          <AdminApp view={route.view} />
         </Suspense>
       </LocaleProvider>
     )

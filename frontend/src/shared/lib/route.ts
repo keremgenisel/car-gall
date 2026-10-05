@@ -15,7 +15,11 @@ export const LISTING_SEGMENT = 'cars'
  */
 export const ADMIN_SEGMENT = 'admin'
 
-export type AdminView = 'staff' | 'password'
+/**
+ * 0010a — panele araç yüzeyi eklendi. `vehicles` liste, `vehicle-new` kayıt formu;
+ * düzenleme adresi `0010b`'nin işi (X18).
+ */
+export type AdminView = 'staff' | 'password' | 'vehicles' | 'vehicle-new'
 
 export type Route =
   | { readonly kind: 'list' }
@@ -29,6 +33,20 @@ export type Route =
  * (locale önekinden sonrası yok sayılıyordu). 0002 onu değiştirmez: değiştirmek yeni
  * bir "sayfa bulunamadı" davranışı tanımlamak olurdu ve hiçbir kriteri yok.
  */
+/** Tanınmayan alt yol personel listesine düşer; 0001'den gelen davranış korunuyor. */
+function adminViewOf(segment: string | undefined): AdminView {
+  switch (segment) {
+    case 'password':
+      return 'password'
+    case 'vehicles':
+      return 'vehicles'
+    case 'vehicle-new':
+      return 'vehicle-new'
+    default:
+      return 'staff'
+  }
+}
+
 export function parseRoute(pathname: string): Route {
   const [localeSegment, sectionSegment, slugSegment] = pathname
     .split('/')
@@ -36,7 +54,7 @@ export function parseRoute(pathname: string): Route {
 
   // Panel locale önekinin DIŞINDADIR; bu dal locale kontrolünden önce gelmek zorunda.
   if (localeSegment === ADMIN_SEGMENT) {
-    return { kind: 'admin', view: sectionSegment === 'password' ? 'password' : 'staff' }
+    return { kind: 'admin', view: adminViewOf(sectionSegment) }
   }
 
   if (localeSegment === undefined || !isAppLocale(localeSegment)) {

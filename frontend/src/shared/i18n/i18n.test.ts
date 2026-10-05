@@ -50,6 +50,8 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           totalPages: 2,
           // 0008 — onay metinleri personelin adını taşıyor (AC-5).
           name: 'Ayşe Yılmaz',
+          // 0010a — şube etiketi kapatılmış şubede durumu da taşıyor.
+          status: 'Kapalı',
         })
         expect(value).not.toBe(key)
         expect(value.trim()).not.toBe('')

@@ -69,6 +69,23 @@ internal sealed class VehicleBuilder
         return this;
     }
 
+    /// <summary>0010a — şase her araçta zorunlu (A5); testler kendi değerini verebilir.</summary>
+    private Vin vin = Vin.Create("TESTVIN0000000001").Value;
+
+    private DateTimeOffset createdAt = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
+
+    internal VehicleBuilder WithVin(string value)
+    {
+        vin = Vin.Create(value).Value;
+        return this;
+    }
+
+    internal VehicleBuilder CreatedAt(DateTimeOffset value)
+    {
+        createdAt = value;
+        return this;
+    }
+
     internal Vehicle Build()
     {
         VehicleSpecification specification = VehicleSpecification.Create(
@@ -92,7 +109,9 @@ internal sealed class VehicleBuilder
             color,
             modelYear,
             mileageKilometers,
-            price).Value;
+            price,
+            vin,
+            createdAt).Value;
 
         for (int index = 0; index < mediaCount; index++)
         {

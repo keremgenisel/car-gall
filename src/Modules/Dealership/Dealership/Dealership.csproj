@@ -11,6 +11,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      0010a — şube listesi ucu `AdminSurface` kökünü ve oturum politikasını kullanıyor.
+      Yalnız `X.Contracts` (Yasak Listesi 7).
+    -->
+    <ProjectReference Include="..\..\Identity\Identity.Contracts\Identity.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">

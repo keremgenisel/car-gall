@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useLocale } from '../../app/localeContext'
 import { ApiError } from '../../shared/api/client'
 import { changeOwnPassword } from '../../shared/api/identity'
-import { Button, Card, EmptyState } from '../../shared/ui'
-import { AdminField } from './AdminField'
+import { Button, Card, EmptyState, Field } from '../../shared/ui'
 import { messageKeyFor } from './loginFormState'
 
 /** Sunucunun yapılandırılan asgari uzunluğu; uç yalnız ipucu metninde kullanır. */
@@ -75,7 +74,7 @@ export function ForcePasswordChangePage() {
         ) : null}
 
         <form className="admin-form" onSubmit={onSubmit} noValidate>
-          <AdminField
+          <Field
             id="password-current"
             label={t('password.field.current')}
             type="password"
@@ -84,7 +83,7 @@ export function ForcePasswordChangePage() {
             onChange={setCurrent}
           />
 
-          <AdminField
+          <Field
             id="password-new"
             label={t('password.field.new')}
             type="password"

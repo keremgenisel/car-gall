@@ -8,6 +8,8 @@ using CarGallery.Modules.VehicleCatalog.Application.EventHandlers;
 using CarGallery.Modules.VehicleCatalog.Application.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
+using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
+using CarGallery.Modules.VehicleCatalog.Contracts.Admin;
 using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 using CarGallery.Modules.VehicleCatalog.Contracts.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Contracts.Listings;
@@ -30,7 +32,9 @@ public static class VehicleCatalogModule
         this IServiceCollection services,
         string connectionString,
         string defaultLocale,
-        IReadOnlyList<string> enabledLocales)
+        IReadOnlyList<string> enabledLocales,
+        string currencyCode,
+        int currencyMinorUnitExponent)
     {
         services.AddDbContext<VehicleCatalogDbContext>(options =>
             options.UseNpgsql(
@@ -66,6 +70,12 @@ public static class VehicleCatalogModule
         // 0009 D5 — bildirimdeki detay bağlantısının slug'ı.
         services.AddScoped<IListingSlugQueries, ListingSlugQueries>();
 
+        // 0010a — yazma yüzeyi. Para birimi KURULUM BAŞINA SABİTTİR ve panelden
+        // değiştirilemez (C3, P3): personel yalnız tutar girer.
+        services.AddSingleton(new CatalogCurrencyOptions(currencyCode, currencyMinorUnitExponent));
+        services.AddScoped<CreateVehicleCommand>();
+        services.AddScoped<IVehicleAdminQueries, VehicleAdminQueries>();
+
         return services;
     }
 
@@ -90,6 +100,10 @@ public static class VehicleCatalogModule
     {
         builder.MapShowcaseEndpoints();
         builder.MapFieldSettingsEndpoints();
+
+        // 0010a — panelin araç yüzeyi. `AdminSurface` kökü altında ve oturum politikasıyla;
+        // C18'in rota tarayan testi onu kendiliğinden kapsar.
+        builder.MapVehicleAdminEndpoints();
     }
 
     /// <summary>

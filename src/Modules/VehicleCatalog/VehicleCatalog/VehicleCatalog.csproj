@@ -9,6 +9,13 @@
     <ProjectReference Include="../VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\Dealership\Dealership.Contracts\Dealership.Contracts.csproj" />
+    <!--
+      0010a — yönetim uçları `AdminSurface.RoutePrefix` ve `AuthenticatedPolicy` sabitlerini
+      kullanıyor. `AdminSurface`'in doc comment'i bunu zaten öngörüyor: "araç paneli kendi
+      spec'iyle geldiğinde uçlarını AYNI köke asacak". Kök adını burada yeniden yazmak,
+      C18'in rota tarayan testinin yeni uçları hiç görmemesi demekti.
+    -->
+    <ProjectReference Include="..\..\Identity\Identity.Contracts\Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\Media\Media.Contracts\Media.Contracts.csproj" />
     <ProjectReference Include="..\..\VehicleReference\VehicleReference.Contracts\VehicleReference.Contracts.csproj" />
   </ItemGroup>

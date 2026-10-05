@@ -11,6 +11,12 @@ internal sealed class Listing : AggregateRoot<ListingId>
 {
     internal const string InvalidTransition = "listing.invalid_status_transition";
 
+    /// <summary>YALNIZCA EF içindir (0010a D10); davranış değişmiyor.</summary>
+    private Listing()
+        : base(default)
+    {
+    }
+
     private Listing(ListingId id, VehicleId vehicleId, int showcaseSortWeight)
         : base(id)
     {
