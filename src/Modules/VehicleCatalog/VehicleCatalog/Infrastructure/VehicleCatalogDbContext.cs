@@ -14,6 +14,18 @@ internal sealed class VehicleCatalogDbContext(DbContextOptions<VehicleCatalogDbC
 {
     internal const string Schema = "vehicle_catalog";
 
+    /// <summary>
+    /// 0010a — YAZMA modeli. Bu spec'e kadar `Vehicle` ve `Listing` hiç kaydedilmiyordu:
+    /// `ShowcaseSeeder` agregatları bellekte kurup projekte ediyor ve atıyordu. Vitrin
+    /// okuma modeli artık yazma modelinden türüyor.
+    /// </summary>
+    internal DbSet<Vehicle> Vehicles => Set<Vehicle>();
+
+    internal DbSet<Listing> Listings => Set<Listing>();
+
+    /// <summary>A6 — yalnız ekleme alır; silme ve güncelleme yolu yoktur.</summary>
+    internal DbSet<PriceChange> PriceChanges => Set<PriceChange>();
+
     internal DbSet<ShowcaseListing> ShowcaseListings => Set<ShowcaseListing>();
 
     internal DbSet<VehicleFieldSetting> VehicleFieldSettings => Set<VehicleFieldSetting>();

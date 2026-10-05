@@ -77,6 +77,11 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 new KeyValuePair<Locale, string>(Locale.Create("en").Value, en),
             ]);
 
+            // 0010a/D12 — seeder artık şase de üretiyor. Tekillik `InvariantGuard` ile
+            // komut katmanında korunuyor ve seed aynı şaseyi iki kez üretirse ilk gerçek
+            // kayıt denemesinde patlardı; sıra numarası bunu imkânsız kılıyor.
+            Vin vin = Vin.Create($"SEED{index:D13}").Value;
+
             Vehicle vehicle = Vehicle.Create(
                 branchId,
                 vehicleModelId,
@@ -84,7 +89,9 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 color,
                 2016 + (index % 9),
                 45_000 + (index * 1_137),
-                price).Value;
+                price,
+                vin,
+                clock.UtcNow).Value;
 
             vehicle.AttachMediaAsset(Guid.CreateVersion7());
 

@@ -14,6 +14,20 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
 
     private readonly List<Guid> mediaAssetIds = [];
     private readonly List<VehicleOptionalFieldValue> optionalFieldValues = [];
+    private readonly List<PriceChange> priceChanges = [];
+
+    /// <summary>
+    /// YALNIZCA EF içindir (0010a **D10**). Agregat bu spec'e kadar hiç kaydedilmemişti;
+    /// kalıcılık tesisatı C17'nin yasakladığı "davranış yeniden yazımı" DEĞİLDİR — hiçbir
+    /// domain metodunun davranışı değişmiyor.
+    /// </summary>
+    private Vehicle()
+        : base(default)
+    {
+        Specification = default;
+        Color = LocalizedText.Empty;
+        Vin = default;
+    }
 
     private Vehicle(
         VehicleId id,
@@ -23,9 +37,20 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
         LocalizedText color,
         int modelYear,
         int mileageKilometers,
-        ListingPrice price)
+        ListingPrice price,
+        Vin vin,
+        DateTimeOffset createdAt)
         : base(id)
     {
+        Vin = vin;
+        priceChanges.Add(new PriceChange
+        {
+            Id = Guid.CreateVersion7(),
+            VehicleId = id,
+            Price = price,
+            ChangedAt = createdAt,
+        });
+
         BranchId = branchId;
         VehicleModelId = vehicleModelId;
         Specification = specification;
@@ -54,6 +79,15 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
 
     internal int ModelYear { get; }
 
+    /// <summary>A5 — galeri genelinde tekil; `Arşiv` muaf (D11). Her zaman GİZLİ (F4).</summary>
+    internal Vin Vin { get; private set; }
+
+    /// <summary>
+    /// A6 — silinemez ve düzeltilemez. Kaldırma metodu YOKTUR ve bu bir eksiklik değil,
+    /// invariantın kendisidir (AC-24, gözlem noktası C19).
+    /// </summary>
+    internal IReadOnlyList<PriceChange> PriceChanges => priceChanges;
+
     internal int MileageKilometers { get; private set; }
 
     internal ListingPrice Price { get; private set; }
@@ -72,6 +106,15 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
 
     internal IReadOnlyList<VehicleOptionalFieldValue> OptionalFieldValues => optionalFieldValues;
 
+    /// <summary>
+    /// D8 — "taslak" çekirdek alanların HEPSİ girilmiş kayıttır. Yedi parametrenin hiçbiri
+    /// nullable değil ve bu bilinçli: alanları nullable yapıp doğrulamayı yayına taşımak
+    /// `0007`'nin invariant korumasına dokunurdu.
+    ///
+    /// <para>Şase ve oluşturma zamanı `0010a`'da eklendi (D2, D3). İlk fiyat da geçmişe
+    /// yazılır: "eski kayıt olduğu gibi kalır" (AC-23) ancak karşılaştırılacak bir ilk
+    /// kayıt varsa ölçülebilir.</para>
+    /// </summary>
     internal static Result<Vehicle> Create(
         Guid branchId,
         Guid vehicleModelId,
@@ -79,7 +122,9 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
         LocalizedText color,
         int modelYear,
         int mileageKilometers,
-        ListingPrice price)
+        ListingPrice price,
+        Vin vin,
+        DateTimeOffset createdAt)
     {
         if (mileageKilometers < 0)
         {
@@ -99,7 +144,9 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
             color,
             modelYear,
             mileageKilometers,
-            price));
+            price,
+            vin,
+            createdAt));
     }
 
     internal void AttachMediaAsset(Guid mediaAssetId)
@@ -110,7 +157,23 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
         }
     }
 
-    internal void ChangePrice(ListingPrice price) => Price = price;
+    /// <summary>
+    /// A6 — fiyat değişikliği geçmişe YAZILIR ve eski kayıt olduğu gibi kalır. Geçmiş
+    /// `Vehicle`'ın içinde yaşıyor çünkü invariant agregatın invariantı: dışarıdan bir
+    /// servis yazsaydı, fiyatı değiştirip geçmişi yazmayan bir yol açık kalırdı.
+    /// </summary>
+    internal void ChangePrice(ListingPrice price, DateTimeOffset at)
+    {
+        Price = price;
+
+        priceChanges.Add(new PriceChange
+        {
+            Id = Guid.CreateVersion7(),
+            VehicleId = Id,
+            Price = price,
+            ChangedAt = at,
+        });
+    }
 
     /// <summary>
     /// Alan kapatıldığında değer SİLİNMEZ (F1); yalnız yanıta girmez (F3).

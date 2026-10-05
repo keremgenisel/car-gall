@@ -67,7 +67,9 @@ public sealed class VehicleTests
             LocalizedText.Empty,
             2020,
             -1,
-            ListingPrice.OnRequest());
+            ListingPrice.OnRequest(),
+            Vin.Create("TESTVIN0000000001").Value,
+            DateTimeOffset.UnixEpoch);
 
         Assert.True(result.IsFailure);
         Assert.Equal(Vehicle.NegativeMileage, result.Error.Code);
