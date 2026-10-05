@@ -22,6 +22,19 @@ internal sealed class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.Property(vehicle => vehicle.ModelYear).HasColumnName("model_year");
         builder.Property(vehicle => vehicle.MileageKilometers).HasColumnName("mileage_kilometers");
         builder.Property(vehicle => vehicle.AwaitingBranchAssignment).HasColumnName("awaiting_branch_assignment");
+        builder.Property(vehicle => vehicle.IsArchived).HasColumnName("is_archived");
+
+        // A5/AC-16, AC-17 — şase galeri genelinde TEKİL, `Arşiv` muaf.
+        //
+        // **Neden indeks, neden `InvariantGuard` değil:** satır kilidi VAR OLAN satırları
+        // kilitler. Yeni bir şase için henüz satır yoktur; iki eşzamanlı kayıt da "0 tane
+        // var" görür ve ikisi de geçer. `0007`'nin deseni mevcut satırları sayan
+        // invariant'lar için doğru, yeni bir değerin tekilliği için değil — ölçüldü ve
+        // D11 bu yüzden düzeltildi.
+        builder.HasIndex(vehicle => vehicle.Vin)
+            .IsUnique()
+            .HasFilter("NOT is_archived")
+            .HasDatabaseName("ux_vehicles_vin");
 
         builder.Property(vehicle => vehicle.Vin)
             .HasColumnName("vin")

@@ -56,10 +56,15 @@ LocalizationOptions localization = builder.Configuration
 
 // Host yalnızca modülü kaydeder ve endpoint'lerini toplar; iş mantığı burada yaşamaz
 // (docs/architecture.md § 2.F, Yasak Listesi 20).
+// 0010a — para birimi KURULUM BAŞINA SABİTTİR ve panelden değiştirilemez (C3, P3).
+// Üs ayrı veriliyor: KWD/BHD/JOD/OMR üç ondalıklıdır ve üs kaybolursa `1250,500`
+// sessizce `1250,50` gibi okunur.
 builder.Services.AddVehicleCatalog(
     connectionString,
     localization.DefaultLocale,
-    localization.EnabledLocales);
+    localization.EnabledLocales,
+    builder.Configuration["Currency:Code"] ?? "TRY",
+    builder.Configuration.GetValue<int?>("Currency:MinorUnitExponent") ?? 2);
 
 // Model adı ve kasa tipi etiketleri referans veridir ve VehicleReference'a aittir
 // (docs/architecture.md § 3). Catalog onlara yalnız Contracts üzerinden ulaşır.

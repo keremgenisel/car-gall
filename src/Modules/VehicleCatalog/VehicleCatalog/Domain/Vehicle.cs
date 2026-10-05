@@ -79,8 +79,22 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
 
     internal int ModelYear { get; }
 
-    /// <summary>A5 — galeri genelinde tekil; `Arşiv` muaf (D11). Her zaman GİZLİ (F4).</summary>
+    /// <summary>A5 — galeri genelinde tekil; `Arşiv` muaf. Her zaman GİZLİ (F4).</summary>
     internal Vin Vin { get; private set; }
+
+    /// <summary>
+    /// A5'in muafiyeti: arşivlenmiş aracın şasesi yeniden kullanılabilir (AC-17).
+    ///
+    /// <para><b>Neden `Vehicle`'da, `Listing.Status`'te değil.</b> Tekillik kısmi bir tekil
+    /// İNDEKSLE korunuyor ve indeks yalnız kendi tablosunu görebilir; durum `listings`'te
+    /// durduğu sürece `vehicles` üzerindeki indeks muafiyeti uygulayamaz. Bu bayrak o
+    /// bilginin araç tarafındaki yansımasıdır ve ilan arşivlendiği anda — `0012`'nin işi —
+    /// aynı transaction'da yazılır.</para>
+    ///
+    /// <para>`0010a`'da hiçbir şey arşivlemez (X2), yani bayrak her zaman `false`; AC-17
+    /// doğrudan agregat üzerinden sınanır.</para>
+    /// </summary>
+    internal bool IsArchived { get; private set; }
 
     /// <summary>
     /// A6 — silinemez ve düzeltilemez. Kaldırma metodu YOKTUR ve bu bir eksiklik değil,
@@ -211,6 +225,12 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     }
 
     internal void MarkAwaitingBranchAssignment() => AwaitingBranchAssignment = true;
+
+    /// <summary>
+    /// A5'in muafiyetini açar. `0012` ilanı arşivlediğinde AYNI transaction'da çağırır;
+    /// ayrı çağrılırsa bayrak bayatlar ve tekillik indeksi yanlış kararı verir.
+    /// </summary>
+    internal void MarkArchived() => IsArchived = true;
 
     /// <summary>A2'nin bu spec'te doğrulanabilen kısmı: en az bir medya varlığı hazır olmalı.</summary>
     internal Result EnsurePublishable() => mediaAssetIds.Count > 0

@@ -28,7 +28,10 @@ internal sealed class ModuleApi : IAsyncDisposable
     {
         WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.UseTestServer();
-        builder.Services.AddVehicleCatalog(database.ConnectionString, "tr", ["tr", "ar", "en"]);
+        builder.Services.AddVehicleCatalog(
+database.ConnectionString, "tr", ["tr", "ar", "en"],
+                "TRY",
+                2);
 
         // Model adı VehicleReference'a aittir; bu testlerde o sınırın ötesi sahtelenir.
         builder.Services.Replace(ServiceDescriptor.Singleton<IVehicleModelNameResolver>(new FakeModelNameResolver()));

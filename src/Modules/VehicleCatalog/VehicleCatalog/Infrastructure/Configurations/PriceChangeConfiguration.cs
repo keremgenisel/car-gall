@@ -15,7 +15,11 @@ internal sealed class PriceChangeConfiguration : IEntityTypeConfiguration<PriceC
         builder.ToTable("price_changes");
 
         builder.HasKey(change => change.Id);
-        builder.Property(change => change.Id).HasColumnName("id");
+        // Anahtar İSTEMCİDE üretiliyor (`Guid.CreateVersion7`). Söylenmezse EF `Guid` bir
+        // birincil anahtarı mağaza üretimli sayar ve istemcide dolu gelen anahtarı "zaten
+        // var" diye okur: yeni kayıt `Added` yerine `Modified` olur ve olmayan bir satıra
+        // UPDATE gider. Ölçüldü — `DbUpdateConcurrencyException`, "0 satır etkilendi".
+        builder.Property(change => change.Id).HasColumnName("id").ValueGeneratedNever();
 
         builder.Property(change => change.VehicleId)
             .HasColumnName("vehicle_id")

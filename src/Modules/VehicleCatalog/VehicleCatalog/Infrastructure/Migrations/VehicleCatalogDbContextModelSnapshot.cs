@@ -78,7 +78,6 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
             modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Domain.PriceChange", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -122,6 +121,10 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("color_names");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_archived");
 
                     b.Property<int>("MileageKilometers")
                         .HasColumnType("integer")
@@ -188,6 +191,11 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         });
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Vin")
+                        .IsUnique()
+                        .HasDatabaseName("ux_vehicles_vin")
+                        .HasFilter("NOT is_archived");
 
                     b.ToTable("vehicles", "vehicle_catalog");
                 });
