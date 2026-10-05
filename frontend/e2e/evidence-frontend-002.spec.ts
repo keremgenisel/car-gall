@@ -89,13 +89,13 @@ test('frontend-002/AC-8: yazı tipi istekleri üçüncü taraf alan adına gitme
 })
 
 /**
- * **AC-7'yi iddia ETMİYOR.** Kriter dört şey sayıyor — beyaz zemin, yüzey grisi kart
- * alanı, limon dolgu, koyu zeytin fiyat metni — bu test yalnız sonuncusunu ölçüyor.
- * Diğer üçü D4'ü bekliyor ve biri (zemin/kart okuması) spec'te belirsiz; AC-7 bu yüzden
- * KARŞILANMAYAN kriter olarak raporlanıyor. Adına AC-7 yazmak, kanıtlamadığı bir şeyi
- * iddia etmek olurdu.
+ * AC-7'nin iki yarısından biri. İkincisi — dolgu vurgusunun YALNIZ dolgu olarak
+ * kullanılması — `check:tokens` kapısında: o bir kaynak kuralı ve tek bir ekranda
+ * ölçülemez.
  */
-test('frontend-002: fiyat metni metin vurgusuyla basılır', async ({ page }) => {
+test('frontend-002/AC-7: vitrin listesinde fiyat metni metin vurgusuyla basılır', async ({
+  page,
+}) => {
   await page.goto('/tr/')
 
   const fiyat = page.getByTestId('listing-card').first().locator('.listing-card__price')

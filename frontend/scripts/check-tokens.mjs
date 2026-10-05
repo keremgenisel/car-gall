@@ -11,6 +11,10 @@ import { join } from 'node:path'
  * 2. **Yazı tipleri uygulamanın kendi kaynağından gelir** (D8, R12, AC-8). Üçüncü taraf
  *    font sağlayıcısı, vitrini açan her ziyaretçinin IP adresini o sağlayıcıya gönderir.
  *    Bu projede KVKK bir ek değil, ürünün içinde.
+ * 3. **Dolgu vurgusu YALNIZ dolgu olarak kullanılır** (R3, D2, AC-7). Limon beyaz zeminde
+ *    metin olarak okunmuyor — ölçüldü, 1.26:1. Kontrast kapısı bunu göremez: kapı token
+ *    ÇİFTİNİ denetler, çağrı yerini denetlemez, yani `color: var(--color-accent-fill)`
+ *    yazan biri bütün eşikleri yeşil bırakarak okunamayan metin üretebilir.
  */
 const designDir = new URL('../src/shared/design/', import.meta.url).pathname
 const srcDir = new URL('../src/', import.meta.url).pathname
@@ -80,7 +84,9 @@ for (const name of tokenFiles) {
   })
 }
 
-// --- AC-8
+// --- AC-7
+const fillOnlyToken = '--color-accent-fill'
+
 function walk(dir) {
   const entries = readdirSync(dir, { withFileTypes: true })
 
@@ -99,6 +105,21 @@ for (const file of [...walk(srcDir), indexHtml]) {
       `${file} üçüncü taraf kaynağa atıf içeriyor ('${offender}') — yazı tipleri kendi kaynağımızdan servis edilir (frontend-002 D8, AC-8).`,
     )
   }
+
+  if (!file.endsWith('.css')) {
+    continue
+  }
+
+  text.split('\n').forEach((line, index) => {
+    // `color:` ve `border-color:` dolgu değildir; `background`, `background-color`,
+    // `outline-color` ve `fill` dolgudur.
+    if (/^\s*(color|border(-[a-z]+)?-color)\s*:[^;]*var\(\s*--color-accent-fill\s*\)/.test(line)) {
+      failed = true
+      console.error(
+        `${file}:${index + 1} ${fillOnlyToken} metin veya kenarlık rengi olarak kullanılıyor — limon beyaz zeminde 1.26:1 verir (frontend-002 R3, AC-7).`,
+      )
+    }
+  })
 }
 
 if (failed) {

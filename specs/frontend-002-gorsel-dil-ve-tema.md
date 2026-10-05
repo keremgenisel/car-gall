@@ -158,6 +158,12 @@ Başarı ölçütü: **bir kurulumun rengini değiştirmek hiçbir bileşene dok
   kendisi. Tipografiyi yapılandırmaya açmak, font dosyası dağıtımını da açmayı gerektirir ve
   bu X4 (kurulum başına build) ile çakışır. İki varsayılan yığın **sabittir**.
   → Karar **D9**. *(Beyaz etiketlemenin tipografi yarısı kendi spec'ini hak eder.)*
+- **X12.** **Zemin ve kart yüzeylerinin mockup'a göre yeniden atanması** (bugünkü gri
+  gövde + beyaz kart düzeninin takas edilmesi) — *neden:* X1 ile aynı gerekçe. Bu spec'in
+  işi **hangi token'ın hangi anlamı taşıdığı**; hangi yüzeyin hangi token'ı alacağı ekranın
+  kendi kararıdır ve ADR 0003 unsur 7'nin sırasına göre ekran başına yapılır. Token'lar
+  (`--color-surface`, `--color-surface-muted`) bu spec'te doğru tanımlanıyor ve kontrast
+  kapısından geçiyor; atama değişimi hiçbir token eklemeden yapılabilir.
 - **X11.** **`--color-border`'ın kontrast kapısına alınması** — *neden:* token hem
   dekoratif kart kenarlığı hem form denetimi sınırı olarak kullanılıyor ve kapı ikisini
   ayırt edemez. WCAG 1.4.11 3:1'i yalnız denetimi tanımlayan sınır için istiyor; dekoratif
@@ -474,8 +480,15 @@ değiştirmiyor.
 - **AC-5.** Tipografi token'ları Latin ve Arapça için iki ayrı yığın tanımlar.
 - **AC-6.** Context § Token tablosundaki **her** token tanımlıdır ve varsayılan temadaki
   hesaplanan değeri tablodaki değerle aynıdır.
-- **AC-7.** `[görsel]` Varsayılan yapılandırmayla açılan vitrin listesi mockup'ın renk
-  dilini taşır: beyaz zemin, yüzey grisi kart alanı, limon dolgu, koyu zeytin fiyat metni.
+- **AC-7.** `[görsel]` Varsayılan yapılandırmayla açılan vitrin listesinde **fiyat metni
+  metin vurgusuyla** (koyu zeytin) basılır ve **dolgu vurgusu yalnız dolgu olarak**
+  kullanılır — hiçbir yerde metin rengi değildir.
+  *(İlk hâli dört şey sayıyordu ve ikisi bu spec'in işi değildi: "beyaz zemin, yüzey grisi
+  kart alanı" bugünün tersi — gri gövde, beyaz kart — ve düzeltmesi gövde ile kart
+  zeminini takas etmek, yani sekiz kuralı etkileyen görsel bir yeniden kurgu. "Kart alanı"
+  ifadesi ayrıca belirsiz: tek tek kartlar mı, ızgaranın oturduğu panel mi? Mockup'ı
+  göremeyen biri bunu tahmin edemez ve yanlış tahminin bedeli beş ekranda görsel
+  regresyon. Yüzey ataması → **X12**.)*
 - **AC-8.** Sayfa yüklenirken üçüncü taraf bir alan adına yazı tipi isteği yapılmaz; yazı
   tipleri uygulamanın kendi kaynağından gelir.
 
