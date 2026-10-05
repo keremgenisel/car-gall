@@ -9,6 +9,7 @@
 | **Modül(ler)** | `VehicleCatalog` (yazma ve okuma yüzeyi) · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | **`0010a` (araç kaydı — önce bitmeli)** · `0006` · `0007` · `frontend-001` |
 | **Dayanak** | `0010a` Karar **D9** |
+| **Karar bekliyor** | yok — *kararları `0010a`'nın D9'uyla birlikte verildi; sahip ataması bekliyor* |
 
 ---
 
