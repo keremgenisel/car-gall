@@ -59,5 +59,5 @@ public static class VehicleReferenceModule
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public static void MapVehicleReference(this IEndpointRouteBuilder builder) => builder.MapBodyTypeEndpoints();
+    public static void MapVehicleReference(this IEndpointRouteBuilder builder) => builder.MapReferenceEndpoints();
 }

@@ -25,6 +25,9 @@ internal sealed class BodyTypeQueries(VehicleReferenceDbContext context) : IBody
                     ?? type.CanonicalName))
         ];
     }
+
+    public Task<bool> ExistsAsync(string slug, CancellationToken cancellationToken) =>
+        context.BodyTypes.AsNoTracking().AnyAsync(type => type.Slug == slug, cancellationToken);
 }
 
 internal sealed class VehicleModelQueries(VehicleReferenceDbContext context) : IVehicleModelQueries
@@ -71,6 +74,33 @@ internal sealed class VehicleModelQueries(VehicleReferenceDbContext context) : I
 
         return models.ToDictionary(model => model.Id, model => model.CanonicalName);
     }
+
+    /// <summary>
+    /// Sıralama KANONİK ada göre, etikete göre değil: etiket locale'e göre değişir ve
+    /// personelin dili değiştiğinde listenin sırası da değişirdi. Kanonik ad dilden
+    /// bağımsızdır (docs/domain.md, Kanonik Ad).
+    /// </summary>
+    public async Task<IReadOnlyList<VehicleModelDto>> GetAllAsync(
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        List<VehicleModel> models = await context.VehicleModels
+            .AsNoTracking()
+            .Include(model => model.Translations)
+            .OrderBy(model => model.CanonicalName)
+            .ToListAsync(cancellationToken);
+
+        return
+        [
+            .. models.Select(model => new VehicleModelDto(
+                model.Id,
+                model.Translations.FirstOrDefault(translation => translation.Locale == locale)?.Name
+                    ?? model.CanonicalName))
+        ];
+    }
+
+    public Task<bool> ExistsAsync(Guid vehicleModelId, CancellationToken cancellationToken) =>
+        context.VehicleModels.AsNoTracking().AnyAsync(model => model.Id == vehicleModelId, cancellationToken);
 }
 
 internal sealed class ReferenceTermQueries(VehicleReferenceDbContext context) : IReferenceTermQueries
@@ -110,5 +140,59 @@ internal sealed class ReferenceTermQueries(VehicleReferenceDbContext context) : 
         }
 
         return sonuc;
+    }
+
+    public async Task<IReadOnlyList<ReferenceTermDto>> GetByKindAsync(
+        string kind,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (!Enum.TryParse(kind, out ReferenceTermKind tur))
+        {
+            return [];
+        }
+
+        List<ReferenceTerm> terimler = await context.ReferenceTerms
+            .AsNoTracking()
+            .Include(term => term.Translations)
+            .Where(term => term.Kind == tur)
+            .OrderBy(term => term.CanonicalName)
+            .ToListAsync(cancellationToken);
+
+        return
+        [
+            .. terimler.Select(term => new ReferenceTermDto(
+                kind,
+                term.Slug,
+                term.Translations.FirstOrDefault(translation => translation.Locale == locale)?.Name
+                    ?? term.CanonicalName))
+        ];
+    }
+
+    /// <summary>
+    /// Tek sorguda bütün çiftleri çeker ve EKSİK olanları döner. Çift başına sorgu atmak
+    /// altı alan için altı gidiş gelişti; doğrulama kayıt yolunun içinde ve orada hız
+    /// doğrudan personelin beklediği süredir.
+    /// </summary>
+    public async Task<IReadOnlyList<(string Kind, string Slug)>> FindMissingAsync(
+        IReadOnlyCollection<(string Kind, string Slug)> terms,
+        CancellationToken cancellationToken)
+    {
+        if (terms.Count == 0)
+        {
+            return [];
+        }
+
+        HashSet<string> sluglar = [.. terms.Select(term => term.Slug)];
+
+        List<(ReferenceTermKind Kind, string Slug)> mevcut = await context.ReferenceTerms
+            .AsNoTracking()
+            .Where(term => sluglar.Contains(term.Slug))
+            .Select(term => new ValueTuple<ReferenceTermKind, string>(term.Kind, term.Slug))
+            .ToListAsync(cancellationToken);
+
+        HashSet<(string, string)> bulunan = [.. mevcut.Select(item => (item.Kind.ToString(), item.Slug))];
+
+        return [.. terms.Where(term => !bulunan.Contains((term.Kind, term.Slug)))];
     }
 }
