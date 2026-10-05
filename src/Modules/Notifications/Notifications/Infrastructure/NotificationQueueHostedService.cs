@@ -51,7 +51,34 @@ internal sealed class NotificationQueueHostedService(
                 logger.LogError(exception, "Bildirim kuyruğu turu başarısız oldu.");
             }
 
+            if (!await BekleAsync(stoppingToken))
+            {
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Turlar arası bekleme. **Kendi `try`'ı var ve bu bir hatanın bedeliydi:** çıplak
+    /// <c>await Task.Delay(interval, stoppingToken)</c> döngünün sonunda duruyordu ve
+    /// normal kapanışta <c>TaskCanceledException</c> fırlatıyordu. `BackgroundService`'in
+    /// varsayılan davranışı <c>StopHost</c> olduğu için süreç <b>134</b> ile düşüyor, ve
+    /// daha kötüsü bu istisna <b>gerçek başlangıç hatasını maskeliyordu</b> — bir dağıtımda
+    /// "port dolu" hatası tam olarak bunun altında kayboldu.
+    ///
+    /// <para>Kapanış bir hata değildir: <c>false</c> dönülür ve döngü sessizce biter.</para>
+    /// </summary>
+    private async Task<bool> BekleAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
             await Task.Delay(interval, stoppingToken);
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
         }
     }
 }
