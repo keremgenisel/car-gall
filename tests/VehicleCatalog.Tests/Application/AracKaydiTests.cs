@@ -113,6 +113,10 @@ public sealed class AracKaydiTests(ShowcaseDatabase database)
             .ExecuteAsync(Istek($"AC07{yil}0000000") with { ModelYear = yil }, CancellationToken.None);
 
         Assert.Equal(Vehicle.ImplausibleModelYear, sonuc.Error.Code);
+
+        // AC-42 — hata HANGİ alanın düştüğünü söyler; agregatın hatası alan adı taşımaz
+        // ve eşleme komut katmanında yapılır.
+        Assert.Equal(VehicleFieldNames.ModelYear, sonuc.Error.Parameters!["field"]);
     }
 
     [Fact(DisplayName = "0010a/AC-8: Kilometre negatif bir değerle kaydedilemez")]
@@ -124,6 +128,7 @@ public sealed class AracKaydiTests(ShowcaseDatabase database)
             .ExecuteAsync(Istek("AC08000000000001") with { MileageKilometers = -1 }, CancellationToken.None);
 
         Assert.Equal(Vehicle.NegativeMileage, sonuc.Error.Code);
+        Assert.Equal(VehicleFieldNames.Mileage, sonuc.Error.Parameters!["field"]);
     }
 
     [Theory(DisplayName = "0010a/AC-9: İlan başlığı, ilan açıklaması, renk veya şase numarası üst uzunluk sınırını aştığında araç kaydedilemez")]

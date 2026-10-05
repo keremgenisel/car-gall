@@ -132,7 +132,15 @@ internal sealed class CreateVehicleCommand(
 
         if (vehicle.IsFailure)
         {
-            return Result.Failure<Guid>(vehicle.Error);
+            // Agregatın hatası alan adı TAŞIMAZ — `Domain` panelin alan adlarını bilmez.
+            // Eşlemeyi burada yapmak AC-42'nin "hatalı alan işaretlenir" sözünü kilometre
+            // ve model yılı için de tutturuyor; aksi hâlde form genel hataya düşerdi ve
+            // personel hangisini düzelteceğini bilemezdi.
+            return Failure(vehicle.Error.Code, vehicle.Error.Code switch
+            {
+                Vehicle.NegativeMileage => VehicleFieldNames.Mileage,
+                _ => VehicleFieldNames.ModelYear,
+            });
         }
 
         context.Vehicles.Add(vehicle.Value);

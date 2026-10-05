@@ -149,7 +149,7 @@ export interface ReferenceOption {
 }
 
 export interface VehicleAdminPrice {
-  readonly isOnRequest: boolean
+  readonly onRequest: boolean
   readonly amount: number | null
   readonly currencyCode: string | null
   readonly minorUnitExponent: number | null
@@ -180,4 +180,14 @@ export interface CreateVehicleRequest {
   readonly priceAmount: number | null
   readonly priceOnRequest: boolean
   readonly vin: string
+}
+
+/**
+ * 0010a — formun şube seçimi. Durum KOD olarak gelir (C11, Yasak Listesi 22) ve
+ * kapatılmış şubeler de listede: ayıklama çağıranın işi, sunucu yalnız olguyu söyler.
+ */
+export interface BranchSummary {
+  readonly branchId: string
+  readonly name: string
+  readonly status: string
 }

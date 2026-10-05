@@ -3,8 +3,7 @@ import { useLocale } from '../../app/localeContext'
 import { ApiError } from '../../shared/api/client'
 import { login } from '../../shared/api/identity'
 import type { CurrentSession } from '../../shared/api/types'
-import { Button, Card } from '../../shared/ui'
-import { AdminField } from './AdminField'
+import { Button, Card, Field } from '../../shared/ui'
 import {
   EMPTY_LOGIN_FORM,
   afterFailedLogin,
@@ -59,7 +58,7 @@ export function LoginPage({ onSignedIn }: Props) {
         {shouldShowLockHint(failedAttempts) ? <LoginLocked /> : null}
 
         <form className="admin-form" onSubmit={onSubmit} noValidate>
-          <AdminField
+          <Field
             id="login-id"
             label={t('login.field.loginId')}
             type="email"
@@ -68,7 +67,7 @@ export function LoginPage({ onSignedIn }: Props) {
             onChange={(loginId) => setValues({ ...values, loginId })}
           />
 
-          <AdminField
+          <Field
             id="login-password"
             label={t('login.field.password')}
             type="password"

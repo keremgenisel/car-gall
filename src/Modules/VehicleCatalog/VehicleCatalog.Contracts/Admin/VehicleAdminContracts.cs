@@ -25,7 +25,7 @@ public sealed record VehicleAdminListItemDto(
 /// üssü birlikte taşınır; üs kaybolursa üç ondalıklı para birimleri sessizce bozulur (P2).
 /// </summary>
 public sealed record VehicleAdminPriceDto(
-    bool IsOnRequest,
+    bool OnRequest,
     decimal? Amount,
     string? CurrencyCode,
     int? MinorUnitExponent);

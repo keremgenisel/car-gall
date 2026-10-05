@@ -3,8 +3,7 @@ import { useLocale } from '../../app/localeContext'
 import { ApiError } from '../../shared/api/client'
 import { changeStaffRole, deactivateStaff, resetStaffPassword } from '../../shared/api/identity'
 import { STAFF_ROLES, type StaffListItem, type StaffRole } from '../../shared/api/types'
-import { Button } from '../../shared/ui'
-import { AdminField } from './AdminField'
+import { Button, Field } from '../../shared/ui'
 import { ConfirmDialog } from './ConfirmDialog'
 import { passwordFormError, rejectionFor, type StaffAction } from './staffActionState'
 
@@ -225,7 +224,7 @@ export function StaffRowActions({
         >
           <p dir="auto">{t('staff.confirm.password.body', { name: member.displayName })}</p>
 
-          <AdminField
+          <Field
             id="reset-password-new"
             label={t('staff.confirm.password.field.new')}
             type="password"
@@ -235,7 +234,7 @@ export function StaffRowActions({
             onChange={(value) => setPassword((current) => ({ ...current, value }))}
           />
 
-          <AdminField
+          <Field
             id="reset-password-confirm"
             label={t('staff.confirm.password.field.confirm')}
             type="password"

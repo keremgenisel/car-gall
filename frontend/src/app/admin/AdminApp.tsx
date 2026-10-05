@@ -3,7 +3,9 @@ import { useLocale } from '../localeContext'
 import { ApiError } from '../../shared/api/client'
 import { fetchCurrentSession, logout } from '../../shared/api/identity'
 import type { CurrentSession } from '../../shared/api/types'
-import { adminPath } from '../../shared/lib/route'
+import { adminPath, type AdminView } from '../../shared/lib/route'
+import { VehicleFormPage } from '../../features/catalog/admin/VehicleFormPage'
+import { VehicleListPage } from '../../features/catalog/admin/VehicleListPage'
 import { ForcePasswordChangePage } from '../../features/identity/ForcePasswordChangePage'
 import { LoginPage } from '../../features/identity/LoginPage'
 import { StaffListPage } from '../../features/identity/StaffListPage'
@@ -26,7 +28,7 @@ type Gate =
  * `identity.password_change_required`: o bir yetki reddi değil, zorunlu bir adımdır
  * (R10) ve kendi ekranına götürür.
  */
-export function AdminApp() {
+export function AdminApp({ view = 'staff' }: { readonly view?: AdminView }) {
   const { locale, t } = useLocale()
   const [gate, setGate] = useState<Gate>({ kind: 'checking' })
 
@@ -106,7 +108,38 @@ export function AdminApp() {
         </button>
       </header>
 
+      {/*
+        0010a — panelin ikinci yüzeyi geldi ve gezinme artık gerekiyor: araç kaydı
+        ekranından listeye dönecek bir yol olmadan iki ekran birbirine bakmaz.
+
+        Personel yönetimi bağlantısı YALNIZ Yöneticiye basılır (0008/AC-4): yetkisi
+        olmayana basılan bir bağlantı, sunucunun `403`'üne yürüyen bir davet olurdu.
+        Araç yüzeyi her role açık — R1 "oturum açmış personel" diyor, rol ayırmıyor.
+      */}
+      <nav className="admin-shell__nav" aria-label={t('admin.nav.label')}>
+        {gate.session.role === 'manager' ? (
+          <a
+            className="admin-shell__nav-link"
+            href={adminPath('staff')}
+            aria-current={view === 'staff' ? 'page' : undefined}
+          >
+            {t('admin.nav.staff')}
+          </a>
+        ) : null}
+        <a
+          className="admin-shell__nav-link"
+          href={adminPath('vehicles')}
+          aria-current={view === 'vehicles' || view === 'vehicle-new' ? 'page' : undefined}
+        >
+          {t('admin.nav.vehicles')}
+        </a>
+      </nav>
+
       <main className="admin-shell__content">
+        {view === 'vehicles' ? <VehicleListPage /> : null}
+        {view === 'vehicle-new' ? <VehicleFormPage /> : null}
+        {view === 'password' ? <ForcePasswordChangePage /> : null}
+
         {/*
           R8 — erişilebilen işlemler ROLE göre belirlenir. Personel yönetimi yalnız
           Yöneticinindir (R9); başka rollerin bu ekranda yapabileceği bir şey yok.
@@ -119,9 +152,11 @@ export function AdminApp() {
           Bu bir güvenlik sınırı DEĞİL, dürüstlük meselesidir: sınır sunucuda ve
           AC-25/AC-26 onu orada sınıyor.
         */}
-        {gate.session.role === 'manager' ? (
+        {view === 'staff' && gate.session.role === 'manager' ? (
           <StaffListPage session={gate.session} />
-        ) : (
+        ) : null}
+
+        {view === 'staff' && gate.session.role !== 'manager' ? (
           <div className="admin-page">
             <EmptyState
               title={t('admin.noAccess.title')}
@@ -129,7 +164,7 @@ export function AdminApp() {
               testId="admin-no-access"
             />
           </div>
-        )}
+        ) : null}
       </main>
     </div>
   )

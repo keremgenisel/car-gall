@@ -422,18 +422,32 @@ body {
   font-weight: var(--font-weight-semibold);
 }
 
-.admin-form__error-body {
+.admin-form__error-body,
+.admin-form__notice-body {
   margin-block: var(--space-0);
 }
 
-.staff-table {
+/*
+  0010a — şeridin içinde bir EYLEM olduğunda (tekrar dene, listeye git) paragrafla
+  arasına boşluk gerekiyor. Şeridin kendisine `display: grid` vermek 0006/0008'in
+  mevcut şeritlerinin düzenini de değiştirirdi; bu yüzden boşluk yalnız eylem
+  sarmalayıcısında.
+*/
+.admin-form__banner-action {
+  margin-block-start: var(--space-5);
+}
+
+.staff-table,
+.admin-table {
   inline-size: 100%;
   border-collapse: collapse;
   text-align: start;
 }
 
 .staff-table th,
-.staff-table td {
+.staff-table td,
+.admin-table th,
+.admin-table td {
   padding-block: var(--space-5);
   padding-inline: var(--space-4);
   border-block-end: var(--border-width) solid var(--color-border);
@@ -443,6 +457,55 @@ body {
 .staff-table__row {
   padding-block: var(--space-5);
   border-block-end: var(--border-width) solid var(--color-border);
+}
+
+/* --- Panelin araç yüzeyi (0010a) --- */
+
+.admin-shell__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  padding-block: var(--space-4);
+  padding-inline: var(--space-6);
+  border-block-end: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.admin-shell__nav-link {
+  color: var(--color-ink-muted);
+  text-decoration: none;
+}
+
+.admin-shell__nav-link:hover {
+  text-decoration: underline;
+}
+
+/* Etkin bölüm RENKLE değil, kalınlık ve alt çizgiyle de işaretlenir: renk tek başına
+   anlam taşımaz (docs/frontend.md § 7). */
+.admin-shell__nav-link[aria-current='page'] {
+  color: var(--color-ink);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+}
+
+.admin-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.vehicle-table-skeleton {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.admin-form__check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  font-weight: var(--font-weight-semibold);
 }
 
 /* --- Talep formu (0005) --- */

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../LocaleProvider'
 import { ApiError } from '../../shared/api/client'
 import { AdminApp } from './AdminApp'
+import { adminPath } from '../../shared/lib/route'
 import type { CurrentSession } from '../../shared/api/types'
 
 vi.mock('../../shared/api/identity', () => ({
@@ -116,6 +117,13 @@ describe('0008/AC-4: Yönetici olmayan personelin panelinde personel yönetimine
    * Kriter NEGATİF bir iddiadır: panelde bugün navigasyon yok, dolayısıyla "bağlantı
    * görünmez" tek başına boş bir kümeyi doğrulardı. Ölçülen şey, personel yönetimine
    * götüren HİÇBİR şeyin basılmaması — tablo, ekleme formu ve satır eylemleri dâhil.
+   *
+   * <b>0010a'da daraltıldı.</b> Önceki hâli "hiç bağlantı basılmaz" diyordu ve bu,
+   * kriterin söylediğinden fazlasıydı: kriter PERSONEL YÖNETİMİNE götüren bağlantıyı
+   * yasaklıyor, bağlantı kavramını değil. 0010a panele araç yüzeyini ve bir gezinmeyi
+   * ekledi; o gezinmedeki "Araçlar" bağlantısı her role açıktır (R1 rol ayırmıyor) ve
+   * eski iddia onu da yasaklardı. Ölçüt artık ADRESE bakıyor: personel ekranının adresi
+   * basılmıyor.
    */
   it.each(['sales_advisor', 'content_editor'] as const)(
     '%s için personel yönetimine götüren hiçbir şey basılmaz',
@@ -128,7 +136,13 @@ describe('0008/AC-4: Yönetici olmayan personelin panelinde personel yönetimine
 
       expect(screen.queryByTestId('staff-table')).toBeNull()
       expect(screen.queryByTestId('add-staff-form')).toBeNull()
-      expect(screen.queryByRole('link')).toBeNull()
+
+      const staffHrefs = screen
+        .queryAllByRole('link')
+        .map((link) => link.getAttribute('href'))
+        .filter((href) => href === adminPath('staff'))
+
+      expect(staffHrefs).toEqual([])
 
       // Satır eylemleri `deactivate-`, `role-`, `password-` önekli test kimlikleri taşır.
       for (const prefix of ['deactivate-', 'role-', 'password-']) {

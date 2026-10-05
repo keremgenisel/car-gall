@@ -4,8 +4,7 @@ import { ApiError } from '../../shared/api/client'
 import { addStaff } from '../../shared/api/identity'
 import { STAFF_ROLES, type AddStaffRequest, type StaffRole } from '../../shared/api/types'
 import { SUPPORTED_LOCALES } from '../../shared/lib/locale'
-import { Button, Card } from '../../shared/ui'
-import { AdminField } from './AdminField'
+import { Button, Card, Field } from '../../shared/ui'
 import { messageKeyFor } from './loginFormState'
 
 const EMPTY: AddStaffRequest = {
@@ -66,7 +65,7 @@ export function AddStaffForm({ onAdded }: { readonly onAdded: () => void }) {
       ) : null}
 
       <form className="admin-form" onSubmit={onSubmit} noValidate>
-        <AdminField
+        <Field
           id="staff-name"
           label={t('staff.add.field.displayName')}
           value={values.displayName}
@@ -74,7 +73,7 @@ export function AddStaffForm({ onAdded }: { readonly onAdded: () => void }) {
           onChange={(displayName) => setValues({ ...values, displayName })}
         />
 
-        <AdminField
+        <Field
           id="staff-login"
           label={t('staff.add.field.loginId')}
           type="email"
@@ -83,7 +82,7 @@ export function AddStaffForm({ onAdded }: { readonly onAdded: () => void }) {
           onChange={(loginId) => setValues({ ...values, loginId })}
         />
 
-        <AdminField
+        <Field
           id="staff-password"
           label={t('staff.add.field.initialPassword')}
           type="password"
