@@ -643,13 +643,16 @@ değiştirmiyor.
 - [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [x] Mimari testler yeşil — modül sınırı ihlali yok.
 - [x] Yeni migration varsa yalnızca kendi şemasına dokunuyor.
-- [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
+- [x] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
-      **YAPILMADI.** Madde bu spec'in DoD'unda yoktu ve şablonla hizalanırken sonradan
-      eklendi; PR o sırada çoktan merge edilmişti. `docs/roles/qa.md` § 8 gereği kendi
-      kodumu gözden geçirip işaretleyemem. Merge SONRASI bir süreç gözden geçirmesi yapıldı
-      ve iki gerçek bulgu verdi (SCORECARD'da) — ama o, DoD'un istediği diff + spec + test
-      okuması değil.
+      *(Yapıldı — **ama merge'den SONRA**, maddenin istediği gibi PR açılmadan önce değil.
+      Madde bu spec'in DoD'unda baştan yoktu; şablonla hizalanırken sonradan eklendi ve PR
+      o sırada çoktan merge edilmişti. Gözden geçirme **dıştan** geldi — kendi kodumu
+      gözden geçiremem, `docs/roles/qa.md` § 8 — ve **iki gerçek bulgu** verdi: DoD'un
+      `specs/TEMPLATE.md` ile hizasızlığı ve ölçülmeden işaretlenmek üzere olan üç
+      doğrulama kutusu. İkisi de işi değiştirdi; SCORECARD'da `2 / —` olarak kayıtlı.
+      **Zamanlama kayıtta kalıyor** çünkü bu spec'in dersi tam oradan çıktı: kapı
+      geç koşarsa bulgu yine gerçek olur, ama onu merge'den önce yakalamaz.)*
 - [x] Çeviri anahtarı eklendiyse TR/AR/EN üçünde de var; eksik anahtar kontrolü yeşil.
 - [x] Yeni domain terimi yok.
 - [x] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D1, D3, D9).
