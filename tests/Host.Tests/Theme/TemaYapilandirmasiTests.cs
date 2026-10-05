@@ -178,22 +178,28 @@ public sealed class TemaYapilandirmasiTests
     }
 
     /// <summary>
-    /// Mockup paleti ve bugünkü yardımcı renkler birlikte tablonun HER satırını geçiyor.
-    /// Değerler `GecerliTema`'da; bu test onların gerçekten geçtiğinin kanıtı.
+    /// Mockup paleti tablonun HER satırını geçiyor. D4 onaylandıktan sonra (2026-10-05)
+    /// bu sözlük artık "mockup + bugünkü yardımcı renkler" karması değil, mockup'ın
+    /// paletinin TAMAMI — varsayılanla aynı değerler.
+    ///
+    /// <para><b>Varsayılanla aynı olması sorun değil, bilinçli:</b> bu test
+    /// yapılandırmanın BORU HATTINI ölçüyor (eksik anahtar, geçersiz biçim, kontrast
+    /// kapısı), değerlerin farklı olmasını değil. Farklı bir paletle çalıştığının kanıtı
+    /// AC-15'in iki tema görüntüsünde.</para>
     /// </summary>
     internal static Dictionary<string, string> GecerliTema() => new(StringComparer.OrdinalIgnoreCase)
     {
         [ThemeTokens.Surface] = "#ffffff",
         [ThemeTokens.SurfaceMuted] = "#f3f4f1",
         [ThemeTokens.Ink] = "#0b0c0e",
-        [ThemeTokens.InkMuted] = "#5b6270",
+        [ThemeTokens.InkMuted] = "#5f656c",
         [ThemeTokens.InkInverse] = "#ffffff",
         [ThemeTokens.AccentFill] = "#cdf564",
         [ThemeTokens.AccentText] = "#4f6b00",
-        [ThemeTokens.AccentSurface] = "#eef7d6",
-        [ThemeTokens.Border] = "#d9dde4",
-        [ThemeTokens.Danger] = "#a4231f",
-        [ThemeTokens.DangerSurface] = "#fdf1f0",
+        [ThemeTokens.AccentSurface] = "#edf6d6",
+        [ThemeTokens.Border] = "#e4e5e1",
+        [ThemeTokens.Danger] = "#b8412a",
+        [ThemeTokens.DangerSurface] = "#fbece9",
     };
 
     private static Result<ThemeOptions> Olustur(Dictionary<string, string> tema) =>

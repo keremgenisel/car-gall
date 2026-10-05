@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı — D4 hariç** (2026-10-04) |
+| **Durum** | **Onaylandı** (2026-10-04) · **D4 onaylandı** (2026-10-05) |
 | **Sahip** | Developer (ajan) |
 | **Analist** | Analist oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
@@ -167,8 +167,10 @@ Başarı ölçütü: **bir kurulumun rengini değiştirmek hiçbir bileşene dok
 - **X11.** **`--color-border`'ın kontrast kapısına alınması** — *neden:* token hem
   dekoratif kart kenarlığı hem form denetimi sınırı olarak kullanılıyor ve kapı ikisini
   ayırt edemez. WCAG 1.4.11 3:1'i yalnız denetimi tanımlayan sınır için istiyor; dekoratif
-  kenarlığa uygulamak **yanlış kırmızı** üretir. Ölçüldü: bugünkü `#d9dde4` beyaz zemine
-  karşı **1.36:1** — yani blanket 3:1 kuralı bugünkü tasarımı anında reddederdi.
+  kenarlığa uygulamak **yanlış kırmızı** üretir. Ölçüldü: `--color-border`'ın mockup'tan
+  okunan değeri `#E4E5E1` beyaz zemine karşı **1.27:1** — yani blanket 3:1 kuralı
+  tasarımcının kendi kenarlığını anında reddederdi. *(D4 öncesi değer `#d9dde4` ile 1.36:1
+  ölçülmüştü; karar değişmiyor, pay büyüyor.)*
   `--color-border` yapılandırılabilir kalır ama kapısı yoktur; düşük kontrastlı bir
   kenarlık metin gibi okunamaz hâle gelmez, zarif bozulur. Denetim sınırlarının kendi
   token'ına ayrılması kendi spec'ini hak eder.
@@ -232,12 +234,12 @@ olmayan anahtar yapılandırılamaz.** `yapılandırılabilir = hayır` olan sat
 | `--color-on-accent-fill` (dolgu üzerindeki metin) | `var(--color-ink)` | hayır (dolgudan **türetilmez**, gövde metnine bağlı) | — |
 | `--color-focus-ring` (odak halkası) | `var(--color-accent-text)` | hayır | — |
 | `--color-ink-inverse` | `#FFFFFF` | evet **(D13)** | — |
-| `--color-ink-muted` | **tasarımcıdan bekleniyor** | evet | — |
-| `--color-border` | **tasarımcıdan bekleniyor** | evet | — *(kontrast kapısı dışında → X11)* |
-| `--color-danger` | **tasarımcıdan bekleniyor** | evet **(D13)** | — |
-| `--color-danger-surface` | **tasarımcıdan bekleniyor** | evet **(D13)** | — |
-| `--color-accent-surface` | **tasarımcıdan bekleniyor** | evet **(D13)** | — |
-| `--color-backdrop` | **tasarımcıdan bekleniyor** *(alfa taşır → `#RRGGBBAA`, C11)* | hayır *(metin taşımaz)* | — |
+| `--color-ink-muted` (yardımcı metin) | `#5F656C` *(okundu)* | evet | — |
+| `--color-border` | `#E4E5E1` *(okundu)* | evet | — *(kontrast kapısı dışında → X11)* |
+| `--color-danger` (hata metni) | `#B8412A` *(okundu)* | evet **(D13)** | — |
+| `--color-danger-surface` | `#FBECE9` *(**türetildi** — D4 Ek)* | evet **(D13)** | — |
+| `--color-accent-surface` | `#EDF6D6` *(okundu)* | evet **(D13)** | — |
+| `--color-backdrop` | `#0B0C0E8C` *(**türetildi** — D4 Ek; alfa taşır → `#RRGGBBAA`, C11)* | hayır *(metin taşımaz)* | — |
 | `--font-family-base` (Latin) | Space Grotesk + sistem yedeği | hayır (X9) | — |
 | `--font-family-arabic` | Readex Pro, IBM Plex Sans Arabic + sistem yedeği | hayır (X9) | — |
 
@@ -271,10 +273,10 @@ rozet metni. **`--color-ink-muted` yapılandırılabilirdi ve hiçbir kapısı y
 kurulum onu açık griye ayarlasa uygulama açılır, kapı yeşil kalır ve bütün yardımcı
 metinler okunmaz olurdu. R7'nin vaadi tam orada boşa çıkıyordu.
 
-**Tablo tamamlanmadan spec onaya sunulmaz.** Bugün `tokens.css` **11** renk token'ı taşıyor;
-mockup tablosu dördünün değerini veriyor. Altı satır tasarımcıdan bekleniyor ve bunlardan
-ikisi için türetme önerisi yazılı — türetilmiş değer de geçerli bir satırdır, boş satır
-değildir. *(Gerekçe: R6'nın "ya tam ya hiç" kuralı kapalı bir liste olmadan tanımlanamaz;
+**Tablo tamamlandı (2026-10-05, D4 Ek).** On dört renk token'ının on dördü değer taşıyor.
+Mockup'ın palet NOTU yalnız dördünü veriyordu; kalan altısı mockup'ın KENDİSİNDEN —
+on bir artboard'ın satır içi stillerinden — okundu ya da tasarımcının kendi tarifiyle
+türetildi. *(Gerekçe: R6'nın "ya tam ya hiç" kuralı kapalı bir liste olmadan tanımlanamaz;
 "tam" tanımsızken AC-11 ve AC-12 test edilemez.)*
 
 ### Çağrı yeri sayımı — D2 bir göçtür
@@ -363,14 +365,43 @@ bir örnek **trafik almaz**. Kademeli dağıtımda yeni örnek açılmaz, eski �
 eder — istenen davranış budur. Doğrudan değiştirilen bir dağıtımda ise aynı karar çalışan
 vitrini indirir; bu yüzden kesme öncesi doğrulama kararın ayrılmaz parçasıdır.
 
-**D4 — Varsayılan tema mockup'ın paletidir.** *(**ONAYLANMADI — veri bekliyor.**)*
+**D4 — Varsayılan tema mockup'ın paletidir.** *(**ONAYLANDI** — 2026-10-05.)*
 *Gerekçe:* kutudan çıkınca ürün mockup gibi görünür; yeni kurulum renk vermeden çalışır (R6).
-*Bedel:* **altı token değeri tasarımcıdan gelmeden bu karar doğrulanamaz.** Context § Token
-tablosunda `--color-ink-muted`, `--color-border`, `--color-danger`, `--color-danger-surface`,
-`--color-accent-surface` ve `--color-backdrop` satırları "tasarımcıdan bekleniyor" durumunda;
-mockup tablosu 11 renk token'ının yalnız dördünün değerini veriyor. Türetilmiş değer de
-geçerli bir cevaptır (iki satır için öneri yazılı), boş satır değildir.
-DoD'nin ilk maddesi bu tablonun tamamlanmasını şart koşar.
+*Bedel — ödendi:* altı token değeri mockup'ın palet NOTUNDA yoktu ve karar bu yüzden
+doğrulanamıyordu. Altısı da artık tabloda; nasıl bulundukları aşağıda.
+
+**D4 Ek — altı değerin kaynağı.**
+Beklenen şey bir evet/hayır değil, **eksik veriydi**. Değerler tasarımcıdan ayrıca
+istenmedi çünkü mockup'ta zaten vardı: palet notu dört satır veriyor, ama on bir
+artboard'ın satır içi stilleri on dört rengin tamamını fiilen kullanıyor. **Dördü oradan
+okundu, ikisi tasarımcının kendi tarifiyle türetildi.** Bu spec türetmeye izin veriyor:
+"türetilmiş değer de geçerli bir satırdır, boş satır değildir."
+
+| Token | Değer | Nasıl bulundu |
+|---|---|---|
+| `--color-ink-muted` | `#5F656C` | **Okundu.** Gezinme bağlantıları, hero paragrafı, kart etiketi, alt bilgi — 45 kullanım. *Mockup'ın en SIK yardımcı metin rengi bu değil (`#6C7178`, 80 kullanım); o ölçüldü ve `--color-surface-muted` üzerinde **4.45:1** verip AC-31'in eşiğini kırıyor. Seçilen değer de tasarımcının kendi değeri ve iki zeminde de geçiyor.* |
+| `--color-border` | `#E4E5E1` | **Okundu.** Mockup'ın en sık kenarlığı: 94 `solid` bildiriminin 32'si (girdi, hap, açılır kutu). |
+| `--color-danger` | `#B8412A` | **Okundu.** Tasarımcının hata **metni** rengi: panel ilan satırlarındaki tehlike durumu, "· boş" dil uyarısı. *Gövde parçası dolgusu `#D9543C` DEĞİL — o beyaz zeminde 3.97:1 verir ve metin olarak kullanılamaz.* |
+| `--color-danger-surface` | `#FBECE9` | **Türetildi.** Mockup'ta açık kırmızı bir yüzey hiç yok. Tasarımcının kendi yüzey tarifi uygulandı: kehribar çifti `#FBEFD6` ⇄ `#7A5510`, limon çifti `#EDF6D6` ⇄ `#3E5400` — ikisi de aynı hue'da ~%90 açıklık. Aynı tarif tehlike hue'suna (10°) uygulandı ve açıklık **%95'e** çekildi: %91'de çift 4.31:1 ile kapıyı kırıyordu. |
+| `--color-accent-surface` | `#EDF6D6` | **Okundu.** Tasarımcının limon tonlu yüzeyi; panelde `--color-accent-text` ile birlikte kullanılıyor. |
+| `--color-backdrop` | `#0B0C0E8C` | **Türetildi.** Mockup'ta modal yok, dolayısıyla perde de yok. Ink tasarımcının (`#0B0C0E`); alfa onun iki örtüsünün ortası — kaydırıcı noktası 0.28, fotoğraf sayacı 0.78 → 0.53 ≈ **0.55** (`8C`). *0.78 bir modal perdesi için fazla ağır, 0.28 altındaki tabloyu ayırmıyor.* |
+
+**Kontrast kapısı ölçüldü, iddia edilmedi** (AC-24, 14/14 çift geçti). Yeni değerleri
+ilgilendiren beş satır:
+
+| Çift | Oran | Eşik | Kriter |
+|---|---|---|---|
+| `--color-ink-muted` ↔ `--color-surface` | **5.89:1** | 4.5 | AC-31 |
+| `--color-ink-muted` ↔ `--color-surface-muted` | **5.34:1** | 4.5 | AC-31 |
+| `--color-accent-text` ↔ `--color-accent-surface` | **5.46:1** | 4.5 | AC-32 |
+| `--color-danger` ↔ `--color-surface` | **5.49:1** | 4.5 | AC-33 |
+| `--color-danger` ↔ `--color-danger-surface` | **4.77:1** | 4.5 | AC-33 |
+
+*En dar pay son satırda: 0.27. Daha açık bir yüzey payı büyütürdü ama yüzey beyazdan
+ayırt edilemez hâle gelir ve hata durumu görsel olarak kaybolur.*
+
+**Tasarımcı sonradan farklı bir ton isterse bedel tek commit'tir:** değerler yalnız
+`tokens.css`'te yaşıyor ve aynı kapı onları yeniden ölçer.
 
 **D5 — Düzen bu spec'te değişmez.**
 *Gerekçe:* ADR 0003 unsur 1. Mockup'ın düzeni mevcut ekranlardan belirgin biçimde farklı
@@ -572,8 +603,11 @@ değiştirmiyor.
 
 ## Definition of Done
 
-- [ ] **Context § Token tablosu tamamlandı** — "tasarımcıdan bekleniyor" satırı kalmadı
-      (R2, AC-6).
+- [x] **Context § Token tablosu tamamlandı** — "tasarımcıdan bekleniyor" satırı kalmadı
+      (R2, AC-6). *(2026-10-05, D4 Ek. Dördü mockup artboard'larından okundu, ikisi
+      tasarımcının yüzey/örtü tarifiyle türetildi; 14/14 kontrast çifti ölçüldü ve geçti.
+      `VarsayilanPaletTests` artık tablonun on dört satırının tamamını karşılaştırıyor —
+      AC-6'nın ikinci yarısı bu commit'le kapandı.)*
 - [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] **A grubundaki kriterin bu spec'ten önce de yeşil olduğu** PR'da yazıldı; yeni
       davranışın kanıtı B–G gruplarıdır.

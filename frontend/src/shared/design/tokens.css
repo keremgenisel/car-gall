@@ -37,24 +37,53 @@
      limon zemin üzerinde görünmezse klavye kullanıcısı nerede olduğunu yitirir. */
   --color-focus-ring: var(--color-accent-text);
 
-  /* --- D4 ONAY BEKLİYOR ---
-     Aşağıdaki altı değer Token tablosunda "tasarımcıdan bekleniyor" durumunda ve
-     BUGÜNKÜ değerleriyle duruyor; mockup paleti onların karşılığını vermiyor. Kontrast
-     kapısını geçiyorlar (AC-24 bunu ölçüyor) ama görsel olarak eski mavi aileye ait:
-     `--color-accent-surface` soluk MAVİ, `--color-border` mavimsi gri. D4 onaylanınca
-     bu blok tasarımcının değerleriyle değişir ve AC-6 ile AC-7 ancak o zaman karşılanır. */
-  --color-ink-muted: #5b6270;
-  --color-border: #d9dde4;
+  /* --- D4 ONAYLANDI (2026-10-05) ---
+     Bu altı satır "tasarımcıdan bekleniyor" durumundaydı ve eski MAVİ aileden kalma
+     değerlerle duruyordu. Mockup'ın palet notu 11 renk token'ının yalnız dördünü
+     veriyor — ama değerler mockup'ın KENDİSİNDE vardı: on bir artboard'ın satır içi
+     stillerinde. Dördü oradan OKUNDU, ikisi tasarımcının kendi tarifiyle TÜRETİLDİ.
+     Türetilmiş değer de geçerli bir satırdır (spec § Token tablosu); boş satır değildir.
+
+     Okunan değerin neden "en sık kullanılan" olmadığı: `--color-ink-muted` için
+     mockup'ın en sık yardımcı metin rengi `#6c7178` (80 kullanım) ama ÖLÇÜLDÜ —
+     `--color-surface-muted` üzerinde 4.45:1 veriyor ve AC-31'in eşiğini kırıyor.
+     Seçilen `#5f656c` de tasarımcının kendi değeri (45 kullanım: gezinme, hero
+     paragrafı, kart etiketi, alt bilgi) ve iki zeminde de geçiyor: 5.89 / 5.34. */
+
+  /* Okundu: gezinme ve ikincil paragraf metni. */
+  --color-ink-muted: #5f656c;
+
+  /* Okundu: mockup'ın en sık kenarlığı (94 `solid` bildiriminin 32'si). Kontrast
+     kapısının dışındadır (X11) — metin taşımaz. */
+  --color-border: #e4e5e1;
 
   /* Doğrulama ve hata. Renk TEK BAŞINA anlam taşımaz (docs/frontend.md § 7): hatalı
-     alan ayrıca metinle ve `aria-invalid` ile anlatılır. */
-  --color-danger: #a4231f;
-  --color-danger-surface: #fdf1f0;
+     alan ayrıca metinle ve `aria-invalid` ile anlatılır.
+
+     `--color-danger` okundu: tasarımcının hata METNİ rengi (panel ilan satırlarındaki
+     tehlike durumu, "· boş" dil uyarısı). Gövde parçası dolgusu olan `#d9543c` DEĞİL:
+     o beyaz zeminde 3.97:1 verir ve metin olarak kullanılamaz.
+
+     `--color-danger-surface` TÜRETİLDİ: mockup'ta açık kırmızı bir yüzey hiç yok.
+     Tasarımcının kendi yüzey tarifi uygulandı — kehribar çifti `#fbefd6` ⇄ `#7a5510`
+     ve limon çifti `#edf6d6` ⇄ `#3e5400`, ikisi de aynı hue'da ~%90 açıklık. Aynı
+     tarif tehlike hue'suna (10°) uygulandı ve açıklık %95'e çekildi: %91'de çift
+     4.31:1 ile kapıyı kırıyordu, %95'te 4.77:1 geçiyor. */
+  --color-danger: #b8412a;
+  --color-danger-surface: #fbece9;
 
   /* 0008 — vurgu yüzeyi ve modal arkaplanı. Arkaplan yarı saydam: altındaki tablo
-     görünür kalır ve ziyaretçi bağlamını kaybetmez. */
-  --color-accent-surface: #e8effb;
-  --color-backdrop: #16191d66;
+     görünür kalır ve ziyaretçi bağlamını kaybetmez.
+
+     `--color-accent-surface` okundu: tasarımcının limon tonlu yüzeyi, panelde
+     `--color-accent-text` ile birlikte kullanılıyor (5.46:1).
+
+     `--color-backdrop` TÜRETİLDİ: mockup'ta modal yok, dolayısıyla perde de yok. Ink
+     tasarımcının (`#0b0c0e`); alfa onun iki örtüsünün arasından alındı — kaydırıcı
+     noktası 0.28, fotoğraf sayacı 0.78 → orta nokta 0.53 ≈ 0.55 (`8c`). Tek başına
+     0.78 bir modal perdesi için fazla ağır, 0.28 ise altındaki tabloyu ayırmıyor. */
+  --color-accent-surface: #edf6d6;
+  --color-backdrop: #0b0c0e8c;
 
   /* --- Aralık --- (4px tabanlı ölçek) */
   --space-0: 0;
