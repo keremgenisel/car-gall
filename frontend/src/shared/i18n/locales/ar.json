@@ -235,5 +235,7 @@
   "vehicle.form.error.negative_mileage": "لا يمكن أن تكون المسافة سالبة.",
   "vehicle.form.error.implausible_model_year": "يرجى التحقق من سنة الصنع.",
   "vehicle.form.error.concurrency_lost": "حدث تغيير آخر في الأثناء. يرجى المحاولة مرة أخرى.",
-  "vehicle.form.error.generic": "تعذّر حفظ المركبة الآن. يرجى المحاولة مرة أخرى."
+  "vehicle.form.error.generic": "تعذّر حفظ المركبة الآن. يرجى المحاولة مرة أخرى.",
+  "vehicle.form.error.invalid_vin": "تحقّق من رقم الهيكل: لا يمكن أن يكون فارغاً ولا أن يحتوي مسافات.",
+  "vehicle.form.error.locale_not_enabled": "إحدى اللغات المُرسَلة غير مفعّلة في هذا التنصيب."
 }

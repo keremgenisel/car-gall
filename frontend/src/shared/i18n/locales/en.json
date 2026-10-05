@@ -235,5 +235,7 @@
   "vehicle.form.error.negative_mileage": "Mileage cannot be negative.",
   "vehicle.form.error.implausible_model_year": "Please check the model year.",
   "vehicle.form.error.concurrency_lost": "Something else changed in the meantime. Please try again.",
-  "vehicle.form.error.generic": "The vehicle could not be saved right now. Please try again."
+  "vehicle.form.error.generic": "The vehicle could not be saved right now. Please try again.",
+  "vehicle.form.error.invalid_vin": "Check the VIN: it cannot be empty and cannot contain spaces.",
+  "vehicle.form.error.locale_not_enabled": "One of the submitted languages is not enabled in this installation."
 }

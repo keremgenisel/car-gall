@@ -113,7 +113,10 @@ export function VehicleFormPage() {
           transmissionType: values.transmissionType,
           drivetrainType: values.drivetrainType,
           trimLevel: values.trimLevel,
-          color: values.color.trim() === '' ? {} : { [locale]: values.color.trim() },
+          // Renk YALNIZ personelin kendi locale'inde gidiyor; kalan diller `0010b`'nin
+          // işi. Sunucu etkin olmayan bir locale görürse isteği reddediyor, bu yüzden
+          // buradan asla tanınmayan bir anahtar çıkmamalı.
+          color: { [locale]: values.color.trim() },
           modelYear: Number(values.modelYear),
           mileageKilometers: Number(values.mileageKilometers),
           // P4 — "fiyat sorunuz" ile tutar birlikte gönderilemez; sunucu ikisini birden

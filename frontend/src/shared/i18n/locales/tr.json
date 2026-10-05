@@ -235,5 +235,7 @@
   "vehicle.form.error.negative_mileage": "Kilometre negatif olamaz.",
   "vehicle.form.error.implausible_model_year": "Model yılını kontrol edin.",
   "vehicle.form.error.concurrency_lost": "Bu sırada başka bir değişiklik oldu. Lütfen tekrar deneyin.",
-  "vehicle.form.error.generic": "Kayıt şu anda tamamlanamadı. Lütfen tekrar deneyin."
+  "vehicle.form.error.generic": "Kayıt şu anda tamamlanamadı. Lütfen tekrar deneyin.",
+  "vehicle.form.error.invalid_vin": "Şase numarasını kontrol edin: boş bırakılamaz ve boşluk içeremez.",
+  "vehicle.form.error.locale_not_enabled": "Gönderilen dillerden biri bu kurulumda etkin değil."
 }

@@ -32,8 +32,16 @@ internal sealed class VehicleAdminQueries(
             return [];
         }
 
+        // Durum sorgusu ELDEKİ araçlarla sınırlı. Koşulsuz okuma bugün de yanlıştı ama
+        // zararsız görünüyordu: araç sorgusu da bütün tabloyu okuyor (sayfalama `0010b`'de,
+        // X18). `0010b` sayfalamayı eklediğinde bu satır değişmeden kalsaydı sayfalamanın
+        // kazancını sessizce iptal ederdi — sayfa başına 24 araç çekilirken `listings`
+        // tablosunun tamamı yine belleğe inerdi.
+        List<VehicleId> ids = [.. vehicles.Select(vehicle => vehicle.Id)];
+
         Dictionary<VehicleId, ListingStatus> statuses = await context.Listings
             .AsNoTracking()
+            .Where(listing => ids.Contains(listing.VehicleId))
             .ToDictionaryAsync(listing => listing.VehicleId, listing => listing.Status, cancellationToken);
 
         // Model adı REFERANS VERİDE yaşıyor; burada saklanmıyor (Yasak Listesi 33).

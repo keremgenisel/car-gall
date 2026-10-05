@@ -177,6 +177,49 @@ describe('0010a/AC-42: Doğrulama hatası olan alan işaretlenir ve hata persone
     expect(screen.queryByTestId('vehicle-form-error')).toBeNull()
   })
 
+  it('renk boş bırakılırsa alan işaretlenir ve istek atılmaz (R2, AC-6)', async () => {
+    ekran()
+    await screen.findByTestId('vehicle-form')
+
+    formuDoldur()
+    yaz('Renk', '')
+    kaydet()
+
+    expect(screen.getByLabelText('Renk').getAttribute('aria-invalid')).toBe('true')
+    expect(vi.mocked(createVehicle)).not.toHaveBeenCalled()
+  })
+
+  it('renk personelin KENDİ locale anahtarıyla gönderilir', async () => {
+    vi.mocked(createVehicle).mockResolvedValue('0192c000-0000-7000-8000-000000000001')
+
+    ekran('en')
+    await screen.findByTestId('vehicle-form')
+
+    // Etiketler İngilizce; alanlar da öyle sorgulanıyor.
+    fireEvent.change(screen.getByLabelText('Branch'), {
+      target: { value: '0192c000-0000-7000-8000-00000000b001' },
+    })
+    fireEvent.change(screen.getByLabelText('Model'), {
+      target: { value: SECENEKLER.models[0].value },
+    })
+    fireEvent.change(screen.getByLabelText('Body type'), { target: { value: 'suv' } })
+    fireEvent.change(screen.getByLabelText('Trim level'), { target: { value: 'base' } })
+    fireEvent.change(screen.getByLabelText('Fuel'), { target: { value: 'petrol' } })
+    fireEvent.change(screen.getByLabelText('Transmission'), { target: { value: 'automatic' } })
+    fireEvent.change(screen.getByLabelText('Drivetrain'), { target: { value: 'fwd' } })
+    fireEvent.change(screen.getByLabelText('Model year'), { target: { value: '2019' } })
+    fireEvent.change(screen.getByLabelText('Mileage'), { target: { value: '125000' } })
+    fireEvent.change(screen.getByLabelText('Colour'), { target: { value: 'White' } })
+    fireEvent.change(screen.getByLabelText('VIN'), { target: { value: 'VIN0000000000001' } })
+    fireEvent.change(screen.getByLabelText('Price'), { target: { value: '750000' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save vehicle' }))
+
+    await screen.findByTestId('vehicle-saved')
+
+    expect(vi.mocked(createVehicle).mock.calls[0][0].color).toEqual({ en: 'White' })
+  })
+
   it('eksik çekirdek alan istek atılmadan işaretlenir (R10)', async () => {
     ekran()
     await screen.findByTestId('vehicle-form')

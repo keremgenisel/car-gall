@@ -66,12 +66,32 @@ internal sealed class CreateVehicleCommand(
 
         if (vin.IsFailure)
         {
-            return Failure(VehicleErrors.TextTooLong, VehicleFieldNames.Vin);
+            // Üç başarısızlık nedeni (boş · uzun · iç boşluk) tek koda eşlenmiyor: boş
+            // bırakılmış bir alana "uzunluk aşıldı" demek personeli yanlış düzeltmeye
+            // yöneltiyordu — şaseyi kısaltmaya çalışıyor, oysa sorun boşluk.
+            return Failure(
+                vin.Error.Code == Vin.TooLong ? VehicleErrors.TextTooLong : VehicleErrors.InvalidVin,
+                VehicleFieldNames.Vin);
         }
 
         if (request.Color.Values.Any(value => value.Length > MaximumColorLength))
         {
             return Failure(VehicleErrors.TextTooLong, VehicleFieldNames.Color);
+        }
+
+        // Etkin olmayan locale SESSİZCE elenmez. Daha önce filtre değeri yutuyordu ve
+        // personel girdiği rengin kaybolduğunu hiçbir yerde göremiyordu.
+        if (request.Color.Keys.Any(code => !locales.IsEnabled(code)))
+        {
+            return Failure(VehicleErrors.LocaleNotEnabled, VehicleFieldNames.Color);
+        }
+
+        // R2 + R10 + AC-6 — renk ÇEKİRDEK alandır ve en az bir etkin locale'de dolu
+        // olmalıdır. "En az bir" bilinçli: R10 çok dilli metni yarıda bırakmaya izin
+        // veriyor, yani kalan diller düzenleme ekranında (`0010b`) doldurulabilir.
+        if (!request.Color.Values.Any(value => !string.IsNullOrWhiteSpace(value)))
+        {
+            return Failure(VehicleErrors.CoreFieldMissing, VehicleFieldNames.Color);
         }
 
         Result<BodyTypeSlug> bodyType = BodyTypeSlug.Create(request.BodyType);
@@ -169,11 +189,18 @@ internal sealed class CreateVehicleCommand(
     private static Result<Guid> Failure(string code, string field) =>
         Result.Failure<Guid>(Error.With(code, "field", field));
 
-    private LocalizedText Color(CreateVehicleRequest request) =>
+    /// <summary>
+    /// Anahtarların hepsi bu noktada ETKİN (doğrulama yukarıda yapıldı), yani burada
+    /// eleme yok. Elenen tek şey BOŞ değer: boş bir dize "o dili doldurmadım" demektir ve
+    /// locale'i boş metinle kaydetmek, dolu sanılan bir alan üretirdi.
+    /// </summary>
+    private static LocalizedText Color(CreateVehicleRequest request) =>
         LocalizedText.From(
             request.Color
-                .Where(pair => locales.IsEnabled(pair.Key))
-                .Select(pair => new KeyValuePair<Locale, string>(Locale.Create(pair.Key).Value, pair.Value)));
+                .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
+                .Select(pair => new KeyValuePair<Locale, string>(
+                    Locale.Create(pair.Key).Value,
+                    pair.Value.Trim())));
 
     /// <summary>
     /// P4 — "fiyat sorunuz" AYRI bir durumdur, `0` değildir. İkisi birlikte verilirse

@@ -19,7 +19,15 @@ namespace CarGallery.Modules.VehicleCatalog.Domain;
 /// </summary>
 internal readonly record struct Vin
 {
+    /// <summary>Boş veya iç boşluk taşıyan şase. <b>Uzunluk DEĞİL</b> — bkz. <see cref="TooLong"/>.</summary>
     internal const string InvalidFormat = "vin.invalid_format";
+
+    /// <summary>
+    /// Üst uzunluk sınırı aşıldı (R11). Biçim hatasından AYRI bir koddur ve bu bir
+    /// incelik değil: tek koda eşlendiğinde personel boş bıraktığı alanda "uzunluk
+    /// aşıldı" mesajı görüyordu ve şaseyi KISALTMAYA çalışıyordu — oysa sorun başkaydı.
+    /// </summary>
+    internal const string TooLong = "vin.too_long";
 
     /// <summary>R11 — serbest metin alanlarının üst uzunluk sınırı.</summary>
     internal const int MaximumLength = 32;
@@ -32,9 +40,14 @@ internal readonly record struct Vin
     {
         string trimmed = value?.Trim() ?? string.Empty;
 
-        if (trimmed is not { Length: > 0 and <= MaximumLength })
+        if (trimmed.Length == 0)
         {
             return Result.Failure<Vin>(new Error(InvalidFormat));
+        }
+
+        if (trimmed.Length > MaximumLength)
+        {
+            return Result.Failure<Vin>(new Error(TooLong));
         }
 
         // İç boşluk taşıyan şase, aynı aracın iki farklı yazımla iki kez girilmesine yol

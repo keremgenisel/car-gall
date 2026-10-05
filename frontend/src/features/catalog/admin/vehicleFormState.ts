@@ -78,9 +78,10 @@ export const EMPTY_VEHICLE_FORM: VehicleFormValues = {
  * model kimliği boş giderse bağlayıcı `400` üretir ve `errorCode` taşımayan bir yanıt
  * forma hangi alanın düştüğünü söyleyemez.
  *
- * <b>Renk listede YOK</b> ve bu bilinçli: renk çok dilli metindir ve R10 çok dilli metni
- * "yarıda bırakıp dönmek" muafiyetine açıkça dâhil ediyor. Sunucu da boş rengi kabul
- * ediyor; uçta zorunlu kılmak, olmayan bir kuralı uydurmak olurdu.
+ * <b>Renk de listede</b> (R2, AC-6). Ölçüt "üç dilde de dolu" DEĞİL, personelin kendi
+ * dilinde dolu: R10 çok dilli metni yarıda bırakmaya izin veriyor, yani kalan diller
+ * düzenleme ekranında (`0010b`) doldurulabilir. Sunucu da aynı ölçütü uyguluyor — bu
+ * denetim onun yerine geçmiyor, yalnız istek atılmadan alanı işaretliyor.
  */
 const CORE_FIELDS: readonly (keyof VehicleFormValues)[] = [
   'branchId',
@@ -90,6 +91,7 @@ const CORE_FIELDS: readonly (keyof VehicleFormValues)[] = [
   'transmissionType',
   'drivetrainType',
   'trimLevel',
+  'color',
   'modelYear',
   'mileageKilometers',
   'vin',

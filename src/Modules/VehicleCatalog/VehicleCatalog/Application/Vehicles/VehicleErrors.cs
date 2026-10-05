@@ -25,6 +25,19 @@ internal static class VehicleErrors
     /// <summary>AC-9 — serbest metin üst uzunluk sınırını aştı (R11).</summary>
     internal const string TextTooLong = "vehicle.text_too_long";
 
+    /// <summary>
+    /// Şase BİÇİMİ geçersiz: boş ya da iç boşluk taşıyor. `TextTooLong`'dan ayrıdır —
+    /// aynı koda eşlendiğinde personel boş alanda "uzunluk aşıldı" mesajı görüyordu.
+    /// </summary>
+    internal const string InvalidVin = "vehicle.invalid_vin";
+
+    /// <summary>
+    /// Kurulumda etkin olmayan bir locale için değer gönderildi. Değer SESSİZCE
+    /// ATILMAZ: bu depoda sessiz veri kaybı tekrar eden bir derstir (`0009` — tanınmayan
+    /// slug'ın sessizce kaybolması). Filtre eleyeceği bir değer bulduğunda reddeder.
+    /// </summary>
+    internal const string LocaleNotEnabled = "vehicle.locale_not_enabled";
+
     /// <summary>AC-6 — çekirdek alanlardan biri eksik (D8).</summary>
     internal const string CoreFieldMissing = "vehicle.core_field_missing";
 

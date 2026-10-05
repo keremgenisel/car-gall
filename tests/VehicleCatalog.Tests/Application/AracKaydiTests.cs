@@ -102,6 +102,87 @@ public sealed class AracKaydiTests(ShowcaseDatabase database)
         Assert.Equal(VehicleFieldNames.BodyType, sonuc.Error.Parameters!["field"]);
     }
 
+    /// <summary>
+    /// Renk de R2'nin çekirdek listesinde. "En az bir etkin locale" ölçütü R10'un iki
+    /// cümlesini birden karşılıyor: alan zorunlu (birinci cümle) ama kalan diller sonra
+    /// doldurulabilir (ikinci cümle, çok dilli metin muafiyeti).
+    ///
+    /// <para>Bulgu olarak geldi: boş renk sözlüğüyle kayıt BAŞARILI oluyordu ve panel
+    /// boş renk alanını tam olarak öyle gönderiyordu.</para>
+    /// </summary>
+    [Theory(DisplayName = "0010a/AC-6: Çekirdek alanlardan biri eksik bırakılan araç kaydedilemez (D8)")]
+    [InlineData("bos-sozluk")]
+    [InlineData("bos-deger")]
+    [InlineData("yalniz-bosluk")]
+    public async Task Kaydedilemez_RenkEksikken(string durum)
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+
+        Dictionary<string, string> renk = durum switch
+        {
+            "bos-sozluk" => [],
+            "bos-deger" => new Dictionary<string, string> { ["tr"] = string.Empty },
+            _ => new Dictionary<string, string> { ["tr"] = "   " },
+        };
+
+        Result<Guid> sonuc = await Komut(context)
+            .ExecuteAsync(Istek("AC06R00000000001") with { Color = renk }, CancellationToken.None);
+
+        Assert.Equal(VehicleErrors.CoreFieldMissing, sonuc.Error.Code);
+        Assert.Equal(VehicleFieldNames.Color, sonuc.Error.Parameters!["field"]);
+    }
+
+    [Fact(DisplayName = "0010a/AC-6: Çekirdek alanlardan biri eksik bırakılan araç kaydedilemez (D8)")]
+    public async Task Kaydedilir_RenkTekEtkinLocaledeDoluyken()
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+
+        Result<Guid> sonuc = await Komut(context).ExecuteAsync(
+            Istek("AC06T00000000001") with { Color = new Dictionary<string, string> { ["tr"] = "Beyaz" } },
+            CancellationToken.None);
+
+        Assert.True(sonuc.IsSuccess, sonuc.IsFailure ? sonuc.Error.Code : null);
+
+        Vehicle vehicle = await context.Vehicles.AsNoTracking()
+            .SingleAsync(item => item.Id == new VehicleId(sonuc.Value));
+
+        // Kalan iki dil boş; düzenleme ekranı (`0010b`) onları sonra dolduracak.
+        Assert.Equal("Beyaz", vehicle.Color.Resolve(Locale.Create("tr").Value, Locale.Create("tr").Value));
+    }
+
+    /// <summary>
+    /// Sessiz veri kaybı: filtre etkin olmayan locale'i atıyordu ve personel girdiği
+    /// rengin kaybolduğunu hiçbir yerde göremiyordu. Bu depoda tekrar eden bir ders
+    /// (`0009` — tanınmayan slug sessizce kaybolurdu).
+    /// </summary>
+    [Fact]
+    public async Task Reddeder_EtkinOlmayanLocaledekiRengi()
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+
+        Result<Guid> sonuc = await Komut(context).ExecuteAsync(
+            Istek("AC06L00000000001") with { Color = new Dictionary<string, string> { ["de"] = "Weiß" } },
+            CancellationToken.None);
+
+        Assert.Equal(VehicleErrors.LocaleNotEnabled, sonuc.Error.Code);
+        Assert.Equal(VehicleFieldNames.Color, sonuc.Error.Parameters!["field"]);
+    }
+
+    [Fact]
+    public async Task Reddeder_EtkinLocaleDoluOlsaBileEtkinOlmayani()
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+
+        Result<Guid> sonuc = await Komut(context).ExecuteAsync(
+            Istek("AC06L00000000002") with
+            {
+                Color = new Dictionary<string, string> { ["tr"] = "Beyaz", ["de"] = "Weiß" },
+            },
+            CancellationToken.None);
+
+        Assert.Equal(VehicleErrors.LocaleNotEnabled, sonuc.Error.Code);
+    }
+
     [Theory(DisplayName = "0010a/AC-7: Model yılı 1900'den küçük veya 2200'den büyük bir değerle araç kaydedilemez")]
     [InlineData(1899)]
     [InlineData(2201)]
@@ -151,6 +232,26 @@ public sealed class AracKaydiTests(ShowcaseDatabase database)
         Result<Guid> sonuc = await Komut(context).ExecuteAsync(istek, CancellationToken.None);
 
         Assert.Equal(VehicleErrors.TextTooLong, sonuc.Error.Code);
+    }
+
+    /// <summary>
+    /// Bulgu olarak geldi: `Vin.Create`'in üç başarısızlık nedeni (boş · uzun · iç
+    /// boşluk) tek koda eşleniyordu ve personel BOŞ bıraktığı alanda "uzunluk aşıldı"
+    /// mesajı görüyordu — şaseyi kısaltmaya çalışıyor, oysa sorun başkaydı.
+    /// </summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("ABC 123")]
+    public async Task Ayirt_SaseBicimHatasiniUzunluktan(string gecersiz)
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+
+        Result<Guid> sonuc = await Komut(context)
+            .ExecuteAsync(Istek(gecersiz), CancellationToken.None);
+
+        Assert.Equal(VehicleErrors.InvalidVin, sonuc.Error.Code);
+        Assert.Equal(VehicleFieldNames.Vin, sonuc.Error.Parameters!["field"]);
     }
 
     [Fact(DisplayName = "0010a/AC-15: Araç kaydı şase numarasıyla kaydedilir")]

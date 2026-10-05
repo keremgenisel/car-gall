@@ -50,6 +50,8 @@ async function formuDoldurAsync(page: Page, sase: string, alanlar: readonly stri
 
   await page.getByLabel('Model yılı', { exact: true }).fill('2021')
   await page.getByLabel('Kilometre', { exact: true }).fill('48500')
+  // Renk de çekirdek alan (R2, AC-6): personelin kendi dilinde dolu olmalı.
+  await page.getByLabel('Renk', { exact: true }).fill('Gece Mavisi')
   await page.getByLabel('Şase numarası', { exact: true }).fill(sase)
 }
 
@@ -71,7 +73,6 @@ test('0010a/AC-1, AC-12: kayıt formu ve altı referans kümesi', async ({ page 
   await kanit(page, form, '0010a-ac12.png')
 
   await formuDoldurAsync(page, benzersizSase('KANIT01'), TR_ALANLAR)
-  await page.getByLabel('Renk', { exact: true }).fill('Gece Mavisi')
   await page.getByLabel('Fiyat', { exact: true }).fill('1250000')
 
   await kanit(page, form, '0010a-ac1.png')
@@ -173,7 +174,7 @@ test('0010a/AC-40: kaydet düğmesi yükleniyor hâline geçer', async ({ page }
   await expect(page.getByTestId('vehicle-saved')).toBeVisible({ timeout: 10_000 })
 })
 
-test('0010a/AC-49, AC-50: Arapça tercih eden personel için form dir="rtl" ve etiketler kendi dilinde', async ({
+test('0010a/AC-48, AC-49, AC-50: panel personelin dilinde açılır, form dir="rtl" ve etiketler kendi dilinde', async ({
   page,
 }) => {
   const kimlik = benzersizKimlik('arapca-arac')
@@ -205,9 +206,13 @@ test('0010a/AC-49, AC-50: Arapça tercih eden personel için form dir="rtl" ve e
   await page.goto('/admin/vehicle-new')
   await expect(page.getByTestId('vehicle-form')).toBeVisible()
 
+  // AC-48 — panel, giriş yapan personelin TERCİH ETTİĞİ dilde açılıyor: bu personelin
+  // tercihi Arapça ve araç yüzeyi `lang="ar"` ile basılıyor. Ziyaretçinin vitrin dili
+  // burayı etkilemiyor (0006 R16).
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
+
   // AC-49 — yön locale'in özelliğidir ve SUNUCUDAN basılır.
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
-  await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
 
   // AC-50 — etiketler Arapça; hiçbir yerde ham çeviri anahtarı yok.
   await expect(page.getByLabel('رقم الهيكل', { exact: true })).toBeVisible()

@@ -81,11 +81,15 @@ describe('firstMissingCoreField', () => {
   })
 
   /**
-   * Renk ÇOK DİLLİ metindir ve R10 çok dilli metni "yarıda bırakıp dönmek" muafiyetine
-   * açıkça dâhil ediyor; sunucu da boş rengi kabul ediyor. Uçta zorunlu kılmak olmayan
-   * bir kuralı uydurmak olurdu.
+   * Renk R2'nin çekirdek listesinde ve AC-6 eksik çekirdek alanı reddediyor. R10'un çok
+   * dilli metin muafiyeti KALAN dilleri kapsıyor: personelin kendi dilinde dolu olması
+   * yetiyor, diğer ikisi `0010b`'de doldurulabilir.
    */
-  it('renk boş olabilir (R10 muafiyeti)', () => {
-    expect(firstMissingCoreField({ ...DOLU, color: '' })).toBeNull()
+  it('renk boş bırakılamaz (R2, AC-6)', () => {
+    expect(firstMissingCoreField({ ...DOLU, color: '' })).toBe('color')
+  })
+
+  it('yalnız boşluk içeren renk dolu sayılmaz', () => {
+    expect(firstMissingCoreField({ ...DOLU, color: '   ' })).toBe('color')
   })
 })
