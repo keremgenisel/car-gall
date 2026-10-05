@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı** (2026-10-04) · **D4 onaylandı** (2026-10-05) |
+| **Durum** | **Tamamlandı** (2026-10-05) — *D4 dâhil; bkz. D4 Ek* |
 | **Sahip** | Developer (ajan) |
 | **Analist** | Analist oturumu (ajan üye) |
 | **Onaylayan** | Takım Yöneticisi |
@@ -332,10 +332,12 @@ Her çağrı yerinin hangi yeni token'a gittiği PR'da tabloyla gösterilir (DoD
 **D1–D3 ve D5–D9 onaylandı** (2026-10-04). Uygulama planından çıkan dört karar daha
 eklendi ve aynı turda onaylandı: **D10–D13**.
 
-**D4 hâlâ veri bekliyor**: Token tablosunun altı satırı tasarımcıdan gelmeden
-doğrulanamaz. Bu yüzden D4 ayrı tutuldu — diğerlerinin onaylanması token katmanının,
-enjeksiyonun, iki kontrast kapısının ve çağrı yeri göçünün tabloyu beklemeden kurulmasına
-izin verdi; yalnız **varsayılan renk değerleri** en sona kaldı.
+**D4 bir tur sonra, 2026-10-05'te onaylandı** (PR #32). Onay turunda ayrı tutulmuştu:
+Token tablosunun altı satırı değer taşımıyordu ve karar doğrulanamıyordu. **Ayrı tutmak
+işe yaradı** — diğerlerinin onaylanması token katmanının, enjeksiyonun, iki kontrast
+kapısının ve çağrı yeri göçünün tabloyu beklemeden kurulmasına izin verdi; yalnız
+**varsayılan renk değerleri** en sona kaldı ve altısı birlikte kapandı. Nasıl bulundukları
+aşağıda, **D4 Ek**'te.
 
 **D1 — Tema değerleri dağıtım yapılandırmasından gelir; panelden düzenlenmez.**
 *Gerekçe:* bu, projenin zaten kurduğu desen — varsayılan dil *"kurulum yapılandırmasından"*,
@@ -604,38 +606,57 @@ değiştirmiyor.
 ## Definition of Done
 
 - [x] **Context § Token tablosu tamamlandı** — "tasarımcıdan bekleniyor" satırı kalmadı
-      (R2, AC-6). *(2026-10-05, D4 Ek. Dördü mockup artboard'larından okundu, ikisi
-      tasarımcının yüzey/örtü tarifiyle türetildi; 14/14 kontrast çifti ölçüldü ve geçti.
-      `VarsayilanPaletTests` artık tablonun on dört satırının tamamını karşılaştırıyor —
-      AC-6'nın ikinci yarısı bu commit'le kapandı.)*
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] **A grubundaki kriterin bu spec'ten önce de yeşil olduğu** PR'da yazıldı; yeni
+      (R2, AC-6). *(**Kapandı 2026-10-05**, PR #32 — bkz. § Verilen kararlar **D4 Ek**.
+      Bu kutu bu PR'ın ilk hâlinde AÇIK yazılmıştı ve o doğruydu: altı satır eski MAVİ
+      ailenin değerleriyle duruyordu. Değerler sonradan tasarımcıdan gelmedi — mockup'ın
+      on bir artboard'ının satır içi stillerinden okundu (dördü) ve tasarımcının kendi
+      yüzey/örtü tarifiyle türetildi (ikisi); 14/14 kontrast çifti ölçüldü ve geçti.
+      `VarsayilanPaletTests` artık tablonun on dört satırının tamamını karşılaştırıyor,
+      yani **AC-6'nın ikinci yarısı da** karşılandı.)*
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] **A grubundaki kriterin bu spec'ten önce de yeşil olduğu** PR'da yazıldı; yeni
       davranışın kanıtı B–G gruplarıdır.
-- [ ] `[görsel]` işaretli her kriterin kanıtı eklendi (`docs/evidence/frontend-002-ac<n>.png`),
+- [x] `[görsel]` işaretli her kriterin kanıtı eklendi (`docs/evidence/frontend-002-ac<n>.png`),
       boş ve hata durumları dâhil, Arapça görüntüler de var.
-- [ ] İki farklı tema yapılandırmasıyla alınmış **aynı ekranın iki görüntüsü** eklendi
+- [x] İki farklı tema yapılandırmasıyla alınmış **aynı ekranın iki görüntüsü** eklendi
       (**AC-15**).
-- [ ] Kontrast kapısının ayağa kalkmayı engellediği testle gösterildi
+- [x] Kontrast kapısının ayağa kalkmayı engellediği testle gösterildi
       (**AC-17…AC-23, AC-31…AC-34**); varsayılan paletin CI testi de yeşil (**AC-24**).
-- [ ] **Çift tablosunun her satırı kapıda denetleniyor** ve kapı tabloda olmayan bir eşik
+- [x] **Çift tablosunun her satırı kapıda denetleniyor** ve kapı tabloda olmayan bir eşik
       uygulamıyor (**AC-21**, C12).
-- [ ] Lint kapısı ham hex/px ihlalinde kırıyor ve token dosyasının muafiyeti duruyor (AC-3).
-- [ ] **Çağrı yeri göçü tabloyla gösterildi:** **sekiz** çağrı yerinin her birinin hangi
+- [x] Lint kapısı ham hex/px ihlalinde kırıyor ve token dosyasının muafiyeti duruyor (AC-3).
+- [x] **Çağrı yeri göçü tabloyla gösterildi:** *(doğrulandı: `frontend/src` altında
+      `var(--color-accent)` kullanımı KALMADI; merge commit'inin CSS diff'i sekiz göçü ve
+      AC-7 için eklenen iki fiyat atamasını gösteriyor.)* **sekiz** çağrı yerinin her birinin hangi
       yeni token'a gittiği PR'da yazılı (Context § Çağrı yeri sayımı). Sekizincisi
       `ui.css:17` — dolgu üzerindeki metin; `--color-accent` dizesini aramakla bulunmaz.
-- [ ] `frontend-001`'in SCORECARD dersi gözetildi: token'lar **anlamına göre** bağlandı,
+- [x] `frontend-001`'in SCORECARD dersi gözetildi: token'lar **anlamına göre** bağlandı,
       mekanik değiştirme yapılmadı; `font-family` bağlantısı doğrulandı.
-- [ ] Hiçbir ekranın düzeni değişmedi (C9) — düzen farkı varsa PR'da **açıkça** yazıldı.
-- [ ] Onay anında var olan ekranlar **sayıldı** ve her biri için kanıt eklendi (R10, AC-25);
+- [x] Hiçbir ekranın düzeni değişmedi (C9) — düzen farkı varsa PR'da **açıkça** yazıldı.
+      *(Doğrulandı, iddia edilmedi: merge commit'inin CSS diff'i `display`, `position`,
+      `width`, `height`, `margin`, `padding`, `gap`, `grid`, `flex`, `inset`, `z-index`,
+      `overflow` özelliklerinden HİÇBİRİNE dokunmuyor — yalnız renk, tipografi importu ve
+      yorum satırları değişti.)*
+- [x] Onay anında var olan ekranlar **sayıldı** ve her biri için kanıt eklendi (R10, AC-25);
       sayım PR'da listelendi.
-- [ ] Yazı tipi isteklerinin üçüncü taraf alan adına gitmediği doğrulandı (AC-8, D8).
-- [ ] Çeviri anahtarı eklendiyse TR/AR/EN üçünde de var; eksik anahtar kontrolü yeşil.
-- [ ] Yeni domain terimi yok.
-- [ ] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D1, D3, D9).
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] Yazı tipi isteklerinin üçüncü taraf alan adına gitmediği doğrulandı (AC-8, D8).
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] Yeni migration varsa yalnızca kendi şemasına dokunuyor.
+- [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
+      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
+      **YAPILMADI.** Madde bu spec'in DoD'unda yoktu ve şablonla hizalanırken sonradan
+      eklendi; PR o sırada çoktan merge edilmişti. `docs/roles/qa.md` § 8 gereği kendi
+      kodumu gözden geçirip işaretleyemem. Merge SONRASI bir süreç gözden geçirmesi yapıldı
+      ve iki gerçek bulgu verdi (SCORECARD'da) — ama o, DoD'un istediği diff + spec + test
+      okuması değil.
+- [x] Çeviri anahtarı eklendiyse TR/AR/EN üçünde de var; eksik anahtar kontrolü yeşil.
+- [x] Yeni domain terimi yok.
+- [x] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D1, D3, D9).
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] Takım Yöneticisi onayladı ve squash-merge edildi.
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
@@ -643,11 +664,32 @@ değiştirmiyor.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Yüksekse spec eksik yazılmıştır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek, kaçı gürültü? Ölçtüğü şey: spec ve kod ne kadar açık yazıldı. |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı. Ölçtüğü şey: yazar kendi işini ne kadar sorguladı. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Spec revizyon sayısı** | **3** | (1) **Onay anında:** D10–D13 eklendi, AC-21 yeniden yazıldı (AC-17/18 ile çelişiyordu), AC-31…AC-34 eklendi ve çağrı yeri tablosuna sekizinci satır girdi — kriter sayısı 30 → 34. (2) **Onaydan SONRA:** AC-7 daraltıldı ve X12 eklendi. (3) **D4 onaylanırken (2026-10-05):** `X11`'in ölçümü mockup'tan okunan kenarlık değeriyle güncellendi (1.36:1 → 1.27:1); kararın kendisi değişmedi, payı büyüdü. Üçüncüsü bir Constraint'e eklenen açıklama notudur ve `specs/TEMPLATE.md` bunu **sayıyor** — 0005'te aynı karar verilmişti, ölçüt kendi tanımına göre uygulanıyor. *(D4'ün onayı tek başına revizyon değil: Token tablosu ve "Verilen kararlar" Context'tedir, DoD de sayılmaz.)* İkincisi şablonun harfiyen saydığı türden; birincisi 0009'daki okumayla aynı — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve dört yeni kriterin üçü yapılandırılabilir bir token'ı denetimsiz bırakan gerçek bir delikten geldi. |
+| **Düzeltme turu sayısı** | **0** | PR #30 gözden geçirmeden geri DÖNMEDİ; dört kapı ilk koşuda yeşildi ve merge edildi. Merge SONRASI bir süreç gözden geçirmesi yapıldı (aşağıda) ama o bir tur değil, kapanış denetimi. |
+| **Dış bulgu (gerçek/gürültü)** | **2 / —** | Merge sonrası süreç gözden geçirmesinden iki GERÇEK bulgu: (1) bu spec'in DoD'u `specs/TEMPLATE.md` ile hizasızdı — dört madde eksikti (backend testleri, mimari testler, migration şeması, dış gözden geçirme); (2) üç doğrulama kutusu ölçülmeden işaretlenecekti (token tablosu, çağrı yeri göçü, düzen değişmemesi). İkisi de gerçekti: ölçünce token tablosu kutusunun KAPANMAMASI gerektiği çıktı. *(Kutu bir
+tur sonra, D4'ün altı değeri mockup artboard'larından okunup türetilince kapandı — PR #32.
+Bulgu yine de gerçekti: kutu ÖLÇÜLMEDEN işaretlenecekti ve o anda kapanamazdı.)* Gürültü sayısı yazılamaz — gözden geçirme bana beş maddelik bir iş listesi olarak geldi ve üçü bulgu değil adımdı. |
+| **Uygulama içi bulgu** | **11** | **Planlarken (3):** (1) göç tablosu sekizinci çağrı yerini kaçırıyordu — `.ui-button--primary` mavi dolgu + BEYAZ metindi ve limon dolguyla 1.26:1 verirdi; (2) AC-21, AC-17/18 ile çelişiyordu; (3) çift tablosu üç çifti atlıyordu ve biri — `--color-ink-muted` — hem on yerde yardımcı metin hem YAPILANDIRILABİLİRDİ, yani kapısız. **Uygularken (3):** (4) Arapça sayfa Latin yığınına düşüyordu (tuzak 3, kendi düzeltmemin içinde) — e2e yakaladı; (5) varsayılan palet ayrıştırıcım `:root` dışını da okuyup Arapça override'ı Latin yığınının üstüne yazıyordu — testin kendisi yakaladı; (6) AC-7'nin adını testten geri almak zorunda kaldım, kriterin dörtte birini ölçüyordu. **Test yazarken (3):** (7) AC-8'in host karşılaştırması `page.url()` kullanıyordu ve belgenin kendisini yabancı sayıyordu; (8) iki assert `if (count > 0)` korumasının arkasındaydı ve hiç koşmuyordu; (9) AC-25 iki ekran ölçüp "her ekran" diyordu. **Sonda yazarken (2):** (10) `--no-build` bayat assembly koşturdu; (11) kabuk tırnaklaması yüzünden `str.replace` hiç eşleşmedi ve sonda hiçbir şeyi değiştirmeden "geçti" dedi. |
+| **Regresyon sayısı** | **1** | Arapça tipografi. Değişiklikten ÖNCE Arapça sayfa `system-ui` ile doğru basılıyordu; Latin yığınına Space Grotesk eklenince — ve `body` kendi `font-family`'sini bildirdiği için `html[lang='ar']` kuralı ona ulaşmadığından — Arapça metin kapsamayan bir fonta düşüyordu. Merge'den önce yakalandı ve token'ı yeniden tanımlayarak düzeltildi. Üretime çıkmadı. |
+| **Kaçan hata** | | *2026-10-05 itibarıyla* — **izleniyor**. Merge sonrası bulunan her kusur buraya tarihiyle eklenir (`specs/TEMPLATE.md` § SCORECARD). |
 
 **Bu spec'ten çıkarılan ders:**
+**Bir kapı, denetlediği şeyin TAMAMINI görmüyorsa güvence değil, güvence hissidir.**
+Bu spec'in merkezinde çalışan bir kontrast kapısı var: on dört çift, iki ayrı kapıdan,
+tek eşik tablosundan. Yine de üç ayrı yerden sızdırabiliyordu ve üçünü de kapı DEĞİL,
+kapının dışına bakmak buldu:
+
+1. **Kapı token ÇİFTİNİ denetler, ÇAĞRI YERİNİ denetlemez.** `.ui-button--primary` beyaz
+   metni limon dolgunun üstüne yazsa bütün eşikler yeşil kalırdı — çünkü o çift tabloda
+   yok. Çözüm kapıyı büyütmek değil, ikinci bir kural oldu: dolgu vurgusu yalnız dolgu
+   olarak kullanılabilir (`check:tokens`).
+2. **Kapı yalnız TABLODAKİ çiftleri denetler.** Tablo CSS'ten değil spec'ten türetilmişti
+   ve üç çifti atlıyordu; biri yapılandırılabilir bir token'dı, yani bir kurulum onu
+   okunamaz yapabilir ve uygulama açılırdı. Çözüm: çiftleri gerçekten kullanılan
+   kombinasyonlardan türetmek.
+3. **Kapı rengi denetler, TİPOGRAFİYİ denetlemez.** Arapça sayfa Latin yığınına düştü ve
+   bütün kontrast eşikleri yeşil kaldı — okunabilirlik rengin değil fontun sorunuydu.
+
+Genelleştirmesi: bir kapı kurarken "neyi denetliyor" kadar **"neyi denetlemiyor"** da
+yazılmalı. Üçünün de ortak kör noktası aynıydı — kapı **değerleri** görüyor, **kullanımı**
+görmüyor.
