@@ -579,8 +579,8 @@ araçlarını eşleyemez.
       *(Şase tekilliği satırı + ADR `0006`.)*
 - [x] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
       *(`AdminField` → `shared/ui/Field` terfi etti; `check:tokens` ve `lint:css` yeşil.)*
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4). *(PR #35, dört kapı da pass.)*
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
