@@ -570,8 +570,9 @@ araçlarını eşleyemez.
 - [x] Mevcut agregat **davranışı** yeniden yazılmadı; komut katmanı onların üzerine kuruldu
       (C17). EF tesisatı (private kurucu, backing field, owned type) D10 kapsamındadır ve
       PR'da **ayrı başlıkta** gösterilmiştir.
-- [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
-      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
+- [x] **Dış gözden geçirme yapıldı:** bir QA oturumu diff + spec + testleri okudu ve dört
+      bulgu verdi; dördü de gerçek çıktı ve düzeltildi (`docs/roles/qa.md`). *(Gözden
+      geçirme PR açıldıktan sonra yapıldı — madde "açılmadan önce" diyor.)*
 - [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(Şablonda iki kez geçiyor.)*
 - [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil. *(237 anahtar.)*
 - [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
@@ -592,10 +593,33 @@ araçlarını eşleyemez.
 |---|---|---|
 | **Spec revizyon sayısı** | 0 | R/C/AC onaylandıktan sonra değişmedi. **D11 bir KARAR revizyonudur** ve bu sütuna girmiyor; ayrıntısı kararın altında. |
 | **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek, kaçı gürültü? |
+| **Dış bulgu (gerçek/gürültü)** | 4 / 0 | QA triyajı dört bulgu verdi, dördü de gerçek çıktı ve düzeltildi. Aşağıda sayıldı. |
 | **Uygulama içi bulgu** | 9 | Aşağıda sayıldı. |
 | **Regresyon sayısı** | 1 | `0007/AC-8`'in mimari testi `0010a`'nın korumalı **okuma** ucunu da reddediyordu; mesajı "korumasız YAZMA ucu" diyordu ama düzenli ifade bütün fiilleri yasaklıyordu. Daraltıldı ve `MapPost`'la kırmızıya döndüğü probla doğrulandı. |
 | **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+
+**Dış bulgular (4/0):**
+
+1. **Renksiz araç kaydedilebiliyordu** *(orta — karar sorusu olarak geldi)*. R2 rengi
+   çekirdek listeye koyuyor, R10'un ikinci cümlesi çok dilli metni muaf tutuyor; QA
+   ikisini de okunabilir buldu ve kararı Takım Yöneticisi'ne bıraktı (AP-10). **Karar:**
+   renk zorunlu, ölçüt "en az bir **etkin** locale'de dolu" — böylece R2'nin açık listesi
+   de R10'un muafiyeti de ayakta kalıyor ve spec revize edilmiyor. Aynı bulgunun bağımsız
+   yarısı: etkin olmayan locale'de girilen renk **sessizce atılıyordu**; artık
+   reddediliyor.
+2. **AC-24 ve AC-48'in etiketli testi yoktu** *(küçük)*. AC-24'ün invariantı doğru
+   kurulmuştu ama yalnız yorumda yaşıyordu — `RemovePriceChange` eklemek hiçbir testi
+   kırmazdı. Artık invariantın ŞEKLİ sınanıyor. AC-48 bir izlenebilirlik boşluğuydu:
+   davranış `0006/AC-54` etiketiyle test ediliyordu.
+3. **Yönetim listesi `listings` tablosunun tamamını okuyordu** *(küçük)*. Bugün zararsızdı
+   (araç sorgusu da sayfalanmıyor, X18) ama `0010b` sayfalamayı eklediğinde kazancı
+   sessizce iptal ederdi.
+4. **Boş şase "çok uzun" diyordu** *(küçük)*. `Vin.Create`'in üç başarısızlık nedeni tek
+   koda eşlenmişti; personel şaseyi kısaltmaya çalışırdı, oysa sorun boşluktu.
+
+**Dersin ikinci yarısı:** dördünün üçü de *"kod doğru, ölçen bir şey yok"* biçimindeydi —
+invariant yorumda, hata kodu tek sepette, sorgu sınırsız. Hiçbiri bir testi kırmıyordu,
+çünkü hiçbirini bir test tutmuyordu.
 
 **Uygulama içi bulgular (9):**
 
