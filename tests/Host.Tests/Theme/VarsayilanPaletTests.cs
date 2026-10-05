@@ -16,7 +16,14 @@ namespace CarGallery.Host.Tests.Theme;
 /// </summary>
 public sealed partial class VarsayilanPaletTests
 {
-    /// <summary>Tablonun DEĞERİNİ verdiği satırlar. Altı satır D4'ü bekliyor ve burada yok.</summary>
+    /// <summary>
+    /// Tablonun DEĞERİNİ verdiği satırlar — D4 onaylandıktan sonra ON DÖRDÜ DE burada
+    /// (2026-10-05). Son altı satır eskiden "tasarımcıdan bekleniyor" durumundaydı.
+    ///
+    /// <para><b>Neden bu liste elle yazılı:</b> `tokens.css`'ten okunsa test hiçbir şey
+    /// doğrulamazdı — kendi kaynağını kendine karşı karşılaştırırdı. AC-6'nın ikinci
+    /// yarısı "hesaplanan değer = TABLODAKİ değer" diyor ve tablo spec'te yaşıyor.</para>
+    /// </summary>
     private static readonly Dictionary<string, string> TablodakiDegerler = new(StringComparer.Ordinal)
     {
         [ThemeTokens.Surface] = "#ffffff",
@@ -27,6 +34,12 @@ public sealed partial class VarsayilanPaletTests
         [ThemeTokens.AccentText] = "#4f6b00",
         [ThemeTokens.OnAccentFill] = "#0b0c0e",
         [ThemeTokens.FocusRing] = "#4f6b00",
+        [ThemeTokens.InkMuted] = "#5f656c",
+        [ThemeTokens.Border] = "#e4e5e1",
+        [ThemeTokens.Danger] = "#b8412a",
+        [ThemeTokens.DangerSurface] = "#fbece9",
+        [ThemeTokens.AccentSurface] = "#edf6d6",
+        [ThemeTokens.Backdrop] = "#0b0c0e8c",
     };
 
     [Fact(DisplayName = "frontend-002/AC-24: Varsayılan palet, yapılandırılan temayla aynı eşik tablosunu okuyan ve CI'da koşan bir testle doğrulanır; eşiklerden biri ihlal edilirse test kırmızıya döner")]
@@ -98,9 +111,13 @@ public sealed partial class VarsayilanPaletTests
     }
 
     /// <summary>
-    /// AC-6'nın BİRİNCİ yarısı: tablodaki her token tanımlı. İkinci yarı — hesaplanan
-    /// değerin tablodakiyle aynı olması — tablonun altı satırı D4'ü beklediği için henüz
-    /// tamamlanamıyor; burada tablonun DEĞER VERDİĞİ satırlar karşılaştırılıyor.
+    /// AC-6 artık İKİ YARISIYLA ölçülüyor: tablodaki her token tanımlı VE hesaplanan
+    /// değeri tablodakiyle aynı. İkinci yarı D4 onaylanana kadar eksikti — tablonun altı
+    /// satırı değer vermiyordu, karşılaştırılacak bir şey yoktu (2026-10-05'te kapandı).
+    ///
+    /// <para>Tablonun satır SAYISI da denetleniyor: yalnız sözlükteki anahtarlar
+    /// dolaşılsaydı, tabloya değer veren bir satır eklenip buraya yazılmadığında test
+    /// yeşil kalırdı — D4'ün altı satırının aylarca denetimsiz durması tam bu delikti.</para>
     /// </summary>
     [Fact(DisplayName = "frontend-002/AC-6: Context § Token tablosundaki her token tanımlıdır ve varsayılan temadaki hesaplanan değeri tablodaki değerle aynıdır")]
     public void Tanimlidir_HerToken_VeEsittir_TablodakiDegerlere()
@@ -117,6 +134,18 @@ public sealed partial class VarsayilanPaletTests
         {
             Assert.Equal(beklenen.Value, palet[beklenen.Key]);
         }
+
+        // Tabloya değer veren satır eklenip buraya yazılmazsa yukarıdaki döngü onu HİÇ
+        // görmez. Renk token'larının tamamı artık değer taşıyor; sayı tutmazsa bir satır
+        // denetimsiz kalmış demektir.
+        List<string> renkTokenlari =
+        [
+            .. ThemeTokens.All
+                .Select(token => token.Key)
+                .Where(key => key.StartsWith("color-", StringComparison.Ordinal))
+        ];
+
+        Assert.Equal(renkTokenlari.Count, TablodakiDegerler.Count);
     }
 
     private static ThemeColor Renk(Dictionary<string, string> palet, string token)
