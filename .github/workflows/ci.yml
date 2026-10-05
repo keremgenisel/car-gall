@@ -88,6 +88,10 @@ jobs:
       - name: Oturum saklama kontrolü
         run: npm run check:session
 
+      # frontend-002 AC-4, AC-8 — token adları anlamsal, yazı tipleri kendi kaynağımızdan.
+      - name: Token katmanı kontrolü
+        run: npm run check:tokens
+
       - name: Tip kontrolü
         run: npm run typecheck
 

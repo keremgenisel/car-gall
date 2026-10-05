@@ -1,6 +1,8 @@
+using CarGallery.BuildingBlocks;
 using CarGallery.Host;
 using CarGallery.Host.Localization;
 using CarGallery.Host.Schema;
+using CarGallery.Host.Theme;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Identity.Contracts.Setup;
@@ -129,6 +131,22 @@ builder.Services.AddNotifications(new NotificationsSetup(
 // (docs/conventions.md § 5, 0005/AC-39, 0006/AC-59). Bu olmadan geliştirme ortamında
 // istisna metni ziyaretçiye giderdi.
 builder.Services.AddProblemDetails();
+
+// frontend-002 — kuruluma özel tema. Dört durum AYRIDIR (C5) ve yalnız birincisi sessiz:
+// tema hiç verilmezse varsayılan palet çalışır; kısmi tema, tanınmayan anahtar, biçime
+// uymayan değer ve kontrastı yetersiz tema uygulamayı HİÇ ayağa kaldırmaz.
+//
+// Erişilebilirlik tabanının bir yapılandırma hatasıyla sessizce kırılması, kırıldığının
+// fark edilmemesi demektir — ve renk hatası gözle yıllarca fark edilmez (D3). Açılan ama
+// okunamayan bir vitrin, açılmayan bir vitrinden kötüdür.
+Result<ThemeOptions> theme = ThemeOptions.Create(builder.Configuration);
+
+if (theme.IsFailure)
+{
+    throw new InvalidOperationException(ThemeErrorText.Describe(theme.Error));
+}
+
+builder.Services.AddSingleton(theme.Value);
 
 builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocale, localization.EnabledLocales));
 builder.Services.AddSingleton<IndexHtmlRenderer>();

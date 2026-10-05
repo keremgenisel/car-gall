@@ -20,9 +20,13 @@
     "format:check": "prettier --check .",
     "check:structure": "node scripts/check-structure.mjs",
     "check:session": "node scripts/check-no-session-storage.mjs",
+    "check:tokens": "node scripts/check-tokens.mjs",
     "evidence": "EVIDENCE_WRITE=1 playwright test --project=masaustu"
   },
   "dependencies": {
+    "@fontsource/ibm-plex-sans-arabic": "^5.3.0",
+    "@fontsource/readex-pro": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
     "intl-messageformat": "^12.1.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

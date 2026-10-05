@@ -1,3 +1,4 @@
+@import url('../shared/design/fonts.css');
 @import url('../shared/design/tokens.css');
 @import url('../shared/ui/ui.css');
 
@@ -72,9 +73,12 @@ body {
   cursor: pointer;
 }
 
+/* Metin TAŞIYAN bir öğenin kenarlığı metin vurgusuna bağlanır, dolguya değil: dolgu
+   limon ve beyaz zeminde kenarlık olarak da görünmez. Seçili hâl ayrıca RENKSİZ olarak da
+   okunur — pilin içinde gerçek bir `<input type="checkbox">` var (docs/frontend.md § 7). */
 .filter-chip--selected {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--color-accent-text);
+  color: var(--color-accent-text);
 }
 
 .filter-bar__summary {
@@ -85,7 +89,7 @@ body {
 }
 
 :focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-accent);
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
   outline-offset: var(--space-1);
 }
 
@@ -129,7 +133,10 @@ body {
   margin: 0;
 }
 
+/* Fiyat METİN VURGUSUYLA basılır (AC-7): mockup'ın "koyu zeytin fiyat metni". Dolgu
+   vurgusu kullanılamaz — limon beyaz zeminde metin olarak okunmuyor (1.26:1). */
 .listing-card__price {
+  color: var(--color-accent-text);
   font-weight: var(--font-weight-semibold);
   margin: 0;
 }
@@ -195,7 +202,7 @@ body {
 }
 
 .top-bar__locale--current {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   font-weight: var(--font-weight-semibold);
   text-decoration: underline;
 }
@@ -231,7 +238,10 @@ body {
   margin: 0;
 }
 
+/* Detay fiyatı 1.5rem = 24px, yani Token tablosunun "büyük metin" sütununun tam
+   karşılığı. Eşiği yine 4.5:1 okunuyor (AC-21) ve metin vurgusu onu geçiyor: 6.11:1. */
 .listing-detail__price {
+  color: var(--color-accent-text);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   margin: 0;
@@ -565,7 +575,7 @@ body {
   padding-inline: var(--space-3);
   border-radius: var(--radius-sm);
   background: var(--color-accent-surface);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   font-size: var(--font-size-sm);
 }
 

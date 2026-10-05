@@ -12,9 +12,12 @@
   cursor: pointer;
 }
 
+/* Dolgu ve dolgu ÜZERİNDEKİ metin ayrı token'lar (R3). İkincisi ilk sayımda gözden
+   kaçmıştı çünkü `--color-accent` dizesini taşımıyor: düğme bugüne kadar mavi dolgu +
+   beyaz metindi ve dolgu limon olduğunda beyaz metin kalırdı — ölçüldü, 1.26:1. */
 .ui-button--primary {
-  background: var(--color-accent);
-  color: var(--color-ink-inverse);
+  background: var(--color-accent-fill);
+  color: var(--color-on-accent-fill);
 }
 
 .ui-button--secondary {
@@ -26,7 +29,7 @@
 .ui-button--text {
   background: none;
   border-color: transparent;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   text-decoration: underline;
   padding-inline: var(--space-2);
 }
