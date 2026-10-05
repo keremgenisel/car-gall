@@ -9,6 +9,7 @@ using CarGallery.Modules.VehicleCatalog.Application.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
+using CarGallery.Modules.VehicleCatalog.Contracts.Admin;
 using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 using CarGallery.Modules.VehicleCatalog.Contracts.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Contracts.Listings;
@@ -73,6 +74,7 @@ public static class VehicleCatalogModule
         // değiştirilemez (C3, P3): personel yalnız tutar girer.
         services.AddSingleton(new CatalogCurrencyOptions(currencyCode, currencyMinorUnitExponent));
         services.AddScoped<CreateVehicleCommand>();
+        services.AddScoped<IVehicleAdminQueries, VehicleAdminQueries>();
 
         return services;
     }
@@ -98,6 +100,10 @@ public static class VehicleCatalogModule
     {
         builder.MapShowcaseEndpoints();
         builder.MapFieldSettingsEndpoints();
+
+        // 0010a — panelin araç yüzeyi. `AdminSurface` kökü altında ve oturum politikasıyla;
+        // C18'in rota tarayan testi onu kendiliğinden kapsar.
+        builder.MapVehicleAdminEndpoints();
     }
 
     /// <summary>
