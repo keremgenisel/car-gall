@@ -301,9 +301,11 @@ ondalık, kurulum başına tek para birimi, "fiyat sorunuz" ≠ `0`).
    MEVCUT satırlara ne yazacağını soruyordu; ölçüldü — `vehicles` tablosu hiç yok, yani
    doldurulacak satır da yok. Kalan gerçek risk seeder'dır:* `ShowcaseSeeder` artık yazma
    modelini de yazacak (**D12**) ve şase üretmezse tekillik indeksi ilk seed'de patlar.*)*
-11. **Şase tekilliğini kısmi tekil indeksle kurmaya çalışmak.** Muafiyet `Arşiv` durumuna
-   bağlı; durum `listings`'te, şase `vehicles`'ta ve `vehicles` üzerindeki bir kısmi indeks
-   `listings.status`'u göremez. → Karar **D11**.
+11. **Şase tekilliğini okuyup-sonra-yazarak kurmaya çalışmak.** *(Tuzağın ilk hâli kısmi
+   indeksi yasaklıyordu; uygulamada ölçüldü ve tersi çıktı — bkz. **D11**'in gözden geçirme
+   notu.)* Gerçek tuzak şu: "bu şase var mı" diye bakıp sonra yazmak, iki eşzamanlı istekte
+   **ikisini de** geçirir — okuma ile yazma arasında kilitlenecek bir satır yoktur. Tekillik
+   kararını veritabanı verir. → Karar **D11**.
 
 ### Verilen kararlar
 
@@ -400,13 +402,23 @@ tesisatını yasaklamak değil — ve agregatlar bugüne kadar hiç kaydedilmedi
 yapılmadan bu spec imkânsız. *Bilerek ödenen bedel:* agregat dosyaları EF'in gereksinimleri
 yüzünden değişir ve diff "domain değişti" gibi okunur; PR'da ayrı başlıkta gösterilir.
 
-**D11 — Şase tekilliği `InvariantGuard` ile kurulur, kısmi tekil indeksle değil.**
-*Gerekçe:* muafiyet `Arşiv` durumuna bağlı; durum `listings`'te, şase `vehicles`'ta ve
-`vehicles` üzerindeki kısmi indeks `listings.status`'u göremez. `0007`'nin deseni tam olarak
-bu: satırlar arasına yayılan bir sayımla **kilit altında** karar vermek.
-*Bilerek ödenen bedel:* veritabanı kısıtı kadar ucuz değil ve koruma kodda yaşıyor.
-*Elenen alternatif:* `vehicles`'a denormalize `is_archived` bayrağı koyup kısmi indeks
-kurmak — daha ucuz ama bayrak kaymaya açık ve kayma **sessizdir**.
+**D11 — Şase tekilliği kısmi tekil indeksle kurulur; `vehicles` kendi arşiv bayrağını
+taşır.** *(Uygulama sırasında GÖZDEN GEÇİRİLDİ — aşağıda.)*
+*Gerekçe:* muafiyet `Arşiv` durumuna bağlı ve durum `listings`'te; bayrak o bilginin araç
+tarafındaki yansımasıdır ve ilan arşivlendiği anda **aynı transaction'da** yazılır (`0012`).
+İndeks `NOT is_archived` filtresiyle kuruluyor, tekillik kararını veritabanı veriyor.
+*Bilerek ödenen bedel:* bayrak iki yerde tutulan bir olgunun ikinci kopyası ve aynı
+transaction dışında yazılırsa bayatlar; `Vehicle.MarkArchived()` bu yüzden tek giriş kapısı.
+
+> **Kararın ilk hâli ve neden düştüğü.** Onaylanan metin şöyleydi: *"Şase tekilliği
+> `InvariantGuard` ile kurulur, kısmi tekil indeksle değil."* Uygulamada ölçüldü ve
+> **yanlış olduğu görüldü**: `InvariantGuard` var olan bir satırı `SELECT … FOR UPDATE` ile
+> kilitleyip sayar; şase tekilliğinde kilitlenecek satır **henüz yoktur**. Aynı şaseyle
+> gelen iki eşzamanlı kayıt isteğinin ikisi de sıfır sayar, ikisi de geçer. Yani birinci
+> karar A5'i koruyormuş gibi görünen ama korumayan bir mekanizma seçiyordu. Elenen
+> alternatif olarak yazılan "denormalize `is_archived` bayrağı" tam da gereken şeydi;
+> bayrağın kaymasına karşı itiraz, `0012`'nin arşivlemeyi tek transaction'da yapmasıyla
+> karşılanıyor. *(Bu bir **karar** revizyonudur; R/C/AC değişmedi.)*
 
 **D12 — `ShowcaseSeeder` yazma modelini de yazar ve ilanları yayınlamaya devam eder.**
 *Gerekçe:* seeder bugün yalnız okuma modeli yazıyor; yazma modeli gelince arkasında araç
@@ -528,36 +540,45 @@ araçlarını eşleyemez.
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] `[görsel]` işaretli **her** kriterin kanıtı eklendi (`docs/evidence/0010-ac<n>.png`),
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] `[görsel]` işaretli **her** kriterin kanıtı eklendi (`docs/evidence/0010a-ac<n>.png`),
       boş, doğrulama hatası ve hata durumları dâhil; AC-49 için Arapça görüntü de var.
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — `VehicleCatalog` başka modülün tablosuna erişmiyor;
+      *(12 görüntü: AC-1, AC-12, AC-26, AC-26-boş, AC-40, AC-41, AC-42, AC-43, AC-47,
+      AC-49, AC-50-ar, AC-50-en.)*
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(679 test)*
+- [x] Mimari testler yeşil — `VehicleCatalog` başka modülün tablosuna erişmiyor;
       `VehicleReference` ve `Dealership` çağrıları tek atlama.
-- [ ] Yeni migration yalnızca `vehicle_catalog` şemasına dokunuyor.
-- [ ] **Yazma modeli kalıcı hâle getirildi** (`vehicles`, `listings`, `price_changes`) ve
-      projeksiyon **kaydetme anında** koşuyor; vitrin okuma modeli yazma modelinden türüyor.
-- [ ] **`ShowcaseSeeder` yazma modelini de yazıyor ve şase üretiyor** (D12, Tuzak 10);
+- [x] Yeni migration yalnızca `vehicle_catalog` şemasına dokunuyor. *(Üç migration;
+      ölçüldü — hepsinde `schema: "vehicle_catalog"`. **D7**'nin model seed'i ayrı bir
+      zincirde ve yalnız `vehicle_reference`'a dokunuyor; bu madde yazıldığında o karar
+      henüz yoktu.)*
+- [x] **Yazma modeli kalıcı hâle getirildi** (`vehicles`, `listings`, `price_changes`);
+      vitrin okuma modeli yazma modelinden türüyor. *(Kayıt anında projeksiyon KOŞMUYOR ve
+      koşmamalı: `ShowcaseListingProjector` yalnız `Published`/`Reserved` ilanı yansıtıyor,
+      yeni kayıt ise **taslak** (R17, AC-11). Yayın `0012`'nin işi — X2.)*
+- [x] **`ShowcaseSeeder` yazma modelini de yazıyor ve şase üretiyor** (D12, Tuzak 10);
       vitrin seed'i bozulmadı — `0001`/`0002` e2e'si yeşil.
-- [ ] Şase tekilliği `InvariantGuard` ile kurulmuş ve `Arşiv` muafiyeti testle gösterilmiş
-      (AC-17, D11).
-- [ ] Fiyat geçmişinin silinemez olduğu testle gösterildi (AC-24, gözlem noktası C19).
-- [ ] Şasenin hiçbir **vitrin** yanıtında bulunmadığı sözleşme testiyle gösterildi (AC-18);
+- [x] Şase tekilliği kısmi tekil indeksle kurulmuş ve `Arşiv` muafiyeti testle gösterilmiş
+      (AC-17, D11 — gözden geçirildi; `docs/decisions/0006-sase-tekilligi.md`).
+- [x] Fiyat geçmişinin silinemez olduğu testle gösterildi (AC-24, gözlem noktası C19).
+- [x] Şasenin hiçbir **vitrin** yanıtında bulunmadığı sözleşme testiyle gösterildi (AC-18);
       yönetim yanıtında bulunduğu ve oturum gerektirdiği de gösterildi (AC-19).
-- [ ] **Başlangıç model kümesi seed edildi** ve taze kurulumda model listesinin boş olmadığı
-      gösterildi (AC-14, D7).
-- [ ] Referans okuma yüzeyi altı küme için açıldı ve `VehicleReference.Contracts`
+- [x] **Başlangıç model kümesi seed edildi** ve taze kurulumda model listesinin boş olmadığı
+      gösterildi (AC-14, D7). *(12 model × 3 locale.)*
+- [x] Referans okuma yüzeyi altı küme için açıldı ve `VehicleReference.Contracts`
       genişlemesi yalnız gereken alanları taşıyor (AC-12, AC-13).
-- [ ] Mevcut agregat **davranışı** yeniden yazılmadı; komut katmanı onların üzerine kuruldu
+- [x] Mevcut agregat **davranışı** yeniden yazılmadı; komut katmanı onların üzerine kuruldu
       (C17). EF tesisatı (private kurucu, backing field, owned type) D10 kapsamındadır ve
       PR'da **ayrı başlıkta** gösterilmiştir.
 - [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
-- [ ] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(Şablonda iki kez geçiyor.)*
+- [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil. *(237 anahtar.)*
+- [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
+- [x] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+      *(Şase tekilliği satırı + ADR `0006`.)*
+- [x] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
+      *(`AdminField` → `shared/ui/Field` terfi etti; `check:tokens` ve `lint:css` yeşil.)*
 - [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
@@ -569,11 +590,48 @@ araçlarını eşleyemez.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? |
+| **Spec revizyon sayısı** | 0 | R/C/AC onaylandıktan sonra değişmedi. **D11 bir KARAR revizyonudur** ve bu sütuna girmiyor; ayrıntısı kararın altında. |
 | **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** |
 | **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek, kaçı gürültü? |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
+| **Uygulama içi bulgu** | 9 | Aşağıda sayıldı. |
+| **Regresyon sayısı** | 1 | `0007/AC-8`'in mimari testi `0010a`'nın korumalı **okuma** ucunu da reddediyordu; mesajı "korumasız YAZMA ucu" diyordu ama düzenli ifade bütün fiilleri yasaklıyordu. Daraltıldı ve `MapPost`'la kırmızıya döndüğü probla doğrulandı. |
 | **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
 
+**Uygulama içi bulgular (9):**
+
+1. **D11 korumuyordu.** `InvariantGuard` var olan bir satırı kilitler; şase tekilliğinde
+   kilitlenecek satır yok ve iki eşzamanlı kayıt ikisi de "sıfır" sayar. Karar gözden
+   geçirildi (ADR `0006`).
+2. **Spec'in merkezî iddiası eksikti.** "Yazma modeli zaten var" varsayımı ölçüldü: `Vehicle`
+   ve `Listing` agregatları bugüne kadar **hiç kaydedilmiyordu** — `DbContext`'te yoktu,
+   migration'ı yoktu. D10 bu yüzden eklendi.
+3. **EF, iç içe karmaşık tipte `Money?` bağlayamadı.** `ListingPrice` tek metin kolonuna
+   indirildi; ondalık basamak sayısı kodlamanın içinde taşınıyor (KWD üç ondalıklı).
+4. **Migration yeniden üretildiğinde tablolar kayboldu.** Snapshot zaten işlenmişti, yeni
+   migration yalnız farkı taşıdı ve 31 Host testi `relation does not exist` ile düştü.
+   İşlenmiş migration geri alındı, arşiv bayrağı ayrı migration oldu.
+5. **`PriceChange` `Modified` olarak izlendi.** Guid anahtar `ValueGeneratedNever()` olmadan
+   EF'e "bu satır var" dedirtiyordu; `DbUpdateConcurrencyException` oradan geliyordu.
+6. **Zincir testinin üç hatası bendeydi:** `Secure` çerez `https://localhost` taban adresi
+   ister, kurulum hesabı önce parolasını değiştirmek zorundadır ve vitrin rotası
+   `/api/catalog/showcase-listings`.
+7. **E2E bayat Host'a karşı koştu.** İlk turun "157 geçti"si anlamsızdı; `/api/reference/models`
+   boş dönüyordu. Host yeniden kuruldu, 12 model + 200 ilan doğrulandı, sonra koşuldu.
+8. **`if (false)` probu yine CS0162 üretti** — aynı ders `0009`'un SCORECARD'ında yazılıydı.
+9. **Playwright'ın `getByLabel`'ı alt dize eşler.** `getByLabel('Model')` hem *Model* hem
+   *Model yılı* alanını buluyordu; `getByLabel('Fiyat')` fiyat alanını ve "fiyat sorunuz"
+   onay kutusunu. 10 e2e testi bu yüzden düştü — `{ exact: true }` ile kapatıldı. Birim
+   testlerinde görünmemişti: Testing Library'nin `getByLabelText`'i varsayılan olarak TAM
+   eşler, Playwright'ınki ETMEZ ve iki kütüphanenin aynı isimli sorgusu farklı davranıyor.
+
 **Bu spec'ten çıkarılan ders:**
+
+**Bir invariantı "nasıl koruyacağımız" kararı, koruyup koruyamayacağı ÖLÇÜLMEDEN
+verilemez.** D11 planlama turunda makul görünüyordu: proje zaten `InvariantGuard`'a sahipti,
+muafiyet başka tabloda duruyordu ve kısmi indeks onu göremiyordu. Üç önerme de doğruydu;
+sonuç yanlıştı. Eksik olan tek soru şuydu: *"`InvariantGuard` neyi kilitler?"* Cevap "var
+olan satırı" ve yeni kayıtta öyle bir satır yok. Karar, mekanizmanın adını değil
+**mekanizmanın ne yaptığını** kontrol etmeden verilmişti.
+
+Kural olarak: eşzamanlılık kararlarında "hangi satır kilitlenecek" sorusu kararın
+**parçasıdır**; cevabı yoksa karar henüz verilmemiştir.

@@ -483,6 +483,7 @@ altındaki ADR'lerdedir.
 | Şube bazlı yetki | Yok (V1) |
 | Personel oturumu | Sunucu tarafı opak oturum çerezi; JWT yok (rol ve durum her istekte kaynaktan) |
 | Eşzamanlılık | Invariant koruması: satır kilidi + tek transaction (`InvariantGuard`); iyimser eşzamanlılık yok |
+| Şase tekilliği | `vehicles` üzerinde kısmi tekil indeks (`NOT is_archived`); araç kendi arşiv bayrağını taşır |
 | Bildirim gönderimi | Veritabanı kuyruğu + arka plan servisi; gönderici port arkasında (V1: SMTP/MailKit) |
 | Tema (renk) | Dağıtım yapılandırmasından, **ya tam ya hiç**; panelden düzenlenmez |
 | Kontrast güvencesi | Başlangıçta doğrulanır — karşılanmazsa uygulama ayağa kalkmaz; varsayılan palet için ayrıca CI testi |

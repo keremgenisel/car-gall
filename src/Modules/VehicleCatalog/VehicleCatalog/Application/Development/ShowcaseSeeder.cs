@@ -91,9 +91,10 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 new KeyValuePair<Locale, string>(Locale.Create("en").Value, en),
             ]);
 
-            // 0010a/D12 — seeder artık şase de üretiyor. Tekillik `InvariantGuard` ile
-            // komut katmanında korunuyor ve seed aynı şaseyi iki kez üretirse ilk gerçek
-            // kayıt denemesinde patlardı; sıra numarası bunu imkânsız kılıyor.
+            // 0010a/D12 — seeder artık şase de üretiyor. Tekillik `vehicles` üzerindeki
+            // kısmi tekil indeksle korunuyor (D11, gözden geçirildi) ve seed aynı şaseyi
+            // iki kez üretirse ilk `SaveChanges` patlardı; sıra numarası bunu imkânsız
+            // kılıyor.
             Vin vin = Vin.Create($"SEED{index:D13}").Value;
 
             Vehicle vehicle = Vehicle.Create(
