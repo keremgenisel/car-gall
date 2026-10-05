@@ -12,6 +12,15 @@ namespace CarGallery.Modules.VehicleCatalog.Application.Development;
 /// yazmaz — agregatları kurup ShowcaseListingProjector'dan geçirir, yani üretimdeki
 /// görünürlük kararının AYNI yolunu kullanır. Elle satır yazan bir seed, kanıt
 /// görüntülerini gerçek davranıştan kopartırdı.
+///
+/// <para><b>0010a/D12 — artık YAZMA modelini de yazıyor.</b> Bu spec'e kadar agregatlar
+/// bellekte kurulup atılıyordu ve saklanan tek şey okuma modeli satırlarıydı. Yazma modeli
+/// gelince o hâl bir yalana dönüşürdü: arkasında araç kaydı olmayan iki yüz vitrin satırı
+/// ve bomboş bir panel listesi.</para>
+///
+/// <para><b>İlanlar YAYINLANMAYA devam ediyor</b> ve bu, panelin `0010a`'da yapamadığı bir
+/// şey (X2). Seeder bir geliştirme aracıdır, uç değil; taslak üretseydi vitrin boşalır ve
+/// `0001`/`0002`'nin bütün e2e'si düşerdi.</para>
 /// </summary>
 internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clock)
 {
@@ -52,6 +61,11 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
         ];
 
         List<ShowcaseListing> rows = [];
+
+        // 0010a/D12 — yazma modeli de saklanıyor; vitrin satırları artık arkalarında
+        // gerçek birer araç kaydı olan ilanlardan türüyor.
+        List<Vehicle> vehicles = [];
+        List<Listing> listings = [];
 
         for (int index = 0; index < listingCount; index++)
         {
@@ -109,6 +123,9 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             Listing listing = Listing.CreateDraft(vehicle.Id, showcaseSortWeight: listingCount - index);
             listing.Publish(clock);
 
+            vehicles.Add(vehicle);
+            listings.Add(listing);
+
             if (index % 7 == 6)
             {
                 listing.Reserve();
@@ -129,6 +146,8 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             }
         }
 
+        context.Vehicles.AddRange(vehicles);
+        context.Listings.AddRange(listings);
         context.ShowcaseListings.AddRange(rows);
         await context.SaveChangesAsync(cancellationToken);
     }
