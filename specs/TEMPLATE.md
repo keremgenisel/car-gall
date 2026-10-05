@@ -17,11 +17,31 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak · Onaylandı · Geliştiriliyor · Tamamlandı |
+| **Durum** | Taslak · Onaylandı · Geliştiriliyor · **Beklemede** · Tamamlandı |
 | **Sahip** | <kim yürütüyor> |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | <hangi modüller — docs/architecture.md> |
 | **Bağımlı spec'ler** | <numaralar, yoksa "yok"> |
+| **Karar bekliyor** | <hangi karar, kimden — yoksa "yok"> |
+
+<!--
+İKİ ALAN BİR ARADA ÇALIŞIR.
+
+**Durum = Beklemede**, spec'in ilerlemesi BAŞKA BİR ŞEYE bağlı olduğunda kullanılır:
+bir karar, bir veri, ya da sırası gelmemiş bir önkoşul. `Taslak`'tan ayırt edilir —
+`Taslak` "yazılıyor", `Beklemede` "yazılmıyor ve nedeni şu" demektir. Yarım kalmış bir
+taslak ile bilinçli park edilmiş bir spec aynı şey değildir; ayırt edilmezse durum
+sorgusunda ikisi de "eksik" görünür ve hangisine dokunulacağı belli olmaz.
+
+**Karar bekliyor**, bir karar onaysız beklediği sürece DOLU kalır: hangi karar, kimden.
+Boş geçilmez — bekleyen bir şey yoksa "yok" yazılır.
+
+*Neden alan olarak var:* kararlar spec'in ortasında, "Verilen kararlar" bölümünde
+yaşıyordu. Bir karar onaysız kaldığında bunu görmenin tek yolu spec'i baştan okumaktı ve
+üç karar aynı deseni izleyerek birikti: spec yazıldı → karar bekledi → iş durdu → başka
+bir şeye geçildi. Başlıktaki tek satır, "hangi spec neyi bekliyor" sorusunu okumadan
+cevaplar.
+-->
 
 ---
 

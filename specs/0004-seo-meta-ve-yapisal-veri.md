@@ -2,15 +2,38 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
+| **Durum** | **Beklemede** (2026-10-05) — *sırası gelmedi; bkz. aşağıdaki not* |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Host` (rota bazlı enjeksiyon) · `VehicleCatalog.Contracts` (okuma) · `Dealership.Contracts` (şube sayfaları için) |
 | **Bağımlı spec'ler** | `0001` (tamamlandı) · `0002` (detay sayfası — **önkoşul**) · `0003` (şubeler) |
+| **Karar bekliyor** | yok — *bekleyen şey bir karar değil, SIRA* |
 
 > Bu spec, `0002`'nin **E11** kararı gereğince, `0002` merge edilmeden açıldı.
 > `0002` X4'ü kapsam dışı bıraktı; `docs/architecture.md` § 3 ise bunu zorunlu kılıyor.
 > Borcun bir yeri olsun diye burası açıldı — açılmasaydı borç görünmez olur ve kimse ödemezdi.
+
+> ### Neden `Beklemede` (2026-10-05)
+>
+> Bu spec'in Intent'i, Acceptance Criteria'sı ve KAPSAM DIŞI listesi boş ve **bilerek öyle
+> bırakılıyor.** `ADR 0003` Ek 1'in sırasında **8. adım**; önünde `0010` (panelden araç
+> kaydı), medya yükleme, yayına alma, iki adımlı doğrulama ve ana sayfa var.
+>
+> **Intent şimdi yazılırsa yeniden yazılacak.** Intent'in cevapladığı üçüncü soru "başarı
+> neye benziyor?" — ve bu spec'in başarısı, var olmayan sayfaların arama sonuçlarında nasıl
+> göründüğüdür. Bugün vitrin seed verisine bağlı, galeri kendi aracını giremiyor ve ana
+> sayfa yok. Hakem olacak Intent'in zemini de yok.
+>
+> **Durumu `Taslak`'tan `Beklemede`'ye çevirmenin nedeni** budur: `Taslak` "yazılıyor"
+> demek ve bu spec yazılmıyor. Üç ayrı durum sorgusunda "`0004`'ün Intent'i boş" diye
+> karşımıza çıktı — her seferinde cevap aynıydı ve her seferinde yeniden bulundu.
+>
+> **Ne zaman açılır:** `ADR 0003` Ek 1'in 7. adımı (ana sayfa) tamamlandığında. O noktada
+> vitrin gerçek veriyle çalışıyor, detay sayfası ve şube sayfaları yerinde olacak — Intent
+> ölçülebilir bir başarı tanımı yazabilir.
+>
+> **Bu arada borç görünür kalıyor:** `R1`–`R6` ve `C1`–`C3` duruyor; park etmek silmek
+> değildir.
 
 ---
 
