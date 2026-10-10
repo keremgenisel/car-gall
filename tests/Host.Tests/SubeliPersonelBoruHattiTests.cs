@@ -46,6 +46,7 @@ public sealed class SubeliPersonelBoruHattiTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
             IdentityTestSettings.Apply(builder);
             NotificationsTestSettings.Apply(builder);
+            MediaTestSettings.Apply(builder);
         });
 
         // Kurulum hesabı zorunlu parola değişimi bekleyerek doğar (D2); o hâldeyken

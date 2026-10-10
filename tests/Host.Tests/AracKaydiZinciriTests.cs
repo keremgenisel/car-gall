@@ -45,6 +45,7 @@ public sealed class AracKaydiZinciriTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
             IdentityTestSettings.Apply(builder);
             NotificationsTestSettings.Apply(builder);
+            MediaTestSettings.Apply(builder);
         });
 
         // Kurulum hesabı ilk girişte parolasını DEĞİŞTİRMEK zorunda (0006 R10); aksi hâlde

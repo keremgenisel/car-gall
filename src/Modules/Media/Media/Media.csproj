@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CarGallery.Modules.Media</RootNamespace>
+    <AssemblyName>CarGallery.Modules.Media</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Media.Contracts/Media.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.csproj" />
+    <!--
+      TEK tüketilen yabancı yüzey ve yalnız iki sabit için: yönetim kökü ve oturum
+      politikası (`AdminSurface`). Kökü burada yeniden yazmak, 0006/C18'in rota TARAYAN
+      testinin medya ucunu hiç görmemesi demekti.
+
+      D6 — `Media` bağımsızdır: ondan dışarı ok çıkmaz. Bu referans bir VERİ bağımlılığı
+      değil, yönetim yüzeyinin adres sabitidir; mimari test `Media`'nın hiçbir modülün
+      verisini okumadığını ayrıca doğruluyor (AC-35).
+    -->
+    <ProjectReference Include="../../Identity/Identity.Contracts/Identity.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!--
+      D7 — görüntü işleme bir portun arkasında ve kütüphane LİSANSI ölçülerek seçildi:
+      SkiaSharp MIT. En yaygın alternatif ImageSharp v3'ten beri "Six Labors Split
+      License" taşıyor — ticari kurulumda ücretli lisans gerektirir ve bu ürün
+      white-label satılıyor. NuGet lisans alanları ölçüldü (2026-10-10).
+
+      Linux native varlıkları AÇIKÇA referans veriliyor: CI ubuntu üzerinde koşuyor ve
+      SkiaSharp meta paketi tek başına Linux ikililerini getirmez — eksikse hata
+      çalışma anında `DllNotFoundException` olarak çıkar, derlemede değil.
+    -->
+    <PackageReference Include="SkiaSharp" Version="4.153.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.153.1" />
+    <!-- C3 — depolama S3 uyumlu (R2/MinIO). Apache-2.0. -->
+    <PackageReference Include="AWSSDK.S3" Version="4.0.104.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Media.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

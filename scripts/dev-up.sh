@@ -9,6 +9,10 @@ PORT=55432
 MAIL_CONTAINER="cargall-dev-mail"
 MAIL_SMTP_PORT=51025
 MAIL_UI_PORT=58025
+S3_CONTAINER="cargall-dev-s3"
+S3_PORT=54566
+S3_BUCKET="cargallery-media"
+S3_WATERMARK_KEY="private/brand/watermark.png"
 
 echo "==> PostgreSQL ($CONTAINER, port $PORT)"
 docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
@@ -26,6 +30,60 @@ docker run -d --name "$MAIL_CONTAINER" \
   -e MP_SMTP_AUTH_ACCEPT_ANY=true -e MP_SMTP_AUTH_ALLOW_INSECURE=true \
   -p "$MAIL_SMTP_PORT:1025" -p "$MAIL_UI_PORT:8025" axllent/mailpit:v1.21 >/dev/null
 
+# 0011 — medya hattı gerçekten bir S3 uyumlu depoya yazıyor. Depo olmadan her yükleme
+# başarısız olur ve "türev üretildi" iddiası hiçbir yerden doğrulanamaz.
+#
+# MinIO DEĞİL ve bunun ölçülmüş bir nedeni var: `minio/minio` imajı anonim olarak
+# çekilemiyor (`pull access denied ... repository does not exist`). Aynı makinede
+# `alpine:3.20` sorunsuz indi, yani Docker Hub erişimi sorunu değil. C3'ün ÜRETİM kararı
+# değişmedi (S3-uyumlu, R2/MinIO); değişen yalnız yerel ikizdir.
+echo "==> LocalStack S3 ($S3_CONTAINER, port $S3_PORT)"
+docker rm -f "$S3_CONTAINER" >/dev/null 2>&1 || true
+docker run -d --name "$S3_CONTAINER" \
+  -e SERVICES=s3 -e DEBUG=0 \
+  -p "$S3_PORT:4566" localstack/localstack:3.8.1 >/dev/null
+for i in $(seq 1 60); do
+  curl -sf "http://localhost:$S3_PORT/_localstack/health" >/dev/null 2>&1 && break
+  sleep 1
+done
+
+docker exec "$S3_CONTAINER" awslocal s3 mb "s3://$S3_BUCKET" >/dev/null 2>&1 || true
+
+# Filigran kaynağı yapılandırmadaki bir NESNE ANAHTARIDIR (D4), bir medya varlığı kimliği
+# değil — kimlik olsaydı kurulum döngüsü doğardı: yapılandırma zorunlu → uygulama kalkmaz
+# → logo yüklenemez → kimlik yok.
+#
+# Bu PNG burada ÜRETİLİYOR, repoda durmuyor: repoda duran bir filigran, galerinin logosu
+# yerine sessizce kullanılabilecek bir varsayılan olurdu. Geliştirme filigranı yarı
+# saydam beyaz bir şerittir; galerinin logosu kurulumda operatör tarafından konur.
+python3 - "$PWD/.dev-watermark.png" <<'PYEOF'
+import struct, sys, zlib
+
+genislik, yukseklik = 240, 80
+satirlar = b"".join(
+    b"\x00" + bytes([255, 255, 255, 180]) * genislik for _ in range(yukseklik))
+
+
+def parca(tur, govde):
+    return (struct.pack(">I", len(govde)) + tur + govde
+            + struct.pack(">I", zlib.crc32(tur + govde) & 0xFFFFFFFF))
+
+
+png = (b"\x89PNG\r\n\x1a\n"
+       + parca(b"IHDR", struct.pack(">IIBBBBB", genislik, yukseklik, 8, 6, 0, 0, 0))
+       + parca(b"IDAT", zlib.compress(satirlar, 9))
+       + parca(b"IEND", b""))
+
+with open(sys.argv[1], "wb") as dosya:
+    dosya.write(png)
+PYEOF
+
+docker cp .dev-watermark.png "$S3_CONTAINER:/tmp/watermark.png" >/dev/null
+docker exec "$S3_CONTAINER" awslocal s3 cp /tmp/watermark.png \
+  "s3://$S3_BUCKET/$S3_WATERMARK_KEY" >/dev/null
+rm -f .dev-watermark.png
+echo "    filigran yüklendi: s3://$S3_BUCKET/$S3_WATERMARK_KEY"
+
 echo "==> Frontend build (çıktı: src/Host/wwwroot)"
 (cd frontend && npm ci --silent && npm run build --silent)
 
@@ -41,6 +99,13 @@ Notifications__Smtp__Host=localhost \
 Notifications__Smtp__Port="$MAIL_SMTP_PORT" \
 Notifications__Smtp__User=gelistirme \
 Notifications__Smtp__Password=gelistirme \
+Media__Storage__ServiceUrl="http://localhost:$S3_PORT" \
+Media__Storage__Bucket="$S3_BUCKET" \
+Media__Storage__AccessKey=test \
+Media__Storage__SecretKey=test \
+Media__Storage__Region=us-east-1 \
+Media__PublicBaseUrl="http://localhost:$S3_PORT/$S3_BUCKET/" \
+Media__WatermarkObjectKey="$S3_WATERMARK_KEY" \
   dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release -- --migrate
 
 # D2/AC-53 — başlangıç Yönetici parolası YAPILANDIRMADAN gelir ve repoda durmaz
@@ -61,5 +126,12 @@ Notifications__Smtp__Host=localhost \
 Notifications__Smtp__Port="$MAIL_SMTP_PORT" \
 Notifications__Smtp__User=gelistirme \
 Notifications__Smtp__Password=gelistirme \
+Media__Storage__ServiceUrl="http://localhost:$S3_PORT" \
+Media__Storage__Bucket="$S3_BUCKET" \
+Media__Storage__AccessKey=test \
+Media__Storage__SecretKey=test \
+Media__Storage__Region=us-east-1 \
+Media__PublicBaseUrl="http://localhost:$S3_PORT/$S3_BUCKET/" \
+Media__WatermarkObjectKey="$S3_WATERMARK_KEY" \
 ASPNETCORE_URLS="http://localhost:5080" \
   dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release

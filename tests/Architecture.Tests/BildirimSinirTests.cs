@@ -198,11 +198,12 @@ public sealed partial class BildirimSinirTests
     /// Tablo adının küçük harfle başlaması bu üçünü de ayırıyor — gürültülü bir mimari
     /// test, kapattığından daha çok şey açar.</para>
     /// </summary>
-    private static Regex SchemaReference(string schema) =>
-        new(
-            @"\b" + Regex.Escape(schema) + @"\.[a-z_]{2,}\b|""" + Regex.Escape(schema) + @"""",
-            RegexOptions.None,
-            TimeSpan.FromSeconds(2));
+    /// <summary>
+    /// Desen `SolutionLayout`'ta yaşıyor: aynı kuralı `0011`/AC-35 de koruyor ve ikinci
+    /// kopya yazıldığında daha zayıf çıktı (bir sonda yakaladı). Ortak desen tek bir yerde
+    /// yaşar; modüller onu çağırır (`0007`/AC-9'un aynı ilkesi).
+    /// </summary>
+    private static Regex SchemaReference(string schema) => SolutionLayout.SchemaReference(schema);
 
     private static bool ImplementationDeclaration(string text, string interfaceName) =>
         Regex.IsMatch(

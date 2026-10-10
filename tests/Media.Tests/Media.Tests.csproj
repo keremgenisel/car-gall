@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <!--
+      `Testcontainers.Minio` DEĞİL ve bunun ölçülmüş bir nedeni var: paket var (4.15.0,
+      MIT) ama imajı çekilemiyor — `pull access denied for minio/minio, repository does
+      not exist`. Docker Hub erişimi sorunu değil: aynı makinede `alpine:3.20` sorunsuz
+      indi ve `quay.io/minio/minio` da 401 döndü. Çekilemeyen bir imaja bağlı test,
+      CI'da yazı tura demek.
+
+      LocalStack'in S3'ü ölçüldü ve tam gidiş-dönüş çalışıyor: kova, PUT, GET (bayt ve
+      `Content-Type` birebir), olmayan nesnede 404. C3'ün ÜRETİM kararı değişmedi
+      (S3-uyumlu, R2/MinIO); değişen yalnız test ikizidir.
+    -->
+    <PackageReference Include="Testcontainers.LocalStack" Version="4.16.0" />
+    <!--
+      EXIF okuyucusu TESTE ÖZEL ve bağımsız olması kriterin kendisi: türevi üreten
+      kütüphaneyle doğrulamak, o kütüphanenin metadata yazıcısındaki bir hatada testi
+      boş yere yeşil verirdi.
+    -->
+    <PackageReference Include="MetadataExtractor" Version="2.9.3" />
+    <PackageReference Include="SkiaSharp" Version="4.153.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.153.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Media\Media\Media.csproj" />
+  </ItemGroup>
+
+</Project>

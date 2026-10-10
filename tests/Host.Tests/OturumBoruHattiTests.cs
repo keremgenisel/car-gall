@@ -64,6 +64,7 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
             IdentityTestSettings.Apply(builder);
             NotificationsTestSettings.Apply(builder);
+            MediaTestSettings.Apply(builder);
 
             // Saat en SONDA değiştirilir: modüller kendi `IClock`'larını kaydediyor ve
             // son kayıt kazanıyor.

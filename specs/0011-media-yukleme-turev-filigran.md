@@ -415,19 +415,34 @@ yapılandırma eksikliğinde ayağa kalkmama) ve D1–D17'yi kapsar.
 ## Definition of Done
 
 - [x] Açık sorular karara bağlandı ve § **Verilen kararlar** olarak işlendi (D1–D17).
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — `Media` başka modülün tablosuna veya deposuna erişmiyor; yaprak
-      modül kalıyor.
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `media` şemasına dokunuyor.
-- [ ] EXIF temizliğinin gerçekten uygulandığı testle gösterildi.
-- [ ] Yapılandırma eksikken uygulamanın ayağa kalkmadığı testle gösterildi (C6).
-- [ ] <!-- DoD:T7 --> Yeni domain terimi yok — spec yalnızca sözlükteki terimleri kullanır.
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`) — dokuz projede **867 test, 0 kırmızı**.
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — `Media` başka modülün tablosuna veya deposuna erişmiyor;
+      **bağımsız** kalıyor (taslaktaki "yaprak" ifadesi D6 ile düzeltildi: `docs/`'un yaprak
+      listesinde `Media` yok ve § 2.A `VehicleCatalog → Media` okumasını meşru sayıyor).
+      `MedyaSinirTests` beş iddia, dördü sondayla kırmızıya döndürülerek doğrulandı.
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `media` şemasına dokunuyor (`MigrationSchemaTests` doğruluyor).
+- [x] EXIF temizliğinin gerçekten uygulandığı testle gösterildi — AC-19, **bağımsız** bir
+      okuyucuyla (MetadataExtractor; üreten kütüphane SkiaSharp). Test boş yere yeşil
+      değil: girdide GPS ve cihaz bilgisinin VAR olduğunu da iddia ediyor ve fixture EXIF
+      yazmayı bıraktığında kırmızı veriyor (sondayla doğrulandı). AC-20 ayrıca yönün
+      doğruluğunu ölçüyor — "EXIF yok" testi yan yatmış bir görselde de yeşil verir (D8).
+- [x] Yapılandırma eksikken uygulamanın ayağa kalkmadığı testle gösterildi (C6) —
+      `MedyaYapilandirmasiTests`, GERÇEK Host başlangıcında, yedi anahtar için.
+- [x] <!-- DoD:T7 --> **Bir yeni terim vardı ve sözlüğe girdi:** R6'nın getirdiği `İşleme Durumu`
+      (`MediaProcessingStatus`). `docs/domain.md` § 1'e eklendi, geçişleri § 2.10'a (M1–M3)
+      yazıldı. Kutuyu "yeni terim yok" diye işaretlemek yanlış olurdu — `docs/conventions.md`
+      § 2 terimin koda girmeden önce sözlüğe girmesini istiyor (D13).
+- [x] <!-- DoD:T8 --> `docs/architecture.md` § Karar Defteri'ne **üç satır** eklendi (medya işleme
+      yeri, filigran kaynağı, orijinal saklama) ve gerekçeleri ADR `0009`'da.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/<no>-ac<n>.png`),
-      boş ve hata durumları dâhil; RTL kriteri varsa Arapça görüntü de var.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T2 --> **Yok — arayüz kriteri yok.** Bu spec hiçbir ekran üretmiyor: X5/X6 toplu
+      yükleme sihirbazını ve medya kütüphanesi ekranını, D5 `alt` metni girişini kapsam
+      dışı bırakıyor; panel yükleme akışı `0012`'nin işi. 35 kriterin hiçbiri arayüz
+      kriteri değil, bu yüzden görsel kanıt hiçbir kriteri kapısız bırakmıyor.
+- [x] <!-- DoD:T6 --> **Yok — kullanıcıya görünen metin üretilmedi.** API `errorCode` döner (C7) ve
+      durum bir kod olarak geçer (`uploaded`); çeviri uçta, `0012`'nin ekranıyla gelir.
+      `frontend/` altında tek dosya değişmedi.
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.

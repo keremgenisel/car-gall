@@ -13,6 +13,13 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <!--
+      0011 — medya zinciri GERÇEK boru hattında koşuyor ve yükleme ucu orijinali istek
+      içinde depoya yazıyor (D9). Depo olmadan AC-1 kanıtlanamaz: yanıtın kimlik ve durum
+      taşıdığı iddiası, yazmanın gerçekten olduğunu varsayıyor.
+    -->
+    <PackageReference Include="Testcontainers.LocalStack" Version="4.16.0" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.104.2" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
   </ItemGroup>

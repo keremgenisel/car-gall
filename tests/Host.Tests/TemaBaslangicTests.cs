@@ -154,6 +154,7 @@ public sealed class TemaBaslangicTests
                 builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
                 IdentityTestSettings.Apply(builder);
                 NotificationsTestSettings.Apply(builder);
+                MediaTestSettings.Apply(builder);
 
                 foreach (KeyValuePair<string, string> deger in tema)
                 {

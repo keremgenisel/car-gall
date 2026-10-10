@@ -50,6 +50,7 @@ public sealed class TalepBildirimiZinciriTests : IAsyncLifetime
 
             IdentityTestSettings.Apply(builder);
             NotificationsTestSettings.Apply(builder);
+            MediaTestSettings.Apply(builder);
             builder.UseSetting("Notifications:Smtp:Port", KapaliPort);
         });
 
