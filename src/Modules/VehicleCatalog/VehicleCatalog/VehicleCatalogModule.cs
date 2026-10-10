@@ -74,7 +74,11 @@ public static class VehicleCatalogModule
         // 0010a — yazma yüzeyi. Para birimi KURULUM BAŞINA SABİTTİR ve panelden
         // değiştirilemez (C3, P3): personel yalnız tutar girer.
         services.AddSingleton(new CatalogCurrencyOptions(currencyCode, currencyMinorUnitExponent));
+        // Kayıt ve düzenlemenin ORTAK kuralları tek yerde: aynı invariant iki komutta
+        // iki farklı şey olmasın (0010b, bilinen tuzak 3).
+        services.AddScoped<VehicleWriteRules>();
         services.AddScoped<CreateVehicleCommand>();
+        services.AddScoped<UpdateVehicleCommand>();
         services.AddScoped<IVehicleAdminQueries, VehicleAdminQueries>();
 
         return services;

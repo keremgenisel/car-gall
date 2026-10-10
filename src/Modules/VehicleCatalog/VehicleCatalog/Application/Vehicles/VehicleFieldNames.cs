@@ -21,4 +21,11 @@ internal static class VehicleFieldNames
     internal const string Mileage = "mileageKilometers";
     internal const string Price = "price";
     internal const string Vin = "vin";
+
+    /// <summary>0010b — düzenleme isteğinin hedefi; `404` bu alanı işaretler.</summary>
+    internal const string VehicleId = "vehicleId";
+
+    internal const string ListingTitle = "listingTitle";
+
+    internal const string ListingDescription = "listingDescription";
 }

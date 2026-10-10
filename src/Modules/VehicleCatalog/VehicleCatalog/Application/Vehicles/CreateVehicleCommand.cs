@@ -39,19 +39,11 @@ internal sealed record CreateVehicleRequest(
 /// </summary>
 internal sealed class CreateVehicleCommand(
     VehicleCatalogDbContext context,
-    IBranchQueries branches,
-    IBodyTypeQueries bodyTypes,
-    IVehicleModelQueries models,
-    IReferenceTermQueries terms,
-    CatalogCurrencyOptions currency,
-    ShowcaseLocaleOptions locales,
+    VehicleWriteRules rules,
     IClock clock)
 {
     /// <summary>R17 — yeni kayıt VARSAYILAN vitrin sıralama ağırlığıyla açılır (X17).</summary>
     internal const int DefaultShowcaseSortWeight = 0;
-
-    /// <summary>R11 — renk serbest metindir ve üst sınırı vardır.</summary>
-    internal const int MaximumColorLength = 60;
 
     /// <summary>PostgreSQL: tekillik ihlali.</summary>
     private const string UniqueViolation = "23505";
@@ -74,35 +66,15 @@ internal sealed class CreateVehicleCommand(
                 VehicleFieldNames.Vin);
         }
 
-        if (request.Color.Values.Any(value => value.Length > MaximumColorLength))
+        Result color = rules.ValidateColor(request.Color);
+
+        if (color.IsFailure)
         {
-            return Failure(VehicleErrors.TextTooLong, VehicleFieldNames.Color);
+            return Result.Failure<Guid>(color.Error);
         }
 
-        // Etkin olmayan locale SESSİZCE elenmez. Daha önce filtre değeri yutuyordu ve
-        // personel girdiği rengin kaybolduğunu hiçbir yerde göremiyordu.
-        if (request.Color.Keys.Any(code => !locales.IsEnabled(code)))
-        {
-            return Failure(VehicleErrors.LocaleNotEnabled, VehicleFieldNames.Color);
-        }
-
-        // R2 + R10 + AC-6 — renk ÇEKİRDEK alandır ve en az bir etkin locale'de dolu
-        // olmalıdır. "En az bir" bilinçli: R10 çok dilli metni yarıda bırakmaya izin
-        // veriyor, yani kalan diller düzenleme ekranında (`0010b`) doldurulabilir.
-        if (!request.Color.Values.Any(value => !string.IsNullOrWhiteSpace(value)))
-        {
-            return Failure(VehicleErrors.CoreFieldMissing, VehicleFieldNames.Color);
-        }
-
-        Result<BodyTypeSlug> bodyType = BodyTypeSlug.Create(request.BodyType);
-
-        if (bodyType.IsFailure)
-        {
-            return Failure(VehicleErrors.CoreFieldMissing, VehicleFieldNames.BodyType);
-        }
-
-        Result<VehicleSpecification> specification = VehicleSpecification.Create(
-            bodyType.Value,
+        Result<VehicleSpecification> specification = VehicleWriteRules.BuildSpecification(
+            request.BodyType,
             request.FuelType,
             request.TransmissionType,
             request.DrivetrainType,
@@ -110,40 +82,42 @@ internal sealed class CreateVehicleCommand(
 
         if (specification.IsFailure)
         {
-            return Failure(VehicleErrors.CoreFieldMissing, VehicleFieldNames.FuelType);
+            return Result.Failure<Guid>(specification.Error);
         }
 
-        Result<ListingPrice> price = BuildPrice(request);
+        Result<ListingPrice> price = rules.BuildPrice(request.PriceAmount, request.PriceOnRequest);
 
         if (price.IsFailure)
         {
             return Result.Failure<Guid>(price.Error);
         }
 
-        Result<Guid> references = await ValidateReferencesAsync(request, cancellationToken);
+        Result references = await rules.ValidateReferencesAsync(
+            request.VehicleModelId,
+            request.BodyType,
+            request.FuelType,
+            request.TransmissionType,
+            request.DrivetrainType,
+            request.TrimLevel,
+            cancellationToken);
 
         if (references.IsFailure)
         {
-            return references;
+            return Result.Failure<Guid>(references.Error);
         }
 
-        if (request.BranchId == Guid.Empty)
-        {
-            return Failure(VehicleErrors.BranchRequired, VehicleFieldNames.BranchId);
-        }
+        Result branch = await rules.ValidateBranchAsync(request.BranchId, cancellationToken);
 
-        // C6 — şube kimliğinin geçerliliği `Dealership.Contracts` üzerinden, TEK ATLAMA
-        // ve salt okuma. Şube adı burada saklanmıyor (Yasak Listesi 33).
-        if (await branches.FindAsync(request.BranchId, locales.Default.Code, cancellationToken) is null)
+        if (branch.IsFailure)
         {
-            return Failure(VehicleErrors.BranchNotFound, VehicleFieldNames.BranchId);
+            return Result.Failure<Guid>(branch.Error);
         }
 
         Result<Vehicle> vehicle = Vehicle.Create(
             request.BranchId,
             request.VehicleModelId,
             specification.Value,
-            Color(request),
+            VehicleWriteRules.BuildColor(request.Color),
             request.ModelYear,
             request.MileageKilometers,
             price.Value,
@@ -181,97 +155,11 @@ internal sealed class CreateVehicleCommand(
         return Result.Success(vehicle.Value.Id.Value);
     }
 
-    private static bool IsVinConflict(DbUpdateException exception) =>
+    internal static bool IsVinConflict(DbUpdateException exception) =>
         exception.InnerException is PostgresException postgres
         && postgres.SqlState == UniqueViolation
         && postgres.ConstraintName == "ux_vehicles_vin";
 
     private static Result<Guid> Failure(string code, string field) =>
         Result.Failure<Guid>(Error.With(code, "field", field));
-
-    /// <summary>
-    /// Anahtarların hepsi bu noktada ETKİN (doğrulama yukarıda yapıldı), yani burada
-    /// eleme yok. Elenen tek şey BOŞ değer: boş bir dize "o dili doldurmadım" demektir ve
-    /// locale'i boş metinle kaydetmek, dolu sanılan bir alan üretirdi.
-    /// </summary>
-    private static LocalizedText Color(CreateVehicleRequest request) =>
-        LocalizedText.From(
-            request.Color
-                .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
-                .Select(pair => new KeyValuePair<Locale, string>(
-                    Locale.Create(pair.Key).Value,
-                    pair.Value.Trim())));
-
-    /// <summary>
-    /// P4 — "fiyat sorunuz" AYRI bir durumdur, `0` değildir. İkisi birlikte verilirse
-    /// istek reddedilir: hangisinin kazandığını sessizce seçmek, veri bozulmasının en
-    /// sessiz biçimi olurdu.
-    /// </summary>
-    private Result<ListingPrice> BuildPrice(CreateVehicleRequest request)
-    {
-        if (request.PriceOnRequest)
-        {
-            return request.PriceAmount is null
-                ? Result.Success(ListingPrice.OnRequest())
-                : Result.Failure<ListingPrice>(Error.With(VehicleErrors.InvalidPrice, "field", VehicleFieldNames.Price));
-        }
-
-        if (request.PriceAmount is null)
-        {
-            return Result.Failure<ListingPrice>(
-                Error.With(VehicleErrors.CoreFieldMissing, "field", VehicleFieldNames.Price));
-        }
-
-        Result<Money> money = currency.Money(request.PriceAmount.Value);
-
-        return money.IsSuccess
-            ? Result.Success(ListingPrice.Of(money.Value))
-            : Result.Failure<ListingPrice>(Error.With(VehicleErrors.InvalidPrice, "field", VehicleFieldNames.Price));
-    }
-
-    /// <summary>
-    /// AC-5 — altı küme. Terimler TEK sorguda, model ve kasa tipi ayrı: üçü farklı
-    /// tablolarda ve tek bir sorguya sığmıyor. Terim sorgusu eksik olanları döndüğü için
-    /// hangi alanın düştüğü doğrudan okunuyor.
-    /// </summary>
-    private async Task<Result<Guid>> ValidateReferencesAsync(
-        CreateVehicleRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (!await models.ExistsAsync(request.VehicleModelId, cancellationToken))
-        {
-            return Failure(VehicleErrors.ReferenceNotFound, VehicleFieldNames.VehicleModelId);
-        }
-
-        if (!await bodyTypes.ExistsAsync(request.BodyType, cancellationToken))
-        {
-            return Failure(VehicleErrors.ReferenceNotFound, VehicleFieldNames.BodyType);
-        }
-
-        (string Kind, string Slug)[] istenen =
-        [
-            (ReferenceTermKinds.FuelType, request.FuelType),
-            (ReferenceTermKinds.TransmissionType, request.TransmissionType),
-            (ReferenceTermKinds.DrivetrainType, request.DrivetrainType),
-            (ReferenceTermKinds.TrimLevel, request.TrimLevel),
-        ];
-
-        IReadOnlyList<(string Kind, string Slug)> eksikler =
-            await terms.FindMissingAsync(istenen, cancellationToken);
-
-        if (eksikler.Count == 0)
-        {
-            return Result.Success(Guid.Empty);
-        }
-
-        return Failure(VehicleErrors.ReferenceNotFound, FieldNameOf(eksikler[0].Kind));
-    }
-
-    private static string FieldNameOf(string kind) => kind switch
-    {
-        ReferenceTermKinds.FuelType => VehicleFieldNames.FuelType,
-        ReferenceTermKinds.TransmissionType => VehicleFieldNames.TransmissionType,
-        ReferenceTermKinds.DrivetrainType => VehicleFieldNames.DrivetrainType,
-        _ => VehicleFieldNames.TrimLevel,
-    };
 }
