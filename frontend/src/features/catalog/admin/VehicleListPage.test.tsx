@@ -180,7 +180,7 @@ describe('0010b/AC-24: Liste araç tanımını, fiyatı, kilometreyi, yayın dur
 
     await screen.findByTestId('vehicle-table')
 
-    for (const baslik of ['Araç', 'Fiyat', 'Kilometre', 'Durum', 'Durumu', 'Son güncelleme']) {
+    for (const baslik of ['Araç', 'Fiyat', 'Kilometre', 'Durum', 'Tamlık', 'Son güncelleme']) {
       expect(screen.getByRole('columnheader', { name: baslik }), baslik).toBeTruthy()
     }
 

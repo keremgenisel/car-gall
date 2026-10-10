@@ -149,71 +149,81 @@ export function VehicleListPage() {
 
       {state.kind === 'ready' && state.page.items.length > 0 ? (
         <>
-          <table className="admin-table" data-testid="vehicle-table">
-            <thead>
-              <tr>
-                <th scope="col">{t('vehicle.column.vehicle')}</th>
-                <th scope="col">{t('vehicle.column.price')}</th>
-                <th scope="col">{t('vehicle.column.mileage')}</th>
-                <th scope="col">{t('vehicle.column.status')}</th>
-                <th scope="col">{t('vehicle.column.completeness')}</th>
-                <th scope="col">{t('vehicle.column.updatedAt')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.page.items.map((vehicle) => {
-                // Biçimlendirme UÇTA: sunucu ham sayı + para kodu + minor unit üssü
-                // döner (docs/conventions.md § 7).
-                const price = formatMoney(vehicle.price, locale)
+          {/*
+            Telefon genişliğinde altı sütunluk tablo TAŞIYOR ve altındaki sayfalayıcıyı
+            örtüyordu — e2e'de ölçüldü: "Sonraki" düğmesine yapılan tıklamayı tablonun
+            hücreleri yakalıyordu. Taşma tablonun KENDİ kapsayıcısında kalıyor; sayfanın
+            yatay kaydırması yok (docs/frontend.md § 7).
+          */}
+          <div className="admin-table__scroll">
+            <table className="admin-table" data-testid="vehicle-table">
+              <thead>
+                <tr>
+                  <th scope="col">{t('vehicle.column.vehicle')}</th>
+                  <th scope="col">{t('vehicle.column.price')}</th>
+                  <th scope="col">{t('vehicle.column.mileage')}</th>
+                  <th scope="col">{t('vehicle.column.status')}</th>
+                  <th scope="col">{t('vehicle.column.completeness')}</th>
+                  <th scope="col">{t('vehicle.column.updatedAt')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.page.items.map((vehicle) => {
+                  // Biçimlendirme UÇTA: sunucu ham sayı + para kodu + minor unit üssü
+                  // döner (docs/conventions.md § 7).
+                  const price = formatMoney(vehicle.price, locale)
 
-                return (
-                  <tr key={vehicle.vehicleId}>
-                    <td dir="auto" data-testid="vehicle-row">
-                      <a href={vehicleEditPath(vehicle.vehicleId)}>
-                        {t('vehicle.list.definition', {
-                          model: vehicle.modelName,
-                          year: formatYear(vehicle.modelYear, locale),
-                        })}
-                      </a>
-                    </td>
-                    <td>{price ?? t('vehicle.price.onRequest')}</td>
-                    <td>{t('vehicle.mileage.value', { kilometers: vehicle.mileageKilometers })}</td>
-                    {/*
+                  return (
+                    <tr key={vehicle.vehicleId}>
+                      <td dir="auto" data-testid="vehicle-row">
+                        <a href={vehicleEditPath(vehicle.vehicleId)}>
+                          {t('vehicle.list.definition', {
+                            model: vehicle.modelName,
+                            year: formatYear(vehicle.modelYear, locale),
+                          })}
+                        </a>
+                      </td>
+                      <td>{price ?? t('vehicle.price.onRequest')}</td>
+                      <td>
+                        {t('vehicle.mileage.value', { kilometers: vehicle.mileageKilometers })}
+                      </td>
+                      {/*
                       Durum KODU sunucudan geliyor ve çeviri burada yapılıyor (C11, Yasak
                       Listesi 22): veritabanında çevrilmiş durum adı saklanmaz.
                     */}
-                    <td>{t(codeKey('vehicle.status', vehicle.listingStatus))}</td>
-                    <td>
-                      {/*
+                      <td>{t(codeKey('vehicle.status', vehicle.listingStatus))}</td>
+                      <td>
+                        {/*
                         Göstergeler renkle değil METİNLE anlatılıyor (docs/frontend.md § 7):
                         renk tek başına anlam taşımaz.
                       */}
-                      {vehicle.missingLocales.length > 0 ? (
-                        <span data-testid="vehicle-missing-locales">
-                          <Badge>
-                            {t('vehicle.badge.missingLocales', {
-                              locales: vehicle.missingLocales
-                                .map((code) => t(`app.locale.${code}`))
-                                .join(', '),
-                            })}
-                          </Badge>
-                        </span>
-                      ) : null}
-                      {vehicle.hasMissingRequiredInfo ? (
-                        <span data-testid="vehicle-missing-info">
-                          <Badge>{t('vehicle.badge.missingInfo')}</Badge>
-                        </span>
-                      ) : null}
-                      {vehicle.missingLocales.length === 0 && !vehicle.hasMissingRequiredInfo
-                        ? t('vehicle.badge.complete')
-                        : null}
-                    </td>
-                    <td>{formatDateTime(vehicle.updatedAt, locale)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                        {vehicle.missingLocales.length > 0 ? (
+                          <span data-testid="vehicle-missing-locales">
+                            <Badge>
+                              {t('vehicle.badge.missingLocales', {
+                                locales: vehicle.missingLocales
+                                  .map((code) => t(`app.locale.${code}`))
+                                  .join(', '),
+                              })}
+                            </Badge>
+                          </span>
+                        ) : null}
+                        {vehicle.hasMissingRequiredInfo ? (
+                          <span data-testid="vehicle-missing-info">
+                            <Badge>{t('vehicle.badge.missingInfo')}</Badge>
+                          </span>
+                        ) : null}
+                        {vehicle.missingLocales.length === 0 && !vehicle.hasMissingRequiredInfo
+                          ? t('vehicle.badge.complete')
+                          : null}
+                      </td>
+                      <td>{formatDateTime(vehicle.updatedAt, locale)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
 
           {state.page.totalPages > 1 ? (
             <nav className="vehicle-list__pager" aria-label={t('vehicle.list.pager')}>

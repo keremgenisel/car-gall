@@ -523,6 +523,10 @@ body {
   color: var(--color-ink-muted);
 }
 
+.admin-table__scroll {
+  overflow-x: auto;
+}
+
 .vehicle-list__pager {
   display: flex;
   flex-wrap: wrap;

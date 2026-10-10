@@ -246,7 +246,7 @@
   "vehicle.list.pageOf": "Sayfa {page} / {totalPages}",
   "vehicle.list.previous": "Önceki",
   "vehicle.list.next": "Sonraki",
-  "vehicle.column.completeness": "Durumu",
+  "vehicle.column.completeness": "Tamlık",
   "vehicle.column.updatedAt": "Son güncelleme",
   "vehicle.badge.missingLocales": "Eksik dil: {locales}",
   "vehicle.badge.missingInfo": "Eksik bilgi",
