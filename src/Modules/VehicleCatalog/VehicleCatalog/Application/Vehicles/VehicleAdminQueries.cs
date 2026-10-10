@@ -70,11 +70,16 @@ internal sealed class VehicleAdminQueries(
     {
         int totalCount = await context.Vehicles.CountAsync(cancellationToken);
 
-        List<Listing> listings = await context.Listings
+        // Gerçekten İKİ KOLON: önceki hâli tüm `Listing` varlığını çekiyordu (durum,
+        // ağırlık, yayın zamanı dâhil) ve üstündeki yorum "dar projeksiyon" diyordu.
+        // Yorumla kod ayrışınca, bir sonraki okuyucu buraya hiç bakmaz.
+        var metinler = await context.Listings
             .AsNoTracking()
+            .Select(listing => new { listing.Title, listing.Description })
             .ToListAsync(cancellationToken);
 
-        int eksik = listings.Count(listing => listing.MissingLocales(locales.Enabled).Count > 0);
+        int eksik = metinler.Count(metin =>
+            Listing.MissingLocalesOf(metin.Title, metin.Description, locales.Enabled).Count > 0);
 
         return new VehicleAdminSummaryDto(totalCount, eksik);
     }

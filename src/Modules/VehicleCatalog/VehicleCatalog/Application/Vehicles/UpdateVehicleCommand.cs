@@ -20,8 +20,16 @@ internal sealed record UpdateVehicleRequest(
     string DrivetrainType,
     string TrimLevel,
     IReadOnlyDictionary<string, string> Color,
-    int ModelYear,
-    int MileageKilometers,
+    /// <summary>
+    /// **Nullable ve bu bilinçli** (C25, AC-5). `int` olduğunda JSON'da bulunmayan alan
+    /// sessizce `0` bağlanıyordu: kilometre `0` GEÇERLİ bir değer olduğu için istek
+    /// kabul ediliyor ve araç kaydedilmiş kilometresini kaybediyordu. Diğer çekirdek
+    /// alanlar tesadüfen korunuyordu — dizeler boşa, `Guid`'ler `Empty`'ye, model yılı
+    /// aralık dışına düşüyor. Değer tipi olan alanlarda "gönderilmedi" ile "0 gönderildi"
+    /// ancak `null` ile ayrılır.
+    /// </summary>
+    int? ModelYear,
+    int? MileageKilometers,
     decimal? PriceAmount,
     bool PriceOnRequest,
     string Vin,
@@ -101,6 +109,19 @@ internal sealed class UpdateVehicleCommand(
             return Result.Failure(description.Error);
         }
 
+        // C25 — eksik gelen alan "dokunulmadı" değil GEÇERSİZ sayılır. Değer tipli iki
+        // çekirdek alanda bu ancak burada görülebilir: bağlayıcı onlara varsayılan
+        // veriyor ve `0` kilometre geçerli bir kilometredir.
+        if (request.MileageKilometers is null)
+        {
+            return VehicleWriteRules.Failure(VehicleErrors.CoreFieldMissing, VehicleFieldNames.Mileage);
+        }
+
+        if (request.ModelYear is null)
+        {
+            return VehicleWriteRules.Failure(VehicleErrors.CoreFieldMissing, VehicleFieldNames.ModelYear);
+        }
+
         // --- VARLIK ---
         Vehicle? vehicle = await context.Vehicles
             .Include(item => item.OptionalFieldValues)
@@ -163,8 +184,8 @@ internal sealed class UpdateVehicleCommand(
         Result core = vehicle.ChangeCoreDetails(
             specification.Value,
             VehicleWriteRules.BuildColor(request.Color),
-            request.ModelYear,
-            request.MileageKilometers,
+            request.ModelYear.Value,
+            request.MileageKilometers.Value,
             now);
 
         if (core.IsFailure)
@@ -198,7 +219,13 @@ internal sealed class UpdateVehicleCommand(
 
         if (text.IsFailure)
         {
-            return VehicleWriteRules.Failure(VehicleErrors.TextTooLong, VehicleFieldNames.ListingTitle);
+            // Hata KODU hangi metnin uzun olduğunu söylüyor; koşulsuz başlığa eşlemek,
+            // açıklamayı uzun yazan personele yanlış alanı gösteriyordu.
+            return VehicleWriteRules.Failure(
+                VehicleErrors.TextTooLong,
+                text.Error.Code == Listing.DescriptionTooLong
+                    ? VehicleFieldNames.ListingDescription
+                    : VehicleFieldNames.ListingTitle);
         }
 
         await context.SaveChangesAsync(cancellationToken);

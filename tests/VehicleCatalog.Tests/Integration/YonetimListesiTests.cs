@@ -188,6 +188,41 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
         Assert.Equal([.. beklenen.OrderBy(id => id)], [.. birlikte.OrderBy(id => id)]);
     }
 
+    /// <summary>
+    /// Özet sorgusu `listings`'ten YALNIZ iki kolon çekiyor (BULGU-3). Önceki hâli tüm
+    /// varlığı çekiyordu — durum, ağırlık, yayın zamanı dâhil — ve üstündeki yorum "dar
+    /// projeksiyon" diyordu. Yorumla kod ayrışınca bir sonraki okuyucu oraya hiç bakmaz.
+    ///
+    /// <para>Ölçüm ÜRETİM YOLUNDA: `GetSummaryAsync`'in gerçekten çalıştırdığı SQL
+    /// yakalanıyor. Testin kendi kurduğu bir sorguyu ölçmek yalnız EF'in çalıştığını
+    /// gösterirdi, kodun o sorguyu kullandığını değil.</para>
+    /// </summary>
+    [Fact]
+    public async Task Okur_OzetiYalnizIkiKolondan()
+    {
+        SorguYakalayici yakalayici = new();
+
+        await using VehicleCatalogDbContext context = database.CreateContext(yakalayici);
+
+        await new VehicleAdminQueries(
+            context,
+            new SahteModelSorgusu(),
+            new ShowcaseLocaleOptions(Tr, [Tr, En, Ar]),
+            new CatalogAdminPagingOptions(25, 100)).GetSummaryAsync(CancellationToken.None);
+
+        string? ilanSorgusu = yakalayici.Sorgular
+            .FirstOrDefault(sorgu => sorgu.Contains("listings", StringComparison.OrdinalIgnoreCase));
+
+        Assert.NotNull(ilanSorgusu);
+        Assert.Contains("title", ilanSorgusu, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("description", ilanSorgusu, StringComparison.OrdinalIgnoreCase);
+
+        foreach (string kolon in new[] { "status", "showcase_sort_weight", "published_at" })
+        {
+            Assert.DoesNotContain(kolon, ilanSorgusu, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
     [Fact(DisplayName = "0010b/AC-23: Liste, çeviri eksik ilan sayısını tüm araçlar üzerinden gösterir; gösterilen sayı o anki sayfanın içeriğine bağlı değildir")]
     public async Task Sayar_CeviriEksigiTumAraclarUzerinden()
     {

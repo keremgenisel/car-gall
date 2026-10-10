@@ -187,8 +187,13 @@ internal sealed record UpdateVehicleBody(
     string DrivetrainType,
     string TrimLevel,
     Dictionary<string, string>? Color,
-    int ModelYear,
-    int MileageKilometers,
+    /// <summary>
+    /// Nullable — AC-5/C25. `int` olsaydı gövdede BULUNMAYAN alan `0` bağlanır ve
+    /// kilometre sessizce sıfırlanırdı; `0` geçerli bir kilometre olduğu için istek de
+    /// kabul edilirdi.
+    /// </summary>
+    int? ModelYear,
+    int? MileageKilometers,
     decimal? PriceAmount,
     bool PriceOnRequest,
     string? Vin,

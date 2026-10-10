@@ -61,6 +61,33 @@ public sealed class AracDuzenlemeTests(ShowcaseDatabase database)
         Assert.Equal(VehicleErrors.CoreFieldMissing, sonuc.Error.Code);
     }
 
+    /// <summary>
+    /// C25/AC-5'in komut katmanındaki karşılığı. Uç testi tel üzerinde ölçüyor; burada
+    /// ölçülen şey kuralın KOMUTTA yaşadığı — bağlayıcıya değil.
+    /// </summary>
+    [Theory]
+    [InlineData("mileage")]
+    [InlineData("modelYear")]
+    public async Task Reddedilir_DegerTipliCekirdekAlanGonderilmediginde(string alan)
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+        (Guid Id, string Vin) arac = await AracKaydetAsync(context, $"DUZN{alan[..3]}");
+
+        UpdateVehicleRequest istek = alan == "mileage"
+            ? Istek(arac) with { MileageKilometers = null }
+            : Istek(arac) with { ModelYear = null };
+
+        Result sonuc = await Komut(context).ExecuteAsync(istek, CancellationToken.None);
+
+        Assert.Equal(VehicleErrors.CoreFieldMissing, sonuc.Error.Code);
+        Assert.Equal(
+            alan == "mileage" ? VehicleFieldNames.Mileage : VehicleFieldNames.ModelYear,
+            sonuc.Error.Parameters!["field"]);
+
+        // Reddedilen istek araca DOKUNMAMALI.
+        Assert.Equal(45_000, (await Oku(arac.Id)).MileageKilometers);
+    }
+
     [Fact(DisplayName = "0010b/AC-4: Var olmayan bir araç kimliğiyle gelen düzenleme isteği `404` ve kararlı bir hata koduyla reddedilir")]
     public async Task Reddedilir_VarOlmayanKimlik()
     {
@@ -167,10 +194,15 @@ public sealed class AracDuzenlemeTests(ShowcaseDatabase database)
         Assert.Contains(en, ilan.MissingLocales([tr, en]));
     }
 
+    /// <summary>
+    /// Hata HANGİ alanın düştüğünü de söylemeli: ikisi tek koda eşlendiğinde açıklamayı
+    /// uzun yazan personele BAŞLIK alanı kırmızı gösteriliyordu. Önceki hâli yalnız hata
+    /// kodunu doğruluyordu ve bu yüzden görmedi.
+    /// </summary>
     [Theory(DisplayName = "0010b/AC-20: İlan başlığı veya açıklaması locale başına üst uzunluk sınırını aştığında istek reddedilir")]
-    [InlineData("title")]
-    [InlineData("description")]
-    public async Task Reddedilir_IlanMetniUzunlugu(string alan)
+    [InlineData("title", VehicleFieldNames.ListingTitle)]
+    [InlineData("description", VehicleFieldNames.ListingDescription)]
+    public async Task Reddedilir_IlanMetniUzunlugu(string alan, string beklenenAlan)
     {
         await using VehicleCatalogDbContext context = database.CreateContext();
         (Guid Id, string Vin) arac = await AracKaydetAsync(context, $"DUZ20{alan[..3]}");
@@ -194,6 +226,7 @@ public sealed class AracDuzenlemeTests(ShowcaseDatabase database)
         Result sonuc = await Komut(context).ExecuteAsync(istek, CancellationToken.None);
 
         Assert.Equal(VehicleErrors.TextTooLong, sonuc.Error.Code);
+        Assert.Equal(beklenenAlan, sonuc.Error.Parameters!["field"]);
     }
 
     [Fact]

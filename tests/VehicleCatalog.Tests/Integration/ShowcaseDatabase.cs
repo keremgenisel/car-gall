@@ -1,5 +1,6 @@
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Testcontainers.PostgreSql;
 
 namespace CarGallery.Modules.VehicleCatalog.Tests.Integration;
@@ -27,12 +28,18 @@ public sealed class ShowcaseDatabase : IAsyncLifetime
 
     public Task DisposeAsync() => container.DisposeAsync().AsTask();
 
-    internal VehicleCatalogDbContext CreateContext()
+    internal VehicleCatalogDbContext CreateContext(IInterceptor? interceptor = null)
     {
         DbContextOptionsBuilder<VehicleCatalogDbContext> builder = new();
         builder.UseNpgsql(
             ConnectionString,
             npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", VehicleCatalogDbContext.Schema));
+
+        // Çalıştırılan SQL'i ölçmek isteyen testler kendi dinleyicisini veriyor.
+        if (interceptor is not null)
+        {
+            builder.AddInterceptors(interceptor);
+        }
 
         return new VehicleCatalogDbContext(builder.Options);
     }

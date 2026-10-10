@@ -16,7 +16,15 @@ internal sealed class Listing : AggregateRoot<ListingId>
 
     internal const int MaximumDescriptionLength = 4000;
 
-    internal const string TextTooLong = "listing.text_too_long";
+    /// <summary>
+    /// Başlık ve açıklama AYRI kodlar döner. Tek koda eşlenince komut katmanı hangi
+    /// alanı işaretleyeceğini bilemiyordu ve açıklamayı uzun yazan personele BAŞLIK
+    /// alanı kırmızı gösteriliyordu — `0010a`'daki "boş şase → çok uzun" hatasının aynı
+    /// sınıfı. Yanlış alan işaretlemesi personeli yanlış düzeltmeye yöneltir.
+    /// </summary>
+    internal const string TitleTooLong = "listing.title_too_long";
+
+    internal const string DescriptionTooLong = "listing.description_too_long";
 
     /// <summary>YALNIZCA EF içindir (0010a D10); davranış değişmiyor.</summary>
     private Listing()
@@ -70,10 +78,14 @@ internal sealed class Listing : AggregateRoot<ListingId>
     /// </summary>
     internal Result SetText(LocalizedText title, LocalizedText description)
     {
-        if (title.ToDictionary().Values.Any(value => value.Length > MaximumTitleLength)
-            || description.ToDictionary().Values.Any(value => value.Length > MaximumDescriptionLength))
+        if (title.ToDictionary().Values.Any(value => value.Length > MaximumTitleLength))
         {
-            return Result.Failure(new Error(TextTooLong));
+            return Result.Failure(new Error(TitleTooLong));
+        }
+
+        if (description.ToDictionary().Values.Any(value => value.Length > MaximumDescriptionLength))
+        {
+            return Result.Failure(new Error(DescriptionTooLong));
         }
 
         Title = title;
@@ -88,10 +100,21 @@ internal sealed class Listing : AggregateRoot<ListingId>
     /// <para>Boş dize dolu SAYILMAZ. Aksi hâlde formda boşluk bırakıp kaydeden personel
     /// o dili "tam" görürdü ve gösterge tam da gizlemesi gereken şeyi gizlerdi.</para>
     /// </summary>
-    internal IReadOnlyList<Locale> MissingLocales(IReadOnlyList<Locale> enabled)
+    internal IReadOnlyList<Locale> MissingLocales(IReadOnlyList<Locale> enabled) =>
+        MissingLocalesOf(Title, Description, enabled);
+
+    /// <summary>
+    /// Aynı kural, agregat ÖRNEĞİ olmadan. Özet sorgusu `listings`'ten yalnız iki kolon
+    /// çekiyor ve elinde bir `Listing` yok; kuralı orada tekrar yazmak, aynı invariantı
+    /// iki yerde iki farklı şey yapma riski demekti.
+    /// </summary>
+    internal static IReadOnlyList<Locale> MissingLocalesOf(
+        LocalizedText title,
+        LocalizedText description,
+        IReadOnlyList<Locale> enabled)
     {
-        Dictionary<string, string> titles = Title.ToDictionary();
-        Dictionary<string, string> descriptions = Description.ToDictionary();
+        Dictionary<string, string> titles = title.ToDictionary();
+        Dictionary<string, string> descriptions = description.ToDictionary();
 
         return
         [

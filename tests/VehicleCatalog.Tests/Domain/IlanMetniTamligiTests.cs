@@ -78,8 +78,10 @@ public sealed class IlanMetniTamligiTests
             LocalizedText.Empty,
             Metin((Tr, new string('A', Listing.MaximumDescriptionLength + 1))));
 
-        Assert.Equal(Listing.TextTooLong, uzunBaslik.Error.Code);
-        Assert.Equal(Listing.TextTooLong, uzunAciklama.Error.Code);
+        // İKİ AYRI KOD: tek koda eşlendiğinde komut katmanı hangi alanı işaretleyeceğini
+        // bilemiyor ve açıklamayı uzun yazan personele başlık alanı kırmızı gösteriliyordu.
+        Assert.Equal(Listing.TitleTooLong, uzunBaslik.Error.Code);
+        Assert.Equal(Listing.DescriptionTooLong, uzunAciklama.Error.Code);
     }
 
     /// <summary>Sınır LOCALE BAŞINA: üç dilde yazan galeri, tek dilde yazandan erken kesilmez.</summary>

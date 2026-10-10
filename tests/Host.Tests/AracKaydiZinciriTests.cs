@@ -208,38 +208,107 @@ public sealed class AracKaydiZinciriTests : IAsyncLifetime
     /// AC-5 — eksik gelen alan "dokunulmadı" DEĞİL geçersiz sayılır (C25). Ölçüm TEL
     /// ÜZERİNDE yapılıyor: gövdeden alan çıkarıldığında bağlayıcı varsayılan değer
     /// üretiyor ve kuralın orada da tuttuğunu yalnız bu seviye gösterebilir.
+    ///
+    /// <para><b>Çekirdek alanların HEPSİ tek tek çıkarılıyor.</b> Önceki hâli yalnız
+    /// `bodyType`'ı deniyordu — bir DİZE, yani boşa düşüp kendiliğinden reddedilen
+    /// alanlardan biri. Değer tipi olan `mileageKilometers` hiç denenmemişti ve tam
+    /// orada kural tutmuyordu: alan gövdede yokken `0` bağlanıyor, `0` geçerli bir
+    /// kilometre olduğu için istek kabul ediliyor ve araç kaydedilmiş kilometresini
+    /// SESSİZCE kaybediyordu. Bir alanın geçmesi diğerlerini garanti etmiyor.</para>
     /// </summary>
-    [Fact(DisplayName = "0010b/AC-5: Çekirdek alanlardan birini hiç göndermeyen düzenleme isteği reddedilir; eksik alan \"dokunulmadı\" sayılmaz (C25)")]
-    public async Task Reddedilir_CekirdekAlaniHicGondermeyenIstek()
+    [Theory(DisplayName = "0010b/AC-5: Çekirdek alanlardan birini hiç göndermeyen düzenleme isteği reddedilir; eksik alan \"dokunulmadı\" sayılmaz (C25)")]
+    [InlineData("branchId", "vehicle.branch_required", "branchId")]
+    [InlineData("vehicleModelId", "vehicle.reference_not_found", "vehicleModelId")]
+    [InlineData("bodyType", "vehicle.core_field_missing", "bodyType")]
+    // Üç slug tek bir `VehicleSpecification.Create` çağrısından geçiyor ve o çağrı
+    // hangisinin düştüğünü söylemiyor; istek reddediliyor (AC-5'in istediği bu) ama
+    // işaretlenen alan `fuelType` oluyor. `0010a`'dan devralınan davranış, burada
+    // yazılı tutuluyor.
+    [InlineData("fuelType", "vehicle.core_field_missing", "fuelType")]
+    [InlineData("transmissionType", "vehicle.core_field_missing", "fuelType")]
+    [InlineData("drivetrainType", "vehicle.core_field_missing", "fuelType")]
+    [InlineData("trimLevel", "vehicle.core_field_missing", "fuelType")]
+    [InlineData("color", "vehicle.core_field_missing", "color")]
+    [InlineData("modelYear", "vehicle.core_field_missing", "modelYear")]
+    [InlineData("mileageKilometers", "vehicle.core_field_missing", "mileageKilometers")]
+    [InlineData("priceAmount", "vehicle.core_field_missing", "price")]
+    // Şase çekirdek alandır ve gövdede taşınır (D24); gönderilmemesi saklanandan farklı
+    // bir şase göndermekle aynı kapıya çıkar.
+    [InlineData("vin", "vehicle.vin_immutable", "vin")]
+    public async Task Reddedilir_CekirdekAlaniHicGondermeyenIstek(
+        string eksikAlan,
+        string beklenenKod,
+        string beklenenAlan)
     {
         HttpClient client = await GirisYapmisIstemciAsync();
-        Guid id = await AracOlusturAsync(client, "EKSIKALAN0000001");
+        string vin = $"EKSIK{eksikAlan}00000000000"[..16].ToUpperInvariant();
+        Guid id = await AracOlusturAsync(client, vin);
 
-        // `bodyType` gövdede HİÇ YOK.
+        Dictionary<string, object> govdeAlanlari = new(StringComparer.Ordinal)
+        {
+            ["branchId"] = SeedSube,
+            ["vehicleModelId"] = SeedModel,
+            ["bodyType"] = "suv",
+            ["fuelType"] = "diesel",
+            ["transmissionType"] = "automatic",
+            ["drivetrainType"] = "front-wheel-drive",
+            ["trimLevel"] = "comfort",
+            ["color"] = new Dictionary<string, string> { ["tr"] = "Beyaz" },
+            ["modelYear"] = 2019,
+            ["mileageKilometers"] = 45_000,
+            ["priceAmount"] = 750_000m,
+            ["priceOnRequest"] = false,
+            ["vin"] = vin,
+        };
+
+        govdeAlanlari.Remove(eksikAlan);
+
         HttpResponseMessage yanit = await client.PutAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/vehicles/{id}",
+            govdeAlanlari);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, yanit.StatusCode);
+
+        using JsonDocument govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync());
+
+        Assert.Equal(beklenenKod, govde.RootElement.GetProperty("errorCode").GetString());
+        Assert.Equal(beklenenAlan, govde.RootElement.GetProperty("field").GetString());
+    }
+
+    /// <summary>
+    /// AC-5'in en pahalı hâli: istek reddedilmezse araç SAKLANMIŞ değerini kaybeder.
+    /// Kilometre geçmişi yok — fiyatın aksine geri alınacak bir kayıt da yok.
+    /// </summary>
+    [Fact(DisplayName = "0010b/AC-5: Çekirdek alanlardan birini hiç göndermeyen düzenleme isteği reddedilir; eksik alan \"dokunulmadı\" sayılmaz (C25)")]
+    public async Task Korur_KilometreyiReddedilenIstekte()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+        Guid id = await AracOlusturAsync(client, "KMKORUMA00000001");
+
+        await client.PutAsJsonAsync(
             $"{AdminSurface.RoutePrefix}/vehicles/{id}",
             new
             {
                 branchId = SeedSube,
                 vehicleModelId = SeedModel,
+                bodyType = "suv",
                 fuelType = "diesel",
                 transmissionType = "automatic",
                 drivetrainType = "front-wheel-drive",
                 trimLevel = "comfort",
                 color = new Dictionary<string, string> { ["tr"] = "Beyaz" },
                 modelYear = 2019,
-                mileageKilometers = 45_000,
+                // `mileageKilometers` gövdede HİÇ YOK.
                 priceAmount = 750_000m,
                 priceOnRequest = false,
-                vin = "EKSIKALAN0000001",
+                vin = "KMKORUMA00000001",
             });
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, yanit.StatusCode);
+        PagedResult<VehicleAdminListItemDto>? liste = await client
+            .GetFromJsonAsync<PagedResult<VehicleAdminListItemDto>>(
+                $"{AdminSurface.RoutePrefix}/vehicles?locale=tr&pageSize=100&sort=recently-added");
 
-        using JsonDocument govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync());
-
-        Assert.Equal("vehicle.core_field_missing", govde.RootElement.GetProperty("errorCode").GetString());
-        Assert.Equal("bodyType", govde.RootElement.GetProperty("field").GetString());
+        Assert.Equal(45_000, liste!.Items.Single(item => item.VehicleId == id).MileageKilometers);
     }
 
     [Fact(DisplayName = "0010b/AC-2: Kaydedilmiş bir araç düzenlenir ve değişiklik listede görünür")]
