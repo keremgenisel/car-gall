@@ -2,23 +2,26 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
-| **Sahip** | — |
+| **Durum** | Onaylandı |
+| **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `Media` (yeni — bugün tek bir olay dosyası) |
+| **Modül(ler)** | `Media` (yeni) · `VehicleCatalog` (yalnız **D2**'nin alıcı düzeltmesi) |
 | **Bağımlı spec'ler** | `0010a` (araç kaydı — Onaylandı). `0012` bu spec'i **bekler**. |
 | **Dayanak** | ADR 0003 Ek 1, sıra #4 |
-| **Karar bekliyor** | **S1, S2, S3, S5** — § Açık sorular (4 soru, öneriler yazılı). **S4, D7 ile kapandı.** Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
-| **Verilen kararlar** | **D1–D12** (2026-10-10) — § Context. CLARIFY turunun on iki boşluğu karara bağlandı; kriterler hâlâ S1/S2/S3/S5'i bekliyor. |
+| **Verilen kararlar** | **D1–D26** (2026-10-10). **D1–D12** CLARIFY turunun boşlukları; **D13–D16** açık soruların (S1, S2, S3, S5) cevabı; **D17–D26** uygulama planı turunda **ölçülerek** çıktı. Açık soru kalmadı. |
 
-> **Bu bir Analist taslağıdır.** Intent, Requirements, Constraints ve Context doğrulanmış
-> bilgiden yazıldı. **Kabul kriterleri hâlâ yazılmadı** — ve bu bilinçli: **S1** (türev ve
-> filigran tarayıcıda mı sunucuda mı üretilir) neredeyse her kriterin metnini değiştirir.
-> Cevaplar gelmeden spec onaya sunulmaz.
+> **R/C/AC bu PR'da `main`'e giriyor ve orada donuyor** (ADR `0008` / K2, `docs/git.md` § 1).
+> Bu commit'ten sonra Requirements, Constraints veya Acceptance Criteria'da yapılan her
+> değişiklik **sayılan bir revizyondur** ve kendi commit'ine girer.
 >
-> **2026-10-10 CLARIFY turu:** on iki boşluk daha bulundu ve **D1–D12** olarak karara
-> bağlandı. Bu kararlar R12–R18, C5'in düzeltilmesi, C11–C14 ve X7–X8'i üretti; dördü
-> bir kusuru kapattı, dördü yazılamayan bir kriteri yazılabilir hâle getirdi.
+> **İki tur birikti.** 2026-10-10 **CLARIFY** turu on iki boşluk buldu (**D1–D12**) ve
+> R12–R18, C5'in düzeltilmesi, C11–C14 ile X7–X8'i üretti — ama kabul kriterlerini
+> **bilerek yazmadı**, çünkü dört soru (S1, S2, S3, S5) onların metnini belirliyordu. Aynı
+> gün **uygulama planı** turu o dört soruyu karara bağladı (**D13–D16**), on karar daha
+> ölçerek ekledi (**D17–D26**) ve kriterleri yazdı.
+>
+> **D1–D12 ve § Doğrulanmış bulgular CLARIFY turundan birebir korunuyor.** Hiçbir ölçüm
+> yeniden yazılmadı.
 
 ---
 
@@ -123,6 +126,9 @@ alınmasının önündeki medya engeli kalkar.**
   **yapılandırılan değeri** doğrular, spec'e kopyalanmış bir sabiti değil. Sert kodlanmış
   bir sınır, yapılandırma değiştiği gün yalan söyler. → **D4**, `0006` C20 · `0009` C9
   kalıbı.
+- **C15.** `Media` outbox yazıcısını **konkret tip** olarak kaydeder, paylaşılan
+  `IOutboxWriter` arayüzü olarak **değil**. Bir modülün olayı başka modülün outbox
+  tablosuna yazılamaz. → Yasak Listesi 16, **D26**.
 
 ### KAPSAM DIŞI
 
@@ -304,31 +310,147 @@ Takım Yöneticisi, 2026-10-10. CLARIFY turunun on iki boşluğu.
   şablonun sorduğu şey olmaz. *Ayrı iş:* diğer dokuz açık spec'in kartı da eski biçimde ve
   ayrı bir `docs/` turuyla yenilenir.
 
+#### Uygulama planı turu — D13–D26 (2026-10-10)
+
+Takım Yöneticisi, aynı gün. **D13–D16** CLARIFY turunun bıraktığı dört açık sorunun
+cevabı; **D17–D26** uygulama planı yazılırken **ölçülerek** çıktı — hiçbiri çıkarım değil.
+
+- **D13 (S1) — Türevler ve filigran SUNUCUDA üretilir.** *Gerekçe:* filigranı istemcide
+  uygulamak onu **atlanabilir** kılar ve *"R2'ye yalnızca bu sürümler yazılır"* bir
+  garantidir; garanti istemciye bırakılamaz. Türev boyutları politika değişikliğiyle
+  değişir ve o gün tüm istemcilerin güncel olması beklenemez. *Bedel:* sunucu CPU'su ve
+  asenkron bir hat; yükleme anında görsel hazır olmaz — R6'nın durumu bu yüzden zorunlu.
+  Hattın bir turu **sınırlıdır** (en fazla 20 varlık, `OutboxDispatchOptions.BatchSize`
+  ile aynı gerekçe): sınırsız bir döngü, sahiplenme kilidinin doğruluğuna bağımlı kalırdı.
+  **Bu sınır bir sondayla bulundu** — kilidi kasten bozduğumda tur hiç bitmedi.
+- **D14 (S2) — Orijinal SAKLANIR.** `docs/` kazanır (`AGENTS.md` açılış kuralı).
+  *Gerekçe:* filigran politikası, boyut kümesi veya kalite ayarı değişirse türevler
+  yeniden üretilebilir olmalı; orijinal atılırsa o kapı kalıcı olarak kapanır. **D9'un
+  ikinci yarısı bu kararla ayakta kalıyor** (orijinal herkese açık sunulmaz, R18) ve nasıl
+  saklandığı **D20**'de. *Bedel:* depolama maliyeti artar ve — açıkça kabul ediliyor —
+  aracın durduğu adresin koordinatı ham baytta, yani **bizim depomuzda** yaşar; bir veri
+  silme akışı yazıldığında orijinalleri de kapsamak zorundadır.
+- **D15 (S3) — `MediaAssetFailed` eklenir ve bu spec yayar.** Gövdesi **D8**'in kapalı
+  sebep kümesi (R15). *Gerekçe:* `VehicleCatalog` fotoğrafı bekleyen aracı "eksik bilgi"
+  olarak işaretleyebilsin; aksi hâlde başarısızlık yalnızca `Media` içinde bilinir.
+  *Bedel:* yok — tüketicisi bu spec'te zorunlu değil (**D2** yalnız `MediaAssetReady`'nin
+  alıcısını düzeltiyor).
+- **D16 (S5) — `alt` metni ALANI tutulur; girişi `0012`'de.** `0011` bu alan için **hiç
+  HTTP yazma ucu açmaz**. *Gerekçe:* `alt` metni araç bağlamında anlamlı ("beyaz BMW 320i,
+  önden"); yükleme anında personel o bağlamı kurmamıştır. *Bedel:* `0012` bitene kadar
+  `alt` boş kalır ve `docs/frontend.md` § 7'nin erişilebilirlik tabanı o aralıkta eksik.
+- **D17 — Görüntü işleme bir PORTUN arkasında; kütüphane LİSANSI ölçülerek seçilir.**
+  `IImageProcessor` `Application`'da, uygulaması `Infrastructure`'da. *Gerekçe:* en yaygın
+  seçenek ImageSharp, v3'ten beri "Six Labors Split License" taşıyor — açık kaynakta ve
+  cirosu eşiğin altındaki şirkette Apache-2.0, **diğer her kullanımda ticari lisans**. Bu
+  ürün white-label, galeriye satılan ticari bir kurulum. Lisans bedelini hattın içine
+  gömmek, ürün satıldığı gün doğan bir yükümlülüktür ve o gün kütüphaneyi değiştirmek
+  bütün hattı yeniden yazmak demektir. *Ölçüldü (NuGet lisans alanları, 2026-10-10):*
+  SkiaSharp **MIT**, SkiaSharp.NativeAssets.Linux **MIT**, Magick.NET-Q8-AnyCPU
+  **Apache-2.0** (yedek); SixLabors.ImageSharp'ın lisans alanı bir SPDX ifadesi **değil**,
+  özel bir metin. **Seçilen: SkiaSharp.** *Bedel:* port bir dolaylılık katmanı ve bugün
+  tek uygulaması var.
+- **D18 — EXIF yönlendirmesi PİKSELE uygulanır, sonra metadata atılır.** Hat sırası: oku →
+  yönlendirmeyi piksele uygula → ölçekle → filigranı bas → metadata'sız encode et.
+  *Ölçüldü:* `SKBitmap.Decode` EXIF yönlendirmesini **uygulamıyor** — 600×900 dikey bir
+  fotoğraf 600×900 olarak çözülüyor ve etiket atıldığında görsel **yan yatmış** kalıyor.
+  Yani yalnız *"EXIF'i temizle"* yazan bir hat R5'i karşılar ve **kullanılamaz** çıktı
+  üretir. Tuzak 4 silmeyi söylüyordu; silmenin kendisi bu ikinci tuzağı doğuruyor.
+  *Sonuç:* kriter ikiye bölünür — metadata'nın yokluğu ve **yönün doğruluğu** ayrı ayrı
+  ölçülür, çünkü "EXIF yok" testi yan yatmış bir görselde de yeşil verir.
+- **D19 — Orijinal İSTEK İÇİNDE depoya yazılır; uç `202` döner.** Sıra: doğrula → orijinali
+  yaz → kaydı `yüklendi` aç → `202`. *Gerekçe:* işleme asenkron olduğu için (D13) yanıt
+  dönerken dosyanın dayanıklı bir yerde olması gerekir; süreç o an düşerse kaybolmaz.
+  Orijinal D14 gereği zaten saklanıyor, bu yüzden ek maliyet değil. `201` dönmek "kaynak
+  hazır" demekti ve türevler henüz yok. *Elenen alternatif:* baytları veritabanında tutup
+  sonra taşımak — megabaytları Postgres'e sokar ve aynı dosyayı iki kez saklar.
+- **D20 — Depolama yolu düzeni: `public/` ve `private/` önekleri.**
+  `public/assets/{kimlik}/{etiket}.webp` ve `private/originals/{kimlik}.{uzantı}`. CDN
+  **yalnız** `public/` önekine bağlanır; erişim yolu üretimi public olmayan bir anahtarı
+  **reddeder** — sessizce `null` dönmez, patlar. *Gerekçe:* R18'i bir konvansiyon olarak
+  değil **kod seviyesinde** dayatıyor. D9'un ikinci yarısı ancak böyle ölçülebilir hâle
+  geliyor ve D12'nin deterministik yol kuralını da karşılıyor. *Bedel:* yeniden üretim
+  orijinali okuyan iç bir yol gerektirir (D9'un yazdığı bedel).
+- **D21 — `İşleme Durumu` sözlüğe girer.** R6 sözlükte olmayan bir terim getiriyor:
+  `docs/domain.md` § 1'de `Medya Varlığı` ve `Kapak Görseli` var, **işleme durumu yok**. Bu
+  spec sözlüğe bir satır ekler (`İşleme Durumu | MediaProcessingStatus`) ve geçişleri
+  § 2.10'a (M1–M3) yazar — A3'ün ilan durumları gibi. *Gerekçe:* `docs/conventions.md` § 2
+  terimin koda girmeden önce sözlüğe girmesini istiyor; DoD'un *"yeni domain terimi yok"*
+  kutusunu öyle işaretlemek yanlış olurdu. M1, **D6** uyarınca `başarısız`ı terminal
+  **saymaz**. *Bedel:* paylaşılan bir doküman değişir.
+- **D22 — Yükleme ucu gövdeyi `HttpRequest` olarak bağlar, `IFormFile` olarak DEĞİL.**
+  *Ölçüldü:* `IFormFile` parametresi uca `multipart/form-data` kabul meta verisi ekliyor ve
+  o meta verinin `415` kısa devresi **yetkilendirmeden ÖNCE** koşuyor — oturumsuz bir istek
+  JSON gövdeyle `415`, multipart gövdeyle `401` alıyordu. Yani yönetim kökü altındaki bir
+  uç, oturumu olmayan birine kendi varlığını ve beklediği içerik tipini söylüyordu ve
+  `0006`/C18'in rota TARAYAN testi bunu kırdı. *Karar:* `HttpRequest` bağlanır, kabul meta
+  verisi hiç oluşmaz, içerik tipi denetimi oturum doğrulandıktan **sonraya** taşınır.
+  *Gerekçe:* testi gevşetmek yerine ucu düzeltmek, kuralı bir sonraki panel için de ayakta
+  tutar. *Bedel:* `IFormFile`'ın bildirimsel bağlaması ve OpenAPI meta verisi elle yazılır.
+- **D23 — Tür kümesi yapılandırmadan gelir (C14) AMA SVG koddan reddedilir.**
+  Yapılandırma yalnız **JPEG / PNG / WebP** arasından seçebilir; `image/svg+xml`
+  yapılandırmayla **açılamaz** ve tanınır-reddedilir (`Unknown` sayılmaz, çünkü o zaman
+  neden reddedildiği logdan okunamaz). *Gerekçe:* SVG aynı origin'de script çalıştırır ve
+  bu depo o tuzağa `Program.cs`'in seed ucunda bir kez bakıp yüzeyi kapatmış. **Bir
+  yapılandırma satırıyla geri açılabilen güvenlik kararı, verilmemiş karardır.** C14'ün
+  istediği şey (sınırın yapılandırılabilir ve kriterin yapılandırılan değeri doğrulaması)
+  korunuyor; daraltılan yalnız kümenin **üst sınırı**. *Bedel:* galeri bir gün başka bir
+  raster formatı isterse kod değişir — ve bu, bir sözleşme değişikliği olarak görünür olur.
+- **D24 — Test ikizi LocalStack'in S3'ü, MinIO DEĞİL.** C11'in istediği gözlem noktası
+  korunuyor: depolama bir port, ve **gerçek** bir nesne deposu servisine karşı koşan
+  testler var. *Ölçüldü:* `Testcontainers.Minio` 4.15.0 paketi var (MIT) ama imajı anonim
+  olarak **çekilemiyor** — `pull access denied for minio/minio, repository does not
+  exist`. Bu bir Docker Hub erişim sorunu değil: aynı makinede `alpine:3.20` sorunsuz indi
+  ve `quay.io/minio/minio` 401 döndü. Çekilemeyen bir imaja bağlı test CI'da yazı turadır.
+  LocalStack'in gidiş-dönüşü ölçüldü: kova, PUT, GET'te bayt ve `Content-Type` birebir,
+  olmayan nesnede 404. **C3'ün ÜRETİM kararı değişmedi** (`S3-uyumlu (R2/MinIO) + CDN`);
+  değişen yalnız geliştirme ve test ikizi. *Bedel:* LocalStack imajı büyük ve testler iki
+  konteyner açıyor; CI süresi artar.
+- **D25 — Yükleme ucuna hız sınırı KONMAZ.** *Gerekçe:* uç oturum arkasında ve kullanıcısı
+  galeri personeli; D4'ün piksel bütçesi asıl CPU riskini zaten kesiyor. Oturumlu bir uca
+  sınır koymak, X5'in toplu yüklemesini baştan engeller ve kapsamı genişletir. *Bedel:*
+  tek bir personel hesabı, art arda yüklemeyle hattı meşgul edebilir — kötü niyet değil,
+  kapasite sorunu; ölçülürse ayrı bir karardır.
+- **D26 — `Media` outbox yazıcısını KONKRET tip olarak kaydeder** (C15). *Ölçüldü ve bu bir
+  kırılmanın bedeliydi:* `IOutboxWriter` non-generic bir arayüz ve dört modül onu kendi
+  `DbContext`'iyle kaydediyor; DI'da **son kayıt kazanıyor**. `AddMedia` Host'ta
+  `AddLeads`'ten sonra çağrıldığı için `Leads`'in yazıcısı `Media`'nın oldu: `LeadCaptured`
+  olayı `media` şemasının outbox'ına yazıldı, `Leads`'in dağıtıcısı kendi tablosunda
+  hiçbir şey bulamadı ve **bildirim zinciri sessizce durdu** — `TalepBildirimiZinciriTests`
+  30 saniye bekleyip **0** kayıt gördü. *Karar:* konkret tip kaydı ve bunu koruyan bir
+  mimari kapı. *Ayrı iş — kapsam dışı:* aynı tuzak `Dealership` ve `Identity`'de de
+  duruyor (ölçüldü: temiz `main`'de `IOutboxWriter` → `OutboxWriter<LeadsDbContext>`, üç
+  kayıt). Kapı bilinçli olarak yalnız `Media`'ya bakıyor; dört modülü kapsayan bir kapı
+  ilk koşuda kırmızı verir ve ADR `0008`/K8 tam olarak bunu tartışıyor.
+
 ---
 
-## Açık sorular
+## Açık sorular — **hepsi kapandı**
 
-**S1. Türevler ve filigran nerede üretilir — tarayıcıda mı sunucuda mı?**
+> Dördü de 2026-10-10'da karara bağlandı (**D13–D16**); S4 CLARIFY turunda **D7** ile
+> kapanmıştı. Soru metinleri ve gerekçeler **korunuyor** — gerekçe izi silinmez.
+
+**S1. Türevler ve filigran nerede üretilir — tarayıcıda mı sunucuda mı?** — ✅ **KAPANDI: D13** (2026-10-10)
 Mockup "tarayıcıda küçültülür" diyor.
-*Öneri:* **sunucuda.**
+*Öneri (kabul edildi):* **sunucuda.**
 *Gerekçe:* filigranı istemcide uygulamak onu **atlanabilir** kılar; "R2'ye yalnızca bu
 sürümler yazılır" garantisi istemciye bırakılamaz. Ayrıca türev boyutları politika
 değişikliğiyle değişir ve o gün tüm istemcilerin güncel olması beklenemez.
 *Bedel:* sunucu CPU'su ve asenkron bir işleme hattı gerekir; yükleme anında görsel hazır
 olmaz — R6'nın işleme durumu bu yüzden zorunlu.
 
-**S2. Orijinal dosya saklanır mı?**
+**S2. Orijinal dosya saklanır mı?** — ✅ **KAPANDI: D14** (2026-10-10)
 Mockup "R2'ye **yalnızca** bu sürümler yazılır" diyor; `docs/architecture.md` § 1 ise
 "**orijinal + türevler**" diyor. Çelişki var.
-*Öneri:* **orijinal saklanır** (`docs/` kazanır — `AGENTS.md` açılış kuralı).
+*Öneri (kabul edildi):* **orijinal saklanır** (`docs/` kazanır — `AGENTS.md` açılış kuralı).
 *Gerekçe:* filigran politikası, boyut kümesi veya kalite ayarı değişirse türevler yeniden
 üretilebilir olmalı; orijinal atılırsa o kapı kalıcı olarak kapanır.
 *Bedel:* depolama maliyeti belirgin biçimde artar (orijinaller türevlerin toplamından büyük
 olur). İsterseniz orijinali "soğuk" saklama sınıfına koymak ayrı bir karardır.
 
-**S3. `MediaAssetFailed` sözleşmesi eklenecek mi?**
+**S3. `MediaAssetFailed` sözleşmesi eklenecek mi?** — ✅ **KAPANDI: D15** (2026-10-10)
 Olay akışında yazılı, kodda yok.
-*Öneri:* eklenir ve bu spec yayar (R8).
+*Öneri (kabul edildi):* eklenir ve bu spec yayar (R8).
 *Gerekçe:* `VehicleCatalog` fotoğrafı bekleyen aracı "eksik bilgi" olarak işaretleyebilsin;
 aksi hâlde başarısızlık yalnızca `Media` içinde bilinir.
 *Bedel:* yok — tüketicisi bu spec'te zorunlu değil.
@@ -345,9 +467,10 @@ gerekçeyle: iki atlamalı senkron zincir yasak.
 *Bedel değişmedi:* logo değiştiğinde **eski türevler eski filigranı taşımaya devam eder**;
 yeniden üretim ayrı bir iştir.
 
-**S5. `alt` metnini kim, nerede yazar?**
-*Öneri:* bu spec `alt` metni **alanını** tutar (R9) ama panel girişi yapmaz; giriş `0012`
-ile, fotoğrafın araca bağlandığı ekranda gelir.
+**S5. `alt` metnini kim, nerede yazar?** — ✅ **KAPANDI: D16** (2026-10-10)
+*Öneri (kabul edildi):* bu spec `alt` metni **alanını** tutar (R9) ama panel girişi yapmaz;
+giriş `0012` ile, fotoğrafın araca bağlandığı ekranda gelir. **`0011` `alt` metni için hiç
+HTTP yazma ucu açmaz.**
 *Gerekçe:* `alt` metni araç bağlamında anlamlı ("beyaz BMW 320i, önden"); medya yükleme
 anında personel o bağlamı henüz kurmamıştır.
 *Bedel:* `0012` bitene kadar `alt` metni boş kalır ve `docs/frontend.md` § 7'nin
@@ -358,29 +481,92 @@ personeli her fotoğrafta üç dilde metin yazmaya zorlar ve yükleme akışın�
 
 ## Acceptance Criteria
 
-> **Hâlâ yazılmadı — ve bu bilinçli.** Dört açık soru (**S1, S2, S3, S5**) kriterlerin
-> metnini belirliyor; en pahalısı **S1**: türev ve filigran tarayıcıda mı sunucuda mı
-> üretilir. Cevap "tarayıcıda" olursa yükleme, türev, filigran ve EXIF kriterlerinin dördü
-> de başka bir şeyi ölçer. CLARIFY turu kriterleri yazmadı; **yazılabilir hâle getirdi.**
->
-> **D1–D12 neyi çözdü:** reddetmenin durum kodu ve tür kümesi artık tanımlı (D4, R12–R13);
-> işleme durumunun geçişleri ve terminal olmayışı yazılı (D6, R16); duyurunun gövdesi
-> belirli (D3 · D8, R14–R15); depolamanın ve duyurunun **gözlem noktası** sabit (D5 · D2,
-> C11); filigran kaynağı döngüsel değil (D7, C13); işlemenin idempotentliği kurala bağlı
-> (D10, C12).
->
-> **Kriterler yazıldığında en az şu kümeleri kapsayacak:** yükleme ve reddetme (`415` · `413`
-> ayrı ayrı) · işleme durumu geçişleri ve tekrar deneme · türev üretimi, boyut kümesi ve
-> **her türevin genişlik/yüksekliği** · filigran · EXIF temizliği **ve orijinalin açık
-> sunulmaması** · hazır/başarısız duyuruları, gövdeleri ve idempotentlik · **duyurunun
-> dağıtıcı üzerinden alıcıya ulaşması** · locale başına `alt` metni · depolama yolu ve CDN ·
-> yapılandırma eksikliğinde ayağa kalkmama (hem S3 anahtarı hem filigran yolu).
+Kırk yedi kriter, on grupta. CLARIFY turunun saydığı on kümeyi ve D1–D26'yı kapsar.
+Yapılandırmadan gelen her değer için kriter **yapılandırılan değeri** doğrular, spec'e
+kopyalanmış bir sabiti değil (C14).
+
+### A. Yükleme ve reddetme
+
+- **AC-1.** Oturum açmış personel bir görsel yükler; yanıt varlığın kimliğini ve işleme durumunu taşır.
+- **AC-2.** Oturumu olmayan biri görsel yükleyemez; istek **içerik tipinden bağımsız olarak** reddedilir.
+- **AC-3.** Yapılandırılan tür kümesinde olmayan bir dosya `415` ile reddedilir ve varlık kaydı oluşmaz.
+- **AC-4.** Dosyanın türü içeriğinden belirlenir; `image/jpeg` adıyla gönderilen bir SVG reddedilir.
+- **AC-5.** Yapılandırmaya SVG eklenemez; eklenmişse uygulama ayağa kalkmaz.
+- **AC-6.** Yapılandırılan boyut sınırını aşan dosya `413` ile reddedilir ve varlık kaydı oluşmaz.
+- **AC-7.** Yapılandırılan piksel bütçesini aşan dosya reddedilir ve varlık kaydı oluşmaz.
+- **AC-8.** Reddedilen istek çevrilmiş metin değil `errorCode` döner.
+- **AC-9.** Kabul edilen tür kümesi ve boyut sınırı yapılandırmadan okunur; koda gömülü bir sabit yoktur.
+
+### B. İşleme durumu ve tekrar deneme
+
+- **AC-10.** Yüklenen varlık `yüklendi` durumunda, depolama yolu ve kimliğiyle kaydedilir.
+- **AC-11.** İşleme başladığında durum `işleniyor`, başarıyla bittiğinde `hazır` olur.
+- **AC-12.** Tanımlı olmayan durum geçişi yapılamaz.
+- **AC-13.** İşleme başarısız olduğunda durum `başarısız` olur; varlık `yüklendi` durumunda kalmaz.
+- **AC-14.** `başarısız` terminal değildir: tekrar deneme ayrı bir komutla tetiklenir ve aynı varlık kimliğini korur.
+- **AC-15.** Tekrar deneme otomatik tetiklenmez; komut çağrılmadan durum kendiliğinden değişmez.
+- **AC-16.** Bir işleme turu, başka bir turun sahiplendiği varlığı yeniden işlemez.
+
+### C. Türev üretimi
+
+- **AC-17.** Hazır varlık 1600 / 800 / 400 piksel genişlikte üç WebP türev taşır.
+- **AC-18.** Kaynak görsel bir türev genişliğinden küçükse o türev kaynaktan büyütülmez.
+- **AC-19.** Her türev kendi depolama yolunda durur ve yol `(varlık kimliği, etiket)`'ten deterministik üretilir.
+- **AC-20.** "Hazır" damgasından önce kesilen bir koşu, ikinci turda kopya dosya üretmez.
+
+### D. Filigran
+
+- **AC-21.** Üç türevin hepsinde filigran bulunur.
+- **AC-22.** Filigran kaynağı yapılandırmadan bir dosya yolu olarak gelir; `Media` bunun için başka bir modülü çağırmaz.
+- **AC-23.** Filigran kaynağı erişilemezse varlık `başarısız` olur; filigransız türev üretilmez.
+
+### E. EXIF ve orijinal
+
+- **AC-24.** Yüklenen görselin konum ve cihaz bilgisi türevlerde bulunmaz.
+- **AC-25.** EXIF yönlendirme etiketi taşıyan görselin türevi doğru yönde üretilir.
+- **AC-26.** Orijinal dosya işleme bittikten sonra da depoda durur.
+- **AC-27.** Orijinal dosya herkese açık sunulmaz; onun için erişim yolu üretilemez.
+
+### F. Duyurular, gövdeleri ve idempotentlik
+
+- **AC-28.** Varlık hazır olduğunda `MediaAssetReady` yayılır; duyuru varlığın kimliğini taşır.
+- **AC-29.** Hazır duyurusu **türev kümesini** taşır: her türev için etiket, erişim yolu, genişlik ve yükseklik.
+- **AC-30.** Duyuru, iş verisiyle aynı transaction'da outbox'a yazılır.
+- **AC-31.** Aynı varlık için ikinci bir duyuru oluşmaz.
+- **AC-32.** İşleme başarısız olduğunda `MediaAssetFailed` yayılır.
+- **AC-33.** Başarısızlık duyurusunun sebebi kapalı bir kümedendir; serbest metin veya çevrilmiş metin taşımaz.
+- **AC-34.** `MediaAssetReady` ve `MediaAssetFailed`'in şekli kırılmaz.
+- **AC-35.** `Media`'nın olayı başka bir modülün outbox tablosuna yazılmaz.
+
+### G. Duyurunun alıcıya ulaşması
+
+- **AC-36.** `MediaAssetReadyHandler` `IIntegrationEventHandler<MediaAssetReady>`'i uygular ve DI'ya kayıtlıdır.
+- **AC-37.** Duyuru, arka plan dağıtıcısı üzerinden alıcıya ulaşır; elle handler çağıran bir test bunun yerine geçmez.
+
+### H. `alt` metni
+
+- **AC-38.** Bir varlık etkin her locale için ayrı `alt` metni taşıyabilir.
+- **AC-39.** `alt` metni boş olan bir varlık yine hazır olabilir.
+
+### I. Depolama, CDN ve okuma yüzeyi
+
+- **AC-40.** Türevin erişim yolu yapılandırılan taban adresten üretilir.
+- **AC-41.** Türev, S3 uyumlu sağlayıcıya yazılır ve oradan okunabilir.
+- **AC-42.** `Media`, bir varlık kümesinin hazır olup olmadığını yanıtlayan bir okuma yüzeyi sunar.
+
+### J. Yapılandırma ve sınır
+
+- **AC-43.** Depolama kimlik bilgileri eksikken uygulama ayağa kalkmaz.
+- **AC-44.** Erişim taban adresi eksikken uygulama ayağa kalkmaz.
+- **AC-45.** Filigran kaynağı yapılandırılmamışken uygulama ayağa kalkmaz.
+- **AC-46.** `media` migration'ı yalnızca `media` şemasına dokunur.
+- **AC-47.** `Media` hiçbir modüle senkron çağrı yapmaz ve başka modülün tablosuna veya dosya deposuna erişmez.
 
 ---
 
 ## Definition of Done
 
-- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
+- [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi (D1–D12 CLARIFY turu, D13–D26 uygulama planı turu; S1–S5'in beşi de kapandı).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T4 --> Mimari testler yeşil — `Media` başka modülün tablosuna veya deposuna
