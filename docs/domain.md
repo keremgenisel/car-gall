@@ -40,6 +40,7 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Parça Haritası** | `PaintChangeMap` | 13 parçanın orijinal / boyalı / değişen durumu. Opsiyonel alan. |
 | **Alan Ayarı** | `VehicleFormSettings` | Hangi opsiyonel alanın açık/zorunlu ve public olduğunu belirleyen tekil ayar. |
 | **Medya Varlığı** | `MediaAsset` | Yüklenmiş ve işlenmiş görsel/video. Sahipsizdir; araca `VehicleCatalog` bağlar. |
+| **İşleme Durumu** | `MediaProcessingStatus` | Bir medya varlığının hat üzerindeki hâli: `Yüklendi` · `İşleniyor` · `Hazır` · `Başarısız`. Kod saklanır, uçta çevrilir. |
 | **Kapak Görseli** | `CoverAsset` | İlanın listede görünen ilk görseli. Sıralı medya listesinin ilk elemanı. |
 | **Donanım Paketi** | `TrimLevel` | Bir modelin donanım seviyesi. Referans veridir; `VehicleReference` besler. |
 | **Yakıt** | `FuelType` | Aracın yakıt türü. Referans veridir; kapalı kümedir ve locale başına çevrilir. |
@@ -259,6 +260,31 @@ KWD/BHD/JOD/OMR **üç ondalıklıdır**; saklama `decimal(19,4)`.
 
 **P4.** "Fiyat sorunuz" ayrı bir durumdur, `0` değildir. Fiyatı olmayan araç sıralamada
 fiyat filtresine takılmaz.
+
+---
+
+### 2.10 Medya
+
+**M1.** Bir medya varlığının **işleme durumu** vardır ve geçişler şunlardır — başka geçiş
+yoktur:
+```
+Yüklendi   → İşleniyor
+İşleniyor  → Hazır
+İşleniyor  → Başarısız
+Başarısız  → Yüklendi        (AÇIK bir tekrar deneme komutuyla; otomatik değil)
+Hazır      → (terminal)
+```
+
+**`Başarısız` terminal DEĞİLDİR.** Tekrar deneme ayrı bir komutla tetiklenir ve **aynı
+varlık kimliğini korur** — yeni bir kimlik, `VehicleCatalog`'un tuttuğu referansı öksüz
+bırakır. Otomatik tekrar bilinçli olarak yok: `0009`'un kaçan hatası otomatik tekrarın
+kuyruğu sessizce tıkamasıydı.
+
+**M2.** **Medya sahipsizdir.** Bir varlığın hangi araca ait olduğu `Media`'da tutulmaz;
+`VehicleCatalog`'un sıralı medya listesinde durur.
+
+**M3.** Yalnız **`Hazır`** durumdaki varlık A2'nin yayın şartını karşılar. `İşleniyor` bir
+varlık aracı yayına yetiştirmez.
 
 ---
 
