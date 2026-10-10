@@ -1,3 +1,4 @@
+import type { UpdateVehicleRequest, VehicleAdminDetail } from '../../../shared/api/types'
 import { catalogKeys } from '../../../shared/i18n/i18n'
 import type { AppLocale } from '../../../shared/lib/locale'
 
@@ -106,4 +107,144 @@ export function firstMissingCoreField(values: VehicleFormValues): string | null 
 
   // P4 — "fiyat sorunuz" tutarı olmayan AYRI bir durumdur; işaretli değilse tutar gerekir.
   return !values.priceOnRequest && values.priceAmount.trim() === '' ? 'price' : null
+}
+
+/**
+ * Düzenleme formunun değerleri (0010b R1).
+ *
+ * <p>İlan metni ve opsiyonel değerler SÖZLÜK olarak tutuluyor: etkin dil sayısı ve alan
+ * kümesi kurulumdan geliyor, formda sabit alan listesi yok.</p>
+ */
+export interface VehicleEditValues extends VehicleFormValues {
+  /** locale → başlık. Her etkin dil için bir anahtar; boş dize "yazılmadı" demek. */
+  readonly listingTitle: Readonly<Record<string, string>>
+  readonly listingDescription: Readonly<Record<string, string>>
+  /** fieldKey → ham değer. Locale'li alanlar `locale|değer` değil, ayrı sözlükte. */
+  readonly optionalValues: Readonly<Record<string, string>>
+  readonly optionalLocalizedValues: Readonly<Record<string, Readonly<Record<string, string>>>>
+}
+
+/**
+ * Sunucudan gelen kaydı form değerlerine çevirir.
+ *
+ * <p><b>Sayılar metne çevriliyor</b> çünkü form alanları metin taşır; geri dönüşte
+ * `Number` ile ayrıştırılıyor. Tutar sunucudan ZATEN para biriminin ondalık ölçeğiyle
+ * geliyor (`9900.00`), yani personel gördüğü değeri olduğu gibi geri gönderiyor.</p>
+ */
+export function toEditValues(
+  detail: VehicleAdminDetail,
+  enabledLocales: readonly string[],
+): VehicleEditValues {
+  const optionalValues: Record<string, string> = {}
+  const optionalLocalizedValues: Record<string, Record<string, string>> = {}
+
+  for (const item of detail.optionalValues) {
+    if (item.values !== null) {
+      optionalLocalizedValues[item.fieldKey] = { ...item.values }
+    } else if (item.value !== null) {
+      optionalValues[item.fieldKey] = item.value
+    }
+  }
+
+  return {
+    branchId: detail.branchId,
+    vehicleModelId: detail.vehicleModelId,
+    bodyType: detail.bodyType,
+    fuelType: detail.fuelType,
+    transmissionType: detail.transmissionType,
+    drivetrainType: detail.drivetrainType,
+    trimLevel: detail.trimLevel,
+    // Renk çok dilli; form personelin KENDİ dilini düzenletiyor, kalanı korunuyor.
+    color: '',
+    modelYear: String(detail.modelYear),
+    mileageKilometers: String(detail.mileageKilometers),
+    priceAmount: detail.price.amount === null ? '' : String(detail.price.amount),
+    priceOnRequest: detail.price.onRequest,
+    vin: detail.vin,
+    listingTitle: fillLocales(detail.listingTitle, enabledLocales),
+    listingDescription: fillLocales(detail.listingDescription, enabledLocales),
+    optionalValues,
+    optionalLocalizedValues,
+  }
+}
+
+/** Etkin her dil için bir anahtar: formda üç kutu da basılmalı (R10). */
+function fillLocales(
+  values: Record<string, string>,
+  enabledLocales: readonly string[],
+): Record<string, string> {
+  const filled: Record<string, string> = {}
+
+  for (const locale of enabledLocales) {
+    filled[locale] = values[locale] ?? ''
+  }
+
+  return filled
+}
+
+/**
+ * Form değerlerini düzenleme isteğine çevirir.
+ *
+ * <p><b>Renk BİRLEŞTİRİLİR, değiştirilmez:</b> form yalnız personelin kendi dilini
+ * düzenletiyor ve diğer dillerdeki renk metni kaybolmamalı. Sunucu rengi tam değiştirme
+ * olarak alıyor, yani eksik gönderilen dil SİLİNİR — bu yüzden eski değerler burada
+ * korunuyor.</p>
+ *
+ * <p><b>Boş bırakılan opsiyonel alan gönderilmez</b> (D23): "gelmeyen" dokunulmamış
+ * sayılıyor ve kapalı alanın değeri böyle korunuyor (AC-17).</p>
+ */
+export function toUpdateRequest(
+  values: VehicleEditValues,
+  existingColor: Readonly<Record<string, string>>,
+  locale: string,
+): UpdateVehicleRequest {
+  const color: Record<string, string> = { ...existingColor }
+
+  if (values.color.trim() !== '') {
+    color[locale] = values.color.trim()
+  }
+
+  const optionalValues = [
+    ...Object.entries(values.optionalValues)
+      .filter(([, value]) => value.trim() !== '')
+      .map(([fieldKey, value]) => ({ fieldKey, value: value.trim(), values: null })),
+    ...Object.entries(values.optionalLocalizedValues)
+      .filter(([, map]) => Object.values(map).some((text) => text.trim() !== ''))
+      .map(([fieldKey, map]) => ({ fieldKey, value: null, values: { ...map } })),
+  ]
+
+  return {
+    branchId: values.branchId,
+    vehicleModelId: values.vehicleModelId,
+    bodyType: values.bodyType,
+    fuelType: values.fuelType,
+    transmissionType: values.transmissionType,
+    drivetrainType: values.drivetrainType,
+    trimLevel: values.trimLevel,
+    color,
+    modelYear: Number(values.modelYear),
+    mileageKilometers: Number(values.mileageKilometers),
+    priceAmount: values.priceOnRequest ? null : Number(values.priceAmount),
+    priceOnRequest: values.priceOnRequest,
+    vin: values.vin,
+    listingTitle: { ...values.listingTitle },
+    listingDescription: { ...values.listingDescription },
+    optionalValues,
+  }
+}
+
+/**
+ * R12/AC-21 — bir dil, başlık VE açıklamasının ikisi de doluysa tamdır. Uç bu hesabı
+ * KENDİ formunda da yapıyor: personel kaydetmeden önce hangi dilin eksik kalacağını
+ * görmeli. Sunucudaki hesap bunun yerine geçmez, ikisi aynı kuralı söyler.
+ */
+export function missingLocalesOf(
+  values: VehicleEditValues,
+  enabledLocales: readonly string[],
+): readonly string[] {
+  return enabledLocales.filter(
+    (locale) =>
+      (values.listingTitle[locale] ?? '').trim() === '' ||
+      (values.listingDescription[locale] ?? '').trim() === '',
+  )
 }

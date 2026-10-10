@@ -52,6 +52,12 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           name: 'Ayşe Yılmaz',
           // 0010a — şube etiketi kapatılmış şubede durumu da taşıyor.
           status: 'Kapalı',
+          // 0010b — liste özeti, eksik dil rozeti ve alan etiketleri.
+          total: 12,
+          locales: 'العربية',
+          label: 'Tramer tutarı',
+          current: 'Beyaz',
+          locale: 'Türkçe',
         })
         expect(value).not.toBe(key)
         expect(value.trim()).not.toBe('')

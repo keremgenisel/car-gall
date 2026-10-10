@@ -36,3 +36,25 @@ export function formatMileage(kilometers: number, locale: AppLocale): string {
 export function formatYear(year: number, locale: AppLocale): string {
   return new Intl.NumberFormat(intlLocale(locale), { useGrouping: false }).format(year)
 }
+
+/**
+ * Son güncelleme zamanı (0010b R13). Sunucu ISO 8601 döner; biçimlendirme UÇTA yapılır
+ * (`docs/conventions.md` § 7).
+ *
+ * <p>Tarih ve saat BİRLİKTE: "bugün 14:05" ile "bugün" arasındaki fark, aynı gün iki kez
+ * düzenlenen bir araçta personelin tek ipucu.</p>
+ */
+export function formatDateTime(iso: string, locale: AppLocale): string {
+  const value = new Date(iso)
+
+  // Geçersiz tarih ziyaretçiye `Invalid Date` olarak GÖSTERİLMEZ; boş metin, yanlış
+  // metinden iyidir ve sütun zaten ikincil bilgi taşıyor.
+  if (Number.isNaN(value.getTime())) {
+    return ''
+  }
+
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(value)
+}

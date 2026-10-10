@@ -3,7 +3,7 @@ import { useLocale } from '../../app/localeContext'
 interface Props {
   readonly id: string
   readonly label: string
-  readonly type?: 'text' | 'email' | 'password' | 'number'
+  readonly type?: 'text' | 'email' | 'password' | 'number' | 'date'
   readonly autoComplete?: string
   readonly hint?: string
   /** Sunucunun işaretlediği hata kodu; metin uçta üretilir (docs/conventions.md § 5). */

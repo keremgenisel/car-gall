@@ -4,6 +4,7 @@ import { ApiError } from '../../shared/api/client'
 import { fetchCurrentSession, logout } from '../../shared/api/identity'
 import type { CurrentSession } from '../../shared/api/types'
 import { adminPath, type AdminView } from '../../shared/lib/route'
+import { VehicleEditPage } from '../../features/catalog/admin/VehicleEditPage'
 import { VehicleFormPage } from '../../features/catalog/admin/VehicleFormPage'
 import { VehicleListPage } from '../../features/catalog/admin/VehicleListPage'
 import { ForcePasswordChangePage } from '../../features/identity/ForcePasswordChangePage'
@@ -28,7 +29,13 @@ type Gate =
  * `identity.password_change_required`: o bir yetki reddi değil, zorunlu bir adımdır
  * (R10) ve kendi ekranına götürür.
  */
-export function AdminApp({ view = 'staff' }: { readonly view?: AdminView }) {
+export function AdminApp({
+  view = 'staff',
+  vehicleId,
+}: {
+  readonly view?: AdminView
+  readonly vehicleId?: string
+}) {
   const { locale, t } = useLocale()
   const [gate, setGate] = useState<Gate>({ kind: 'checking' })
 
@@ -129,7 +136,11 @@ export function AdminApp({ view = 'staff' }: { readonly view?: AdminView }) {
         <a
           className="admin-shell__nav-link"
           href={adminPath('vehicles')}
-          aria-current={view === 'vehicles' || view === 'vehicle-new' ? 'page' : undefined}
+          aria-current={
+            view === 'vehicles' || view === 'vehicle-new' || view === 'vehicle-edit'
+              ? 'page'
+              : undefined
+          }
         >
           {t('admin.nav.vehicles')}
         </a>
@@ -138,6 +149,9 @@ export function AdminApp({ view = 'staff' }: { readonly view?: AdminView }) {
       <main className="admin-shell__content">
         {view === 'vehicles' ? <VehicleListPage /> : null}
         {view === 'vehicle-new' ? <VehicleFormPage /> : null}
+        {view === 'vehicle-edit' && vehicleId !== undefined ? (
+          <VehicleEditPage vehicleId={vehicleId} />
+        ) : null}
         {view === 'password' ? <ForcePasswordChangePage /> : null}
 
         {/*

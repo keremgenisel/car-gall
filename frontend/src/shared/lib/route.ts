@@ -19,12 +19,16 @@ export const ADMIN_SEGMENT = 'admin'
  * 0010a — panele araç yüzeyi eklendi. `vehicles` liste, `vehicle-new` kayıt formu;
  * düzenleme adresi `0010b`'nin işi (X18).
  */
-export type AdminView = 'staff' | 'password' | 'vehicles' | 'vehicle-new'
+export type AdminView = 'staff' | 'password' | 'vehicles' | 'vehicle-new' | 'vehicle-edit'
 
 export type Route =
   | { readonly kind: 'list' }
   | { readonly kind: 'detail'; readonly slug: string }
-  | { readonly kind: 'admin'; readonly view: AdminView }
+  /**
+   * 0010b **D29** — düzenleme adresi `/admin/vehicles/{id}`: liste onun üstü, kayıt
+   * onun altı. Panel rotası artık kimlik taşıyor.
+   */
+  | { readonly kind: 'admin'; readonly view: AdminView; readonly vehicleId?: string }
 
 /**
  * Rota adresten okunur; router kütüphanesi yoktur (0001'den gelen yapı).
@@ -54,6 +58,12 @@ export function parseRoute(pathname: string): Route {
 
   // Panel locale önekinin DIŞINDADIR; bu dal locale kontrolünden önce gelmek zorunda.
   if (localeSegment === ADMIN_SEGMENT) {
+    // `/admin/vehicles/{id}` düzenleme, `/admin/vehicles` liste. Üçüncü parça yalnız
+    // araç yüzeyinde anlamlı; başka bir bölümde yok sayılır.
+    if (sectionSegment === 'vehicles' && slugSegment !== undefined) {
+      return { kind: 'admin', view: 'vehicle-edit', vehicleId: decodeURIComponent(slugSegment) }
+    }
+
     return { kind: 'admin', view: adminViewOf(sectionSegment) }
   }
 
@@ -76,4 +86,9 @@ export function listingPath(locale: AppLocale, slug: string): string {
 /** Panel içindeki adres. Giriş ekranının ayrı bir adresi yoktur: oturumsuz `/admin` odur. */
 export function adminPath(view: AdminView = 'staff'): string {
   return view === 'staff' ? `/${ADMIN_SEGMENT}` : `/${ADMIN_SEGMENT}/${view}`
+}
+
+/** Düzenleme adresi (D29). Listeye dönüş `adminPath('vehicles')`. */
+export function vehicleEditPath(vehicleId: string): string {
+  return `/${ADMIN_SEGMENT}/vehicles/${encodeURIComponent(vehicleId)}`
 }

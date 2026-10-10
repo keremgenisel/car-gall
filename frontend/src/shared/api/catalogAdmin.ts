@@ -3,8 +3,14 @@ import { getJson, sendJson } from './client'
 import type {
   BranchSummary,
   CreateVehicleRequest,
+  PagedResult,
   ReferenceOption,
+  UpdateVehicleRequest,
+  VehicleAdminDetail,
+  VehicleAdminField,
   VehicleAdminListItem,
+  VehicleAdminSummary,
+  VehicleSort,
 } from './types'
 
 /**
@@ -16,17 +22,60 @@ import type {
  */
 const ADMIN_VEHICLES = '/api/admin/vehicles'
 const ADMIN_BRANCHES = '/api/admin/branches'
+const ADMIN_VEHICLE_FIELDS = '/api/admin/vehicle-fields'
 const REFERENCE = '/api/reference'
 
+/**
+ * 0010b — liste artık sayfalı ve sıralı. Sayfa ve sıralama ADRESTEN geliyor; ikisi de
+ * ekranın değil ziyaretçinin durumu ve paylaşılabilir olmalı.
+ */
 export function fetchVehicles(
   locale: AppLocale,
+  page: number,
+  sort: VehicleSort,
   signal?: AbortSignal,
-): Promise<readonly VehicleAdminListItem[]> {
-  return getJson<readonly VehicleAdminListItem[]>(
-    `${ADMIN_VEHICLES}?locale=${locale}`,
+): Promise<PagedResult<VehicleAdminListItem>> {
+  return getJson<PagedResult<VehicleAdminListItem>>(
+    `${ADMIN_VEHICLES}?locale=${locale}&page=${page}&sort=${sort}`,
     locale,
     signal,
   )
+}
+
+/** AC-23 — sayı TÜM araçlar üzerinden; bu yüzden sayfadan ayrı bir okuma. */
+export function fetchVehicleSummary(
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<VehicleAdminSummary> {
+  return getJson<VehicleAdminSummary>(`${ADMIN_VEHICLES}/summary`, locale, signal)
+}
+
+export function fetchVehicle(
+  vehicleId: string,
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<VehicleAdminDetail> {
+  return getJson<VehicleAdminDetail>(
+    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}`,
+    locale,
+    signal,
+  )
+}
+
+/** R7 — formun basacağı AÇIK opsiyonel alanlar ve tipleri. */
+export function fetchVehicleFields(
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<readonly VehicleAdminField[]> {
+  return getJson<readonly VehicleAdminField[]>(ADMIN_VEHICLE_FIELDS, locale, signal)
+}
+
+export async function updateVehicle(
+  vehicleId: string,
+  request: UpdateVehicleRequest,
+  locale: AppLocale,
+): Promise<void> {
+  await sendJson<null>('PUT', `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}`, request, locale)
 }
 
 export async function createVehicle(
