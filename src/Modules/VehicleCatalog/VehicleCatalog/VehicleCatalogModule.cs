@@ -35,7 +35,11 @@ public static class VehicleCatalogModule
         string defaultLocale,
         IReadOnlyList<string> enabledLocales,
         string currencyCode,
-        int currencyMinorUnitExponent)
+        int currencyMinorUnitExponent,
+        // C26 — panel sayfa boyutu dağıtım yapılandırmasından. Vitrin tarafının 24'ü
+        // AYRI bir eksen: biri ziyaretçinin ızgarası, diğeri personelin tablosu.
+        int adminPageSize,
+        int adminMaxPageSize)
     {
         services.AddDbContext<VehicleCatalogDbContext>(options =>
             options.UseNpgsql(
@@ -76,6 +80,7 @@ public static class VehicleCatalogModule
         services.AddSingleton(new CatalogCurrencyOptions(currencyCode, currencyMinorUnitExponent));
         // Kayıt ve düzenlemenin ORTAK kuralları tek yerde: aynı invariant iki komutta
         // iki farklı şey olmasın (0010b, bilinen tuzak 3).
+        services.AddSingleton(new CatalogAdminPagingOptions(adminPageSize, adminMaxPageSize));
         services.AddScoped<VehicleWriteRules>();
         services.AddScoped<CreateVehicleCommand>();
         services.AddScoped<UpdateVehicleCommand>();

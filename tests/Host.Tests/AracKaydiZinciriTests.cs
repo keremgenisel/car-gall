@@ -1,3 +1,4 @@
+using CarGallery.BuildingBlocks;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -95,11 +96,13 @@ public sealed class AracKaydiZinciriTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Created, yanit.StatusCode);
 
-        IReadOnlyList<VehicleAdminListItemDto>? liste = await client
-            .GetFromJsonAsync<IReadOnlyList<VehicleAdminListItemDto>>($"{AdminSurface.RoutePrefix}/vehicles?locale=tr");
+        // 0010b — liste yanıtı artık `PagedResult` zarfında (AC-25). `0010a`'nın kriteri
+        // değişmedi: kaydın listede görünmesi. Değişen tek şey zarfın adı.
+        PagedResult<VehicleAdminListItemDto>? liste = await client
+            .GetFromJsonAsync<PagedResult<VehicleAdminListItemDto>>($"{AdminSurface.RoutePrefix}/vehicles?locale=tr");
 
         Assert.NotNull(liste);
-        Assert.Contains(liste, item => item.Vin == "ZINCIR0000000001");
+        Assert.Contains(liste.Items, item => item.Vin == "ZINCIR0000000001");
     }
 
     [Theory(DisplayName = "0010a/AC-2: Oturumu olmayan biri araç kaydı oluşturamaz; istek reddedilir")]
@@ -171,6 +174,148 @@ public sealed class AracKaydiZinciriTests : IAsyncLifetime
         priceAmount = 750_000m,
         priceOnRequest = false,
         vin,
+    };
+
+    [Fact(DisplayName = "0010b/AC-1: Oturumu olmayan biri araç düzenleyemez; istek reddedilir")]
+    public async Task Duzenleyemez_OturumsuzKisi()
+    {
+        HttpClient client = Istemci();
+
+        HttpResponseMessage yanit = await client.PutAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/vehicles/{Guid.CreateVersion7()}",
+            Duzenleme("OTURUMSUZDUZ0001"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
+    }
+
+    [Fact(DisplayName = "0010b/AC-4: Var olmayan bir araç kimliğiyle gelen düzenleme isteği `404` ve kararlı bir hata koduyla reddedilir")]
+    public async Task Reddedilir_VarOlmayanAracKimligi()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+
+        HttpResponseMessage yanit = await client.PutAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/vehicles/{Guid.CreateVersion7()}",
+            Duzenleme("YOKARAC000000001"));
+
+        Assert.Equal(HttpStatusCode.NotFound, yanit.StatusCode);
+
+        using JsonDocument govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync());
+
+        Assert.Equal("vehicle.not_found", govde.RootElement.GetProperty("errorCode").GetString());
+    }
+
+    /// <summary>
+    /// AC-5 — eksik gelen alan "dokunulmadı" DEĞİL geçersiz sayılır (C25). Ölçüm TEL
+    /// ÜZERİNDE yapılıyor: gövdeden alan çıkarıldığında bağlayıcı varsayılan değer
+    /// üretiyor ve kuralın orada da tuttuğunu yalnız bu seviye gösterebilir.
+    /// </summary>
+    [Fact(DisplayName = "0010b/AC-5: Çekirdek alanlardan birini hiç göndermeyen düzenleme isteği reddedilir; eksik alan \"dokunulmadı\" sayılmaz (C25)")]
+    public async Task Reddedilir_CekirdekAlaniHicGondermeyenIstek()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+        Guid id = await AracOlusturAsync(client, "EKSIKALAN0000001");
+
+        // `bodyType` gövdede HİÇ YOK.
+        HttpResponseMessage yanit = await client.PutAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/vehicles/{id}",
+            new
+            {
+                branchId = SeedSube,
+                vehicleModelId = SeedModel,
+                fuelType = "diesel",
+                transmissionType = "automatic",
+                drivetrainType = "front-wheel-drive",
+                trimLevel = "comfort",
+                color = new Dictionary<string, string> { ["tr"] = "Beyaz" },
+                modelYear = 2019,
+                mileageKilometers = 45_000,
+                priceAmount = 750_000m,
+                priceOnRequest = false,
+                vin = "EKSIKALAN0000001",
+            });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, yanit.StatusCode);
+
+        using JsonDocument govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync());
+
+        Assert.Equal("vehicle.core_field_missing", govde.RootElement.GetProperty("errorCode").GetString());
+        Assert.Equal("bodyType", govde.RootElement.GetProperty("field").GetString());
+    }
+
+    [Fact(DisplayName = "0010b/AC-2: Kaydedilmiş bir araç düzenlenir ve değişiklik listede görünür")]
+    public async Task Duzenlenir_VeDegisiklikListedeGorunur()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+        Guid id = await AracOlusturAsync(client, "ZINCIRDUZ0000001");
+
+        HttpResponseMessage yanit = await client.PutAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/vehicles/{id}",
+            Duzenleme("ZINCIRDUZ0000001", kilometre: 88_000));
+
+        Assert.Equal(HttpStatusCode.NoContent, yanit.StatusCode);
+
+        PagedResult<VehicleAdminListItemDto>? liste = await client
+            .GetFromJsonAsync<PagedResult<VehicleAdminListItemDto>>($"{AdminSurface.RoutePrefix}/vehicles?locale=tr");
+
+        Assert.Equal(88_000, liste!.Items.Single(item => item.VehicleId == id).MileageKilometers);
+    }
+
+    [Fact(DisplayName = "0010b/AC-25: Liste yanıtı `PagedResult<T>` biçimindedir ve sayfa, sayfa boyutu ile toplam kayıt sayısını taşır")]
+    public async Task Tasir_SayfalamaZarfini()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+        await AracOlusturAsync(client, "ZARFZINCIR000001");
+
+        using JsonDocument govde = JsonDocument.Parse(
+            await client.GetStringAsync(new Uri($"{AdminSurface.RoutePrefix}/vehicles?locale=tr", UriKind.Relative)));
+
+        foreach (string alan in new[] { "items", "page", "pageSize", "totalCount" })
+        {
+            Assert.True(govde.RootElement.TryGetProperty(alan, out _), alan);
+        }
+    }
+
+    [Fact(DisplayName = "0010b/AC-26: Üst sınırı aşan bir `pageSize` isteği üst sınıra kırpılır ve hata dönmez (C26)")]
+    public async Task Kirpilir_UstSiniriAsanSayfaBoyutu()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+
+        PagedResult<VehicleAdminListItemDto>? liste = await client
+            .GetFromJsonAsync<PagedResult<VehicleAdminListItemDto>>(
+                $"{AdminSurface.RoutePrefix}/vehicles?locale=tr&pageSize=5000");
+
+        Assert.Equal(100, liste!.PageSize);
+    }
+
+    private async Task<Guid> AracOlusturAsync(HttpClient client, string vin)
+    {
+        HttpResponseMessage yanit = await client.PostAsJsonAsync($"{AdminSurface.RoutePrefix}/vehicles", Arac(vin));
+
+        Assert.Equal(HttpStatusCode.Created, yanit.StatusCode);
+
+        using JsonDocument govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync());
+
+        return govde.RootElement.GetProperty("vehicleId").GetGuid();
+    }
+
+    private static object Duzenleme(string vin, int kilometre = 45_000) => new
+    {
+        branchId = SeedSube,
+        vehicleModelId = SeedModel,
+        bodyType = "suv",
+        fuelType = "diesel",
+        transmissionType = "automatic",
+        drivetrainType = "front-wheel-drive",
+        trimLevel = "comfort",
+        color = new Dictionary<string, string> { ["tr"] = "Beyaz", ["en"] = "White" },
+        modelYear = 2019,
+        mileageKilometers = kilometre,
+        priceAmount = 750_000m,
+        priceOnRequest = false,
+        vin,
+        listingTitle = new Dictionary<string, string> { ["tr"] = "Temiz Corolla" },
+        listingDescription = new Dictionary<string, string> { ["tr"] = "Bakımları yapıldı" },
+        optionalValues = Array.Empty<object>(),
     };
 
     private async Task<HttpClient> GirisYapmisIstemciAsync()

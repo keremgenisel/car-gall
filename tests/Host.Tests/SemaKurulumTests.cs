@@ -52,7 +52,7 @@ public sealed class SemaKurulumTests : IAsyncLifetime
     {
         ServiceCollection services = new();
         services.AddLogging();
-        services.AddVehicleCatalog(container.GetConnectionString(), "tr", ["tr", "ar", "en"], "TRY", 2);
+        services.AddVehicleCatalog(container.GetConnectionString(), "tr", ["tr", "ar", "en"], "TRY", 2, 25, 100);
         services.AddVehicleReference(container.GetConnectionString());
         services.AddDealership(container.GetConnectionString(), "tr");
 

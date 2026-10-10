@@ -33,7 +33,30 @@ internal static class VehicleAdminEndpoints
 
         vehicles.MapGet("/", ListAsync)
             .WithName("ListVehicles")
-            .Produces<IReadOnlyList<VehicleAdminListItemDto>>(StatusCodes.Status200OK);
+            .Produces<PagedResult<VehicleAdminListItemDto>>(StatusCodes.Status200OK);
+
+        // R15/AC-23 — özet AYRI bir okuma: sayı o anki sayfaya bağlı değil ve AC-25
+        // liste yanıtının `PagedResult` zarfında kalmasını istiyor.
+        vehicles.MapGet("/summary", SummaryAsync)
+            .WithName("VehicleSummary")
+            .Produces<VehicleAdminSummaryDto>(StatusCodes.Status200OK);
+
+        vehicles.MapGet("/{vehicleId:guid}", FindAsync)
+            .WithName("FindVehicle")
+            .Produces<VehicleAdminDetailDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
+        vehicles.MapPut("/{vehicleId:guid}", UpdateAsync)
+            .WithName("UpdateVehicle")
+            .Produces(StatusCodes.Status204NoContent);
+
+        // Formun kurabilmesi için AÇIK opsiyonel alanlar ve tipleri (R6, R7).
+        // Vitrin tarafındaki `GET /api/catalog/field-settings` AYRI bir yüzey: orası
+        // ziyaretçinin gördüğü alanları söyler, burası personelin doldurduklarını.
+        builder.MapGet($"{AdminSurface.RoutePrefix}/vehicle-fields", FormFieldsAsync)
+            .WithName("ListVehicleFormFields")
+            .RequireAuthorization(AdminSurface.AuthenticatedPolicy)
+            .Produces<IReadOnlyList<VehicleAdminFieldDto>>(StatusCodes.Status200OK);
     }
 
     private static async Task<IResult> CreateAsync(
@@ -50,14 +73,68 @@ internal static class VehicleAdminEndpoints
             : TypedResults.Created($"{AdminSurface.RoutePrefix}/vehicles/{result.Value}", new CreateVehicleResponse(result.Value));
     }
 
-    private static async Task<Ok<IReadOnlyList<VehicleAdminListItemDto>>> ListAsync(
+    private static async Task<Ok<PagedResult<VehicleAdminListItemDto>>> ListAsync(
         HttpContext httpContext,
         IVehicleAdminQueries queries,
         ShowcaseLocaleOptions locales,
+        CancellationToken cancellationToken)
+    {
+        IQueryCollection query = httpContext.Request.Query;
+
+        // Tanınmayan `sort` değeri HATA DEĞİL: adres çubuğundan gelen bir ipucu ve
+        // varsayılana düşmesi personelin önüne hata ekranı koymaktan iyidir.
+        VehicleAdminListSort sort = string.Equals(query["sort"], "recently-added", StringComparison.OrdinalIgnoreCase)
+            ? VehicleAdminListSort.RecentlyAdded
+            : VehicleAdminListSort.LastUpdated;
+
+        VehicleAdminListFilter filter = new(
+            locales.ResolveOrDefault(query["locale"].ToString()).Code,
+            int.TryParse(query["page"], out int page) ? page : 1,
+            int.TryParse(query["pageSize"], out int pageSize) ? pageSize : null,
+            sort);
+
+        return TypedResults.Ok(await queries.ListAsync(filter, cancellationToken));
+    }
+
+    private static async Task<Ok<VehicleAdminSummaryDto>> SummaryAsync(
+        IVehicleAdminQueries queries,
         CancellationToken cancellationToken) =>
-        TypedResults.Ok(await queries.ListAsync(
-            locales.ResolveOrDefault(httpContext.Request.Query["locale"].ToString()).Code,
-            cancellationToken));
+        TypedResults.Ok(await queries.GetSummaryAsync(cancellationToken));
+
+    private static async Task<Ok<IReadOnlyList<VehicleAdminFieldDto>>> FormFieldsAsync(
+        IVehicleAdminQueries queries,
+        CancellationToken cancellationToken) =>
+        TypedResults.Ok(await queries.GetFormFieldsAsync(cancellationToken));
+
+    private static async Task<IResult> FindAsync(
+        Guid vehicleId,
+        IVehicleAdminQueries queries,
+        CancellationToken cancellationToken)
+    {
+        VehicleAdminDetailDto? vehicle = await queries.FindAsync(vehicleId, cancellationToken);
+
+        return vehicle is null
+            ? CatalogProblems.From(Error.With(VehicleErrors.NotFound, "field", VehicleFieldNames.VehicleId))
+            : TypedResults.Ok(vehicle);
+    }
+
+    /// <summary>
+    /// R2/C25 — düzenleme TAM DEĞİŞTİRMEDİR. Gövde çekirdek alanların tamamını taşır ve
+    /// eksik gelen alan "dokunulmadı" değil GEÇERSİZ sayılır (AC-5): kısmi semantik
+    /// "boş geldi = silindi mi, dokunulmadı mı" belirsizliğini üretirdi.
+    /// </summary>
+    private static async Task<IResult> UpdateAsync(
+        Guid vehicleId,
+        UpdateVehicleBody body,
+        UpdateVehicleCommand command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        Result result = await command.ExecuteAsync(body.ToRequest(vehicleId), cancellationToken);
+
+        return result.IsFailure ? CatalogProblems.From(result.Error) : TypedResults.NoContent();
+    }
 }
 
 /// <summary>
@@ -98,6 +175,53 @@ internal sealed record CreateVehicleBody(
 internal sealed record CreateVehicleResponse(Guid VehicleId);
 
 /// <summary>
+/// Düzenleme gövdesi. Şase TAŞINIR ama değiştirilemez (**D24**): gövdede olmasaydı
+/// "değiştirme girişimi" ifade edilemez ve AC-8 ölçülemez olurdu.
+/// </summary>
+internal sealed record UpdateVehicleBody(
+    Guid BranchId,
+    Guid VehicleModelId,
+    string BodyType,
+    string FuelType,
+    string TransmissionType,
+    string DrivetrainType,
+    string TrimLevel,
+    Dictionary<string, string>? Color,
+    int ModelYear,
+    int MileageKilometers,
+    decimal? PriceAmount,
+    bool PriceOnRequest,
+    string? Vin,
+    Dictionary<string, string>? ListingTitle,
+    Dictionary<string, string>? ListingDescription,
+    List<UpdateVehicleOptionalValue>? OptionalValues)
+{
+    internal UpdateVehicleRequest ToRequest(Guid vehicleId) => new(
+        vehicleId,
+        BranchId,
+        VehicleModelId,
+        BodyType ?? string.Empty,
+        FuelType ?? string.Empty,
+        TransmissionType ?? string.Empty,
+        DrivetrainType ?? string.Empty,
+        TrimLevel ?? string.Empty,
+        Color ?? [],
+        ModelYear,
+        MileageKilometers,
+        PriceAmount,
+        PriceOnRequest,
+        Vin ?? string.Empty,
+        ListingTitle ?? [],
+        ListingDescription ?? [],
+        [.. (OptionalValues ?? []).Select(item => new OptionalFieldInput(item.FieldKey, item.Value, item.Values))]);
+}
+
+internal sealed record UpdateVehicleOptionalValue(
+    string FieldKey,
+    string? Value,
+    Dictionary<string, string>? Values);
+
+/// <summary>
 /// `Result`'ın hatasını RFC 7807 gövdesine çevirir. Gövde KARARLI bir `errorCode` ve
 /// gerekirse hangi ALANIN düştüğünü taşır; çevrilmiş metin taşımaz — uç kendi
 /// kataloğundan çevirir (C10, AC-42).
@@ -112,6 +236,8 @@ internal static class CatalogProblems
     {
         int status = error.Code switch
         {
+            // AC-4 — var olmayan araç: istek geçerli, hedef yok.
+            VehicleErrors.NotFound => StatusCodes.Status404NotFound,
             // AC-16 — tekillik ihlali bir DURUM ÇAKIŞMASIDIR: istek geçerli, dünya uygun değil.
             VehicleErrors.DuplicateVin => StatusCodes.Status409Conflict,
             VehicleErrors.BranchNotFound => StatusCodes.Status422UnprocessableEntity,
