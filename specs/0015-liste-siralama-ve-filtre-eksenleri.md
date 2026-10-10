@@ -225,19 +225,25 @@ parametre zorunlu olmaz.
 ## Definition of Done
 
 - [ ] Açık sorular karara bağlandı; **S4 kodda doğrulandı** ve sonucu Context'e yazıldı.
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Görsel kanıt eklendi (`docs/evidence/0015-ac<n>.png`), boş sonuç dâhil, Arapça görüntü
+- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0015-ac<n>.png`), boş sonuç dâhil, Arapça görüntü
       de var.
 - [ ] `0001`'in kabul kriterleri **regresyon testi olarak** hâlâ yeşil (C10).
 - [ ] `0001` C3'ün performans eşikleri yeni eksenlerle **ölçüldü** ve karşılandı (C9).
-- [ ] Mimari testler yeşil; ham metin üzerinde `ILIKE`/`lower()` kullanılmadı (C1).
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi.
-- [ ] Yeni domain terimi yok.
+- [ ] <!-- DoD:T4 --> Mimari testler yeşil; ham metin üzerinde `ILIKE`/`lower()` kullanılmadı (C1).
+- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi.
+- [ ] <!-- DoD:T7 --> Yeni domain terimi yok.
 - [ ] Ham piksel/hex eklenmedi; token katmanı kullanıldı.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
+- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
+      bunun yerine geçmez.
+- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 

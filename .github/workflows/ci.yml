@@ -6,9 +6,23 @@ on:
   push:
     branches: [main]
   pull_request:
+  # ADR 0008 / K6 — main'in yeşilliği zamanla da bozulabilir.
+  # Ölçüldü: 2026-10-05T13:14 ile 2026-10-10T06:03 arasında bu depoda HİÇBİR koşu yok
+  # (4 gün 16 saat 49 dakika) ve main o sürenin dördünde kırmızıydı. Kırmızılığı ne bir
+  # dal ne bir birleşim üretti — TAKVİM üretti: bir testin sahte saati 2026-09-22'ye
+  # sabitti ve ondan üretilen çerez Expires'ını gerçek saat değerlendiriyordu (spec 0006
+  # kaçan hata, PR #38). Bulan şey, ilgisiz bir chore dalının PR koşusu oldu.
+  # Zamanlı koşu daima varsayılan dalı (main) kullanır — izlemek istediğimiz şey tam o.
+  schedule:
+    - cron: '0 3 * * *'  # 03:00 UTC — her gün
+  # Gece koşusu elle de tetiklenebilsin: kırmızı bir sabahtan sonra düzeltmeyi beklemeden
+  # tekrar koşmak gerekir.
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # Olay adı gruba DAHİL: aksi hâlde gece koşusu ile main'e yapılan bir push aynı gruba
+  # düşer ve `cancel-in-progress` gerçek bir merge'in CI'ını iptal edebilirdi.
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

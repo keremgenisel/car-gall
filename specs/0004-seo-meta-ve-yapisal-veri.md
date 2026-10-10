@@ -114,14 +114,22 @@ Analist yazacak. Her satır tek başına test edilebilir olmalı; JSON-LD kriter
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/<no>-ac<n>.png`),
+      boş ve hata durumları dâhil; RTL kriteri varsa Arapça görüntü de var.
+- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
+- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
+      bunun yerine geçmez.
+- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
