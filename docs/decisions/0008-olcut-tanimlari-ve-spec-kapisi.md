@@ -103,9 +103,23 @@ bir birleşim üretti — **takvim** üretti (`0006`'nın sahte saati). Bulan ş
 chore dalının PR koşusu oldu.
 
 *Bedel iki parçalı ve ikincisi mekanik değil:* CI dakikası, ve **kimsenin okumadığı bir gece
-kırmızısı gürültüdür.** Koşu kuruldu; **okuyanın kim olduğu Takım Yöneticisi'nin kararına
-bırakıldı ve bu ADR o kararı kayda geçmeyi bekliyor.** Okuyan atanmadığı sürece bu kapı
-yalnız yarım çalışır.
+kırmızısı gürültüdür.**
+
+**Okuyan karara bağlandı (Takım Yöneticisi, 2026-10-10): kırmızı bir gece koşusu, ertesi gün
+ilk oturum açan üyenin İLK İŞİdir.** Üye, rolünden bağımsız olarak kendi işine başlamadan
+önce onu raporlar — hangi iş, hangi test, hangi commit'ten beri. **Raporlamak yeterli;
+düzeltmek ayrı bir karardır** ve üyenin kapsamını kendiliğinden genişletmez. Kural
+`AGENTS.md` § Çalışma Disiplini'ne yazıldı: ADR bir kayıttır, oturumun işe başlarken
+okuduğu yer orası.
+
+*Gerekçe:* bu depoda sabit bir nöbetçi yok ve oturumlar tek seferlik. "Birine atamak"
+atanacak kimse olmadığı için çalışmaz; "ilk bakan" çalışır.
+
+**Kapsam — `perf.yml` bilinçli olarak dışarıda.** Zamanlı koşu yalnız `ci.yml`'ı tetikliyor.
+`perf.yml` (C3 eşikleri) bugün ne `main` push'unda ne zamanlı koşuyor ve bu turda eklenmedi:
+eşik ölçümünün kırmızısı koşucu gürültüsünden ayırt edilemez, **okunamayan bir gece kırmızısı
+da tam olarak bu kararın reddettiği şeydir.** Sonuç olarak `main`'in performans durumu
+"bilinmiyor" hâlinde kalıyor — kapatılması gerekiyorsa ayrı bir karardır.
 
 ### K7 (Ö12) — Gürültü böleni teslim formatına girer
 
@@ -135,6 +149,14 @@ onlara bakarsa ilk koşuda on iki kırmızı verir ve hiçbiri düzeltilemez.
 *Bedel:* Kesim tarihi bir bakım yüküdür — listenin kendisi değil, **tarihin gerekçesi**
 unutulursa kapı bir gün "neden bu tarih?" sorusuyla kaldırılır. Gerekçe bu yüzden kapının
 kendi içinde yazılı.
+
+**Muafiyet listesi gerekçeyle BÜYÜYEBİLİR.** İşaretleyici listesi şablondan canlı okunduğu
+için, şablona sonradan eklenen bir madde kesimden sonra kapanmış kartları da kırmızıya
+çevirir — sondayla ölçüldü (çıkış kodu **1**, mesaj: *"şablonun 1 DoD maddesi yok
+(DoD:T14)"*). O kırmızıyı söndürmenin iki yolu var ve ilk yazımda **ikisi de yasaktı**:
+kapanmış kartı düzenlemek (tarihli kayıt) ve listeyi büyütmek. İkincisi artık meşru — ama
+**yalnız bu vakada** ve **yalnız satırın yanına gerekçe yazılarak** (hangi işaretleyici,
+hangi tarihte eklendi). Gerekçesiz bir ad, muafiyetin sessizce genişlemesidir.
 
 ## Elenen alternatifler
 
@@ -169,9 +191,16 @@ gönderilmedi.
 - `.github/workflows/ci.yml`: `schedule` tetikleyicisi (K6).
 - `tests/Architecture.Tests/ArsivKapisiTests.cs`: `done/` kapısı, **rapor eden**,
   2026-10-10 kesimli, dört iddia ve üçü **sondayla kırmızıya döndürülerek** doğrulandı (K8).
+  Düzeltme turunda bir denetim daha eklendi: **§ SCORECARD bölümünün tamamen yokluğu** —
+  bir hücrenin boş olmasından daha kötü olduğu hâlde kapı onu yeşil geçiriyordu.
 - On açık spec'in DoD'una `DoD:Tn` işaretleyicileri ve eksik şablon maddeleri eklendi (K4).
   **Zorunlu dış gözden geçirme maddesi onunda da yoktu.**
 - **Karar Defteri'ne satır eklenmedi:** bu kararlar süreç ve ölçüm kararlarıdır, mimari
   karar değil; § 7 kurulum modeli, modül sınırı ve veri deposu gibi mimari seçimleri
   taşıyor. ADR `0007` de aynı gerekçeyle satır eklememişti.
-- **Açık kalan tek şey K6'nın ikinci yarısı:** gece koşusunu okuyanın kim olduğu.
+- `AGENTS.md` § Çalışma Disiplini: gece koşusunun kırmızısını ertesi günün **ilk oturumu**
+  raporlar (K6'nın ikinci yarısı — Takım Yöneticisi kararı, 2026-10-10).
+- `.github/workflows/ci.yml`: kapı raporunu **iş özetine** yazan adım. `ITestOutputHelper`
+  çıktısı geçen testler için konsola basılmıyor; rapor yalnız trx artefaktının içinde
+  kalıyordu, yani bildiren yarısı pratikte susturulmuştu.
+- **Açık kalan:** `perf.yml`'ın zamanlı koşuya alınıp alınmayacağı (K6, kapsam notu).

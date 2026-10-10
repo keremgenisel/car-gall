@@ -37,8 +37,11 @@ docs/<kisa-ad>                → spec metni, ADR, doküman (kod değişmez)
 chore/<kisa-ad>               → bağımlılık, CI, araç zinciri
 ```
 
-`docs/` ve `chore/` **spec'siz açılabilir**; ikisinin de dayanağı `docs/decisions/` altındaki
-bir ADR'dir (§ 4.1). `docs/` öneki bir kuralı kodlamadan önce iki PR'da kullanılmıştı
+`docs/` ve `chore/` **spec'siz açılabilir**; dayanağı § 4 madde 1'in saydıklarından biridir —
+bir **spec taslağı**, bir **ADR** (`docs/decisions/`) ya da **yazılı bir süreç maddesi**
+(örn. `specs/done/README.md` § Periyodik okuma). Yalnız ADR saymak, bu öneki doğuran işleri
+kural dışı bırakırdı: #24 bir spec taslağıydı, #43 bir periyodik okumaydı ve ikisinin de
+arkasında ADR yok. `docs/` öneki bir kuralı kodlamadan önce iki PR'da kullanılmıştı
 (#24, #28) ve listede yoktu — ADR `0008` / K2 ile yazıldı. Ayrımı şu: `docs/` **metni**
 değiştirir, `chore/` **araç zincirini**. İkisi birden değişiyorsa `chore/` kullanılır.
 
@@ -62,7 +65,9 @@ güvenilir revizyon sayısını taşıyor — bedeli bir ek PR ve bir ek onay tu
 
 ### SPEC'SİZ BRANCH AÇILMAZ
 
-`chore/` dışındaki her branch, `specs/` altında **var olan** bir spec'e dayanır.
+`docs/` ve `chore/` dışındaki her branch, `specs/` altında **var olan** bir spec'e dayanır.
+`docs/` bunun dışındadır, çünkü K2 gereği spec'i `main`'e sokan PR'ın kendisi odur: var
+olmayan bir spec'e dayanması istenemez.
 Spec yoksa:
 1. Dur.
 2. `specs/TEMPLATE.md`'den bir spec taslağı öner (öneri kuralı — `AGENTS.md` Altın Kural 2).

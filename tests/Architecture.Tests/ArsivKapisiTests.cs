@@ -39,16 +39,27 @@ namespace CarGallery.Architecture.Tests;
 /// koşar ve sonuç test çıktısına YAZILIR
 /// (<see cref="Bildirir_MuafKartlarinKapanmamisKayitlarini"/>).</para>
 ///
-/// <para><b>Liste yalnız KÜÇÜLEBİLİR.</b> Bir ad eklemek, kapıyı yeni bir spec için
-/// kapatmak demektir ve diff'te görünür. <see cref="Canlidir_MuafiyetListesi"/> listedeki
-/// her adın gerçekten var olduğunu sınar; bir spec yeniden adlandırılırsa liste sessizce
-/// çürümez.</para>
+/// <para><b>Liste kural olarak KÜÇÜLÜR; büyümesinin tek meşru hâli yazılıdır.</b> Bir ad
+/// eklemek, kapıyı bir spec için kapatmak demektir ve diff'te görünür.
+/// <see cref="Canlidir_MuafiyetListesi"/> listedeki her adın gerçekten var olduğunu sınar;
+/// bir spec yeniden adlandırılırsa liste sessizce çürümez.</para>
+///
+/// <para><b>Tek meşru büyüme: şablon, kart kapandıktan SONRA madde kazandığında.</b>
+/// İşaretleyici listesi şablondan canlı okunduğu için, şablona bugün bir
+/// <c>DoD:T14</c> eklemek kesimden sonra kapanmış kartları da kırmızıya çevirir — sondayla
+/// ölçüldü (çıkış kodu 1). O kırmızıyı söndürmenin iki yolu vardı ve ikisi de yasaktı:
+/// kapanmış kartı düzenlemek (tarihli kayıt) ve bu listeyi büyütmek. İkincisi artık
+/// yasak değil: kartın adı listeye eklenir ve <b>satırın yanına gerekçe yazılır</b> —
+/// hangi işaretleyici, hangi tarihte eklendi. Gerekçesiz bir ad, muafiyetin sessizce
+/// genişlemesidir (ADR 0008 / K8).</para>
 /// </summary>
 public sealed class ArsivKapisiTests(ITestOutputHelper cikti)
 {
     /// <summary>
     /// 2026-10-10'dan ÖNCE kapanan spec'ler. ADR 0008'in kuralları bu kartlara geriye dönük
-    /// uygulanmaz ve kartları DÜZELTİLMEZ — tarihli kayıttır. Liste küçülebilir, büyümemeli.
+    /// uygulanmaz ve kartları DÜZELTİLMEZ — tarihli kayıttır. Liste kural olarak küçülür;
+    /// büyümesinin tek meşru hâli, şablonun kart kapandıktan SONRA madde kazanması ve
+    /// eklenen satırın gerekçesini taşımasıdır (sınıf özetine bkz.).
     /// </summary>
     private static readonly string[] KesimdenOnceKapananlar =
     [
@@ -156,7 +167,10 @@ public sealed class ArsivKapisiTests(ITestOutputHelper cikti)
         Assert.True(true);
     }
 
-    /// <summary>Açık DoD kutusu ve boş SCORECARD değer hücresi — ikisinin de yanlış pozitifi yok.</summary>
+    /// <summary>
+    /// Açık DoD kutusu, EKSİK SCORECARD bölümü ve boş SCORECARD değer hücresi — üçünün de
+    /// yanlış pozitifi yok.
+    /// </summary>
     private static IReadOnlyList<string> KapanmamisKayitlar(string yol)
     {
         string ad = Path.GetFileName(yol);
@@ -169,9 +183,25 @@ public sealed class ArsivKapisiTests(ITestOutputHelper cikti)
             bulgular.Add($"{ad}: {acikKutu} açık DoD kutusu — arşivlenmiş spec'te kutu açık kalmaz.");
         }
 
-        foreach (string olcut in BosOlcumler(BolumMetni(metin, "SCORECARD")))
+        // SCORECARD'ın TAMAMEN yokluğu, bir hücresinin boş olmasından daha kötüdür — ve kapı
+        // onu GÖRMÜYORDU: `BolumMetni` başlığı bulamazsa boş dize döner, `BosOlcumler` de boş
+        // dizeden hiç bulgu üretmez. Sondayla ölçüldü: 13 işaretleyicisi tam, bütün kutuları
+        // `[x]`, ama § SCORECARD bölümü HİÇ olmayan bir kart kapıdan yeşil geçiyordu.
+        // `specs/done/README.md` net: "SCORECARD boş bırakılmış spec taşınmaz."
+        string scorecard = BolumMetni(metin, "SCORECARD");
+
+        if (!Regex.IsMatch(scorecard, @"^\|\s*\*\*", RegexOptions.Multiline))
         {
-            bulgular.Add($"{ad}: SCORECARD'da `{olcut}` ölçümünün değer hücresi BOŞ.");
+            bulgular.Add(
+                $"{ad}: § SCORECARD bölümü yok ya da hiç ölçüt satırı taşımıyor — boş "
+                + "bırakılmış SCORECARD'la spec arşive taşınmaz.");
+        }
+        else
+        {
+            foreach (string olcut in BosOlcumler(scorecard))
+            {
+                bulgular.Add($"{ad}: SCORECARD'da `{olcut}` ölçümünün değer hücresi BOŞ.");
+            }
         }
 
         return bulgular;

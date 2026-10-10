@@ -49,6 +49,28 @@ jobs:
       - name: Test
         run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
 
+      # ADR 0008 / K8 — kapı DÜZELTMEZ, BİLDİRİR; bildirdiği yer okunabilir olmak zorunda.
+      # Ölçüldü: `ITestOutputHelper` çıktısı GEÇEN testler için konsola basılmaz, yalnız
+      # trx'in içine girer — yani rapor, birinin artefaktı indirip XML açmasını bekliyordu.
+      # Bu adım onu iş özetine yazar. Kapı kırmızı vermediği için `if: always()`.
+      - name: Arşiv kapısı raporu (muaf kartlar)
+        if: always()
+        # BİLDİREN bir adım CI'ı kıramaz: build düşmüşse `--no-build` de düşer ve kırmızı,
+        # kapının bildirdiği şeyi değil kendisini anlatırdı.
+        continue-on-error: true
+        run: |
+          {
+            echo '### Arşiv kapısı — muaf kartların kapanmamış kayıtları'
+            echo '_ADR 0008 / K8: bu kayıtlar DÜZELTİLMEZ, tarihli kayıttır._'
+            echo '```'
+            dotnet test tests/Architecture.Tests/Architecture.Tests.csproj \
+              --no-build --configuration Release --nologo \
+              --filter "FullyQualifiedName~Bildirir_MuafKartlarinKapanmamisKayitlarini" \
+              --logger "console;verbosity=detailed" \
+              | sed -n '/Muaf kartlarda/,/^[[:space:]]*$/p'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Test sonuçlarını yükle
         if: always()
         uses: actions/upload-artifact@v4

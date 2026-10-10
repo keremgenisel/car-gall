@@ -64,6 +64,14 @@ Tek bir araç galerisi için satış vitrini ve yönetim paneli.
 
 ## Çalışma Disiplini
 
+**Oturumun ilk işi**
+- `gh run list --branch main --limit 5` oku. Son **zamanlı (gece) koşu** kırmızıysa, kendi
+  işine başlamadan önce onu raporla: hangi iş, hangi test, hangi commit'ten beri. Rolünden
+  bağımsızdır. **Raporlamak yeterli** — düzeltmek ayrı bir karardır ve senin kapsamını
+  kendiliğinden genişletmez. (ADR `0008` / K6, Takım Yöneticisi kararı 2026-10-10.)
+  *Neden:* `0006`'nın zaman bombası `main`'de dört gün durdu; bu depoda sabit nöbetçi yok,
+  bu yüzden kural "ilk bakan"a bağlı.
+
 **Bir işe başlamadan önce**
 1. İlgili spec'i **tam** oku. Spec yoksa dur ve spec iste (Altın Kural 1).
 2. Kabul kriterlerini işin tanımı olarak al. Kriterde olmayan şey kapsamda değildir.
