@@ -7,6 +7,8 @@ using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Identity.Contracts.Setup;
 using CarGallery.Modules.Leads;
+using CarGallery.Modules.Media;
+using CarGallery.Modules.Media.Contracts.Setup;
 using CarGallery.Modules.Notifications;
 using CarGallery.Modules.Notifications.Contracts.Setup;
 using CarGallery.Modules.VehicleCatalog;
@@ -134,6 +136,32 @@ builder.Services.AddNotifications(new NotificationsSetup(
     builder.Configuration.GetValue<int?>("Notifications:RetryBaseSeconds") ?? 0,
     builder.Configuration.GetValue<int?>("Notifications:SendTimeoutSeconds") ?? 0));
 
+// 0011 — medya hattı. R2 kovası ve CDN taban adresi DAĞITIM YAPILANDIRMASINDAN gelir
+// (C6) ve hiçbirinin `??` ile üretilmiş varsayılanı YOK: filigran kaynağı
+// yapılandırılmamışsa her fotoğraf filigransız çıkar ve galeri sahibinin satın aldığı tek
+// garanti sessizce kaybolur. Sessizliği fotoğraflar rakip sitede göründüğünde fark edilir
+// ve o noktada bütün türevlerin yeniden üretilmesi gerekir.
+//
+// Depolama anahtarı ve parolası appsettings'te DEĞİL, ortam değişkenindedir — sır repoda
+// durmaz (docs/conventions.md § 11). Geliştirmede user-secrets.
+//
+// Sınırlar (bayt, piksel, deneme) appsettings'te durabilir: sır değil, operasyon ayarı.
+builder.Services.AddMedia(new MediaSetup(
+    connectionString,
+    builder.Configuration["Media:Storage:ServiceUrl"] ?? string.Empty,
+    builder.Configuration["Media:Storage:Bucket"] ?? string.Empty,
+    builder.Configuration["Media:Storage:AccessKey"] ?? string.Empty,
+    builder.Configuration["Media:Storage:SecretKey"] ?? string.Empty,
+    builder.Configuration["Media:Storage:Region"] ?? string.Empty,
+    builder.Configuration.GetValue<bool?>("Media:Storage:ForcePathStyle") ?? true,
+    builder.Configuration["Media:PublicBaseUrl"] ?? string.Empty,
+    builder.Configuration["Media:WatermarkObjectKey"] ?? string.Empty,
+    builder.Configuration.GetValue<long?>("Media:MaximumByteSize") ?? 0,
+    builder.Configuration.GetValue<long?>("Media:MaximumPixelCount") ?? 0,
+    // AC-9 — kabul edilen tür kümesi de yapılandırmadan. `??` ile üretilmiş varsayılan
+    // YOK: boş küme kuruluşta reddediliyor (AC-5'in aynı kapısı).
+    builder.Configuration.GetSection("Media:AllowedImageFormats").Get<string[]>() ?? []));
+
 // İlk yazma uçları ilk hata sözleşmesini getirdi. `500` yanıtı ASLA iç detay taşımaz:
 // stack trace, SQL, dosya yolu, tip adı yok — yalnız `traceId`
 // (docs/conventions.md § 5, 0005/AC-39, 0006/AC-59). Bu olmadan geliştirme ortamında
@@ -213,6 +241,7 @@ app.MapDealership();
 app.MapVehicleReference();
 app.MapIdentity();
 app.MapLeads();
+app.MapMedia();
 
 // Geliştirme ve görsel kanıt üretimi yolu. Bayrak kapalıyken hiçbir şey kaydedilmez
 // ve bu uç noktalar hiç tanımlanmaz; üretimde erişilebilir bir yüzeyi yoktur.

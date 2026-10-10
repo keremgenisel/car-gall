@@ -138,6 +138,7 @@ public sealed class TemaEnjeksiyonuTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:VehicleCatalog", container.GetConnectionString());
             IdentityTestSettings.Apply(builder);
             NotificationsTestSettings.Apply(builder);
+            MediaTestSettings.Apply(builder);
 
             foreach (KeyValuePair<string, string> deger in tema ?? [])
             {

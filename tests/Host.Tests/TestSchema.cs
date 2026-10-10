@@ -3,6 +3,8 @@ using CarGallery.Host.Schema;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Leads;
+using CarGallery.Modules.Media;
+using CarGallery.Modules.Media.Contracts.Setup;
 using CarGallery.Modules.Notifications;
 using CarGallery.Modules.Notifications.Contracts.Setup;
 using CarGallery.Modules.Identity.Contracts.Setup;
@@ -75,6 +77,27 @@ internal static class TestSchema
             MaximumAttempts: 5,
             RetryBaseSeconds: 30,
             SendTimeoutSeconds: 20));
+
+        // 0011 ile `media` de bir modül şemasıdır. Listeden düşerse Host başlangıçta
+        // "şema güncel değil" diyerek reddeder ve Host.Tests'in TAMAMI kırılır — `0009`'da
+        // bu tam olarak yaşandı ve 31 test birden düştü (ADR 0002'nin doğrulaması).
+        //
+        // Değerler gerçek bir depolama sağlayıcısına işaret etmiyor ve etmesi de
+        // gerekmiyor: bu adım yalnız ŞEMAYI uygular; `MediaOptions` doğrulaması kuruluşta
+        // koştuğu için değerlerin DOLU olması yeterli.
+        services.AddMedia(new MediaSetup(
+            connectionString,
+            StorageServiceUrl: "http://localhost:54566",
+            StorageBucket: "cargallery-media-test",
+            StorageAccessKey: "test",
+            StorageSecretKey: "test",
+            StorageRegion: "us-east-1",
+            StorageForcePathStyle: true,
+            PublicBaseUrl: "http://localhost:54566/cargallery-media-test/",
+            WatermarkObjectKey: "private/brand/watermark.png",
+            MaximumByteSize: 15_728_640,
+            MaximumPixelCount: 50_000_000,
+            AllowedImageFormats: ["jpeg", "png", "webp"]));
 
         await using ServiceProvider provider = services.BuildServiceProvider();
 

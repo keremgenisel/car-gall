@@ -477,6 +477,9 @@ altındaki ADR'lerdedir.
 | Veritabanı | PostgreSQL, şema başına ayrı rol |
 | Migration uygulama | Tek seferlik kurulum adımı (`--migrate`); çalışan uygulama yalnız doğrular |
 | Medya | S3-uyumlu (R2/MinIO) + CDN, ilk günden |
+| Medya işleme | Türevler (1600/800/400 WebP) ve filigran **sunucuda**; asenkron hat + işleme durumu |
+| Filigran kaynağı | Yapılandırmadaki bir **nesne anahtarı** (`Media`'nın kendi kovasında); medya varlığı kimliği değil |
+| Orijinal medya | **Ham saklanır**, `private/` önekinde; CDN'e bağlanmaz ve hiçbir yanıtta yolu dönmez |
 | Teklif/pazarlık | Yalnızca bir `Lead` tipi; durum makinesi yok |
 | Ekspertiz modeli | Türkiye modeli, alanlar yapılandırılabilir |
 | Coğrafi arama | PostGIS yok |

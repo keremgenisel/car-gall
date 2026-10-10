@@ -70,6 +70,25 @@ jobs:
           Notifications__Smtp__User: ci
           Notifications__Smtp__Password: ci
           Notifications__PublicBaseUrl: http://localhost:5080
+          # 0011 — uygulama medya yapılandırması olmadan HİÇ başlamaz (AC-31…33) ve bu iş
+          # de Host'u ayağa kaldıran yerlerden biri. İlk yazımda ATLANDI: C6'yı eklerken
+          # beş çağrı yeri saydım, altıncısı buydu ve `perf.yml` koşusu
+          # `media.storage_credentials_missing` ile 134 verdi. Kural doğru çalıştı,
+          # sayım eksikti.
+          #
+          # Gerçek bir depolama servisi yok ve gerekmiyor: bu iş vitrin sorgusunun
+          # gecikmesini ölçüyor, medya yüklemiyor.
+          Media__Storage__ServiceUrl: http://localhost:54566
+          Media__Storage__Bucket: cargallery-media
+          Media__Storage__AccessKey: perf
+          Media__Storage__SecretKey: perf
+          Media__Storage__Region: us-east-1
+          Media__PublicBaseUrl: http://localhost:54566/cargallery-media/
+          Media__WatermarkObjectKey: private/brand/watermark.png
+          # AC-9 — tür kümesi yapılandırmadan; boş küme kuruluşta reddedilir.
+          Media__AllowedImageFormats__0: jpeg
+          Media__AllowedImageFormats__1: png
+          Media__AllowedImageFormats__2: webp
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Kurulum adımı (ADR 0002): şemayı uygulayan budur. Bu iş onu çalıştırmıyordu,

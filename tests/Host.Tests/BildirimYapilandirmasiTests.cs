@@ -70,6 +70,7 @@ public sealed class BildirimYapilandirmasiTests
                 builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
                 IdentityTestSettings.Apply(builder);
                 NotificationsTestSettings.Apply(builder);
+                MediaTestSettings.Apply(builder);
                 builder.UseSetting(anahtar, string.Empty);
             });
 

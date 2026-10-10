@@ -98,6 +98,7 @@ public sealed class SemaKurulumTests : IAsyncLifetime
                 // Bu testlerin ölçtüğü şey şema kapısı, o yüzden bu ayar verilmeli.
                 IdentityTestSettings.Apply(builder);
                 NotificationsTestSettings.Apply(builder);
+                MediaTestSettings.Apply(builder);
             });
 
         InvalidOperationException hata = Assert.Throws<InvalidOperationException>(
@@ -125,6 +126,7 @@ public sealed class SemaKurulumTests : IAsyncLifetime
                 // Bu testlerin ölçtüğü şey şema kapısı, o yüzden bu ayar verilmeli.
                 IdentityTestSettings.Apply(builder);
                 NotificationsTestSettings.Apply(builder);
+                MediaTestSettings.Apply(builder);
             });
 
         HttpResponseMessage yanit = await factory.CreateClient().GetAsync("/api/catalog/field-settings");

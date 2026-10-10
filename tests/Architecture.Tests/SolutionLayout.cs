@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace CarGallery.Architecture.Tests;
@@ -53,6 +54,35 @@ internal static class SolutionLayout
     {
         string[] segments = Relative(projectFile).Split('/');
         return segments.Length >= 3 ? segments[2] : string.Empty;
+    }
+
+    /// <summary>
+    /// Başka bir modülün şemasına dokunan satırı yakalayan desen (Yasak Listesi 1).
+    /// İki biçimi birlikte arıyor: nitelikli tablo adı (<c>dealership.branches</c>, ham
+    /// SQL'de böyle görünür) ve dize sabiti (<c>"dealership"</c>, EF yapılandırmasında
+    /// böyle görünür).
+    ///
+    /// <para><b>Burada yaşıyor çünkü iki sınır testi onu paylaşıyor</b> (`0009`/AC-30 ve
+    /// `0011`/AC-35). İkinci kopyayı yazarken daha zayıf bir desen kurdum
+    /// (<c>[".]şema[".]</c>) ve bir sonda onu yakaladı: <c>"SELECT * FROM
+    /// dealership.branches"</c> satırını <b>kaçırıyordu</b>, çünkü şema adının öncesinde
+    /// boşluk vardı. İki kopyanın ayrışması tam olarak böyle görünüyor — kuralın bir
+    /// yarısı sessizce zayıflıyor.</para>
+    /// </summary>
+    internal static Regex SchemaReference(string schema)
+    {
+        string kacisli = Regex.Escape(schema);
+
+        // Nitelikli tablo adı: ham SQL'de `dealership.branches` gibi görünür.
+        string nitelikli = $@"\b{kacisli}\.[a-z_]{{2,}}\b";
+
+        // Dize sabiti: EF yapılandırmasında `"dealership"` gibi görünür.
+        string dizeSabiti = $@"""{kacisli}""";
+
+        return new Regex(
+            $"{nitelikli}|{dizeSabiti}",
+            RegexOptions.None,
+            TimeSpan.FromSeconds(2));
     }
 
     private static bool IsGenerated(string path) =>

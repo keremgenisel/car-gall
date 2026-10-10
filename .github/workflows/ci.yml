@@ -223,6 +223,26 @@ jobs:
           Notifications__Smtp__User: ci
           Notifications__Smtp__Password: ci
           Notifications__PublicBaseUrl: http://localhost:5080
+          # 0011 — uygulama medya yapılandırması olmadan HİÇ başlamaz (AC-31…33).
+          #
+          # Burada GERÇEK bir depolama servisi YOK ve bilinçli: e2e akışlarının hiçbiri
+          # dosya yüklemiyor (0011'in arayüzü yok, panel yükleme ekranı 0012'nin işi) ve
+          # `MediaOptions` yalnız YAPILANDIRMAYI doğruluyor, bağlantıyı değil. Bir
+          # LocalStack servisi eklemek bu işe iki dakika ve sıfır kapı eklerdi.
+          #
+          # Yüklemenin ve türev üretiminin gerçek bir S3 uyumlu sağlayıcıya karşı kanıtı
+          # backend işindeki `Media.Tests` entegrasyon testlerinde — Testcontainers ile.
+          Media__Storage__ServiceUrl: http://localhost:54566
+          Media__Storage__Bucket: cargallery-media
+          Media__Storage__AccessKey: ci
+          Media__Storage__SecretKey: ci
+          Media__Storage__Region: us-east-1
+          Media__PublicBaseUrl: http://localhost:54566/cargallery-media/
+          Media__WatermarkObjectKey: private/brand/watermark.png
+          # AC-9 — tür kümesi yapılandırmadan; boş küme kuruluşta reddedilir.
+          Media__AllowedImageFormats__0: jpeg
+          Media__AllowedImageFormats__1: png
+          Media__AllowedImageFormats__2: webp
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Migration'ı çalışan uygulama değil, bu tek seferlik kurulum adımı uygular

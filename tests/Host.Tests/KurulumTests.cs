@@ -26,6 +26,7 @@ public sealed class KurulumTests
                 // Bildirim ayarları VERİLİR: verilmezse uygulama yine başlamaz ama bu kez
                 // 0009/AC-28 yüzünden ve bu test yanlış sebeple yeşil kalırdı.
                 NotificationsTestSettings.Apply(builder);
+                MediaTestSettings.Apply(builder);
                 builder.UseSetting("Identity:SeedAdmin:Password", string.Empty);
             });
 
