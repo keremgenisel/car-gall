@@ -228,7 +228,8 @@ taşımayabilir.
 | 3 | Yayın ve durum eylemleri + toplu eylemler | spec yok |
 
 *Bu tablo **kararın verildiği andaki** durumu kaydediyor ve yeniden yazılmıyor. Bugünkü
-karşılıkları: dilim 1 → `0010a` (tamamlandı) + `0010b`; dilim 2 → `0011`; dilim 3 → `0012`.
+karşılıkları: dilim 1 → `0010a` + `0010b` (ikisi de tamamlandı); dilim 2 → `0011`;
+dilim 3 → `0012`.
 Güncel hâl aşağıdaki "Güncellenen sıra" tablosundadır.*
 
 **Bu, unsur 7'yi reddetmez; 2. maddesini ikiye böler ve `Media`'yı (#3) yayın işinin
@@ -241,8 +242,13 @@ hâlâ seed'e bağlı kalır. `0010` bu bedeli açıkça yazıyor.
 
 ### Güncellenen sıra
 
-**Durum sütunu 2026-10-10'da güncellendi.** Sıra DEĞİŞMEDİ; yalnız her satırın hangi
-spec'e karşılık geldiği yazıldı. `spec yok` satırı kalmadı — on bir işin de taslağı var.
+**Durum sütunu 2026-10-10'da iki kez güncellendi:** önce her satırın hangi spec'e karşılık
+geldiği yazıldı (`spec yok` satırı kalmadı — on bir işin de taslağı var), sonra `0010b`'nin
+kapanışı işlendi. **Sıra ikisinde de DEĞİŞMEDİ.** Araya bir boşluk girdi ve ölçüsü şu:
+tablo `85373a0` ile 09:34'te güncellendi, `0010b` `710d3e8` ile 11:36'da arşive girdi ve
+satır bundan **sonra** da "Taslak — sahip bekliyor" yazmaya devam etti; kapanış adımı bu
+tabloya geri dönmedi. Bu tablo `specs/done/` kapısının (ADR `0008` / K8) **görmediği** bir
+yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış adımının parçasıdır.
 *Bu tablo tek nüshadır: ikinci bir sıra tablosu yazmak yerine sütun güncelleniyor
 (`CLAUDE.md`, tek gerçek kaynağı).*
 
@@ -251,7 +257,7 @@ spec'e karşılık geldiği yazıldı. `spec yok` satırı kalmadı — on bir i
 | 1 | Talep bildirimi | `0009` ✅ tamamlandı |
 | — | Personel yönetimi eylemleri *(sıra dışı yapıldı)* | `0008` ✅ tamamlandı |
 | 2 | **Görsel dil ve marka teması** | `frontend-002` ✅ tamamlandı |
-| 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · **`0010b`** (Taslak — sahip bekliyor) |
+| 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | **`0011`** (Taslak — S1–S5) |
 | 5 | Yayın ve durum eylemleri + toplu eylemler | **`0012`** (Taslak — S1–S5) |
 | 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
@@ -263,8 +269,14 @@ spec'e karşılık geldiği yazıldı. `spec yok` satırı kalmadı — on bir i
 | 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
 | 13 | Bülten aboneliği | **`0018`** (Taslak — S1–S5) |
 
-`3`. satır `0010`'un **D9**'uyla ikiye bölündü: `0010a` (araç kaydı) tamamlandı, `0010b`
-(düzenleme ve liste) sıranın bu adımını kapatacak.
+`3`. satır `0010`'un **D9**'uyla ikiye bölündü ve **iki dilimi de kapandı**: `0010a` (araç
+kaydı, 2026-10-05) ve `0010b` (düzenleme ve liste, 2026-10-10). Sıranın bu adımı bitti;
+**başlanmamış ilk iş #4 (`0011`)**.
+
+Bu, yukarıda yazılı bedeli de gerçek hâline getirdi: galeri artık panelden araç girebiliyor
+ama **hiçbirini yayına alamıyor** — `EnsurePublishable()` en az bir medya varlığı istiyor ve
+`MediaAssetReady` olayını yayan hâlâ bir şey yok. Vitrin bu yüzden seed'e bağlı ve `0011`
+sıranın başında.
 
 **Dokuz taslağın toplam 43 açık sorusu var ve hepsinin önerisi yazılı.** Hiçbirinin
 kabul kriteri yok; cevaplar onları belirliyor. `0014`'ün **S1**'i tablonun kendisini
