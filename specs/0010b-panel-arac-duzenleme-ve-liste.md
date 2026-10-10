@@ -444,8 +444,8 @@ kapalı birleşimi kimlik taşımıyor; `parseRoute`'un panel dalı üçüncü p
       *(`check:tokens` ve `lint:css` yeşil.)*
 - [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] Pipeline tamamen yeşil (`docs/git.md` § 4). *(PR #39, dört kapı da pass.)*
+- [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
