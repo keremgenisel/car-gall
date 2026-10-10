@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | **Tamamlandı** (2026-10-10) |
 | **Sahip** | Developer (ajan oturumu) — atandı 2026-10-10 |
 | **Analist** | Metnin kaynağı `0010` (Analist oturumu); **bölünme kararı** `0010a` D9 (Developer oturumu). Sahip atandığında güncellenir. |
 | **Onaylayan** | Takım Yöneticisi |
@@ -442,12 +442,15 @@ kapalı birleşimi kimlik taşımıyor; `parseRoute`'un panel dalı üçüncü p
       *(İki satır + ADR `0007`.)*
 - [x] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
       *(`check:tokens` ve `lint:css` yeşil.)*
-- [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
-      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
+- [x] **Dış gözden geçirme yapıldı:** bir QA oturumu diff + spec + testleri okudu ve üç
+      bulgu verdi; üçü de gerçek çıktı ve üçü de kod değiştirdi (`docs/roles/qa.md`).
+      *(Tur PR açıldıktan SONRA koştu — madde "açılmadan önce" diyor. **Üst üste üçüncü
+      spec'te aynı şey oldu** (`frontend-002`, `0010a`, `0010b`); maddenin zamanlaması
+      pratikte tutmuyor ve düzeltilmesi bir öneri olarak kapanış PR'ında duruyor.)*
 - [x] Pipeline tamamen yeşil (`docs/git.md` § 4). *(PR #39, dört kapı da pass.)*
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] Takım Yöneticisi onayladı ve squash-merge edildi. *(PR #39; dört kapı yeşil okunduktan SONRA merge edildi, `docs/git.md` § 4.3. Dalın merge-base'i tam olarak `origin/main` olduğu için CI gerçek birleşmiş hâli koştu ve `0010a`'da gereken yerel birleştirme provası gerekmedi.)*
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
@@ -456,13 +459,36 @@ kapalı birleşimi kimlik taşımıyor; `parseRoute`'un panel dalı üçüncü p
 | Ölçüt | Değer | Not |
 |---|---|---|
 | **Spec revizyon sayısı** | 0 | R/C/AC onaylandıktan sonra değişmedi. D21–D29 uygulama planıyla **birlikte** onaylandı; D22'nin "veri kaybı yok" cümlesi uygulamada tutmadı ve karar notu düzeltildi — bu bir KARAR revizyonudur, sütuna girmiyor. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek, kaçı gürültü? |
-| **Uygulama içi bulgu** | 10 | Aşağıda sayıldı. |
+| **Düzeltme turu sayısı** | 1 | QA triyajı. Öncesindeki commit'ler planın adımlarıydı, geri dönüş değil. |
+| **Dış bulgu (gerçek/gürültü)** | 3 / 0 | QA triyajı üç bulgu verdi, üçü de gerçek çıktı ve düzeltildi. Aşağıda sayıldı. |
+| **Uygulama içi bulgu** | 11 | Aşağıda sayıldı. **Kapanışta 10'dan 11'e düzeltildi:** 11. bulgu (slug eşlemesi) SCORECARD commit'inden SONRA düzeltildi ve listeye hiç girmemişti. |
 | **Regresyon sayısı** | 0 | Sözleşme kırılması **bilerek** yapıldı ve DoD'da yazılı; `0010a`'nın kriterleri aynı şeyi ölçmeye devam ediyor. Kırılan bir davranış yok. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Kaçan hata** | izleniyor | Merge 2026-10-10. Bilinen bir kaçan hata yok; X20 (kaybolan güncelleme) ve X21 (alan ayarı ucu) **kabul edilmiş riskler**, kaçan hata değil — ikisi de DoD'da adıyla yazılı. |
 
-**Uygulama içi bulgular (10):**
+**Dış bulgular (3/0):**
+
+1. **AC-5 kilometre için TUTMUYORDU** *(önemli)*. `mileageKilometers` gövdede yokken
+   bağlayıcı `0` veriyor, `0` geçerli bir kilometre olduğu için istek kabul ediliyor ve
+   araç kaydedilmiş kilometresini **sessizce kaybediyordu**. Fiyatın aksine kilometre
+   geçmişi de yok, yani geri alınacak bir kayıt yoktu. Değer tipli iki çekirdek alan
+   (`modelYear`, `mileageKilometers`) nullable yapıldı — "gönderilmedi" ile "0 gönderildi"
+   ancak böyle ayrılıyor. AC-5 testi her çekirdek alanı tek tek çıkaran bir `[Theory]` oldu
+   (12 vaka); önceki hâli yalnız `bodyType`'ı deniyordu, yani bir dizeyi — zaten korunan
+   alanlardan birini.
+2. **Uzun açıklama BAŞLIK alanını işaretliyordu** *(küçük)*. `Listing.SetText` artık iki
+   ayrı kod dönüyor (`title_too_long` / `description_too_long`). AC-20 testi `field`
+   parametresini de doğruluyor; önceki hâli yalnız hata koduna bakıyordu ve bu yüzden
+   görmedi. `0010a` BULGU-4'ün ("boş şase → çok uzun") aynı sınıfı.
+3. **Özet sorgusu tüm `Listing` varlığını çekiyordu** *(küçük)* — üstündeki yorum "dar
+   projeksiyon" diyordu. Artık gerçekten iki kolon. Test ÜRETİM yolunun çalıştırdığı SQL'i
+   yakalıyor: kendi kurduğu bir sorguyu ölçmek yalnız EF'in çalıştığını gösterirdi.
+
+**Üçünün ortak sınıfı:** hiçbiri "kod yanlış" değildi; üçü de **yanlış şeyi ölçen bir
+test**ti. Biri yanlış alanı deniyordu, biri yanlız hata koduna bakıyordu, biri yorumun
+söylediğini doğru varsayıyordu. `0010a`'nın dersinin ("kod doğru, ölçen bir şey yok")
+bir adım ilerisi: ölçen bir şey vardı, yanlış şeyi ölçüyordu.
+
+**Uygulama içi bulgular (11):**
 
 1. **AC-29'un ilk testi kırıcıyı KANITLAMIYORDU.** Kırıcı kaldırıldığında da yeşil
    kalıyordu: küçük bir tabloda PostgreSQL her iki sorguda aynı tarama sırasını veriyor.
@@ -490,6 +516,15 @@ kapalı birleşimi kimlik taşımıyor; `parseRoute`'un panel dalı üçüncü p
    şaseleriyle buluyor. Aynı yarış şase damgasını da çakıştırdı (milisaniye yetmiyordu).
 10. **Yan yana iki sütun neredeyse aynı adı taşıyordu** — "Durum" ve "Durumu". Tamlık
     sütunu "Tamlık" oldu; sorun önce testte göründü, ama ekranda da vardı.
+11. **Boş bırakılan slug YANLIŞ alanı işaretliyordu.** `VehicleSpecification.Create` dört
+    slug'ı bir döngüde geziyor ve tek bir `InvalidSlug` dönüyor; eşleme koşulsuz
+    `fuelType` olduğu için vitesi, çekişi veya donanım paketini boş bırakan personele
+    **yakıt** alanı kırmızı gösteriliyordu. Dört slug artık
+    `VehicleWriteRules.BuildSpecification` içinde tek tek denetleniyor — `Create` yine
+    çağrılıyor, kuralın sahibi o; buradaki iş yalnız alanı adlandırmak. **Bu bulgu QA'nın
+    BULGU-1'i için yazılan "her çekirdek alanı tek tek çıkar" testinden çıktı; o test
+    olmasa görünmezdi** — dış bir bulgunun düzeltmesi, kendi dışında bir hatayı açığa
+    çıkardı.
 
 **Bu spec'ten çıkarılan ders:**
 
