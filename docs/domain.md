@@ -269,11 +269,16 @@ fiyat filtresine takılmaz.
 yoktur:
 ```
 Yüklendi   → İşleniyor
-İşleniyor  → Hazır | Yüklendi      (tur başarısız oldu, deneme hakkı kaldı)
-İşleniyor  → Başarısız             (deneme hakkı tükendi)
+İşleniyor  → Hazır
+İşleniyor  → Başarısız
+Başarısız  → Yüklendi        (AÇIK bir tekrar deneme komutuyla; otomatik değil)
 Hazır      → (terminal)
-Başarısız  → (terminal)
 ```
+
+**`Başarısız` terminal DEĞİLDİR.** Tekrar deneme ayrı bir komutla tetiklenir ve **aynı
+varlık kimliğini korur** — yeni bir kimlik, `VehicleCatalog`'un tuttuğu referansı öksüz
+bırakır. Otomatik tekrar bilinçli olarak yok: `0009`'un kaçan hatası otomatik tekrarın
+kuyruğu sessizce tıkamasıydı.
 
 **M2.** **Medya sahipsizdir.** Bir varlığın hangi araca ait olduğu `Media`'da tutulmaz;
 `VehicleCatalog`'un sıralı medya listesinde durur.
