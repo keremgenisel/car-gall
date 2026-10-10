@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı** (2026-10-05) |
+| **Durum** | **Tamamlandı** (2026-10-05) |
 | **Sahip** | Developer (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (yazma yüzeyi — bugün hiç yok) · `VehicleReference.Contracts` · `frontend/` yönetim paneli |
@@ -570,8 +570,9 @@ araçlarını eşleyemez.
 - [x] Mevcut agregat **davranışı** yeniden yazılmadı; komut katmanı onların üzerine kuruldu
       (C17). EF tesisatı (private kurucu, backing field, owned type) D10 kapsamındadır ve
       PR'da **ayrı başlıkta** gösterilmiştir.
-- [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
-      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
+- [x] **Dış gözden geçirme yapıldı:** bir QA oturumu diff + spec + testleri okudu ve dört
+      bulgu verdi; dördü de gerçek çıktı ve düzeltildi (`docs/roles/qa.md`). *(Gözden
+      geçirme PR açıldıktan sonra yapıldı — madde "açılmadan önce" diyor.)*
 - [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(Şablonda iki kez geçiyor.)*
 - [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil. *(237 anahtar.)*
 - [x] Yeni domain terimi **yok** — spec yalnızca sözlükteki terimleri kullanır.
@@ -581,8 +582,10 @@ araçlarını eşleyemez.
       *(`AdminField` → `shared/ui/Field` terfi etti; `check:tokens` ve `lint:css` yeşil.)*
 - [x] Pipeline tamamen yeşil (`docs/git.md` § 4). *(PR #35, dört kapı da pass.)*
 - [x] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] Takım Yöneticisi onayladı ve squash-merge edildi. *(PR #35.)*
+- [x] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı. *(Taşıma PR
+      #36; SCORECARD'ın ölçümleri o PR'da KAYBOLDU ve bu PR'da geri getirildi —
+      ayrıntısı SCORECARD'ın altında.)*
 
 ---
 
@@ -591,11 +594,45 @@ araçlarını eşleyemez.
 | Ölçüt | Değer | Not |
 |---|---|---|
 | **Spec revizyon sayısı** | 0 | R/C/AC onaylandıktan sonra değişmedi. **D11 bir KARAR revizyonudur** ve bu sütuna girmiyor; ayrıntısı kararın altında. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek, kaçı gürültü? |
+| **Düzeltme turu sayısı** | 1 | QA triyajı. Öncesindeki commit'ler planın adımlarıydı, geri dönüş değil. |
+| **Dış bulgu (gerçek/gürültü)** | 4 / 0 | QA triyajı dört bulgu verdi, dördü de gerçek çıktı ve düzeltildi. Aşağıda sayıldı. |
 | **Uygulama içi bulgu** | 9 | Aşağıda sayıldı. |
 | **Regresyon sayısı** | 1 | `0007/AC-8`'in mimari testi `0010a`'nın korumalı **okuma** ucunu da reddediyordu; mesajı "korumasız YAZMA ucu" diyordu ama düzenli ifade bütün fiilleri yasaklıyordu. Daraltıldı ve `MapPost`'la kırmızıya döndüğü probla doğrulandı. |
-| **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
+| **Kaçan hata** | 1 | Opsiyonel alan değeri `LocalizedText` olarak saklanıyordu; tanımlı tek alan tramer, yani bir **tutar**. Parayı metinde saklamak Altın Kural 4'ün ve Yasak Listesi 26'nın ihlali. `0010b` buldu, C23 istisnasıyla tipli değere (`numeric(19,4)`) geçirdi ve eski kolonu düşürdü. **`ListingPrice` sayılmadı:** o da tek metin kolonunda duruyor ama `0010a`'da BİLİNEREK kabul edilmiş bir EF sınırıdır ve ondalık ölçeğin korunduğu testle gösterilmiştir — kabul edilen risk, kaçan hata değil. |
+
+> **Bu SCORECARD iki kez dolduruldu.** Ölçümler 2026-10-05'te yapıldı ama `main`'e
+> girmedi: kapanış PR'ı (#36) yalnız bir `git mv` taşıdı — düzenlemeler, iki paralel
+> oturumun aynı çalışma ağacındaki index'ini çözerken yapılan `git reset` ile silindi.
+> `Dış bulgu` satırı ise 41 saniye sonra, artık merge edilmiş olan
+> `feature/0010a-panel-arac-kaydi` dalına ve taşınmadan önceki yola yazıldı; oradan
+> buraya taşındı. Commit mesajı "DoD 23/23" diyordu, dosya 20/23 diyordu — **ve beş gün
+> boyunca kimse farkı görmedi, çünkü hiçbir kapı spec dosyasını okumuyor.**
+>
+> Ders: *bir ölçüm commit'e girmediyse yapılmamıştır.* Bunun kurala dönüşmesi
+> `docs/git.md` § 4'e ait ve bu PR'da öneri olarak duruyor.
+
+**Dış bulgular (4/0):**
+
+1. **Renksiz araç kaydedilebiliyordu** *(orta — karar sorusu olarak geldi)*. R2 rengi
+   çekirdek listeye koyuyor, R10'un ikinci cümlesi çok dilli metni muaf tutuyor; QA
+   ikisini de okunabilir buldu ve kararı Takım Yöneticisi'ne bıraktı (AP-10). **Karar:**
+   renk zorunlu, ölçüt "en az bir **etkin** locale'de dolu" — böylece R2'nin açık listesi
+   de R10'un muafiyeti de ayakta kalıyor ve spec revize edilmiyor. Aynı bulgunun bağımsız
+   yarısı: etkin olmayan locale'de girilen renk **sessizce atılıyordu**; artık
+   reddediliyor.
+2. **AC-24 ve AC-48'in etiketli testi yoktu** *(küçük)*. AC-24'ün invariantı doğru
+   kurulmuştu ama yalnız yorumda yaşıyordu — `RemovePriceChange` eklemek hiçbir testi
+   kırmazdı. Artık invariantın ŞEKLİ sınanıyor. AC-48 bir izlenebilirlik boşluğuydu:
+   davranış `0006/AC-54` etiketiyle test ediliyordu.
+3. **Yönetim listesi `listings` tablosunun tamamını okuyordu** *(küçük)*. Bugün zararsızdı
+   (araç sorgusu da sayfalanmıyor, X18) ama `0010b` sayfalamayı eklediğinde kazancı
+   sessizce iptal ederdi.
+4. **Boş şase "çok uzun" diyordu** *(küçük)*. `Vin.Create`'in üç başarısızlık nedeni tek
+   koda eşlenmişti; personel şaseyi kısaltmaya çalışırdı, oysa sorun boşluktu.
+
+**Dersin ikinci yarısı:** dördünün üçü de *"kod doğru, ölçen bir şey yok"* biçimindeydi —
+invariant yorumda, hata kodu tek sepette, sorgu sınırsız. Hiçbiri bir testi kırmıyordu,
+çünkü hiçbirini bir test tutmuyordu.
 
 **Uygulama içi bulgular (9):**
 
