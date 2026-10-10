@@ -126,6 +126,12 @@ Domain → (hiçbir şey; yalnızca BuildingBlocks primitive'leri)
   Yalnızca bir `traceId` döner; detay loga yazılır.
 - Doğrulama hataları `422`, bulunamadı `404`, yetki `403`, kimlik `401`,
   durum çakışması `409`, **hız sınırı `429`**.
+- **Dosya yüklemede:** desteklenmeyen dosya türü `415`, boyut sınırı aşıldı `413`.
+  İkisi `422`'ye toplanmaz — istemcinin yapacağı şey farklı: biri **başka bir dosya**
+  seçmek, diğeri **aynı dosyayı küçültmek**. Tür, dosya adından veya istemcinin
+  `Content-Type` başlığından değil **içerikten** belirlenir; adına güvenen bir kontrol
+  `.jpg` diye adlandırılmış herhangi bir dosyayı kabul eder.
+  *(Spec `0011` / D4, Takım Yöneticisi onayı 2026-10-10.)*
 
 **`errorCode` adlandırması:** `<alan>.<durum>[.<ayrıntı>]`, hepsi snake_case, nokta ayraçlı.
 Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod eklenir.
