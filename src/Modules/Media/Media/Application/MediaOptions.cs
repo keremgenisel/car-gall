@@ -72,6 +72,28 @@ internal sealed class MediaOptions
         return true;
     }
 
+    /// <summary>
+    /// Taban adresi sondaki eğik çizgiyle tamamlar.
+    ///
+    /// <para><b>Bir bulgunun bedeli.</b> Erişim yolu <c>new Uri(taban, anahtar)</c> ile
+    /// göreli çözülüyor ve <c>Uri</c>'nin kuralı gereği sondaki eğik çizgi olmadan taban
+    /// adresin <b>son yol segmenti düşüyor</b>. Ölçüldü:
+    /// <c>https://cdn.ornek.test/kova/</c> →
+    /// <c>…/kova/public/assets/…/display.webp</c>, ama
+    /// <c>https://cdn.ornek.test/kova</c> → <c>…/public/assets/…/display.webp</c> —
+    /// <c>/kova</c> yok. Uygulama ayağa kalkıyor, log temiz, vitrindeki her görsel 404.
+    /// Yapılandırmanın dört yerindeki (appsettings, ci.yml, perf.yml, dev-up.sh) değerler
+    /// yol segmenti taşıyor; tek karakter eksilterek tetiklenebilir bir kurulum tuzağıydı.</para>
+    ///
+    /// <para><b>Reddetmek yerine normalize ediliyor</b> ve bu bir tercih: C6'nın deseni
+    /// EKSİK yapılandırmayı reddetmek içindir, burada eksik bir şey yok — niyet
+    /// tartışmasız ve biçim kusurlu. Eksik bir eğik çizgi için kurulumu reddetmek
+    /// sürtünme ekler, güvenlik kazandırmaz. Şema denetimi (aşağıda) ayrı bir konu:
+    /// orada niyet GERÇEKTEN belirsizdir.</para>
+    /// </summary>
+    private static string NormalizeBaseUrl(string value) =>
+        string.IsNullOrWhiteSpace(value) || value.EndsWith('/') ? value : value + "/";
+
     internal static Result<MediaOptions> Create(MediaSetup setup)
     {
         ArgumentNullException.ThrowIfNull(setup);
@@ -100,7 +122,7 @@ internal sealed class MediaOptions
             return Result.Failure<MediaOptions>(new Error("media.storage_region_missing"));
         }
 
-        if (!IsReachableUrl(setup.PublicBaseUrl, out Uri? publicBaseUrl))
+        if (!IsReachableUrl(NormalizeBaseUrl(setup.PublicBaseUrl), out Uri? publicBaseUrl))
         {
             return Result.Failure<MediaOptions>(new Error("media.public_base_url_missing"));
         }

@@ -50,7 +50,8 @@ public sealed class IslemeHattiTests(MedyaOrtami ortam)
         {
             Assert.Equal($"public/assets/{id:D}/{turev.VariantCode}.webp", turev.ObjectKey);
 
-            // AC-30 — türev GERÇEKTEN depoda ve oradan okunabiliyor.
+            // Yolun KULLANILABİLİR olduğu da burada görülüyor; AC-30'un kendi testi
+            // ayrıca baytların ve boyutun doğruluğunu ölçüyor.
             byte[]? govde = await ortam.NesneOkuAsync(turev.ObjectKey);
 
             Assert.NotNull(govde);
@@ -62,6 +63,38 @@ public sealed class IslemeHattiTests(MedyaOrtami ortam)
         Assert.Equal(
             kayit.Derivatives.Count,
             kayit.Derivatives.Select(turev => turev.ObjectKey).Distinct(StringComparer.Ordinal).Count());
+    }
+
+    /// <summary>
+    /// AC-30'un KENDİ testi. Önceki hâli AC-15'in testinin içinde bir yorum satırıydı ve
+    /// etiket taramasıyla kurulan kriter → test eşlemesi onu hiç görmüyordu: etiketsiz
+    /// kriter, testi bir gün dar bir refactor'da düştüğünde kimsenin fark etmeyeceği
+    /// kriterdir.
+    /// </summary>
+    [Fact(DisplayName = "0011/AC-30: Türev, S3 uyumlu sağlayıcıya yazılır ve oradan okunabilir")]
+    public async Task Okunabilir_Turev_S3UyumluSaglayicidan()
+    {
+        Guid id = await HazirlaAsync();
+
+        await TurKosAsync();
+
+        MediaAsset kayit = await VarlikAsync(id);
+
+        Assert.Equal(3, kayit.Derivatives.Count);
+
+        foreach (MediaDerivative turev in kayit.Derivatives)
+        {
+            byte[]? govde = await ortam.NesneOkuAsync(turev.ObjectKey);
+
+            Assert.NotNull(govde);
+            Assert.NotEmpty(govde);
+
+            // Yazılan şey GERÇEKTEN o türev: boyutu kayıtla uyuşuyor.
+            using SkiaSharp.SKBitmap cozulen = SkiaSharp.SKBitmap.Decode(govde);
+
+            Assert.Equal(turev.Width, cozulen.Width);
+            Assert.Equal(turev.Height, cozulen.Height);
+        }
     }
 
     [Fact(DisplayName = "0011/AC-19: Yüklenen görselin konum ve cihaz bilgisi türevlerde bulunmaz")]
@@ -144,6 +177,29 @@ public sealed class IslemeHattiTests(MedyaOrtami ortam)
     }
 
     /// <summary>
+    /// AC-29'un eksik yarısı: taban adres sondaki eğik çizgi OLMADAN yazıldığında yol
+    /// segmenti korunmalı.
+    ///
+    /// <para>Önceki testin iki vakası da eğik çizgiyle bitiyordu ve bu yüzden kusuru
+    /// görmüyordu: <c>new Uri(taban, anahtar)</c> göreli çözümünde eğik çizgi yoksa son
+    /// segment (<c>/kova</c>) <b>sessizce düşüyor</b> ve vitrindeki her görsel 404 olurdu.</para>
+    /// </summary>
+    [Theory(DisplayName = "0011/AC-29: Türevin erişim yolu yapılandırılan taban adresten üretilir")]
+    [InlineData("https://cdn.ornek.test/kova/")]
+    [InlineData("https://cdn.ornek.test/kova")]
+    public void Korunur_YolSegmenti_EgikCizgiOlmasaDa(string tabanAdres)
+    {
+        MediaOptions ayarlar = MediaOptions.Create(
+            ortam.Setup() with { PublicBaseUrl = tabanAdres }).Value;
+
+        const string anahtar = "public/assets/abc/display.webp";
+
+        Assert.Equal(
+            $"https://cdn.ornek.test/kova/{anahtar}",
+            new MediaUrlResolver(ayarlar).Resolve(anahtar).ToString());
+    }
+
+    /// <summary>
     /// D16 — orijinalin erişim yolu ÜRETİLEMEZ. Üretilebilse, ham EXIF taşıyan dosya
     /// yayınlanabilir olurdu ve R5'in kapattığı delik arka kapıdan açılırdı.
     /// </summary>
@@ -198,6 +254,66 @@ public sealed class IslemeHattiTests(MedyaOrtami ortam)
         Assert.Equal(1, kayit.AttemptCount);
     }
 
+    /// <summary>
+    /// AC-12'nin ASIL riski: iki turun sahiplenme okuması <b>kesişiyor</b>. Sıralı vaka
+    /// (yukarıdaki test) sorguyu durum filtresiyle koruyor ve kilidin var olup olmadığını
+    /// hiç sormuyor — bu test onu soruyor.
+    ///
+    /// <para>Kilit kaldırıldığında kırmızı veriyor: kilitsiz bir <c>SELECT</c> + <c>UPDATE</c>
+    /// çiftinde ikinci tur da varlığı sahipleniyor ve <c>attempt_count</c> kaybolan
+    /// güncellemeyle <b>1</b>'de kalıyor.</para>
+    /// </summary>
+    [Fact(DisplayName = "0011/AC-12: Bir işleme turu, başka bir turun sahiplendiği varlığı yeniden işlemez")]
+    public async Task Islemez_Tur_KesisenOkumadaBileAyniVarligi()
+    {
+        Guid id = await HazirlaAsync();
+
+        // İki ayrı bağlantı, iki ayrı tur — ve ikisi birlikte koşuyor. `Task.WhenAll`
+        // olmadan sıralama testin kendi kurgusundan gelirdi.
+        Task<int> birinci = TurKosAsync();
+        Task<int> ikinci = TurKosAsync();
+
+        int[] islenen = await Task.WhenAll(birinci, ikinci);
+
+        // Varlık BİR kez işlendi: turlardan biri onu aldı, diğeri kilitli satırı atladı.
+        Assert.Equal(1, islenen.Sum());
+
+        MediaAsset kayit = await VarlikAsync(id);
+
+        Assert.Equal(MediaProcessingStatus.Ready, kayit.Status);
+        Assert.Equal(1, kayit.AttemptCount);
+
+        // Ve tek duyuru: ikinci tur işi tekrar yapıp çakışmaya düşmedi.
+        await using MediaDbContext oku = ortam.CreateContext();
+
+        Assert.Single(await oku.OutboxMessages.AsNoTracking().ToListAsync());
+
+        // Türevler de bir kez yazıldı — çift yazma `PK_asset_derivatives` çakışmasıyla
+        // patlıyordu ve son hâl "tutarlı" görünüyordu; bu iddia o tesadüfü kapatıyor.
+        Assert.Equal(3, kayit.Derivatives.Count);
+    }
+
+    /// <summary>
+    /// Kilit, hattı SERİ hâle getirmemeli: ikinci tur kilitli satırı beklemek yerine
+    /// atlayıp sıradaki varlığı almalı (`SKIP LOCKED`). İki varlık, iki paralel tur →
+    /// ikisi de işlenmiş olmalı.
+    /// </summary>
+    [Fact]
+    public async Task Atlar_Tur_KilitliSatiri_VeSiradakiniAlir()
+    {
+        await ortam.SifirlaAsync();
+        await ortam.FiligraniYerlestirAsync(GorselFixture.FiligranPng());
+
+        Guid birinciId = await YukleAsync();
+        Guid ikinciId = await YukleAsync();
+
+        int[] islenen = await Task.WhenAll(TurKosAsync(), TurKosAsync());
+
+        Assert.Equal(2, islenen.Sum());
+        Assert.Equal(MediaProcessingStatus.Ready, (await VarlikAsync(birinciId)).Status);
+        Assert.Equal(MediaProcessingStatus.Ready, (await VarlikAsync(ikinciId)).Status);
+    }
+
     [Fact(DisplayName = "0011/AC-18: Filigran kaynağı erişilemezse varlık `Başarısız` olur; filigransız türev üretilmez")]
     public async Task Olur_Varlik_Basarisiz_FiligranYoksa()
     {
@@ -221,6 +337,41 @@ public sealed class IslemeHattiTests(MedyaOrtami ortam)
         {
             Assert.Null(await ortam.NesneOkuAsync(MediaObjectKeys.Derivative(id, variant)));
         }
+    }
+
+    /// <summary>
+    /// Filigran TUR BAŞINA bir kez indirilir, varlık başına değil. Kriter ihlali değil —
+    /// ölçülmüş bir maliyet: önceki hâli 20'lik bir partide aynı nesneyi 20 kez çekiyordu.
+    /// </summary>
+    [Fact]
+    public async Task Indirilir_Filigran_TurBasinaBirKez()
+    {
+        await ortam.SifirlaAsync();
+        await ortam.FiligraniYerlestirAsync(GorselFixture.FiligranPng());
+
+        await YukleAsync();
+        await YukleAsync();
+        await YukleAsync();
+
+        MediaOptions ayarlar = ortam.Options();
+        SayanDepo depo = new(ortam.Store(ayarlar));
+
+        await using MediaDbContext context = ortam.CreateContext();
+
+        MediaProcessingService servis = new(
+            context,
+            depo,
+            new SkiaImageProcessor(),
+            new MediaUrlResolver(ayarlar),
+            new OutboxWriter<MediaDbContext>(context, new SabitSaat(Simdi)),
+            ayarlar,
+            new SabitSaat(Simdi),
+            NullLogger<MediaProcessingService>.Instance);
+
+        int islenen = await servis.ProcessDueAsync(CancellationToken.None);
+
+        Assert.Equal(3, islenen);
+        Assert.Equal(1, depo.OkumaSayisi(MedyaOrtami.WatermarkKey));
     }
 
     [Fact(DisplayName = "0011/AC-25: İşleme başarısız olduğunda `MediaAssetFailed` yayılır")]
@@ -316,6 +467,15 @@ public sealed class IslemeHattiTests(MedyaOrtami ortam)
         await ortam.SifirlaAsync();
         await ortam.FiligraniYerlestirAsync(GorselFixture.FiligranPng());
 
+        return await YukleAsync(govde);
+    }
+
+    /// <summary>
+    /// Sıfırlamadan yükler. Birden çok varlık gereken testler bunu kullanıyor:
+    /// `HazirlaAsync` her çağrıda tabloyu boşaltıyor.
+    /// </summary>
+    private async Task<Guid> YukleAsync(byte[]? govde = null)
+    {
         MediaOptions ayarlar = ortam.Options();
 
         await using MediaDbContext context = ortam.CreateContext();

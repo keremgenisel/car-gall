@@ -49,6 +49,18 @@ internal sealed class MediaProcessingService(
     {
         int islenen = 0;
 
+        // Filigran TUR BAŞINA bir kez indiriliyor, varlık başına değil. Önceki hâli
+        // `UretAsync` içindeydi ve 20'lik bir partide aynı nesneyi 20 kez çekiyordu.
+        //
+        // Süreç içi önbellek bilinçli olarak YOK: D4 logo değiştiğinde yapılandırmanın
+        // güncellendiğini söylüyor ve kalıcı bir önbellek o değişimi bir yeniden başlatmaya
+        // kadar görmezdi.
+        //
+        // `null` ise tur yine koşuyor: AC-18 gereği sahiplenilen her varlık
+        // `media.watermark_unavailable` ile BAŞARISIZ işaretlenmeli — sessizce bekleyen bir
+        // varlık, R8'in önlemeye çalıştığı şeyin ta kendisi.
+        byte[]? filigran = await IndirAsync(options.WatermarkObjectKey, cancellationToken);
+
         while (islenen < BatchSize && !cancellationToken.IsCancellationRequested)
         {
             MediaAsset? asset = await SahiplenAsync(cancellationToken);
@@ -58,7 +70,7 @@ internal sealed class MediaProcessingService(
                 break;
             }
 
-            await IsleAsync(asset, cancellationToken);
+            await IsleAsync(asset, filigran, cancellationToken);
             islenen++;
         }
 
@@ -66,39 +78,85 @@ internal sealed class MediaProcessingService(
     }
 
     /// <summary>
-    /// D14 — en eski bekleyen varlığı alır ve <c>İşleniyor</c>'a geçirir. Geçiş kendi
-    /// `SaveChanges`'inde kalıcı olur; işin kendisi ondan sonra başlar.
+    /// D14 — turun varlığı SAHİPLENMESİ. Geçiş eşzamanlılık belirteci altında kaydedilir;
+    /// aynı satırı başka bir tur çoktan sahiplendiyse <c>SaveChanges</c> düşer ve bu tur
+    /// SIRADAKİ varlığa geçer.
+    ///
+    /// <para><b>Kilit bir sondayla eklendi.</b> Önceki hâli çıplak bir <c>SELECT</c> +
+    /// <c>UPDATE</c> çiftiydi ve D14'ün *"geçişi işin başına koymak R6'nın durumunu aynı
+    /// zamanda bir kilit yapıyor"* iddiası iki turun okuması kesiştiğinde tutmuyordu:
+    /// ikisi de sahiplendi, <c>attempt_count</c> kaybolan güncellemeyle <b>1</b>'de kaldı
+    /// (oysa o sayaç AC-11'in ölçütü) ve gerçekten paralel koşturulduğunda ikisi de tam
+    /// işi yaptı — çözme, üç türev, filigran, S3'e yazma — sonra ikincisi
+    /// <c>PK_asset_derivatives</c> çakışmasına düştü. Tek Host örneğiyle görünmez; ikinci
+    /// örnek açıldığı gün belirtisi "bazı fotoğraflar geç hazır oluyor" olurdu.</para>
+    ///
+    /// <para><b>Neden satır kilidi değil:</b> `0007` R3 satır kilidini yalnız
+    /// `BuildingBlocks/Concurrency/` altına koyuyor ve bir mimari test (`0007`/AC-9)
+    /// modüllerde kilit sözdizimini tarıyor. İlk düzeltmemde ham SQL yazdım ve o test beni
+    /// kırdı — haklıydı: ortak desen tek yerde yaşar. `InvariantGuard` de bu iş için uygun
+    /// değil: o "satır kümesini kilitle, SAY, karar ver" içindir; buradaki ihtiyaç bir
+    /// kuyruktan bir satır kapmak. Eşzamanlılık belirteci aynı garantiyi ortak deseni
+    /// delmeden veriyor.</para>
+    ///
+    /// <para>Çakışan tur <b>durmuyor, atlıyor</b>: döngü bir sonraki adayı deniyor ve
+    /// partinin geri kalanı bir sonraki tike ertelenmiyor.</para>
     /// </summary>
     private async Task<MediaAsset?> SahiplenAsync(CancellationToken cancellationToken)
     {
-        DateTimeOffset simdi = clock.UtcNow;
-
-        MediaAsset? aday = await context.Assets
-            .Where(asset => asset.Status == MediaProcessingStatus.Uploaded
-                && asset.NextAttemptAt <= simdi)
-            .OrderBy(asset => asset.NextAttemptAt)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (aday is null)
+        // Deneme sayısı parti boyuyla sınırlı: her çakışma bir adayı tüketiyor ve
+        // sınırsız bir döngü, kuyruk kalabalıkken turu burada asılı bırakırdı.
+        for (int deneme = 0; deneme < BatchSize; deneme++)
         {
-            return null;
+            DateTimeOffset simdi = clock.UtcNow;
+
+            MediaAsset? aday = await context.Assets
+                .Where(asset => asset.Status == MediaProcessingStatus.Uploaded
+                    && asset.NextAttemptAt <= simdi)
+                .OrderBy(asset => asset.NextAttemptAt)
+                .ThenBy(asset => asset.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (aday is null)
+            {
+                return null;
+            }
+
+            Result sahiplenme = aday.BeginProcessing(simdi);
+
+            if (sahiplenme.IsFailure)
+            {
+                return null;
+            }
+
+            try
+            {
+                await context.SaveChangesAsync(cancellationToken);
+
+                return aday;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Başka bir tur bu satırı çoktan sahiplendi. İstisna akış kontrolü DEĞİL:
+                // sağlayıcının sinyali burada, sınırda, "sıradakine geç" kararına
+                // çevriliyor (`docs/conventions.md` § 5 — `InvariantGuard`'ın aynı deseni).
+                //
+                // Takipçi temizlenmeli: aksi hâlde aynı `DbContext` bir sonraki turda o
+                // bayat nesneyi yeniden yazmaya kalkar.
+                context.ChangeTracker.Clear();
+            }
         }
 
-        Result sahiplenme = aday.BeginProcessing(clock.UtcNow);
-
-        if (sahiplenme.IsFailure)
-        {
-            return null;
-        }
-
-        await context.SaveChangesAsync(cancellationToken);
-
-        return aday;
+        return null;
     }
 
-    private async Task IsleAsync(MediaAsset asset, CancellationToken cancellationToken)
+    private async Task IsleAsync(
+        MediaAsset asset,
+        byte[]? watermark,
+        CancellationToken cancellationToken)
     {
-        Result<IReadOnlyList<RenderedDerivative>> uretim = await UretAsync(asset, cancellationToken);
+        Result<IReadOnlyList<RenderedDerivative>> uretim =
+            await UretAsync(asset, watermark, cancellationToken);
 
         if (uretim.IsFailure)
         {
@@ -178,8 +236,20 @@ internal sealed class MediaProcessingService(
 
     private async Task<Result<IReadOnlyList<RenderedDerivative>>> UretAsync(
         MediaAsset asset,
+        byte[]? watermark,
         CancellationToken cancellationToken)
     {
+        // AC-18 — filigran kaynağı erişilemezse varlık BAŞARISIZ olur. Filigransız türev
+        // üretmek, galeri sahibinin satın aldığı tek garantiyi sessizce iptal etmekti ve
+        // sessizliği fotoğraflar rakip sitede göründüğünde fark edilirdi.
+        //
+        // Kontrol KAYNAĞI indirmeden önce: filigran yoksa orijinali çekmenin anlamı yok
+        // ve 20'lik bir partide bu 20 gereksiz S3 GET demekti.
+        if (watermark is null)
+        {
+            return Result.Failure<IReadOnlyList<RenderedDerivative>>(new Error(MediaErrors.WatermarkUnavailable));
+        }
+
         byte[]? kaynak = await IndirAsync(asset.OriginalObjectKey, cancellationToken);
 
         if (kaynak is null)
@@ -187,17 +257,7 @@ internal sealed class MediaProcessingService(
             return Result.Failure<IReadOnlyList<RenderedDerivative>>(new Error(MediaErrors.StorageUnavailable));
         }
 
-        // AC-18 — filigran kaynağı erişilemezse varlık BAŞARISIZ olur. Filigransız türev
-        // üretmek, galeri sahibinin satın aldığı tek garantiyi sessizce iptal etmekti ve
-        // sessizliği fotoğraflar rakip sitede göründüğünde fark edilirdi.
-        byte[]? filigran = await IndirAsync(options.WatermarkObjectKey, cancellationToken);
-
-        if (filigran is null)
-        {
-            return Result.Failure<IReadOnlyList<RenderedDerivative>>(new Error(MediaErrors.WatermarkUnavailable));
-        }
-
-        return processor.Render(kaynak, filigran);
+        return processor.Render(kaynak, watermark);
     }
 
     private async Task<byte[]?> IndirAsync(string objectKey, CancellationToken cancellationToken)

@@ -31,7 +31,8 @@ namespace CarGallery.Modules.Media.Infrastructure.Migrations
                     uploaded_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     next_attempt_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    alt_text = table.Column<string>(type: "jsonb", nullable: false)
+                    alt_text = table.Column<string>(type: "jsonb", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {

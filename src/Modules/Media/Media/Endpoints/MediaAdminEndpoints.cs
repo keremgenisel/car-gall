@@ -77,7 +77,29 @@ internal static class MediaAdminEndpoints
             return TypedResults.StatusCode(StatusCodes.Status415UnsupportedMediaType);
         }
 
-        IFormCollection form = await request.ReadFormAsync(cancellationToken);
+        IFormCollection form;
+
+        try
+        {
+            form = await request.ReadFormAsync(cancellationToken);
+        }
+        catch (InvalidDataException)
+        {
+            // Boru hattı sınırı aşıldı (`FormOptions.MultipartBodyLengthLimit`).
+            //
+            // **Yakalanmazsa `500` döner** ve bunu ölçtüm: genel `UseExceptionHandler`
+            // gövdeye `"title": "An error occurred while processing your request."`
+            // koyuyordu — yani uçta yanlışlıkla basılabilecek İngilizce bir metin, ki
+            // `MediaProblems`'in `TypedResults.Problem` kullanmama gerekçesi birebir buydu
+            // (Yasak Listesi 23). Üstelik `errorCode` hiç dönmüyordu ve `0012`'nin yükleme
+            // ekranı için "dosya çok büyük" en sık görülecek kullanıcı hatası.
+            //
+            // İstisna akış kontrolü DEĞİL: sağlayıcının sinyali burada, SINIRDA, kararlı
+            // bir koda çevriliyor (`docs/conventions.md` § 5 — `InvariantGuard`'ın aynı
+            // deseni).
+            return MediaProblems.From(new Error(MediaErrors.TooLarge));
+        }
+
         IFormFile? file = form.Files["file"];
 
         if (file is null)

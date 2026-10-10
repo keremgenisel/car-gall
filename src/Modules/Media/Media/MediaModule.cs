@@ -18,6 +18,19 @@ namespace CarGallery.Modules.Media;
 /// <summary>Modülün tek giriş noktası (`docs/conventions.md` § 1).</summary>
 public static class MediaModule
 {
+    /// <summary>
+    /// Multipart çerçevelemesi için ayrılan pay: sınır çizgisi, bölüm başlıkları ve alan
+    /// adı. Dosyanın kendi boyutunu `UploadMediaAssetCommand` denetliyor; boru hattının
+    /// sınırı yalnızca kaba bir arka duvar.
+    ///
+    /// <para><c>FormOptions.ValueLengthLimit</c> AÇIKÇA dokunulmuyor. Önceki hâli
+    /// <c>int.MaxValue</c> yazıyordu ve bu, yüklenen dosyaya hiçbir şey kazandırmadan
+    /// host GENELİNDEKİ dosya-olmayan form değeri sınırını (varsayılan 4 MB) kaldırıyordu
+    /// — yüklenen dosyayı <c>MultipartBodyLengthLimit</c> yönetiyor. Bugün başka form ucu
+    /// yok, ama bir sonraki form ucu o gevşemeyi miras alacaktı.</para>
+    /// </summary>
+    private const long MultipartOverheadAllowance = 8 * 1024;
+
     public static IServiceCollection AddMedia(this IServiceCollection services, MediaSetup setup)
     {
         ArgumentNullException.ThrowIfNull(setup);
@@ -54,10 +67,19 @@ public static class MediaModule
 
         // D10(b) — boyut sınırı BORU HATTINDA uygulanır, uç gövdeyi tamponlamadan önce.
         // Uçta kontrol etmek, sınırı aşan gövdenin zaten belleğe alınmış olması demekti.
+        //
+        // **Sınır biraz YUKARIDA ve bu bir hatanın bedeliydi.** İki sınır birebir aynı
+        // eşik olduğunda komutun `media.too_large` dalına HTTP yoluyla hiç ulaşılamıyordu:
+        // multipart gövdesi dosyanın kendisinden büyüktür (sınır çizgisi, başlıklar, alan
+        // adı) ve boru hattı her zaman komuttan ÖNCE patlıyordu. Ölçüldü: sınır 39.344
+        // iken 39.344 baytlık gövde `202`, sınır 39.343 iken aynı gövde `500` —
+        // `MediaErrors.TooLarge` ölü koddu.
+        //
+        // Pay, multipart çerçevelemesini karşılıyor: dosyanın KENDİ boyutu artık komutun
+        // kararı, boru hattı ise yalnız kaba bir arka duvar.
         services.Configure<FormOptions>(form =>
         {
-            form.MultipartBodyLengthLimit = options.Value.MaximumByteSize;
-            form.ValueLengthLimit = int.MaxValue;
+            form.MultipartBodyLengthLimit = options.Value.MaximumByteSize + MultipartOverheadAllowance;
         });
 
         services.AddSingleton(provider => new MediaUrlResolver(

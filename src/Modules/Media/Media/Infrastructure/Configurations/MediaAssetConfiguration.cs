@@ -46,6 +46,29 @@ internal sealed class MediaAssetConfiguration : IEntityTypeConfiguration<MediaAs
         builder.Property(asset => asset.UpdatedAt).HasColumnName("updated_at");
         builder.Property(asset => asset.NextAttemptAt).HasColumnName("next_attempt_at");
 
+        // AC-12 — SAHİPLENMENİN kilidi. PostgreSQL'in sistem kolonu `xmin` eşzamanlılık
+        // belirteci olarak kullanılıyor: ikinci tur aynı satırı güncellemeye kalkarsa
+        // `SaveChanges` `DbUpdateConcurrencyException` ile düşer.
+        //
+        // **Neden satır kilidi DEĞİL:** `0007` R3 satır kilidini yalnız
+        // `BuildingBlocks/Concurrency/` altına koyuyor ve bir mimari test (`0007`/AC-9)
+        // modüllerde kilit sözdizimini tarıyor — yorumlarda da, ve haklı olarak: dizeyi
+        // anmak bir sonraki okuyucuyu onu kopyalamaya davet eder. İlk yazımda ham SQL
+        // yazdım ve o test beni kırdı. `InvariantGuard` de bu iş için uygun değil, çünkü
+        // o "satır kümesini kilitle, SAY, karar ver" içindir; buradaki ihtiyaç bir
+        // kuyruktan bir satır kapmak.
+        //
+        // Belirteç ayrıca kaybolan güncellemeyi de kapatıyor: ölçüldü, kilitsiz hâlde
+        // iki tur sahiplenip `attempt_count` 1'de kalıyordu — oysa o sayaç AC-11'in
+        // ölçütü.
+        //
+        // **Ek kolon YOK:** `xmin` her tabloda zaten var, bu yüzden migration gerekmez.
+        builder.Property<uint>("Version")
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .ValueGeneratedOnAddOrUpdate()
+            .IsConcurrencyToken();
+
         builder.Property(asset => asset.AltText)
             .HasColumnName("alt_text")
             .HasColumnType("jsonb")

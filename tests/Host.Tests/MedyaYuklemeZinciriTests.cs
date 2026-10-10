@@ -29,6 +29,12 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
 
     private const string CalisanParola = "calisan-parolasi-1";
 
+    /// <summary>
+    /// Yapılandırılan boyut sınırı. 640×480 JPEG bunun üstünde, 64×48 JPEG altında —
+    /// ikisi de aynı uçtan geçiyor ve fark yalnızca boyut.
+    /// </summary>
+    private const long ByteSinir = 8 * 1024;
+
     private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("cargallery")
         .Build();
@@ -75,6 +81,11 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
             builder.UseSetting("Media:Storage:Bucket", Bucket);
             builder.UseSetting("Media:PublicBaseUrl", $"https://cdn.ornek.test/{Bucket}/");
             builder.UseSetting("Media:WatermarkObjectKey", WatermarkKey);
+
+            // AC-5'in HTTP yolunu ölçebilmek için sınır KÜÇÜK tutuluyor; kriter
+            // yapılandırılan değeri doğruluyor, koda gömülü bir sabiti değil.
+            builder.UseSetting("Media:MaximumByteSize", ByteSinir.ToString(
+                System.Globalization.CultureInfo.InvariantCulture));
         });
 
         // Kurulum hesabı ilk girişte parolasını DEĞİŞTİRMEK zorunda (0006 R10); aksi hâlde
@@ -182,9 +193,9 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
         return govde;
     }
 
-    private static byte[] JpegUret()
+    private static byte[] JpegUret(int genislik = 64, int yukseklik = 48)
     {
-        using SKBitmap bitmap = new(640, 480);
+        using SKBitmap bitmap = new(genislik, yukseklik);
 
         using (SKCanvas tuval = new(bitmap))
         {
@@ -192,6 +203,30 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
         }
 
         using SKData jpeg = bitmap.Encode(SKEncodedImageFormat.Jpeg, 90);
+
+        return jpeg.ToArray();
+    }
+
+    /// <summary>
+    /// Sıkışmayan bir görsel. İlk denemede 1200×900 düz renk kullandım ve JPEG onu
+    /// **6700 bayta** sıkıştırdı — sınırın altında kaldı ve test kendi iddiasıyla kırmızı
+    /// verdi. Gürültü, boyutun piksel sayısıyla birlikte büyümesini garanti ediyor.
+    /// </summary>
+    private static byte[] BuyukJpegUret()
+    {
+        using SKBitmap bitmap = new(400, 400);
+        Random rastgele = new(Seed: 11);
+
+        for (int x = 0; x < bitmap.Width; x++)
+        {
+            for (int y = 0; y < bitmap.Height; y++)
+            {
+                bitmap.SetPixel(x, y, new SKColor(
+                    (byte)rastgele.Next(256), (byte)rastgele.Next(256), (byte)rastgele.Next(256)));
+            }
+        }
+
+        using SKData jpeg = bitmap.Encode(SKEncodedImageFormat.Jpeg, 95);
 
         return jpeg.ToArray();
     }
@@ -208,6 +243,55 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
         using SKData png = bitmap.Encode(SKEncodedImageFormat.Png, 100);
 
         return png.ToArray();
+    }
+
+    [Fact(DisplayName = "0011/AC-5: Yapılandırılan boyut sınırını aşan dosya reddedilir ve varlık kaydı oluşmaz")]
+    public async Task Reddedilir_SinirdanBuyukDosya_UcUzerinden()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+
+        // Sınırın BELİRGİN biçimde üstünde: boru hattının `InvalidDataException`'ı bu
+        // yolda tetiklenir ve yakalanmazsa `500` döner (ölçüldü).
+        byte[] buyuk = BuyukJpegUret();
+
+        Assert.True(buyuk.Length > ByteSinir, $"Test görseli sınırın altında: {buyuk.Length}");
+
+        HttpResponseMessage yanit = await client.PostAsync(
+            new Uri($"{AdminSurface.RoutePrefix}/media/assets", UriKind.Relative),
+            Govde(buyuk));
+
+        Assert.Equal(HttpStatusCode.UnprocessableContent, yanit.StatusCode);
+
+        JsonElement govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync()).RootElement;
+
+        Assert.Equal("media.too_large", govde.GetProperty("errorCode").GetString());
+
+        // AC-7 — gövdede uçta yanlışlıkla basılabilecek İngilizce bir metin YOK. Genel
+        // `UseExceptionHandler` tam olarak bunu koyuyordu.
+        Assert.False(govde.TryGetProperty("title", out _));
+        Assert.False(govde.TryGetProperty("detail", out _));
+        Assert.False(govde.TryGetProperty("traceId", out _));
+    }
+
+    /// <summary>
+    /// Reddin sebebinin BOYUT olduğunun kanıtı: aynı uç, aynı oturum, sınırın altındaki
+    /// gövde kabul ediliyor. Bu olmadan test "uç her şeyi reddediyor" hâlinde de yeşil
+    /// kalırdı.
+    /// </summary>
+    [Fact]
+    public async Task Kabul_Edilir_SinirinAltindakiDosya_AyniUctan()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+
+        byte[] kucuk = JpegUret();
+
+        Assert.True(kucuk.Length < ByteSinir, $"Test görseli sınırın üstünde: {kucuk.Length}");
+
+        HttpResponseMessage yanit = await client.PostAsync(
+            new Uri($"{AdminSurface.RoutePrefix}/media/assets", UriKind.Relative),
+            Govde(kucuk));
+
+        Assert.Equal(HttpStatusCode.Accepted, yanit.StatusCode);
     }
 
     /// <summary>

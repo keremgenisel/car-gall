@@ -214,6 +214,57 @@ public sealed partial class MedyaSinirTests
             + $"(Yasak Listesi 16):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
     }
 
+
+    /// <summary>
+    /// AC-34'ün ETİKETLİ testi. `MigrationSchemaTests.DokunurYalnizKendiSemasina_…` tüm
+    /// modülleri tarıyor ve `media` migration'ını da kapsıyor — ama jenerik olduğu için
+    /// `DisplayName` taşımıyor ve etiket taramasıyla kurulan eşlemede görünmüyordu.
+    ///
+    /// <para>Bu test jenerik olanın yerine geçmiyor, onu `0011`'in kriterine BAĞLIYOR ve
+    /// ayrıca daha dar bir şey ölçüyor: `media` migration'ında <b>yalnız</b> `media`
+    /// şeması geçiyor ve dosya gerçekten VAR. Jenerik test, hiç migration bulamadığında
+    /// da yeşil kalırdı.</para>
+    /// </summary>
+    [Fact(DisplayName = "0011/AC-34: `media` migration'ı yalnızca `media` şemasına dokunur")]
+    public void Dokunur_MediaMigrationi_YalnizMediaSemasina()
+    {
+        string[] migrations =
+        [
+            .. SolutionLayout.SourceFiles()
+                .Where(file => SolutionLayout.Relative(file)
+                    .StartsWith("src/Modules/Media/Media/Infrastructure/Migrations/", StringComparison.Ordinal))
+        ];
+
+        // Tarama BOŞ geçmemeli: hiç migration bulamayan bir tarama da "hepsi temiz" der.
+        Assert.NotEmpty(migrations);
+
+        List<string> violations = [];
+        int mediaReferences = 0;
+
+        foreach (string file in migrations)
+        {
+            foreach (Match match in SchemaLiteral().Matches(File.ReadAllText(file)))
+            {
+                string schema = match.Groups["schema"].Value;
+
+                if (schema == "media")
+                {
+                    mediaReferences++;
+                    continue;
+                }
+
+                violations.Add($"{SolutionLayout.Relative(file)}: '{schema}'");
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            "`media` migration'ı yalnız kendi şemasına dokunabilir (C9, Yasak Listesi 3):"
+            + $"{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+
+        Assert.True(mediaReferences > 0, "Migration hiç şema adı geçirmiyor; tarama anlamsız.");
+    }
+
     private static IEnumerable<string> MediaSourceFiles() =>
         SolutionLayout.SourceFiles().Where(file => SolutionLayout.ModuleNameOf(file) == Module);
 
@@ -253,4 +304,7 @@ public sealed partial class MedyaSinirTests
 
     [GeneratedRegex(@"Add\w*<\s*IOutboxWriter\s*,")]
     private static partial Regex SharedOutboxWriterRegistration();
+
+    [GeneratedRegex("schema:\\s*\"(?<schema>[a-z_]+)\"")]
+    private static partial Regex SchemaLiteral();
 }

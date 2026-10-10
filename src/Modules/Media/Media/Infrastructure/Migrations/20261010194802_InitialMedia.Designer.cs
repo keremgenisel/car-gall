@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarGallery.Modules.Media.Infrastructure.Migrations
 {
     [DbContext(typeof(MediaDbContext))]
-    [Migration("20261010172724_InitialMedia")]
+    [Migration("20261010194802_InitialMedia")]
     partial class InitialMedia
     {
         /// <inheritdoc />
@@ -136,6 +136,12 @@ namespace CarGallery.Modules.Media.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("UploadedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("uploaded_at");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 

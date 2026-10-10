@@ -134,6 +134,12 @@ namespace CarGallery.Modules.Media.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("uploaded_at");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Status", "NextAttemptAt")
