@@ -145,9 +145,17 @@ Her kriter bir testle karşılanır ve test DisplayName'i "AC-<n>: <metin>" taş
 - [ ] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
 - [ ] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
 - [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
+- [ ] **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
+      <!-- Madde "PR açılmadan önce" diyordu ve üst üste ÜÇ spec'te tutmadı
+           (frontend-002, 0010a, 0010b): üçünde de tur koştu, bulgular gerçekti ve
+           düzeltildi, tutmayan tek şey zamanlamaydı. Nedeni yapısal, dikkatsizlik
+           değil: docs/roles/qa.md § 1 QA'in okuyacağı ilk şeyi "diff — bu PR'da değişen
+           ne varsa" diye tanımlıyor, yani rolün kendisi bir PR'ın varlığını varsayıyor.
+           "PR açılmadan önce" okunacak bir PR olmadan QA istiyordu. Korunan şey
+           değişmedi: bulgular main'e girmeden işlenir. Değişen şey, maddenin tutabildiği
+           ana taşınması — Takım Yöneticisi onayı, 2026-10-10. -->
 - [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
