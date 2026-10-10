@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | **Tamamlandı** (2026-10-11) |
 | **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Media` (yeni) · `VehicleCatalog` (yalnız **D2**'nin alıcı düzeltmesi) |
@@ -567,65 +567,134 @@ kopyalanmış bir sabiti değil (C14).
 ## Definition of Done
 
 - [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi (D1–D12 CLARIFY turu, D13–D26 uygulama planı turu; S1–S5'in beşi de kapandı).
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — `Media` başka modülün tablosuna veya deposuna
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+      *PR #49'un 47 satırlık tablosu. Bağımsız ölçüldü: 47 kriterin 47'si etiketli, 59 etiket
+      noktası, kartta olmayan etiket yok, **karttan metin sapması 0**.*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+      *898 test, 0 kırmızı, **0 atlanan**; `Media.Tests` 90, `Host.Tests` 160.*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — `Media` başka modülün tablosuna veya deposuna
       erişmiyor ve **hiçbir modüle senkron çağrı yapmıyor** (C5, **D1**). *Maddenin önceki
       hâli "yaprak modül kalıyor" diyordu ve C5'in düzeltilen yanlışını tekrarlıyordu.*
-- [ ] **Duyuru alıcısına DAĞITICI ÜZERİNDEN ulaştı** (**D2**): `MediaAssetReadyHandler`
+      *Kanıt: AC-47 (`Cikmaz_Referans_MediadanBaskaModule`), AC-46, AC-35.*
+- [x] **Duyuru alıcısına DAĞITICI ÜZERİNDEN ulaştı** (**D2**): `MediaAssetReadyHandler`
       `IIntegrationEventHandler<MediaAssetReady>`'i uyguluyor, DI'ya kayıtlı ve kanıt
       `tests/Host.Tests`'te — elle handler çağıran bir test bunun yerine geçmez
       (`0003` C17 kalıbı).
-- [ ] **`0010a` ve `0010b`'nin kriterleri kesintisiz yeşil kaldı** — `VehicleCatalog`
+      *Ölçüldü: handler `IdempotentIntegrationEventHandler<MediaAssetReady, VehicleCatalogDbContext>`'ten
+      türüyor ve o taban sınıf arayüzü uyguluyor; kayıt `VehicleCatalogModule.cs:61`. AC-37'nin
+      testi (`Host.Tests/Ulasir_Duyuru_DagiticiUzerinden`) hiçbir şeyi elle tetiklemiyor:
+      yükleme ucuna POST → `media.assets` → işleme hattı → `media.outbox_messages` → dağıtıcı
+      → alıcı → `vehicle_catalog.showcase_listings.cover_media_url`.*
+- [x] **`0010a` ve `0010b`'nin kriterleri kesintisiz yeşil kaldı** — `VehicleCatalog`
       tarafına dokunulduğu için öncesi ve sonrası koşu çıktıları PR'da (**D2**).
-- [ ] **Türev kümesi uçtan uca taşındı** (**D3**): duyuru ve okuma modeli her türev için
-      etiket, erişim yolu, **genişlik ve yükseklik** taşıyor.
-- [ ] **CI'a nesne deposu servisi eklendi** ve **tek** bir `Host.Tests` testi ona karşı
-      koşuyor (**D5**, C11); modül testleri sahte port kullanıyor.
-- [ ] **`413` ve `415`, `docs/conventions.md` § 5 tablosuna eklendi** (**D4**).
-- [ ] **İşlemenin idempotentliği sondayla gösterildi** (**D10**, C12): "hazır" damgasından
+      *`VehicleCatalog.Tests`: öncesi (`c4c1151`) 227 geçti / 0 kırmızı, sonrası 227 geçti /
+      0 kırmızı. `OlayIsleyiciTests`'in iki medya testi yeni imzaya uyarlandı ve kriter testi
+      değil **regresyon koruması** olarak kaldı.*
+- [x] **Türev kümesi DUYURUDA uçtan uca taşındı** (**D3**): hazır duyurusu her türev için
+      etiket, erişim yolu, **genişlik ve yükseklik** taşıyor (AC-29,
+      `MediaAssetReady(… IReadOnlyList<MediaDerivativePayload>)`; tek `string Url` alanı
+      kaldırıldı).
+      ***Okuma modeli kümeyi SAKLAMIYOR ve bu karara bağlandı*** (Takım Yöneticisi,
+      2026-10-11): `showcase_listings` tek bir `cover_media_url` kolonu tutmaya devam ediyor,
+      alıcı kümeden **gösterim** türevini adıyla seçip onu yazıyor
+      (`MediaAssetReadyHandler.cs:44-64`). *Gerekçe:* D3'ün "okuma modeli kümeyi saklamaya
+      devam eder" cümlesi **hiçbir kabul kriterine dönüşmedi** — 47 kriterin hiçbiri okuma
+      modelinden küme istemiyor. Eklemek yeni bir `VehicleCatalog` migration'ı, yani yeni bir
+      kriter, yani sayılan bir K2 revizyonu demekti. **Borç adıyla devredildi:** küme
+      projeksiyonu ve `srcset` `0016`'nın (medya galerisi) işi.
+- [x] **CI'da GERÇEK nesne deposu koşuyor** (**D5**, C11) — LocalStack 3.8.1,
+      Testcontainers; `S3ObjectStore` gerçek `AmazonS3Client` ile konuşuyor. Sahte depoya
+      yazan bir test "S3'e yazıldı"yı kanıtlamıyor.
+      ***C11'in "tek bir Host.Tests testi" yazısından sapma, karara bağlandı*** (Takım
+      Yöneticisi, 2026-10-11): gerçek depoya karşı koşan `Host.Tests` testi **beş**
+      (`MedyaYuklemeZinciriTests` — tek sınıf, **tek konteyner** paylaşıyor) ve modül testleri
+      gerçek konteynerin yanında sahteleri (`ReddedenDepo`, `SayanDepo`) **hata enjeksiyonu**
+      için tutuyor. Sapma C11'in amacının **gerisinde değil ilerisinde**; ölçülen bedel backend
+      işinin 6m42s'ye çıkması. *MinIO yerine LocalStack seçimi ölçümle gerekçelendirildi
+      (`quay.io/minio/minio` anonim çekimde 401); C3'ün ÜRETİM kararı değişmedi.*
+- [x] **`413` ve `415`, `docs/conventions.md` § 5 tablosuna eklendi** (**D4**).
+      *#46 ile girdi (`b7c6a4a`).*
+- [x] **İşlemenin idempotentliği sondayla gösterildi** (**D10**, C12): "hazır" damgasından
       önce kesilen bir koşu ikinci turda kopya dosya üretmiyor.
-- [ ] **X7 ve X8'in kabul edilen bedelleri PR'da adıyla yazılı** — özellikle X7: bu spec
+      *AC-20 (`Uretmez_KopyaDosya_KesilenKosudanSonra`): depo son türevi reddediyor, ilk ikisi
+      kovaya yazılmış durumda, açık tekrar deneme komutuyla ikinci tur aynı anahtarların
+      ÜZERİNE yazıyor — üç türev, üç tekil anahtar.*
+- [x] **X7 ve X8'in kabul edilen bedelleri PR'da adıyla yazılı** — özellikle X7: bu spec
       bittiğinde A2 hâlâ tam karşılanmıyor.
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `media` şemasına dokunuyor.
-- [ ] EXIF temizliğinin gerçekten uygulandığı testle gösterildi.
-- [ ] Yapılandırma eksikken uygulamanın ayağa kalkmadığı testle gösterildi (C6).
-- [ ] <!-- DoD:T7 --> Yeni domain terimi yok — spec yalnızca sözlükteki terimleri kullanır.
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/<no>-ac<n>.png`),
-      boş ve hata durumları dâhil; RTL kriteri varsa Arapça görüntü de var.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      *X7: PR #49 § Ne değişti. X8: § Açık konular madde 3 — `retry` UCU yazıldı, çünkü X8
+      yalnız **ekranı** kapsam dışı bırakıyor; uç olmadan AC-14 kâğıt üstünde kalırdı.*
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `media` şemasına dokunuyor.
+      *`20261010205422_InitialMedia` → `assets`, `asset_derivatives`, `outbox_messages`.
+      Inbox yok. Kapı: AC-46.*
+- [x] EXIF temizliğinin gerçekten uygulandığı testle gösterildi.
+      *AC-24 (konum/cihaz bilgisi türevlerde ve DEPODAKİ türevlerde yok) ve AC-25 (yönlendirme
+      etiketi taşıyan görselin türevi doğru yönde) — `MetadataExtractor` ile okunarak.*
+- [x] Yapılandırma eksikken uygulamanın ayağa kalkmadığı testle gösterildi (C6).
+      *AC-43/44/45 (`Host.Tests/MedyaYapilandirmasiTests`): depolama kimliği, erişim taban
+      adresi ve filigran kaynağı — üçünün yokluğunda da Host ayağa kalkmıyor.*
+- [x] <!-- DoD:T7 --> Yeni domain terimi `docs/domain.md` sözlüğüne eklendi.
+      *Terim: **İşleme Durumu** (`MediaProcessingStatus`) + § 2.10 Medya (M1–M3). #50 ile girdi
+      (`c4c1151`). Maddenin önceki hâli "yeni domain terimi yok" diyordu ve bu, kriterler
+      yazılmadan önceki durumu anlatıyordu.*
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+      *Üç satır eklendi (medya işleme, filigran kaynağı, orijinal medya) ve karar
+      **ADR `0009`**'a yazıldı.*
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+      *PR #49'un son HEAD'i `2a556d9`: dört kapının dördü de `pass`, `gh pr checks` çıkış kodu
+      **0**. Merge sonrası `main` koşusu `38087576269` → **success** (Backend · Frontend · E2E).*
+- [x] <!-- DoD:T2 --> **Arayüz kriteri YOK; görsel kanıt bu spec için uygulanabilir değildir.**
+      *Panelde yükleme ekranı `0012`'nin, medya galerisi `0016`'nın işi (X6). 47 kriterin
+      hiçbiri bir ekran davranışı istemiyor; `0009`'un aynı gerekçeyle kapattığı maddeyle
+      aynı durum.*
+- [x] <!-- DoD:T6 --> **Çeviri anahtarı gerekmedi.** *Ölçüldü: bu spec `frontend/` altında
+      **hiçbir dosyaya** dokunmuyor ve kullanıcıya görünen metin üretmiyor — API `errorCode`
+      döndürüyor, çeviri uçta yapılıyor (Yasak Listesi 23). Eksik anahtar kontrolü yeşil.*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      *QA oturumu 2026-10-10/11. **Birinci tur** (uyarlama öncesi): beş bulgu — üçü donmuş
+      kriterle doğrudan çelişki (AC-29, AC-36/37, AC-14/15), ikisi karşılanmayan kriter (AC-9,
+      AC-5). **İkinci tur** (merge öncesi, `2a556d9`): bulgu yok; kart kimliği, 47/47 etiket,
+      üç kararın kodu, susturma izleri ve kapsam genişlemesi tek tek ölçüldü.*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+      *§ Karşılanmayan kriterler: **Yok.** § Açık konular dört madde taşıyor ve üçü ayrı iş
+      olarak devrediliyor.*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+      *`488f1d9`, 2026-10-11 00:25.*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      *Bu commit.*
 
 ---
 
 ## SCORECARD
 
-<!--
-İş bittikten SONRA doldurulur. Amaç suçlu bulmak değil, sürecin nerede sızdırdığını görmek.
-Dürüst doldurulmayan scorecard işe yaramaz — abartılmış iyi sayılar en pahalı yalandır.
-
-Sayılar ancak TANIMLI oldukları sürece karşılaştırılabilir. Tanımsız bir sayı, spec'ten
-spec'e farklı şey ölçer ve birikince eğilim değil gürültü üretir. Bu yüzden her ölçütün
-neyi saydığı satırında yazılıdır; bir ölçüt belirsiz geldiyse sayıyı tahmin etme,
-tanımın netleştirilmesini öner.
--->
-
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e 488f1d9^:specs/0011-media-yukleme-turev-filigran.md` → çıkış kodu **0**. Kriterler `c4c1151` (#50) ile `main`'e girdi, implementasyon `488f1d9` (#49) ile. Sıra K2'nin istediği sıra. |
+| **Kriter sayısı: önce → bugün** | **47 → 47** | İmplementasyon commit'inin ebeveyninde 47, bugün 47. Dalın kartı `main`'in kartıyla **birebir** tutuldu ve bu merge'den önce `diff`'le ölçüldü. |
+| **Spec revizyon sayısı** | **1** | Kriterler `main`'e girdikten sonra R/C/AC **değişmedi** (kart `c4c1151`'den beri birebir). Sayılan **1**, onay anındaki CLARIFY turu (#46): R12–R18, C5'in düzeltilmesi, C11–C14, X7–X8. ADR `0008`/K3 bu turun sayılacağını yazıyor. Uygulama planı turu (#50: C15 + 47 kriterin yazılması) **sayılmadı** — kriterleri ilk kez yazan commit, kendi tabanının revizyonu olamaz (`0010b`'nin emsali). |
+| **Düzeltme turu sayısı** | **1** | PR bir kez geri döndü: QA'in beş bulgusu, ardından `2a556d9` ile uyarlama. Öncesindeki commit'ler planın adımlarıydı ve `808132f` yazarın KENDİ triyajıydı — geri dönüş değil. |
+| **Dış bulgu (gerçek/gürültü)** | **5 / 0** | Beşinin beşi de gerçek çıktı ve kodda düzeltildi: AC-29 (duyuru tek URL taşıyordu), AC-36+AC-37 (alıcı hiç kablolanmamıştı), AC-14+AC-15 (`Başarısız` terminaldi, tekrar deneme otomatikti), AC-9 (tür kümesi koda gömülüydü), AC-5 (SVG için başlangıç kapısı yoktu). **Gürültü 0.** QA'in bulgu açmadığı iki gözlem kartta da bulgu sayılmadı: AC-36'nın testinin invariant yerine taban sınıf adını ölçmesi ve ADR `0009`'un ayrı onay gerektirmesi. |
+| **Uygulama içi bulgu** | **10** | Yazarın kendi ölçümüyle bulduğu kusurlar. Önceki turlar (8): `IOutboxWriter`'ın paylaşılan arayüz kaydının bildirim zincirini sessizce durdurması · `IFormFile` bağlamasının oturumsuz isteğe `415` sızdırması · göreli taban adresin `file://` olarak kabul edilmesi · işleme turunun sınırsız döngüsü · `perf.yml`'ın atlanması · sahiplenme geçişinin kilitsizliği · taban adres eğik çizgisiz yazıldığında yol segmentinin düşmesi · filigranın varlık başına yeniden indirilmesi. Uyarlama turu (2): etiket betiğinin sıralı yeniden adlandırmayla aynı etiketi iki kez taşıması · `0007`/AC-9 kapısının ilk düzeltmeyi haklı olarak kırması (satır kilidi yalnız `BuildingBlocks/Concurrency/` altında yazılır). |
+| **Regresyon sayısı** | **0** | `VehicleCatalog.Tests` 227 → 227, `main` koşusu yeşil. `MediaAssetReady`'nin şekli **bilerek** kırıldı (AC-29) ve tek tüketicisi aynı PR'da uyarlandı — sözleşme bu spec'te doğdu, dışarıda tüketicisi yoktu. |
+| **Kaçan hata** | **izleniyor** | Merge 2026-10-11. Bilinen kaçan hata yok. İzlenen iki bilinen boşluk kriter DIŞI ve PR'da yazılı: (1) süreç ölürse varlık `İşleniyor`'da kalıyor ve M1'de o durumdan çıkış yok — yeni kriter gerektirir; (2) türev yeniden üretimi için tetikleyen bir eylem yok (D3'ün kabul edilen bedeli). |
 
 **Bu spec'ten çıkarılan ders:**
+
+**Kriterleri donmadan yazılan implementasyon, kendi spec sürümüne göre yeşil görünür.**
+PR #49 ilk açıldığında dört kapının dördü de `pass` veriyordu ve 35 kriterinin 35'i etiketli
+testle kapılıydı — ama o 35 kriter, PR'ın kendi içinde taşıdığı **süpersede olmuş** kart
+sürümünden geliyordu. `main`'de donan 47 kriterin üçü kodun yaptığının **tersini** istiyordu:
+duyuru türev kümesi taşıyacaktı (tek URL taşıyordu), alıcı kablolanacaktı (hiç
+kablolanmamıştı), tekrar deneme açık bir komutla olacaktı (otomatikti).
+
+Bunu yakalayan şey kod okumak değil, **kriter kümelerini karşılaştırmak** oldu: 35'in 35'i
+47'ye birebir oturuyordu ve fark tam olarak 12 kriterdi. K2'nin ("kriterler implementasyondan
+önce `main`'e girer ve orada donar") ölçülebilir bedeli budur — kural olmasaydı PR yeşil
+olduğu için merge edilir ve çelişki `main`'e donardı.
+
+İkinci ders, birincinin ucundan: **bir kriterin numarası, kriterin kendisi değildir.** 35
+etiketin donmuş numaralara çevrilmesi mekanik bir iş gibi görünüyordu ama yazarın ilk betiği
+sıralı yeniden adlandırma yaptı (`5→6`, sonra `6→7` aynı etiketi ikinci kez taşıdı) ve bunu
+dağılımı ölçerek yakaladı. Yanlış numaraya bağlı bir test, karşılanmamış bir kriteri
+karşılanmış gösterir — bu işte yapılabilecek en pahalı sessiz hata.
