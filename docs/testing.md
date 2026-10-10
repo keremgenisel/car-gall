@@ -176,6 +176,17 @@ durum makinesi) içeren yardımcılar için yazılır.
 - Object mother / builder deseni kullanılır; nesne kurulumu testin gövdesini boğmaz.
 - Rastgele veri (`Faker`) yalnızca alakasız alanlar için. Test edilen alan **açıkça yazılır**.
 - Tarih ve saat testlerinde `IClock` sabitlenir; gerçek saate bağlı test yazılmaz.
+- **Sahte saatin başlangıcı takvimde sabit bir güne yazılmaz** — sabitlenen şey geçen
+  SÜREDİR, mutlak tarih değil. Başlangıç gerçek saatten alınır (`DateTimeOffset.UtcNow`),
+  ilerletme `Advance` ile yapılır. *Gerekçe ölçülmüş bir hatadır (2026-10-10):*
+  `OturumBoruHattiTests`'in saati `2026-09-22`'ye sabitti; oturum çerezinin `Expires`
+  değeri o saatten üretiliyor ama onu `HttpClient`'ın `CookieContainer`'ı **gerçek
+  sistem saatiyle** değerlendiriyor. Takvim o tarihi geçince çerez doğar doğmaz ölü
+  sayıldı ve sekiz test, kod beş gündür değişmediği hâlde kırmızıya döndü.
+- Genel kural: **sahte saatten üretilen bir değer gerçek saatle karşılaştırılıyorsa,
+  sahte saat gerçek saatten kopuk olamaz.** Çerez `Expires`, `Retry-After`, HTTP
+  önbellek başlıkları ve imza geçerlilikleri bu sınıfa girer; yalnızca veritabanına
+  yazılan domain zaman damgaları girmez.
 - Para testlerinde **KWD (3 ondalık)** en az bir kez kullanılır — `decimal(_,2)` hatası
   yalnızca orada görünür.
 

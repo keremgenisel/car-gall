@@ -15,8 +15,10 @@ namespace CarGallery.Host.Tests;
 /// burada sınanan şey onun KABLOLANMIŞ olmasıdır — Host `UseAuthentication()` /
 /// `UseAuthorization()` / `UseIdentity()` çağırmazsa koruma sessizce kaybolur.
 ///
-/// Saat sabitlenir; süre kriterleri gerçek saate bağlı test yazılarak doğrulanamaz
-/// (docs/testing.md § 4, C20).
+/// Saat KONTROL EDİLİR; süre kriterleri gerçek saate bağlı test yazılarak doğrulanamaz
+/// (docs/testing.md § 4, C20). Kontrol edilen şey <b>geçen süredir</b>, mutlak tarih
+/// değildir — bu ayrım aşağıda `clock`'un başlangıcında neden sabit bir tarih
+/// yazılmadığını açıklıyor.
 /// </summary>
 public sealed class OturumBoruHattiTests : IAsyncLifetime
 {
@@ -26,7 +28,25 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
     private readonly Testcontainers.PostgreSql.PostgreSqlContainer container =
         new Testcontainers.PostgreSql.PostgreSqlBuilder("postgres:17-alpine").WithDatabase("cargallery").Build();
 
-    private readonly TestClock clock = new(new DateTimeOffset(2026, 9, 22, 8, 30, 0, TimeSpan.Zero));
+    /// <summary>
+    /// Başlangıç GERÇEK saatten alınır. <b>Sabit bir tarih yazmak bu sınıfta bir zaman
+    /// bombasıdır</b> ve 2026-10-10'da patladı: başlangıç `2026-09-22` idi, sekiz test
+    /// birden `InitializeAsync`'te 401 vermeye başladı ve kod beş gündür değişmemişti.
+    ///
+    /// <para><b>Mekanizma.</b> Giriş başarılı olunca `SessionCookie.Write` çerezin
+    /// `Expires` değerini OTURUMUN saatinden yazıyor: sahte saat + 14 gün = `2026-10-06`.
+    /// Ama o `Expires`'ı değerlendiren şey `HttpClient`'ın `CookieContainer`'ı ve o
+    /// <b>gerçek sistem saatini</b> kullanıyor. Takvim o tarihi geçince çerez doğar
+    /// doğmaz ölü sayıldı, hiç geri gönderilmedi ve sonraki istek oturumsuz gitti.
+    /// Giriş assert'i geçiyor, bir sonraki satır çöküyordu — hata buradaydı, oturum
+    /// kodunda değil.</para>
+    ///
+    /// <para><b>Kural.</b> Sahte saatten üretilen bir değer gerçek saatle
+    /// karşılaştırılıyorsa, sahte saat gerçek saatten KOPUK olamaz. `Advance` ile
+    /// kontrol tamamen duruyor; testlerin ölçtüğü şey zaten mutlak tarih değil, erişim
+    /// ve yenileme SÜRELERİ.</para>
+    /// </summary>
+    private readonly TestClock clock = new(DateTimeOffset.UtcNow);
 
     private WebApplicationFactory<Program>? factory;
 
