@@ -24,7 +24,12 @@ doldurulduğunda buraya taşınır.
 
 ## Periyodik okuma
 
-> **Yapılan analizler:** [SCORECARD-ANALIZ.md](SCORECARD-ANALIZ.md) — 2026-09-22, ilk altı spec.
+> **Yapılan analizler:**
+> - [SCORECARD-ANALIZ.md](SCORECARD-ANALIZ.md) — 2026-09-22, ilk altı spec (001).
+> - [SCORECARD-ANALIZ-002.md](SCORECARD-ANALIZ-002.md) — 2026-10-10, on iki spec'in tamamı (002).
+>
+> Tarihli bir analiz yeniden yazılmaz; yanına yenisi yazılır. 001'in tablosu bugünkü
+> kartlarla çelişir ve bu bilinçlidir — gerekçesi kendi metninde.
 
 Belirli aralıklarla scorecard'lar birlikte okunur ve şu sorular sorulur:
 
