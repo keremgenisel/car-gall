@@ -209,7 +209,7 @@ komutu olmayan kapı, kapı değildir.
 | Biçim | `npm run format:check` | Prettier — biçim farkı yok |
 | Lint (CSS) | `npm run lint:css` | Fiziksel yön özellikleri (§ 6) ve gömülü hex/px (§ 4.1) |
 | Sert kodlanmış metin | `npm run check:text` | Bileşene gömülü kullanıcı metni (§ 5) |
-| Eksik çeviri anahtarı | `npm run check:locales` | `tr`/`ar`/`en` anahtar bazında eşit değilse |
+| Eksik çeviri anahtarı | `npm run check:locales` | `tr`/`ar`/`en` anahtar bazında eşit değilse. **Üçünde de eksik olan anahtarı yakalamaz** — o kapı backend'de, `docs/testing.md` § 3 |
 | Birim + smoke test | `npm run test` | Vitest + Testing Library |
 | Production build | `npm run build` | Build başarısız olursa |
 

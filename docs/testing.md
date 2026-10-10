@@ -165,6 +165,27 @@ Pipeline'da frontend için **lint + build** zorunludur:
 - production build — başarılı,
 - **eksik çeviri anahtarı kontrolü** — `tr`/`ar`/`en` katalogları anahtar bazında eşit.
 
+**Bu kontrolün ölçmediği şey:** katalogları birbirine karşı ölçüyor, yani **üçünde de**
+eksik olan bir anahtar yeşil geçer. Ölçüldü: tek opsiyonel alanın etiketi üç katalogdan da
+silindiğinde `check:locales` *"3 katalog, 274 anahtar — hepsi eşit"* dedi ve **0 ile**
+çıktı. Eksikliğin ölçüsü katalogda değil, anahtarı ÜRETEN yerde yaşıyor.
+
+Böyle bir anahtar kümesi kodda tanımlıysa kapısı **backend tarafındadır** ve kayıt
+defterinin kendisini okur — ara bir temsil (düzenli ifadeyle kaynak tarama) kurulmaz.
+Emsal: `VehicleCatalog.Tests/Domain/AlanEtiketiKapisiTests` — `VehicleFieldDefinitions`
+üzerinden geçip her katalogda `vehicle.field.<anahtar>` arar.
+
+> **Bir testin `frontend/` altındaki bir dosyayı okuması bu durumda meşrudur.** Kuralın bir
+> yanı kodda, bir yanı katalogta olduğunda tek taraftan ölçmek mümkün değildir. Koşulu:
+> **hiçbir dil varsayılmaz** — `BuildingBlocks/Locale` etkin dil listesini dağıtım
+> yapılandırmasına bırakıyor, bu yüzden diller sabit yazılmaz, var olan katalog dosyaları
+> taranır. İkinci koşul: **kök yukarı yürünerek bulunur**, sabit sayıda `..` ile değil —
+> sabit sayı derleme çıktısının derinliğine bağlıdır ve değiştiğinde test eksik çeviriyi
+> değil kendi yolunu bildirir.
+>
+> Bu tür bir kapı `Theory` ile yazıldığında **vaka listesinin boşalmadığı ayrıca sınanır**:
+> sıfır vakayla koşan bir `Theory` yeşildir ve kapı sessizce açılmış olur.
+
 Birim testi frontend tarafında zorunlu değildir; saf mantık (biçimlendirme, hesaplama,
 durum makinesi) içeren yardımcılar için yazılır.
 
