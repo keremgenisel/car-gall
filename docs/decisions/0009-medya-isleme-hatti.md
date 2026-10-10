@@ -2,7 +2,7 @@
 
 - **Durum:** Kabul edildi
 - **Tarih:** 2026-10-10
-- **Bağlam:** `specs/0011-media-yukleme-turev-filigran.md` — D1, D2, D4, D7, D8, D12, D16
+- **Bağlam:** `specs/done/0011-media-yukleme-turev-filigran.md` — D1, D2, D4, D7, D8, D12, D16
   (Takım Yöneticisi onayı 2026-10-10)
 
 ## Bağlam
