@@ -64,7 +64,20 @@ internal sealed class VehicleWriteRules(
                     Locale.Create(pair.Key).Value,
                     pair.Value.Trim())));
 
-    /// <summary>Çekirdek slug'ların BİÇİM denetimi; varlık denetimi ayrı (C6).</summary>
+    /// <summary>
+    /// Çekirdek slug'ların BİÇİM denetimi; varlık denetimi ayrı (C6).
+    ///
+    /// <para><b>Dört slug tek tek denetleniyor ve bu bilinçli.</b>
+    /// `VehicleSpecification.Create` dördünü bir döngüde geziyor ve tek bir `InvalidSlug`
+    /// dönüyor — hangisinin düştüğünü söylemiyor. Önceki hâli o hatayı koşulsuz
+    /// `fuelType`'a eşliyordu: vitesi boş bırakan personele YAKIT alanı kırmızı
+    /// gösteriliyordu. Yanlış alan işaretlemesi personeli yanlış düzeltmeye yöneltir
+    /// (`0010a` AC-42).</para>
+    ///
+    /// <para>Buradaki denetim `Domain`'in yerine GEÇMEZ: `Create` yine çağrılıyor ve
+    /// kuralın sahibi o. Bu geçiş yalnız alanı adlandırmak için; ikisi bir gün ayrışırsa
+    /// `Create` yine reddeder, sadece alan adı genel kalır.</para>
+    /// </summary>
     internal static Result<VehicleSpecification> BuildSpecification(
         string bodyType,
         string fuelType,
@@ -78,6 +91,23 @@ internal sealed class VehicleWriteRules(
         {
             return Result.Failure<VehicleSpecification>(
                 Error.With(VehicleErrors.CoreFieldMissing, "field", VehicleFieldNames.BodyType));
+        }
+
+        (string Slug, string Field)[] slugs =
+        [
+            (fuelType, VehicleFieldNames.FuelType),
+            (transmissionType, VehicleFieldNames.TransmissionType),
+            (drivetrainType, VehicleFieldNames.DrivetrainType),
+            (trimLevel, VehicleFieldNames.TrimLevel),
+        ];
+
+        foreach ((string deger, string alan) in slugs)
+        {
+            if (!BodyTypeSlug.TryParse(deger, out _))
+            {
+                return Result.Failure<VehicleSpecification>(
+                    Error.With(VehicleErrors.CoreFieldMissing, "field", alan));
+            }
         }
 
         Result<VehicleSpecification> specification = VehicleSpecification.Create(

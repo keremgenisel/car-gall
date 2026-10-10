@@ -41,10 +41,10 @@ public sealed class AracDuzenlemeTests(ShowcaseDatabase database)
     }
 
     [Theory(DisplayName = "0010b/AC-3: Düzenlemede de çekirdek alanlardan biri boşaltılarak kaydedilemez")]
-    [InlineData("bodyType")]
-    [InlineData("color")]
-    [InlineData("price")]
-    public async Task Kaydedilemez_CekirdekAlanBosaltilinca(string alan)
+    [InlineData("bodyType", VehicleFieldNames.BodyType)]
+    [InlineData("color", VehicleFieldNames.Color)]
+    [InlineData("price", VehicleFieldNames.Price)]
+    public async Task Kaydedilemez_CekirdekAlanBosaltilinca(string alan, string beklenenAlan)
     {
         await using VehicleCatalogDbContext context = database.CreateContext();
         (Guid Id, string Vin) arac = await AracKaydetAsync(context, $"DUZ03{alan[..3]}");
@@ -59,6 +59,36 @@ public sealed class AracDuzenlemeTests(ShowcaseDatabase database)
         Result sonuc = await Komut(context).ExecuteAsync(istek, CancellationToken.None);
 
         Assert.Equal(VehicleErrors.CoreFieldMissing, sonuc.Error.Code);
+        Assert.Equal(beklenenAlan, sonuc.Error.Parameters!["field"]);
+    }
+
+    /// <summary>
+    /// Dört slug AYRI AYRI işaretlenmeli. `VehicleSpecification.Create` dördünü bir
+    /// döngüde geziyor ve hangisinin düştüğünü söylemiyor; eşleme koşulsuz `fuelType`
+    /// olduğunda vitesi boş bırakan personele YAKIT alanı kırmızı gösteriliyordu.
+    /// </summary>
+    [Theory(DisplayName = "0010b/AC-3: Düzenlemede de çekirdek alanlardan biri boşaltılarak kaydedilemez")]
+    [InlineData("fuel", VehicleFieldNames.FuelType)]
+    [InlineData("transmission", VehicleFieldNames.TransmissionType)]
+    [InlineData("drivetrain", VehicleFieldNames.DrivetrainType)]
+    [InlineData("trim", VehicleFieldNames.TrimLevel)]
+    public async Task Isaretler_BosBirakilanSlugAlanini(string alan, string beklenenAlan)
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+        (Guid Id, string Vin) arac = await AracKaydetAsync(context, $"DUZS{alan[..3]}");
+
+        UpdateVehicleRequest istek = alan switch
+        {
+            "fuel" => Istek(arac) with { FuelType = "  " },
+            "transmission" => Istek(arac) with { TransmissionType = "  " },
+            "drivetrain" => Istek(arac) with { DrivetrainType = "  " },
+            _ => Istek(arac) with { TrimLevel = "  " },
+        };
+
+        Result sonuc = await Komut(context).ExecuteAsync(istek, CancellationToken.None);
+
+        Assert.Equal(VehicleErrors.CoreFieldMissing, sonuc.Error.Code);
+        Assert.Equal(beklenenAlan, sonuc.Error.Parameters!["field"]);
     }
 
     /// <summary>

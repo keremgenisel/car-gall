@@ -220,14 +220,13 @@ public sealed class AracKaydiZinciriTests : IAsyncLifetime
     [InlineData("branchId", "vehicle.branch_required", "branchId")]
     [InlineData("vehicleModelId", "vehicle.reference_not_found", "vehicleModelId")]
     [InlineData("bodyType", "vehicle.core_field_missing", "bodyType")]
-    // Üç slug tek bir `VehicleSpecification.Create` çağrısından geçiyor ve o çağrı
-    // hangisinin düştüğünü söylemiyor; istek reddediliyor (AC-5'in istediği bu) ama
-    // işaretlenen alan `fuelType` oluyor. `0010a`'dan devralınan davranış, burada
-    // yazılı tutuluyor.
+    // Dört slug AYRI AYRI işaretleniyor: `VehicleSpecification.Create` hangisinin
+    // düştüğünü söylemiyor ve eşleme koşulsuz `fuelType` olduğunda vitesi boş bırakan
+    // personele YAKIT alanı kırmızı gösteriliyordu.
     [InlineData("fuelType", "vehicle.core_field_missing", "fuelType")]
-    [InlineData("transmissionType", "vehicle.core_field_missing", "fuelType")]
-    [InlineData("drivetrainType", "vehicle.core_field_missing", "fuelType")]
-    [InlineData("trimLevel", "vehicle.core_field_missing", "fuelType")]
+    [InlineData("transmissionType", "vehicle.core_field_missing", "transmissionType")]
+    [InlineData("drivetrainType", "vehicle.core_field_missing", "drivetrainType")]
+    [InlineData("trimLevel", "vehicle.core_field_missing", "trimLevel")]
     [InlineData("color", "vehicle.core_field_missing", "color")]
     [InlineData("modelYear", "vehicle.core_field_missing", "modelYear")]
     [InlineData("mileageKilometers", "vehicle.core_field_missing", "mileageKilometers")]
