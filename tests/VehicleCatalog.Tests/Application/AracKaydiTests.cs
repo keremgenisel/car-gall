@@ -225,7 +225,7 @@ public sealed class AracKaydiTests(ShowcaseDatabase database)
             {
                 Color = new Dictionary<string, string>
                 {
-                    ["tr"] = new string('B', CreateVehicleCommand.MaximumColorLength + 1),
+                    ["tr"] = new string('B', VehicleWriteRules.MaximumColorLength + 1),
                 },
             };
 
@@ -421,8 +421,18 @@ public sealed class AracKaydiTests(ShowcaseDatabase database)
         SahteKasaSorgusu? kasa = null,
         SahteModelSorgusu? model = null,
         SahteTerimSorgusu? terim = null) =>
+        new(context, Kurallar(sube, kasa, model, terim), new FixedClock(An));
+
+    /// <summary>
+    /// 0010b — kayıt ve düzenlemenin ortak kuralları tek sınıfta toplandı; bu yardımcı
+    /// aynı sahtelerle onu kuruyor. `0010a`'nın kriterleri değişmeden yeşil kalmalı.
+    /// </summary>
+    internal static VehicleWriteRules Kurallar(
+        SahteSubeSorgusu? sube = null,
+        SahteKasaSorgusu? kasa = null,
+        SahteModelSorgusu? model = null,
+        SahteTerimSorgusu? terim = null) =>
         new(
-            context,
             sube ?? new SahteSubeSorgusu(),
             kasa ?? new SahteKasaSorgusu(),
             model ?? new SahteModelSorgusu(),
@@ -430,6 +440,5 @@ public sealed class AracKaydiTests(ShowcaseDatabase database)
             new CatalogCurrencyOptions("TRY", 2),
             new ShowcaseLocaleOptions(
                 Locale.Create("tr").Value,
-                [Locale.Create("tr").Value, Locale.Create("ar").Value, Locale.Create("en").Value]),
-            new FixedClock(An));
+                [Locale.Create("tr").Value, Locale.Create("ar").Value, Locale.Create("en").Value]));
 }

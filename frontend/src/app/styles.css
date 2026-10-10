@@ -508,6 +508,61 @@ body {
   font-weight: var(--font-weight-semibold);
 }
 
+/* --- Düzenleme ve sayfalı liste (0010b) --- */
+
+.vehicle-list__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.vehicle-list__summary {
+  margin-block: var(--space-0);
+  color: var(--color-ink-muted);
+}
+
+.admin-table__scroll {
+  overflow-x: auto;
+}
+
+.vehicle-list__pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+/* Alan kümesi: tarayıcının varsayılan kenarlığı token'lı düzeni bozuyor. */
+.admin-form__group {
+  display: grid;
+  gap: var(--space-6);
+  margin-block: var(--space-0);
+  padding-block: var(--space-5);
+  padding-inline: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.admin-form__group-item {
+  display: grid;
+  gap: var(--space-5);
+  padding-block-end: var(--space-5);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+
+.admin-form__group-item:last-of-type {
+  padding-block-end: var(--space-0);
+  border-block-end: none;
+}
+
+/* Salt okunur alan düzenlenebilir görünmemeli; fark RENKLE değil zeminle anlatılıyor. */
+.admin-form__control[readonly] {
+  background: var(--color-surface-muted);
+  color: var(--color-ink-muted);
+}
+
 /* --- Talep formu (0005) --- */
 
 .lead-form__title {

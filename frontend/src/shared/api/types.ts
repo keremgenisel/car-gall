@@ -163,6 +163,89 @@ export interface VehicleAdminListItem {
   readonly price: VehicleAdminPrice
   readonly listingStatus: string
   readonly vin: string
+  /** 0010b — listenin "son güncellenen" ekseni; ISO 8601, biçimlendirme uçta. */
+  readonly updatedAt: string
+  /** Metni eksik olan diller. KOD taşır; görünen ad çeviri kataloğundan gelir (C11). */
+  readonly missingLocales: readonly string[]
+  /** Zorunlu işaretli bir opsiyonel alanı boş olan araç. Sunucuda hesaplanır (C21). */
+  readonly hasMissingRequiredInfo: boolean
+}
+
+/** R15/AC-23 — çeviri eksik ilan sayısı TÜM araçlar üzerinden; sayfaya bağlı değil. */
+export interface VehicleAdminSummary {
+  readonly totalCount: number
+  readonly translationIncompleteCount: number
+}
+
+/** 0010b R14 — liste sıralaması. Değerler adres çubuğundaki yazımlarıdır. */
+export const VEHICLE_SORTS = ['last-updated', 'recently-added'] as const
+
+export type VehicleSort = (typeof VEHICLE_SORTS)[number]
+
+/**
+ * Opsiyonel alan tanımı. Tip KODDAN gelir (D21), zorunluluk ayardan. Kapalı alanlar bu
+ * listede BULUNMAZ (R7) — form onları hiç basmaz.
+ */
+export interface VehicleAdminField {
+  readonly fieldKey: string
+  readonly kind: 'Text' | 'LocalizedText' | 'Integer' | 'Amount' | 'Boolean' | 'Date' | 'Option'
+  readonly isRequired: boolean
+}
+
+export interface VehicleAdminOptionalValue {
+  readonly fieldKey: string
+  readonly kind: string
+  readonly value: string | null
+  readonly values: Record<string, string> | null
+}
+
+/** Düzenleme ekranının okuduğu tam kayıt. Yalnız AÇIK alanların değerleri gelir (F3). */
+export interface VehicleAdminDetail {
+  readonly vehicleId: string
+  readonly branchId: string
+  readonly vehicleModelId: string
+  readonly bodyType: string
+  readonly fuelType: string
+  readonly transmissionType: string
+  readonly drivetrainType: string
+  readonly trimLevel: string
+  readonly color: Record<string, string>
+  readonly modelYear: number
+  readonly mileageKilometers: number
+  readonly price: VehicleAdminPrice
+  readonly vin: string
+  readonly listingStatus: string
+  readonly listingTitle: Record<string, string>
+  readonly listingDescription: Record<string, string>
+  readonly optionalValues: readonly VehicleAdminOptionalValue[]
+  readonly updatedAt: string
+}
+
+/**
+ * Düzenleme isteği. Çekirdek alanların TAMAMINI taşır (C25) ve şaseyi de taşır — şase
+ * değiştirilemez ama gövdede bulunur ki değiştirme girişimi reddedilebilsin (D24).
+ */
+export interface UpdateVehicleRequest {
+  readonly branchId: string
+  readonly vehicleModelId: string
+  readonly bodyType: string
+  readonly fuelType: string
+  readonly transmissionType: string
+  readonly drivetrainType: string
+  readonly trimLevel: string
+  readonly color: Record<string, string>
+  readonly modelYear: number
+  readonly mileageKilometers: number
+  readonly priceAmount: number | null
+  readonly priceOnRequest: boolean
+  readonly vin: string
+  readonly listingTitle: Record<string, string>
+  readonly listingDescription: Record<string, string>
+  readonly optionalValues: readonly {
+    readonly fieldKey: string
+    readonly value: string | null
+    readonly values: Record<string, string> | null
+  }[]
 }
 
 /** Para BİRİMİ yok: kurulum başına sabit ve panelden değiştirilemez (C3, P3). */

@@ -39,6 +39,17 @@ internal static class CatalogConverters
                 .Select(pair => new KeyValuePair<Locale, string>(Locale.Create(pair.Key).Value, pair.Value))));
 
     /// <summary>
+    /// `LocalizedText?` için aynı dönüşüm. Opsiyonel alan değerinde taşıyıcı NULL olabilir
+    /// (değer locale'li metin değilse) ve EF nullable referans tipini ayrı bir dönüştürücü
+    /// olarak istiyor.
+    /// </summary>
+    internal static ValueConverter<LocalizedText?, string> NullableLocalizedText { get; } = new(
+        text => text == null ? "{}" : JsonSerializer.Serialize(text.ToDictionary(), Json),
+        json => CarGallery.BuildingBlocks.LocalizedText.From(
+            (JsonSerializer.Deserialize<Dictionary<string, string>>(json, Json) ?? new Dictionary<string, string>())
+                .Select(pair => new KeyValuePair<Locale, string>(Locale.Create(pair.Key).Value, pair.Value))));
+
+    /// <summary>
     /// Karşılaştırıcı olmadan EF `LocalizedText`'i REFERANSLA karşılaştırır ve içerik
     /// değişikliğini kaçırır — güncelleme sessizce kaybolur. Okuma modelinde aynı tuzağa
     /// karşı aynı önlem alınmıştı.

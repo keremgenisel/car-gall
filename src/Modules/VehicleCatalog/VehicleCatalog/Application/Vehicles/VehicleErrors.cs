@@ -43,4 +43,25 @@ internal static class VehicleErrors
 
     /// <summary>Para birimi veya tutar geçersiz (P1–P2).</summary>
     internal const string InvalidPrice = "vehicle.invalid_price";
+
+    /// <summary>0010b/AC-4 — var olmayan araç kimliği (R3). Uçta `404`'e eşlenir.</summary>
+    internal const string NotFound = "vehicle.not_found";
+
+    /// <summary>
+    /// 0010b/AC-8 — şase düzenlenemez (R4, D20). Şase gövdede TAŞINIR ki değiştirme
+    /// girişimi ifade edilebilsin ve reddedilebilsin (D24).
+    /// </summary>
+    internal const string VinImmutable = "vehicle.vin_immutable";
+
+    /// <summary>0010b/AC-9 — kayıt defterinde tipi beyan edilmemiş alan (D21).</summary>
+    internal const string FieldNotDeclared = "vehicle.field_not_declared";
+
+    /// <summary>
+    /// 0010b/D27 — kapalı alana değer gönderildi. Sessizce yutulmaz: formun o alanı
+    /// göstermesi imkânsız, yani istek ya bayat bir sekmeden ya elle geliyor.
+    /// </summary>
+    internal const string FieldClosed = "vehicle.field_closed";
+
+    /// <summary>0010b/AC-11, AC-12 — değer beyan edilen tipe uymuyor.</summary>
+    internal const string InvalidFieldValue = "vehicle.invalid_field_value";
 }

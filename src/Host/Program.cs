@@ -64,7 +64,10 @@ builder.Services.AddVehicleCatalog(
     localization.DefaultLocale,
     localization.EnabledLocales,
     builder.Configuration["Currency:Code"] ?? "TRY",
-    builder.Configuration.GetValue<int?>("Currency:MinorUnitExponent") ?? 2);
+    builder.Configuration.GetValue<int?>("Currency:MinorUnitExponent") ?? 2,
+    // 0010b/C26 — panel sayfa boyutu: varsayılan 25, üst sınır 100.
+    builder.Configuration.GetValue<int?>("AdminPaging:PageSize") ?? 25,
+    builder.Configuration.GetValue<int?>("AdminPaging:MaxPageSize") ?? 100);
 
 // Model adı ve kasa tipi etiketleri referans veridir ve VehicleReference'a aittir
 // (docs/architecture.md § 3). Catalog onlara yalnız Contracts üzerinden ulaşır.

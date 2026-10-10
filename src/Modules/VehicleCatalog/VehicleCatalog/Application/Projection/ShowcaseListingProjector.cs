@@ -73,13 +73,34 @@ internal static class ShowcaseListingProjector
             [
                 .. vehicle.OptionalFieldValues
                     .Where(value => publicOptionalFieldKeys.Contains(value.FieldKey))
+                    .Where(value => IsLocaleSafeAtRest(value.Value.Kind))
                     .Select(value => new ShowcaseListingOptionalValue
                     {
                         ListingId = listing.Id.Value,
                         FieldKey = value.FieldKey,
-                        Values = value.Value.ToDictionary(),
+                        Values = value.Value.Localized!.ToDictionary(),
                     })
             ],
         };
     }
+
+    /// <summary>
+    /// 0010b **D28** — hangi tipler vitrin okuma modeline OLDUĞU GİBİ taşınabilir.
+    ///
+    /// <para>Okuma modeli locale → metin tutuyor ve ziyaretçiye o metin olduğu gibi
+    /// gösteriliyor. Tutar, tarih, tam sayı ve evet/hayır değerlerinin metin hâli
+    /// LOCALE'E BAĞLIDIR; sunucuda metne çevirmek `docs/conventions.md` § 7'yi deler ve
+    /// Arapça'da yanlış ayraç üretir. `seçenek` ise slug taşır ve ham slug gösterilmez.</para>
+    ///
+    /// <para>Düz `metin` de dışarıda ve bu bilinçli: okuma modeli locale ANAHTARLI bir
+    /// sözlük tutuyor, düz metnin ise locale'i yok. Onu boş bir sözlükle yazmak satırı
+    /// sessizce değersiz bırakırdı — bu depoda tekrar eden hata.</para>
+    ///
+    /// <para>Doğru çözüm okuma modeline TİPLİ bir kanal açmaktır; o da `0002`'nin
+    /// sözleşmesini değiştirir ve bu spec'in kapsamı dışındadır. Bugün public opsiyonel
+    /// alan YOK, yani bedel sıfır — ve bir alan public yapıldığında sessiz kalmaması için
+    /// mimari bir tripwire testi var.</para>
+    /// </summary>
+    private static bool IsLocaleSafeAtRest(FieldValueKind kind) =>
+        kind is FieldValueKind.LocalizedText;
 }

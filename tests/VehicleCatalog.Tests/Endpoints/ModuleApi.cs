@@ -31,7 +31,9 @@ internal sealed class ModuleApi : IAsyncDisposable
         builder.Services.AddVehicleCatalog(
 database.ConnectionString, "tr", ["tr", "ar", "en"],
                 "TRY",
-                2);
+                2,
+                adminPageSize: 25,
+                adminMaxPageSize: 100);
 
         // Model adı VehicleReference'a aittir; bu testlerde o sınırın ötesi sahtelenir.
         builder.Services.Replace(ServiceDescriptor.Singleton<IVehicleModelNameResolver>(new FakeModelNameResolver()));

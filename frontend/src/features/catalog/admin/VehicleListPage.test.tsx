@@ -1,8 +1,12 @@
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../../../app/LocaleProvider'
 import { ApiError } from '../../../shared/api/client'
-import type { VehicleAdminListItem } from '../../../shared/api/types'
+import type {
+  PagedResult,
+  VehicleAdminListItem,
+  VehicleAdminSummary,
+} from '../../../shared/api/types'
 import { VehicleListPage } from './VehicleListPage'
 
 /**
@@ -11,9 +15,10 @@ import { VehicleListPage } from './VehicleListPage'
  */
 vi.mock('../../../shared/api/catalogAdmin', () => ({
   fetchVehicles: vi.fn(),
+  fetchVehicleSummary: vi.fn(),
 }))
 
-const { fetchVehicles } = await import('../../../shared/api/catalogAdmin')
+const { fetchVehicles, fetchVehicleSummary } = await import('../../../shared/api/catalogAdmin')
 
 const arac: VehicleAdminListItem = {
   vehicleId: '0192c000-0000-7000-8000-000000000001',
@@ -23,7 +28,28 @@ const arac: VehicleAdminListItem = {
   price: { onRequest: false, amount: 750000, currencyCode: 'TRY', minorUnitExponent: 2 },
   listingStatus: 'Draft',
   vin: 'VIN0000000000001',
+  updatedAt: '2026-10-10T12:30:00Z',
+  missingLocales: [],
+  hasMissingRequiredInfo: false,
 }
+
+/** 0010b — liste yanıtı `PagedResult` zarfında (AC-25). */
+function sayfa(
+  items: readonly VehicleAdminListItem[],
+  page = 1,
+  pageSize = 25,
+  totalCount = items.length,
+): PagedResult<VehicleAdminListItem> {
+  return {
+    items,
+    page,
+    pageSize,
+    totalCount,
+    totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
+  }
+}
+
+const ozet: VehicleAdminSummary = { totalCount: 1, translationIncompleteCount: 0 }
 
 function ekran(locale: 'tr' | 'ar' | 'en' = 'tr') {
   render(
@@ -33,6 +59,11 @@ function ekran(locale: 'tr' | 'ar' | 'en' = 'tr') {
   )
 }
 
+beforeEach(() => {
+  window.history.replaceState(null, '', '/admin/vehicles')
+  vi.mocked(fetchVehicleSummary).mockResolvedValue(ozet)
+})
+
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
@@ -40,7 +71,7 @@ afterEach(() => {
 
 describe('0010a/AC-26: Kaydedilen araç sade listede araç tanımı, fiyat ve kilometreyle görünür', () => {
   it('araç tanımı, fiyat ve kilometre basılır', async () => {
-    vi.mocked(fetchVehicles).mockResolvedValue([arac])
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac]))
 
     ekran()
 
@@ -55,7 +86,7 @@ describe('0010a/AC-26: Kaydedilen araç sade listede araç tanımı, fiyat ve ki
   })
 
   it('yıl gruplama ayracı ALMAZ: 2019, "2.019" değil', async () => {
-    vi.mocked(fetchVehicles).mockResolvedValue([arac])
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac]))
 
     ekran()
 
@@ -65,12 +96,14 @@ describe('0010a/AC-26: Kaydedilen araç sade listede araç tanımı, fiyat ve ki
   })
 
   it('"fiyat sorunuz" tutar yerine kendi metnini gösterir (P4)', async () => {
-    vi.mocked(fetchVehicles).mockResolvedValue([
-      {
-        ...arac,
-        price: { onRequest: true, amount: null, currencyCode: null, minorUnitExponent: null },
-      },
-    ])
+    vi.mocked(fetchVehicles).mockResolvedValue(
+      sayfa([
+        {
+          ...arac,
+          price: { onRequest: true, amount: null, currencyCode: null, minorUnitExponent: null },
+        },
+      ]),
+    )
 
     ekran()
 
@@ -79,7 +112,7 @@ describe('0010a/AC-26: Kaydedilen araç sade listede araç tanımı, fiyat ve ki
   })
 
   it('durum KODU çeviri kataloğundan basılır; ham kod görünmez (C11, Yasak Listesi 22)', async () => {
-    vi.mocked(fetchVehicles).mockResolvedValue([arac])
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac]))
 
     ekran()
 
@@ -98,7 +131,7 @@ describe('Üç durum (docs/frontend.md § 3)', () => {
   })
 
   it('boş: neden boş ve ne yapılabileceği yazılır', async () => {
-    vi.mocked(fetchVehicles).mockResolvedValue([])
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([]))
 
     ekran()
 
@@ -128,11 +161,137 @@ describe('0010a/AC-50: Form etiketleri ve alan adları TR, AR ve EN de kendi dil
     ['en', 'Mileage'],
     ['ar', 'المسافة المقطوعة'],
   ] as const)('%s başlıkları kendi dilinde basılır', async (locale, beklenen) => {
-    vi.mocked(fetchVehicles).mockResolvedValue([arac])
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac]))
 
     ekran(locale)
 
     expect(await screen.findByText(beklenen)).toBeTruthy()
     expect(document.body.textContent).not.toContain('vehicle.column')
+  })
+})
+
+describe('0010b/AC-24: Liste araç tanımını, fiyatı, kilometreyi, yayın durumunu, eksik dil göstergesini, eksik bilgi göstergesini ve son güncelleme zamanını gösterir', () => {
+  it('yedi sütunun hepsi basılır', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(
+      sayfa([{ ...arac, missingLocales: ['ar'], hasMissingRequiredInfo: true }]),
+    )
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    for (const baslik of ['Araç', 'Fiyat', 'Kilometre', 'Durum', 'Tamlık', 'Son güncelleme']) {
+      expect(screen.getByRole('columnheader', { name: baslik }), baslik).toBeTruthy()
+    }
+
+    // Son güncelleme UÇTA biçimleniyor; ISO dizesi ham hâliyle görünmez.
+    expect(screen.getByRole('table').textContent).not.toContain('2026-10-10T12:30:00Z')
+    expect(screen.getByRole('table').textContent).toContain('10.10.2026')
+  })
+})
+
+describe('0010b/AC-22: Panel, metni eksik olan dilleri araç başına gösterir', () => {
+  it('eksik dil rozeti dilin ADINI taşır, kodunu değil', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([{ ...arac, missingLocales: ['ar', 'en'] }]))
+
+    ekran()
+
+    const rozet = await screen.findByTestId('vehicle-missing-locales')
+
+    // Dil adları KENDİ dillerinde yazılı (`app.locale.*`, 0001'den gelen desen); ham
+    // locale kodu (`ar`, `en`) ziyaretçiye gösterilmez.
+    expect(rozet.textContent).toContain('العربية')
+    expect(rozet.textContent).toContain('English')
+    expect(rozet.textContent).not.toContain('ar,')
+  })
+
+  it('eksiksiz araçta rozet yok', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac]))
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    expect(screen.queryByTestId('vehicle-missing-locales')).toBeNull()
+    expect(screen.queryByTestId('vehicle-missing-info')).toBeNull()
+    expect(screen.getByText('Tam')).toBeTruthy()
+  })
+
+  it('eksik bilgi göstergesi ayrı bir rozettir', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([{ ...arac, hasMissingRequiredInfo: true }]))
+
+    ekran()
+
+    expect((await screen.findByTestId('vehicle-missing-info')).textContent).toContain('Eksik bilgi')
+  })
+})
+
+describe('0010b/AC-23: Liste, çeviri eksik ilan sayısını tüm araçlar üzerinden gösterir; gösterilen sayı o anki sayfanın içeriğine bağlı değildir', () => {
+  it('özet SAYFADAN değil, özet ucundan gelir', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac], 1, 25, 40))
+    vi.mocked(fetchVehicleSummary).mockResolvedValue({
+      totalCount: 40,
+      translationIncompleteCount: 7,
+    })
+
+    ekran()
+
+    const ozetMetni = await screen.findByTestId('vehicle-summary')
+
+    // Sayfada tek araç var ve o eksiksiz; sayı yine de 7.
+    expect(ozetMetni.textContent).toContain('7')
+    expect(ozetMetni.textContent).toContain('40')
+  })
+})
+
+describe('0010b/AC-27: Yapılandırılan sayfa boyutunun bir fazlası kadar araç varken ikinci sayfa tam olarak bir araç gösterir', () => {
+  it('sayfa göstergesi ve ileri düğmesi basılır', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac], 1, 25, 26))
+
+    ekran()
+
+    expect((await screen.findByTestId('vehicle-page-indicator')).textContent).toContain('1')
+    expect(screen.getByRole('button', { name: 'Sonraki' })).toHaveProperty('disabled', false)
+
+    // İlk sayfada geri gidilemez.
+    expect(screen.getByRole('button', { name: 'Önceki' })).toHaveProperty('disabled', true)
+  })
+
+  it('tek sayfalık listede sayfalayıcı hiç basılmaz', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac], 1, 25, 1))
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    expect(screen.queryByTestId('vehicle-page-indicator')).toBeNull()
+  })
+
+  it('ileri gitmek SONRAKİ sayfayı ister ve adrese yazar', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac], 1, 25, 26))
+
+    ekran()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Sonraki' }))
+
+    await waitFor(() => expect(vi.mocked(fetchVehicles).mock.calls.at(-1)?.[1]).toBe(2))
+    expect(window.location.search).toContain('page=2')
+  })
+})
+
+describe('0010b/AC-28: Ekleme ve güncelleme sıraları birbirinden farklı olan en az üç araçla, son güncellenen ve yeni eklenen sıralamaları farklı sıralar üretir', () => {
+  it('sıralama seçimi istekte ve adreste görünür', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue(sayfa([arac]))
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.change(screen.getByLabelText('Sıralama'), { target: { value: 'recently-added' } })
+
+    await waitFor(() =>
+      expect(vi.mocked(fetchVehicles).mock.calls.at(-1)?.[2]).toBe('recently-added'),
+    )
+    expect(window.location.search).toContain('sort=recently-added')
   })
 })

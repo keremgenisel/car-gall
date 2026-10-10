@@ -26,6 +26,21 @@ internal sealed class ListingConfiguration : IEntityTypeConfiguration<Listing>
         builder.Property(listing => listing.ShowcaseSortWeight).HasColumnName("showcase_sort_weight");
         builder.Property(listing => listing.PublishedAt).HasColumnName("published_at");
 
+        // C22 — ilan metni `jsonb`, locale başına satır olarak değil (0010a D13).
+        // `color_names` ile aynı desen; ek tablo açmadan aynı yolu tekrar ediyor.
+        //
+        // Karşılaştırıcı olmadan EF `LocalizedText`'i REFERANSLA karşılaştırır ve içerik
+        // değişikliğini kaçırır: düzenleme sessizce kaybolur.
+        builder.Property(listing => listing.Title)
+            .HasColumnName("title")
+            .HasColumnType("jsonb")
+            .HasConversion(CatalogConverters.LocalizedText, CatalogConverters.LocalizedTextComparer);
+
+        builder.Property(listing => listing.Description)
+            .HasColumnName("description")
+            .HasColumnType("jsonb")
+            .HasConversion(CatalogConverters.LocalizedText, CatalogConverters.LocalizedTextComparer);
+
         // Bir araca bir ilan: A3'ün durum makinesi tek ilan üzerinde yürüyor.
         builder.HasIndex(listing => listing.VehicleId).IsUnique().HasDatabaseName("ux_listings_vehicle_id");
     }

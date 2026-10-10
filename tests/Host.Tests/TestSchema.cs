@@ -33,7 +33,7 @@ internal static class TestSchema
         ServiceCollection services = new();
 
         services.AddLogging();
-        services.AddVehicleCatalog(connectionString, "tr", ["tr", "ar", "en"], "TRY", 2);
+        services.AddVehicleCatalog(connectionString, "tr", ["tr", "ar", "en"], "TRY", 2, 25, 100);
         services.AddVehicleReference(connectionString);
         services.AddDealership(connectionString, "tr");
 

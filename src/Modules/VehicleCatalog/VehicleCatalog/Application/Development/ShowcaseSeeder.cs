@@ -22,8 +22,26 @@ namespace CarGallery.Modules.VehicleCatalog.Application.Development;
 /// şey (X2). Seeder bir geliştirme aracıdır, uç değil; taslak üretseydi vitrin boşalır ve
 /// `0001`/`0002`'nin bütün e2e'si düşerdi.</para>
 /// </summary>
-internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clock)
+internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clock, CatalogCurrency currency)
 {
+    /// <summary>
+    /// Seed metni. Her beşinci araçta Arapça eksik — gösterge gerçek veriyle görülsün.
+    /// </summary>
+    private static IEnumerable<KeyValuePair<Locale, string>> SeedText(string model, int index, bool baslik)
+    {
+        string tr = baslik ? $"{model} {2016 + (index % 9)} — temiz kayıt" : $"{model}, bakımları yapılmış, {index} numaralı seed kaydı.";
+        string en = baslik ? $"{model} {2016 + (index % 9)} — clean record" : $"{model}, fully serviced, seed record {index}.";
+        string ar = baslik ? $"{model} {2016 + (index % 9)} — سجل نظيف" : $"{model}، صيانة كاملة، سجل {index}.";
+
+        yield return new KeyValuePair<Locale, string>(Locale.Create("tr").Value, tr);
+        yield return new KeyValuePair<Locale, string>(Locale.Create("en").Value, en);
+
+        if (index % 5 != 4)
+        {
+            yield return new KeyValuePair<Locale, string>(Locale.Create("ar").Value, ar);
+        }
+    }
+
     private static readonly string[] BodyTypes = ["sedan", "suv", "hatchback", "station-wagon", "coupe", "pickup"];
     private static readonly string[] FuelTypes = ["petrol", "diesel", "hybrid", "electric"];
     private static readonly string[] Transmissions = ["manual", "automatic"];
@@ -111,17 +129,22 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             vehicle.AttachMediaAsset(Guid.CreateVersion7());
 
             // E10 — opsiyonel alan DEĞERLERİ yazma yolu gelene kadar buradan gelir.
-            // Tramer alanı seed'de Gizli'dir; AC-13 tam olarak onu sınar.
+            // 0010b/D17 — tramer bir TUTAR; artık `Money` olarak yazılıyor, metin olarak
+            // değil. Alan seed'de Gizli'dir ve `0001` AC-13 tam olarak onu sınar.
             vehicle.SetOptionalFieldValue(
                 VehicleFieldKeys.DamageRecordAmount,
-                LocalizedText.From(
-                [
-                    new KeyValuePair<Locale, string>(Locale.Create("tr").Value, $"{index * 1_250} TL"),
-                    new KeyValuePair<Locale, string>(Locale.Create("ar").Value, $"{index * 1_250} ليرة"),
-                    new KeyValuePair<Locale, string>(Locale.Create("en").Value, $"{index * 1_250} TRY"),
-                ]));
+                OptionalFieldValue.OfAmount(
+                    Money.Create(index * 1_250m, currency.Code, currency.MinorUnitExponent).Value));
 
             Listing listing = Listing.CreateDraft(vehicle.Id, showcaseSortWeight: listingCount - index);
+
+            // 0010b — seed ilan metni de yazıyor. Her beşinci araçta Arapça metin BİLEREK
+            // eksik: "eksik dil" göstergesinin (R12) geliştirme verisinde görülebilir bir
+            // karşılığı olmasa, kanıt üretimi sahte veriye muhtaç kalırdı.
+            listing.SetText(
+                LocalizedText.From(SeedText("Toyota Corolla", index, baslik: true)),
+                LocalizedText.From(SeedText("Toyota Corolla", index, baslik: false)));
+
             listing.Publish(clock);
 
             vehicles.Add(vehicle);

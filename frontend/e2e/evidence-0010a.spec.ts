@@ -272,7 +272,13 @@ test('0010a/AC-26: boş liste nedenini ve ne yapılabileceğini söyler', async 
       return
     }
 
-    await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    // 0010b — liste yanıtı artık `PagedResult` zarfında. `0010a`'nın kriteri değişmedi;
+    // sahte yanıt yeni sözleşmeye uyduruldu.
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 1 }),
+    })
   })
 
   await page.goto('/admin/vehicles')

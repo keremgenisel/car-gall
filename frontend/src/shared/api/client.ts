@@ -138,7 +138,7 @@ async function toApiError(response: Response): Promise<ApiError> {
  * yazar (0006 C17, AC-29).
  */
 export async function sendJson<TResponse>(
-  method: 'POST' | 'DELETE',
+  method: 'POST' | 'PUT' | 'DELETE',
   path: string,
   body: unknown,
   locale: AppLocale,

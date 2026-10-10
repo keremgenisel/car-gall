@@ -10,6 +10,7 @@ using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
 using CarGallery.Modules.VehicleCatalog.Contracts.Admin;
+using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 using CarGallery.Modules.VehicleCatalog.Contracts.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Contracts.Listings;
@@ -34,7 +35,11 @@ public static class VehicleCatalogModule
         string defaultLocale,
         IReadOnlyList<string> enabledLocales,
         string currencyCode,
-        int currencyMinorUnitExponent)
+        int currencyMinorUnitExponent,
+        // C26 — panel sayfa boyutu dağıtım yapılandırmasından. Vitrin tarafının 24'ü
+        // AYRI bir eksen: biri ziyaretçinin ızgarası, diğeri personelin tablosu.
+        int adminPageSize,
+        int adminMaxPageSize)
     {
         services.AddDbContext<VehicleCatalogDbContext>(options =>
             options.UseNpgsql(
@@ -73,7 +78,12 @@ public static class VehicleCatalogModule
         // 0010a — yazma yüzeyi. Para birimi KURULUM BAŞINA SABİTTİR ve panelden
         // değiştirilemez (C3, P3): personel yalnız tutar girer.
         services.AddSingleton(new CatalogCurrencyOptions(currencyCode, currencyMinorUnitExponent));
+        // Kayıt ve düzenlemenin ORTAK kuralları tek yerde: aynı invariant iki komutta
+        // iki farklı şey olmasın (0010b, bilinen tuzak 3).
+        services.AddSingleton(new CatalogAdminPagingOptions(adminPageSize, adminMaxPageSize));
+        services.AddScoped<VehicleWriteRules>();
         services.AddScoped<CreateVehicleCommand>();
+        services.AddScoped<UpdateVehicleCommand>();
         services.AddScoped<IVehicleAdminQueries, VehicleAdminQueries>();
 
         return services;
@@ -92,7 +102,11 @@ public static class VehicleCatalogModule
         using IServiceScope scope = services.CreateScope();
 
         VehicleCatalogDbContext context = scope.ServiceProvider.GetRequiredService<VehicleCatalogDbContext>();
-        ShowcaseSeeder seeder = new(context, scope.ServiceProvider.GetRequiredService<IClock>());
+        CatalogCurrencyOptions currency = scope.ServiceProvider.GetRequiredService<CatalogCurrencyOptions>();
+        ShowcaseSeeder seeder = new(
+            context,
+            scope.ServiceProvider.GetRequiredService<IClock>(),
+            new CatalogCurrency(currency.Code, currency.MinorUnitExponent));
         await seeder.SeedAsync(listingCount, vehicleModelId, cancellationToken);
     }
 
