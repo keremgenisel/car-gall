@@ -38,4 +38,29 @@ internal sealed class MediaAssetQueries(MediaDbContext context, MediaUrlResolver
                 turev.Height,
                 urls.Resolve(turev.ObjectKey).ToString()))]);
     }
+
+    public async Task<bool> AreAllReadyAsync(
+        IReadOnlyCollection<Guid> mediaAssetIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(mediaAssetIds);
+
+        // Boş küme `false` (arayüzdeki gerekçe): A2 en az bir varlık istiyor.
+        if (mediaAssetIds.Count == 0)
+        {
+            return false;
+        }
+
+        // Tekilleştirilmiş kimlikle sayıyoruz: çağıran aynı kimliği iki kez verdiğinde
+        // eşitlik tutmaz ve sorgu "hazır değil" derdi.
+        Guid[] tekil = [.. mediaAssetIds.Distinct()];
+
+        int hazir = await context.Assets
+            .AsNoTracking()
+            .CountAsync(
+                asset => tekil.Contains(asset.Id) && asset.Status == MediaProcessingStatus.Ready,
+                cancellationToken);
+
+        return hazir == tekil.Length;
+    }
 }

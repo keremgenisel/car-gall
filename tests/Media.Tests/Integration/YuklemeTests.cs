@@ -17,7 +17,7 @@ public sealed class YuklemeTests(MedyaOrtami ortam)
 {
     private static readonly DateTimeOffset Simdi = new(2026, 10, 10, 9, 0, 0, TimeSpan.Zero);
 
-    [Fact(DisplayName = "0011/AC-8: Yüklenen varlık `Yüklendi` durumunda, depolama yolu ve kimliğiyle kaydedilir")]
+    [Fact(DisplayName = "0011/AC-10: Yüklenen varlık `yüklendi` durumunda, depolama yolu ve kimliğiyle kaydedilir")]
     public async Task Kaydedilir_Varlik_DepolamaYoluylaBirlikte()
     {
         await ortam.SifirlaAsync();
@@ -39,7 +39,7 @@ public sealed class YuklemeTests(MedyaOrtami ortam)
         Assert.NotNull(await ortam.NesneOkuAsync(kayit.OriginalObjectKey));
     }
 
-    [Fact(DisplayName = "0011/AC-3: Desteklenmeyen türdeki bir dosya reddedilir ve varlık kaydı oluşmaz")]
+    [Fact(DisplayName = "0011/AC-3: Yapılandırılan tür kümesinde olmayan bir dosya `415` ile reddedilir ve varlık kaydı oluşmaz")]
     public async Task Reddedilir_DesteklenmeyenTur()
     {
         await ortam.SifirlaAsync();
@@ -70,7 +70,7 @@ public sealed class YuklemeTests(MedyaOrtami ortam)
         await KayitYokAsync();
     }
 
-    [Fact(DisplayName = "0011/AC-5: Yapılandırılan boyut sınırını aşan dosya reddedilir ve varlık kaydı oluşmaz")]
+    [Fact(DisplayName = "0011/AC-6: Yapılandırılan boyut sınırını aşan dosya `413` ile reddedilir ve varlık kaydı oluşmaz")]
     public async Task Reddedilir_BoyutSinirindanBuyuk()
     {
         await ortam.SifirlaAsync();
@@ -87,7 +87,7 @@ public sealed class YuklemeTests(MedyaOrtami ortam)
         await KayitYokAsync();
     }
 
-    [Fact(DisplayName = "0011/AC-6: Çözülmüş piksel bütçesini aşan dosya reddedilir ve varlık kaydı oluşmaz")]
+    [Fact(DisplayName = "0011/AC-7: Yapılandırılan piksel bütçesini aşan dosya reddedilir ve varlık kaydı oluşmaz")]
     public async Task Reddedilir_PikselButcesiniAsan()
     {
         await ortam.SifirlaAsync();

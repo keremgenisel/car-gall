@@ -116,6 +116,7 @@ public static class MediaModule
         // hâlâ bu tuzağı taşıyor — PR'da açık konu olarak raporlandı.
         services.AddScoped<OutboxWriter<MediaDbContext>>();
         services.AddScoped<UploadMediaAssetCommand>();
+        services.AddScoped<RetryMediaAssetCommand>();
         services.AddScoped<MediaProcessingService>();
         services.AddScoped<IMediaAssetQueries, MediaAssetQueries>();
 

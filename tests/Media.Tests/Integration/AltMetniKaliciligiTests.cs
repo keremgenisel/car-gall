@@ -19,7 +19,7 @@ public sealed class AltMetniKaliciligiTests(MedyaOrtami ortam)
 {
     private static readonly DateTimeOffset Simdi = new(2026, 10, 10, 9, 0, 0, TimeSpan.Zero);
 
-    [Fact(DisplayName = "0011/AC-27: Bir varlık etkin her locale için ayrı `alt` metni taşıyabilir")]
+    [Fact(DisplayName = "0011/AC-38: Bir varlık etkin her locale için ayrı `alt` metni taşıyabilir")]
     public async Task Tasir_AltMetni_UcLocaleIcinKalici()
     {
         Guid id = await YukleAsync();
@@ -73,7 +73,7 @@ public sealed class AltMetniKaliciligiTests(MedyaOrtami ortam)
         }
     }
 
-    [Fact(DisplayName = "0011/AC-28: `alt` metni boş olan bir varlık yine hazır olabilir")]
+    [Fact(DisplayName = "0011/AC-39: `alt` metni boş olan bir varlık yine hazır olabilir")]
     public async Task Olabilir_Hazir_AltMetniBosOlsaDa()
     {
         Guid id = await YukleAsync();

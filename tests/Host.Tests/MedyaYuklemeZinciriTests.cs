@@ -7,6 +7,7 @@ using Amazon.S3.Model;
 using CarGallery.Modules.Identity.Contracts;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Npgsql;
 using SkiaSharp;
 using Testcontainers.LocalStack;
 using Testcontainers.PostgreSql;
@@ -142,7 +143,7 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, okuma.StatusCode);
     }
 
-    [Theory(DisplayName = "0011/AC-2: Oturumu olmayan biri görsel yükleyemez; istek reddedilir")]
+    [Theory(DisplayName = "0011/AC-2: Oturumu olmayan biri görsel yükleyemez; istek **içerik tipinden bağımsız olarak** reddedilir")]
     [InlineData("POST")]
     [InlineData("GET")]
     public async Task Yukleyemez_OturumsuzKisi(string yontem)
@@ -160,7 +161,7 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
     }
 
-    [Fact(DisplayName = "0011/AC-7: Reddedilen istek çevrilmiş metin değil `errorCode` döner")]
+    [Fact(DisplayName = "0011/AC-8: Reddedilen istek çevrilmiş metin değil `errorCode` döner")]
     public async Task Doner_ErrorCode_ReddedilenIstekte()
     {
         HttpClient client = await GirisYapmisIstemciAsync();
@@ -172,7 +173,8 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
                 """<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"></svg>"""u8.ToArray(),
                 "arac.jpg"));
 
-        Assert.Equal(HttpStatusCode.UnprocessableContent, yanit.StatusCode);
+        // AC-3 — `415`: istemcinin yapacağı şey BAŞKA BİR dosya seçmek.
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, yanit.StatusCode);
 
         string govde = await yanit.Content.ReadAsStringAsync();
         JsonElement kok = JsonDocument.Parse(govde).RootElement;
@@ -180,6 +182,109 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
         Assert.Equal("media.unsupported_type", kok.GetProperty("errorCode").GetString());
         Assert.False(kok.TryGetProperty("title", out _));
         Assert.False(kok.TryGetProperty("detail", out _));
+    }
+
+    /// <summary>
+    /// 0011/AC-37 — duyuru <b>arka plan dağıtıcısı üzerinden</b> alıcıya ulaşır.
+    ///
+    /// <para><b>Elle handler çağıran bir test bunun yerine GEÇMEZ</b> ve kriter bunu
+    /// açıkça yazıyor. `0003`'ün kaçan hatası birebir buydu: alıcı test edilmişti, ama
+    /// yayıncısı ve kablosu yoktu. Burada hiçbir şey elle çağrılmıyor — yükleme ucuna
+    /// POST atılıyor ve `media` outbox'ından `vehicle_catalog` okuma modeline kadarki
+    /// bütün zincirin kendi kendine koşması bekleniyor:</para>
+    ///
+    /// <para>yükleme ucu → `media.assets` → işleme hattı (türevler + filigran + S3) →
+    /// `media.outbox_messages` → outbox dağıtıcısı → `MediaAssetReadyHandler` →
+    /// `vehicle_catalog.showcase_listings.cover_media_url`.</para>
+    /// </summary>
+    [Fact(DisplayName = "0011/AC-37: Duyuru, arka plan dağıtıcısı üzerinden alıcıya ulaşır; elle handler çağıran bir test bunun yerine geçmez")]
+    public async Task Ulasir_Duyuru_DagiticiUzerinden()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+
+        // Yükle ve varlığın kimliğini al.
+        HttpResponseMessage yanit = await client.PostAsync(
+            new Uri($"{AdminSurface.RoutePrefix}/media/assets", UriKind.Relative),
+            Govde(JpegUret()));
+
+        Assert.Equal(HttpStatusCode.Accepted, yanit.StatusCode);
+
+        Guid varlikId = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("id").GetGuid();
+
+        // Okuma modeline o varlığı KAPAK olarak işaret eden bir ilan koyuyoruz. Alıcı
+        // `cover_asset_id`'den ilanı buluyor — `vehicleId` parametresi olmadan (D2).
+        await IlanEkleAsync(varlikId);
+
+        // Hiçbir şeyi elle tetiklemiyoruz: işleme hattı ve outbox dağıtıcısı kendi
+        // turlarıyla çalışıyor. Sabit bir bekleme bu testi makinenin hızına göre kırılgan
+        // yapardı (AP-03).
+        string? kapakUrl = await BekleAsync(varlikId);
+
+        Assert.NotNull(kapakUrl);
+
+        // AC-29 — alıcı GÖSTERİM türevini adıyla almış olmalı.
+        Assert.EndsWith($"/public/assets/{varlikId:D}/display.webp", kapakUrl, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Okuma modeline kapak varlığı bu olan bir ilan ekler. Alıcı onu `cover_asset_id`
+    /// üzerinden bulacak.
+    /// </summary>
+    private async Task IlanEkleAsync(Guid coverAssetId)
+    {
+        await using NpgsqlConnection connection = new(postgres.GetConnectionString());
+        await connection.OpenAsync();
+
+        await using NpgsqlCommand command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO vehicle_catalog.showcase_listings (
+                listing_id, vehicle_id, is_reserved, showcase_sort_weight, published_at, slug,
+                body_type_slug, fuel_type_slug, transmission_type_slug, drivetrain_type_slug,
+                trim_level_slug, color_names, vehicle_model_id, model_year, mileage_kilometers,
+                price_amount, price_currency_code, price_minor_unit_exponent, price_on_request,
+                branch_id, branch_names, cover_asset_id, cover_media_url)
+            VALUES (
+                gen_random_uuid(), gen_random_uuid(), false, 0, now(), @slug,
+                'sedan', 'diesel', 'automatic', 'front-wheel-drive',
+                'comfort', '{"tr":"Beyaz"}'::jsonb, @modelId, 2019, 125000,
+                1250000, 'TRY', 2, false,
+                @branchId, '{"tr":"Merkez Şube"}'::jsonb, @coverAssetId, NULL)
+            """;
+
+        command.Parameters.AddWithValue("slug", $"medya-zinciri-{coverAssetId:N}");
+        command.Parameters.AddWithValue("modelId", Guid.Parse("0192c000-0000-7000-8000-00000000000a"));
+        command.Parameters.AddWithValue("branchId", Guid.Parse("00000000-0000-7000-8000-00000000b001"));
+        command.Parameters.AddWithValue("coverAssetId", coverAssetId);
+
+        await command.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// İşleme hattı ve outbox dağıtıcısı beş saniyelik turlarla çalışıyor; sabit bir
+    /// bekleme bu testi makinenin hızına göre kırılgan yapardı (AP-03).
+    /// </summary>
+    private async Task<string?> BekleAsync(Guid coverAssetId)
+    {
+        for (int deneme = 0; deneme < 90; deneme++)
+        {
+            await using NpgsqlConnection connection = new(postgres.GetConnectionString());
+            await connection.OpenAsync();
+
+            await using NpgsqlCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT cover_media_url FROM vehicle_catalog.showcase_listings WHERE cover_asset_id = @id";
+            command.Parameters.AddWithValue("id", coverAssetId);
+
+            if (await command.ExecuteScalarAsync() is string url)
+            {
+                return url;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+        }
+
+        return null;
     }
 
     private static MultipartFormDataContent Govde(byte[] icerik, string dosyaAdi = "arac.jpg")
@@ -245,7 +350,7 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
         return png.ToArray();
     }
 
-    [Fact(DisplayName = "0011/AC-5: Yapılandırılan boyut sınırını aşan dosya reddedilir ve varlık kaydı oluşmaz")]
+    [Fact(DisplayName = "0011/AC-6: Yapılandırılan boyut sınırını aşan dosya `413` ile reddedilir ve varlık kaydı oluşmaz")]
     public async Task Reddedilir_SinirdanBuyukDosya_UcUzerinden()
     {
         HttpClient client = await GirisYapmisIstemciAsync();
@@ -260,7 +365,8 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
             new Uri($"{AdminSurface.RoutePrefix}/media/assets", UriKind.Relative),
             Govde(buyuk));
 
-        Assert.Equal(HttpStatusCode.UnprocessableContent, yanit.StatusCode);
+        // AC-6 — `413`: istemcinin yapacağı şey AYNI dosyayı küçültmek.
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, yanit.StatusCode);
 
         JsonElement govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync()).RootElement;
 

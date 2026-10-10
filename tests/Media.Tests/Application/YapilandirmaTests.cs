@@ -1,6 +1,7 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Media.Application;
 using CarGallery.Modules.Media.Contracts.Setup;
+using CarGallery.Modules.Media.Domain;
 
 namespace CarGallery.Media.Tests.Application;
 
@@ -23,8 +24,7 @@ public sealed class YapilandirmaTests
         WatermarkObjectKey: "private/brand/watermark.png",
         MaximumByteSize: 15_728_640,
         MaximumPixelCount: 50_000_000,
-        MaximumAttempts: 3,
-        RetryBaseSeconds: 30);
+        AllowedImageFormats: ["jpeg", "png", "webp"]);
 
     [Fact]
     public void Gecerlidir_TamYapilandirma()
@@ -32,7 +32,7 @@ public sealed class YapilandirmaTests
         Result<MediaOptions> sonuc = MediaOptions.Create(Tam());
 
         Assert.True(sonuc.IsSuccess);
-        Assert.Equal(TimeSpan.FromSeconds(30), sonuc.Value.RetryBaseDelay);
+        Assert.Equal(3, sonuc.Value.AllowedFormats.Count);
     }
 
     [Theory]
@@ -43,7 +43,7 @@ public sealed class YapilandirmaTests
     [InlineData("public_base_url_missing")]
     [InlineData("watermark_missing")]
     [InlineData("invalid_upload_limits")]
-    [InlineData("invalid_retry_policy")]
+    [InlineData("allowed_formats_missing")]
     public void Reddedilir_EksikYapilandirma(string beklenenKod)
     {
         MediaSetup eksik = beklenenKod switch
@@ -55,7 +55,7 @@ public sealed class YapilandirmaTests
             "public_base_url_missing" => Tam() with { PublicBaseUrl = "/goreli/yol" },
             "watermark_missing" => Tam() with { WatermarkObjectKey = string.Empty },
             "invalid_upload_limits" => Tam() with { MaximumPixelCount = 0 },
-            _ => Tam() with { MaximumAttempts = 0 },
+            _ => Tam() with { AllowedImageFormats = [] },
         };
 
         Result<MediaOptions> sonuc = MediaOptions.Create(eksik);
@@ -94,5 +94,52 @@ public sealed class YapilandirmaTests
 
         Assert.True(sonuc.IsFailure, $"'{servisAdresi}' kabul edildi.");
         Assert.Equal("media.storage_url_missing", sonuc.Error.Code);
+    }
+
+    /// <summary>
+    /// AC-9 — kabul edilen tür kümesi YAPILANDIRMADAN okunur. Kriter yapılandırılan
+    /// değeri doğruluyor: aynı gövde, iki ayrı küme, iki ayrı sonuç.
+    /// </summary>
+    [Theory(DisplayName = "0011/AC-9: Kabul edilen tür kümesi ve boyut sınırı yapılandırmadan okunur; koda gömülü bir sabit yoktur")]
+    [InlineData("jpeg")]
+    [InlineData("png")]
+    [InlineData("webp")]
+    public void Okunur_TurKumesi_Yapilandirmadan(string tur)
+    {
+        MediaOptions ayarlar = MediaOptions.Create(Tam() with { AllowedImageFormats = [tur] }).Value;
+
+        Assert.Single(ayarlar.AllowedFormats);
+        Assert.Equal(ImageFormatDetection.ParseConfigurable(tur), ayarlar.AllowedFormats.Single());
+
+        // Diğer iki tür artık KABUL EDİLMİYOR — küme koda gömülü olsaydı üçü de geçerdi.
+        foreach (DetectedImageFormat diger in ImageFormatDetection.ConfigurableFormats)
+        {
+            Assert.Equal(
+                diger == ImageFormatDetection.ParseConfigurable(tur),
+                ImageFormatDetection.IsAccepted(diger, ayarlar.AllowedFormats));
+        }
+    }
+
+    /// <summary>
+    /// AC-5 — yapılandırmaya SVG eklenemez. D23: bir yapılandırma satırıyla geri
+    /// açılabilen güvenlik kararı, verilmemiş karardır.
+    ///
+    /// <para>Tanınmayan bir ad da reddediliyor: sessizce atlanan bir ad, operatörün
+    /// yapılandırdığını sandığı türün hiç kabul edilmemesi demekti.</para>
+    /// </summary>
+    [Theory(DisplayName = "0011/AC-5: Yapılandırmaya SVG eklenemez; eklenmişse uygulama ayağa kalkmaz")]
+    [InlineData("svg")]
+    [InlineData("image/svg+xml")]
+    [InlineData("SVG")]
+    [InlineData("gif")]
+    [InlineData("bmp")]
+    public void Kalkmaz_Uygulama_SvgYapilandirildiginda(string tur)
+    {
+        Result<MediaOptions> sonuc = MediaOptions.Create(
+            Tam() with { AllowedImageFormats = ["jpeg", tur] });
+
+        Assert.True(sonuc.IsFailure, $"'{tur}' kabul edildi.");
+        Assert.Equal("media.allowed_format_not_permitted", sonuc.Error.Code);
+        Assert.Equal(tur.Trim().ToLowerInvariant(), sonuc.Error.Parameters!["format"]);
     }
 }

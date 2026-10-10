@@ -38,8 +38,12 @@ public sealed class SemaTests(MedyaOrtami ortam)
         // Beklenen kolonların durduğunu da ölçüyoruz: boş bir tabloda üstteki iddia da
         // yeşil kalırdı.
         Assert.Contains("status", kolonlar);
-        Assert.Contains("next_attempt_at", kolonlar);
         Assert.Contains("original_object_key", kolonlar);
+        Assert.Contains("failure_reason", kolonlar);
+
+        // AC-15 — geri çekilme aralığı kaldırıldığı için `next_attempt_at` de yok:
+        // otomatik tekrar olmadan "sırası gelmiş" diye ayrı bir zaman alanı gerekmiyor.
+        Assert.DoesNotContain("next_attempt_at", kolonlar);
     }
 
     /// <summary>

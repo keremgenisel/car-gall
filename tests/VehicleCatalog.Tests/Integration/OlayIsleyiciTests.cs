@@ -89,7 +89,7 @@ public sealed class OlayIsleyiciTests(ShowcaseDatabase database)
         listing.CoverMediaUrl = null;
         await ShowcaseQueryHarness.SeedAsync(database, [listing]);
 
-        await HandleMediaAsync(kapakVarligi, "https://cdn.example.test/kapak.webp", listing.VehicleId);
+        await HandleMediaAsync(kapakVarligi, "https://cdn.example.test/kapak.webp");
 
         await using VehicleCatalogDbContext read = database.CreateContext();
         ShowcaseListing stored = await read.ShowcaseListings.AsNoTracking()
@@ -113,9 +113,9 @@ public sealed class OlayIsleyiciTests(ShowcaseDatabase database)
 
         // Medya işleme süreleri farklıdır ve teslimat sıra garantisi vermez
         // (docs/architecture.md § 2.C): ikinci görsel önce hazır olabilir.
-        await HandleMediaAsync(ikinciVarlik, "https://cdn.example.test/ikinci.webp", listing.VehicleId);
-        await HandleMediaAsync(kapakVarligi, "https://cdn.example.test/kapak.webp", listing.VehicleId);
-        await HandleMediaAsync(ikinciVarlik, "https://cdn.example.test/ikinci-yeniden.webp", listing.VehicleId);
+        await HandleMediaAsync(ikinciVarlik, "https://cdn.example.test/ikinci.webp");
+        await HandleMediaAsync(kapakVarligi, "https://cdn.example.test/kapak.webp");
+        await HandleMediaAsync(ikinciVarlik, "https://cdn.example.test/ikinci-yeniden.webp");
 
         await using VehicleCatalogDbContext read = database.CreateContext();
         ShowcaseListing stored = await read.ShowcaseListings.AsNoTracking()
@@ -125,13 +125,27 @@ public sealed class OlayIsleyiciTests(ShowcaseDatabase database)
         Assert.Equal("https://cdn.example.test/kapak.webp", stored.CoverMediaUrl);
     }
 
-    private async Task HandleMediaAsync(Guid mediaAssetId, string url, Guid vehicleId)
+    /// <summary>
+    /// `0011`/D2 — handler artık `vehicleId` parametresi ALMIYOR: kapak varlık kimliği tek
+    /// başına ilanı belirliyor ve o değer olayın gövdesinde zaten var. Önceki imza
+    /// dağıtıcının sözleşmesini uygulamıyordu ve handler kablolanamaz hâldeydi.
+    ///
+    /// <para><b>Bu iki test KRİTER testi değil, regresyon korumasıdır</b> (`[Fact]`,
+    /// `DisplayName` yok). `0011`/AC-37 açıkça şunu istiyor: <i>elle handler çağıran bir
+    /// test bunun yerine geçmez</i> — duyurunun dağıtıcı üzerinden ulaştığının kanıtı
+    /// `tests/Host.Tests`'tedir. Buradaki ikisi kapak seçiminin DAVRANIŞINI koruyor.</para>
+    /// </summary>
+    private async Task HandleMediaAsync(Guid mediaAssetId, string url)
     {
         await using VehicleCatalogDbContext context = database.CreateContext();
-        MediaAssetReadyHandler handler = new(context);
+        MediaAssetReadyHandler handler = new(context, new FixedClock(Simdi));
+
         await handler.HandleAsync(
-            new MediaAssetReady(Guid.CreateVersion7(), Simdi, mediaAssetId, url),
-            vehicleId,
+            new MediaAssetReady(
+                Guid.CreateVersion7(),
+                Simdi,
+                mediaAssetId,
+                [new MediaDerivativePayload("display", url, 800, 533)]),
             CancellationToken.None);
     }
 

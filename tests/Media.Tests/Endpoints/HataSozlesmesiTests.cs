@@ -13,10 +13,14 @@ namespace CarGallery.Media.Tests.Endpoints;
 /// </summary>
 public sealed class HataSozlesmesiTests
 {
-    [Theory(DisplayName = "0011/AC-7: Reddedilen istek çevrilmiş metin değil `errorCode` döner")]
-    [InlineData(MediaErrors.UnsupportedType, 422)]
-    [InlineData(MediaErrors.TooLarge, 422)]
+    [Theory(DisplayName = "0011/AC-8: Reddedilen istek çevrilmiş metin değil `errorCode` döner")]
+    // AC-3 / AC-6 — `415` ve `413` AYRI AYRI (`docs/conventions.md` § 5, `0011` ile
+    // eklendi): istemcinin yapacağı şey farklı — biri BAŞKA BİR DOSYA seçmek, diğeri
+    // AYNI dosyayı küçültmek. Önceki turda ikisini `422`'de toplamıştım.
+    [InlineData(MediaErrors.UnsupportedType, 415)]
+    [InlineData(MediaErrors.TooLarge, 413)]
     [InlineData(MediaErrors.PixelBudgetExceeded, 422)]
+    [InlineData(MediaErrors.NotRetryable, 409)]
     [InlineData(MediaErrors.NotFound, 404)]
     public void Doner_ErrorCode_CevrilmisMetinDegil(string kod, int beklenenDurum)
     {

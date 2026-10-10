@@ -38,13 +38,14 @@ internal sealed class MediaAssetConfiguration : IEntityTypeConfiguration<MediaAs
 
         builder.Property(asset => asset.AttemptCount).HasColumnName("attempt_count");
 
+        // AC-33 — sebep kapalı bir kümeden; `int` olarak saklanıyor. Veritabanında
+        // çevrilmiş ad değil KOD saklanır (Yasak Listesi 22).
         builder.Property(asset => asset.FailureReason)
             .HasColumnName("failure_reason")
-            .HasMaxLength(100);
+            .HasConversion<int?>();
 
         builder.Property(asset => asset.UploadedAt).HasColumnName("uploaded_at");
         builder.Property(asset => asset.UpdatedAt).HasColumnName("updated_at");
-        builder.Property(asset => asset.NextAttemptAt).HasColumnName("next_attempt_at");
 
         // AC-12 — SAHİPLENMENİN kilidi. PostgreSQL'in sistem kolonu `xmin` eşzamanlılık
         // belirteci olarak kullanılıyor: ikinci tur aynı satırı güncellemeye kalkarsa
@@ -95,9 +96,12 @@ internal sealed class MediaAssetConfiguration : IEntityTypeConfiguration<MediaAs
         builder.Navigation(asset => asset.Derivatives)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        // D14 — işleme turu "sırası gelmiş" varlıkları bu indeksle buluyor. İndeks olmadan
-        // sorgu her turda tüm tabloyu tarar ve varlık sayısı arttıkça tur süresi büyür.
-        builder.HasIndex(asset => new { asset.Status, asset.NextAttemptAt })
-            .HasDatabaseName("ix_assets_status_next_attempt_at");
+        // D14 — işleme turu bekleyen varlıkları bu indeksle buluyor. İndeks olmadan sorgu
+        // her turda tüm tabloyu tarar ve varlık sayısı arttıkça tur süresi büyür.
+        //
+        // İkinci kolon `uploaded_at`: geri çekilme aralığı kalktığı için (AC-15) sıra
+        // artık yükleme anına göre — ilk gelen ilk işlenir.
+        builder.HasIndex(asset => new { asset.Status, asset.UploadedAt })
+            .HasDatabaseName("ix_assets_status_uploaded_at");
     }
 }

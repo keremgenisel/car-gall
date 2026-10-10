@@ -29,6 +29,14 @@ namespace CarGallery.Modules.Media.Contracts.Setup;
 /// D10(c) — boyut sınırı bunu GÖRMEZ. 2 MB'lık bir PNG gigapiksele açılabilir ve tek
 /// istekle sunucu CPU'sunu tüketir.
 /// </param>
+/// <param name="AllowedImageFormats">
+/// AC-9 / C14 — kabul edilen tür kümesi YAPILANDIRMADAN gelir; koda gömülü bir sabit
+/// yoktur. Değerler <c>jpeg</c>, <c>png</c>, <c>webp</c>.
+///
+/// <para>AC-5 / D23 — <b>`svg` eklenemez</b>: tanınmayan ya da izin verilmeyen bir değer
+/// varsa uygulama ayağa kalkmaz. SVG aynı origin'de script çalıştırır ve bir yapılandırma
+/// satırıyla geri açılabilen güvenlik kararı, verilmemiş karardır.</para>
+/// </param>
 public sealed record MediaSetup(
     string ConnectionString,
     string StorageServiceUrl,
@@ -41,5 +49,4 @@ public sealed record MediaSetup(
     string WatermarkObjectKey,
     long MaximumByteSize,
     long MaximumPixelCount,
-    int MaximumAttempts,
-    int RetryBaseSeconds);
+    IReadOnlyList<string> AllowedImageFormats);

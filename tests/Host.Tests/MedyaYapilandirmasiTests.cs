@@ -18,17 +18,17 @@ namespace CarGallery.Host.Tests;
 /// </summary>
 public sealed class MedyaYapilandirmasiTests
 {
-    [Theory(DisplayName = "0011/AC-31: S3 kimlik bilgileri eksikken uygulama ayağa kalkmaz")]
+    [Theory(DisplayName = "0011/AC-43: Depolama kimlik bilgileri eksikken uygulama ayağa kalkmaz")]
     [InlineData("Media:Storage:AccessKey")]
     [InlineData("Media:Storage:SecretKey")]
     public void Kalkmaz_DepolamaKimlikBilgileriYokken(string anahtar) =>
         Assert.Contains("Media", Baslatmayi(anahtar).Message, StringComparison.Ordinal);
 
-    [Fact(DisplayName = "0011/AC-32: Erişim taban adresi eksikken uygulama ayağa kalkmaz")]
+    [Fact(DisplayName = "0011/AC-44: Erişim taban adresi eksikken uygulama ayağa kalkmaz")]
     public void Kalkmaz_ErisimTabanAdresiYokken() =>
         Assert.Contains("Media", Baslatmayi("Media:PublicBaseUrl").Message, StringComparison.Ordinal);
 
-    [Fact(DisplayName = "0011/AC-33: Filigran kaynağı yapılandırılmamışken uygulama ayağa kalkmaz")]
+    [Fact(DisplayName = "0011/AC-45: Filigran kaynağı yapılandırılmamışken uygulama ayağa kalkmaz")]
     public void Kalkmaz_FiligranKaynagiYapilandirilmamisken() =>
         Assert.Contains("Media", Baslatmayi("Media:WatermarkObjectKey").Message, StringComparison.Ordinal);
 

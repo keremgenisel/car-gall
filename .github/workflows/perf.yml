@@ -85,6 +85,10 @@ jobs:
           Media__Storage__Region: us-east-1
           Media__PublicBaseUrl: http://localhost:54566/cargallery-media/
           Media__WatermarkObjectKey: private/brand/watermark.png
+          # AC-9 — tür kümesi yapılandırmadan; boş küme kuruluşta reddedilir.
+          Media__AllowedImageFormats__0: jpeg
+          Media__AllowedImageFormats__1: png
+          Media__AllowedImageFormats__2: webp
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Kurulum adımı (ADR 0002): şemayı uygulayan budur. Bu iş onu çalıştırmıyordu,

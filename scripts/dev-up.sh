@@ -106,6 +106,9 @@ Media__Storage__SecretKey=test \
 Media__Storage__Region=us-east-1 \
 Media__PublicBaseUrl="http://localhost:$S3_PORT/$S3_BUCKET/" \
 Media__WatermarkObjectKey="$S3_WATERMARK_KEY" \
+Media__AllowedImageFormats__0=jpeg \
+Media__AllowedImageFormats__1=png \
+Media__AllowedImageFormats__2=webp \
   dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release -- --migrate
 
 # D2/AC-53 — başlangıç Yönetici parolası YAPILANDIRMADAN gelir ve repoda durmaz
@@ -133,5 +136,8 @@ Media__Storage__SecretKey=test \
 Media__Storage__Region=us-east-1 \
 Media__PublicBaseUrl="http://localhost:$S3_PORT/$S3_BUCKET/" \
 Media__WatermarkObjectKey="$S3_WATERMARK_KEY" \
+Media__AllowedImageFormats__0=jpeg \
+Media__AllowedImageFormats__1=png \
+Media__AllowedImageFormats__2=webp \
 ASPNETCORE_URLS="http://localhost:5080" \
   dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release

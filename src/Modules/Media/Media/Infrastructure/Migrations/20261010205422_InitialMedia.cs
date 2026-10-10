@@ -27,10 +27,9 @@ namespace CarGallery.Modules.Media.Infrastructure.Migrations
                     source_height = table.Column<int>(type: "integer", nullable: false),
                     status = table.Column<int>(type: "integer", nullable: false),
                     attempt_count = table.Column<int>(type: "integer", nullable: false),
-                    failure_reason = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    failure_reason = table.Column<int>(type: "integer", nullable: true),
                     uploaded_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    next_attempt_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     alt_text = table.Column<string>(type: "jsonb", nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
@@ -83,10 +82,10 @@ namespace CarGallery.Modules.Media.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ix_assets_status_next_attempt_at",
+                name: "ix_assets_status_uploaded_at",
                 schema: "media",
                 table: "assets",
-                columns: new[] { "status", "next_attempt_at" });
+                columns: new[] { "status", "uploaded_at" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_outbox_messages_pending",

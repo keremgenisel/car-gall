@@ -30,5 +30,11 @@ internal static class MediaTestSettings
         builder.UseSetting("Media:Storage:Region", "us-east-1");
         builder.UseSetting("Media:PublicBaseUrl", "http://localhost:54566/cargallery-media-test/");
         builder.UseSetting("Media:WatermarkObjectKey", "private/brand/watermark.png");
+
+        // AC-9 — tür kümesi de yapılandırmadan geliyor ve boş küme kuruluşta reddediliyor;
+        // bu satır olmadan HER Host testi "media.allowed_formats_missing" ile düşer.
+        builder.UseSetting("Media:AllowedImageFormats:0", "jpeg");
+        builder.UseSetting("Media:AllowedImageFormats:1", "png");
+        builder.UseSetting("Media:AllowedImageFormats:2", "webp");
     }
 }

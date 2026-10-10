@@ -158,8 +158,9 @@ builder.Services.AddMedia(new MediaSetup(
     builder.Configuration["Media:WatermarkObjectKey"] ?? string.Empty,
     builder.Configuration.GetValue<long?>("Media:MaximumByteSize") ?? 0,
     builder.Configuration.GetValue<long?>("Media:MaximumPixelCount") ?? 0,
-    builder.Configuration.GetValue<int?>("Media:MaximumAttempts") ?? 0,
-    builder.Configuration.GetValue<int?>("Media:RetryBaseSeconds") ?? 0));
+    // AC-9 — kabul edilen tür kümesi de yapılandırmadan. `??` ile üretilmiş varsayılan
+    // YOK: boş küme kuruluşta reddediliyor (AC-5'in aynı kapısı).
+    builder.Configuration.GetSection("Media:AllowedImageFormats").Get<string[]>() ?? []));
 
 // İlk yazma uçları ilk hata sözleşmesini getirdi. `500` yanıtı ASLA iç detay taşımaz:
 // stack trace, SQL, dosya yolu, tip adı yok — yalnız `traceId`

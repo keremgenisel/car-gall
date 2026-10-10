@@ -25,9 +25,14 @@ internal static class MediaProblems
         {
             // İstek geçerli, hedef yok.
             MediaErrors.NotFound => StatusCodes.Status404NotFound,
-            // AC-5 için `413` daha spesifik görünür ama hata sözleşmesini ikiye bölerdi:
-            // uç tek bir `errorCode` okuma yolu bekliyor ve sınır aşımı bir doğrulama
-            // hatasıdır (`docs/conventions.md` § 5).
+            // AC-3 / AC-6 — `415` ve `413` AYRI AYRI. `docs/conventions.md` § 5'e `0011`
+            // ile eklendiler ve gerekçe orada yazılı: istemcinin yapacağı şey farklı —
+            // biri BAŞKA BİR DOSYA seçmek, diğeri AYNI dosyayı küçültmek. Bir önceki
+            // turda ikisini `422`'de toplamıştım; donmuş kriter bunu reddediyor.
+            MediaErrors.UnsupportedType => StatusCodes.Status415UnsupportedMediaType,
+            MediaErrors.TooLarge => StatusCodes.Status413PayloadTooLarge,
+            // AC-14 — `başarısız` olmayan bir varlık tekrar denenemez: durum çakışması.
+            MediaErrors.NotRetryable => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status422UnprocessableEntity,
         };
 

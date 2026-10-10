@@ -54,6 +54,11 @@ public static class VehicleCatalogModule
         // Yayıncı bu kayıtları GÖRMEZ: dağıtıcı alıcıları DI'dan çözer (C7, Yasak Listesi 18).
         services.AddScoped<IIntegrationEventDispatchTarget, BranchDetailsChangedHandler>();
         services.AddScoped<IIntegrationEventDispatchTarget, BranchDeactivatedHandler>();
+
+        // 0011/AC-36 — medya duyurusunun alıcısı. Bu kayıt olmadan handler yazılmış ama
+        // KABLOLANMAMIŞ kalıyordu: dağıtıcı alıcıları DI'dan çözer ve kayıtsız bir alıcı
+        // hiçbir zaman çağrılmaz. `0003`'ün kaçan hatası birebir buydu.
+        services.AddScoped<IIntegrationEventDispatchTarget, MediaAssetReadyHandler>();
         services.AddScoped<IIntegrationEventHandler<BranchDetailsChanged>, BranchDetailsChangedHandler>();
         services.AddScoped<IIntegrationEventHandler<BranchDeactivated>, BranchDeactivatedHandler>();
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();

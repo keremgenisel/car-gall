@@ -21,6 +21,9 @@ internal static class MediaErrors
     /// <summary>Görsel hiç çözülemedi: bozuk dosya ya da gövdesi kesilmiş yükleme.</summary>
     internal const string Undecodable = "media.undecodable";
 
+    /// <summary>AC-14 — tekrar deneme yalnız `başarısız` durumdan tetiklenebilir.</summary>
+    internal const string NotRetryable = "media.not_retryable";
+
     internal const string NotFound = "media.not_found";
 
     /// <summary>

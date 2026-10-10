@@ -15,7 +15,7 @@ public sealed class GorselIslemeTests
 {
     private readonly SkiaImageProcessor islemci = new();
 
-    [Fact(DisplayName = "0011/AC-13: Hazır varlık 1600 / 800 / 400 piksel genişlikte üç WebP türev taşır")]
+    [Fact(DisplayName = "0011/AC-17: Hazır varlık 1600 / 800 / 400 piksel genişlikte üç WebP türev taşır")]
     public void Tasir_UcTurev_BeklenenGenisliklerde()
     {
         // Kaynak üç hedefin hepsinden geniş: büyütme kuralı devreye girmesin.
@@ -37,7 +37,7 @@ public sealed class GorselIslemeTests
         }
     }
 
-    [Fact(DisplayName = "0011/AC-14: Kaynak görsel bir türev genişliğinden küçükse o türev kaynaktan büyütülmez")]
+    [Fact(DisplayName = "0011/AC-18: Kaynak görsel bir türev genişliğinden küçükse o türev kaynaktan büyütülmez")]
     public void Buyutulmez_Turev_KaynaktanGenisse()
     {
         byte[] kaynak = GorselFixture.DikeyJpeg(genislik: 600, yukseklik: 400);
@@ -52,7 +52,7 @@ public sealed class GorselIslemeTests
         Assert.DoesNotContain(sonuc.Value, turev => turev.Width > 600);
     }
 
-    [Fact(DisplayName = "0011/AC-16: Üç türevin hepsinde filigran bulunur")]
+    [Fact(DisplayName = "0011/AC-21: Üç türevin hepsinde filigran bulunur")]
     public void Bulunur_Filigran_UcTurevinHepsinde()
     {
         byte[] kaynak = GorselFixture.DikeyJpeg(genislik: 2400, yukseklik: 1600);
@@ -78,7 +78,7 @@ public sealed class GorselIslemeTests
         }
     }
 
-    [Fact(DisplayName = "0011/AC-19: Yüklenen görselin konum ve cihaz bilgisi türevlerde bulunmaz")]
+    [Fact(DisplayName = "0011/AC-24: Yüklenen görselin konum ve cihaz bilgisi türevlerde bulunmaz")]
     public void Bulunmaz_KonumVeCihazBilgisi_Turevlerde()
     {
         byte[] kaynak = GorselFixture.ExifliJpeg();
@@ -99,7 +99,7 @@ public sealed class GorselIslemeTests
         }
     }
 
-    [Fact(DisplayName = "0011/AC-20: EXIF yönlendirme etiketi taşıyan görselin türevi doğru yönde üretilir")]
+    [Fact(DisplayName = "0011/AC-25: EXIF yönlendirme etiketi taşıyan görselin türevi doğru yönde üretilir")]
     public void Uretilir_Turev_DogruYonde()
     {
         // Dosyada 600x900 (dikey) duruyor ama `Orientation=6` "90° saat yönünde döndür"

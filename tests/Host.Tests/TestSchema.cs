@@ -97,8 +97,7 @@ internal static class TestSchema
             WatermarkObjectKey: "private/brand/watermark.png",
             MaximumByteSize: 15_728_640,
             MaximumPixelCount: 50_000_000,
-            MaximumAttempts: 3,
-            RetryBaseSeconds: 30));
+            AllowedImageFormats: ["jpeg", "png", "webp"]));
 
         await using ServiceProvider provider = services.BuildServiceProvider();
 

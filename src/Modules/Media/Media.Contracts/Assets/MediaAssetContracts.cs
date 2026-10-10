@@ -26,7 +26,7 @@ public sealed record MediaDerivativeDto(string Variant, int Width, int Height, s
 public sealed record MediaAssetDto(
     Guid Id,
     MediaProcessingStatus Status,
-    string? FailureReason,
+    MediaFailureReason? FailureReason,
     IReadOnlyDictionary<string, string> AltText,
     IReadOnlyList<MediaDerivativeDto> Derivatives);
 
@@ -38,4 +38,20 @@ public sealed record MediaAssetDto(
 public interface IMediaAssetQueries
 {
     Task<MediaAssetDto?> FindAsync(Guid mediaAssetId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// AC-42 — bir varlık KÜMESİNİN hazır olup olmadığını yanıtlar.
+    ///
+    /// <para>`0012` bunu A2'nin yayın şartına bağlayacak: *"en az bir medya varlığı
+    /// **hazır** durumda"* (`docs/domain.md` M3). Bu spec yüzeyi <b>sunar, tüketmez</b>
+    /// (D11, X7) — `Vehicle.EnsurePublishable()` bugün hâlâ yalnız sayıya bakıyor ve
+    /// kabul edilen bedel X7'de yazılı.</para>
+    ///
+    /// <para><b>Boş küme <c>false</c> döner</b> ve bu bilinçli: A2 en az bir varlık
+    /// istiyor, yani "hiç varlık yok" sorusunun doğru cevabı "hazır değil". <c>true</c>
+    /// dönmek, fotoğrafı olmayan aracı yayına uygun göstermekti.</para>
+    /// </summary>
+    Task<bool> AreAllReadyAsync(
+        IReadOnlyCollection<Guid> mediaAssetIds,
+        CancellationToken cancellationToken);
 }

@@ -46,6 +46,17 @@ internal static class MediaAdminEndpoints
             .WithName("FindMediaAsset")
             .Produces<MediaAssetDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+
+        // AC-14 — tekrar denemenin AÇIK komutu. Fiil rotada, çünkü bu gerçek bir durum
+        // geçişi (`docs/conventions.md` § 2'nin saydığı istisna).
+        //
+        // **Ekran `0012`'nin işi** (X8): bu spec komutu ve ucunu sunar. Uç olmadan komutu
+        // modül dışından hiçbir şey tetikleyemez ve AC-14 kâğıt üstünde kalırdı.
+        assets.MapPost("/{id:guid}/retry", RetryAsync)
+            .WithName("RetryMediaAsset")
+            .Produces(StatusCodes.Status202Accepted)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
     }
 
     /// <summary>
@@ -127,6 +138,22 @@ internal static class MediaAdminEndpoints
             new UploadMediaAssetResponse(
                 sonuc.Value.Id,
                 sonuc.Value.Status.ToString().ToLowerInvariant()));
+    }
+
+    /// <summary>
+    /// AC-14 — `başarısız` bir varlığı tekrar kuyruğa alır ve **aynı kimliği korur**.
+    /// <c>202</c>: iş kabul edildi, bitmedi — işleme turu onu bir sonraki tikte alacak.
+    /// </summary>
+    private static async Task<IResult> RetryAsync(
+        Guid id,
+        RetryMediaAssetCommand command,
+        CancellationToken cancellationToken)
+    {
+        Result sonuc = await command.ExecuteAsync(id, cancellationToken);
+
+        return sonuc.IsFailure
+            ? MediaProblems.From(sonuc.Error)
+            : TypedResults.Accepted($"{AdminSurface.RoutePrefix}/media/assets/{id}");
     }
 
     private static async Task<IResult> FindAsync(

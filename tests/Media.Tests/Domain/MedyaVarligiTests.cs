@@ -18,7 +18,7 @@ public sealed class MedyaVarligiTests
         sourceHeight: 800,
         Simdi);
 
-    [Fact(DisplayName = "0011/AC-8: Yüklenen varlık `Yüklendi` durumunda, depolama yolu ve kimliğiyle kaydedilir")]
+    [Fact(DisplayName = "0011/AC-10: Yüklenen varlık `yüklendi` durumunda, depolama yolu ve kimliğiyle kaydedilir")]
     public void Kaydedilir_Varlik_YuklendiDurumunda()
     {
         MediaAsset asset = Varlik();
@@ -28,7 +28,7 @@ public sealed class MedyaVarligiTests
         Assert.NotEqual(Guid.Empty, asset.Id);
     }
 
-    [Fact(DisplayName = "0011/AC-9: İşleme başladığında durum `İşleniyor`, başarıyla bittiğinde `Hazır` olur")]
+    [Fact(DisplayName = "0011/AC-11: İşleme başladığında durum `işleniyor`, başarıyla bittiğinde `hazır` olur")]
     public void Gecer_Durum_IsleniyordanHazira()
     {
         MediaAsset asset = Varlik();
@@ -45,7 +45,7 @@ public sealed class MedyaVarligiTests
         Assert.Single(asset.Derivatives);
     }
 
-    [Theory(DisplayName = "0011/AC-10: Tanımlı olmayan durum geçişi yapılamaz")]
+    [Theory(DisplayName = "0011/AC-12: Tanımlı olmayan durum geçişi yapılamaz")]
     [InlineData("hazir-sonra-islemeye")]
     [InlineData("basarisiz-sonra-hazira")]
     [InlineData("yuklendi-dogrudan-hazira")]
@@ -66,51 +66,61 @@ public sealed class MedyaVarligiTests
         Assert.Equal(MediaErrors.InvalidStatusTransition, sonuc.Error.Code);
     }
 
-    [Fact(DisplayName = "0011/AC-11: Denemeler tükendiğinde durum `Başarısız` olur; varlık `Yüklendi` durumunda kalmaz")]
-    public void Olur_Durum_Basarisiz_DenemelerTukendiginde()
+    [Fact(DisplayName = "0011/AC-13: İşleme başarısız olduğunda durum `başarısız` olur; varlık `yüklendi` durumunda kalmaz")]
+    public void Olur_Durum_Basarisiz_TurDustugunde()
     {
         MediaAsset asset = Varlik();
-        const int enFazla = 3;
 
-        // İki tur başarısız ama hak var: varlık `Yüklendi`'ye döner (M1).
-        for (int tur = 1; tur < enFazla; tur++)
-        {
-            Assert.True(asset.BeginProcessing(Simdi).IsSuccess);
-            Assert.True(asset.HasAttemptsLeft(enFazla));
-            Assert.True(asset.Reschedule("media.storage_unavailable", Simdi, TimeSpan.FromSeconds(30)).IsSuccess);
-            Assert.Equal(MediaProcessingStatus.Uploaded, asset.Status);
-        }
-
-        // Üçüncü tur: hak tükendi.
         Assert.True(asset.BeginProcessing(Simdi).IsSuccess);
-        Assert.False(asset.HasAttemptsLeft(enFazla));
-        Assert.True(asset.MarkFailed("media.storage_unavailable", Simdi).IsSuccess);
+        Assert.True(asset.MarkFailed(MediaFailureReason.StorageUnavailable, Simdi).IsSuccess);
 
         Assert.Equal(MediaProcessingStatus.Failed, asset.Status);
         Assert.NotEqual(MediaProcessingStatus.Uploaded, asset.Status);
-        Assert.Equal("media.storage_unavailable", asset.FailureReason);
+        Assert.Equal(MediaFailureReason.StorageUnavailable, asset.FailureReason);
     }
 
-    [Fact]
-    public void Ileriye_Atar_SonrakiDeneme_ArtanAralikla()
+    [Fact(DisplayName = "0011/AC-14: `başarısız` terminal değildir: tekrar deneme ayrı bir komutla tetiklenir ve aynı varlık kimliğini korur")]
+    public void Degildir_Terminal_Basarisiz()
+    {
+        MediaAsset asset = Varlik();
+        Guid kimlik = asset.Id;
+
+        asset.BeginProcessing(Simdi);
+        asset.MarkFailed(MediaFailureReason.WatermarkUnavailable, Simdi);
+
+        Assert.True(asset.Retry(Simdi).IsSuccess);
+
+        Assert.Equal(MediaProcessingStatus.Uploaded, asset.Status);
+
+        // AYNI kimlik: yeni bir kimlik, `VehicleCatalog`'un tuttuğu referansı öksüz
+        // bırakırdı (M1).
+        Assert.Equal(kimlik, asset.Id);
+
+        // Ve varlık gerçekten yeniden işlenebilir hâlde.
+        Assert.True(asset.BeginProcessing(Simdi).IsSuccess);
+    }
+
+    [Fact(DisplayName = "0011/AC-15: Tekrar deneme otomatik tetiklenmez; komut çağrılmadan durum kendiliğinden değişmez")]
+    public void Degismez_Durum_KomutCagrilmadan()
     {
         MediaAsset asset = Varlik();
 
         asset.BeginProcessing(Simdi);
-        asset.Reschedule("x", Simdi, TimeSpan.FromSeconds(30));
-        DateTimeOffset birinci = asset.NextAttemptAt;
+        asset.MarkFailed(MediaFailureReason.Undecodable, Simdi);
 
-        asset.BeginProcessing(Simdi);
-        asset.Reschedule("x", Simdi, TimeSpan.FromSeconds(30));
-        DateTimeOffset ikinci = asset.NextAttemptAt;
+        // Saat ilerliyor, hiçbir komut çağrılmıyor: önceki hâlde geri çekilme aralığı
+        // dolduğunda varlık kendiliğinden `yüklendi`'ye dönüyordu.
+        Assert.Equal(MediaProcessingStatus.Failed, asset.Status);
 
-        // Taban 30 sn: birinci tur +30, ikinci tur +60. Sabit aralık olsaydı bozuk bir
-        // dosya turu her beş saniyede bir meşgul ederdi.
-        Assert.Equal(Simdi.AddSeconds(30), birinci);
-        Assert.Equal(Simdi.AddSeconds(60), ikinci);
+        // `başarısız`dan `işleniyor`a doğrudan geçiş de yok: tur onu eline alamaz.
+        Result dogrudan = asset.BeginProcessing(Simdi.AddHours(1));
+
+        Assert.True(dogrudan.IsFailure);
+        Assert.Equal(MediaErrors.InvalidStatusTransition, dogrudan.Error.Code);
+        Assert.Equal(MediaProcessingStatus.Failed, asset.Status);
     }
 
-    [Fact(DisplayName = "0011/AC-27: Bir varlık etkin her locale için ayrı `alt` metni taşıyabilir")]
+    [Fact(DisplayName = "0011/AC-38: Bir varlık etkin her locale için ayrı `alt` metni taşıyabilir")]
     public void Tasiyabilir_AltMetni_LocaleBasina()
     {
         MediaAsset asset = Varlik();
@@ -132,7 +142,7 @@ public sealed class MedyaVarligiTests
         Assert.Equal("white BMW 320i, front view", metinler["en"]);
     }
 
-    [Fact(DisplayName = "0011/AC-28: `alt` metni boş olan bir varlık yine hazır olabilir")]
+    [Fact(DisplayName = "0011/AC-39: `alt` metni boş olan bir varlık yine hazır olabilir")]
     public void Olabilir_Hazir_AltMetniBosOlsaDa()
     {
         MediaAsset asset = Varlik();
@@ -183,7 +193,7 @@ public sealed class MedyaVarligiTests
     private static MediaAsset Basarisiz(MediaAsset asset)
     {
         asset.BeginProcessing(Simdi);
-        asset.MarkFailed("x", Simdi);
+        asset.MarkFailed(MediaFailureReason.Undecodable, Simdi);
         return asset;
     }
 }

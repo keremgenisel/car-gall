@@ -58,9 +58,45 @@ internal static class ImageFormatDetection
         return LooksLikeSvg(prefix) ? DetectedImageFormat.Svg : DetectedImageFormat.Unknown;
     }
 
-    /// <summary>Kabul edilen türler. SVG bilinçli olarak dışarıda (yukarıdaki not).</summary>
-    internal static bool IsAccepted(DetectedImageFormat format) =>
-        format is DetectedImageFormat.Jpeg or DetectedImageFormat.Png or DetectedImageFormat.Webp;
+    /// <summary>
+    /// AC-5 / D23 — yapılandırmanın seçebileceği türlerin ÜST SINIRI. `svg` burada yok ve
+    /// hiçbir yapılandırma onu ekleyemez.
+    /// </summary>
+    internal static readonly IReadOnlySet<DetectedImageFormat> ConfigurableFormats =
+        new HashSet<DetectedImageFormat>
+        {
+            DetectedImageFormat.Jpeg,
+            DetectedImageFormat.Png,
+            DetectedImageFormat.Webp,
+        };
+
+    /// <summary>
+    /// Yapılandırmadaki adı çözer. İzin verilmeyen ya da tanınmayan ad için <c>null</c> —
+    /// çağıran onu kuruluşta REDDEDİYOR (AC-5).
+    /// </summary>
+    internal static DetectedImageFormat? ParseConfigurable(string name)
+    {
+        DetectedImageFormat? aday = (name ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "jpeg" or "jpg" => DetectedImageFormat.Jpeg,
+            "png" => DetectedImageFormat.Png,
+            "webp" => DetectedImageFormat.Webp,
+            _ => null,
+        };
+
+        return aday is not null && ConfigurableFormats.Contains(aday.Value) ? aday : null;
+    }
+
+    /// <summary>
+    /// AC-9 — kabul YAPILANDIRILAN kümeye bakar, koda gömülü bir listeye değil. Küme her
+    /// zaman <see cref="ConfigurableFormats"/>'ın alt kümesidir (AC-5).
+    /// </summary>
+    internal static bool IsAccepted(DetectedImageFormat format, IReadOnlySet<DetectedImageFormat> allowed)
+    {
+        ArgumentNullException.ThrowIfNull(allowed);
+
+        return allowed.Contains(format);
+    }
 
     internal static string Extension(DetectedImageFormat format) => format switch
     {

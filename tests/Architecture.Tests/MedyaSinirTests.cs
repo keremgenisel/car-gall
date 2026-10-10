@@ -26,7 +26,7 @@ public sealed partial class MedyaSinirTests
     private static readonly string[] OtherSchemas =
         ["vehicle_catalog", "vehicle_reference", "dealership", "identity", "leads", "notifications"];
 
-    [Fact(DisplayName = "0011/AC-35: `Media`'dan başka bir modüle referans çıkmaz; `Media` başka modülün tablosuna veya dosya deposuna erişmez")]
+    [Fact(DisplayName = "0011/AC-47: `Media` hiçbir modüle senkron çağrı yapmaz ve başka modülün tablosuna veya dosya deposuna erişmez")]
     public void Cikmaz_Referans_MediadanBaskaModule()
     {
         List<string> violations = [];
@@ -79,7 +79,7 @@ public sealed partial class MedyaSinirTests
             + $"{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
     }
 
-    [Fact(DisplayName = "0011/AC-17: Filigran kaynağı yapılandırmadan gelir; `Media` bunun için başka bir modülü çağırmaz")]
+    [Fact(DisplayName = "0011/AC-22: Filigran kaynağı yapılandırmadan bir dosya yolu olarak gelir; `Media` bunun için başka bir modülü çağırmaz")]
     public void Gelir_FiligranKaynagi_Yapilandirmadan()
     {
         List<string> violations = [];
@@ -183,7 +183,7 @@ public sealed partial class MedyaSinirTests
     /// dışında — ADR `0008`/K8 tam olarak bu durumu tartışıyor: susturulmuş bir kapı,
     /// olmayan kapıdan kötüdür. Geniş ihlal PR'da açık konu olarak raporlandı.</para>
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "0011/AC-35: `Media`'nın olayı başka bir modülün outbox tablosuna yazılmaz")]
     public void Kaydetmez_Media_PaylasilanOutboxYazicisini()
     {
         string modul = File.ReadAllText(Path.Combine(
@@ -225,7 +225,7 @@ public sealed partial class MedyaSinirTests
     /// şeması geçiyor ve dosya gerçekten VAR. Jenerik test, hiç migration bulamadığında
     /// da yeşil kalırdı.</para>
     /// </summary>
-    [Fact(DisplayName = "0011/AC-34: `media` migration'ı yalnızca `media` şemasına dokunur")]
+    [Fact(DisplayName = "0011/AC-46: `media` migration'ı yalnızca `media` şemasına dokunur")]
     public void Dokunur_MediaMigrationi_YalnizMediaSemasina()
     {
         string[] migrations =
@@ -263,6 +263,59 @@ public sealed partial class MedyaSinirTests
             + $"{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
 
         Assert.True(mediaReferences > 0, "Migration hiç şema adı geçirmiyor; tarama anlamsız.");
+    }
+
+    /// <summary>
+    /// AC-36 — alıcı dağıtıcının sözleşmesini uyguluyor VE DI'ya kayıtlı.
+    ///
+    /// <para><b>İkisi birlikte sorulmak zorunda.</b> `0011`'in CLARIFY turu ölçtü:
+    /// handler yazılmıştı ama arayüzü uygulamıyordu, DI'ya kayıtlı değildi ve tek çağıranı
+    /// elle <c>vehicleId</c> veren bir testti. `0003`'ün kaçan hatası birebir buydu —
+    /// <i>"test edilmiş bir alıcı, yayıncısı olmadan hiçbir şey kanıtlamaz."</i> Yalnız
+    /// arayüzü sormak, kayıtsız bir alıcıda yeşil kalırdı.</para>
+    ///
+    /// <para>Duyurunun GERÇEKTEN dağıtıcı üzerinden ulaştığının kanıtı `tests/Host.Tests`
+    /// (AC-37); bu test yalnız kablonun takılı olduğunu söylüyor.</para>
+    /// </summary>
+    [Fact(DisplayName = "0011/AC-36: `MediaAssetReadyHandler` `IIntegrationEventHandler<MediaAssetReady>`'i uygular ve DI'ya kayıtlıdır")]
+    public void Uygular_Alici_DagiticininSozlesmesini()
+    {
+        string handler = File.ReadAllText(Path.Combine(
+            SolutionLayout.SourceRoot,
+            "Modules/VehicleCatalog/VehicleCatalog/Application/EventHandlers/MediaAssetReadyHandler.cs"));
+
+        Assert.Contains(
+            "IdempotentIntegrationEventHandler<MediaAssetReady, VehicleCatalogDbContext>",
+            handler,
+            StringComparison.Ordinal);
+
+        // `vehicleId` parametresi KALKTI: o değer olayın gövdesinde yok ve R10 gereği
+        // `Media`'da da yok.
+        //
+        // Tarama YORUMLARI atlıyor ve bu bir hatanın bedeliydi: handler'ın doc comment'i
+        // eski imzayı TARİF ediyor ve dosyayı tek dize olarak okuyan ilk hâlim onu ihlal
+        // sandı. Gerekçeyi bozmak yerine taramayı daralttım — `MatchingLines`'ın aynı
+        // kararı.
+        string[] kodSatirlari =
+        [
+            .. handler.Split('\n')
+                .Where(satir => !satir.TrimStart().StartsWith("//", StringComparison.Ordinal)
+                    && !satir.TrimStart().StartsWith("///", StringComparison.Ordinal))
+        ];
+
+        Assert.DoesNotContain(
+            "Guid vehicleId",
+            string.Join('\n', kodSatirlari),
+            StringComparison.Ordinal);
+
+        string modul = File.ReadAllText(Path.Combine(
+            SolutionLayout.SourceRoot,
+            "Modules/VehicleCatalog/VehicleCatalog/VehicleCatalogModule.cs"));
+
+        Assert.Contains(
+            "IIntegrationEventDispatchTarget, MediaAssetReadyHandler",
+            modul,
+            StringComparison.Ordinal);
     }
 
     private static IEnumerable<string> MediaSourceFiles() =>

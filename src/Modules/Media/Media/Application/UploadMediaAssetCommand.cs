@@ -46,7 +46,7 @@ internal sealed class UploadMediaAssetCommand(
         int sniffLength = Math.Min(ImageFormatDetection.SniffLength, content.Length);
         DetectedImageFormat format = ImageFormatDetection.Detect(content.AsSpan(0, sniffLength));
 
-        if (!ImageFormatDetection.IsAccepted(format))
+        if (!ImageFormatDetection.IsAccepted(format, options.AllowedFormats))
         {
             return Result.Failure<UploadMediaAssetResult>(Error.With(
                 MediaErrors.UnsupportedType, "detected", format.ToString().ToLowerInvariant()));

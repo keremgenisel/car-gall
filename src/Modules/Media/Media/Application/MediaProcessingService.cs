@@ -110,10 +110,11 @@ internal sealed class MediaProcessingService(
         {
             DateTimeOffset simdi = clock.UtcNow;
 
+            // Sıra YÜKLEME anına göre: geri çekilme aralığı kalktığı için (AC-15)
+            // "sırası gelmiş" diye ayrı bir zaman alanı yok — ilk gelen ilk işlenir.
             MediaAsset? aday = await context.Assets
-                .Where(asset => asset.Status == MediaProcessingStatus.Uploaded
-                    && asset.NextAttemptAt <= simdi)
-                .OrderBy(asset => asset.NextAttemptAt)
+                .Where(asset => asset.Status == MediaProcessingStatus.Uploaded)
+                .OrderBy(asset => asset.UploadedAt)
                 .ThenBy(asset => asset.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -160,7 +161,7 @@ internal sealed class MediaProcessingService(
 
         if (uretim.IsFailure)
         {
-            await BasarisizAsync(asset, uretim.Error.Code, cancellationToken);
+            await BasarisizAsync(asset, ReasonFor(uretim.Error.Code), cancellationToken);
             return;
         }
 
@@ -172,7 +173,7 @@ internal sealed class MediaProcessingService(
 
             if (variant is null)
             {
-                await BasarisizAsync(asset, MediaErrors.Undecodable, cancellationToken);
+                await BasarisizAsync(asset, MediaFailureReason.Undecodable, cancellationToken);
                 return;
             }
 
@@ -188,7 +189,7 @@ internal sealed class MediaProcessingService(
 #pragma warning restore CA1031
             {
                 logger.LogError(exception, "Türev yazılamadı: {AssetId} {Variant}", asset.Id, variant.Code);
-                await BasarisizAsync(asset, MediaErrors.StorageUnavailable, cancellationToken);
+                await BasarisizAsync(asset, MediaFailureReason.StorageUnavailable, cancellationToken);
                 return;
             }
 
@@ -201,19 +202,18 @@ internal sealed class MediaProcessingService(
             });
         }
 
-        // D11 — duyurunun `Url`'i GÖSTERİM türevidir (800 px), en büyüğü değil.
+        // AC-29 — duyuru türev kümesini taşıyor. Gösterim türevinin varlığı yine
+        // kontrol ediliyor: `VehicleCatalog` kapak görselini onun adıyla alıyor ve küme
+        // onsuz gelirse alıcı sessizce hiçbir şey yazmazdı.
         //
         // Kontrol `MarkReady`'den ÖNCE ve bu bir sıra hatasının bedeliydi: sonraya
-        // koyduğumda varlık zaten `Hazır` olduğu için `BasarisizAsync`'in durum geçişi
+        // koyduğumda varlık zaten `hazır` olduğu için `BasarisizAsync`'in durum geçişi
         // reddediliyordu ve varlık HAZIR ama DUYURUSUZ kalıyordu — R7 sessizce
         // karşılanmaz olurdu.
-        MediaDerivative? gosterim = turevler
-            .SingleOrDefault(turev => turev.VariantCode == MediaVariant.Display.Code);
-
-        if (gosterim is null)
+        if (!turevler.Exists(turev => turev.VariantCode == MediaVariant.Display.Code))
         {
             logger.LogError("Gösterim türevi üretilmedi: {AssetId}", asset.Id);
-            await BasarisizAsync(asset, MediaErrors.Undecodable, cancellationToken);
+            await BasarisizAsync(asset, MediaFailureReason.Undecodable, cancellationToken);
             return;
         }
 
@@ -229,7 +229,11 @@ internal sealed class MediaProcessingService(
             Guid.CreateVersion7(),
             clock.UtcNow,
             asset.Id,
-            urls.Resolve(gosterim.ObjectKey).ToString()));
+            [.. turevler.Select(turev => new MediaDerivativePayload(
+                turev.VariantCode,
+                urls.Resolve(turev.ObjectKey).ToString(),
+                turev.Width,
+                turev.Height))]));
 
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -286,25 +290,18 @@ internal sealed class MediaProcessingService(
     }
 
     /// <summary>
-    /// Deneme hakkı kaldıysa varlık <c>Yüklendi</c>'ye döner (M1); tükendiyse
-    /// <c>Başarısız</c> olur ve <c>MediaAssetFailed</c> yayılır (R8/AC-25).
+    /// R8/AC-13 — tur başarısız oldu: varlık <c>başarısız</c> işaretlenir ve
+    /// <c>MediaAssetFailed</c> yayılır (AC-32).
+    ///
+    /// <para><b>Otomatik yeniden kuyruğa alma YOK</b> (AC-15). Önceki hâli deneme bütçesi
+    /// tükenene kadar varlığı <c>yüklendi</c>'ye döndürüyordu; M1 o geçişi hiç saymıyor.
+    /// Tekrar deneme artık <c>RetryMediaAssetCommand</c> ile, AÇIK bir komutla.</para>
     /// </summary>
-    private async Task BasarisizAsync(MediaAsset asset, string reason, CancellationToken cancellationToken)
+    private async Task BasarisizAsync(
+        MediaAsset asset,
+        MediaFailureReason reason,
+        CancellationToken cancellationToken)
     {
-        if (asset.HasAttemptsLeft(options.MaximumAttempts))
-        {
-            Result yeniden = asset.Reschedule(reason, clock.UtcNow, options.RetryBaseDelay);
-
-            if (yeniden.IsFailure)
-            {
-                logger.LogError("Varlık yeniden kuyruğa alınamadı: {AssetId}", asset.Id);
-                return;
-            }
-
-            await context.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
         Result basarisiz = asset.MarkFailed(reason, clock.UtcNow);
 
         if (basarisiz.IsFailure)
@@ -317,4 +314,16 @@ internal sealed class MediaProcessingService(
 
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// AC-33 — işlemcinin hata KODUNU duyurunun kapalı sebep kümesine eşler. Eşlenmeyen
+    /// bir kod `Undecodable`'a düşüyor ve bu bilinçli: duyurunun kümesi KAPALI, yani
+    /// işlemciye yeni bir hata kodu eklemek sözleşmeyi sessizce büyütemez.
+    /// </summary>
+    private static MediaFailureReason ReasonFor(string errorCode) => errorCode switch
+    {
+        MediaErrors.WatermarkUnavailable => MediaFailureReason.WatermarkUnavailable,
+        MediaErrors.StorageUnavailable => MediaFailureReason.StorageUnavailable,
+        _ => MediaFailureReason.Undecodable,
+    };
 }

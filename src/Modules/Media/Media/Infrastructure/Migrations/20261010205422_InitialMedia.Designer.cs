@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarGallery.Modules.Media.Infrastructure.Migrations
 {
     [DbContext(typeof(MediaDbContext))]
-    [Migration("20261010194802_InitialMedia")]
+    [Migration("20261010205422_InitialMedia")]
     partial class InitialMedia
     {
         /// <inheritdoc />
@@ -102,14 +102,9 @@ namespace CarGallery.Modules.Media.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("content_type");
 
-                    b.Property<string>("FailureReason")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                    b.Property<int?>("FailureReason")
+                        .HasColumnType("integer")
                         .HasColumnName("failure_reason");
-
-                    b.Property<DateTimeOffset>("NextAttemptAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("next_attempt_at");
 
                     b.Property<string>("OriginalObjectKey")
                         .IsRequired()
@@ -145,8 +140,8 @@ namespace CarGallery.Modules.Media.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Status", "NextAttemptAt")
-                        .HasDatabaseName("ix_assets_status_next_attempt_at");
+                    b.HasIndex("Status", "UploadedAt")
+                        .HasDatabaseName("ix_assets_status_uploaded_at");
 
                     b.ToTable("assets", "media");
                 });
