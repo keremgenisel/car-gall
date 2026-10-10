@@ -58,6 +58,7 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
         ModelYear = modelYear;
         MileageKilometers = mileageKilometers;
         Price = price;
+        UpdatedAt = createdAt;
     }
 
     /// <summary>Başka modülün (Dealership) kimliği: kısıtsız Guid, foreign key yok (Yasak Listesi 2).</summary>
@@ -66,7 +67,7 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// <summary>Referans verinin (VehicleReference) kimliği; model adı orada yaşar.</summary>
     internal Guid VehicleModelId { get; }
 
-    internal VehicleSpecification Specification { get; }
+    internal VehicleSpecification Specification { get; private set; }
 
     /// <summary>Kasa tipi çekirdek alandır ve daraltmanın tek eksenidir (0001 R8).</summary>
     internal BodyTypeSlug BodyType => Specification.BodyType;
@@ -75,9 +76,9 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// Renk taksonomi değildir; galeriye göre değişen serbest metindir ve locale başına
     /// taşınır, sessiz fallback'le (docs/architecture.md § 3, docs/domain.md).
     /// </summary>
-    internal LocalizedText Color { get; }
+    internal LocalizedText Color { get; private set; }
 
-    internal int ModelYear { get; }
+    internal int ModelYear { get; private set; }
 
     /// <summary>A5 — galeri genelinde tekil; `Arşiv` muaf. Her zaman GİZLİ (F4).</summary>
     internal Vin Vin { get; private set; }
@@ -105,6 +106,12 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     internal int MileageKilometers { get; private set; }
 
     internal ListingPrice Price { get; private set; }
+
+    /// <summary>
+    /// 0010b **D25** — listenin "son güncellenen" ekseni. Ayrı bir `CreatedAt` kolonu YOK:
+    /// kimlik UUID v7 ve zaten zaman sıralı; aynı bilgiyi ikinci kez saklamak olurdu.
+    /// </summary>
+    internal DateTimeOffset UpdatedAt { get; private set; }
 
     /// <summary>
     /// A8: şube kapatıldığında araç yayından kalkar ve "lokasyon ataması bekliyor"
@@ -140,14 +147,11 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
         Vin vin,
         DateTimeOffset createdAt)
     {
-        if (mileageKilometers < 0)
-        {
-            return Result.Failure<Vehicle>(new Error(NegativeMileage));
-        }
+        Result validation = ValidateCore(modelYear, mileageKilometers);
 
-        if (modelYear is < 1900 or > 2200)
+        if (validation.IsFailure)
         {
-            return Result.Failure<Vehicle>(new Error(ImplausibleModelYear));
+            return Result.Failure<Vehicle>(validation.Error);
         }
 
         return Result.Success(new Vehicle(
@@ -161,6 +165,54 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
             price,
             vin,
             createdAt));
+    }
+
+    /// <summary>
+    /// 0010b **R2/C25** — düzenleme TAM DEĞİŞTİRMEDİR ve çekirdek alanların hepsi birlikte
+    /// gelir. Doğrulama `Create` ile AYNI yerden geçiyor (<see cref="ValidateCore"/>):
+    /// iki yolun iki ayrı kuralı olsaydı `0010a` D8'in invariantı iki yerde iki farklı şey
+    /// olurdu — bu spec'in bilinen tuzaklarından biri (3).
+    ///
+    /// <para>Şase BURADA YOK ve bu bilinçli: **D20/R4** şaseyi düzenlemeye kapatıyor.
+    /// İsteğin taşıdığı şase ile saklanan şasenin aynı olup olmadığı komut katmanının
+    /// işi (**D24**) — agregat değiştirilemez bir alanı hiç almaz.</para>
+    /// </summary>
+    internal Result ChangeCoreDetails(
+        VehicleSpecification specification,
+        LocalizedText color,
+        int modelYear,
+        int mileageKilometers,
+        DateTimeOffset at)
+    {
+        Result validation = ValidateCore(modelYear, mileageKilometers);
+
+        if (validation.IsFailure)
+        {
+            return validation;
+        }
+
+        Specification = specification;
+        Color = color;
+        ModelYear = modelYear;
+        MileageKilometers = mileageKilometers;
+        Touch(at);
+
+        return Result.Success();
+    }
+
+    /// <summary>Her yazma yolundan sonra çağrılır; `UpdatedAt` tek kapıdan geçer (D25).</summary>
+    internal void Touch(DateTimeOffset at) => UpdatedAt = at;
+
+    private static Result ValidateCore(int modelYear, int mileageKilometers)
+    {
+        if (mileageKilometers < 0)
+        {
+            return Result.Failure(new Error(NegativeMileage));
+        }
+
+        return modelYear is < 1900 or > 2200
+            ? Result.Failure(new Error(ImplausibleModelYear))
+            : Result.Success();
     }
 
     internal void AttachMediaAsset(Guid mediaAssetId)
@@ -179,6 +231,7 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     internal void ChangePrice(ListingPrice price, DateTimeOffset at)
     {
         Price = price;
+        Touch(at);
 
         priceChanges.Add(new PriceChange
         {
@@ -192,8 +245,12 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// <summary>
     /// Alan kapatıldığında değer SİLİNMEZ (F1); yalnız yanıta girmez (F3).
     /// Bu yüzden değer yazmak alan ayarına bakmaz — ayrım sorgu tarafında yapılır (C4).
+    ///
+    /// <para>0010b **C23** — değer artık TİPLİ. İmza değişikliği C17'nin adıyla yazılmış
+    /// istisnasıdır; davranış aynı kalıyor: aynı anahtar ikinci kez yazılırsa üzerine
+    /// yazar, yoksa ekler.</para>
     /// </summary>
-    internal void SetOptionalFieldValue(string fieldKey, LocalizedText value)
+    internal void SetOptionalFieldValue(string fieldKey, OptionalFieldValue value)
     {
         VehicleOptionalFieldValue? mevcut =
             optionalFieldValues.Find(item => item.FieldKey == fieldKey);

@@ -20,9 +20,10 @@ public sealed class YazmaModeliKaliciligiTests(ShowcaseDatabase database)
     public async Task GidipGelir_AracinButunDegerTipleri()
     {
         Vehicle yazilan = new VehicleBuilder().WithVin("ROUNDTRIP00000001").Build();
+        // 0010b/D17 — tramer bir TUTAR; `Money` ile saklanıyor, metin olarak değil.
         yazilan.SetOptionalFieldValue(
             VehicleFieldKeys.DamageRecordAmount,
-            LocalizedText.From([new KeyValuePair<Locale, string>(Locale.Create("tr").Value, "12.500 TL")]));
+            OptionalFieldValue.OfAmount(Money.Create(12_500m, "TRY", 2).Value));
         yazilan.AttachMediaAsset(Guid.CreateVersion7());
 
         await using (VehicleCatalogDbContext yazma = database.CreateContext())

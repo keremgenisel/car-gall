@@ -18,6 +18,9 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Integration;
 /// </summary>
 public sealed class SeedYazmaModeliTests : IAsyncLifetime
 {
+    /// <summary>Kurulumun tek para birimi; seed tramer tutarını `Money` ile yazıyor (0010b D17).</summary>
+    private static readonly CatalogCurrency Para = new("TRY", 2);
+
     private readonly Testcontainers.PostgreSql.PostgreSqlContainer container =
         new Testcontainers.PostgreSql.PostgreSqlBuilder("postgres:17-alpine").WithDatabase("cargallery").Build();
 
@@ -38,7 +41,7 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
 
         await using (VehicleCatalogDbContext yazma = CreateContext())
         {
-            await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 10, 5, 12, 0, 0, TimeSpan.Zero)))
+            await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 10, 5, 12, 0, 0, TimeSpan.Zero)), Para)
                 .SeedAsync(sayi, Guid.Parse("0192c000-0000-7000-8000-00000000000a"), CancellationToken.None);
         }
 
@@ -72,7 +75,7 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
     {
         await using (VehicleCatalogDbContext yazma = CreateContext())
         {
-            await new ShowcaseSeeder(yazma, new FixedClock(DateTimeOffset.UnixEpoch))
+            await new ShowcaseSeeder(yazma, new FixedClock(DateTimeOffset.UnixEpoch), Para)
                 .SeedAsync(30, Guid.CreateVersion7(), CancellationToken.None);
         }
 

@@ -10,6 +10,7 @@ using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
 using CarGallery.Modules.VehicleCatalog.Contracts.Admin;
+using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 using CarGallery.Modules.VehicleCatalog.Contracts.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Contracts.Listings;
@@ -92,7 +93,11 @@ public static class VehicleCatalogModule
         using IServiceScope scope = services.CreateScope();
 
         VehicleCatalogDbContext context = scope.ServiceProvider.GetRequiredService<VehicleCatalogDbContext>();
-        ShowcaseSeeder seeder = new(context, scope.ServiceProvider.GetRequiredService<IClock>());
+        CatalogCurrencyOptions currency = scope.ServiceProvider.GetRequiredService<CatalogCurrencyOptions>();
+        ShowcaseSeeder seeder = new(
+            context,
+            scope.ServiceProvider.GetRequiredService<IClock>(),
+            new CatalogCurrency(currency.Code, currency.MinorUnitExponent));
         await seeder.SeedAsync(listingCount, vehicleModelId, cancellationToken);
     }
 
