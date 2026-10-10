@@ -71,6 +71,18 @@ Yeniden adlandırmak, tipi `tutar` olan bir alanda locale'li metin bırakırdı:
 kalıcı bir tutarsızlık. Bu kolona yazan tek yol bugüne kadar geliştirme seed'iydi (ölçüldü:
 iki çağrı yeri, biri test).
 
+**Karar — veri taşıma adımı YAZILMAYACAK** (Takım Yöneticisi, 2026-10-10). Spec 0010b'nin
+kapanış PR'ında soru olarak soruldu ve kapsamı yeniden ölçüldü: `SetOptionalFieldValue`'ya
+yazan iki üretim yolu var ve biri `ShowcaseSeeder` (geliştirme seed'i), diğeri
+`UpdateVehicleCommand` — o da 0010b'de doğdu, eski kolona hiç yazmadı. Yani düşen veri
+yalnız geliştirme veritabanlarında duruyordu ve `scripts/dev-up.sh` onu her kurulumda
+yeniden üretiyor. Var olmayan veri için taşıma yazmak, tutmayacak bir dönüşümü
+(`"12.500 TL"` → `Money`) koda sokmak demekti.
+
+**Bu kararın koşulu:** ürün henüz hiçbir yere kurulmadı. Aynı sorunun bir sonraki hâli —
+üretimde veri varken bir kolonun tipini değiştirmek — bu kararı emsal ALAMAZ; o zaman
+taşıma adımı zorunludur.
+
 ## Sonuç
 
 - `VehicleFieldDefinitions` alan → tip defteri; defterde olmayan anahtara değer yazılamaz.
