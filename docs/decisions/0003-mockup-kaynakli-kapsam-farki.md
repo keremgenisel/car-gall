@@ -227,6 +227,10 @@ taşımayabilir.
 | 2 | `Media`: yükleme, türev üretimi, filigran, depolama | spec yok |
 | 3 | Yayın ve durum eylemleri + toplu eylemler | spec yok |
 
+*Bu tablo **kararın verildiği andaki** durumu kaydediyor ve yeniden yazılmıyor. Bugünkü
+karşılıkları: dilim 1 → `0010a` (tamamlandı) + `0010b`; dilim 2 → `0011`; dilim 3 → `0012`.
+Güncel hâl aşağıdaki "Güncellenen sıra" tablosundadır.*
+
 **Bu, unsur 7'yi reddetmez; 2. maddesini ikiye böler ve `Media`'yı (#3) yayın işinin
 önüne çeker.** Gerekçesi doğrulanmış bir teknik kısıt: `Vehicle.EnsurePublishable()` en az
 bir medya varlığı istiyor ve `MediaAssetReady` olayını yayan hiçbir şey yok. Yani panel
@@ -237,22 +241,34 @@ hâlâ seed'e bağlı kalır. `0010` bu bedeli açıkça yazıyor.
 
 ### Güncellenen sıra
 
+**Durum sütunu 2026-10-10'da güncellendi.** Sıra DEĞİŞMEDİ; yalnız her satırın hangi
+spec'e karşılık geldiği yazıldı. `spec yok` satırı kalmadı — on bir işin de taslağı var.
+*Bu tablo tek nüshadır: ikinci bir sıra tablosu yazmak yerine sütun güncelleniyor
+(`CLAUDE.md`, tek gerçek kaynağı).*
+
 | # | İş | Spec |
 |---|---|---|
 | 1 | Talep bildirimi | `0009` ✅ tamamlandı |
 | — | Personel yönetimi eylemleri *(sıra dışı yapıldı)* | `0008` ✅ tamamlandı |
-| 2 | **Görsel dil ve marka teması** | `frontend-002` (Taslak) |
-| 3 | **Panel: araç kaydı ve taslak ilan** | `0010` (Taslak) |
-| 4 | `Media`: yükleme, türev, filigran | spec yok |
-| 5 | Yayın ve durum eylemleri + toplu eylemler | spec yok |
-| 6 | İki adımlı doğrulama (unsur 2) | spec yok |
-| 7 | Ana sayfa | spec yok |
-| 8 | SEO meta ve yapısal veri | `0004` (Taslak, Intent boş) |
-| 9 | Liste: sıralama + filtre eksenleri | spec yok |
-| 10 | Medya galerisi + parça haritası şeması | spec yok |
-| 11 | `Content` sayfaları | spec yok |
-| 12 | Favori + karşılaştırma | spec yok |
-| 13 | Bülten aboneliği | spec yok |
+| 2 | **Görsel dil ve marka teması** | `frontend-002` ✅ tamamlandı |
+| 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · **`0010b`** (Taslak — sahip bekliyor) |
+| 4 | `Media`: yükleme, türev, filigran | **`0011`** (Taslak — S1–S5) |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | **`0012`** (Taslak — S1–S5) |
+| 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
+| 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
+| 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
+| 9 | Liste: sıralama + filtre eksenleri | **`0015`** (Taslak — S1–S5) |
+| 10 | Medya galerisi + parça haritası şeması | **`0016`** (Taslak — S1–S4) |
+| 11 | `Content` sayfaları | **`0017`** (Taslak — S1–S5) |
+| 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
+| 13 | Bülten aboneliği | **`0018`** (Taslak — S1–S5) |
+
+`3`. satır `0010`'un **D9**'uyla ikiye bölündü: `0010a` (araç kaydı) tamamlandı, `0010b`
+(düzenleme ve liste) sıranın bu adımını kapatacak.
+
+**Dokuz taslağın toplam 43 açık sorusu var ve hepsinin önerisi yazılı.** Hiçbirinin
+kabul kriteri yok; cevaplar onları belirliyor. `0014`'ün **S1**'i tablonun kendisini
+sorguluyor — üç bağımlılığı kendisinden SONRA sıralanmış.
 
 ---
 
