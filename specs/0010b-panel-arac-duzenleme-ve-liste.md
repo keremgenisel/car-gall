@@ -412,30 +412,36 @@ kapalı birleşimi kimlik taşımıyor; `parseRoute`'un panel dalı üçüncü p
 
 ## Definition of Done
 
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] `[görsel]` işaretli **her** kriterin kanıtı eklendi (`docs/evidence/0010b-ac<n>.png`),
-      boş ve hata durumları dâhil; AC-34 için Arapça görüntü de var.
-- [ ] **A grubundaki kriterin bu spec'ten önce de yeşil olduğu** PR'da yazıldı; yeni
+- [x] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] `[görsel]` işaretli **her** kriterin kanıtı eklendi (`docs/evidence/0010b-ac<n>.png`),
+      boş ve hata durumları dâhil; AC-34 için Arapça görüntü de var. *(11 görüntü.)*
+- [x] **A grubundaki kriterin bu spec'ten önce de yeşil olduğu** PR'da yazıldı; yeni
       davranışın kanıtı B–G gruplarıdır.
-- [ ] Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] Yeni migration varsa yalnızca `vehicle_catalog` şemasına dokunuyor.
-- [ ] **"Eksik bilgi" hesaplanıyor, saklanmıyor** (C21) ve ayar değişince hiçbir yazma
-      olmadan değiştiği testle gösterildi.
-- [ ] **Sayfalama kararlılığı** birinci ve ikinci sayfa BİRLİKTE alınarak gösterildi
-      (AC-29): çakışma yok, atlama yok.
-- [ ] **`0010a`'nın liste kriterleri kesintisiz yeşil kaldı** — `IVehicleAdminQueries` ve
-      `VehicleAdminListItemDto` bu spec'te değişiyor; değişiklik öncesi ve sonrası koşu
-      çıktıları PR'da (Context § Doğrulanmış bulgular).
-- [ ] **Opsiyonel alan tipleri `Money` ve tarih için testle gösterildi** (AC-10, AC-11,
+- [x] Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(759 test; 0010a'da 692'ydi.)*
+- [x] Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] Yeni migration varsa yalnızca `vehicle_catalog` şemasına dokunuyor. *(Tek
+      migration; ölçüldü — tüm `schema:` değerleri `vehicle_catalog`.)*
+- [x] **"Eksik bilgi" hesaplanıyor, saklanmıyor** (C21) ve ayar değişince hiçbir yazma
+      olmadan değiştiği testle gösterildi. *(`YonetimListesiTests` — gösterge değişiyor,
+      `UpdatedAt` değişmiyor.)*
+- [x] **Sayfalama kararlılığı** birinci ve ikinci sayfa BİRLİKTE alınarak gösterildi
+      (AC-29): çakışma yok, atlama yok. *(İki sayfa arasında sıralama anahtarına
+      dokunmadan bir satır güncelleniyor; kırıcı kaldırılınca test üç koşuda da
+      kırmızı — ilk hâli kırıcısız da yeşildi ve hiçbir şey kanıtlamıyordu.)*
+- [x] **`0010a`'nın liste kriterleri kesintisiz yeşil kaldı** — `IVehicleAdminQueries` ve
+      `VehicleAdminListItemDto` bu spec'te değişti; öncesi ve sonrası koşu çıktıları PR'da.
+- [x] **Opsiyonel alan tipleri `Money` ve tarih için testle gösterildi** (AC-10, AC-11,
       AC-12); hiçbir para değeri metin olarak saklanmıyor (C23, Altın Kural 4).
-- [ ] **C23'ün C17 istisnası** PR açıklamasında adıyla yazıldı ve kapsamı `0010a` C17'nin
+      *(`information_schema` sorgusuyla kolonun `numeric(19,4)` olduğu ölçüldü.)*
+- [x] **C23'ün C17 istisnası** PR açıklamasında adıyla yazıldı ve kapsamı `0010a` C17'nin
       geri kalanını etkilemiyor.
-- [ ] **X20'nin ve X21'in kabul edilen riskleri** PR açıklamasında yazıldı.
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] Yeni domain terimi **yok**.
-- [ ] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
+- [x] **X20'nin ve X21'in kabul edilen riskleri** PR açıklamasında yazıldı.
+- [x] Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil. *(275 anahtar.)*
+- [x] Yeni domain terimi **yok**.
+- [x] Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+      *(İki satır + ADR `0007`.)*
+- [x] Ekranlar `docs/frontend.md` § 4.2 envanterini kullanıyor; ham piksel/hex eklenmedi.
+      *(`check:tokens` ve `lint:css` yeşil.)*
 - [ ] **Dış gözden geçirme yapıldı:** PR açılmadan önce bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`).
 - [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
@@ -449,11 +455,50 @@ kapalı birleşimi kimlik taşımıyor; `parseRoute`'un panel dalı üçüncü p
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Spec revizyon sayısı** | | Onaylandıktan sonra **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? |
+| **Spec revizyon sayısı** | 0 | R/C/AC onaylandıktan sonra değişmedi. D21–D29 uygulama planıyla **birlikte** onaylandı; D22'nin "veri kaybı yok" cümlesi uygulamada tutmadı ve karar notu düzeltildi — bu bir KARAR revizyonudur, sütuna girmiyor. |
 | **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** |
 | **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek, kaçı gürültü? |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
+| **Uygulama içi bulgu** | 10 | Aşağıda sayıldı. |
+| **Regresyon sayısı** | 0 | Sözleşme kırılması **bilerek** yapıldı ve DoD'da yazılı; `0010a`'nın kriterleri aynı şeyi ölçmeye devam ediyor. Kırılan bir davranış yok. |
 | **Kaçan hata** | | Merge'den sonra bulunan hata sayısı. En pahalı sütun budur. |
 
+**Uygulama içi bulgular (10):**
+
+1. **AC-29'un ilk testi kırıcıyı KANITLAMIYORDU.** Kırıcı kaldırıldığında da yeşil
+   kalıyordu: küçük bir tabloda PostgreSQL her iki sorguda aynı tarama sırasını veriyor.
+   Test, iki sayfa arasında sıralama anahtarına **dokunmadan** bir satırı güncelleyecek
+   biçimde yeniden yazıldı; artık kırıcısız üç koşuda da kırmızı. `0001`'in dersi tam
+   burada tekrarlanıyordu — ve bu kez testin kendisinde.
+2. **Tutar ondalık ölçeğini kaybediyordu.** Kolon `numeric(19,4)`, okunan değer ölçeğiyle
+   geliyor ve ham `ToString()` iki ondalıklı kurulumda `9900.0000` üretiyordu. Biçim artık
+   `Money`'nin minor unit üssünden geliyor.
+3. **D22'nin "yeniden adlandırma, veri kaybı yok" cümlesi tutmadı.** Eski kolonda duran tek
+   şey locale'li metin hâlindeki bir tutar ve metni `Money`'ye çeviren güvenilir bir
+   dönüşüm yok. Kolon düşürüldü, gerekçe migration'ın içine yazıldı.
+4. **Migration `jsonb` kolonuna GEÇERSİZ varsayılan üretti.** `defaultValue: ""` — boş dize
+   jsonb'ye çevrilemez ve `--migrate` adımı bu hâliyle patlardı.
+5. **`updated_at`'in üretilen varsayılanı `0001-01-01`'di**; mevcut araçlar listenin en
+   dibine düşer ve ekranda `01.01.0001` görünürdü.
+6. **Yükleme başarısız olduğunda düzenleme ekranı İSKELETTE donuyordu**: `values` null
+   kaldığı için 404 ve hata dalları hiç basılmıyordu.
+7. **Formun basmadığı bir alana işaret eden hata sessizce kayboluyordu** (ör. salt okunur
+   şase). Artık genel şeride düşüyor.
+8. **Telefon genişliğinde tablo sayfalayıcıyı örtüyordu**; "Sonraki" düğmesine yapılan
+   tıklamayı tablo hücreleri yakalıyordu.
+9. **E2E "listenin ilk satırı benim aracım" varsayıyordu.** İki Playwright profili ayrı
+   worker'larda aynı anda koşuyor ve aynı veritabanına yazıyor; testler artık araçlarını
+   şaseleriyle buluyor. Aynı yarış şase damgasını da çakıştırdı (milisaniye yetmiyordu).
+10. **Yan yana iki sütun neredeyse aynı adı taşıyordu** — "Durum" ve "Durumu". Tamlık
+    sütunu "Tamlık" oldu; sorun önce testte göründü, ama ekranda da vardı.
+
 **Bu spec'ten çıkarılan ders:**
+
+**Bir testin yeşil olması, ölçtüğünü sandığın şeyi ölçtüğü anlamına gelmez; bunu ancak
+KIRMIZIYA döndürerek bilirsin.** AC-29'un ilk testi altı araç kurup iki sayfayı birleştiriyor
+ve hiçbir çakışma bulamıyordu — doğru cevabı veriyordu ama yanlış sebeple: sıralama kırıcısı
+kaldırıldığında da aynı yeşili veriyordu. Kırıcıyı silip koşmasaydım, `0001`'in SCORECARD'ına
+yazılmış dersi "test ettim" diyerek ikinci kez kaçırmış olacaktım.
+
+Bu turda prob, dört ayrı yerde testin kendi iddiasını kurtardı: kırıcı, şase denetimi,
+birleştirme semantiği ve tripwire. Kural olarak: **bir invariant için yazılan her test, o
+invariant kaldırıldığında kırmızıya döndüğü görülene kadar yazılmamış sayılır.**

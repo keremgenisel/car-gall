@@ -484,6 +484,8 @@ altındaki ADR'lerdedir.
 | Personel oturumu | Sunucu tarafı opak oturum çerezi; JWT yok (rol ve durum her istekte kaynaktan) |
 | Eşzamanlılık | Invariant koruması: satır kilidi + tek transaction (`InvariantGuard`); iyimser eşzamanlılık yok |
 | Şase tekilliği | `vehicles` üzerinde kısmi tekil indeks (`NOT is_archived`); araç kendi arşiv bayrağını taşır |
+| Opsiyonel alan tipleri | Kapalı tip kümesi; alan → tip eşlemesi KODDA, değer tipli kolonlarda (tutar `numeric(19,4)` + kod + üs) |
+| Panel sayfa boyutu | Varsayılan 25, üst sınır 100; dağıtım yapılandırmasından, vitrinin 24'ünden ayrı eksen |
 | Bildirim gönderimi | Veritabanı kuyruğu + arka plan servisi; gönderici port arkasında (V1: SMTP/MailKit) |
 | Tema (renk) | Dağıtım yapılandırmasından, **ya tam ya hiç**; panelden düzenlenmez |
 | Kontrast güvencesi | Başlangıçta doğrulanır — karşılanmazsa uygulama ayağa kalkmaz; varsayılan palet için ayrıca CI testi |
