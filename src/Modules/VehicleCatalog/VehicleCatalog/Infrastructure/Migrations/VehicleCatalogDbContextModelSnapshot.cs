@@ -50,6 +50,11 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("description");
+
                     b.Property<DateTimeOffset?>("PublishedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
@@ -61,6 +66,11 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("title");
 
                     b.Property<Guid>("VehicleId")
                         .HasColumnType("uuid")
@@ -139,6 +149,10 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("price");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<Guid>("VehicleModelId")
                         .HasColumnType("uuid")
@@ -388,17 +402,75 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                                 .HasColumnType("character varying(80)")
                                 .HasColumnName("field_key");
 
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasColumnType("jsonb")
-                                .HasColumnName("value");
-
                             b1.HasKey("vehicle_id", "FieldKey");
 
                             b1.ToTable("vehicle_optional_field_values", "vehicle_catalog");
 
                             b1.WithOwner()
                                 .HasForeignKey("vehicle_id");
+
+                            b1.OwnsOne("CarGallery.Modules.VehicleCatalog.Domain.OptionalFieldValue", "Value", b2 =>
+                                {
+                                    b2.Property<Guid>("VehicleOptionalFieldValuevehicle_id")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<string>("VehicleOptionalFieldValueFieldKey")
+                                        .HasColumnType("character varying(80)");
+
+                                    b2.Property<string>("AmountCurrencyCode")
+                                        .HasMaxLength(3)
+                                        .HasColumnType("character varying(3)")
+                                        .HasColumnName("value_currency");
+
+                                    b2.Property<int?>("AmountMinorUnitExponent")
+                                        .HasColumnType("integer")
+                                        .HasColumnName("value_minor_unit");
+
+                                    b2.Property<decimal?>("AmountValue")
+                                        .HasPrecision(19, 4)
+                                        .HasColumnType("numeric(19,4)")
+                                        .HasColumnName("value_amount");
+
+                                    b2.Property<bool?>("Boolean")
+                                        .HasColumnType("boolean")
+                                        .HasColumnName("value_boolean");
+
+                                    b2.Property<DateOnly?>("Date")
+                                        .HasColumnType("date")
+                                        .HasColumnName("value_date");
+
+                                    b2.Property<long?>("Integer")
+                                        .HasColumnType("bigint")
+                                        .HasColumnName("value_integer");
+
+                                    b2.Property<int>("Kind")
+                                        .HasColumnType("integer")
+                                        .HasColumnName("value_kind");
+
+                                    b2.Property<string>("Localized")
+                                        .HasColumnType("jsonb")
+                                        .HasColumnName("value_localized");
+
+                                    b2.Property<string>("Option")
+                                        .HasMaxLength(60)
+                                        .HasColumnType("character varying(60)")
+                                        .HasColumnName("value_slug");
+
+                                    b2.Property<string>("Text")
+                                        .HasMaxLength(500)
+                                        .HasColumnType("character varying(500)")
+                                        .HasColumnName("value_text");
+
+                                    b2.HasKey("VehicleOptionalFieldValuevehicle_id", "VehicleOptionalFieldValueFieldKey");
+
+                                    b2.ToTable("vehicle_optional_field_values", "vehicle_catalog");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("VehicleOptionalFieldValuevehicle_id", "VehicleOptionalFieldValueFieldKey");
+                                });
+
+                            b1.Navigation("Value")
+                                .IsRequired();
                         });
 
                     b.Navigation("OptionalFieldValues");

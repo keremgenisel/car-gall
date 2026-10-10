@@ -22,6 +22,10 @@ internal sealed class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.Property(vehicle => vehicle.ModelYear).HasColumnName("model_year");
         builder.Property(vehicle => vehicle.MileageKilometers).HasColumnName("mileage_kilometers");
         builder.Property(vehicle => vehicle.AwaitingBranchAssignment).HasColumnName("awaiting_branch_assignment");
+
+        // D25 — listenin "son güncellenen" ekseni. `created_at` YOK: kimlik UUID v7 ve
+        // zaten zaman sıralı.
+        builder.Property(vehicle => vehicle.UpdatedAt).HasColumnName("updated_at");
         builder.Property(vehicle => vehicle.IsArchived).HasColumnName("is_archived");
 
         // A5/AC-16, AC-17 — şase galeri genelinde TEKİL, `Arşiv` muaf.
@@ -78,11 +82,33 @@ internal sealed class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
             value.ToTable("vehicle_optional_field_values");
             value.WithOwner().HasForeignKey("vehicle_id");
             value.Property(item => item.FieldKey).HasColumnName("field_key").HasMaxLength(80);
-            value.Property(item => item.Value)
-                .HasColumnName("value")
-                .HasColumnType("jsonb")
-                .HasConversion(CatalogConverters.LocalizedText, CatalogConverters.LocalizedTextComparer);
             value.HasKey("vehicle_id", nameof(VehicleOptionalFieldValue.FieldKey));
+
+            // D22 — değer TİPLİ KOLONLARDA. Tip başına bir taşıyıcı dolu, gerisi null.
+            //
+            // **Neden tek bir jsonb zarfı değil:** tanımlı tek opsiyonel alan bir TUTAR ve
+            // parayı JSON sayısına çevirmek `numeric` kadar kesin değil. Vitrin okuma
+            // modeli fiyatı zaten tutar + kod + üs üçlüsüyle tutuyor; yazma modeli aynı
+            // deseni tekrarlıyor (Altın Kural 4, Yasak Listesi 26).
+            value.OwnsOne(item => item.Value, payload =>
+            {
+                payload.Ignore(item => item.Amount);
+
+                payload.Property(item => item.Kind).HasColumnName("value_kind").HasConversion<int>();
+                payload.Property(item => item.AmountValue).HasColumnName("value_amount").HasPrecision(19, 4);
+                payload.Property(item => item.AmountCurrencyCode).HasColumnName("value_currency").HasMaxLength(3);
+                payload.Property(item => item.AmountMinorUnitExponent).HasColumnName("value_minor_unit");
+                payload.Property(item => item.Text).HasColumnName("value_text").HasMaxLength(OptionalFieldValue.MaximumTextLength);
+                payload.Property(item => item.Integer).HasColumnName("value_integer");
+                payload.Property(item => item.Boolean).HasColumnName("value_boolean");
+                payload.Property(item => item.Date).HasColumnName("value_date");
+                payload.Property(item => item.Option).HasColumnName("value_slug").HasMaxLength(60);
+
+                payload.Property(item => item.Localized)
+                    .HasColumnName("value_localized")
+                    .HasColumnType("jsonb")
+                    .HasConversion(CatalogConverters.NullableLocalizedText, CatalogConverters.LocalizedTextComparer);
+            });
         });
 
         builder.Navigation(vehicle => vehicle.OptionalFieldValues)

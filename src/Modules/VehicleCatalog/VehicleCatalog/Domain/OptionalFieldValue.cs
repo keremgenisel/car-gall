@@ -48,7 +48,26 @@ internal sealed record OptionalFieldValue
 
     internal long? Integer { get; private init; }
 
-    internal Money? Amount { get; private init; }
+    /// <summary>
+    /// <b>Tutar ÜÇ taşıyıcıda duruyor ve bu bir EF sınırının sonucu.</b> Sahipli tipin
+    /// içinde sahipli bir değer tipi (`Money?`) eşlenemiyor — `0010a`'da `ListingPrice`
+    /// tam olarak burada düşmüştü. Oradaki çözüm tek metin kolonuydu; burada metne
+    /// düşmek Altın Kural 4'ün ihlali olurdu (C23), bu yüzden üç skaler kolon.
+    ///
+    /// <para>Vitrin okuma modeli fiyatı zaten aynı üçlüyle tutuyor: tutar + ISO kodu +
+    /// minor unit üssü. Üçünden biri kaybolursa üç ondalıklı para birimi sessizce
+    /// bozulur (P2).</para>
+    /// </summary>
+    internal decimal? AmountValue { get; private init; }
+
+    internal string? AmountCurrencyCode { get; private init; }
+
+    internal int? AmountMinorUnitExponent { get; private init; }
+
+    /// <summary>Üç taşıyıcıdan türetilir; kolonu yoktur.</summary>
+    internal Money? Amount => AmountValue is null || AmountCurrencyCode is null || AmountMinorUnitExponent is null
+        ? null
+        : Money.Create(AmountValue.Value, AmountCurrencyCode, AmountMinorUnitExponent.Value).Value;
 
     internal bool? Boolean { get; private init; }
 
@@ -66,7 +85,12 @@ internal sealed record OptionalFieldValue
         new(FieldValueKind.Integer) { Integer = value };
 
     internal static OptionalFieldValue OfAmount(Money value) =>
-        new(FieldValueKind.Amount) { Amount = value };
+        new(FieldValueKind.Amount)
+        {
+            AmountValue = value.Amount,
+            AmountCurrencyCode = value.CurrencyCode,
+            AmountMinorUnitExponent = value.MinorUnitExponent,
+        };
 
     internal static OptionalFieldValue OfBoolean(bool value) =>
         new(FieldValueKind.Boolean) { Boolean = value };
