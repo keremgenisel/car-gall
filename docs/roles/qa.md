@@ -87,7 +87,21 @@ Kriter kapsaması: <karşılanan>/<toplam>
 Kanıtı doğrulanan kriterler: AC-1, AC-3, AC-4
 Kanıtı eksik/doğrulanamayan kriterler: AC-2  → BULGU-1
 Bulgu: <kritik n> / <önemli n> / <küçük n>
+Gerçek/gürültü: <n> bulgu, bunların <m>'si gürültü
 ```
+
+**Son satır zorunludur** (ADR `0008` / K7). `specs/TEMPLATE.md`'nin
+`Dış bulgu (gerçek/gürültü)` sütununun **böleni** budur ve bugüne kadar hiç yazılmadı: on
+iki kartta 38 dış bulgu var ve **hiçbirinin** yanında gürültü sayısı yok. İki kart sebebini
+kendisi yazmış — `0009`: *"gürültü işaretini Takım Yöneticisi yaptı ve işaretlenenler bana
+hiç ulaşmadı"*; `frontend-002`: *"beş maddelik bir iş listesi olarak geldi ve üçü bulgu
+değil adımdı."* Bölen teslimde yazılmazsa kartta **`— (işaretlenmedi)`** olur; **`0`
+yazılmaz** — sıfır gürültü, var olmayan bir kaliteyi ölçer.
+
+Gürültü işaretini QA kendi koyar: teslim ettiği listenin kaçının **bulgu**, kaçının
+**adım veya tercih** olduğunu söylemek onun işidir (§ 4'ün "stil ve tercih tartışması
+açamaz" yasağının sayısal karşılığı). Takım Yöneticisi bu sayıyı değiştirebilir; QA'in
+yazmaması bir seçenek değil.
 
 Kurallar:
 - **Önerisiz bulgu teslim edilmez.** (README § Ortak Kurallar 4)

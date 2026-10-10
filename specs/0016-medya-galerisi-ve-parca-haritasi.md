@@ -212,18 +212,26 @@ sahibi yok.** Sıraya eklenmesi gerekir; bunu ADR 0003 Ek 1'e yeni bir madde ola
 - [ ] Açık sorular karara bağlandı; **S1 bir sözlük kararı gerektiriyorsa**
       `docs/domain.md` güncellendi ve ADR gerekip gerekmediği değerlendirildi.
 - [ ] `0011` tamamlandı.
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Görsel kanıt eklendi (`docs/evidence/0016-ac<n>.png`); şemanın her durumu, boş ve hata
+- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0016-ac<n>.png`); şemanın her durumu, boş ve hata
       durumları, Arapça (RTL) görünüm dâhil.
 - [ ] Şemanın renk dışı ayırt edilebilirliği kanıtla gösterildi (C2, R9).
 - [ ] Klavyeyle tam gezinme ve odak halkası kanıtla gösterildi (R3).
 - [ ] `0002`'nin kabul kriterleri regresyon testi olarak hâlâ yeşil (C8).
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi — 13 parça adı ve durum adları dâhil.
+- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi — 13 parça adı ve durum adları dâhil.
 - [ ] Ham piksel/hex eklenmedi; token katmanı kullanıldı (C3).
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
+- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
+      bunun yerine geçmez.
+- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 

@@ -33,12 +33,41 @@ feature/frontend-<XXX>-<kisa-ad>     → specs/frontend-001-standarda-uyum.md
 Diğer önekler:
 ```
 fix/<spec-no>-<kisa-ad>       → kabul kriterine aykırı davranışın düzeltilmesi
-chore/<kisa-ad>               → bağımlılık, CI, araç zinciri (spec'siz açılabilecek TEK önek)
+docs/<kisa-ad>                → spec metni, ADR, doküman (kod değişmez)
+chore/<kisa-ad>               → bağımlılık, CI, araç zinciri
 ```
+
+`docs/` ve `chore/` **spec'siz açılabilir**; dayanağı § 4 madde 1'in saydıklarından biridir —
+bir **spec taslağı**, bir **ADR** (`docs/decisions/`) ya da **yazılı bir süreç maddesi**
+(örn. `specs/done/README.md` § Periyodik okuma). Yalnız ADR saymak, bu öneki doğuran işleri
+kural dışı bırakırdı: #24 bir spec taslağıydı, #43 bir periyodik okumaydı ve ikisinin de
+arkasında ADR yok. `docs/` öneki bir kuralı kodlamadan önce iki PR'da kullanılmıştı
+(#24, #28) ve listede yoktu — ADR `0008` / K2 ile yazıldı. Ayrımı şu: `docs/` **metni**
+değiştirir, `chore/` **araç zincirini**. İkisi birden değişiyorsa `chore/` kullanılır.
+
+### SPEC, İMPLEMENTASYONDAN ÖNCE `main`'E GİRER VE ORADA DONAR
+
+Bir spec'in **Requirements, Constraints ve Acceptance Criteria** bölümleri, o spec'i uygulayan
+commit'ten **önce** `main`'de olmak zorundadır — kendi `docs/` PR'ıyla. O commit'ten sonra her
+R/C/AC değişikliği **sayılan bir revizyondur** (`specs/TEMPLATE.md` § SCORECARD) ve kendi
+commit'ine girer; implementasyon commit'inin içine karıştırılmaz.
+
+Bu kural ölçülmüş bir körlükten doğdu (`specs/done/SCORECARD-ANALIZ-002.md` § Bulgu 3,
+ADR `0008` / K2). On iki kapanmış spec'in **dokuzunda** kriterler implementasyon
+commit'inden önce `main`'de değildi: altısında spec dosyası hiç yoktu, üçünde dosya vardı
+ama implementasyon commit'i kriterleri yeniden yazdı — `0008` **2 kriterden 33'e**. Sonuç:
+"spec onaydan sonra kaç kez değişti" sorusunun karşılaştırılacak bir "önce"si yok ve
+`Spec revizyon sayısı` sütunu dokuz kartta **ölçülemez**. Düşük sayı iyi spec değil,
+ölçülemeyen spec demek.
+
+Kuralına uyan tek spec `0007` oldu (tam metin #14, `ad0c221`) ve kartı on ikinin en
+güvenilir revizyon sayısını taşıyor — bedeli bir ek PR ve bir ek onay turu.
 
 ### SPEC'SİZ BRANCH AÇILMAZ
 
-`chore/` dışındaki her branch, `specs/` altında **var olan** bir spec'e dayanır.
+`docs/` ve `chore/` dışındaki her branch, `specs/` altında **var olan** bir spec'e dayanır.
+`docs/` bunun dışındadır, çünkü K2 gereği spec'i `main`'e sokan PR'ın kendisi odur: var
+olmayan bir spec'e dayanması istenemez.
 Spec yoksa:
 1. Dur.
 2. `specs/TEMPLATE.md`'den bir spec taslağı öner (öneri kuralı — `AGENTS.md` Altın Kural 2).
@@ -171,6 +200,17 @@ Bir PR şu şartların **hepsini** sağlamadan merge edilmez:
    ile birlikte. Sessizce atlanan kriter PR'ı reddeder.
 6. **En az bir onay.** Ajan üyenin açtığı PR'ı **Takım Yöneticisi onaylar**; ajan kendi
    PR'ını merge edemez.
+7. **Düzenlemelerin commit'e girdiği doğrulanmıştır.** Commit'ten sonra `git show --stat`
+   okunur. **Paylaşılan çalışma ağacında zorunludur** ve `--stat`'ın `0 0` gösterdiği bir
+   dosya, düzenlenmiş sayılmaz.
+
+   Bu kural ölçülmüş bir kayıptan doğdu (ADR `0008` / K5). `0010a`'nın kapanış ölçümleri
+   PR #36'da **hiç commit'e girmedi**: o PR spec dosyasında `0 0` taşıyor, yalnızca bir
+   `git mv`. Düzenlemeler iki paralel oturumun aynı çalışma ağacındaki index'i çözülürken
+   `git reset` ile silindi. Commit mesajı "DoD 23/23" diyordu, dosya 20/23 diyordu ve fark
+   **beş gün** görünmedi — çünkü hiçbir CI kapısı `specs/` altını okumuyor.
+
+   Kuralın tek cümlesi: **bir ölçüm commit'e girmediyse yapılmamıştır.**
 
 ---
 

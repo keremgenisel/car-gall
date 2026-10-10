@@ -211,20 +211,27 @@ izinsiz. Talep formuna **ayrı bir bülten onay kutusu** eklemek meşru bir yold
 
 - [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
 - [ ] `0012` ve `0017` ile olan bağımlılıklar çözüldü (S3, R4).
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Görsel kanıt eklendi (`docs/evidence/0018-ac<n>.png`), hata durumu dâhil, Arapça
+- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0018-ac<n>.png`), hata durumu dâhil, Arapça
       görüntü de var.
 - [ ] Teyit edilmemiş adrese pazarlama gönderilmediği testle gösterildi (R2, S1).
 - [ ] Çıkış bağlantısının **tek adımda** çalıştığı testle gösterildi (R5).
 - [ ] Kişisel verinin logda ve gönderim geçmişinde bulunmadığı testle gösterildi (C5).
 - [ ] `0009`'un kabul kriterleri regresyon olarak hâlâ yeşil (R10).
 - [ ] Şablonlar TR/AR/EN üçünde de seed edildi; eksik şablon kontrolü yeşil (C6).
-- [ ] Yeni migration yalnızca `notifications` şemasına dokunuyor.
-- [ ] Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `notifications` şemasına dokunuyor.
+- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
+      bunun yerine geçmez.
+- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 

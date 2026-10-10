@@ -201,22 +201,26 @@ ikinci adım olmadan saldırgana bir şey kazandırmaz — ikinci adımın varl�
 ## Definition of Done
 
 - [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0013-ac<n>.png`), hata ve
+- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0013-ac<n>.png`), hata ve
       kilitlenme durumları dâhil, RTL için Arapça görüntü de var.
 - [ ] Sırrın ve kurtarma kodlarının yanıtta, logda ve hata metninde görünmediği testle
       gösterildi (C2).
-- [ ] Mimari testler yeşil — `Identity` sınırları korundu.
-- [ ] Yeni migration yalnızca `identity` şemasına dokunuyor.
+- [ ] <!-- DoD:T4 --> Mimari testler yeşil — `Identity` sınırları korundu.
+- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `identity` şemasına dokunuyor.
 - [ ] Mockup'taki iki çelişkili metin (S1 "Sahip", S2 "8 deneme") tasarım tarafında
       güncellendi veya PR'da **açıkça** uyumsuz olarak not edildi.
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi.
-- [ ] Yeni domain terimi yok.
-- [ ] `docs/architecture.md` § Karar Defteri güncellendi (2FA kapsamda).
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi.
+- [ ] <!-- DoD:T7 --> Yeni domain terimi yok.
+- [ ] <!-- DoD:T8 --> `docs/architecture.md` § Karar Defteri güncellendi (2FA kapsamda).
+- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
+      bunun yerine geçmez.
+- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 

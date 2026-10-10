@@ -202,19 +202,24 @@ tüketicileri kırar.
 
 - [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
 - [ ] `0011` tamamlandı (S3).
-- [ ] Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012-ac<n>.png`), kısmi
+- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012-ac<n>.png`), kısmi
       başarı ve hata durumları dâhil, RTL için Arapça görüntü de var.
 - [ ] A2'nin **dört** koşulunun hepsinin kontrol edildiği testle gösterildi (Tuzak 1).
-- [ ] Mimari testler yeşil; durum geçişi mantığı agregatta kaldı (C2).
-- [ ] Yeni migration yalnızca `vehicle_catalog` şemasına dokunuyor.
+- [ ] <!-- DoD:T4 --> Mimari testler yeşil; durum geçişi mantığı agregatta kaldı (C2).
+- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `vehicle_catalog` şemasına dokunuyor.
 - [ ] Olay adları `docs/architecture.md` § 1'deki adlarla birebir aynı (S5).
-- [ ] Çeviri anahtarları TR/AR/EN üçünde de eklendi.
-- [ ] Yeni domain terimi yok.
-- [ ] Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi.
+- [ ] <!-- DoD:T7 --> Yeni domain terimi yok.
+- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
+      bunun yerine geçmez.
+- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 

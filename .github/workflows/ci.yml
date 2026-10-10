@@ -6,9 +6,23 @@ on:
   push:
     branches: [main]
   pull_request:
+  # ADR 0008 / K6 — main'in yeşilliği zamanla da bozulabilir.
+  # Ölçüldü: 2026-10-05T13:14 ile 2026-10-10T06:03 arasında bu depoda HİÇBİR koşu yok
+  # (4 gün 16 saat 49 dakika) ve main o sürenin dördünde kırmızıydı. Kırmızılığı ne bir
+  # dal ne bir birleşim üretti — TAKVİM üretti: bir testin sahte saati 2026-09-22'ye
+  # sabitti ve ondan üretilen çerez Expires'ını gerçek saat değerlendiriyordu (spec 0006
+  # kaçan hata, PR #38). Bulan şey, ilgisiz bir chore dalının PR koşusu oldu.
+  # Zamanlı koşu daima varsayılan dalı (main) kullanır — izlemek istediğimiz şey tam o.
+  schedule:
+    - cron: '0 3 * * *'  # 03:00 UTC — her gün
+  # Gece koşusu elle de tetiklenebilsin: kırmızı bir sabahtan sonra düzeltmeyi beklemeden
+  # tekrar koşmak gerekir.
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # Olay adı gruba DAHİL: aksi hâlde gece koşusu ile main'e yapılan bir push aynı gruba
+  # düşer ve `cancel-in-progress` gerçek bir merge'in CI'ını iptal edebilirdi.
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -34,6 +48,31 @@ jobs:
       # Mimari testler ve migration şema kontrolü de bu koşunun içindedir.
       - name: Test
         run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      # ADR 0008 / K8 — kapı DÜZELTMEZ, BİLDİRİR; bildirdiği yer okunabilir olmak zorunda.
+      # Ölçüldü: `ITestOutputHelper` çıktısı GEÇEN testler için konsola basılmaz, yalnız
+      # trx'in içine girer — yani rapor, birinin artefaktı indirip XML açmasını bekliyordu.
+      # Bu adım onu iş özetine yazar. Kapı kırmızı vermediği için `if: always()`.
+      - name: Arşiv kapısı raporu (muaf kartlar)
+        if: always()
+        # BİLDİREN bir adım CI'ı kıramaz: build düşmüşse `--no-build` de düşer ve kırmızı,
+        # kapının bildirdiği şeyi değil kendisini anlatırdı.
+        continue-on-error: true
+        run: |
+          # `tee`: rapor hem iş özetine hem İŞ KAYDINA yazılır. Yalnız özete yazmak, bu
+          # adımın çözdüğü hatanın hafif hâli olurdu — iş özetinin API'den okunabilen bir
+          # karşılığı yok ve bu depodaki okuyucular `gh run view --log` kullanıyor.
+          {
+            echo '### Arşiv kapısı — muaf kartların kapanmamış kayıtları'
+            echo '_ADR 0008 / K8: bu kayıtlar DÜZELTİLMEZ, tarihli kayıttır._'
+            echo '```'
+            dotnet test tests/Architecture.Tests/Architecture.Tests.csproj \
+              --no-build --configuration Release --nologo \
+              --filter "FullyQualifiedName~Bildirir_MuafKartlarinKapanmamisKayitlarini" \
+              --logger "console;verbosity=detailed" \
+              | sed -n '/Muaf kartlarda/,/^[[:space:]]*$/p'
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Test sonuçlarını yükle
         if: always()
