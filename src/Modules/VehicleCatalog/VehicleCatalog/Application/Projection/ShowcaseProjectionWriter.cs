@@ -1,4 +1,5 @@
 using CarGallery.Modules.Dealership.Contracts.Events;
+using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
@@ -31,8 +32,19 @@ internal sealed class ShowcaseProjectionWriter(
     /// <summary>
     /// Aracın vitrin satırını yazar, günceller ya da siler. Çağıran bunu
     /// <c>SaveChanges</c>'ten ÖNCE çağırır; yazma ile yansıtma aynı transaction'a girer.
+    ///
+    /// <para><c>read</c> `0012c` **D46**'nın ön okuma bağlamı: verildiğinde şube adları ve
+    /// public alan anahtarları oradan gelir, verilmediğinde buradan okunur. İkinci yol
+    /// <b>kaldırılmadı</b> çünkü yansıtmanın dört çağıranı var ve üçü tek kayıt üzerinde
+    /// çalışıyor; hepsini bağlam kurmaya zorlamak `0012c`'nin işini üç komuda
+    /// genişletirdi. Toplu yol bağlamı verir ve 25 satır için `Dealership`'i şube başına
+    /// bir kez okur.</para>
     /// </summary>
-    internal async Task ProjectAsync(Vehicle vehicle, Listing listing, CancellationToken cancellationToken)
+    internal async Task ProjectAsync(
+        Vehicle vehicle,
+        Listing listing,
+        ListingReadContext? read,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(vehicle);
         ArgumentNullException.ThrowIfNull(listing);
@@ -48,9 +60,11 @@ internal sealed class ShowcaseProjectionWriter(
                 vehicle,
                 listing,
                 listing.Slug.Value,
-                await SubeAdlariAsync(vehicle.BranchId, cancellationToken),
+                read is null
+                    ? await SubeAdlariAsync(vehicle.BranchId, cancellationToken)
+                    : read.BranchNamesOf(vehicle.BranchId),
                 await KapakAdresiAsync(vehicle.CoverAssetId, cancellationToken),
-                await PublicAlanlarAsync(cancellationToken));
+                read?.PublicFieldKeys ?? await PublicAlanlarAsync(cancellationToken));
 
         if (hedef is null)
         {
@@ -84,7 +98,7 @@ internal sealed class ShowcaseProjectionWriter(
 
         if (listing is not null)
         {
-            await ProjectAsync(vehicle, listing, cancellationToken);
+            await ProjectAsync(vehicle, listing, read: null, cancellationToken);
         }
     }
 

@@ -64,14 +64,33 @@ internal static class VehicleAdminEndpoints
         // Durum geçişleri FİİL rotada. Kuralın kaynağı `docs/conventions.md` § 2 ve
         // örneği birebir bu: `POST /api/catalog/vehicles/{id}/publish`. Bu spec'in ayrı
         // bir kararı YOK — konvansiyon zaten söylüyor.
-        foreach ((string yol, ListingAction eylem) in ListingActions)
+        foreach ((string yol, ListingOperation islem) in ListingOperations.All)
         {
-            vehicles.MapPost($"/{{vehicleId:guid}}/{yol}", (Guid vehicleId, ListingTransitionCommands command, CancellationToken ct) =>
-                    TransitionAsync(vehicleId, eylem, command, ct))
-                .WithName($"VehicleListing{eylem}")
+            vehicles.MapPost($"/{{vehicleId:guid}}/{yol}", (
+                    Guid vehicleId,
+                    ListingTransitionCommands transitions,
+                    ListingFeatureCommands features,
+                    CancellationToken ct) =>
+                    OperationAsync(vehicleId, islem, transitions, features, ct))
+                .WithName($"VehicleListing{islem}")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status409Conflict)
+                .Produces(StatusCodes.Status422UnprocessableEntity);
+        }
+
+        // `0012c` **D18** — toplu yüzey ALTI işlemi taşıyor; rezerve ve rezervasyon
+        // kaldırma burada yok ve yokluğun karşılığı `404`'tür (rota tanımlanmadı).
+        // Sözcükler tekil yüzeyle AYNI tablodan geliyor: iki yüzey hiç ayrışamaz.
+        foreach ((string yol, ListingOperation islem) in ListingOperations.Bulk)
+        {
+            vehicles.MapPost($"/bulk/{yol}", (
+                    BulkListingBody body,
+                    ListingBulkCommands command,
+                    CancellationToken ct) =>
+                    BulkAsync(islem, body, command, ct))
+                .WithName($"VehicleListingBulk{islem}")
+                .Produces<BulkListingResponse>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status422UnprocessableEntity);
         }
 
@@ -200,34 +219,57 @@ internal static class VehicleAdminEndpoints
         string.Equals(query["archived"], "true", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// `0012b` — durum geçişinin ince ucu: bağlama, komut çağrısı, sonuç eşleme. Geçiş
-    /// mantığı agregatta (**C2**, Yasak Listesi 20); burada tek bir `switch` bile yok.
+    /// `0012b`/`0012c` — tekil işlemin ince ucu: bağlama, komut çağrısı, sonuç eşleme.
+    /// Karar agregatta (**C2**, Yasak Listesi 20).
+    ///
+    /// <para>Buradaki tek dallanma iki **KOMUT** arasında, iki durum arasında değil: öne
+    /// çıkarma bir geçiş değildir ve kendi komutuna gider.</para>
     /// </summary>
-    private static async Task<IResult> TransitionAsync(
+    private static async Task<IResult> OperationAsync(
         Guid vehicleId,
-        ListingAction action,
-        ListingTransitionCommands command,
+        ListingOperation operation,
+        ListingTransitionCommands transitions,
+        ListingFeatureCommands features,
         CancellationToken cancellationToken)
     {
-        Result sonuc = await command.ExecuteAsync(vehicleId, action, cancellationToken);
+        Result sonuc = operation.IsFeature(out bool featured)
+            ? await features.ExecuteAsync(vehicleId, featured, cancellationToken)
+            : await transitions.ExecuteAsync(vehicleId, operation.ToAction(), cancellationToken);
 
         return sonuc.IsFailure ? CatalogProblems.From(sonuc.Error) : TypedResults.NoContent();
     }
 
     /// <summary>
-    /// Altı durum geçişinin rota parçası ve eylemi. Elle yazılmış bir eşleme: rota adını
-    /// enum'dan TÜRETMEK `MarkSold` → `mark-sold` gibi bir dönüşüm kuralı gerektirirdi ve
-    /// o kural adresi enum adının rehinesi yapardı.
+    /// `0012c` **R4**/**D6** — toplu eylemin ucu. İstek düzeyi reddi `ProblemDetails`
+    /// (`422`), satır düzeyi sonuçlar `200` + liste.
+    ///
+    /// <para><b>Hepsi başarısız olsa bile `200`</b>: `200` isteğin işlendiğini söyler,
+    /// kayıtların başarılı olduğunu değil. Bedeli açıkça kabul edildi — istemci başarıyı
+    /// HTTP kodundan okuyamaz, gövdeyi okumak zorundadır (`docs/conventions.md` § 5).</para>
     /// </summary>
-    private static readonly (string Route, ListingAction Action)[] ListingActions =
-    [
-        ("publish", ListingAction.Publish),
-        ("unpublish", ListingAction.Unpublish),
-        ("reserve", ListingAction.Reserve),
-        ("unreserve", ListingAction.Unreserve),
-        ("sold", ListingAction.MarkSold),
-        ("archive", ListingAction.Archive),
-    ];
+    private static async Task<IResult> BulkAsync(
+        ListingOperation operation,
+        BulkListingBody body,
+        ListingBulkCommands command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        Result<IReadOnlyList<BulkListingRow>> sonuc =
+            await command.ExecuteAsync(operation, body.VehicleIds ?? [], cancellationToken);
+
+        return sonuc.IsFailure
+            ? CatalogProblems.From(sonuc.Error)
+            : TypedResults.Ok(new BulkListingResponse(
+                [
+                    .. sonuc.Value.Select(satir => new BulkListingResultBody(
+                        satir.VehicleId,
+                        satir.Applied,
+                        satir.ErrorCode,
+                        satir.Parameters,
+                        satir.ListingStatus))
+                ]));
+    }
 
     /// <summary>
     /// R2/C25 — düzenleme TAM DEĞİŞTİRMEDİR. Gövde çekirdek alanların tamamını taşır ve
@@ -352,6 +394,26 @@ internal sealed record UpdateVehicleOptionalValue(
 /// ziyaretçiye gösterilebilecek bir metin gibi görünür ve uçta yanlışlıkla basılabilir —
 /// `0006`'da aynı karar verilmişti.</para>
 /// </summary>
+/// <summary>
+/// Toplu eylemin isteği. Seçim **araç kimliğiyle** taşınıyor (**D44**): `0012b`'nin uçları
+/// araç kimliğiyle çalışıyor ve yönetim sözleşmesinde ilan kimliği diye bir yüzey yok.
+/// </summary>
+internal sealed record BulkListingBody(IReadOnlyList<Guid>? VehicleIds);
+
+/// <summary>Araç başına sonuç satırı (**D45**). Şekil tek; doluluk değişir.</summary>
+internal sealed record BulkListingResultBody(
+    Guid VehicleId,
+    bool Applied,
+    string? ErrorCode,
+    IReadOnlyDictionary<string, string>? Parameters,
+    string? ListingStatus);
+
+/// <summary>
+/// Toplu eylemin yanıtı. Liste bir **zarf** içinde: çıplak dizi dönmek, yanıta bir gün
+/// istek düzeyi bir alan eklemeyi (örneğin uygulanan sayısı) kırıcı bir değişiklik yapardı.
+/// </summary>
+internal sealed record BulkListingResponse(IReadOnlyList<BulkListingResultBody> Results);
+
 internal static class CatalogProblems
 {
     internal static JsonHttpResult<Dictionary<string, object?>> From(Error error)
@@ -369,6 +431,10 @@ internal static class CatalogProblems
             // koda toplamak, panelin "satırı tazele" ile "eksikleri göster" arasında
             // seçim yapmasını imkânsız kılardı.
             Listing.InvalidTransition => StatusCodes.Status409Conflict,
+            // 0012c C8/D49 — öne çıkarmanın reddi de bir DURUM ÇAKIŞMASIDIR: istek
+            // geçerli, ilan arşivde. Kendi kodunu taşıyor çünkü panel bir SIRALAMA eylemi
+            // için "geçersiz durum geçişi" derse personel olmayan bir geçişi arar.
+            Listing.CannotFeatureArchived => StatusCodes.Status409Conflict,
             ConcurrencyErrors.Lost => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status422UnprocessableEntity,
         };

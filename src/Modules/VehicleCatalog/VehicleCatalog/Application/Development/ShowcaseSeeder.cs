@@ -136,7 +136,15 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 OptionalFieldValue.OfAmount(
                     Money.Create(index * 1_250m, currency.Code, currency.MinorUnitExponent).Value));
 
-            Listing listing = Listing.CreateDraft(vehicle.Id, showcaseSortWeight: listingCount - index);
+            // 0012c D36/AC-31 — öne çıkarma anahtarı İKİ DEĞERLİ ve seed artık o iki değeri
+            // yazıyor. Önceki hâli `listingCount - index` ile 200 ilana 200 ayrı ağırlık
+            // veriyordu; kararın kendisini VERİ tarafında deliyordu ve "öne çıkarılmış
+            // ilan" diye bir şey geliştirme ortamında görünmüyordu — her ilan farklı bir
+            // ağırlıktaydı, yani hiçbiri öne çıkarılmış değildi. Her yedinci ilan öne
+            // çıkarılıyor ki panelin rozeti ve vitrin sırası seed'de görülebilsin.
+            Listing listing = Listing.CreateDraft(
+                vehicle.Id,
+                showcaseSortWeight: index % 7 == 0 ? Listing.FeaturedWeight : Listing.NormalWeight);
 
             // 0010b — seed ilan metni de yazıyor. Her beşinci araçta Arapça metin BİLEREK
             // eksik: "eksik dil" göstergesinin (R12) geliştirme verisinde görülebilir bir

@@ -240,7 +240,7 @@ internal sealed class UpdateVehicleCommand(
         // D12/R15 — vitrin satırı AYNI İŞLEMDE güncelleniyor. Bu spec'e kadar hiçbir komut
         // okuma modeline yazmıyordu: personel fiyatı düşürüyor, vitrinde eski fiyat
         // kalıyordu.
-        await projection.ProjectAsync(vehicle, listing, cancellationToken);
+        await projection.ProjectAsync(vehicle, listing, read: null, cancellationToken);
 
         // D11 — fiyat ve şube değişikliğinin duyurusu iş verisiyle aynı transaction'da
         // outbox'a yazılıyor (C3).
