@@ -16,7 +16,10 @@ namespace CarGallery.Modules.Identity.Application;
 /// kaydetmenin kendisidir. Personel değişikliği kaydedildiyse duyurusu da
 /// kaydedilmiştir; değişiklik geri alındıysa duyuru da alınmamıştır (C5, AC-48).
 /// </summary>
-internal sealed class IdentityUnitOfWork(IdentityDbContext context, IOutboxWriter outbox, IClock clock)
+internal sealed class IdentityUnitOfWork(
+    IdentityDbContext context,
+    OutboxWriter<IdentityDbContext> outbox,
+    IClock clock)
 {
     internal async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {

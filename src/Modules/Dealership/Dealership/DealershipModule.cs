@@ -42,7 +42,7 @@ public static class DealershipModule
             "Dealership"));
 
         services.AddSingleton<IClock, SystemClock>();
-        services.AddScoped<IOutboxWriter, OutboxWriter<DealershipDbContext>>();
+        services.AddScoped<OutboxWriter<DealershipDbContext>>();
         services.AddScoped<DealershipUnitOfWork>();
 
         // 0007 — invariant koruması ortak desenden gelir; süre yapılandırmadan değil
