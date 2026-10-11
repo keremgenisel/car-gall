@@ -753,7 +753,7 @@ kopyalanmış bir sabiti değil.
 
 - **AC-33.** Her durum geçişi bir duyuru üretir.
 - **AC-34.** Üretilen olay adları `docs/architecture.md` § 1'deki sekiz adla **birebir** aynıdır.
-- **AC-35.** Olay gövdesi beş alan taşır ve **yeni durumu ayrı bir alan olarak taşımaz**.
+- **AC-35.** Olay gövdesi **yeni durumu ayrı bir alan olarak taşımaz**; yedi olay beş alan taşır, `VehiclePublished` ek olarak ilk yayın zamanını taşır (**D31**).
 - **AC-36.** Duyuru iş verisiyle **aynı transaction'da** outbox'a yazılır; yazma başarısız olursa duyuru da yazılmaz.
 - **AC-37.** Outbox yazıcısı **konkret** `OutboxWriter<VehicleCatalogDbContext>` tipiyle kaydedilir.
 - **AC-38.** Fiyat ve şube değişikliği araç düzenleme komutundan duyurulur.
@@ -827,8 +827,8 @@ kopyalanmış bir sabiti değil.
 - [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
-- [ ] A2'nin **dört** koşulunun hepsinin kontrol edildiği ve eksiklerin **birlikte** döndüğü
-      testle gösterildi (Tuzak 1, Tuzak 2).
+- [ ] Eksiklerin **birlikte** döndüğü testle gösterildi (Tuzak 1, Tuzak 2). *Koşul sayısı
+      için alttaki maddeye bakınız: **D23** ve **D42** dördün ikisini eledi.*
 - [ ] **Üretilen her olayın** adı `docs/architecture.md` § 1'deki adıyla birebir aynı (D11).
 - [ ] Outbox yazıcısının **konkret** tiple kaydedildiği testle gösterildi (C11, Tuzak 8).
 - [ ] Arşivlemenin aracın bayrağını **aynı işlemde** yazdığı ve aynı şasenin yeniden
@@ -855,7 +855,6 @@ kopyalanmış bir sabiti değil.
       PR'da **adıyla** yazıldı (**D37**). Öne çıkarma `0012c`'dedir (**D39**).
 - [ ] `Dealership.Contracts`'a eklenen okumanın **eklemeli** olduğu ve mevcut imzaları
       kırmadığı testle gösterildi (**D40**).
-      çağrısının tamamlandığı testle gösterildi; ikisi de PR'da adıyla yazıldı (D36, D37).
 
 ---
 
