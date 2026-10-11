@@ -231,6 +231,73 @@ test('0012a/AC-16: başarısız fotoğraf ayırt edilir ve tekrar dene sunar', a
   await kanit(page, page.getByTestId(/^vehicle-media-item-/).first(), '0012a-ac16.png')
 })
 
+/**
+ * 0012a/AC-17'nin TARAYICIDAKİ kapısı: düğmeye gerçekten tıklanıyor ve yanıt gerçek bir
+ * `Response` üzerinden gerçek `sendJson`'a gidiyor.
+ *
+ * <p><b>Dış bulgunun yazdırdığı test.</b> AC-17'nin tek testi bileşen testiydi ve orada
+ * `mediaAdmin` modülünün tamamı sahtelenmişti — `sendJson` hiç koşmuyordu. Uç
+ * `202 Accepted` + <b>boş gövde</b> dönüyor; istemci yalnız `204`'ü gövdesiz saydığı
+ * için `response.json()` patlıyor, çağıran onu `api.unavailable`'a çeviriyor ve
+ * BAŞARILI bir tekrar deneme personele "İşlem şu anda tamamlanamadı" olarak
+ * görünüyordu.</p>
+ *
+ * <p>Burada yalnız VERİ sahte: varlığın durumu ve ucun yanıtı. Yolun geri kalanı —
+ * düğme, `retryMediaAsset`, `sendJson`, `onRefresh`, yeniden okuma — gerçek. Sunucu
+ * tarafının aynı sözleşmeyi verdiği `Host.Tests/AracMedyasiZinciriTests`'te ölçülüyor.</p>
+ */
+test('0012a/AC-17: tekrar dene düğmesi tıklanınca varlık yeniden kuyruğa alınıyor', async ({
+  page,
+}) => {
+  const sase = benzersizSase('K12A17')
+  const varlik = '0192c000-0000-7000-8000-00000000f001'
+
+  await yoneticiOlarakGirAsync(page)
+  await aracKaydetAsync(page, sase)
+  const arac = await medyaEkraninaGitAsync(page, sase)
+
+  let durum = 'failed'
+  let tekrarCagrildi = false
+
+  await page.route(`**/api/admin/vehicles/${arac}/media`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(
+        medyaYaniti(arac, [
+          {
+            mediaAssetId: varlik,
+            status: durum,
+            failureReason: durum === 'failed' ? 'watermarkunavailable' : null,
+            altText: {},
+            derivatives: [],
+          },
+        ]),
+      ),
+    })
+  })
+
+  // Ucun GERÇEK sözleşmesi: 202 + boş gövde. Gövdeyi JSON diye okuyan bir istemci
+  // burada patlar — kusur tam olarak buydu.
+  await page.route(`**/api/admin/media/assets/${varlik}/retry`, async (route) => {
+    tekrarCagrildi = true
+    durum = 'processing'
+
+    await route.fulfill({ status: 202, body: '' })
+  })
+
+  await page.reload()
+  await page.getByTestId('vehicle-media-retry').click()
+
+  // Ekran sunucudan yeniden okuyup varlığı İŞLENİYOR hâlinde gösteriyor.
+  await expect(page.getByTestId('vehicle-media-processing')).toBeVisible()
+  expect(tekrarCagrildi).toBe(true)
+
+  // Ve hiçbir yerde hata basılmıyor: başarılı tekrar deneme başarılı görünüyor.
+  await expect(page.getByTestId('vehicle-media-failure')).toHaveCount(0)
+  await expect(page.locator('body')).not.toContainText('İşlem şu anda tamamlanamadı')
+})
+
 test('0012a/AC-28: `işleniyor` varlığın hâli; ekranın iskeletiyle karışmaz', async ({ page }) => {
   const sase = benzersizSase('K12A28')
 

@@ -52,9 +52,19 @@ internal sealed class UpdateVehicleMediaCommand(
                 await mediaAssets.FindManyAsync(mediaAssetIds, cancellationToken);
 
             HashSet<Guid> varOlan = [.. bulunan.Select(dto => dto.Id)];
-            Guid? eksik = mediaAssetIds.FirstOrDefault(kimlik => !varOlan.Contains(kimlik));
 
-            if (eksik is not null && eksik != Guid.Empty)
+            // `Cast<Guid?>` ŞART. `Guid` bir DEĞER tipi: `FirstOrDefault` eşleşme
+            // bulamadığında `null` değil `Guid.Empty` döner ve "eksik yok" ile "eksik
+            // olan Guid.Empty" aynı değere iner. Önceki hâl bunu `eksik != Guid.Empty`
+            // ile kapatmaya çalışıyordu ve gerçekten eksik olan sıfır kimliği de
+            // eliyordu: `"mediaAssetIds": ["00000000-…"]` gövdesi `204` alıyor ve var
+            // olmayan bir kimlik yazma modeline giriyordu (dış bulgu, ölçüldü).
+            Guid? eksik = mediaAssetIds
+                .Where(kimlik => !varOlan.Contains(kimlik))
+                .Cast<Guid?>()
+                .FirstOrDefault();
+
+            if (eksik is not null)
             {
                 return Result.Failure(Error.With(
                     Vehicle.MediaAssetNotFound, "mediaAssetId", eksik.Value.ToString()));

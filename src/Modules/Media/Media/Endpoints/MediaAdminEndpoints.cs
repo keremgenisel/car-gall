@@ -53,11 +53,6 @@ internal static class MediaAdminEndpoints
             .Produces<MediaAssetDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        // AC-14 — tekrar denemenin AÇIK komutu. Fiil rotada, çünkü bu gerçek bir durum
-        // geçişi (`docs/conventions.md` § 2'nin saydığı istisna).
-        //
-        // **Ekran `0012`'nin işi** (X8): bu spec komutu ve ucunu sunar. Uç olmadan komutu
-        // modül dışından hiçbir şey tetikleyemez ve AC-14 kâğıt üstünde kalırdı.
         // `0012a` AC-11…15 — `alt` metninin yazma ucu. Fiil rotada değil, HTTP
         // metodunda; `PUT` çünkü gövde kaynağın o alanını BÜTÜNÜYLE yerine koyuyor.
         assets.MapPut("/{id:guid}/alt-text", SetAltTextAsync)
@@ -66,6 +61,11 @@ internal static class MediaAdminEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status422UnprocessableEntity);
 
+        // `0011` AC-14 — tekrar denemenin AÇIK komutu. Fiil rotada, çünkü bu gerçek bir
+        // durum geçişi (`docs/conventions.md` § 2'nin saydığı istisna).
+        //
+        // Ekranı `0012a` bastı (`0011` X8); bu uç komutu dışarıya açan yerdir. Yanıt
+        // `202 Accepted` ve gövdesizdir: iş kabul edildi, bitmedi.
         assets.MapPost("/{id:guid}/retry", RetryAsync)
             .WithName("RetryMediaAsset")
             .Produces(StatusCodes.Status202Accepted)
@@ -155,10 +155,6 @@ internal static class MediaAdminEndpoints
     }
 
     /// <summary>
-    /// AC-14 — `başarısız` bir varlığı tekrar kuyruğa alır ve **aynı kimliği korur**.
-    /// <c>202</c>: iş kabul edildi, bitmedi — işleme turu onu bir sonraki tikte alacak.
-    /// </summary>
-    /// <summary>
     /// `0012a` D3/D16 — `alt` metnini bütünüyle yerine koyar. Eksik locale <b>boş</b>
     /// sayılır; bir dili boş bırakmak geçerli bir durumdur (R4).
     ///
@@ -179,6 +175,17 @@ internal static class MediaAdminEndpoints
         return sonuc.IsFailure ? MediaProblems.From(sonuc.Error) : TypedResults.NoContent();
     }
 
+    /// <summary>
+    /// `0011` AC-14 — `başarısız` bir varlığı tekrar kuyruğa alır ve <b>aynı kimliği
+    /// korur</b>. <c>202</c>: iş kabul edildi, bitmedi — işleme turu onu bir sonraki
+    /// tikte alacak.
+    ///
+    /// <para><b>Yanıt GÖVDESİZDİR</b> ve bu, istemcinin uyması gereken bir sözleşme:
+    /// `0012a`'nın dış gözden geçirmesi, yalnız <c>204</c>'ü gövdesiz sayan bir
+    /// istemcinin burada <c>SyntaxError</c> alıp <b>başarılı</b> bir tekrar denemeyi
+    /// genel hata olarak gösterdiğini ölçtü. Kapısı
+    /// <c>Host.Tests/AracMedyasiZinciriTests</c> ve <c>client.test.ts</c>.</para>
+    /// </summary>
     private static async Task<IResult> RetryAsync(
         Guid id,
         RetryMediaAssetCommand command,

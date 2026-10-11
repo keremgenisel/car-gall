@@ -45,6 +45,11 @@ public sealed class YapilandirmaTests
     [InlineData("watermark_missing")]
     [InlineData("invalid_upload_limits")]
     [InlineData("allowed_formats_missing")]
+    // 0012a — `alt` metni yalnız ETKİN bir locale için yazılabilir (AC-14) ve bu iki kod
+    // o kapının red yollarıdır. Dış bulgu yakaladı: kapı açılmıştı, theory'nin saydığı
+    // sekiz kodun dışında kalmıştı. Doc comment gerekçeyi yazıyordu — gerekçe test değil.
+    [InlineData("enabled_locales_missing")]
+    [InlineData("enabled_locale_invalid")]
     public void Reddedilir_EksikYapilandirma(string beklenenKod)
     {
         MediaSetup eksik = beklenenKod switch
@@ -56,13 +61,33 @@ public sealed class YapilandirmaTests
             "public_base_url_missing" => Tam() with { PublicBaseUrl = "/goreli/yol" },
             "watermark_missing" => Tam() with { WatermarkObjectKey = string.Empty },
             "invalid_upload_limits" => Tam() with { MaximumPixelCount = 0 },
-            _ => Tam() with { AllowedImageFormats = [] },
+            "allowed_formats_missing" => Tam() with { AllowedImageFormats = [] },
+            "enabled_locales_missing" => Tam() with { EnabledLocales = [] },
+            _ => Tam() with { EnabledLocales = ["tr", "TR-tr"] },
         };
 
         Result<MediaOptions> sonuc = MediaOptions.Create(eksik);
 
         Assert.True(sonuc.IsFailure);
         Assert.Equal($"media.{beklenenKod}", sonuc.Error.Code);
+    }
+
+    /// <summary>
+    /// Kapının KABUL tarafı: boşluklu bir kod kırpılıp kabul ediliyor.
+    ///
+    /// <para>Yalnız reddi ölçmek yetmez — her şeyi reddeden bir uygulama da o theory'de
+    /// yeşil kalırdı. Burada ayrıca çözülen kümenin NORMALLEŞTİĞİ görülüyor: `" ar "`
+    /// `"ar"` olarak giriyor, yani AC-14'ün karşılaştırması yapılandırmadaki boşluğa
+    /// takılmıyor.</para>
+    /// </summary>
+    [Fact]
+    public void Kirpilir_EtkinLocaleKodu()
+    {
+        Result<MediaOptions> sonuc = MediaOptions.Create(Tam() with { EnabledLocales = [" ar ", "tr"] });
+
+        Assert.True(sonuc.IsSuccess);
+        Assert.Contains("ar", sonuc.Value.EnabledLocales);
+        Assert.DoesNotContain(" ar ", sonuc.Value.EnabledLocales);
     }
 
     /// <summary>

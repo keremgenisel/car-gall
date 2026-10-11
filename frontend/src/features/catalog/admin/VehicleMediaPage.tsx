@@ -277,51 +277,58 @@ export function VehicleMediaPage({ vehicleId }: { readonly vehicleId: string }) 
           testId="vehicle-media-empty"
         />
       ) : (
-        <>
-          <ul className="vehicle-media__list">
-            {ogeler.map((item, index) => (
-              <MediaAssetCard
-                key={item.mediaAssetId}
-                item={item}
-                draft={draft}
-                index={index}
-                total={ogeler.length}
-                cover={item.mediaAssetId === cover}
-                altTextDirty={altTextChanged(draft, source.media, item.mediaAssetId)}
-                onMove={(delta) =>
-                  setDraft((value) =>
-                    value === null ? value : move(value, item.mediaAssetId, delta),
-                  )
-                }
-                onDetach={() =>
-                  setDraft((value) => (value === null ? value : detach(value, item.mediaAssetId)))
-                }
-                onAltTextChange={(code, value) =>
-                  setDraft((current) =>
-                    current === null
-                      ? current
-                      : withAltText(current, item.mediaAssetId, code, value),
-                  )
-                }
-                altTextRequest={() => altTextRequest(draft, item.mediaAssetId)}
-                onRefresh={reload}
-              />
-            ))}
-          </ul>
-
-          <div className="vehicle-media__actions">
-            <Button
-              loading={save.kind === 'saving'}
-              disabled={!dirty}
-              onClick={() => void saveOrder()}
-              data-testid="vehicle-media-save"
-            >
-              {save.kind === 'saving' ? t('vehicle.media.save.sending') : t('vehicle.media.save')}
-            </Button>
-            <p className="admin-form__hint">{t('vehicle.media.save.hint')}</p>
-          </div>
-        </>
+        <ul className="vehicle-media__list">
+          {ogeler.map((item, index) => (
+            <MediaAssetCard
+              key={item.mediaAssetId}
+              item={item}
+              draft={draft}
+              index={index}
+              total={ogeler.length}
+              cover={item.mediaAssetId === cover}
+              altTextDirty={altTextChanged(draft, source.media, item.mediaAssetId)}
+              onMove={(delta) =>
+                setDraft((value) =>
+                  value === null ? value : move(value, item.mediaAssetId, delta),
+                )
+              }
+              onDetach={() =>
+                setDraft((value) => (value === null ? value : detach(value, item.mediaAssetId)))
+              }
+              onAltTextChange={(code, value) =>
+                setDraft((current) =>
+                  current === null ? current : withAltText(current, item.mediaAssetId, code, value),
+                )
+              }
+              altTextRequest={() => altTextRequest(draft, item.mediaAssetId)}
+              onRefresh={reload}
+            />
+          ))}
+        </ul>
       )}
+
+      {/*
+        Kaydetme listenin DIŞINDA ve bu bir dış bulgunun bedeli. Düğme önce listeyle
+        aynı dalın içindeydi: personel son fotoğrafı çıkarınca liste boşalıyor, boş
+        durum basılıyor ve kaydetme yolu ekrandan KAYBOLUYORDU — taslak kirliyken.
+        "Yanlış fotoğrafı yükledim, kaldırayım" tek fotoğraflı bir araçta en sık
+        yapılacak iş ve panelden yapılamıyordu.
+
+        Boş liste geçerli bir yazmadır ve sunucu tarafı onu zaten kabul ediyor
+        (`UpdateVehicleMediaRequest`: "bütün fotoğrafları çıkar"); eksik olan yalnız
+        bu düğmeydi.
+      */}
+      <div className="vehicle-media__actions">
+        <Button
+          loading={save.kind === 'saving'}
+          disabled={!dirty}
+          onClick={() => void saveOrder()}
+          data-testid="vehicle-media-save"
+        >
+          {save.kind === 'saving' ? t('vehicle.media.save.sending') : t('vehicle.media.save')}
+        </Button>
+        <p className="admin-form__hint">{t('vehicle.media.save.hint')}</p>
+      </div>
     </div>
   )
 }

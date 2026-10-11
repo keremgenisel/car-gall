@@ -5,6 +5,7 @@ using System.Text.Json;
 using Amazon.S3;
 using Amazon.S3.Model;
 using CarGallery.Modules.Identity.Contracts;
+using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Contracts.Admin;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -237,6 +238,145 @@ public sealed class AracMedyasiZinciriTests : IAsyncLifetime
         Assert.Equal(
             "beyaz araç, önden",
             govde.GetProperty("altText").GetProperty("tr").GetString());
+    }
+
+    /// <summary>
+    /// AC-17'nin **HTTP** kapısı: tekrar deneme ucu gerçekten çağrılıyor ve varlık
+    /// <b>aynı kimlikle</b> yeniden kuyruğa giriyor.
+    ///
+    /// <para><b>Bu test bir dış bulgunun bedeliydi.</b> AC-17'nin tek testi bileşen
+    /// testiydi ve orada `mediaAdmin` modülünün tamamı sahtelenmişti: uç hiçbir yerde
+    /// HTTP üzerinden çağrılmamıştı. Uç `202 Accepted` + <b>boş gövde</b> dönüyor;
+    /// istemci yalnız `204`'ü gövdesiz sayıyordu ve <b>başarılı</b> tekrar deneme
+    /// personele genel hata olarak görünüyordu. İstemci tarafı `client.test.ts`'te
+    /// kapandı; burası sunucu tarafının aynı sözleşmeyi gerçekten verdiğini ölçüyor —
+    /// <c>202</c> ve gövde uzunluğu <b>sıfır</b>.</para>
+    ///
+    /// <para><b>Varlık gerçekten başarısız ediliyor</b>, durumu elle yazılmıyor:
+    /// filigran nesnesi depodan siliniyor, hat `media.watermark_unavailable` ile
+    /// düşüyor (**M1**), filigran geri konuyor ve tekrar deneme varlığı aynı kimlikle
+    /// `hazır`a taşıyor. Durumu SQL ile yazan bir test, işleme hattının tekrar denenen
+    /// varlığı eline aldığını hiç ölçmezdi.</para>
+    /// </summary>
+    [Fact(DisplayName = "0012a/AC-17: Personel tekrar dene eylemini çağırır ve varlık **aynı kimlikle** yeniden kuyruğa alınır")]
+    public async Task Alinir_Varlik_AyniKimlikleYenidenKuyruga()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+
+        using AmazonS3Client s3 = DepoIstemcisi();
+
+        // 1 — filigranı KALDIR: işleme bu yüzden düşecek (0011 AC-23: filigransız türev
+        // üretilmez).
+        await s3.DeleteObjectAsync(new DeleteObjectRequest
+        {
+            BucketName = Bucket,
+            Key = WatermarkKey,
+        });
+
+        Guid varlikId = await YukleAsync(client);
+
+        MediaProcessingStatus? basarisiz =
+            await DurumBekleAsync(client, varlikId, MediaProcessingStatus.Failed);
+
+        Assert.Equal(MediaProcessingStatus.Failed, basarisiz);
+
+        // 2 — filigranı GERİ KOY, sonra tekrar dene.
+        using (MemoryStream filigran = new(FiligranPng(), writable: false))
+        {
+            await s3.PutObjectAsync(new PutObjectRequest
+            {
+                BucketName = Bucket,
+                Key = WatermarkKey,
+                InputStream = filigran,
+                ContentType = "image/png",
+            });
+        }
+
+        HttpResponseMessage tekrar = await client.PostAsync(
+            new Uri($"{AdminSurface.RoutePrefix}/media/assets/{varlikId}/retry", UriKind.Relative),
+            content: null);
+
+        // Ucun sözleşmesi: iş KABUL EDİLDİ, bitmedi — ve gövde BOŞ.
+        Assert.Equal(HttpStatusCode.Accepted, tekrar.StatusCode);
+        Assert.Equal(string.Empty, await tekrar.Content.ReadAsStringAsync());
+
+        // 3 — AYNI kimlik: yeni bir varlık doğmuyor, eldeki yeniden kuyruğa giriyor.
+        MediaProcessingStatus? sonuc =
+            await DurumBekleAsync(client, varlikId, MediaProcessingStatus.Ready);
+
+        Assert.Equal(MediaProcessingStatus.Ready, sonuc);
+    }
+
+    /// <summary>
+    /// AC-18'in HTTP tarafı: tekrar deneme ÇAĞRILMADAN hiçbir varlık `başarısız`dan
+    /// çıkmaz. `başarısız` olmayan bir varlıkta uç `409` ve kararlı bir kodla reddediyor;
+    /// yani "kendiliğinden geçiş" diye bir yol yok.
+    /// </summary>
+    [Fact(DisplayName = "0012a/AC-18: Tekrar deneme otomatik tetiklenmez; eylem çağrılmadan durum kendiliğinden değişmez")]
+    public async Task Degismez_Durum_EylemCagrilmadan()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+
+        Guid varlikId = await YukleAsync(client);
+
+        // Varlık başarısız DEĞİL; tekrar deneme onu kabul etmiyor.
+        HttpResponseMessage yanit = await client.PostAsync(
+            new Uri($"{AdminSurface.RoutePrefix}/media/assets/{varlikId}/retry", UriKind.Relative),
+            content: null);
+
+        Assert.Equal(HttpStatusCode.Conflict, yanit.StatusCode);
+
+        JsonElement govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync()).RootElement;
+
+        Assert.Equal("media.not_retryable", govde.GetProperty("errorCode").GetString());
+        Assert.False(govde.TryGetProperty("title", out _));
+    }
+
+    private AmazonS3Client DepoIstemcisi() => new("test", "test", new AmazonS3Config
+    {
+        ServiceURL = depo.GetConnectionString(),
+        ForcePathStyle = true,
+        AuthenticationRegion = "us-east-1",
+    });
+
+    /// <summary>
+    /// Varlık istenen duruma gelene kadar bekler. İşleme hattı kendi turlarıyla çalışıyor;
+    /// sabit bir bekleme bu testi makinenin hızına göre kırılgan yapardı (AP-03).
+    ///
+    /// <para><b>Bu ucun `status` alanı bir SAYI</b> (`MediaAssetDto.Status` bir enum ve
+    /// varsayılan biçimde sıra değeri olarak yazılıyor); aracın medya yüzeyi ise
+    /// `VehicleMediaQueries` içinde onu küçük harfli KODA çeviriyor. Panel yalnız
+    /// ikincisini okuyor, yani kullanıcıya dokunan bir tutarsızlık yok — ama test
+    /// bunu bilmek zorunda. İlk hâlim dizge okudu ve
+    /// <c>"target element has type 'Number'"</c> ile düştü.</para>
+    /// </summary>
+    private static async Task<MediaProcessingStatus?> DurumBekleAsync(
+        HttpClient client,
+        Guid varlikId,
+        MediaProcessingStatus beklenen)
+    {
+        MediaProcessingStatus? son = null;
+
+        for (int deneme = 0; deneme < 120; deneme++)
+        {
+            HttpResponseMessage yanit = await client.GetAsync(new Uri(
+                $"{AdminSurface.RoutePrefix}/media/assets/{varlikId}", UriKind.Relative));
+
+            if (yanit.StatusCode == HttpStatusCode.OK)
+            {
+                son = (MediaProcessingStatus)JsonDocument.Parse(await yanit.Content.ReadAsStringAsync())
+                    .RootElement.GetProperty("status").GetInt32();
+
+                if (son == beklenen)
+                {
+                    return son;
+                }
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+        }
+
+        return son;
     }
 
     private async Task<Guid> AracOlusturAsync(HttpClient client, string vin)

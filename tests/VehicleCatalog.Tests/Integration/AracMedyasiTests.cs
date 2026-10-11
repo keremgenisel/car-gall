@@ -113,6 +113,41 @@ public sealed class AracMedyasiTests(ShowcaseDatabase database)
         Assert.Empty(await ListeAsync(aracId));
     }
 
+    /// <summary>
+    /// AC-9'un sınır değeri: <b>tamamı sıfır olan kimlik</b>. Dış bulgu bunu yakaladı —
+    /// var olmayan kimlik testi `Guid.CreateVersion7()` ile üretiliyordu ve `Guid.Empty`
+    /// hiçbir testte yoktu.
+    ///
+    /// <para>Kusur `FirstOrDefault`'un değer tipindeki davranışıydı: eşleşme yoksa `null`
+    /// değil `Guid.Empty` döner, yani "eksik yok" ile "eksik olan sıfır kimlik" aynı
+    /// değere iner. Eski kodun `eksik != Guid.Empty` koruması gerçekten eksik olan sıfır
+    /// kimliği de eliyordu ve uç `204` dönüyordu.</para>
+    ///
+    /// <para><b>İki yönlü ölçülüyor:</b> yalnız sıfır kimlik ve karışık liste. Yalnız
+    /// birini sormak, `Count > 0` dalının atlandığı bir uygulamada da yeşil kalırdı.</para>
+    /// </summary>
+    [Fact(DisplayName = "0012a/AC-9: Var olmayan bir varlık bağlanamaz; istek çevrilmiş metin değil `errorCode` döner")]
+    public async Task Baglanamaz_TamamiSifirOlanKimlik()
+    {
+        FakeMediaAssetQueries medya = new();
+        Guid gercek = medya.Ekle(MediaProcessingStatus.Ready);
+        Guid aracId = await AracEkleAsync();
+
+        Result yalniz = await YazAsync(aracId, [Guid.Empty], medya);
+
+        Assert.True(yalniz.IsFailure);
+        Assert.Equal(Vehicle.MediaAssetNotFound, yalniz.Error.Code);
+        Assert.Equal(Guid.Empty.ToString(), yalniz.Error.Parameters!["mediaAssetId"]);
+
+        Result karisik = await YazAsync(aracId, [gercek, Guid.Empty], medya);
+
+        Assert.True(karisik.IsFailure);
+        Assert.Equal(Vehicle.MediaAssetNotFound, karisik.Error.Code);
+
+        // Reddedilen istek listeyi BOZMAMALI: sıfır kimlik veritabanına hiç girmiyor.
+        Assert.Empty(await ListeAsync(aracId));
+    }
+
     [Fact(DisplayName = "0012a/AC-8: Aynı varlık bir araca iki kez bağlanamaz")]
     public async Task Baglanamaz_AyniVarlik_IkiKez()
     {

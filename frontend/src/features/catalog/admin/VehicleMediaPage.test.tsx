@@ -268,6 +268,37 @@ describe('0012a/AC-6: Personel bağlı bir fotoğrafı çıkarabilir; aracın li
   })
 })
 
+/**
+ * Sınır değer: liste → **0**. Dış bulgu bunu yakaladı — AC-6'nın üç testi de hep bir öğe
+ * bırakıyordu (e2e ikiden birini, bileşen testi ikiden birini, domain testi üçten birini)
+ * ve kaydetme düğmesinin boş listede KAYBOLDUĞU hiçbir yerde ölçülmüyordu.
+ */
+describe('0012a/AC-6: Personel bağlı bir fotoğrafı çıkarabilir; aracın listesi onu artık içermez', () => {
+  it('TEK fotoğraf çıkarılabiliyor: boş durumda bile kaydetme yolu duruyor', async () => {
+    vi.mocked(fetchVehicleMedia).mockResolvedValue(medya([oge(BIR)]))
+
+    ekran()
+
+    const kutu = await screen.findByTestId(`vehicle-media-item-${BIR}`)
+
+    fireEvent.click(kutu.querySelector('[data-testid="vehicle-media-detach"]') as HTMLElement)
+
+    // Boş durum basılıyor AMA kaydetme ekrandan kaybolmuyor.
+    expect(screen.getByTestId('vehicle-media-empty')).toBeTruthy()
+
+    const kaydet = screen.getByTestId('vehicle-media-save')
+
+    expect(kaydet).toHaveProperty('disabled', false)
+
+    fireEvent.click(kaydet)
+
+    await waitFor(() => expect(vi.mocked(updateVehicleMedia)).toHaveBeenCalled())
+
+    // Boş liste GEÇERLİ bir yazma: "bütün fotoğrafları çıkar" ve varlıkları silmiyor.
+    expect(vi.mocked(updateVehicleMedia).mock.calls[0][1]).toEqual([])
+  })
+})
+
 describe('0012a/AC-16: İşlemesi başarısız olmuş fotoğraf panelde ayırt edilir', () => {
   it('başarısız varlık durumunu, NEDENİNİ ve tekrar dene eylemini gösterir', async () => {
     vi.mocked(fetchVehicleMedia).mockResolvedValue(

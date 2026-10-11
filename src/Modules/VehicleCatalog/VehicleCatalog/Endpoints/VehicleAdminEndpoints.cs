@@ -132,11 +132,6 @@ internal static class VehicleAdminEndpoints
     }
 
     /// <summary>
-    /// R2/C25 — düzenleme TAM DEĞİŞTİRMEDİR. Gövde çekirdek alanların tamamını taşır ve
-    /// eksik gelen alan "dokunulmadı" değil GEÇERSİZ sayılır (AC-5): kısmi semantik
-    /// "boş geldi = silindi mi, dokunulmadı mı" belirsizliğini üretirdi.
-    /// </summary>
-    /// <summary>
     /// `0012a`/AC-24 — aracın sıralı medyası, `Media`'nın durumlarıyla birleştirilmiş
     /// hâlde. Birleştirme SUNUCUDA (D10): panel tek çağrı yapıyor.
     /// </summary>
@@ -173,6 +168,11 @@ internal static class VehicleAdminEndpoints
         return sonuc.IsFailure ? CatalogProblems.From(sonuc.Error) : TypedResults.NoContent();
     }
 
+    /// <summary>
+    /// R2/C25 — düzenleme TAM DEĞİŞTİRMEDİR. Gövde çekirdek alanların tamamını taşır ve
+    /// eksik gelen alan "dokunulmadı" değil GEÇERSİZ sayılır (AC-5): kısmi semantik
+    /// "boş geldi = silindi mi, dokunulmadı mı" belirsizliğini üretirdi.
+    /// </summary>
     private static async Task<IResult> UpdateAsync(
         Guid vehicleId,
         UpdateVehicleBody body,
@@ -225,15 +225,15 @@ internal sealed record CreateVehicleBody(
 internal sealed record CreateVehicleResponse(Guid VehicleId);
 
 /// <summary>
-/// Düzenleme gövdesi. Şase TAŞINIR ama değiştirilemez (**D24**): gövdede olmasaydı
-/// "değiştirme girişimi" ifade edilemez ve AC-8 ölçülemez olurdu.
-/// </summary>
-/// <summary>
 /// `0012a` D12 — sıralı kimlik listesinin tamamı. Gövde eksikse boş liste okunur:
 /// "bütün fotoğrafları çıkar" geçerli bir istek (R3).
 /// </summary>
 internal sealed record UpdateVehicleMediaBody(IReadOnlyList<Guid>? MediaAssetIds);
 
+/// <summary>
+/// Düzenleme gövdesi. Şase TAŞINIR ama değiştirilemez (**D24**): gövdede olmasaydı
+/// "değiştirme girişimi" ifade edilemez ve AC-8 ölçülemez olurdu.
+/// </summary>
 internal sealed record UpdateVehicleBody(
     Guid BranchId,
     Guid VehicleModelId,
