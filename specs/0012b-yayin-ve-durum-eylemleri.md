@@ -2,26 +2,27 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
-| **Sahip** | — |
+| **Durum** | Onaylandı |
+| **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `VehicleCatalog` (komut yüzeyi, outbox, vitrin yansıtması) · `frontend/` yönetim paneli |
+| **Modül(ler)** | `VehicleCatalog` (komut yüzeyi, outbox, vitrin yansıtması) · `Dealership` (**eklemeli** bir okuma — **D40**) · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | **`0012a` ÖNKOŞUL — tamamlandı** (2026-10-11, `8fc862c`; A2'nin medya koşulunu ölçülebilir kıldı) · `0010a` + `0010b` · `0011` · `0007` (invariant koruması) — hepsi tamamlandı |
 | **Dayanak** | ADR 0003 Ek 1, sıra #5'in **ikinci dilimi** (→ `0012a` **D1**) |
-| **Kararlar** | **D2–D38**. D2–D21 `0012`'nin 2026-10-11 CLARIFY turundan; **D22–D38** `0012b`'nin kendi CLARIFY turunda (aynı gün, `18e4adf` üzerinde) **ölçülerek** eklendi. **Açık soru yok.** |
+| **Kararlar** | **D2–D42**. D2–D21 `0012`'nin CLARIFY turundan; **D22–D38** `0012b`'nin kendi CLARIFY turundan (`18e4adf` üzerinde); **D39–D42** kriter turunda **ölçülerek** eklendi. **Açık soru yok.** |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri **hâlâ yazılmadı** — ama artık onları
-> bekleten bir soru yok: `0012`'nin beş sorusundan dördü ilk CLARIFY turunda kapandı
-> (§ Kapanan sorular), beşincisi (**rol ayrımı**) bu turda kapandı (**D22**).
+> **R/C/AC bu PR'da `main`'e giriyor ve orada donuyor** (ADR `0008` / K2 ve K3'ün donma
+> anı cümlesi — **D38**). Bu commit'ten sonra Requirements, Constraints veya Acceptance
+> Criteria'da yapılan her değişiklik **sayılan bir revizyondur**.
 >
-> **İkinci CLARIFY turu, 2026-10-11.** `0012a` bittikten sonra spec bugünkü `main`
-> (`18e4adf`) üzerinde yeniden okundu; on yedi boşluk ölçülerek bulundu ve hepsi karara
-> bağlandı (**D22–D38**). Dördü spec'i bugünkü hâliyle **yanlış** kılıyordu: R2 dört koşul
-> sayıyordu ama biri hiç reddedilemiyor (**D23**), yayın A2 dışında iki nedenle daha
-> reddedilebiliyor (**D25**), A8'in yazma tarafı `Rezerve` ilanda çıkışı olmayan bir hâl
-> üretiyordu (**D32**) ve C12 bugün çalışan **üç** işleyiciyle çelişiyordu (**D34**).
-> Kriterler bir sonraki turda yazılır (`0012a`'nın deseni: kararlar bu PR'da, kriterler
-> kendi PR'ında — ADR `0008` / K2).
+> **İkinci CLARIFY turu** (`3c72936`) on yedi kararı (**D22–D38**) bugünkü `main`
+> (`18e4adf`) üzerinde ölçerek verdi ve son açık soruyu kapattı. **Bu tur** onun üzerine
+> dört karar daha ekliyor (**D39–D42**) ve **elli sekiz kriteri** yazıyor.
+>
+> **İş ikiye bölündü** (**D39**): liste üzerinde çalışan **toplu eylem** ve **öne çıkarma**
+> `0012c`'ye taşındı. Bu dosya **bir ilan üzerinde** çalışan eylemleri kurar.
+>
+> **R2 bir revizyon aldı** (**D42**): A2'nin fiyat koşulu da — çekirdek alan koşulu gibi
+> (**D23**) — yayın anında **temsil edilemez**. Ölçüm kararın içinde.
 
 ---
 
@@ -48,13 +49,13 @@ değil galerinin kendi kararından geliyor.**
 
 - **R1.** Oturum açmış personel bir taslak ilanı **yayına alabilir**. Eylemler **rol ayrımı
   yapmaz**; yetki tek bir şeydir: oturum. → **D22**, `0006` R7
-- **R2.** Bir ilan yayına alınırken **A2**'nin yayın anında doğrulanabilen **üç** koşulu
-  sağlanmış olmalıdır: fiyat belirlenmiş **veya** "fiyat sorunuz" · en az bir medya varlığı
-  **hazır** · aktif alan ayarlarında zorunlu işaretli opsiyonel alanlar dolu. **A2'nin
-  çekirdek alan koşulu bu listede yoktur** — o koşul kayıt anında zorunludur ve çekirdek
-  alanı boş bir araç kaydı kurulamaz (→ **D23**). Koşul sağlanmıyorsa yayına alma reddedilir
-  ve **sağlanmayan koşulların HEPSİ birlikte** bildirilir — ilk eksik değil. Zorunlu
-  opsiyonel alan reddi **hangi alanların** eksik olduğunu da taşır. → **D2**, **D23**, **D24**
+- **R2.** Bir ilan yayına alınırken **A2**'nin yayın anında doğrulanabilen **iki** koşulu
+  sağlanmış olmalıdır: en az bir medya varlığı **hazır** · aktif alan ayarlarında zorunlu
+  işaretli opsiyonel alanlar dolu. **A2'nin çekirdek alan koşulu da fiyat koşulu da bu
+  listede yoktur** — ikisi de kayıt anında zorunludur ve eksik hâlleri modelde **temsil
+  edilemez** (→ **D23**, **D42**). Koşul sağlanmıyorsa yayına alma reddedilir ve
+  **sağlanmayan koşulların HEPSİ birlikte** bildirilir — ilk eksik değil. Zorunlu opsiyonel
+  alan reddi **hangi alanların** eksik olduğunu da taşır. → **D2**, **D23**, **D24**, **D42**
 - **R3.** Yayın durumu geçişleri yalnızca **A3**'te yazılı olanlardır; başka geçiş yoktur.
 - **R4.** `Satıldı` **terminaldir**: araç yeniden yayına alınamaz. → **A4**
 - **R5.** Personel bir ilanı **rezerve** edebilir; rezerve ilan vitrinde rozetiyle görünmeye
@@ -66,25 +67,19 @@ değil galerinin kendi kararından geliyor.**
   **arşivleyebilir**. Taslak bir ilan da arşivlenebilir. → **A3**, **D10**
 - **R8.** Arşivleme, aracın **arşiv bayrağını aynı işlemde** yazar; arşivlemeden sonra aynı
   şase yeniden kaydedilebilir. → **A5**, ADR 0006, **D9**
-- **R9.** Personel **birden çok ilanı seçip** aynı eylemi hepsine uygulayabilir. Toplu
-  uygulanabilen eylemler: yayına al · yayından kaldır · satıldı işaretle · arşivle · öne
-  çıkar · **öne çıkarmayı kaldır**. Rezerve etme ve rezervasyonu kaldırma **tek ilan**
-  üzerinde çalışır. → **D18**, **D36**
-- **R10.** Toplu eylemde bazı ilanlar için eylem geçersizse, **geçerli olanlar uygulanır** ve
-  uygulanamayanlar **tek tek gerekçesiyle** bildirilir; işlem bir bütün olarak geri alınmaz.
-  Bildirilen gerekçe kayda **ne olduğunu** da söyler: sonuç satırı ilanın **güncel durumunu**
-  taşır. Bulunamayan ilan isteği değil **o satırı** düşürür. Seçim boş olamaz, yinelenen
-  kimlikler teklenir ve seçim sayısı panelin sayfa üst sınırını aşamaz — aşan seçim
-  **kırpılmaz, reddedilir**. → **D3**, **D4**, **D5**, **D6**, **D27**, **D28**, **D29**
+- **R9.** → **`0012c`.** Toplu eylem bu dilimde **yoktur** (**D39**). Numara serbest
+  bırakılmadı: **D18** ve **D36** ona atıf yapıyor ve hedefsiz bir atıf, kararın kaybolması
+  demekti.
+- **R10.** → **`0012c`.** Kısmi başarı ve seçim sınırları toplu eylemle birlikte taşındı
+  (**D3**–**D6**, **D27**–**D29** orada tüketiliyor).
 - **R11.** Her durum geçişi **duyurulur** — personelin eylemiyle olanı da, sistemin kendi
   tepkisiyle olanı da (**A8**). Duyuru aracın ve ilanın kimliğini ve ilanın **adresini**
   taşır; **yeni durumu ayrı bir alan olarak taşımaz**, durumu olayın **tipi** söyler.
   Üretilen olaylar **sekizdir** ve adları `docs/architecture.md` § 1'deki adlarla birebir
   aynıdır. → **D11**, **D30**, **D33**
-- **R12.** Personel bir ilanı **öne çıkarabilir** ve öne çıkarmayı kaldırabilir; öne
-  çıkarılan ilan vitrin sıralamasının başında görünür. Eylem **arşiv dışındaki her ilanda**
-  çalışır; taslakta işaretlemenin vitrindeki etkisi yayınla birlikte görünür ve panel bunu
-  söyler. → **D16**, **D36**
+- **R12.** → **`0012c`.** Öne çıkarma bir **sıralama** işidir ve toplu eylemle aynı ekranda
+  yaşıyor (**D39**). `Listing.ChangeShowcaseSortWeight` bu dilimde de çağıransız kalıyor;
+  geliştirme seed'inin hizalanması da (**D36**) `0012c`'nin işi.
 - **R13.** Şube kapatıldığında o şubedeki araçlar **yayından kalkar** ve "lokasyon ataması
   bekliyor" hâline geçer; bu araçlar panel listesinde **ayırt edilir** ve şubesi atanmadan
   yayına alınamaz. Yayından kalkma **`Rezerve` ilanları da kapsar**; `Satıldı` ve `Arşiv`
@@ -95,18 +90,22 @@ değil galerinin kendi kararından geliyor.**
   denmez. → `0007`, **D8**
 - **R15.** Bir ilanın vitrindeki görünürlüğü, onu değiştiren her yazma yolunda **aynı
   işlemde** güncellenir — yayına alma, her durum geçişi, öne çıkarma ve araç düzenlemesi
-  dâhil. → **D12**
+  dâhil — **ve aracın medya sırası** (**D41**): sıra değişince vitrindeki kapak değişir.
+  → **D12**, **D41**
 - **R16.** Bir ilanın vitrindeki **adresi ilk yayına alma anında** üretilir ve bir daha
   değişmez; yayından kaldırılıp yeniden yayınlanan ilan **aynı adrese** döner. → **D13**
 - **R17.** Arşivlenen araç panel listesinin **varsayılan** görünümünde yer almaz; açık bir
   filtreyle görülebilir. Aynı koşul listenin **toplam sayısına ve özet sayaçlarına** da
   uygulanır — liste ile sayaç aynı evreni sayar. → **D19**, **D35**
 - **R18.** Durum geçişi aracın **son güncellenme** zamanını da ilerletir; panel listesinin
-  "son güncellenen" sıralaması geçişi görür. Aynı şey öne çıkarma için ve **araç
-  düzenlemesi** için de geçerlidir: personelin her yazması o sıralamada görünür.
-  → **D20**, **D36**, **D37**
-- **R19.** Panel listesi ve eylem ekranları **yükleniyor**, **boş**, **başarılı**, **kısmi
-  başarı** ve **hata** durumlarını ele alır. → `docs/frontend.md` § 3, **D7**
+  "son güncellenen" sıralaması geçişi görür. Aynı şey **araç düzenlemesi** için de
+  geçerlidir: personelin her yazması o sıralamada görünür. (Öne çıkarmanın aynı borcu
+  `0012c`'de — **D36**.) → **D20**, **D37**
+- **R19.** Panel listesi ve eylem ekranları **yükleniyor**, **boş**, **başarılı** ve
+  **hata** durumlarını ele alır. **Kısmi başarı** yalnız çok kayıtlı bir eylemin ekranında
+  doğar ve `0012c`'ye taşındı (**D39**); `docs/frontend.md` § 3'ün dördüncü satırı yerinde
+  kalıyor — o kural *her* toplu eylem ekranını bağlıyor, yalnız onu getireni değil.
+  → `docs/frontend.md` § 3
 - **R20.** Panel personelin tercih ettiği dilde çalışır; Arapça'da RTL.
 - **R21.** Yayına alma **A2 dışında iki nedenle** daha reddedilebilir: aracın lokasyon
   ataması bekliyor olması (**R13**) ve ilanın **adresinin üretilememesi**. İkisi de kod
@@ -136,9 +135,10 @@ değil galerinin kendi kararından geliyor.**
 - **C7.** Mevcut agregat davranışı yeniden yazılmaz: `Listing.Publish`, `Reserve`,
   `ReturnToShowcase`, `MarkSold`, `Unpublish`, `Archive`, `ChangeShowcaseSortWeight` ve
   `Vehicle.MarkArchived`, `MarkAwaitingBranchAssignment`, `EnsurePublishable` bugün vardır.
-  Bu spec onların üzerine komut katmanı kurar. **Adıyla yazılı iki istisnası vardır:**
-  (a) araç düzenleme komutu vitrin yansıtmasını çağırır (**D12**) ve iki olay yayar
-  (**D11**); (b) `Listing.Archive` taslaktan da geçer (**D10**).
+  Bu spec onların üzerine komut katmanı kurar. **Adıyla yazılı ÜÇ istisnası vardır:**
+  (a) araç düzenleme komutu vitrin yansıtmasını çağırır (**D12**), iki olay yayar (**D11**)
+  ve eksik `Touch` çağrısını kazanır (**D37**); (b) `Listing.Archive` taslaktan da geçer
+  (**D10**); (c) `0012a`'nın medya komutu da yansıtmayı çağırır (**D41**).
 - **C8.** Sayı içeren cümleler ICU ile kurulur ("3 ilan yayına alındı"). → Yasak Listesi 31
 - **C9.** Yeni migration yalnızca `vehicle_catalog` şemasına dokunur. → Yasak Listesi 3
 - **C10.** Her kabul kriteri en az bir testle karşılanır. → `AGENTS.md` Altın Kural 5
@@ -183,6 +183,11 @@ değil galerinin kendi kararından geliyor.**
 - **X9.** **İyimser eşzamanlılık / kayıp güncelleme koruması** — *neden:* `0010b` X20
   geçerliliğini koruyor; R14 **durum geçişi** yarışını kapsar, iki personelin aynı aracı
   düzenlemesini değil.
+- **X10.** **Toplu eylem** (seçim, kısmi başarı, seçim sınırları) — *neden:* `0012c`'nin
+  konusu (**D39**). Bu dilim o eylemin üzerine kurulacağı **tekil** komutları ve duyuru
+  altyapısını kurar.
+- **X11.** **Öne çıkarma** (işaretleme, kaldırma, seed'in hizalanması) — *neden:* `0012c`;
+  sıralama işi toplu eylemle aynı ekranda yaşıyor (**D39**, **D36**).
 
 ---
 
@@ -612,6 +617,58 @@ Takım Yöneticisi, `0012a` kapandıktan sonra, hepsi `18e4adf` üzerinde **öl�
   (kart arşivde ve sayısı gerekçesiyle yazılı — K3'ün kendi "kapanmış kartlar düzeltilmez"
   kuralı).
 
+#### Kriter turu — D39–D42 (2026-10-11)
+
+Takım Yöneticisi, aynı gün, ikinci CLARIFY turunun (`3c72936`) **üzerine**. Dördü de
+ölçülerek çıktı.
+
+- **D39 — İş ikiye bölündü: `0012b` (bir ilan) + `0012c` (liste).** *Ölçüldü:* ikinci
+  CLARIFY turunun kapsamı ~58–62 kriter üretiyordu; `0012a` 33, `0011` 47 kriterdi.
+  *Gerekçe:* Intent'in başarı ölçütü — *"vitrindeki araçlar artık seed'den değil galerinin
+  kendi kararından geliyor"* — **tekil eylemlerle** karşılanıyor; toplu eylem, çalışan bir
+  yayın akışının üzerine gelen liste düzeyinde bir hızlandırmadır. Bölme sınırı Intent'in
+  kendi iki cümlesinde yazılıydı: *"bir araç üzerinde değil liste üzerinde"*. *Bedel:*
+  `0012` üçüncü kez bölündü ve toplu eylem bir dilim daha gecikti; **D3**–**D7**, **D16**,
+  **D18**, **D27**–**D29**, **D36** burada verildi ama `0012c`'de tüketilecek — karar ile
+  tüketim arasındaki mesafe iki kartı birden okumayı zorunlu kılıyor.
+  **Sınır bir madde kaydırıldı:** `R17`/**D19**/**D35** (arşiv varsayılan listede, toplam
+  sayıda ve özet sayaçlarında yok) `0012b`'de **kaldı**. *Gerekçe:* arşiv **filtresi** arşiv
+  **eyleminin** sonucudur, liste eyleminin değil; eylemi buraya koyup sonucunu öteki karta
+  bırakmak, arşivlenen aracın listede durduğu bir ara hâl üretirdi. *Bedel:* `0012b` üç
+  kriter daha taşıyor.
+- **D40 — `Dealership.Contracts` EKLEMELİ bir okuma kazanır:** şubenin **locale → ad**
+  haritası. *Ölçüldü:* `IBranchQueries.FindAsync(branchId, locale)` tek bir `Name` döndürüyor
+  (`Dealership.Contracts/Events/BranchEvents.cs:47`); vitrin okuma modelinin `BranchNames`
+  kolonu ise locale → ad **sözlüğü** ve `BranchDetailsChangedHandler` ona olayın **bütün
+  dillerini** yazıyor (`BranchEventHandlers.cs:28-33`). Yayın anında tek dille yazarsak satır
+  tek anahtarlı kalır ve araç, bir sonraki `BranchDetailsChanged`'e kadar diğer iki dilde
+  **şubesiz** görünür. *Gerekçe:* `0012a` D5/D10 aynı şeyi `Media.Contracts`'a yaptı; emsal
+  kurulu. *Bedel:* spec'in `Modül(ler)` satırı `Dealership`'i kapsamak zorunda ve kapanmış
+  bir spec'in sözleşmesine dokunuluyor. *Elenen alternatif:* etkin dil sayısı kadar
+  `FindAsync` çağrısı — aynı veriyi üç kez okur.
+- **D41 — `0012a`'nın medya komutu da yansıtmayı çağırır.** *Ölçüldü:* kapak
+  `Vehicle.CoverAssetId` = sıralı listenin **ilk** elemanı (`Vehicle.cs:132`) ve yansıtma onu
+  yazıyor; `UpdateVehicleMediaCommand` o listeyi değiştiriyor. R15'in saydığı yazma yolları
+  arasında yoktu. *Gerekçe:* R15 *"onu değiştiren her yazma yolunda"* diyor; medya sırasını
+  değiştirmek vitrindeki kapağı değiştirir. Dışarıda bırakmak, fotoğrafı yeniden sıralayan
+  personelin vitrinde **eski kapağı** görmesi demek — sessiz ve bildirilmeyen bir
+  tutarsızlık. *Bedel:* yeni kapanmış bir spec'in komutuna dokunuluyor ve o komut iki
+  modülden senkron okuma yapmaya başlıyor.
+- **D42 — A2'nin FİYAT koşulu da yayın anında TEMSİL EDİLEMEZ; **D23**'ün ölçümü ona da
+  uygulanır.** *Ölçüldü:* `ListingPrice`'ın tek kurucusu `private` ve yalnız iki üretici var
+  — `OnRequest()` ve `Of(money)` (`ListingPrice.cs:22-24`). Kalıcılık yolu da aynı kapalı
+  küme: dönüştürücü `Amount is null` hâlini `onrequest` olarak **yazıyor** ve geri okurken
+  yalnız o iki değeri **üretiyor** (`ValueConverters.cs:90-110`). Yazma yolu ayrıca
+  `BuildPrice` ile dayatılıyor (`VehicleWriteRules.cs:131-150`). Yani "fiyatı belirlenmemiş
+  ve fiyat sorunuz da olmayan araç" **kurulamıyor, kaydedilemiyor ve okunamıyor**.
+  *Gerekçe:* D23 çekirdek alan koşulu için *"o kod yazılmaz"* dedi; aynı ölçüm fiyat için de
+  geçerli ve iki koşulu farklı sayan bir R2 yanlış olurdu. Temsil edilemeyen bir koşulu
+  yayın anında denetlemek **vakum bir kontrol** üretir — hiçbir zaman kırmızıya dönmeyen bir
+  dal, olmayan bir kapıdır. *Bedel, açıkça:* **bu bir R2 revizyonudur** ve SCORECARD'da
+  sayılır; R2'nin metni A2'den dar görünüyor ve farkı kapatan şey bir **tripwire** testidir
+  — `ListingPrice` "fiyatsız" bir hâl üretebilir hâle gelirse test kırmızıya döner ve kapı o
+  gün yazılır.
+
 ### Kapanan sorular
 
 `0012`'nin beş açık sorusundan dördü ilk turda, beşincisi ikinci turda kapandı. **Açık soru
@@ -640,34 +697,104 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
 
 ## Acceptance Criteria
 
-> **Kriter turunda yazılacak** — bekleyen karar kalmadı (**D22**). `0012a`'nın deseni
-> geçerli: kararlar bu PR'da donar, kriterler kendi PR'ında girer (ADR `0008` / K2).
-> En az şu kümeleri kapsayacak:
->
-> **Yayın reddi:** A2'nin **üç** koşulunun ayrı ayrı reddi **ve birlikte reddi** (D2, D23) ·
-> zorunlu opsiyonel alan reddinin **hangi alanları** taşıdığı (D24) · A2 dışındaki iki red —
-> lokasyon bayrağı ve adres üretilemedi (D25) · reddin HTTP karşılığı (D26).
-> **Geçişler:** A3'teki her geçiş ve her **geçersiz** geçiş (`Taslak → Arşiv` ve
-> `Rezerve → Taslak` dâhil) · A4 terminal kuralı · arşivlemenin şase muafiyetini açması (D9) ·
-> eşzamanlılıkta kaybedenin **kural reddi** alması (D8) · geçişin, öne çıkarmanın **ve araç
-> düzenlemesinin** "son güncellenen"i ilerletmesi (D20, D36, D37).
-> **Toplu eylem:** kısmi başarı · boş seçim · yinelenen kimlik · üst sınırın **dâhil** olması
-> ve **kırpılmaması** · tekilleştirmenin sınırdan önce gelmesi (D3–D6, D29) · bulunamayan
-> ilanın satırı düşürmesi, tek kayıtta `404` olması (D27) · zaten hedef durumda olan kaydın
-> **güncel durumuyla** birlikte düşmesi (D28) · öne çıkarma **ve kaldırma**nın toplu çalışması
-> (D36).
-> **Duyurular:** sekiz olayın üretimi, adları ve idempotentliği (D11) · gövdenin beş alanı ve
-> **durum alanı taşımaması** (D30) · yeniden yayının duyurulması ve ilk yayın zamanını
-> taşıması (D31) · A8 yolundaki geçişlerin de duyurulması (D33).
-> **Vitrin ve liste:** vitrin satırının her yazma yolunda güncellenmesi (D12) · görünürlük
-> kararının tek yerde kalması, kopya kolon yazıcılarının dışarıda olması (D34) · adresin ilk
-> yayında donması ve yeniden yayında **aynı** kalması (D13) · yeniden yayının vitrin sırasını
-> **değiştirmemesi** (D31) · öne çıkarmanın sıralamaya yansıması (D16) · arşivin varsayılan
-> listede, **toplam sayıda ve özet sayaçlarında** görünmemesi (D19, D35).
-> **A8:** yazma tarafı, bayraklı aracın yayına alınamaması, `Rezerve` ilanın da yayından
-> kalkması, `Satıldı`/`Arşiv` kayda dokunulmaması (D15, D32).
-> **Yüzey:** beş ekran durumu (D7) · rol ayrımı olmadığı — oturum açmış her personelin her
-> eylemi çağırabildiği (D22) · çok dil ve RTL.
+Elli sekiz kriter, on iki grupta. **D22** (rol ayrımı yok), **D39** (bölme) ve **D42**
+(fiyat koşulu temsil edilemez) kapsamı belirledi; toplu eylem ve öne çıkarma `0012c`'dedir.
+Yapılandırmadan gelen her değer için kriter **yapılandırılan değeri** doğrular, spec'e
+kopyalanmış bir sabiti değil.
+
+### A. Yayına alma ve red
+
+- **AC-1.** Oturum açmış personel, koşulları sağlanan bir taslak ilanı yayına alır ve ilan `Yayında` durumuna geçer.
+- **AC-2.** Hazır medya varlığı olmayan araç yayına alınamaz; yanıt `vehicle.cannot_publish.no_media` taşır.
+- **AC-3.** Zorunlu işaretli bir opsiyonel alanı boş olan araç yayına alınamaz; yanıt `vehicle.cannot_publish.required_field` ve **eksik alanların anahtarlarını** taşır.
+- **AC-4.** Birden çok koşul sağlanmıyorsa yanıt eksiklerin **hepsini birlikte** taşır; ilk eksikte durmaz.
+- **AC-5.** Yayın koşulu yalnız `Hazır` medya varlığını sayar; `işleniyor` ve `başarısız` varlıklar koşulu karşılamaz.
+- **AC-6.** Lokasyon ataması bekleyen araç yayına alınamaz; yanıt `vehicle.cannot_publish.branch_unassigned` taşır.
+- **AC-7.** Adresi üretilemeyen ilan yayına alınamaz; yanıt `vehicle.cannot_publish.slug_unavailable` taşır.
+- **AC-8.** Yayın reddi `422`, geçiş reddi `409`, bulunamayan araç `404` döner.
+- **AC-9.** Reddedilen yayın isteği çevrilmiş metin değil **kod listesi** döner.
+- **AC-10.** A2'nin çekirdek alan ve fiyat koşulları yayın anında **temsil edilemez**; temsil edilebilir hâle gelirlerse kapı kırmızıya döner.
+
+### B. Geçişler
+
+- **AC-11.** `Yayında` bir ilan rezerve edilir ve `Rezerve` durumuna geçer.
+- **AC-12.** `Rezerve` bir ilanın rezervasyonu kaldırılır ve ilan `Yayında` durumuna döner.
+- **AC-13.** `Yayında` ve `Rezerve` bir ilan satıldı olarak işaretlenir.
+- **AC-14.** `Satıldı` terminaldir: araç yeniden yayına alınamaz.
+- **AC-15.** `Yayında` bir ilan yayından kaldırılır ve `Taslak` durumuna döner.
+- **AC-16.** `Yayında` ve `Satıldı` bir ilan arşivlenir.
+- **AC-17.** `Taslak` bir ilan arşivlenir.
+- **AC-18.** `Rezerve` bir ilan yayından kaldırılır ve `Taslak` durumuna döner.
+- **AC-19.** A3'te yazılı olmayan her geçiş `listing.invalid_status_transition` ile reddedilir.
+- **AC-20.** Durum geçişi aracın son güncellenme zamanını ilerletir.
+- **AC-21.** Araç düzenlemesi de aracın son güncellenme zamanını ilerletir.
+- **AC-22.** Oturumu olmayan biri hiçbir durum geçişini çağıramaz.
+
+### C. Arşiv ve şase tekilliği
+
+- **AC-23.** Arşivleme aracın arşiv bayrağını **aynı işlemde** yazar.
+- **AC-24.** Arşivlenen aracın şasesiyle yeni bir araç kaydedilebilir.
+- **AC-25.** Arşivlenmemiş bir aracın şasesi yeniden kaydedilemez.
+
+### D. Şube kapanışının yazma tarafı
+
+- **AC-26.** Şube kapatıldığında o şubedeki `Yayında` ilanlar yayından kalkar ve aracın "lokasyon ataması bekliyor" bayrağı **aynı işlemde** yazılır.
+- **AC-27.** Aynı yol `Rezerve` ilanları da kapsar.
+- **AC-28.** `Satıldı` ve `Arşiv` kayıtlara dokunulmaz.
+- **AC-29.** Bayraklı araç yayına alınamaz.
+- **AC-30.** Şube atandığında bayrak temizlenir ve araç yeniden yayına alınabilir.
+
+### E. Eşzamanlılık
+
+- **AC-31.** Aynı ilana eşzamanlı gelen iki durum geçişinden yalnız biri başarılı olur.
+- **AC-32.** Kaybeden **kural gereği** reddedilir ve `listing.invalid_status_transition` alır; `concurrency.lost` yalnız kilit zaman aşımında döner.
+
+### F. Duyurular
+
+- **AC-33.** Her durum geçişi bir duyuru üretir.
+- **AC-34.** Üretilen olay adları `docs/architecture.md` § 1'deki sekiz adla **birebir** aynıdır.
+- **AC-35.** Olay gövdesi beş alan taşır ve **yeni durumu ayrı bir alan olarak taşımaz**.
+- **AC-36.** Duyuru iş verisiyle **aynı transaction'da** outbox'a yazılır; yazma başarısız olursa duyuru da yazılmaz.
+- **AC-37.** Outbox yazıcısı **konkret** `OutboxWriter<VehicleCatalogDbContext>` tipiyle kaydedilir.
+- **AC-38.** Fiyat ve şube değişikliği araç düzenleme komutundan duyurulur.
+- **AC-39.** Şube kapanışı yolundaki geçişler de duyurulur.
+- **AC-40.** Yeniden yayınlanan ilan yine duyurulur ve duyuru **ilk yayın zamanını** taşır.
+
+### G. Vitrin yansıtması
+
+- **AC-41.** Yayına alma vitrin okuma modeline satır yazar ve ilan ziyaretçiye görünür olur.
+- **AC-42.** Görünmez bir duruma geçen ilanın vitrin satırı silinir.
+- **AC-43.** Araç düzenlemesi vitrin satırını **aynı işlemde** günceller.
+- **AC-44.** Aracın medya sırası değiştiğinde vitrin satırının kapağı güncellenir.
+- **AC-45.** Görünürlük kararını yalnız yansıtma verir; kopyalanmış kolonları besleyen olay işleyicileri bu kararı vermez.
+
+### H. İlanın adresi ve yeniden yayın
+
+- **AC-46.** Adres **ilk yayına alma** anında üretilir ve yazma modelinde saklanır.
+- **AC-47.** Yayından kaldırılıp yeniden yayınlanan ilan **aynı adrese** döner.
+- **AC-48.** Yeniden yayında ilk yayın zamanı **donar**; ilan vitrinde yerini değiştirmez.
+- **AC-49.** Hiç yayınlanmamış bir ilanın adresi yoktur.
+
+### I. Panel listesi
+
+- **AC-50.** Arşivlenen araç panel listesinin varsayılan görünümünde yer almaz.
+- **AC-51.** Açık bir filtreyle arşivlenen araçlar görülebilir.
+- **AC-52.** Arşiv koşulu listenin **toplam sayısına ve özet sayaçlarına** da uygulanır.
+- **AC-53.** Lokasyon ataması bekleyen araç panel listesinde ayırt edilir.
+
+### J. Ekran durumları
+
+- **AC-54.** Eylem ekranı yükleniyor, boş, başarılı ve hata durumlarını ele alır.
+- **AC-55.** Ekranda hiçbir teknik detay görünmez: durum kodu, `errorCode`, `traceId`, yol.
+
+### K. Çok dil ve RTL
+
+- **AC-56.** Ekranın metinleri TR / AR / EN üçünde de vardır; eksik çeviri anahtarı yoktur.
+- **AC-57.** Arapça'da ekran RTL yönünde çalışır.
+
+### L. Sınır
+
+- **AC-58.** Durum geçişi mantığı agregatta kalır; komut ve uç katmanı durum ataması yapmaz.
 
 ---
 
@@ -685,7 +812,8 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
       işi (`0012a` D18).*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012b-ac<n>.png`),
-      **kısmi başarı** ve hata durumları dâhil, RTL için Arapça görüntü de var.
+      **boş** ve **hata** durumları dâhil, RTL için Arapça görüntü de var. (Kısmi başarı
+      `0012c`'nin kanıtıdır — **D39**.)
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T4 --> Mimari testler yeşil; durum geçişi mantığı agregatta kaldı (C2).
 - [ ] <!-- DoD:T5 --> Yeni migration yalnızca `vehicle_catalog` şemasına dokunuyor.
@@ -705,17 +833,16 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
 - [ ] Outbox yazıcısının **konkret** tiple kaydedildiği testle gösterildi (C11, Tuzak 8).
 - [ ] Arşivlemenin aracın bayrağını **aynı işlemde** yazdığı ve aynı şasenin yeniden
       kaydedilebildiği testle gösterildi (D9).
-- [ ] Vitrin satırının her yazma yolunda güncellendiği, **araç düzenlemesi dâhil**, testle
+- [ ] Vitrin satırının her yazma yolunda güncellendiği — **araç düzenlemesi ve medya sırası
+      dâhil** (**D41**) — testle
       gösterildi (D12).
-- [ ] A2'nin **üç** koşulunun reddedilebildiği, çekirdek alan koşulu için **kod
-      yazılmadığı** ve zorunlu alan reddinin eksik **alan anahtarlarını** taşıdığı testle
-      gösterildi (D23, D24).
+- [ ] A2'nin **iki** koşulunun reddedilebildiği; çekirdek alan **ve fiyat** koşulları için
+      **kod yazılmadığı** ve ikisinin de temsil edilemez olduğu **tripwire** ile gösterildi
+      (**D23**, **D42**).
 - [ ] A2 dışındaki **iki** reddin (lokasyon bayrağı, adres üretilemedi) kendi kodunu
       döndürdüğü ve reddin HTTP karşılığının C13'teki eşlemeye uyduğu testle gösterildi
       (D25, D26).
-- [ ] Toplu eylemin dört sınır durumu testle gösterildi: bulunamayan ilan **satırı**
-      düşürüyor · zaten hedef durumdaki kayıt güncel durumuyla düşüyor · sınır **dâhil** ve
-      **kırpılmıyor** · tekilleştirme sınırdan önce (D27, D28, D29).
+- [ ] Toplu eylem bu dilimde **yok**; maddesi `0012c`'ye taşındı (**D39**).
 - [ ] Sekiz olayın gövdesinin **durum alanı taşımadığı** ve adresi taşıdığı, yeniden yayının
       da duyurulduğu ve ilk yayın zamanını taşıdığı testle gösterildi (D30, D31).
 - [ ] A8'in `Rezerve` ilanı da yayından kaldırdığı, `Satıldı`/`Arşiv` kayda dokunmadığı ve
@@ -724,7 +851,10 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
       şube adları) **bozulmadığı** testle gösterildi (D34).
 - [ ] Arşiv koşulunun liste, **toplam sayı ve özet sayaçlarında** birlikte uygulandığı
       testle gösterildi; `0010b`'nin etkilenen kriterleri PR'da **adıyla** yazıldı (D35).
-- [ ] Öne çıkarmanın toplu kaldırılabildiği ve `UpdateVehicleCommand`'ın eksik `Touch`
+- [ ] `UpdateVehicleCommand`'ın eksik `Touch` çağrısının tamamlandığı testle gösterildi ve
+      PR'da **adıyla** yazıldı (**D37**). Öne çıkarma `0012c`'dedir (**D39**).
+- [ ] `Dealership.Contracts`'a eklenen okumanın **eklemeli** olduğu ve mevcut imzaları
+      kırmadığı testle gösterildi (**D40**).
       çağrısının tamamlandığı testle gösterildi; ikisi de PR'da adıyla yazıldı (D36, D37).
 
 ---
