@@ -131,3 +131,50 @@ public interface IVehicleAdminQueries
     /// <summary>Formun kurabilmesi için AÇIK opsiyonel alanlar (R7).</summary>
     Task<IReadOnlyList<VehicleAdminFieldDto>> GetFormFieldsAsync(CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// `0012a`/AC-24 — aracın sıralı medyası, her varlığın `Media` tarafındaki hâliyle
+/// birlikte. **Sıra `VehicleCatalog`'un verisidir** (M2) ve listenin indeksi onu taşıyor;
+/// ayrı bir "sıra" alanı aynı olguyu iki yerde tutardı.
+/// </summary>
+/// <param name="Status">
+/// `Media`'nın işleme durumunun KODU (`uploaded` · `processing` · `ready` · `failed`).
+/// Çevrilmiş ad değil: gösterim uçta, koddan çevrilir (Yasak Listesi 22–23).
+/// </param>
+/// <param name="FailureReason">
+/// Yalnız `failed` durumda dolu; kapalı bir kümeden bir kod (`0011`/AC-33).
+/// </param>
+public sealed record VehicleMediaItemDto(
+    Guid MediaAssetId,
+    string Status,
+    string? FailureReason,
+    IReadOnlyDictionary<string, string> AltText,
+    IReadOnlyList<VehicleMediaDerivativeDto> Derivatives);
+
+/// <summary>Türevin boyutu ve erişim yolu. `docs/frontend.md` § 7 açık `width`/`height` istiyor.</summary>
+public sealed record VehicleMediaDerivativeDto(string Variant, int Width, int Height, string Url);
+
+/// <summary>
+/// Aracın medya yüzeyi. `CoverMediaAssetId` **türetilmiş**: sıralı listenin ilk elemanı
+/// (D2). Yanıtta bulunması bir kolaylık, ikinci bir gerçek kaynak değil — liste boşsa
+/// <c>null</c>.
+/// </summary>
+public sealed record VehicleMediaDto(
+    Guid VehicleId,
+    Guid? CoverMediaAssetId,
+    IReadOnlyList<VehicleMediaItemDto> Items);
+
+/// <summary>
+/// `0012a` D12 — sıralı kimlik listesinin TAMAMI. Bağlama, sıralama ve çıkarma tek
+/// idempotent istektir ve kapak sıranın SONUCU.
+///
+/// <para>Boş liste geçerlidir: "bütün fotoğrafları çıkar" anlamına gelir ve varlıkları
+/// silmez (R3, AC-7).</para>
+/// </summary>
+public sealed record UpdateVehicleMediaRequest(IReadOnlyList<Guid> MediaAssetIds);
+
+/// <summary>`0012a` — aracın medya yüzeyinin okuma sözleşmesi.</summary>
+public interface IVehicleMediaQueries
+{
+    Task<VehicleMediaDto?> FindAsync(Guid vehicleId, CancellationToken cancellationToken);
+}

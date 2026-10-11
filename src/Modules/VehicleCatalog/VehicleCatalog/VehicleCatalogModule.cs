@@ -89,6 +89,8 @@ public static class VehicleCatalogModule
         services.AddScoped<VehicleWriteRules>();
         services.AddScoped<CreateVehicleCommand>();
         services.AddScoped<UpdateVehicleCommand>();
+        services.AddScoped<UpdateVehicleMediaCommand>();
+        services.AddScoped<IVehicleMediaQueries, VehicleMediaQueries>();
         services.AddScoped<IVehicleAdminQueries, VehicleAdminQueries>();
 
         return services;
