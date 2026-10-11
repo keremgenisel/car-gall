@@ -398,7 +398,7 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
 
         if (yayinla)
         {
-            ilan.Publish(new FixedClock(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero)));
+            ilan.Publish(Adres(ilan), new FixedClock(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero)));
         }
 
         await using VehicleCatalogDbContext context = database.CreateContext();
@@ -446,4 +446,12 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
         ayar.FormState = durum;
         await context.SaveChangesAsync();
     }
+    /// <summary>
+    /// `0012b` **D13** — adres artık yayının parametresi: ilk yayında bir kez yazılıyor ve
+    /// bir daha değişmiyor. Bu testlerin ilgilendiği şey adres DEĞİL; yardımcı, imza
+    /// değişikliğini testin gövdesine taşımamak için var.
+    /// </summary>
+    private static ListingSlug Adres(Listing listing) =>
+        ListingSlug.Create("Toyota Corolla", 2020, listing.Id).Value;
+
 }

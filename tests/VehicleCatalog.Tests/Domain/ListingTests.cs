@@ -13,7 +13,7 @@ public sealed class ListingTests
         FixedClock clock = new(IlkYayin);
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 0);
 
-        Result result = listing.Publish(clock);
+        Result result = listing.Publish(Adres(listing), clock);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(ListingStatus.Published, listing.Status);
@@ -31,7 +31,7 @@ public sealed class ListingTests
         FixedClock clock = new(IlkYayin);
         Listing listing = ListingIn(Enum.Parse<ListingStatus>(statusName), clock);
 
-        Result result = listing.Publish(clock);
+        Result result = listing.Publish(Adres(listing), clock);
 
         Assert.True(result.IsFailure);
         Assert.Equal(Listing.InvalidTransition, result.Error.Code);
@@ -42,7 +42,7 @@ public sealed class ListingTests
     {
         FixedClock clock = new(IlkYayin);
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 0);
-        listing.Publish(clock);
+        listing.Publish(Adres(listing), clock);
         listing.Reserve();
 
         clock.Advance(TimeSpan.FromDays(30));
@@ -56,11 +56,11 @@ public sealed class ListingTests
     {
         FixedClock clock = new(IlkYayin);
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 0);
-        listing.Publish(clock);
+        listing.Publish(Adres(listing), clock);
         listing.Unpublish();
 
         clock.Advance(TimeSpan.FromDays(7));
-        listing.Publish(clock);
+        listing.Publish(Adres(listing), clock);
 
         Assert.Equal(IlkYayin, listing.PublishedAt);
     }
@@ -70,10 +70,10 @@ public sealed class ListingTests
     {
         FixedClock clock = new(IlkYayin);
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 0);
-        listing.Publish(clock);
+        listing.Publish(Adres(listing), clock);
         listing.MarkSold();
 
-        Result result = listing.Publish(clock);
+        Result result = listing.Publish(Adres(listing), clock);
 
         Assert.True(result.IsFailure);
         Assert.Equal(ListingStatus.Sold, listing.Status);
@@ -85,7 +85,7 @@ public sealed class ListingTests
         FixedClock clock = new(IlkYayin);
         Listing listing = ListingIn(ListingStatus.Archived, clock);
 
-        Assert.True(listing.Publish(clock).IsFailure);
+        Assert.True(listing.Publish(Adres(listing), clock).IsFailure);
         Assert.True(listing.Reserve().IsFailure);
         Assert.True(listing.MarkSold().IsFailure);
         Assert.True(listing.Archive().IsFailure);
@@ -113,7 +113,7 @@ public sealed class ListingTests
             return listing;
         }
 
-        listing.Publish(clock);
+        listing.Publish(Adres(listing), clock);
 
         switch (status)
         {
@@ -134,4 +134,12 @@ public sealed class ListingTests
 
         return listing;
     }
+    /// <summary>
+    /// `0012b` **D13** — adres artık yayının parametresi: ilk yayında bir kez yazılıyor ve
+    /// bir daha değişmiyor. Bu testlerin ilgilendiği şey adres DEĞİL; yardımcı, imza
+    /// değişikliğini testin gövdesine taşımamak için var.
+    /// </summary>
+    private static ListingSlug Adres(Listing listing) =>
+        ListingSlug.Create("Toyota Corolla", 2020, listing.Id).Value;
+
 }

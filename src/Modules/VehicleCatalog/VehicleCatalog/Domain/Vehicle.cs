@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.VehicleCatalog.Domain.Events;
 
 namespace CarGallery.Modules.VehicleCatalog.Domain;
 
@@ -267,10 +268,13 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// `Vehicle`'ın içinde yaşıyor çünkü invariant agregatın invariantı: dışarıdan bir
     /// servis yazsaydı, fiyatı değiştirip geçmişi yazmayan bir yol açık kalırdı.
     /// </summary>
+    /// <param name="at">0012b **D11** — değişiklik DUYURULUR; olay Application katmanında
+    /// entegrasyon olayına çevrilir (§ 2.B). Domain, modül dışındaki sözleşmeyi bilmez.</param>
     internal void ChangePrice(ListingPrice price, DateTimeOffset at)
     {
         Price = price;
         Touch(at);
+        Raise(new VehiclePriceWasChanged(Id));
 
         priceChanges.Add(new PriceChange
         {
@@ -314,10 +318,24 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
         return Result.Success();
     }
 
+    /// <summary>
+    /// Şube ataması. **A7** değişimin duyurulmasını istiyor (`0012b` **D11**); transfer
+    /// AKIŞI kapsam dışı (X7) — burada yalnız olgu kaydediliyor.
+    ///
+    /// <para>Olay yalnız şube GERÇEKTEN değiştiğinde yayılıyor: aynı şubeye atamak bir
+    /// taşınma değildir ve `A8`'in bayrağını temizlemek için de bu yol kullanılıyor.</para>
+    /// </summary>
     internal void AssignBranch(Guid branchId)
     {
+        bool tasindi = BranchId != branchId;
+
         BranchId = branchId;
         AwaitingBranchAssignment = false;
+
+        if (tasindi)
+        {
+            Raise(new VehicleWasRelocated(Id));
+        }
     }
 
     internal void MarkAwaitingBranchAssignment() => AwaitingBranchAssignment = true;

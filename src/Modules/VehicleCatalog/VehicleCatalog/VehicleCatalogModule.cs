@@ -2,6 +2,7 @@ using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.Modules.Dealership.Contracts.Events;
+using CarGallery.Modules.VehicleCatalog.Application;
 using CarGallery.Modules.VehicleCatalog.Application.Detail;
 using CarGallery.Modules.VehicleCatalog.Application.Development;
 using CarGallery.Modules.VehicleCatalog.Application.EventHandlers;
@@ -19,6 +20,7 @@ using CarGallery.Modules.VehicleCatalog.Endpoints;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Routing;
 
 namespace CarGallery.Modules.VehicleCatalog;
@@ -92,6 +94,26 @@ public static class VehicleCatalogModule
         services.AddScoped<UpdateVehicleMediaCommand>();
         services.AddScoped<IVehicleMediaQueries, VehicleMediaQueries>();
         services.AddScoped<IVehicleAdminQueries, VehicleAdminQueries>();
+
+        // 0012b D14 — modülün outbox'ı. KONKRET tiple kaydediliyor (C11): paylaşılan
+        // non-generic bir soyutlama 2026-10-11'de silindi (`7e8bdef`, #52) çünkü DI'da
+        // son kayıt kazanıyordu ve bir modülün duyurusu HİÇ kalıcı olmuyordu. Konkret
+        // tip hangi şemaya yazdığını imzasında taşıyor.
+        services.AddScoped<OutboxWriter<VehicleCatalogDbContext>>();
+        services.AddScoped<VehicleCatalogUnitOfWork>();
+
+        services.AddScoped(provider => new OutboxDispatcher<VehicleCatalogDbContext>(
+            provider.GetRequiredService<VehicleCatalogDbContext>(),
+            provider,
+            provider.GetRequiredService<IClock>(),
+            new OutboxDispatchOptions(),
+            provider.GetRequiredService<ILogger<OutboxDispatcher<VehicleCatalogDbContext>>>()));
+
+        // Arka plan dağıtıcısı modülün KENDİ kaydıdır: outbox tablosu bu modülün
+        // şemasındadır ve onu okuyan da bu modülün `DbContext`'idir (Yasak Listesi 16).
+        services.AddHostedService(provider => new OutboxDispatcherHostedService<VehicleCatalogDbContext>(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILogger<OutboxDispatcherHostedService<VehicleCatalogDbContext>>>()));
 
         return services;
     }

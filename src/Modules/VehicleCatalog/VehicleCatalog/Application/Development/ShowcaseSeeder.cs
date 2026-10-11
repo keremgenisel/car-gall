@@ -145,7 +145,11 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 LocalizedText.From(SeedText("Toyota Corolla", index, baslik: true)),
                 LocalizedText.From(SeedText("Toyota Corolla", index, baslik: false)));
 
-            listing.Publish(clock);
+            // 0012b D13 — adres artık YAZMA modelinde ve ilk yayında bir kez yazılıyor;
+            // seed de o yoldan geçiyor. Projeksiyon onu kopyalıyor.
+            ListingSlug slug = ListingSlug.Create("Toyota Corolla", vehicle.ModelYear, listing.Id).Value;
+
+            listing.Publish(slug, clock);
 
             vehicles.Add(vehicle);
             listings.Add(listing);
@@ -154,8 +158,6 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             {
                 listing.Reserve();
             }
-
-            ListingSlug slug = ListingSlug.Create("Toyota Corolla", vehicle.ModelYear, listing.Id).Value;
 
             ShowcaseListing? row = ShowcaseListingProjector.Project(
                 vehicle,
