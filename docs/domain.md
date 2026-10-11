@@ -100,12 +100,19 @@ Her kural test edilebilir bir ifadedir. Spec'ler bu kurallara atıf yapar.
 
 **A3.** Yayın durumu geçişleri — başka geçiş yoktur:
 ```
-Taslak   → Yayında
+Taslak   → Yayında | Arşiv
 Yayında  → Rezerve | Satıldı | Taslak | Arşiv
 Rezerve  → Yayında | Satıldı
 Satıldı  → Arşiv
 Arşiv    → (terminal)
 ```
+
+`Taslak → Arşiv` **2026-10-11'de eklendi** (spec `0012b` / D10, Takım Yöneticisi onayı).
+Gerekçe ölçülerek bulundu: silme bu projede `Arşiv` durumudur (`0010b` § X19) ve şase
+tekilliği `Arşiv` kayıtlarını muaf tutuyor (**A5**). İkisi birlikte, yanlış şaseyle açılmış
+ve **hiç yayınlanmamış** bir taslağı ne silinebilir ne arşivlenebilir bırakıyordu; o şase
+galeri genelinde kalıcı olarak tutuluydu. A5'in muafiyeti yanlış kaydın emekliye
+ayrılabilmesi için vardır ve çıkışı olmayan bir muafiyet kâğıt üstünde kalır.
 
 **A4.** `Satıldı` bir **terminal ticari durumdur**: araç yeniden yayına alınamaz.
 Aynı fiziksel araç geri alınırsa **yeni bir araç kaydı** açılır; eskisi arşivde kalır.
