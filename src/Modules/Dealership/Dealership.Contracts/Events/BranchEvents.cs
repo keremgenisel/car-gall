@@ -58,4 +58,22 @@ public interface IBranchQueries
     /// tüketiciyi hiçbir seçeneği olmadan bırakırdı.</para>
     /// </summary>
     Task<IReadOnlyList<BranchSummaryDto>> ListAsync(string locale, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// `0012b` **D40** — şubenin adı **etkin her dilde**, locale → ad haritası olarak.
+    /// Bulunamayan şube için <c>null</c> döner.
+    ///
+    /// <para><b>Neden tek locale yetmiyor:</b> `VehicleCatalog`'un vitrin okuma modeli
+    /// şube adını locale → ad **sözlüğü** olarak taşıyor ve `BranchDetailsChanged`
+    /// işleyicisi ona olayın bütün dillerini yazıyor. Yayın anında tek dille yazılırsa
+    /// satır tek anahtarlı kalır ve araç, bir sonraki `BranchDetailsChanged`'e kadar
+    /// diğer dillerde <b>şubesiz</b> görünür.</para>
+    ///
+    /// <para>Okuma <b>eklemelidir</b>: mevcut iki imza değişmedi. `FindAsync`'in tek
+    /// locale'li yüzeyi hâlâ doğru cevabı veriyor — ziyaretçiye tek dil gösteren çağıranlar
+    /// onu kullanmaya devam ediyor.</para>
+    /// </summary>
+    Task<IReadOnlyDictionary<string, string>?> FindNamesAsync(
+        Guid branchId,
+        CancellationToken cancellationToken);
 }

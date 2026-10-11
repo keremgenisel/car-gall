@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.VehicleCatalog.Application.Projection;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +62,8 @@ internal sealed record OptionalFieldInput(
 internal sealed class UpdateVehicleCommand(
     VehicleCatalogDbContext context,
     VehicleWriteRules rules,
+    ShowcaseProjectionWriter projection,
+    VehicleCatalogUnitOfWork unitOfWork,
     IClock clock)
 {
     internal async Task<Result> ExecuteAsync(UpdateVehicleRequest request, CancellationToken cancellationToken)
@@ -228,7 +231,20 @@ internal sealed class UpdateVehicleCommand(
                     : VehicleFieldNames.ListingTitle);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        // D37 bir `Touch` çağrısı eklemeyi istiyordu; ÖLÇTÜM VE GEREKMİYOR:
+        // `ChangeCoreDetails` zaten `Touch` çağırıyor (`Vehicle.cs:205`) ve bu komut her
+        // zaman ondan geçiyor. İkinci bir çağrı aynı değeri iki kez yazardı — ölü kod
+        // (`docs/conventions.md` § 13). Kararın ölçümü tutmadı ve PR'da adıyla yazılı;
+        // kriterin (AC-21) etiketli testi `AracDuzenlemeTests`'te.
+
+        // D12/R15 — vitrin satırı AYNI İŞLEMDE güncelleniyor. Bu spec'e kadar hiçbir komut
+        // okuma modeline yazmıyordu: personel fiyatı düşürüyor, vitrinde eski fiyat
+        // kalıyordu.
+        await projection.ProjectAsync(vehicle, listing, cancellationToken);
+
+        // D11 — fiyat ve şube değişikliğinin duyurusu iş verisiyle aynı transaction'da
+        // outbox'a yazılıyor (C3).
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

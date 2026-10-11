@@ -27,7 +27,7 @@ public sealed class ProjectionTests
     {
         Vehicle vehicle = new VehicleBuilder().Build();
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 3);
-        listing.Publish(new FixedClock(Yayin));
+        listing.Publish(Adres(listing), new FixedClock(Yayin));
         listing.Reserve();
 
         ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, "https://cdn.example.test/a.webp", PublicAlanYok);
@@ -52,15 +52,15 @@ public sealed class ProjectionTests
             case "Draft":
                 break;
             case "Sold":
-                listing.Publish(clock);
+                listing.Publish(Adres(listing), clock);
                 listing.MarkSold();
                 break;
             case "Archived":
-                listing.Publish(clock);
+                listing.Publish(Adres(listing), clock);
                 listing.Archive();
                 break;
             case "AwaitingBranchAssignment":
-                listing.Publish(clock);
+                listing.Publish(Adres(listing), clock);
                 vehicle.MarkAwaitingBranchAssignment();
                 break;
             default:
@@ -77,7 +77,7 @@ public sealed class ProjectionTests
     {
         Vehicle vehicle = new VehicleBuilder().Build();
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 3);
-        listing.Publish(new FixedClock(Yayin));
+        listing.Publish(Adres(listing), new FixedClock(Yayin));
 
         ShowcaseListing? row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, null, PublicAlanYok);
 
@@ -91,7 +91,7 @@ public sealed class ProjectionTests
     {
         Vehicle vehicle = new VehicleBuilder().WithPrice(ListingPrice.OnRequest()).Build();
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 0);
-        listing.Publish(new FixedClock(Yayin));
+        listing.Publish(Adres(listing), new FixedClock(Yayin));
 
         ShowcaseListing row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, null, PublicAlanYok)!;
 
@@ -106,11 +106,19 @@ public sealed class ProjectionTests
         Money kwd = Money.Create(1250.500m, "KWD", 3).Value;
         Vehicle vehicle = new VehicleBuilder().WithPrice(ListingPrice.Of(kwd)).Build();
         Listing listing = Listing.CreateDraft(VehicleId.New(), showcaseSortWeight: 0);
-        listing.Publish(new FixedClock(Yayin));
+        listing.Publish(Adres(listing), new FixedClock(Yayin));
 
         ShowcaseListing row = ShowcaseListingProjector.Project(vehicle, listing, Slug, SubeAdlari, null, PublicAlanYok)!;
 
         Assert.Equal(1250.500m, row.PriceAmount);
         Assert.Equal(3, row.PriceMinorUnitExponent);
     }
+    /// <summary>
+    /// `0012b` **D13** — adres artık yayının parametresi: ilk yayında bir kez yazılıyor ve
+    /// bir daha değişmiyor. Bu testlerin ilgilendiği şey adres DEĞİL; yardımcı, imza
+    /// değişikliğini testin gövdesine taşımamak için var.
+    /// </summary>
+    private static ListingSlug Adres(Listing listing) =>
+        ListingSlug.Create("Toyota Corolla", 2020, listing.Id).Value;
+
 }

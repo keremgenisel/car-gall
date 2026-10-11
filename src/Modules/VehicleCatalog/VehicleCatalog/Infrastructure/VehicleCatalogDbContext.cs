@@ -10,7 +10,7 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure;
 /// (docs/architecture.md § 1). Migration yalnızca bu şemaya dokunur; CI bunu kontrol eder.
 /// </summary>
 internal sealed class VehicleCatalogDbContext(DbContextOptions<VehicleCatalogDbContext> options)
-    : DbContext(options), IInboxDbContext
+    : DbContext(options), IInboxDbContext, IOutboxDbContext
 {
     internal const string Schema = "vehicle_catalog";
 
@@ -36,11 +36,23 @@ internal sealed class VehicleCatalogDbContext(DbContextOptions<VehicleCatalogDbC
     /// </summary>
     public DbSet<InboxEntry> InboxEntries => Set<InboxEntry>();
 
+    /// <summary>
+    /// `0012b` **D14** — modülün outbox'ı. Bu satıra kadar `VehicleCatalog` konuşmuyordu:
+    /// `Listing` altı domain olayı yayıyor, EF listeyi `Ignore` ediyor ve okuyan yoktu.
+    ///
+    /// <para><b>Bu satır bir mimari kapıyı da açıyor:</b>
+    /// `Architecture.Tests/OutboxYazicisiTests`'in üçüncü iddiası `IOutboxDbContext`
+    /// uygulayan **her** modülü tarıyor — ölçüldü. Yani yazıcının konkret tiple
+    /// kaydedilmesi (C11) artık bu modülde de denetleniyor.</para>
+    /// </summary>
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VehicleCatalogDbContext).Assembly);
         modelBuilder.ApplyConfiguration(new InboxEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>

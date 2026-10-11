@@ -845,3 +845,43 @@ body {
   align-items: center;
   gap: var(--space-6);
 }
+
+/* --- Yayın ve durum eylemleri (0012b) --- */
+
+.vehicle-actions {
+  display: grid;
+  gap: var(--space-5);
+  padding-block: var(--space-6);
+  padding-inline: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.vehicle-actions__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  margin-block: var(--space-0);
+}
+
+.vehicle-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
+
+/* Red bir LİSTEDİR (D2): koşul başına bir satır, hepsi birlikte. */
+.vehicle-actions__reasons {
+  display: grid;
+  gap: var(--space-3);
+  margin-block: var(--space-0);
+  padding-inline-start: var(--space-7);
+}
+
+.vehicle-list__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}

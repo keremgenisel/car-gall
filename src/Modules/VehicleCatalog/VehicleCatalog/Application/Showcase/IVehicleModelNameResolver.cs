@@ -13,4 +13,14 @@ internal interface IVehicleModelNameResolver
         IReadOnlyCollection<Guid> vehicleModelIds,
         Locale locale,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// `0012b` **D13** — ilanın adresi KANONİK addan türüyor ve adres her dilde AYNIdır
+    /// (`docs/architecture.md` § 3). Locale'li addan türetilseydi aynı ilanın üç ayrı
+    /// adresi olurdu; Arapça bir kanonik ad ise yalnız yıl ve sonekten oluşan anlamsız bir
+    /// adres üretirdi — `ListingSlug` bunu `invalid_source` ile reddediyor.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, string>> ResolveCanonicalNamesAsync(
+        IReadOnlyCollection<Guid> vehicleModelIds,
+        CancellationToken cancellationToken);
 }

@@ -28,6 +28,7 @@ const arac: VehicleAdminListItem = {
   price: { onRequest: false, amount: 750000, currencyCode: 'TRY', minorUnitExponent: 2 },
   listingStatus: 'Draft',
   vin: 'VIN0000000000001',
+  awaitingBranchAssignment: false,
   updatedAt: '2026-10-10T12:30:00Z',
   missingLocales: [],
   hasMissingRequiredInfo: false,
@@ -293,5 +294,66 @@ describe('0010b/AC-28: Ekleme ve güncelleme sıraları birbirinden farklı olan
       expect(vi.mocked(fetchVehicles).mock.calls.at(-1)?.[2]).toBe('recently-added'),
     )
     expect(window.location.search).toContain('sort=recently-added')
+  })
+})
+
+describe('0012b/AC-50: Arşivlenen araç panel listesinin varsayılan görünümünde yer almaz', () => {
+  it('arşiv filtresi KAPALI başlıyor ve sunucuya öyle gidiyor', async () => {
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    // D19 — varsayılan KAPALI: arşiv bu projenin "silme"si ve varsayılan listede kalırsa
+    // liste sonsuz büyür, arşivleme eylemi de hiçbir şey yapmamış görünür.
+    expect(vi.mocked(fetchVehicles).mock.calls[0][4]).toBe(false)
+    expect(screen.getByLabelText('Arşivi göster')).toHaveProperty('checked', false)
+  })
+})
+
+describe('0012b/AC-51: Açık bir filtreyle arşivlenen araçlar görülebilir', () => {
+  it('kutu işaretlenince istek arşivi de istiyor ve etiket değişiyor', async () => {
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByLabelText('Arşivi göster'))
+
+    await waitFor(() => expect(vi.mocked(fetchVehicles).mock.calls.at(-1)?.[4]).toBe(true))
+
+    expect(screen.getByLabelText('Arşivi gizle')).toHaveProperty('checked', true)
+  })
+
+  it('0012b/AC-52: ÖZET sayacı da aynı bayrağı alıyor — liste ile aynı evren', async () => {
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    expect(vi.mocked(fetchVehicleSummary).mock.calls[0][2]).toBe(false)
+
+    fireEvent.click(screen.getByLabelText('Arşivi göster'))
+
+    await waitFor(() => expect(vi.mocked(fetchVehicleSummary).mock.calls.at(-1)?.[2]).toBe(true))
+  })
+})
+
+describe('0012b/AC-53: Lokasyon ataması bekleyen araç panel listesinde ayırt edilir', () => {
+  it('bayraklı araç kendi rozetini taşıyor ve "tam" sayılmıyor', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue({
+      items: [{ ...arac, awaitingBranchAssignment: true }],
+      page: 1,
+      pageSize: 25,
+      totalCount: 1,
+      totalPages: 1,
+    })
+
+    ekran()
+
+    expect((await screen.findByTestId('vehicle-awaiting-branch')).textContent).toContain(
+      'Şube bekliyor',
+    )
+    // Sütun BAŞLIĞI "Tamlık" ve o da "Tam" içeriyor; iddia SATIRA daraltılıyor.
+    const satir = screen.getByTestId('vehicle-table').querySelector('tbody')
+
+    expect(satir?.textContent).not.toContain('Tam')
   })
 })

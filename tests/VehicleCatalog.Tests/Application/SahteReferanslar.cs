@@ -14,6 +14,23 @@ internal sealed class SahteSubeSorgusu(bool bulunur = true) : IBranchQueries
 
     public Task<IReadOnlyList<BranchSummaryDto>> ListAsync(string locale, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<BranchSummaryDto>>([]);
+
+    /// <summary>
+    /// `0012b` **D40** — vitrin yansıtmasının okuduğu locale → ad haritası. Sahte üç dili
+    /// de veriyor: tek dilli bir sahte, "satır tek anahtarlı kalıyor" kusurunu testten
+    /// GİZLERDİ — kusurun kendisi tam olarak buydu.
+    /// </summary>
+    public Task<IReadOnlyDictionary<string, string>?> FindNamesAsync(
+        Guid branchId,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<string, string>?>(bulunur
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["tr"] = "Merkez Şube",
+                ["ar"] = "الفرع الرئيسي",
+                ["en"] = "Main Branch",
+            }
+            : null);
 }
 
 internal sealed class SahteKasaSorgusu(bool bulunur = true) : IBodyTypeQueries

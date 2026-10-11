@@ -333,9 +333,12 @@ describe('0012a/AC-17: Personel tekrar dene eylemini çağırır ve varlık ayn�
 
     await waitFor(() => expect(vi.mocked(retryMediaAsset)).toHaveBeenCalledWith(BIR, 'tr'))
 
-    expect((await screen.findByTestId(`vehicle-media-item-${BIR}`)).textContent).toContain(
-      'İşleniyor',
-    )
+    // `findBy*` BULANA KADAR yeniden deniyor; `getBy…textContent` ise o anki DOM'u
+    // okuyor. İkincisi beş koşuda bir kırmızı veriyordu: yeniden okuma çözülmüş ama
+    // React henüz yeniden çizmemiş oluyordu. Kırılgan bir kapı, olmayan kapıdan kötüdür.
+    await screen.findByTestId('vehicle-media-processing')
+
+    expect(screen.getByTestId(`vehicle-media-item-${BIR}`).textContent).toContain('İşleniyor')
   })
 })
 

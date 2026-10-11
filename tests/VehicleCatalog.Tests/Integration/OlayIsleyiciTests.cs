@@ -68,7 +68,9 @@ public sealed class OlayIsleyiciTests(ShowcaseDatabase database)
 
         await using (VehicleCatalogDbContext context = database.CreateContext())
         {
-            BranchDeactivatedHandler handler = new(context, new FixedClock(Simdi));
+            FixedClock saat = new(Simdi);
+            BranchDeactivatedHandler handler = new(
+                context, KatalogYazicilari.Birim(context, saat), saat);
             await handler.HandleAsync(
                 new BranchDeactivated(Guid.CreateVersion7(), Simdi, kapatilan),
                 CancellationToken.None);

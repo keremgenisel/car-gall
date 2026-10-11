@@ -167,6 +167,11 @@ export interface VehicleAdminListItem {
   readonly updatedAt: string
   /** Metni eksik olan diller. KOD taşır; görünen ad çeviri kataloğundan gelir (C11). */
   readonly missingLocales: readonly string[]
+  /**
+   * 0012b **R13** · **D15** — araç lokasyon ataması bekliyor: şubesi kapatıldı ve yenisi
+   * atanmadı. Liste bunu ayırt eder; şubesi atanmadan yayına alınamaz.
+   */
+  readonly awaitingBranchAssignment: boolean
   /** Zorunlu işaretli bir opsiyonel alanı boş olan araç. Sunucuda hesaplanır (C21). */
   readonly hasMissingRequiredInfo: boolean
 }
@@ -181,6 +186,22 @@ export interface VehicleAdminSummary {
 export const VEHICLE_SORTS = ['last-updated', 'recently-added'] as const
 
 export type VehicleSort = (typeof VEHICLE_SORTS)[number]
+
+/**
+ * 0012b — bir ilan üzerinde çalışan altı durum geçişi. Değerler **rota parçalarıdır**:
+ * fiil rotada, çünkü bunlar gerçek durum geçişleri (`docs/conventions.md` § 2'nin saydığı
+ * istisna).
+ */
+export const LISTING_ACTIONS = [
+  'publish',
+  'unpublish',
+  'reserve',
+  'unreserve',
+  'sold',
+  'archive',
+] as const
+
+export type ListingAction = (typeof LISTING_ACTIONS)[number]
 
 /**
  * Opsiyonel alan tanımı. Tip KODDAN gelir (D21), zorunluluk ayardan. Kapalı alanlar bu
@@ -219,6 +240,11 @@ export interface VehicleAdminDetail {
   readonly listingDescription: Record<string, string>
   readonly optionalValues: readonly VehicleAdminOptionalValue[]
   readonly updatedAt: string
+  /**
+   * 0012b **R13** · **D15** — araç lokasyon ataması bekliyor. Eylem yüzeyi bunu düğmeye
+   * basılmadan söylüyor; sunucu da reddediyor (AC-29).
+   */
+  readonly awaitingBranchAssignment: boolean
 }
 
 /**

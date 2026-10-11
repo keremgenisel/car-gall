@@ -31,7 +31,12 @@ public sealed record VehicleAdminListItemDto(
     /// 0010b **R9/C21** — zorunlu işaretli bir opsiyonel alanı boş olan araç. SAKLANMAZ,
     /// sorguda hesaplanır: ayar değiştiğinde hiçbir yazma olmadan değişmesi gerekiyor.
     /// </summary>
-    bool HasMissingRequiredInfo);
+    bool HasMissingRequiredInfo,
+    /// <summary>
+    /// `0012b` **R13**/**D15** — araç lokasyon ataması bekliyor: şubesi kapatıldı ve
+    /// yenisi atanmadı. Liste bunu AYIRT EDER; şubesi atanmadan yayına alınamaz.
+    /// </summary>
+    bool AwaitingBranchAssignment);
 
 /// <summary>
 /// "Fiyat sorunuz" AYRI bir durumdur, `0` değildir (P4). Tutar, para kodu ve minor unit
@@ -68,7 +73,13 @@ public sealed record VehicleAdminDetailDto(
     IReadOnlyDictionary<string, string> ListingTitle,
     IReadOnlyDictionary<string, string> ListingDescription,
     IReadOnlyList<VehicleAdminOptionalValueDto> OptionalValues,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    /// <summary>
+    /// `0012b` **R13** · **D15** — araç lokasyon ataması bekliyor. Düzenleme ekranı bunu
+    /// **düğmeye basılmadan** söylüyor: sunucu da reddediyor, ama personeli boşuna
+    /// denemekten kurtarmak eylem yüzeyinin işi.
+    /// </summary>
+    bool AwaitingBranchAssignment = false);
 
 /// <summary>
 /// Opsiyonel alanın değeri, TİPİYLE birlikte. Biçimlendirme UÇTA yapılır
@@ -111,7 +122,17 @@ public sealed record VehicleAdminListFilter(
     string Locale,
     int Page,
     int? PageSize,
-    VehicleAdminListSort Sort);
+    VehicleAdminListSort Sort,
+    /// <summary>
+    /// `0012b` **R17**/**D19** — arşivlenen araç VARSAYILAN görünümde yer almaz; arşiv bu
+    /// projenin "silme"sidir (`0010b` X19) ve varsayılan listede kalırsa liste sonsuz
+    /// büyür, eylem de hiçbir şey yapmamış görünür.
+    ///
+    /// <para><b>Aynı koşul toplam sayıya ve özet sayaçlarına da uygulanır</b>
+    /// (**D35**): liste ile sayaç aynı evreni saymak zorunda, yoksa "12 araç" yazan bir
+    /// özetin altında 9 satır görünür.</para>
+    /// </summary>
+    bool IncludeArchived = false);
 
 public interface IVehicleAdminQueries
 {
@@ -123,7 +144,17 @@ public interface IVehicleAdminQueries
         VehicleAdminListFilter filter,
         CancellationToken cancellationToken);
 
-    Task<VehicleAdminSummaryDto> GetSummaryAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// `0012b` **D35** — sayaç listeyle **AYNI evreni** sayar. Arşiv bayrağı buraya da
+    /// geliyor ve varsayılanı `false`: parametre eklemeli, mevcut çağıranlar kırılmıyor.
+    ///
+    /// <para>İlk hâli bayrağı hiç almıyordu ve sayaç her zaman arşivi eliyordu; personel
+    /// arşiv modunda "3 araç" yazan bir özetin altında beş satır görüyordu. Kriterin
+    /// lafzı karşılanıyordu, kararın amacı karşılanmıyordu.</para>
+    /// </summary>
+    Task<VehicleAdminSummaryDto> GetSummaryAsync(
+        bool includeArchived,
+        CancellationToken cancellationToken);
 
     /// <summary>Bulunamayan araç için <c>null</c> döner; çağıran `404`'e çevirir (AC-4).</summary>
     Task<VehicleAdminDetailDto?> FindAsync(Guid vehicleId, CancellationToken cancellationToken);

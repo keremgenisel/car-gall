@@ -26,6 +26,19 @@ internal sealed class ListingConfiguration : IEntityTypeConfiguration<Listing>
         builder.Property(listing => listing.ShowcaseSortWeight).HasColumnName("showcase_sort_weight");
         builder.Property(listing => listing.PublishedAt).HasColumnName("published_at");
 
+        // 0012b D13 — adres YAZMA modelinde ve nullable: taslağın adresi yoktur ve
+        // uydurulmaz. Tekil indeks adresin gerçekten tekil olduğunu veritabanı
+        // seviyesinde de dayatıyor; `ListingSlug`'ın soneki kimliğin son altı
+        // karakterinden geliyor ve çakışma teorik olarak mümkün.
+        builder.Property(listing => listing.Slug)
+            .HasColumnName("slug")
+            .HasMaxLength(160)
+            .HasConversion(CatalogConverters.ListingSlug);
+
+        builder.HasIndex(listing => listing.Slug)
+            .IsUnique()
+            .HasDatabaseName("ux_listings_slug");
+
         // C22 — ilan metni `jsonb`, locale başına satır olarak değil (0010a D13).
         // `color_names` ile aynı desen; ek tablo açmadan aynı yolu tekrar ediyor.
         //

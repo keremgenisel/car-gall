@@ -66,6 +66,19 @@ internal sealed class Listing : AggregateRoot<ListingId>
 
     internal LocalizedText Description { get; private set; }
 
+    /// <summary>
+    /// `0012b` **D13** — ilanın kalıcı adresi, **yazma modelinde**.
+    ///
+    /// <para>Adres bu spec'e kadar yalnız vitrin okuma modelinde yaşıyordu ve o satır
+    /// yayından kalkınca siliniyordu; "yayından kaldır → model yılını düzelt → yeniden
+    /// yayınla" dizisi **farklı bir adres** üretir ve paylaşılmış bağlantı kırılırdı.
+    /// Değişmezlik, silinen bir satırda yaşayamaz.</para>
+    ///
+    /// <para><c>null</c> = hiç yayınlanmamış. Taslağın adresi YOKTUR ve uydurulmaz
+    /// (AC-49).</para>
+    /// </summary>
+    internal ListingSlug? Slug { get; private set; }
+
     internal static Listing CreateDraft(VehicleId vehicleId, int showcaseSortWeight) =>
         new(ListingId.New(), vehicleId, showcaseSortWeight);
 
@@ -126,7 +139,19 @@ internal sealed class Listing : AggregateRoot<ListingId>
     private static bool HasText(Dictionary<string, string> values, Locale locale) =>
         values.TryGetValue(locale.Code, out string? text) && !string.IsNullOrWhiteSpace(text);
 
-    internal Result Publish(IClock clock)
+    /// <summary>
+    /// Yayına alma. **Adres İLK yayında bir kez yazılır** (**D13**) ve ikinci kez
+    /// yazılmaz; yeniden yayınlanan ilan aynı adrese döner.
+    ///
+    /// <para><b>`PublishedAt` de ilk yayında donar</b> (**D31**): `??=` bilinçli. Aksi
+    /// hâlde rezervasyonu düşen ya da yeniden yayınlanan araç vitrin sıralamasının başına
+    /// zıplar ve "yeni gelen araç" yanlış sinyalini üretir.</para>
+    ///
+    /// <para>Adres çağırandan geliyor çünkü üretimi kanonik model adını ister ve o
+    /// `VehicleReference`'ın verisidir — `Domain` başka modülü hiç bilmez
+    /// (`docs/conventions.md` § 4). Zaten adresi olan ilanda parametre **yok sayılır**.</para>
+    /// </summary>
+    internal Result Publish(ListingSlug slug, IClock clock)
     {
         if (Status is not ListingStatus.Draft)
         {
@@ -135,6 +160,7 @@ internal sealed class Listing : AggregateRoot<ListingId>
 
         Status = ListingStatus.Published;
         PublishedAt ??= clock.UtcNow;
+        Slug ??= slug;
         Raise(new ListingPublished(Id, PublishedAt.Value));
         return Result.Success();
     }
@@ -175,10 +201,18 @@ internal sealed class Listing : AggregateRoot<ListingId>
         return Result.Success();
     }
 
-    /// <summary>Yayından kaldırma. A8'de şube kapandığında da bu yol kullanılır.</summary>
+    /// <summary>
+    /// Yayından kaldırma. A8'de şube kapandığında da bu yol kullanılır.
+    ///
+    /// <para>**`Rezerve` ilanlar da geçer** (**D32**, `docs/domain.md` A3'e
+    /// 2026-10-11'de eklendi). Önceki hâli yalnız `Yayında`dan geçiyordu ve A8 şube
+    /// kapandığında rezerve bir ilanı **çıkışı olmayan** bir hâlde bırakıyordu: vitrinden
+    /// bayrakla düşüyor ama durumu `Rezerve` kalıyor ve oradan tek çıkış `Satıldı`
+    /// oluyordu.</para>
+    /// </summary>
     internal Result Unpublish()
     {
-        if (Status is not ListingStatus.Published)
+        if (Status is not (ListingStatus.Published or ListingStatus.Reserved))
         {
             return Result.Failure(new Error(InvalidTransition));
         }
@@ -188,9 +222,15 @@ internal sealed class Listing : AggregateRoot<ListingId>
         return Result.Success();
     }
 
+    /// <summary>
+    /// Arşivleme. **`Taslak` ilanlar da geçer** (**D10**): silme bu projede `Arşiv`
+    /// durumudur (`0010b` X19) ve şase tekilliği `Arşiv` kayıtlarını muaf tutuyor (A5).
+    /// İkisi birlikte, yanlış şaseyle açılmış ve hiç yayınlanmamış bir taslağı ne
+    /// silinebilir ne arşivlenebilir bırakıyordu; o şase bir daha kullanılamazdı.
+    /// </summary>
     internal Result Archive()
     {
-        if (Status is not (ListingStatus.Published or ListingStatus.Sold))
+        if (Status is not (ListingStatus.Draft or ListingStatus.Published or ListingStatus.Sold))
         {
             return Result.Failure(new Error(InvalidTransition));
         }

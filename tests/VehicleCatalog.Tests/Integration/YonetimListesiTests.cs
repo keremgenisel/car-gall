@@ -208,7 +208,7 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
             context,
             new SahteModelSorgusu(),
             new ShowcaseLocaleOptions(Tr, [Tr, En, Ar]),
-            new CatalogAdminPagingOptions(25, 100)).GetSummaryAsync(CancellationToken.None);
+            new CatalogAdminPagingOptions(25, 100)).GetSummaryAsync(includeArchived: false, CancellationToken.None);
 
         string? ilanSorgusu = yakalayici.Sorgular
             .FirstOrDefault(sorgu => sorgu.Contains("listings", StringComparison.OrdinalIgnoreCase));
@@ -232,7 +232,7 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
         await KaydetAsync("OZET2", metin: [("tr", true)]);
         await KaydetAsync("OZET3");
 
-        VehicleAdminSummaryDto ozet = await Sorgu().GetSummaryAsync(CancellationToken.None);
+        VehicleAdminSummaryDto ozet = await Sorgu().GetSummaryAsync(includeArchived: false, CancellationToken.None);
 
         Assert.Equal(3, ozet.TotalCount);
         Assert.Equal(2, ozet.TranslationIncompleteCount);
@@ -242,7 +242,7 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
             await Sorgu().ListAsync(Filtre(page: 2, pageSize: 1), CancellationToken.None);
 
         Assert.Single(sayfa.Items);
-        Assert.Equal(2, (await Sorgu().GetSummaryAsync(CancellationToken.None)).TranslationIncompleteCount);
+        Assert.Equal(2, (await Sorgu().GetSummaryAsync(includeArchived: false, CancellationToken.None)).TranslationIncompleteCount);
     }
 
     /// <summary>
@@ -398,7 +398,7 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
 
         if (yayinla)
         {
-            ilan.Publish(new FixedClock(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero)));
+            ilan.Publish(Adres(ilan), new FixedClock(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero)));
         }
 
         await using VehicleCatalogDbContext context = database.CreateContext();
@@ -446,4 +446,12 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
         ayar.FormState = durum;
         await context.SaveChangesAsync();
     }
+    /// <summary>
+    /// `0012b` **D13** — adres artık yayının parametresi: ilk yayında bir kez yazılıyor ve
+    /// bir daha değişmiyor. Bu testlerin ilgilendiği şey adres DEĞİL; yardımcı, imza
+    /// değişikliğini testin gövdesine taşımamak için var.
+    /// </summary>
+    private static ListingSlug Adres(Listing listing) =>
+        ListingSlug.Create("Toyota Corolla", 2020, listing.Id).Value;
+
 }

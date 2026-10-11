@@ -18,6 +18,7 @@ import type {
 import { SUPPORTED_LOCALES } from '../../../shared/lib/locale'
 import { adminPath, vehicleMediaPath } from '../../../shared/lib/route'
 import { Button, Card, ErrorState, Field, Skeleton } from '../../../shared/ui'
+import { ListingActionBar } from './ListingActionBar'
 import { OptionalFieldInput } from './OptionalFieldInput'
 import { VehicleSelect } from './VehicleSelect'
 import {
@@ -70,9 +71,19 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
   const [values, setValues] = useState<VehicleEditValues | null>(null)
   const [submission, setSubmission] = useState<Submission>({ kind: 'idle' })
 
-  const sourceKey = `${locale}|${vehicleId}|${sourceToken}`
+  /**
+   * Veri anahtarı TAZELEME TOKEN'I TAŞIMAZ ve bu bilinçli: yeniden okuma sırasında ekran
+   * eldeki veriyi göstermeye devam ediyor, iskelete DÜŞMÜYOR. Araç ya da dil değişince
+   * anahtar değişir ve iskelet basılır — o veri gerçekten başka bir aracın verisidir.
+   *
+   * <p><b>0012b'de bir e2e bunu yazdırdı:</b> token anahtardayken her tazeleme bütün
+   * ağacı söküyordu ve `ListingActionBar`'ın "durum güncellendi" bildirimi onunla
+   * birlikte kayboluyordu — eylem başarılı olmasına rağmen personel hiçbir işaret
+   * görmüyordu. `0012a`'nın medya ekranı aynı düzeltmeyi aynı gerekçeyle almıştı.</p>
+   */
+  const dataKey = `${locale}|${vehicleId}`
   const sources: Sources =
-    loaded !== null && loaded.key === sourceKey ? loaded.value : { kind: 'loading' }
+    loaded !== null && loaded.key === dataKey ? loaded.value : { kind: 'loading' }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -85,7 +96,7 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
     ])
       .then(([detail, options, branches, fields]) => {
         setValues(toEditValues(detail, SUPPORTED_LOCALES))
-        setLoaded({ key: sourceKey, value: { kind: 'ready', detail, options, branches, fields } })
+        setLoaded({ key: dataKey, value: { kind: 'ready', detail, options, branches, fields } })
       })
       .catch((cause: unknown) => {
         if (cause instanceof DOMException && cause.name === 'AbortError') {
@@ -96,11 +107,11 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
         // "tekrar dene" onu getirmez.
         const missing = cause instanceof ApiError && cause.status === 404
 
-        setLoaded({ key: sourceKey, value: { kind: missing ? 'missing' : 'error' } })
+        setLoaded({ key: dataKey, value: { kind: missing ? 'missing' : 'error' } })
       })
 
     return () => controller.abort()
-  }, [locale, vehicleId, sourceToken, sourceKey])
+  }, [locale, vehicleId, sourceToken, dataKey])
 
   async function submit() {
     if (sources.kind !== 'ready' || values === null) {
@@ -250,6 +261,18 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
           </div>
         </div>
       ) : null}
+
+      {/*
+        0012b — yayın durumu eylemleri. Formun ÜSTÜNDE ve ayrı bir bölüm: durum geçişi
+        bir kaydetme değil, kendi başına bir karardır ve formun "değişiklikleri kaydet"
+        düğmesiyle karışmamalı.
+      */}
+      <ListingActionBar
+        vehicleId={vehicleId}
+        listingStatus={sources.detail.listingStatus}
+        awaitingBranchAssignment={sources.detail.awaitingBranchAssignment}
+        onApplied={() => setSourceToken((token) => token + 1)}
+      />
 
       <Card as="div" testId="vehicle-edit-form">
         <form

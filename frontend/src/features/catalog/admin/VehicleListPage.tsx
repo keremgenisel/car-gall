@@ -39,8 +39,13 @@ export function VehicleListPage() {
   const [reloadToken, setReloadToken] = useState(0)
   const [page, setPage] = useState(() => readNumber('page', 1))
   const [sort, setSort] = useState<VehicleSort>(() => readSort())
+  /**
+   * 0012b **D19** — arşiv AÇIK bir filtreyle görünür ve filtre ADRESTE yaşıyor: sayfa ve
+   * sıralama gibi o da ekranın değil personelin durumu, sekme yenilendiğinde kaybolmamalı.
+   */
+  const [archived, setArchived] = useState(() => readArchived())
 
-  const requestKey = `${locale}|${page}|${sort}|${reloadToken}`
+  const requestKey = `${locale}|${page}|${sort}|${archived}|${reloadToken}`
   const state: LoadState =
     result !== null && result.key === requestKey ? result.value : { kind: 'loading' }
 
@@ -48,8 +53,8 @@ export function VehicleListPage() {
     const controller = new AbortController()
 
     Promise.all([
-      fetchVehicles(locale, page, sort, controller.signal),
-      fetchVehicleSummary(locale, controller.signal),
+      fetchVehicles(locale, page, sort, controller.signal, archived),
+      fetchVehicleSummary(locale, controller.signal, archived),
     ])
       .then(([vehicles, summary]) =>
         setResult({ key: requestKey, value: { kind: 'ready', page: vehicles, summary } }),
@@ -63,17 +68,23 @@ export function VehicleListPage() {
       })
 
     return () => controller.abort()
-  }, [locale, page, sort, reloadToken, requestKey])
+  }, [locale, page, sort, archived, reloadToken, requestKey])
 
   /** Adres ekranla birlikte değişir; tam gezinme YOK, yalnız adres çubuğu güncellenir. */
-  function navigate(nextPage: number, nextSort: VehicleSort) {
+  function navigate(nextPage: number, nextSort: VehicleSort, nextArchived = archived) {
     const query = new URLSearchParams()
     query.set('page', String(nextPage))
     query.set('sort', nextSort)
+
+    if (nextArchived) {
+      query.set('archived', 'true')
+    }
+
     window.history.replaceState(null, '', `${adminPath('vehicles')}?${query.toString()}`)
 
     setPage(nextPage)
     setSort(nextSort)
+    setArchived(nextArchived)
   }
 
   return (
@@ -100,6 +111,24 @@ export function VehicleListPage() {
             <option value="last-updated">{t('vehicle.list.sort.lastUpdated')}</option>
             <option value="recently-added">{t('vehicle.list.sort.recentlyAdded')}</option>
           </select>
+        </div>
+
+        {/*
+          0012b D19 — arşiv filtresi. Varsayılan KAPALI: arşiv bu projenin "silme"sidir
+          (`0010b` X19) ve varsayılan listede kalırsa liste sonsuz büyür, arşivleme eylemi
+          de hiçbir şey yapmamış görünür.
+        */}
+        <div className="vehicle-list__filters">
+          <label className="admin-form__check" htmlFor="vehicle-archived">
+            <input
+              id="vehicle-archived"
+              type="checkbox"
+              checked={archived}
+              onChange={(event) => navigate(1, sort, event.target.checked)}
+            />
+            {archived ? t('vehicle.list.archived.hide') : t('vehicle.list.archived.show')}
+          </label>
+          <span className="admin-form__hint">{t('vehicle.list.archived.hint')}</span>
         </div>
 
         {/*
@@ -213,7 +242,19 @@ export function VehicleListPage() {
                             <Badge>{t('vehicle.badge.missingInfo')}</Badge>
                           </span>
                         ) : null}
-                        {vehicle.missingLocales.length === 0 && !vehicle.hasMissingRequiredInfo
+                        {/*
+                          0012b R13 — şubesi kapatılmış araç AYIRT EDİLİYOR. Rozet renkle
+                          değil METİNLE anlatıyor (§ 7); ne yapılacağını düzenleme ekranı
+                          söylüyor — şube atanmadan yayına alınamaz.
+                        */}
+                        {vehicle.awaitingBranchAssignment ? (
+                          <span data-testid="vehicle-awaiting-branch">
+                            <Badge>{t('vehicle.badge.awaitingBranch')}</Badge>
+                          </span>
+                        ) : null}
+                        {vehicle.missingLocales.length === 0 &&
+                        !vehicle.hasMissingRequiredInfo &&
+                        !vehicle.awaitingBranchAssignment
                           ? t('vehicle.badge.complete')
                           : null}
                       </td>
@@ -271,4 +312,9 @@ function readSort(): VehicleSort {
   return new URLSearchParams(window.location.search).get('sort') === 'recently-added'
     ? 'recently-added'
     : 'last-updated'
+}
+
+/** Tanınmayan değer KAPALI'ya düşer; adres çubuğundan gelen bir ipucu hata ekranı üretmez. */
+function readArchived(): boolean {
+  return new URLSearchParams(window.location.search).get('archived') === 'true'
 }

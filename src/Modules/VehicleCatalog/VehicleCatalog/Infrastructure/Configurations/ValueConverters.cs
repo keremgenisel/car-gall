@@ -29,6 +29,22 @@ internal static class CatalogConverters
         new(slug => slug.Value, value => Domain.BodyTypeSlug.Create(value).Value);
 
     /// <summary>
+    /// `0012b` **D13** — ilan adresi artık yazma modelinde. Geri okurken `TryParse`
+    /// kullanılıyor: `Create` kanonik ad ve yıl ister, oysa elimizde yalnız üretilmiş
+    /// değerin kendisi var. Biçimi tutmayan bir değer veritabanına ancak elle girebilir
+    /// ve o durumda sessizce `default` dönmek yerine patlamak doğru — bozuk adres, kırık
+    /// bağlantı demektir.
+    /// </summary>
+    internal static ValueConverter<ListingSlug, string> ListingSlug { get; } = new(
+        slug => slug.Value,
+        value => ParseSlug(value));
+
+    private static ListingSlug ParseSlug(string value) =>
+        Domain.ListingSlug.TryParse(value, out ListingSlug slug)
+            ? slug
+            : throw new InvalidOperationException($"Geçersiz ilan adresi: '{value}'.");
+
+    /// <summary>
     /// `LocalizedText` sınıf ve iç sözlüğü özel; `ToDictionary()`/`From()` üzerinden
     /// jsonb'ye çevriliyor — okuma modelindeki `LocalizedNames` deseninin aynısı.
     /// </summary>

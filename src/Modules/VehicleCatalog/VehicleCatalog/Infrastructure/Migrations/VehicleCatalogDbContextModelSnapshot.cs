@@ -44,6 +44,56 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                     b.ToTable("inbox_entries", "vehicle_catalog");
                 });
 
+            modelBuilder.Entity("CarGallery.BuildingBlocks.Outbox.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTimeOffset?>("FailedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("failed_at");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTimeOffset?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedAt", "FailedAt", "NextAttemptAt")
+                        .HasDatabaseName("ix_outbox_messages_pending");
+
+                    b.ToTable("outbox_messages", "vehicle_catalog");
+                });
+
             modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Domain.Listing", b =>
                 {
                     b.Property<Guid>("Id")
@@ -63,6 +113,11 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("showcase_sort_weight");
 
+                    b.Property<string>("Slug")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("slug");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");
@@ -77,6 +132,10 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .HasColumnName("vehicle_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ux_listings_slug");
 
                     b.HasIndex("VehicleId")
                         .IsUnique()
