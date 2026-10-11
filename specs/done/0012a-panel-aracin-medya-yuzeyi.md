@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | **Tamamlandı** (2026-10-11) |
 | **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (komut ve sorgu yüzeyi) · `Media` (`alt` metni yazma ucu + iki okuma) + `Media.Contracts` · `frontend/` yönetim paneli |
@@ -358,27 +358,84 @@ Yapılandırmadan ya da yapılandırılmış locale listesinden gelen her değer
      ve mimari test (ADR 0008 / K8) sayıyı şablondan okuyarak denetler. -->
 
 - [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi (D1–D8 CLARIFY turu, **D9–D19** kriter turu; açık soru kalmadı).
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012a-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+      *PR #56'nın 33 satırlık tablosu. Ölçüldü: 33 kriterin 33'ü etiketli testle karşılandı.
+      Son commit bir e2e başlığında yarım kalan `AC-31` etiketini tamamladı — testi vardı,
+      etiketi taramaya görünmüyordu.*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012a-ac<n>.png`),
       boş ve hata durumları dâhil, RTL için Arapça görüntü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      *Dokuz görüntü: `ac1`, `ac4`, `ac5`, `ac11`, `ac16`, **`ac26` (boş durum)**,
+      **`ac27` (hata durumu)**, `ac28` ve **`ac31-ar` (Arapça, RTL)**. Ölçüldü:
+      `ls docs/evidence | grep -c 0012a` → 9.*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+      *Yetkili kanıt CI: PR koşusu `38125343618` ve merge sonrası `main` push koşusu
+      `38126734382` — backend işi `success`. PR'ın bildirdiği dağılım 952 test / 0 kırmızı
+      (Architecture 43 · Host 167 · VehicleCatalog 250 · Identity 124 · Leads 112 · Media 108 ·
+      Dealership 69 · Notifications 45 · VehicleReference 34).*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+      *Backend işinin içinde koştu. Kriter kapıları `AracMedyaSiniriTests.cs`: AC-32
+      (`Media` hiçbir modüle senkron çağrı yapmıyor; araç bağı `Media`'da tutulmuyor) ve
+      AC-33 (`VehicleCatalog → Media` yalnız `Media.Contracts`, tek atlama).*
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
+      *Yeni migration **YOK** — ölçüldü: `git diff --name-only 341e047 8fc862c | grep -i migration`
+      → sıfır satır. Bağlama `vehicles.media_asset_ids`'e, `alt` metni `media.assets.alt_text`'e
+      yazılıyor; iki kolon da zaten vardı.*
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+      *Ölçüldü: üç katalogda da **327** anahtar ve **52** medya anahtarı — düzleştirilmiş
+      anahtar kümeleri eşit. `check:locales` yeşil; üç dosya aynı commit'te +54 satır aldı.*
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+      ***Yeni domain terimi yok → madde bu spec için uygulanabilir değil*** (`0009`/`0011`
+      emsali). Ölçüldü: *Kapak Görseli* sözlükte zaten tanımlı (`docs/domain.md:44`) ve tanımı
+      "sıralı medya listesinin ilk elemanı" diyor — R2 tam onu kuruyor; M1–M3 `0011`'de girdi.
+      #56 `docs/domain.md`'ye **hiç dokunmadı**. (Dosyanın 2026-10-11 değişikliği `0012b`'nin
+      D10'u ve #54 ile girdi.)*
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+      ***Yeni mimari karar yok → madde uygulanabilir değil.*** *D10'un (sunucuda birleştirme,
+      panel tek HTTP çağrısı) dayanağı § 2.A'nın **zaten saydığı** meşru okuma; yeni bir kural
+      doğmadı. Ölçüldü: #56 `docs/architecture.md`'ye dokunmadı — dosyanın 2026-10-11
+      değişiklikleri `0012b`'nin D11'i ve #54 ile girdi.*
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+      *PR'ın dört kapısı `pass` (`38125343618` + Performans `38125343617`); merge sonrası
+      `main` push koşusu `38126734382` üç işin üçünde `success`. Her merge'de CI doğrulaması
+      **merge'den ayrı** adım olarak okundu (§ 4.3): çıkış kodu, özet ve `mergeStateStatus`
+      birlikte.*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
-- [ ] Medya koşulunun **dört** sınır durumu ayrı ayrı testle gösterildi (Tuzak 1).
-- [ ] `EnsurePublishable`'ın yeni şartı ile `0010a`'nın agregat testi birlikte güncellendi
+      *Bir tur, 2026-10-11, **beş bulgu** (üçü önemli, ikisi küçük); beşi de düzeltildi ve her
+      biri için kapı eklendi/güncellendi (`fb37f09`). Önemli üçü: tekrar denemenin `202` + boş
+      gövdesi istemcide patlıyordu ve **başarılı** tekrar deneme ekranda hata görünüyordu
+      (AC-17) · aracın **son** fotoğrafı çıkarılamıyordu, liste boşalınca Kaydet kayboluyordu
+      (AC-6) · `Guid.Empty` var olmayan varlık kontrolünü atlayıp araca bağlanıyordu (AC-9).*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+      *#56'nın şablonu dolu; **"Karşılanmayan kriterler: Yok"**. Altı açık konu adıyla yazılı —
+      ikisi öneri (dosya seçme kontrolünün tarayıcı metni, `dev-up.sh`'e port öneki), dördü
+      kayıt (D13'ün kabul edilmiş eşzamanlılık bedeli dâhil).*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+      *`8fc862c`, 2026-10-11. Yığın sırası korundu: #54 (`98c68ea`) → #55 (`341e047`) → #56.
+      #55'in squash sonrası tarihsel çatışması `-s ours` ile çözüldü ve kaybın olmadığı ağaç
+      kimliğiyle kanıtlandı; #56 merge edilmeden önce `git merge-tree` sonucu `fb37f09`'un
+      ağacıyla aynı çıktı (`318576f`).*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      *Bu PR.*
+- [x] Medya koşulunun **dört** sınır durumu ayrı ayrı testle gösterildi (Tuzak 1).
+      *`VehicleTests.cs` dördünü ayrı testlerle ölçüyor — AC-19 hiç bağlı varlık yok ·
+      AC-20 hepsi `işleniyor` · AC-21 biri `hazır`, ikisi `işleniyor` → **karşılar** ·
+      AC-22 hepsi `başarısız`; `vehicleMediaState.test.ts` aynı dördünü ekran tarafında.
+      Tuzak 1'in kapısı AC-21: `AreAllReadyAsync` ile ölçen bir uygulama onu reddederdi.*
+- [x] `EnsurePublishable`'ın yeni şartı ile `0010a`'nın agregat testi birlikte güncellendi
       ve bu PR açıklamasında **adıyla** yazıldı (**D6**).
-- [ ] `alt` metni yazma ucunun `Media` modülünde açıldığı ve `VehicleCatalog`'un metnin
+      *İmza `EnsurePublishable(IReadOnlySet<Guid> readyMediaAssetIds)` oldu ve gövde kesişime
+      bakıyor (`Vehicle.cs:353`); `tests/VehicleCatalog.Tests/Domain/VehicleTests.cs` birlikte
+      yeniden yazıldı. #56 § "DoD'un adıyla yazılması istenen üç maddesi" onu adıyla yazıyor.
+      Kapanmış bir spec'in testine dokunmak D6'nın açıkça kabul ettiği bedeldi.*
+- [x] `alt` metni yazma ucunun `Media` modülünde açıldığı ve `VehicleCatalog`'un metnin
       kopyasını tutmadığı testle gösterildi (**C5**, **D3**).
+      *Uç `Media`'da: `PUT {admin}/media/assets/{id}/alt-text` → `AltMetniKaliciligiTests.cs`.
+      Kopya tutulmadığı: `AracMedyaSiniriTests.cs`. **Bu ikinci kapı PR'ın ilk hâlinde YOKTU:**
+      maddenin dayandığı test bir doc comment'te adı geçen ama var olmayan bir testti;
+      ölçüldü ve kapı yazıldı (`baa2088`). `0011`'in AC-35 kapısıyla aynı sınıf — atıf test
+      değildir.*
 
 ---
 
@@ -391,13 +448,37 @@ Dürüst doldurulmayan scorecard işe yaramaz — abartılmış iyi sayılar en 
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3). Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı. Dış bulguyla aynı sütunda toplanmaz. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır.** Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak (ADR 0008 / K3). |
+| **Kriterler önce `main`'de miydi?** | **evet** | Ölçüldü: `git cat-file -e 8fc862c^:specs/0012a-panel-aracin-medya-yuzeyi.md` → çıkış 0. Implementasyon commit'i `8fc862c` (#56), ebeveyni `341e047` (#55) ve 33 kriterin tamamı o ebeveynde duruyor. **Bu kuralı sırasına uyarak işleten ikinci spec** (`0007`'den sonra). |
+| **Kriter sayısı: önce → bugün** | **33 → 33** | `git show 8fc862c^:…` → 33, bugün → 33. Kriterler donduktan sonra **hiç** değişmedi: `git diff --stat 341e047 8fc862c -- specs/` boş — #56 spec dosyasına dokunmadı. |
+| **Spec revizyon sayısı** | **1** | R/C ilk olarak #54'te (`98c68ea`) `main`'e girdi: kart **`Taslak`**, 8 R, **0 AC**. #55 (`341e047`) kartı `Onaylandı` yaptı, **R9**'u ekledi (D9) ve 33 kriteri yazdı. K3 "onay anındaki CLARIFY turu **sayılır**" dediği için R'nin #54 → #55 arasındaki değişimi **1** sayıldı. *Daha gevşek okuma:* K2'nin "R/C/AC kendi PR'ında" ifadesi AC taşıyan PR'ı (#55) donma anı sayar ve sonuç **0** olur — PR #56'nın gövdesi o okumayı kullanıyor. **Sıkı okuma seçildi** (Takım Yöneticisi, kapanış turu): kural iki okumaya açık ve abartılmış iyi sayı en pahalı yalandır. AC tarafında churn **sıfır**. |
+| **Düzeltme turu sayısı** | **1** | PR bir kez geri döndü: dış gözden geçirme turu beş bulgu verdi, hepsi düzeltildi (`fb37f09`). DoD'un dış gözden geçirme kutusu `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **5 / 0** | Beşi de gerçek sorundu ve beşi de düzeltildi; üçü önemli (AC-17 tekrar denemenin `202` + boş gövdesi, AC-6 son fotoğrafın çıkarılamaması, AC-9 `Guid.Empty` kaçağı), ikisi küçük (kuruluş kapısının iki red kodu test edilmiyordu, dört doc comment yanlış üyenin üstündeydi). Gürültü yok. |
+| **Uygulama içi bulgu** | **5** | Yazarın kendi işini yaparken bulduğu kusurlar, PR gövdesinden sayıldı — sayıyı yazar vermedi, bu triyaj kapanış turunun: (1) kaydetme bildirimi hiç görünmüyordu, başarıdan sonraki yeniden okuma onu siliyordu; (2) her tazeleme bütün listeyi söküyordu ve kartın durumu onunla kayboluyordu; (3) AC-13'ün sınır yarısına kapı yoktu, DoD maddesi var olmayan bir teste atıf yapıyordu; (4) e2e başlıkları etiketleri kısaltıyordu ve tarama `AC-31`'i göremiyordu; (5) CI'ın e2e işi medya deposu olmadan koşuyordu, ilk koşuda yedi test düştü. |
+| **Regresyon sayısı** | **0** | Daha önce çalışan hiçbir davranış bozulmadı. `VehicleTests.cs`'in yeniden yazımı D6'nın açıkça kabul ettiği imza değişikliğidir, regresyon değil. `sendJson`'ın kusuru **gizli** duruyordu: bu dilimden önce panelde `202` + boş gövde dönen bir ucun çağıranı yoktu. |
+| **Kaçan hata** | **izleniyor** | Spec arşive taşınıyor (ADR 0008 / K3). Kapanış turu bir kusur buldu ama davranışta değil: `MediaAssetContracts.cs`'in `AreAllReadyAsync` doc comment'i *"`Vehicle.EnsurePublishable()` bugün hâlâ yalnız sayıya bakıyor"* diyordu; D6'dan sonra bu **yanlış** ve aynı PR'da düzeltildi. |
 
-**Bu spec'ten çıkarılan ders:**
+**Bu spec'ten çıkarılan ders:** **Yığını doğru sıralamak işe yaradı ve bedeli tam olarak
+K2'nin yazdığı bedeldi.** Kriterler implementasyon commit'inin ebeveyninde duruyor, AC tarafında
+churn sıfır (33 → 33) ve `0011`'de delinen ölçüm burada delinmedi. Karşılığı iki ek PR, iki ek
+onay turu ve bir tarihsel merge çatışması oldu.
+
+Üç ders daha, üçü de ölçümden çıktı:
+
+1. **Bir kart kendi ölçümünü veremez.** PR gövdesi "revizyon 0" diyordu; kapanış turu aynı
+   kuralı sıkı okuyup **1** yazdı, çünkü R #54'te `main`'e girip #55'te R9 kazandı. Ölçümü
+   yazan ile işi yapan aynı kişi olduğunda sayı iyimser tarafa düşer — K3'ün "yorum payı yok"
+   hedefi R/C/AC'nin **kısmen** girdiği bu durumda tutmuyor ve kuralın bir sonraki turda
+   netleşmesi gerekiyor.
+2. **Bir yorumda yazılı "bugün gerekmiyor" varsayımı, onu geçersiz kılan işin PR'ında
+   denetlenmek zorunda.** CI'ın e2e işi *"akışların hiçbiri dosya yüklemiyor"* varsayımına
+   dayanıyordu; bu dilim yükleme ekranını getirdi ve ilk koşuda yedi test düştü. Yerelde
+   yeşildi — kanıt yığınında LocalStack vardı.
+3. **DoD maddesinin bir teste ATIF yapması, o testin var olduğunu kanıtlamaz.** AC-13'ün sınır
+   yarısına kapı yoktu; madde bir doc comment'te adı geçen ama var olmayan bir testi
+   gösteriyordu. `0011`'in AC-35'iyle aynı sınıf.
+
+**Devredilen borç, adıyla:** bu dilim bittiğinde galeri hâlâ **hiçbir aracı yayına alamıyor**
+(D7). Ölçüldü: `EnsurePublishable`'ın ve `ReadyAmongAsync`'in **üretim çağıranı yok** — ikisi de
+yalnız testlerden çağrılıyor (D18) — ve vitrin okuma modeline yazan üretim yolu hâlâ geliştirme
+seed'i (D19). Tüketicisi `0012b`. D13 gereği eşzamanlılık koruması **bilerek yok**: iki personel
+aynı aracın medyasını aynı anda düzenlerse son yazan kazanır.
