@@ -171,6 +171,18 @@ jobs:
           MP_SMTP_AUTH_ALLOW_INSECURE: 'true'
         ports: ['1025:1025', '8025:8025']
 
+      # 0012a — panelde YÜKLEME KONTROLÜ var (D9) ve e2e gerçekten dosya yüklüyor.
+      # Bu servis eklenene kadar iş, "e2e akışlarının hiçbiri dosya yüklemiyor"
+      # varsayımıyla depo olmadan koşuyordu; 0012a o varsayımı geçersiz kıldı ve
+      # yükleme adımı yedi testi birden düşürdü. Yorumun kendi tahmini doğru çıktı:
+      # iki dakika — ama artık SIFIR kapı değil, yedi test.
+      localstack:
+        image: localstack/localstack:3.8.1
+        env:
+          SERVICES: s3
+          DEBUG: '0'
+        ports: ['4566:4566']
+
     steps:
       - uses: actions/checkout@v4
 
@@ -195,6 +207,32 @@ jobs:
       - name: Frontend build
         working-directory: frontend
         run: npm run build
+
+      # Filigran kaynağı yapılandırmadaki bir NESNE ANAHTARIDIR (0011 D4) ve depoda
+      # BULUNMAK zorunda: bulunmazsa her işleme `media.watermark_unavailable` ile
+      # başarısız olur ve türev üretilmez. PNG burada üretiliyor, repoda durmuyor —
+      # `scripts/dev-up.sh` ile aynı karar ve aynı gerekçe.
+      - name: Medya deposu (kova + filigran)
+        run: |
+          for _ in $(seq 60); do
+            curl -sf -o /dev/null http://localhost:4566/_localstack/health && break
+            sleep 1
+          done
+
+          python3 - watermark.png <<'PYEOF'
+          import struct, sys, zlib
+          w, h = 240, 80
+          rows = b''.join(b'\x00' + bytes([255, 255, 255, 220] * w) for _ in range(h))
+          def chunk(tag, body):
+              return struct.pack('>I', len(body)) + tag + body + struct.pack('>I', zlib.crc32(tag + body) & 0xffffffff)
+          png = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 6, 0, 0, 0)) \
+              + chunk(b'IDAT', zlib.compress(rows, 9)) + chunk(b'IEND', b'')
+          open(sys.argv[1], 'wb').write(png)
+          PYEOF
+
+          export AWS_ACCESS_KEY_ID=ci AWS_SECRET_ACCESS_KEY=ci AWS_DEFAULT_REGION=us-east-1
+          aws --endpoint-url http://localhost:4566 s3 mb s3://cargallery-media
+          aws --endpoint-url http://localhost:4566 s3 cp watermark.png s3://cargallery-media/private/brand/watermark.png
 
       - name: Host'u seed ederek başlat
         env:
@@ -224,20 +262,14 @@ jobs:
           Notifications__Smtp__Password: ci
           Notifications__PublicBaseUrl: http://localhost:5080
           # 0011 — uygulama medya yapılandırması olmadan HİÇ başlamaz (AC-31…33).
-          #
-          # Burada GERÇEK bir depolama servisi YOK ve bilinçli: e2e akışlarının hiçbiri
-          # dosya yüklemiyor (0011'in arayüzü yok, panel yükleme ekranı 0012'nin işi) ve
-          # `MediaOptions` yalnız YAPILANDIRMAYI doğruluyor, bağlantıyı değil. Bir
-          # LocalStack servisi eklemek bu işe iki dakika ve sıfır kapı eklerdi.
-          #
-          # Yüklemenin ve türev üretiminin gerçek bir S3 uyumlu sağlayıcıya karşı kanıtı
-          # backend işindeki `Media.Tests` entegrasyon testlerinde — Testcontainers ile.
-          Media__Storage__ServiceUrl: http://localhost:54566
+          # 0012a — ve artık GERÇEK bir depo var: panelin yükleme kontrolü (D9) e2e'de
+          # gerçekten dosya yüklüyor, hat türev üretiyor ve filigran basıyor.
+          Media__Storage__ServiceUrl: http://localhost:4566
           Media__Storage__Bucket: cargallery-media
           Media__Storage__AccessKey: ci
           Media__Storage__SecretKey: ci
           Media__Storage__Region: us-east-1
-          Media__PublicBaseUrl: http://localhost:54566/cargallery-media/
+          Media__PublicBaseUrl: http://localhost:4566/cargallery-media/
           Media__WatermarkObjectKey: private/brand/watermark.png
           # AC-9 — tür kümesi yapılandırmadan; boş küme kuruluşta reddedilir.
           Media__AllowedImageFormats__0: jpeg
