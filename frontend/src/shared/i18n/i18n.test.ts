@@ -63,6 +63,10 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           // 0012b — yayın reddi hangi ALANLARIN eksik olduğunu da söylüyor (D24) ve
           // durumu adıyla anıyor.
           fields: 'Tramer tutarı',
+          // 0012c — toplu eylemin sayıları ve seçim sınırı (**D29**, **D45**).
+          limit: 100,
+          applied: 2,
+          failed: 1,
         })
         expect(value).not.toBe(key)
         expect(value.trim()).not.toBe('')

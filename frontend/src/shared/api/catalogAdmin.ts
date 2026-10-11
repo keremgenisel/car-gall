@@ -2,6 +2,8 @@ import type { AppLocale } from '../lib/locale'
 import { getJson, sendJson } from './client'
 import type {
   BranchSummary,
+  BulkListingOperation,
+  BulkListingResult,
   CreateVehicleRequest,
   PagedResult,
   ReferenceOption,
@@ -11,6 +13,7 @@ import type {
   VehicleAdminListItem,
   VehicleAdminSummary,
   ListingAction,
+  ListingFeatureAction,
   VehicleMedia,
   VehicleSort,
 } from './types'
@@ -100,6 +103,53 @@ export async function applyListingAction(
     undefined,
     locale,
   )
+}
+
+/**
+ * 0012c **R5** — bir ilanı öne çıkarır ya da öne çıkarmayı kaldırır.
+ *
+ * <p>Geçişlerden AYRI bir fonksiyon: öne çıkarma bir durum geçişi değil. Reddin kodu da
+ * ayrı (`listing.cannot_feature.archived` → `409`, **D49**) ve panel onu kendi
+ * anahtarından çeviriyor.</p>
+ */
+export async function applyListingFeature(
+  vehicleId: string,
+  featured: boolean,
+  locale: AppLocale,
+): Promise<void> {
+  const action: ListingFeatureAction = featured ? 'feature' : 'unfeature'
+
+  await sendJson<null>(
+    'POST',
+    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}/${action}`,
+    undefined,
+    locale,
+  )
+}
+
+/**
+ * 0012c **R4** · **D6** — toplu eylem. Yanıt `200` ve gövdesi **araç başına sonuç
+ * listesidir**; hepsi başarısız olsa bile.
+ *
+ * <p><b>Başarı HTTP kodundan okunamaz</b> ve bedel açıkça kabul edildi
+ * (`docs/conventions.md` § 5): çağıran gövdeyi okumak zorunda. İstek düzeyi reddi
+ * (boş seçim, sınır aşımı) `422` ile gelir ve `ApiError` olarak fırlar.</p>
+ */
+export async function applyBulkListingAction(
+  operation: BulkListingOperation,
+  vehicleIds: readonly string[],
+  locale: AppLocale,
+): Promise<BulkListingResult> {
+  const sonuc = await sendJson<BulkListingResult>(
+    'POST',
+    `${ADMIN_VEHICLES}/bulk/${operation}`,
+    { vehicleIds },
+    locale,
+  )
+
+  // Gövdesiz bir `200` sözleşmeye aykırı; boş liste ile "yanıt yok"u ayırmak çağıranın
+  // işi olmasın diye burada normalleştiriliyor.
+  return sonuc ?? { results: [] }
 }
 
 /** 0012a/AC-24 — aracın sıralı medyası, `Media`'nın durumlarıyla birleştirilmiş hâlde. */
