@@ -331,27 +331,73 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
 
 ## Acceptance Criteria
 
-> **Kriter turunda yazılacak** — bekleyen karar kalmadı (**D43**). En az şu kümeleri
-> kapsayacak:
->
-> **Toplu eylem:** kısmi başarı · boş seçim · yinelenen kimlik (tekilleştirme sınırdan
-> **önce**) · üst sınır aşımı ve sınırın **dâhil** olması — **API düzeyinde** (**D52**) ·
-> hepsi başarısız olsa da `200` · **altı** toplu eylemin her biri (öne çıkarmayı kaldırma
-> dâhil) · satırların **gönderildiği sırada** işlenmesi ve bir satırın eşzamanlılık kaybının
-> diğerlerini düşürmemesi (**D47**).
-> **Sonuç satırı:** her satırın aynı şekli taşıması · başarısız satırın hata kodu **ve
-> yapısal parametrelerini** taşıması — tekil uçla aynı gerekçe (**D45**) · başarılı satırın
-> **güncel durum kodunu** taşıması · bulunamayan aracın **satırı** düşürmesi (**D27**) ·
-> zaten hedef **durumda** olan kaydın başarısız sayılması (**D28**).
-> **Öne çıkarma:** vitrin sıralamasına yansıması · duyuru **üretmemesi** (**D16**) ·
-> **idempotent** olması — zaten o hâlde olan kaydın **başarılı** dönmesi (**D48**) ·
-> arşivlenmiş ilanın `listing.cannot_feature.archived` ile **`409`** alması (**D49**) ·
-> durumun panel listesinde **görünmesi** (**D50**) · eylemin **yalnız liste ekranında**
-> olması (**D51**) · zaman damgasını ilerletmesi (**D36**).
-> **Okuma bütçesi:** istek başına bir kez okunan dört okumanın gerçekten **bir kez**
-> okunduğu ve medya hazırlığının **kayıt başına ve kilit altında** kaldığı (**D46**).
-> **Yüzey:** seçimin **sayfaya** ait olması ve sayfa değişince temizlenmesi (**D43**) ·
-> eylem sonucunun **başarılı** ve **kısmi başarı** durumları (**D54**) · çok dil ve RTL.
+Kırk iki kriter, yedi grupta. Bekleyen karar yoktu (**D43**); kapsamı **D52** (sınır
+kriterleri API düzeyinde), **D53** (filtreye uygulama kapsam dışı) ve **D54** (R6 ikiye
+ayrıldı) belirledi. Yapılandırmadan gelen her değer için kriter **yapılandırılan değeri**
+doğrular, spec'e kopyalanmış bir sabiti değil.
+
+### A. Seçim ve istek düzeyi reddi
+
+- **AC-1.** Oturum açmış personel birden çok aracı seçip aynı eylemi hepsine uygular; yanıt `200` ve gövdesi araç başına sonuç listesidir.
+- **AC-2.** Boş seçim istek düzeyinde reddedilir: yanıt `422` ve `listing.selection_empty` taşır.
+- **AC-3.** Yinelenen araç kimlikleri teklenir: aynı araç iki kez gönderildiğinde sonuç listesi o aracı **bir kez** taşır.
+- **AC-4.** Tekilleştirme sınır kontrolünden **önce** gelir: yalnız yinelemeler yüzünden sınırı aşan bir seçim kabul edilir.
+- **AC-5.** Üst sınırı aşan seçim **kırpılmaz, reddedilir**: yanıt `422` ve `listing.selection_limit_exceeded` taşır.
+- **AC-6.** Üst sınır **dâhildir**: tam sınır kadar araç taşıyan seçim kabul edilir.
+- **AC-7.** Üst sınır **yapılandırmadan** okunur; kodda sabit değildir.
+- **AC-8.** Oturumu olmayan biri hiçbir toplu eylemi çağıramaz.
+- **AC-9.** Toplu **rezerve** ve toplu **rezervasyon kaldırma** uçları yoktur.
+
+### B. Sonuç satırının şekli
+
+- **AC-10.** Her sonuç satırı aynı şekli taşır: araç kimliği · başarılı mı · hata kodu ve yapısal parametreleri · kaydın güncel durum kodu.
+- **AC-11.** **Başarılı** satır da kaydın **güncel durum kodunu** taşır.
+- **AC-12.** Başarısız satır tekil ucun **aynı** gerekçesini taşır: kod **ve** yapısal parametreleri; toplu yayın reddinde eksiklerin listesi satırda durur.
+- **AC-13.** Araçların **hepsi** başarısız olsa bile yanıt `200` döner.
+- **AC-14.** Bulunamayan araç isteği değil **o satırı** düşürür: satır `vehicle.not_found` taşır ve istek `200` kalır.
+- **AC-15.** Zaten hedef **durumda** olan kayıt **başarısız** sayılır ve satır kaydın güncel durumunu taşır.
+- **AC-16.** Geçerli satırlar uygulanır; bir satırın reddi uygulanmış satırları **geri almaz**.
+
+### C. Altı eylem, sıra ve dayanıklılık
+
+- **AC-17.** Altı toplu eylemin her biri toplu yüzeyden uygulanır: yayına al · yayından kaldır · satıldı işaretle · arşivle · öne çıkar · öne çıkarmayı kaldır.
+- **AC-18.** Satırlar **gönderildiği sırada** işlenir ve sonuç listesi aynı sırayı taşır.
+- **AC-19.** Bir satırın eşzamanlılık kaybı **satır düzeyinde** kalır: `concurrency.lost` o satıra yazılır, diğer satırlar uygulanır.
+- **AC-20.** Toplu eylem durum geçişi mantığını **tekrarlamaz**; karar agregatta kalır.
+- **AC-21.** Toplu eylem aracın **son güncellenme** zamanını ilerletir.
+- **AC-22.** Toplu eylem vitrin okuma modelini **aynı işlemde** günceller.
+- **AC-23.** Toplu geçişler **duyurulur**: başarılı her geçiş kendi entegrasyon olayını yazar.
+
+### D. Öne çıkarma
+
+- **AC-24.** Öne çıkarılan ilan vitrin sıralamasının **başında** görünür.
+- **AC-25.** Öne çıkarma **duyuru üretmez**: outbox'a satır yazılmaz.
+- **AC-26.** Öne çıkarma **idempotenttir**: zaten öne çıkarılmış kayıt **başarılı** döner.
+- **AC-27.** Öne çıkarmayı kaldırma da **idempotenttir**: zaten öne çıkarılmamış kayıt **başarılı** döner.
+- **AC-28.** Arşivlenmiş ilan öne çıkarılamaz: yanıt `listing.cannot_feature.archived` ve `409` taşır.
+- **AC-29.** Öne çıkarma **arşiv dışındaki her durumda** çalışır: taslak, yayında, rezerve ve satıldı.
+- **AC-30.** Öne çıkarma aracın **son güncellenme** zamanını ilerletir.
+- **AC-31.** Öne çıkarma anahtarı **iki değerlidir** ve geliştirme seed'i o iki değere hizalıdır.
+- **AC-32.** Panel listesi **hangi aracın öne çıkarıldığını** gösterir.
+- **AC-33.** Öne çıkarma **yalnız liste ekranında** yaşar; düzenleme ekranının eylem çubuğunda yoktur.
+
+### E. Okuma bütçesi
+
+- **AC-34.** Aynı yanıtı veren dört okuma istek başına **bir kez** yapılır: zorunlu alan kümesi · public alan anahtarları · şube başına ad haritası · kanonik model adları.
+- **AC-35.** Medya hazırlığı **kayıt başına** ve **kilidin altında** okunur.
+
+### F. Panel yüzeyi
+
+- **AC-36.** Seçim **sayfaya aittir**: sayfa değişince temizlenir.
+- **AC-37.** Eylem sonucunun **başarılı** durumu basılır ve kaç kaydın uygulandığı **ICU** ile söylenir.
+- **AC-38.** **Kısmi başarı** dördüncü ekran durumu olarak basılır: uygulanmayanlar **tek tek gerekçesiyle** listelenir ve sonuç "başarılı" ya da "hata" olarak yuvarlanmaz.
+- **AC-39.** Panel hiçbir teknik detay göstermez: hata kodu, HTTP durumu ve rota yolu ekranda görünmez.
+- **AC-40.** Panel personelin tercih ettiği dilde çalışır; Arapça'da yüzey RTL ve metinler Arapçadır.
+
+### G. Sınır ve kayıt
+
+- **AC-41.** Şube kapanışı yolu seçim üst sınırına **tabi değildir**.
+- **AC-42.** `VehicleCatalog` `InvariantGuardOptions`'ı **kendi** kaydeder; başka modülün kaydına bağımlı değildir.
 
 ---
 
@@ -360,8 +406,9 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
 <!-- MADDE ÇIKARILAMAZ. Şablondaki her maddenin bir `<!-- DoD:Tn -->` işaretleyicisi vardır
      ve mimari test (ADR 0008 / K8) sayıyı şablondan okuyarak denetler. -->
 
-- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi
-      (**D43–D55**; taşınan kararlar `0012b`'de donmuş hâlde).
+- [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi
+      (**D43–D55**; taşınan kararlar `0012b`'de donmuş hâlde). *Son açık soru S1,
+      `d969dfb` turunda **D43** ile kapandı; kriter turuna giren bekleyen karar yok.*
 - [x] `0012b` tamamlandı (tekil komutlar ve duyurular hazır).
       *2026-10-11, `e67a61d` (#60) ve kapanışı `2255370` (#61); kart `specs/done/` altında,
       58 kriter, 29 DoD kutusu. Ölçüldü: altı eylem ucu
