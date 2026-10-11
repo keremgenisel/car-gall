@@ -71,6 +71,18 @@ Tek bir araç galerisi için satış vitrini ve yönetim paneli.
   kendiliğinden genişletmez. (ADR `0008` / K6, Takım Yöneticisi kararı 2026-10-10.)
   *Neden:* `0006`'nın zaman bombası `main`'de dört gün durdu; bu depoda sabit nöbetçi yok,
   bu yüzden kural "ilk bakan"a bağlı.
+- **Son 24 saatte hiç zamanlı koşu YOKSA bunu da raporla.** Olayı ayrıca sor, listeye
+  bakmakla yetinme — `push` koşuları listeyi yeşil gösterir ve zamanlı koşunun yokluğunu
+  gizler:
+  ```
+  gh api "repos/<sahip>/<depo>/actions/workflows/ci.yml/runs?event=schedule&per_page=1" \
+    --jq .total_count
+  ```
+  *Neden:* kural kırmızı bir koşu için yazılmıştı ve "koşu hiç yok" hâli sessizce "sorun yok"
+  gibi görünüyordu. Hiç havlamayan bekçi, yanlış havlayan bekçiden daha tehlikelidir:
+  `0006`'yı dört gün görünmez kılan şey koşunun **yokluğu**ydu. İlk zamanlı pencere
+  2026-10-11'de kaçtı ve bu ölçüm ADR `0008` / K6'ya yazıldı.
+  (Takım Yöneticisi kararı 2026-10-11.)
 
 **Bir işe başlamadan önce**
 1. İlgili spec'i **tam** oku. Spec yoksa dur ve spec iste (Altın Kural 1).

@@ -121,6 +121,29 @@ eşik ölçümünün kırmızısı koşucu gürültüsünden ayırt edilemez, **
 da tam olarak bu kararın reddettiği şeydir.** Sonuç olarak `main`'in performans durumu
 "bilinmiyor" hâlinde kalıyor — kapatılması gerekiyorsa ayrı bir karardır.
 
+**Ölçüm — ilk zamanlı pencere KAÇTI (2026-10-11).** Cron `main`'e 2026-10-10 11:20 UTC'de
+girdi (`b97a320`); ilk `0 3 * * *` penceresi 2026-10-11 03:00 UTC'ydi ve o pencereden koşu
+çıkmadı. Üç şey ayrı ayrı ölçüldü: iş akışının durumu `active`, dosya varsayılan dalda
+(`.github/workflows/ci.yml`), ve API'ye göre `schedule` olayıyla koşu sayısı **0**
+(`gh api .../workflows/ci.yml/runs?event=schedule` → `total_count: 0`, 05:26 UTC'de
+okundu). Yani sebep devre dışı bir iş akışı ya da yanlış daldaki bir dosya DEĞİL.
+
+Takım Yöneticisi kararıyla yol elle doğrulandı: `workflow_dispatch`, `main @ b99912a`,
+koşu `38114347861`, 05:18 → 05:26 UTC, **üç işin üçü de `success`**. Bunun kanıtladığı şey
+sınırlı ve sınırını yazmak gerekiyor: **iş akışı `main`'de bir PR'a bağlı olmadan koşabiliyor
+ve yeşil.** Kanıtlamadığı şey **zamanlı tetikleyicinin kendisi** — o ancak ikinci pencerede
+(2026-10-12 03:00 UTC) ölçülebilir. GitHub'ın zamanlı koşularını yoğunlukta geciktirdiği
+bilinen bir davranış; ikinci pencere de boş çıkarsa K6'nın dayandığı mekanizma bu depoda
+çalışmıyor demektir ve kararın yeniden açılması gerekir.
+
+**Kuralın kör noktası bu ölçümle görünür oldu: K6 KIRMIZI bir koşu için yazılmıştı.**
+"Koşu hiç yok" hâli sessizce "sorun yok" gibi görünür — oturum `gh run list` okur, son
+koşuların hepsi yeşil `push` koşusudur ve raporlanacak bir şey bulmaz. Hiç havlamayan bir
+bekçi, yanlış havlayan bekçiden daha tehlikelidir: `0006`'nın zaman bombasını dört gün
+boyunca görünmez kılan şey tam olarak koşunun **yokluğu**ydu. Bu yüzden `AGENTS.md`'nin
+oturum açılış maddesi aynı turda genişletildi: **son 24 saatte hiç zamanlı koşu yoksa bu da
+raporlanır** (Takım Yöneticisi, 2026-10-11).
+
 ### K7 (Ö12) — Gürültü böleni teslim formatına girer
 
 Dış turu veren oturum bulgularını teslim ederken *"n bulgu, bunların m'si gürültü"* satırını
