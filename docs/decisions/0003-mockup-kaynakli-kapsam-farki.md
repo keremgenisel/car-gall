@@ -229,7 +229,7 @@ taşımayabilir.
 
 *Bu tablo **kararın verildiği andaki** durumu kaydediyor ve yeniden yazılmıyor. Bugünkü
 karşılıkları: dilim 1 → `0010a` + `0010b` (ikisi de tamamlandı); dilim 2 → `0011`;
-dilim 3 → `0012`.
+dilim 3 → `0012a` + `0012b` (2026-10-11'de ikiye bölündü).
 Güncel hâl aşağıdaki "Güncellenen sıra" tablosundadır.*
 
 **Bu, unsur 7'yi reddetmez; 2. maddesini ikiye böler ve `Media`'yı (#3) yayın işinin
@@ -261,7 +261,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 2 | **Görsel dil ve marka teması** | `frontend-002` ✅ tamamlandı |
 | 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
-| 5 | Yayın ve durum eylemleri + toplu eylemler | **`0012`** (Taslak — S1–S5) |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | **`0012a`** (Taslak — karar bekleyen soru yok) · **`0012b`** (Taslak — S1) |
 | 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
 | 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
@@ -273,21 +273,33 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 
 `3`. satır `0010`'un **D9**'uyla ikiye bölündü ve **iki dilimi de kapandı**: `0010a` (araç
 kaydı, 2026-10-05) ve `0010b` (düzenleme ve liste, 2026-10-10). `4`. satır `0011` ile kapandı
-(2026-10-11). **Başlanmamış ilk iş #5 (`0012`)** — ve o, `0011`'den iki iş devraldı: X7 (A2'nin
-"hazır" şartını `Media`'nın okuma yüzeyine bağlamak) ve X8 (panelde "tekrar dene" ekranı).
+(2026-10-11). **`5`. satır da ikiye bölündü** — 2026-10-11 CLARIFY turu, `0012a` **D1**:
+`0012a` (aracın medya yüzeyi) ve `0012b` (yayın ve durum eylemleri). Bölme sınırı **A2'nin
+medya koşulu**: birinci dilim onu ölçülebilir kılar, ikinci dilim onu tüketir. Sıra
+DEĞİŞMEDİ; başlanmamış ilk iş hâlâ #5'tir ve artık iki dosyadır.
 
-`0011` bu bedelin **medya yarısını** ödedi: fotoğraf artık sisteme giriyor, türevleri ve
+**Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
+diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca
+bağlanması, sıralanması ve kapak seçimi — "panel akışı `0012` ile gelir") ve **D16** (`alt`
+metninin girişi) de aynı yere yazılıydı. Dördü `0012a`'ya düştü. Devrin kendisi yazılıydı
+ama **toplamı** iki ayrı yerde iki farklı sayı veriyordu; sayıyı sonradan düzeltmek, devrin
+yazılı olmasının neden yetmediğini gösteriyor.
+
+`0011` bedelin **medya yarısını** ödedi: fotoğraf artık sisteme giriyor, türevleri ve
 filigranı üretiliyor, `MediaAssetReady` yayılıyor ve duyuru dağıtıcı üzerinden vitrinin okuma
 modeline ulaşıyor. **Yayına alma yine de yapılamıyor** ve sebebi değişti: artık "olayı yayan
 yok" değil, (1) yüklenen varlığı bir araca bağlayan hiçbir akış yok — ölçüldü:
 `Vehicle.AttachMediaAsset`'in tek üretim çağıranı geliştirme seed'i — ve (2) yayın eyleminin
 kendisi yok; `EnsurePublishable()`'ın hiçbir üretim çağıranı bulunmuyor ve gövdesi hâlâ yalnız
-`mediaAssetIds.Count > 0`'a bakıyor (`0011` X7 bunu bilerek `0012`'ye bıraktı). Vitrin bu yüzden
-hâlâ seed'e bağlı ve `0012` sıranın başında.
+`mediaAssetIds.Count > 0`'a bakıyor. Birinci sebep `0012a`'nın, ikincisi `0012b`'nin işi.
+Vitrin bu yüzden hâlâ seed'e bağlı.
 
-**Sekiz taslağın toplam 38 açık sorusu var ve hepsinin önerisi yazılı** (`0011`'in beşi
-kapandı ve kartı arşive girdi). Hiçbirinin kabul kriteri yok; cevaplar onları belirliyor. `0014`'ün **S1**'i tablonun kendisini
-sorguluyor — üç bağımlılığı kendisinden SONRA sıralanmış.
+**Dokuz taslağın toplam 34 açık sorusu var ve hepsinin önerisi yazılı.** `0012`'nin beş
+sorusundan dördü CLARIFY turunda kapandı, biri (**rol ayrımı**) `0012b` § Açık sorular
+**S1** olarak duruyor; `0012a`'nın karar bekleyen sorusu **yok** — sekiz kararı
+yazılı ve yalnız kriter turu bekliyor (`0012b`'nin yirmi kararı da yazılı). Hiçbir taslağın kabul kriteri yok; cevaplar onları
+belirliyor. `0014`'ün **S1**'i tablonun kendisini sorguluyor — üç bağımlılığı kendisinden
+SONRA sıralanmış.
 
 ---
 

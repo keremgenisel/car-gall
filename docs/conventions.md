@@ -133,6 +133,13 @@ Domain → (hiçbir şey; yalnızca BuildingBlocks primitive'leri)
   `.jpg` diye adlandırılmış herhangi bir dosyayı kabul eder.
   *(Spec `0011` / D4, Takım Yöneticisi onayı 2026-10-10.)*
 
+- **Çok kayıtlı (toplu) eylemde:** istek başarıyla işlendiyse yanıt **`200`** ve gövdesi
+  **kayıt başına sonuç listesidir** — kayıtların **hepsi** başarısız olsa bile. `ProblemDetails`
+  istek düzeyi hatalar içindir; "hangi kayıt neden olmadı" bilgisi gövdeye aittir ve her
+  başarısız satır kendi `errorCode`'unu taşır. Boş seçim ve üst sınırın aşılması **istek
+  düzeyi** hatadır (`422`). *Bedel, açıkça:* istemci başarıyı HTTP kodundan okuyamaz, gövdeyi
+  okumak zorundadır. *(Spec `0012b` / D6, Takım Yöneticisi onayı 2026-10-11.)*
+
 **`errorCode` adlandırması:** `<alan>.<durum>[.<ayrıntı>]`, hepsi snake_case, nokta ayraçlı.
 Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod eklenir.
 

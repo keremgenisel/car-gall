@@ -126,7 +126,9 @@ talebinden sonra outbox'ta yaşamaya devam ederdi.
 Olay akışı (outbox, tek yön):
 
 ```
-VehicleCatalog → VehiclePublished / Unpublished / PriceChanged / Reserved / Sold / Relocated
+VehicleCatalog → VehiclePublished / VehicleUnpublished / VehicleReserved /
+                 VehicleReturnedToShowcase / VehicleSold / VehicleArchived /
+                 VehiclePriceChanged / VehicleRelocated
                    → Engagement, Audit, Content(slot geçersizleme), sitemap(host)
 Dealership     → BranchOpened / BranchDetailsChanged / BranchDeactivated
                    → VehicleCatalog, Audit, sitemap(host)
@@ -136,6 +138,15 @@ Identity       → StaffDeactivated                          → Leads (açık t
 ```
 
 Döngü yok. İki atlamalı senkron zincir yok.
+
+`VehicleCatalog`'un satırı **2026-10-11'de düzeltildi** (spec `0012b` / D11, Takım
+Yöneticisi onayı). Üç şey değişti ve üçü de ölçümle bulundu: (1) altı addan beşi `Vehicle`
+öneki **yazılmadan** sayılıyordu, oysa § 2.B'nin örneği `VehiclePriceChanged` diyor — önek
+kararsızdı ve "adlar buradakiyle birebir aynı" diyen bir DoD maddesi doğrulanamazdı;
+(2) `VehicleCatalog`'un agregatı `ReturnedToShowcase` ve `Archived` domain olaylarını
+**zaten yayıyordu** ve ikisinin burada adı yoktu — listeye eklendi; (3) sekizinin de
+yayıncısı `0012b`'dir. `VehiclePriceChanged` ve `VehicleRelocated`'ın tetikleyicisi araç
+**düzenleme** komutudur: ikisi de bugün değişiyor ve **A7** duyuruyu istiyor.
 
 ---
 
@@ -470,6 +481,10 @@ altındaki ADR'lerdedir.
 | `Engagement` | İnce modül olarak var |
 | `Localization` | Modül yok |
 | Olay dağıtımı | Tek mekanizma: outbox, en-az-bir-kez, idempotent |
+| Outbox yazıcısı | Modül başına **konkret** `OutboxWriter<TDbContext>`; paylaşılan soyutlama yok (silindi, #52) |
+| `VehicleCatalog` olayları | Sekiz entegrasyon olayı, hepsi `Vehicle*` önekli; yayıncısı `0012b` |
+| İlan adresi (slug) | Yazma modelinde; **ilk yayına alma** anında bir kez üretilir, bir daha değişmez |
+| Toplu eylem sonucu | `200` + ilan başına sonuç listesi; kısmi başarı dördüncü ekran durumudur |
 | Proje sayısı | Modül başına 2 (`X`, `X.Contracts`) |
 | Syndication | V1 dışı, V1.1'de ayrı modül |
 | SSR | Yok; sunucu tarafı meta + JSON-LD enjeksiyonu |

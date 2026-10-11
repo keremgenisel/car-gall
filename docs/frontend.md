@@ -83,6 +83,15 @@ ekran tamamlanmış sayılmaz ve kabul kriteri karşılanmamıştır.
 | **Yükleniyor** | İskelet (`Skeleton`). Boş ekran veya ani sıçrama yok. |
 | **Boş** | "Sonuç yok" yeterli değil: neden boş ve kullanıcı **ne yapabilir** söylenir. |
 | **Hata** | Anlamlı mesaj + **tekrar dene** eylemi. Teknik detay yok. |
+| **Kısmi başarı** | Yalnız **çok kayıtlı bir eylemin** sonucunda doğar: bir kısmı uygulandı, bir kısmı uygulanmadı. Kaç kaydın uygulandığı ICU ile söylenir ve **uygulanmayanlar tek tek, gerekçesiyle** listelenir. "Başarılı" veya "hata" olarak yuvarlanmaz. |
+
+**Dördüncü satır 2026-10-11'de eklendi** (spec `0012b` / D7, Takım Yöneticisi onayı) ve
+bölümün adı bilinçli olarak "Üç Durum Kuralı" kaldı: üç durum **veri çeken her** ekranın
+borcudur, kısmi başarı ise yalnız çok kayıtlı bir eylemin ekranında doğar. Eklenmesinin
+nedeni ölçüldü: `0012b`'nin R19'u beş durum istiyor ve dayanak olarak bu bölümü gösteriyordu,
+oysa burada üç durum yazılıydı ve "kısmi başarı" terimi dokümanların **hiçbirinde**
+geçmiyordu (`grep -rn "kısmi başarı" docs/` → sıfır satır). Dayanağı olmayan bir kabul
+kriteri doğrulanamaz; kuralın kendisi olmadan her ekran kendi yorumunu üretirdi.
 
 - **İskelet, gerçek içeriğin kutu modelini taklit eder** — aynı en-boy oranı, aynı satır
   yükseklikleri, aynı sayıda öğe. *Gerekçe:* yer tutucunun işi boşluğu doldurmak değil, **doğru**

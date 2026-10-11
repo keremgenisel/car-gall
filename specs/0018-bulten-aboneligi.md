@@ -6,7 +6,7 @@
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Notifications` · `frontend/` public vitrin |
-| **Bağımlı spec'ler** | `0009` (bildirim altyapısı — tamamlandı; **X2**'yi geri açar) · `0012` (yayın olayları) · `0017` (KVKK metni) |
+| **Bağımlı spec'ler** | `0009` (bildirim altyapısı — tamamlandı; **X2**'yi geri açar) · `0012b` (yayın olayları) · `0017` (KVKK metni) |
 | **Dayanak** | ADR 0003 Ek 1, sıra #13 |
 | **Karar bekliyor** | **S1–S5** — § Açık sorular (5 soru, **5 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
 
@@ -126,8 +126,9 @@ mesajı gitmez ve çıkmak isteyen tek adımda çıkar.**
   *"**Tek tıkla** çıkabilirsiniz. Adresiniz üçüncü kişilerle paylaşılmaz — KVKK aydınlatma
   metni."* Üç vaat: haftalık sıklık, tek tıkla çıkış, üçüncü kişiyle paylaşmama.
 - **"Yeni araç" olayı henüz yok.** `docs/architecture.md` § 1 `VehiclePublished` olayını
-  sayıyor ama kodda yok; `0012` § S5 bu olayı **üretmeyi öneriyor**. Yani bu spec `0012`'ye
-  bağlı. → Açık soru **S3**.
+  sayıyor ama kodda yok. 2026-10-11'de **karara bağlandı**: `0012b` / **D11** sekiz olayı
+  üretiyor ve `VehiclePublished` onlardan biri. Yani bu spec `0012b`'ye bağlı ve olayın
+  **geleceği artık belirsiz değil**, sırası belirsiz. → Açık soru **S3**.
 - **KVKK metni yok.** R4'ün bağlantı verdiği sayfa `0017`'nin işi; `0017` § S5 bu metni
   `Content`'e koymayı öneriyor.
 
@@ -167,12 +168,13 @@ Panelden sıklık değiştirmek, yanlışlıkla günlük gönderim riskidir.
 *Bedel:* galeri sıklığı kendi değiştiremez.
 
 **S3. "Yeni araç" nasıl belirlenir?**
-*Öneri:* son başarılı gönderimden sonra **yayına alınmış** ilanlar; kaynak `0012`'nin
-üreteceği yayın olayı.
+*Öneri:* son başarılı gönderimden sonra **yayına alınmış** ilanlar; kaynak `0012b`'nin
+ürettiği `VehiclePublished` olayı (D11 ile karara bağlandı).
 *Gerekçe:* "yayına alınma" galerinin kasıtlı eylemidir; araç kaydının oluşturulma tarihi
 değil (taslak haftalar önce girilmiş olabilir).
-*Bedel:* **bu spec `0012`'ye bağımlı hâle gelir.** `0012` olayı üretmezse bülten içeriği
-sorgu ile hesaplanmak zorunda kalır ve "son gönderimden beri" penceresi kırılgan olur.
+*Bedel:* **bu spec `0012b`'ye bağımlı hâle gelir** ve ondan önce başlayamaz. `0012b`'nin
+D11'i olayı taahhüt ediyor; yine de olay gelmeden bülten içeriği sorgu ile hesaplanmak
+zorunda kalır ve "son gönderimden beri" penceresi kırılgan olur.
 *Elenen alternatif:* ilanın `PublishedAt` alanını sorgulamak — `Listing` bu alanı taşıyor,
 yani olaysız da mümkün; ama o zaman bülten `VehicleCatalog`'un okuma modeline senkron
 bağımlı olur ve `Notifications`'ın yaprak konumu tartışmaya açılır.
@@ -210,7 +212,7 @@ izinsiz. Talep formuna **ayrı bir bülten onay kutusu** eklemek meşru bir yold
 ## Definition of Done
 
 - [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
-- [ ] `0012` ve `0017` ile olan bağımlılıklar çözüldü (S3, R4).
+- [ ] `0012b` ve `0017` ile olan bağımlılıklar çözüldü (S3, R4).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0018-ac<n>.png`), hata durumu dâhil, Arapça
       görüntü de var.
