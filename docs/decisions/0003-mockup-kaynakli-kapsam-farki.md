@@ -262,7 +262,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 2 | **Görsel dil ve marka teması** | `frontend-002` ✅ tamamlandı |
 | 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
-| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · **`0012c`** (Taslak — S1) |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · **`0012c`** (Taslak — **karar bekleyen soru yok**) |
 | 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
 | 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
@@ -320,11 +320,13 @@ Yani vitrindeki araçlar bu commit'ten sonra geliştirme seed'inden değil **gal
 kararından** geliyor ve `docs/testing.md` § 3'ün üçüncü kritik akışı ilk kez uçtan uca
 koşuyor. `0012a`'nın D18 ve D19 borçları böylece kapandı.
 
-**Dokuz taslağın toplam 34 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-11'de
-yeniden ölçüldü; `0012a` kapandığı için taslak sayısı dokuzdan sekize, `0012b`'nin son
-sorusunun kapanmasıyla soru sayısı 34'ten 33'e inmişti — sonra `0012b` de kapandı ve yerine
-`0012c` açıldı, yani taslak sayısı yine **dokuz** ve `0012c`'nin **S1**'i ile soru sayısı yine
-**34**). `0012`'nin beş sorusundan dördü ilk
+**Sekiz taslağın toplam 33 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-11'de
+yeniden ölçüldü ve sayım tek tek yapıldı: `0013` 5 · `0014` 4 · `0015` 5 · `0016` 4 ·
+`0017` 5 · `0018` 5 · `frontend-003` 5 · `0012c` **0**; `0004` **Beklemede** ve sorusu yok,
+bu yüzden taslak sayımına girmiyor. Gün içindeki hareket: `0012a` ve `0012b` kapandı,
+yerine `0012c` açıldı ve onun tek sorusu (**S1** — "hepsini seç" sayfa değiştiğinde ne olur)
+aynı gün kendi CLARIFY turunda **D43** ile kapandı. Bir ara sürüm bu paragrafta taslak
+sayısını dokuz yazıyordu; sayım `0004`'ü de katıyordu ve düzeltildi). `0012`'nin beş sorusundan dördü ilk
 CLARIFY turunda kapandı; beşincisi (**rol ayrımı**) `0012b`'nin **ikinci** CLARIFY turunda
 kapandı (**D22**: rol ayrımı yok, `0012a` X2 ile aynı karar). **`0012b`'nin karar bekleyen
 sorusu kalmadı** ve sıradaki tur kriter turudur; o tur on yedi karar daha ekledi
