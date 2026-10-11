@@ -10,6 +10,7 @@ import type {
   VehicleAdminField,
   VehicleAdminListItem,
   VehicleAdminSummary,
+  VehicleMedia,
   VehicleSort,
 } from './types'
 
@@ -59,6 +60,38 @@ export function fetchVehicle(
     `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}`,
     locale,
     signal,
+  )
+}
+
+/** 0012a/AC-24 — aracın sıralı medyası, `Media`'nın durumlarıyla birleştirilmiş hâlde. */
+export function fetchVehicleMedia(
+  vehicleId: string,
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<VehicleMedia> {
+  return getJson<VehicleMedia>(
+    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}/media`,
+    locale,
+    signal,
+  )
+}
+
+/**
+ * 0012a **D12** — sıralı kimlik listesinin TAMAMINI yerine koyar: bağlama, sıralama ve
+ * çıkarma tek istek. Kapak sıranın SONUCU (**D2**), ayrı bir eylem değil.
+ *
+ * Boş liste geçerli: "bütün fotoğrafları çıkar" demek ve varlıkları silmiyor (R3).
+ */
+export async function updateVehicleMedia(
+  vehicleId: string,
+  mediaAssetIds: readonly string[],
+  locale: AppLocale,
+): Promise<void> {
+  await sendJson<null>(
+    'PUT',
+    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}/media`,
+    { mediaAssetIds },
+    locale,
   )
 }
 

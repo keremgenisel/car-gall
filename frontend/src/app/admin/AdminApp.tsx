@@ -7,6 +7,7 @@ import { adminPath, type AdminView } from '../../shared/lib/route'
 import { VehicleEditPage } from '../../features/catalog/admin/VehicleEditPage'
 import { VehicleFormPage } from '../../features/catalog/admin/VehicleFormPage'
 import { VehicleListPage } from '../../features/catalog/admin/VehicleListPage'
+import { VehicleMediaPage } from '../../features/catalog/admin/VehicleMediaPage'
 import { ForcePasswordChangePage } from '../../features/identity/ForcePasswordChangePage'
 import { LoginPage } from '../../features/identity/LoginPage'
 import { StaffListPage } from '../../features/identity/StaffListPage'
@@ -137,7 +138,10 @@ export function AdminApp({
           className="admin-shell__nav-link"
           href={adminPath('vehicles')}
           aria-current={
-            view === 'vehicles' || view === 'vehicle-new' || view === 'vehicle-edit'
+            view === 'vehicles' ||
+            view === 'vehicle-new' ||
+            view === 'vehicle-edit' ||
+            view === 'vehicle-media'
               ? 'page'
               : undefined
           }
@@ -151,6 +155,10 @@ export function AdminApp({
         {view === 'vehicle-new' ? <VehicleFormPage /> : null}
         {view === 'vehicle-edit' && vehicleId !== undefined ? (
           <VehicleEditPage vehicleId={vehicleId} />
+        ) : null}
+        {/* 0012a D17 — medya yüzeyi düzenlemenin alt yolu; kendi ekranı, kendi kaydetme akışı. */}
+        {view === 'vehicle-media' && vehicleId !== undefined ? (
+          <VehicleMediaPage vehicleId={vehicleId} />
         ) : null}
         {view === 'password' ? <ForcePasswordChangePage /> : null}
 

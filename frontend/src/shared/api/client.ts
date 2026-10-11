@@ -173,3 +173,51 @@ export async function sendJson<TResponse>(
   // 204 gövdesizdir; her yazma ucu bir gövde döndürmez.
   return response.status === 204 ? null : ((await response.json()) as TResponse)
 }
+
+/**
+ * 0012a **D9** — tek dosya yüklemesi. `multipart/form-data`; gövde `FormData` olduğu için
+ * `Content-Type` AÇIKÇA yazılmaz — tarayıcı `boundary` ile birlikte kendisi üretir ve elle
+ * yazılan bir `Content-Type` o sınır çizgisini kaybettirir, sunucu da gövdeyi
+ * ayrıştıramaz.
+ *
+ * `Idempotency-Key` TAŞIMAZ ve bu bilinçli: aynı dosyayı iki kez yüklemek iki ayrı medya
+ * varlığı demektir ve ikisi de geçerlidir — personel aynı fotoğrafı bilerek iki kez
+ * ekleyebilir. İdempotentlik, kaydın TEKİL olması gereken yerde gerekir (0005'in talep
+ * ucu); burada kayıt tekil değil.
+ */
+export async function sendFile<TResponse>(
+  path: string,
+  file: File,
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<TResponse> {
+  const body = new FormData()
+  body.append('file', file)
+
+  let response: Response
+
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      signal,
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        'Accept-Language': locale,
+      },
+      body,
+    })
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === 'AbortError') {
+      throw cause
+    }
+
+    throw new ApiError(DEFAULT_ERROR_CODE, null)
+  }
+
+  if (!response.ok) {
+    throw await toApiError(response)
+  }
+
+  return (await response.json()) as TResponse
+}
