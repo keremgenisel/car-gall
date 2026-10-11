@@ -229,7 +229,8 @@ taşımayabilir.
 
 *Bu tablo **kararın verildiği andaki** durumu kaydediyor ve yeniden yazılmıyor. Bugünkü
 karşılıkları: dilim 1 → `0010a` + `0010b` (ikisi de tamamlandı); dilim 2 → `0011`;
-dilim 3 → `0012a` + `0012b` (2026-10-11'de ikiye bölündü).
+dilim 3 → `0012a` + `0012b` + `0012c` (2026-10-11'de **üçe** bölündü; ilk ikisi
+tamamlandı).
 Güncel hâl aşağıdaki "Güncellenen sıra" tablosundadır.*
 
 **Bu, unsur 7'yi reddetmez; 2. maddesini ikiye böler ve `Media`'yı (#3) yayın işinin
@@ -261,7 +262,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 2 | **Görsel dil ve marka teması** | `frontend-002` ✅ tamamlandı |
 | 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
-| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · **`0012b`** (Taslak — **karar bekleyen soru yok**) |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · **`0012c`** (Taslak — S1) |
 | 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
 | 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
@@ -278,6 +279,12 @@ kaydı, 2026-10-05) ve `0010b` (düzenleme ve liste, 2026-10-10). `4`. satır `0
 medya koşulu**: birinci dilim onu ölçülebilir kılar, ikinci dilim onu tüketir. **Birinci
 dilim aynı gün kapandı** (`0012a`, 2026-10-11, `8fc862c`); sıra DEĞİŞMEDİ ve başlanmamış ilk
 iş artık #5'in **ikinci dilimi** (`0012b`).
+
+**İkinci dilim de aynı gün kapandı** (`0012b`, 2026-10-11, `e67a61d`) ve `5`. satır bölünmeye
+**üçüncü kez** gitti: kriter turunda ölçülen **D39** ile toplu eylem ve öne çıkarma
+`0012c`'ye ayrıldı. Bölme bu kez kriter yazılmadan yapıldı — kararlar `0012b`'den taşındı
+(D3–D7, D16, D18, D27–D29, D36) — yani bedeli neredeyse sıfırdı. Sıra yine DEĞİŞMEDİ;
+başlanmamış ilk iş artık #5'in **üçüncü dilimi** (`0012c`).
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca
@@ -304,9 +311,20 @@ hâlâ **hiçbir üretim çağıranı yok** — ölçüldü, tek çağıranı `V
 yayın eyleminin kendisi `0012b`'nin işi (`0012a` D7, D18). Vitrin okuma modeline yazan üretim
 yolu da hâlâ geliştirme seed'i (`0012a` D19).
 
-**Sekiz taslağın toplam 33 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-11'de
-ölçüldü; `0012a` kapandığı için taslak sayısı dokuzdan sekize indi ve aynı gün `0012b`'nin
-son sorusu kapandığı için sayı 34'ten 33'e indi). `0012`'nin beş sorusundan dördü ilk
+**`0012b` ikinci sebebi de kapattı** (2026-10-11, `e67a61d`) ve bu ADR'ın "vitrin neden hâlâ
+seed'e bağlı" gerekçesi **tümüyle geçersiz kaldı**. Yeniden ölçüldü: `EnsurePublishable`'ın
+üretim çağıranı artık **var** — `PublishEligibility.cs:55`, yayın komutunun çağırdığı yol — ve
+vitrin okuma modeline yazan üretim yolu da **var**: `ShowcaseProjectionWriter`, üç komuttan
+çağrılıyor (`ListingTransitionCommands`, `UpdateVehicleCommand`, `UpdateVehicleMediaCommand`).
+Yani vitrindeki araçlar bu commit'ten sonra geliştirme seed'inden değil **galerinin kendi
+kararından** geliyor ve `docs/testing.md` § 3'ün üçüncü kritik akışı ilk kez uçtan uca
+koşuyor. `0012a`'nın D18 ve D19 borçları böylece kapandı.
+
+**Dokuz taslağın toplam 34 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-11'de
+yeniden ölçüldü; `0012a` kapandığı için taslak sayısı dokuzdan sekize, `0012b`'nin son
+sorusunun kapanmasıyla soru sayısı 34'ten 33'e inmişti — sonra `0012b` de kapandı ve yerine
+`0012c` açıldı, yani taslak sayısı yine **dokuz** ve `0012c`'nin **S1**'i ile soru sayısı yine
+**34**). `0012`'nin beş sorusundan dördü ilk
 CLARIFY turunda kapandı; beşincisi (**rol ayrımı**) `0012b`'nin **ikinci** CLARIFY turunda
 kapandı (**D22**: rol ayrımı yok, `0012a` X2 ile aynı karar). **`0012b`'nin karar bekleyen
 sorusu kalmadı** ve sıradaki tur kriter turudur; o tur on yedi karar daha ekledi

@@ -204,19 +204,7 @@ public sealed partial class YayinSiniriTests
 
     private static Dictionary<int, string> SpectekiKriterler()
     {
-        DirectoryInfo? dizin = new(AppContext.BaseDirectory);
-
-        // Kök YUKARI YÜRÜNEREK bulunuyor, sabit sayıda `..` ile değil (`docs/testing.md` § 3).
-        while (dizin is not null
-            && !File.Exists(Path.Combine(dizin.FullName, "specs", "0012b-yayin-ve-durum-eylemleri.md")))
-        {
-            dizin = dizin.Parent;
-        }
-
-        Assert.NotNull(dizin);
-
-        string spec = File.ReadAllText(
-            Path.Combine(dizin.FullName, "specs", "0012b-yayin-ve-durum-eylemleri.md"));
+        string spec = File.ReadAllText(SpecYolu());
 
         Dictionary<int, string> kriterler = [];
 
@@ -227,6 +215,36 @@ public sealed partial class YayinSiniriTests
         }
 
         return kriterler;
+    }
+
+    /// <summary>
+    /// Kartın yolu, iş bittiğinde <c>specs/</c> altından <c>specs/done/</c> altına taşınır
+    /// (DoD <c>T13</c>) — bu yüzden kapı <b>iki yere de</b> bakıyor.
+    ///
+    /// <para><b>Bu metot bir kapanış hatasının bedeliydi.</b> İlk hâli depo kökünü
+    /// <c>specs/0012b-….md</c>'nin VARLIĞIYLA arıyordu: dosya arşive taşındığı an yukarı
+    /// yürüyüş kökü hiç bulamıyor, <c>dizin</c> null oluyor ve kapı tam <b>kartı kapatan
+    /// commit'te</b> kırılıyordu. Kök artık <see cref="SolutionLayout.Root"/> üzerinden
+    /// geliyor; o, spec'in yerinden bağımsız. <b>Ders:</b> bir kapı, denetlediği dosyanın
+    /// yolunu kökü bulmak için kullanmamalı.</para>
+    /// </summary>
+    private static string SpecYolu()
+    {
+        const string ad = "0012b-yayin-ve-durum-eylemleri.md";
+
+        string[] adaylar =
+        [
+            Path.Combine(SolutionLayout.Root, "specs", ad),
+            Path.Combine(SolutionLayout.Root, "specs", "done", ad),
+        ];
+
+        string? bulunan = Array.Find(adaylar, File.Exists);
+
+        Assert.True(
+            bulunan is not null,
+            $"`{ad}` ne `specs/` ne `specs/done/` altında bulundu; kapı okuyacak kriter bulamadı.");
+
+        return bulunan!;
     }
 
     /// <summary>
