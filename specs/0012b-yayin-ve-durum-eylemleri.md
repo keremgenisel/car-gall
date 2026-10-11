@@ -6,20 +6,29 @@
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (komut yüzeyi, outbox, vitrin yansıtması) · `frontend/` yönetim paneli |
-| **Bağımlı spec'ler** | **`0012a` ÖNKOŞUL** (aracın medya yüzeyi — A2'nin medya koşulunu ölçülebilir kılar) · `0010a` + `0010b` · `0011` (tamamlandı) · `0007` (invariant koruması — tamamlandı) |
+| **Bağımlı spec'ler** | **`0012a` ÖNKOŞUL — tamamlandı** (2026-10-11, `8fc862c`; A2'nin medya koşulunu ölçülebilir kıldı) · `0010a` + `0010b` · `0011` · `0007` (invariant koruması) — hepsi tamamlandı |
 | **Dayanak** | ADR 0003 Ek 1, sıra #5'in **ikinci dilimi** (→ `0012a` **D1**) |
-| **Karar bekliyor** | **S1** — eylemler rol ayrımı yapacak mı (§ Açık sorular, öneri yazılı). Cevap gelmeden kabul kriterleri yazılmaz. |
+| **Kararlar** | **D2–D38**. D2–D21 `0012`'nin 2026-10-11 CLARIFY turundan; **D22–D38** `0012b`'nin kendi CLARIFY turunda (aynı gün, `18e4adf` üzerinde) **ölçülerek** eklendi. **Açık soru yok.** |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı. `0012`'nin beş açık sorusunun
-> **dördü** 2026-10-11 CLARIFY turunda kapandı (§ Kapanan sorular); geriye **S1** kaldı ve
-> yirmi bir karar Context'e işlendi.
+> **Bu bir Analist taslağıdır.** Kabul kriterleri **hâlâ yazılmadı** — ama artık onları
+> bekleten bir soru yok: `0012`'nin beş sorusundan dördü ilk CLARIFY turunda kapandı
+> (§ Kapanan sorular), beşincisi (**rol ayrımı**) bu turda kapandı (**D22**).
+>
+> **İkinci CLARIFY turu, 2026-10-11.** `0012a` bittikten sonra spec bugünkü `main`
+> (`18e4adf`) üzerinde yeniden okundu; on yedi boşluk ölçülerek bulundu ve hepsi karara
+> bağlandı (**D22–D38**). Dördü spec'i bugünkü hâliyle **yanlış** kılıyordu: R2 dört koşul
+> sayıyordu ama biri hiç reddedilemiyor (**D23**), yayın A2 dışında iki nedenle daha
+> reddedilebiliyor (**D25**), A8'in yazma tarafı `Rezerve` ilanda çıkışı olmayan bir hâl
+> üretiyordu (**D32**) ve C12 bugün çalışan **üç** işleyiciyle çelişiyordu (**D34**).
+> Kriterler bir sonraki turda yazılır (`0012a`'nın deseni: kararlar bu PR'da, kriterler
+> kendi PR'ında — ADR `0008` / K2).
 
 ---
 
 ## Intent
 
-`0010a`/`0010b` bittiğinde galeri araç kaydı oluşturabiliyor, `0012a` bittiğinde
-fotoğraflarını sıralayabiliyor — ama **hiçbirini vitrine çıkaramıyor.** Vitrin geliştirme
+`0010a`/`0010b` ve `0012a` bitti: galeri araç kaydı oluşturabiliyor, fotoğrafını
+yükleyip sıralayabiliyor — ama **hiçbirini vitrine çıkaramıyor.** Vitrin geliştirme
 amaçlı bir seed'e bağlı kalmaya devam ediyor; yani ürün hâlâ satılamaz durumdadır. Bu spec o
 son halkayı kapatır.
 
@@ -37,12 +46,15 @@ değil galerinin kendi kararından geliyor.**
 
 ## Requirements
 
-- **R1.** Oturum açmış yetkili personel bir taslak ilanı **yayına alabilir**.
-- **R2.** Bir ilan yayına alınırken **A2**'nin tüm koşulları sağlanmış olmalıdır: çekirdek
-  alanlar dolu, fiyat belirlenmiş **veya** "fiyat sorunuz", en az bir medya varlığı **hazır**,
-  aktif alan ayarlarında zorunlu işaretli opsiyonel alanlar dolu. Koşul sağlanmıyorsa yayına
-  alma reddedilir ve **sağlanmayan koşulların HEPSİ birlikte** bildirilir — ilk eksik değil.
-  → **D2**
+- **R1.** Oturum açmış personel bir taslak ilanı **yayına alabilir**. Eylemler **rol ayrımı
+  yapmaz**; yetki tek bir şeydir: oturum. → **D22**, `0006` R7
+- **R2.** Bir ilan yayına alınırken **A2**'nin yayın anında doğrulanabilen **üç** koşulu
+  sağlanmış olmalıdır: fiyat belirlenmiş **veya** "fiyat sorunuz" · en az bir medya varlığı
+  **hazır** · aktif alan ayarlarında zorunlu işaretli opsiyonel alanlar dolu. **A2'nin
+  çekirdek alan koşulu bu listede yoktur** — o koşul kayıt anında zorunludur ve çekirdek
+  alanı boş bir araç kaydı kurulamaz (→ **D23**). Koşul sağlanmıyorsa yayına alma reddedilir
+  ve **sağlanmayan koşulların HEPSİ birlikte** bildirilir — ilk eksik değil. Zorunlu
+  opsiyonel alan reddi **hangi alanların** eksik olduğunu da taşır. → **D2**, **D23**, **D24**
 - **R3.** Yayın durumu geçişleri yalnızca **A3**'te yazılı olanlardır; başka geçiş yoktur.
 - **R4.** `Satıldı` **terminaldir**: araç yeniden yayına alınamaz. → **A4**
 - **R5.** Personel bir ilanı **rezerve** edebilir; rezerve ilan vitrinde rozetiyle görünmeye
@@ -56,19 +68,28 @@ değil galerinin kendi kararından geliyor.**
   şase yeniden kaydedilebilir. → **A5**, ADR 0006, **D9**
 - **R9.** Personel **birden çok ilanı seçip** aynı eylemi hepsine uygulayabilir. Toplu
   uygulanabilen eylemler: yayına al · yayından kaldır · satıldı işaretle · arşivle · öne
-  çıkar. Rezerve etme ve rezervasyonu kaldırma **tek ilan** üzerinde çalışır. → **D18**
+  çıkar · **öne çıkarmayı kaldır**. Rezerve etme ve rezervasyonu kaldırma **tek ilan**
+  üzerinde çalışır. → **D18**, **D36**
 - **R10.** Toplu eylemde bazı ilanlar için eylem geçersizse, **geçerli olanlar uygulanır** ve
   uygulanamayanlar **tek tek gerekçesiyle** bildirilir; işlem bir bütün olarak geri alınmaz.
-  Seçim boş olamaz, yinelenen kimlikler teklenir ve seçim sayısı panelin sayfa üst sınırını
-  aşamaz. → **D3**, **D4**, **D5**, **D6**
-- **R11.** Her durum geçişi **duyurulur**; duyuru ilanın kimliğini ve yeni durumunu taşır.
+  Bildirilen gerekçe kayda **ne olduğunu** da söyler: sonuç satırı ilanın **güncel durumunu**
+  taşır. Bulunamayan ilan isteği değil **o satırı** düşürür. Seçim boş olamaz, yinelenen
+  kimlikler teklenir ve seçim sayısı panelin sayfa üst sınırını aşamaz — aşan seçim
+  **kırpılmaz, reddedilir**. → **D3**, **D4**, **D5**, **D6**, **D27**, **D28**, **D29**
+- **R11.** Her durum geçişi **duyurulur** — personelin eylemiyle olanı da, sistemin kendi
+  tepkisiyle olanı da (**A8**). Duyuru aracın ve ilanın kimliğini ve ilanın **adresini**
+  taşır; **yeni durumu ayrı bir alan olarak taşımaz**, durumu olayın **tipi** söyler.
   Üretilen olaylar **sekizdir** ve adları `docs/architecture.md` § 1'deki adlarla birebir
-  aynıdır. → **D11**
+  aynıdır. → **D11**, **D30**, **D33**
 - **R12.** Personel bir ilanı **öne çıkarabilir** ve öne çıkarmayı kaldırabilir; öne
-  çıkarılan ilan vitrin sıralamasının başında görünür. → **D16**
+  çıkarılan ilan vitrin sıralamasının başında görünür. Eylem **arşiv dışındaki her ilanda**
+  çalışır; taslakta işaretlemenin vitrindeki etkisi yayınla birlikte görünür ve panel bunu
+  söyler. → **D16**, **D36**
 - **R13.** Şube kapatıldığında o şubedeki araçlar **yayından kalkar** ve "lokasyon ataması
   bekliyor" hâline geçer; bu araçlar panel listesinde **ayırt edilir** ve şubesi atanmadan
-  yayına alınamaz. → **A8**, **D15**
+  yayına alınamaz. Yayından kalkma **`Rezerve` ilanları da kapsar**; `Satıldı` ve `Arşiv`
+  kayıtlara dokunulmaz. Eylem şubedeki **bütün** araçlara uygulanır ve R10'un seçim üst
+  sınırına tabi değildir. → **A8**, **D15**, **D32**, **D33**
 - **R14.** Yayına alma, rezerve etme ve satıldı işaretleme eylemleri **eşzamanlı**
   çağrıldığında tek biri başarılı olur; kaybeden **kural gereği** reddedilir, "tekrar dene"
   denmez. → `0007`, **D8**
@@ -78,12 +99,22 @@ değil galerinin kendi kararından geliyor.**
 - **R16.** Bir ilanın vitrindeki **adresi ilk yayına alma anında** üretilir ve bir daha
   değişmez; yayından kaldırılıp yeniden yayınlanan ilan **aynı adrese** döner. → **D13**
 - **R17.** Arşivlenen araç panel listesinin **varsayılan** görünümünde yer almaz; açık bir
-  filtreyle görülebilir. → **D19**
+  filtreyle görülebilir. Aynı koşul listenin **toplam sayısına ve özet sayaçlarına** da
+  uygulanır — liste ile sayaç aynı evreni sayar. → **D19**, **D35**
 - **R18.** Durum geçişi aracın **son güncellenme** zamanını da ilerletir; panel listesinin
-  "son güncellenen" sıralaması geçişi görür. → **D20**
+  "son güncellenen" sıralaması geçişi görür. Aynı şey öne çıkarma için ve **araç
+  düzenlemesi** için de geçerlidir: personelin her yazması o sıralamada görünür.
+  → **D20**, **D36**, **D37**
 - **R19.** Panel listesi ve eylem ekranları **yükleniyor**, **boş**, **başarılı**, **kısmi
   başarı** ve **hata** durumlarını ele alır. → `docs/frontend.md` § 3, **D7**
 - **R20.** Panel personelin tercih ettiği dilde çalışır; Arapça'da RTL.
+- **R21.** Yayına alma **A2 dışında iki nedenle** daha reddedilebilir: aracın lokasyon
+  ataması bekliyor olması (**R13**) ve ilanın **adresinin üretilememesi**. İkisi de kod
+  olarak bildirilir ve ikincisi personelin düzeltemeyeceği bir reddir — panel bunu böyle
+  söyler. → **D25**
+- **R22.** Yayından kaldırılıp **yeniden yayınlanan** ilan vitrine **eski yerinden** döner:
+  adresi de ilk yayın zamanı da değişmez. Duyuru yine yayılır ve tüketicinin "bu ilk yayın
+  değil" diyebilmesi için ilk yayın zamanını taşır. → **D13**, **D31**
 
 ---
 
@@ -99,7 +130,9 @@ değil galerinin kendi kararından geliyor.**
 - **C4.** Veritabanında çevrilmiş durum adı saklanmaz; kod saklanır. → Yasak Listesi 22
 - **C5.** Fiyat değişikliği olursa fiyat geçmişine yazılır. → **A6**, `0010a` R8
 - **C6.** Kullanıcıya görünen metin koda gömülmez; API `errorCode` döner — "hangi koşul
-  eksik" bilgisi de kod olarak döner, metin olarak değil. → Yasak Listesi 23–24
+  eksik" bilgisi de kod olarak döner, metin olarak değil. Çalışma zamanında değişen bir
+  kümeye (zorunlu alan listesi) kod üretilmez: o bilgi kodun **yapısal parametresidir**
+  (`docs/conventions.md` § 5). → Yasak Listesi 23–24, **D24**
 - **C7.** Mevcut agregat davranışı yeniden yazılmaz: `Listing.Publish`, `Reserve`,
   `ReturnToShowcase`, `MarkSold`, `Unpublish`, `Archive`, `ChangeShowcaseSortWeight` ve
   `Vehicle.MarkArchived`, `MarkAwaitingBranchAssignment`, `EnsurePublishable` bugün vardır.
@@ -114,8 +147,14 @@ değil galerinin kendi kararından geliyor.**
   `Architecture.Tests/OutboxYazicisiTests` bunu denetliyor — üçüncü iddiası
   `IOutboxDbContext` uygulayan **her** modülü taradığı için `VehicleCatalog` outbox'ı
   kurduğu anda kapıya dâhil olur. → **D14**, Yasak Listesi 16
-- **C12.** Vitrin okuma modeline yazan tek yer **yansıtmadır**; görünürlük kararı başka hiçbir
-  yerde tekrarlanmaz. → Yasak Listesi 41, `0001` C10, **D12**
+- **C12.** **Görünürlük kararını** — hangi ilanın vitrinde satırı olduğunu — veren tek yer
+  **yansıtmadır** ve bu karar başka hiçbir yerde tekrarlanmaz. Kopyalanmış kolonları
+  (kapak URL'i, şube adları) besleyen olay işleyicileri bunun dışındadır; onlar görünürlük
+  kararı vermez. → Yasak Listesi 41, `0001` C10, **D12**, **D34**
+- **C13.** Reddin HTTP karşılığı sabittir: A2'nin ve R21'in yayın reddi **`422`**, A3'ün
+  geçiş reddi (`listing.invalid_status_transition`) **`409`**, `concurrency.lost` **`409`**,
+  bulunamayan araç **`404`**. Toplu eylem bunların hiçbirini istek düzeyine taşımaz (**D6**).
+  → `docs/conventions.md` § 5, **D26**
 
 ### KAPSAM DIŞI
 
@@ -128,8 +167,9 @@ değil galerinin kendi kararından geliyor.**
 - **X3.** **Fiyat düşüşü rozeti ve fiyat geçmişinin ziyaretçiye gösterilmesi** — *neden:*
   `0002` § X6 bunu kapsam dışı bıraktı; vitrin kararıdır.
 - **X4.** **Rol bazlı eylem kısıtı** ("danışman yayına alamasın") — *neden:* ADR 0003 unsur 3
-  alan/kayıt düzeyi yetkiyi ayrı bir karara bağladı. **Karar S1'de bekliyor**; `hayır`
-  gelirse bu madde geçerli kalır, `evet` gelirse R1'in "yetkili" sözü tanımlanır.
+  alan/kayıt düzeyi yetkiyi ayrı bir karara bağladı ve § 6 bunu "basit rol modelini izin
+  motoruna dönüştürür" diye uyardı. **Karar verildi: bu spec'te rol ayrımı yok** (**D22**);
+  madde geçerli ve `0012a` X2 ile aynı yerde duruyor.
 - **X5.** **Dışa aktarma** ve **görüntülenme sütunu** — *neden:* biçim kararı ve `Engagement`
   modülünün yokluğu.
 - **X6.** **Süresi geçmiş rezervasyon uyarısı** (mockup'taki "1 rezervasyon 3 günü geçti") —
@@ -148,21 +188,34 @@ değil galerinin kendi kararından geliyor.**
 
 ## Context
 
-### Mevcut davranış — doğrulandı (2026-10-11, `origin/main` = `b99912a`)
+### Mevcut davranış — doğrulandı (2026-10-11, `origin/main` = `18e4adf`)
+
+> **Ölçüm tazelendi.** Bu bölüm `b99912a` üzerinde yazılmıştı; `0012a` arada bitti (#54→#57)
+> ve **üç maddesi yanlışlandı**: modülün artık bir yazma ucu var, `EnsurePublishable`'ın
+> imzası ve gövdesi değişti, A2'yi ölçen okuma `AreAllReadyAsync` değil `ReadyAmongAsync`.
+> Üçü aşağıda düzeltildi. Bayat ölçüm, varsaymanın kibarca yazılmış hâlidir (AP-10) —
+> kriterler bu bölümün üstüne yazılacak.
 
 - **Agregat tarafı hazır.** `Listing` bugün `CreateDraft`, `Publish`, `Reserve`,
   `ReturnToShowcase`, `MarkSold`, `Unpublish`, `Archive`, `ChangeShowcaseSortWeight`
   taşıyor; `Vehicle` ise `EnsurePublishable`, `AttachMediaAsset`,
   `MarkAwaitingBranchAssignment`, `MarkArchived`, `AssignBranch`. **Eksik olan komut ve uç
-  katmanıdır** — C7 bu yüzden var.
+  katmanıdır** — C7 bu yüzden var. `EnsurePublishable`'ın imzası `0012a` D11 ile değişti:
+  hazırlık bilgisini parametre alıyor ve bağlı varlıklarla hazır varlıkların **kesişimine**
+  bakıyor (`Vehicle.cs:353`, eski ölçüm `:293` diyordu).
 - **Hiçbirinin üretim çağıranı yok.** Ölçüldü: `Publish`/`Reserve`'ün tek üretim çağıranı
   geliştirme seed'i (`ShowcaseSeeder.cs:148,155`); `MarkSold`, `Unpublish`,
   `ReturnToShowcase`, `Archive`, `MarkArchived`, `MarkAwaitingBranchAssignment` yalnız
   testlerden çağrılıyor; **`ChangeShowcaseSortWeight`'in hiçbir çağıranı yok** — üretimde de
   testte de sıfır.
-- **`VehicleCatalog`'un hiçbir yazma UCU yok.** Projedeki tüm `MapPost`/`MapPut` uçları
-  `Identity`, `Leads` ve `Media`'ya ait; `VehicleAdminEndpoints` araç kaydı/düzenlemesi
-  dışında eylem ucu taşımıyor.
+- **Modülün yazma uçları üç tane ve hiçbiri EYLEM ucu değil.** `0012a`'dan sonra ölçüldü:
+  `POST /` (kayıt), `PUT /{id}` (düzenleme) ve `PUT /{id}/media` (medya listesi) —
+  `VehicleAdminEndpoints.cs:30,56,62`. Durum geçişi ve toplu eylem ucu **yok**; eski ölçüm
+  "hiçbir yazma ucu yok" diyordu ve `0012a` bunu yanlışladı.
+- **A2'nin medya koşulu artık ÖLÇÜLEBİLİR ama tüketicisi yok.** `0012a` D5 `Media`'ya
+  `ReadyAmongAsync`'i ekledi (`MediaAssetContracts.cs:72`) ve D6 `EnsurePublishable`'ı
+  genişletti; ikisinin de **üretim çağıranı yok** — `0012a` D18 bunu adıyla devretti ve
+  tüketicisi bu spec'tir.
 - **Modülün OUTBOX'ı yok.** `VehicleCatalogDbContext` yalnız `IInboxDbContext` uyguluyor
   (`:13`); outbox `DbSet`'i yok ve modülde domain → entegrasyon çevirisi yapan bir birim
   yok. Diğer üç modülde var: `IdentityUnitOfWork.cs:56`, `LeadsUnitOfWork.cs:56`,
@@ -196,11 +249,62 @@ değil galerinin kendi kararından geliyor.**
 - **Panelin sayfa sınırları yazılı:** varsayılan 25, üst sınır 100, ikisi de dağıtım
   yapılandırmasından (`CatalogAdminPagingOptions.cs:6`). → **D4**
 - **Panel listesi arşivi filtrelemiyor:** `VehicleAdminQueries` `context.Vehicles`'ı arşiv
-  koşulu olmadan okuyor (`:42-44`) ve `VehicleAdminListFilter`'da durum alanı yok. → **D19**
+  koşulu olmadan okuyor (`:39-48`) ve `VehicleAdminListFilter`'da durum alanı yok. → **D19**
+
+#### İkinci turun ölçümleri (2026-10-11, `18e4adf`)
+
+- **A2'nin çekirdek alan koşulu REDDEDİLEMİYOR.** `Vehicle.Create` dokuz çekirdek alanı
+  parametre olarak zorunlu alıyor, `0010a` D8 onları kayıt anında şart koşuyor ve kodun
+  kendi yorumu bunu yazıyor: *"yani her zaman doludurlar"* (`VehicleAdminQueries.cs:207`).
+  Çekirdek alanı boş bir araç kaydı kurulamıyor. → **D23**
+- **Zorunlu opsiyonel alan kümesi ÇALIŞMA ZAMANINDA değişiyor.** Hangi alanın zorunlu
+  olduğu operatör ayarı (`FieldFormState.Required`, `VehicleFieldSetting`); alan listesi
+  kodda sabit (`VehicleFieldDefinitions`). Panel aynı olguyu bugün `EksikBilgiVar` ile
+  hesaplayıp gösteriyor (`VehicleAdminQueries.cs:209`, `0010b` AC-16). → **D24**
+- **Yayın iki ayrı nedenle daha düşebiliyor.** Yansıtma lokasyon ataması bekleyen aracı
+  `null` ile reddediyor (`ShowcaseListingProjector.cs:32-35`); adres üretimi ise kanonik
+  model adı Latin harfe inmiyorsa `listing_slug.invalid_source` dönüyor
+  (`ListingSlug.cs:41-45`) ve kanonik ad başka modülün verisi
+  (`IReferenceQueries.ResolveCanonicalNamesAsync`). → **D25**
+- **Yayın yolu ÜÇ modülden okuyacak, iki değil.** D12'nin bedel satırı iki sayıyordu;
+  yansıtmanın imzası üçünü istiyor: şube adları (`Dealership`), kapak URL'i (`Media`) ve
+  adres için kanonik ad (`VehicleReference`) — `ShowcaseListingProjector.Project(…)`. Üçü
+  de § 2.A'nın saydığı salt okuma, tek atlama. → **D25**
+- **Üst sınır bugün KIRPILIYOR.** `VehicleAdminListRequest.Normalize` `pageSize`'ı
+  `Math.Min` ile üst sınıra indiriyor ve yorumu *"hata dönmez… adres çubuğundan gelen bir
+  ipucudur"* diyor (`CatalogAdminPagingOptions.cs:22-30`, `0010b` AC-26). D4 ise aşımda
+  **red** istiyor: aynı sayı iki yüzeyde zıt davranacak. → **D29**
+- **`Rezerve` ilan A8'de çıkışsız kalıyor.** `Unpublish()` yalnız `Yayında`dan geçiyor
+  (`Listing.cs:179-183`) ve A3'te `Rezerve → Taslak` geçişi yok; yansıtma ise bayraklı aracı
+  her durumda düşürüyor. Sonuç: vitrinden düşmüş, durumu `Rezerve` kalmış, tek çıkışı
+  `Satıldı` olan bir kayıt. → **D32**
+- **Vitrin okuma modeline yansıtmadan BAŞKA üç yazıcı var.** `MediaAssetReadyHandler` kapak
+  URL'ini yazıyor (`:63`), `BranchDetailsChangedHandler` şube adlarını yazıyor
+  (`BranchEventHandlers.cs:30`), `BranchDeactivatedHandler` satırı siliyor (`:52`). Üçü de
+  `0001`/`0003`/`0011`'in kriterleriyle korunuyor. → **D34**
+- **Yayın zamanı İLK yayında donuyor:** `PublishedAt ??= clock.UtcNow` (`Listing.cs:137`) ve
+  vitrin sıralaması `ShowcaseSortWeight DESC, PublishedAt DESC`
+  (`ShowcaseListingQueries.cs:38-40`). → **D31**
+- **Liste ile özet aynı evreni saymıyor olacak.** `ListAsync` (`:39`) ve `GetSummaryAsync`
+  (`:71`) ikisi de `context.Vehicles.CountAsync()` ile **koşulsuz** sayıyor; özetin "çeviri
+  eksik" sayısı da tüm ilanlar üzerinden (`0010b` AC-23). → **D35**
+- **`Vehicle` hiç domain olayı YAYMIYOR** ve `VehicleCatalog.Contracts` altında `Events`
+  klasörü **yok** — sekiz entegrasyon kaydı sıfırdan yazılacak. Emsal çift yönlü:
+  `BranchOpened` adları taşıyor ki *"alıcı ikinci bir sorgu yapmak zorunda kalmasın"*
+  (`BranchIntegrationEvents.cs:50`), `LeadCaptured` ise bilerek yalnız istatistik taşıyor
+  (L6). → **D30**
+- **Düzenleme komutu "son güncellenme"yi ilerletmiyor.** `Vehicle.Touch`'ın çağıranları
+  yalnız `UpdateVehicleMediaCommand.cs:82` (`0012a`) ve `ChangePrice` (`Vehicle.cs:274`);
+  `UpdateVehicleCommand` onu çağırmıyor. Başlık, kilometre veya renk düzeltmesi bugün "son
+  güncellenen" sıralamasında görünmüyor. → **D37**
+- **Öne çıkarma kolonu bugün iki değerli DEĞİL.** `ChangeShowcaseSortWeight(int)` doğrulama
+  yapmıyor, olay yaymıyor ve çağıranı yok (`Listing.cs:203`); geliştirme seed'i ise aynı
+  kolona `1..N` yazıyor (`ShowcaseSeeder.cs:139`). → **D36**
 
 ### Geçerli domain kuralları
 
-**A2** (yayın koşulları) · **A3** (geçiş tablosu — `Taslak → Arşiv` **D10** ile eklendi) ·
+**A2** (yayın koşulları; çekirdek alan koşulu kayıt anında bağlar → **D23**) · **A3**
+(geçiş tablosu — `Taslak → Arşiv` **D10**, `Rezerve → Taslak` **D32** ile eklendi) ·
 **A4** (`Satıldı` terminal; aynı araç geri alınırsa **yeni kayıt**) · **A5** (şase tekilliği,
 arşiv muaf) · **A6** (fiyat geçmişi) · **A7** (şube değişince `VehicleRelocated`) ·
 **A8** (şube kapatılınca lokasyon ataması bekler) · **R1–R6** (rezervasyon; R6: rezerve araç
@@ -237,11 +341,23 @@ A2'yi karşılar).
    **silindi**. Dersi ölçümün kendisi: belirti "yanlış tabloya yazılıyor" sanılmıştı, gerçek
    "hiç yazılmıyor"du; bu aileden bir şüphede **tabloyu say**, kodu okumakla yetinme.
    `VehicleCatalog` outbox tutan **dördüncü** modül olacak. → **C11**
+9. **A8'i yalnız `Yayında` ilan sanmak.** `Unpublish()` `Rezerve`den geçmiyor; kapalı
+   şubedeki rezerve ilan vitrinden düşer ama durumu `Rezerve` kalır ve tek çıkışı `Satıldı`
+   olur. Ölçüldü (`Listing.cs:179-183`); A8'in *"sessizce vitrinde kalmazlar"* amacı tam
+   burada deliniyor. → **D32**
+10. **Arşivi listeden gizleyip sayaçta tutmak.** İki sorgu da bugün koşulsuz sayıyor
+    (`:39`, `:71`); yalnız listeye koşul eklenirse panel "12 araç" yazarken 10 satır
+    gösterir ve kimse hangi sayının yanlış olduğunu bilmez. → **D35**
+11. **Toplu seçimi `Normalize` gibi kırpmak.** En kısa yol o ve bugünkü kod onu
+    öğretiyor (`Math.Min`, `0010b` AC-26). Kırpma, "17 ilan uygulanmadı"yı sessizce
+    üretir; seçim adres çubuğundan gelen bir ipucu değil, personelin açık eylemidir.
+    → **D29**
 
 ### Verilen kararlar
 
-Hepsi 2026-10-11 CLARIFY turunda Takım Yöneticisi onayıyla verildi. **D1**, `0012a`'da
-yazılı bölme kararıdır ve burada tekrarlanmaz.
+Hepsi Takım Yöneticisi onayıyla verildi, **iki turda**: **D2–D21** `0012`'nin 2026-10-11
+CLARIFY turunda, **D22–D38** aynı gün `0012a` bittikten sonra yapılan ikinci turda. **D1**,
+`0012a`'da yazılı bölme kararıdır ve burada tekrarlanmaz.
 
 - **D2 — Yayın reddi koşul başına bir kod döner ve eksiklerin HEPSİ birlikte gelir.** Kodlar
   ortak önekli: `vehicle.cannot_publish.*`. Mevcut `vehicle.media_required` sabiti
@@ -357,10 +473,149 @@ yazılı bölme kararıdır ve burada tekrarlanmaz.
   § 7 **Karar Defteri**'dir. *Gerekçe:* yanlış atıf, kuralı aramaya çıkan geliştiriciyi
   kararlar tablosuna gönderiyordu. *Bedel:* yok.
 
+#### İkinci CLARIFY turu — D22–D38 (2026-10-11)
+
+Takım Yöneticisi, `0012a` kapandıktan sonra, hepsi `18e4adf` üzerinde **ölçülerek**.
+
+- **D22 — Eylemler ROL AYRIMI YAPMAZ; yetki tek bir şeydir: oturum.** (eski **S1**, kapandı)
+  *Gerekçe:* ADR 0003 unsur 3 alan/kayıt düzeyi yetkiyi ayrı bir karara bağladı ve
+  `architecture.md` § 6 bunu *"basit rol modelini izin motoruna dönüştürür"* diye uyardı;
+  `0012a` da aynı kararla (X2) teslim edildi ve kapandı. İki dilimin aynı yetki modelini
+  taşıması zorunlu. *Bedel, açıkça:* satış danışmanı da yayına alabilir, satıldı
+  işaretleyebilir ve fiyat değiştirebilir. Küçük ekipte kabul edilebilir; aksi istenirse
+  karar `0012a`'nın **kapanmış** uçlarını da açar — bedeli bugün daha büyük.
+- **D23 — A2'nin çekirdek alan koşulu için KOD YAZILMAZ; reddedilebilen koşul sayısı ÜÇ.**
+  *Gerekçe:* çekirdek alanı boş bir araç kaydı kurulamıyor — `Vehicle.Create` dokuzunu
+  zorunlu parametre alıyor, `0010a` D8 kuralı kayıt anına koydu ve kodun yorumu *"her zaman
+  doludurlar"* diyor (`VehicleAdminQueries.cs:207`). O kodu yazmak, testini yazmanın tek
+  yolu agregata arka kapı açmak olan bir red üretirdi (Altın Kural 5). *Bedel:* sözlükteki
+  A2 dört koşullu kalırken spec üç koşul doğruluyor; bu fark R2'de yazılı olmak zorunda,
+  yoksa sonraki okuyucu eksik sanar.
+- **D24 — Zorunlu opsiyonel alan reddi TEK KOD + ALAN ANAHTARLARI parametresidir.**
+  Kod: `vehicle.cannot_publish.missing_required_fields`; gövdede eksik alanların anahtar
+  listesi. Uç kodu kendi kataloğundan, alan adlarını kendi alan kataloğundan çevirir.
+  *Gerekçe:* hangi alanın zorunlu olduğu **operatör ayarı**; alan başına kod üretmek
+  `docs/conventions.md` § 5'in *"kod bir kez yayınlanınca anlamı değişmez"* kuralıyla
+  çelişir. § 5 yapısal parametreyi zaten tanıyor (`{ "field": "price" }`). *Bedel:* D2'nin
+  "dört kod × üç dil = on iki anahtar" hesabı **yanlış** — üç kod + alan adı anahtarları
+  olur ve hata gövdesi iç içe bir yapı taşır.
+- **D25 — Yayın reddi A2 ∪ {lokasyon ataması bekliyor, adres üretilemedi}'dir.** Birincisi
+  personelin düzeltebileceği (şube ata), ikincisi düzeltemeyeceği bir reddir ve panel bunu
+  böyle söyler. *Gerekçe:* ölçüldü — yansıtma bayraklı aracı `null` ile reddediyor
+  (`ShowcaseListingProjector.cs:32-35`) ve `ListingSlug.Create` kanonik ad Latin harfe
+  inmiyorsa `listing_slug.invalid_source` dönüyor (`ListingSlug.cs:41-45`). Tanımsız
+  bırakılırsa bu `Result.Failure` ya uçta yutulur ya `500` olur; ikisi de Yasak 24'ü deler.
+  *Bedel:* personelin çözemediği bir hata mesajı doğar (referans veriyi düzeltecek kişi
+  başka) ve D12'nin bedel satırı düzeltilir: yayın yolu **üç** modülden senkron okur.
+- **D26 — Reddin HTTP karşılığı sabitlendi:** A2/R21 reddi **`422`**, A3 geçiş reddi
+  **`409`**, `concurrency.lost` **`409`**, bulunamayan araç **`404`** (→ **C13**).
+  *Gerekçe:* merkezi eşleme yok, her modül kendi `Problems` switch'ini yazıyor
+  (`VehicleAdminEndpoints.cs:303-305`) ve D8'in bedel satırı `409` varsayıyordu ama hiçbir
+  yerde yazılı değildi. Panelin yapacağı iş farklı: `422`'de eksik koşul listesi gösterilir,
+  `409`'da satır tazelenir. *Bedel:* aynı düğme iki ayrı hata yolu taşır ve ikisi de ayrı
+  kriterle sabitlenir.
+- **D27 — Toplu eylemde BULUNAMAYAN ilan, isteği değil o SATIRI düşürür** (`200` gövdesinde
+  `vehicle.not_found`). Tek kayıtlı eylemde aynı durum **`404`**'tür. *Gerekçe:* D6 "istek
+  başarıyla işlendi" diyor ve bu durumun normal sebebi **bayat liste** — başka personel
+  arşivlemiştir. On dokuz geçerli kaydı bir bayat satır yüzünden reddetmek D3'ü anlamsız
+  kılar. *Bedel:* aynı neden iki yüzeyde iki ayrı yanıt üretir; yazılmazsa geliştirici
+  tutarlılık adına birini seçer ve yanlışını hiçbir kriter yakalamaz.
+- **D28 — Zaten hedef durumda olan kayıt BAŞARISIZ sayılır; sonuç satırı kaydın GÜNCEL
+  DURUMUNU taşır.** *Gerekçe:* A3'te kendine geçiş yok ve `Publish()` `Draft` değilse
+  `listing.invalid_status_transition` dönüyor (`Listing.cs:131-135`); sessiz başarı sonuç
+  listesini yalancı yapar. Ama tek başına o kod personele *"zaten yayında"* ile *"taslak ama
+  medyası yok"*u ayırt ettirmiyor — ayrımı yapacak veri durumun kendisi ve cümleyi panel
+  kurar (C6). *Bedel:* sonuç satırı bir alan daha kazanır; panel iki ayrı cümleyi aynı
+  koddan kurar.
+- **D29 — Toplu seçim KIRPILMAZ, reddedilir; sınır DÂHİLDİR; tekilleştirme sınırdan ÖNCE
+  yapılır.** Yani 100 geçer, 101 düşer, 150 kimlikten 60'ı tekilse istek geçer.
+  *Gerekçe:* bugünkü kod tersini öğretiyor — `Normalize` `pageSize`'ı `Math.Min` ile
+  kırpıyor ve yorumu *"hata dönmez"* diyor (`CatalogAdminPagingOptions.cs:22-30`). Ama
+  seçim adres çubuğundan gelen bir ipucu değil, personelin açık eylemidir; kırpmak
+  *"17 ilan uygulanmadı"*yı sessizce üretir. Tekilleştirmeyi sonraya bırakmak, aynı kaydı
+  iki kez göndereni sınır yüzünden reddeder. *Bedel:* aynı sayı iki yüzeyde zıt davranır ve
+  üç cümlenin üçü de kriter olmak zorunda.
+- **D30 — Sekiz olayın gövdesi `(EventId, OccurredAt, VehicleId, ListingId, Slug)`'dır;
+  DURUM ALANI YOKTUR.** Durumu olayın **tipi** söyler. Tutar, fiyat ve şube adı girmez.
+  *Gerekçe:* adres şart — yayından kaldırıldıktan sonra slug'ı okumanın yolu yok; bugün
+  yalnız okuma modelinde ve o satır siliniyor (`ShowcaseListingProjector.cs:17`). Tüketici
+  bugünden belli: `0004` R6 sitemap'i `VehiclePublished`/`VehicleUnpublished` ile
+  güncelliyor. Ayrı bir "durum" alanı, tipiyle çelişebilen ikinci bir gerçek üretir; para
+  alanı ise outbox satırında kalıcılaşır (`LeadCaptured`'ın L6 gerekçesi). *Bedel:* R11'in
+  metni değişti; `VehiclePriceChanged`'ın tüketicisi fiyatı kendisi okumak zorunda.
+- **D31 — Yeniden yayında TARİH DE DONAR ve duyuru YİNE yayılır; `VehiclePublished` ilk
+  yayın zamanını taşır.** *Gerekçe:* `PublishedAt ??= clock.UtcNow` (`Listing.cs:137`) zaten
+  ilk yayında donuyor ve vitrin sıralaması ona bakıyor (`ShowcaseListingQueries.cs:38-40`);
+  R16'nın donmuş adresiyle tutarlı olan şey donmuş sıradır. Duyuruyu yaymamak ise tüketiciyi
+  kör bırakır; `OccurredAt > FirstPublishedAt` karşılaştırması *"bu ilk yayın değil"*
+  bilgisini bayrak eklemeden verir. *Bedel:* bir ay yayından kalkmış ilan geri döndüğünde
+  vitrinde "yeni" görünmez ve `0018`'in "son gönderimden beri yayına alınanlar" penceresi
+  **yeniden yayını da sayar** — o spec'in S3'üne bu not düşüldü.
+- **D32 — A8 `Rezerve` ilanları da kapsar ve `docs/domain.md` A3'e `Rezerve → Taslak`
+  geçişi eklendi.** Bayrak vitrine dönebilecek kayıtlara (`Taslak|Yayında|Rezerve`) yazılır;
+  `Satıldı` ve `Arşiv` kayıtlara dokunulmaz. *Gerekçe:* `Unpublish()` yalnız `Yayında`dan
+  geçiyor (`Listing.cs:179-183`) ve A3'te bu geçiş yoktu; kapalı şubedeki rezerve ilan
+  vitrinden düşüyor ama `Rezerve` kalıyor, tek çıkışı `Satıldı` oluyordu — A8'in
+  *"sessizce vitrinde kalmazlar"* amacının tam tersi, çıkışı olmayan bir hâl. *Elenen
+  alternatif:* işleyicinin `ReturnToShowcase()` + `Unpublish()` zinciri — tek nedenden
+  **iki** duyuru üretir ve § 2.C sıra garantisi vermediği için tüketici diziyi ters sırada
+  görebilir. *Bedel:* **sözlükte ikinci bir kural değişikliği** (D10'dan sonra ikinci) ve
+  rezervasyonun düştüğü bilgisi hiçbir yere yazılmaz — ama rezervasyon kaydı X1'de kapsam
+  dışı.
+- **D33 — A8 yolu D4'ün seçim sınırından MUAFTIR; şube olayı başına tek işlemde koşar ve
+  geçişleri DUYURULUR.** *Gerekçe:* kısmi başarı bir **personel** kararının karşılığıdır
+  (D3); sistemin kendi tepkisinde yarım uygulanmış bir şube kapanışı A8'i deler. Sınırın
+  yazılmaması, D4'ü buraya da uygulayan bir okumaya kapı açıyordu. *Bedel, açıkça:* 300
+  araçlı bir şube tek işlemde 300 geçiş, 300 bayrak ve 300 outbox satırı demektir; uzun
+  transaction kabul edildi ve idempotentlik olay kimliğine bağlı kalır.
+- **D34 — C12 GÖRÜNÜRLÜK KARARINA daraltıldı.** Hangi ilanın vitrinde satırı olduğunu yalnız
+  yansıtma belirler; kopyalanmış kolonları besleyen işleyiciler (kapak URL'i, şube adları)
+  bunun dışındadır. `BranchDeactivatedHandler` ise görünürlük kararı **verdiği** için
+  istisna olmaktan çıkar: D32'nin yazma yolunu çağırır, satır yansıtmanın `null` sonucuyla
+  düşer. *Gerekçe:* ölçüldü — bugün üç işleyici okuma modeline doğrudan yazıyor
+  (`MediaAssetReadyHandler:63`, `BranchEventHandlers:30` ve `:52`) ve üçü de
+  `0001`/`0003`/`0011`'in kriterleriyle korunuyor. C12'nin eski yazımıyla geliştiricinin iki
+  seçeneği vardı: çalışan üç işleyiciyi yeniden yazmak ya da kısıtı sessizce ihlal etmek.
+  Kısıtın koruduğu şey Yasak 41'dir (gizlemenin uca kaçması), kopyalanan kolonlar değil.
+  *Bedel:* kısıt zayıflar; "hangi yazma görünürlük kararıdır" ayrımı kriterle sabitlenmek
+  zorunda.
+- **D35 — Arşiv koşulu listeye, TOPLAM SAYIYA ve ÖZET SAYAÇLARINA birlikte uygulanır.**
+  Filtre eklemeli ve iki değerli ("arşivi dâhil et"); tanınmayan değer **yoksayılır**, hata
+  dönmez (`pageSize` emsali, `docs/conventions.md` § 3). *Gerekçe:* `ListAsync` (`:39`) ve
+  `GetSummaryAsync` (`:71`) bugün koşulsuz sayıyor; yalnız listeye koşul eklenirse panel
+  "12 araç" yazarken 10 satır gösterir. *Bedel:* kapanmış `0010b`'nin iki kriterinin
+  (AC-23 ve AC-26 komşusu) anlamı değişir ve bu PR'da **adıyla** yazılmak zorunda — D11'in
+  emsali.
+- **D36 — Öne çıkarma: toplu KALDIRMA da listede, ön koşul "arşiv değil", zaman damgasını
+  ilerletir, geliştirme seed'i hizalanır.** *Gerekçe:* R12 iki eylem veriyor, D18'in toplu
+  listesi yalnız birini sayıyordu — yirmi ilanı öne çıkarıp tek tek geri almak D3'ün çözdüğü
+  sorunun aynısı. Durum ön koşulu koymak yeni bir red kodu ve yeni bir test demek,
+  karşılığında kazanç yok; taslakta işaretlemenin etkisi yayınla görünür ve panel bunu
+  söyler. Seed bugün aynı kolona `1..N` yazıyor (`ShowcaseSeeder.cs:139`) ve D16'nın iki
+  değerli anahtar kararını **veri tarafında** deliyor. *Bedel:* etkisi hemen görünmeyen bir
+  düğme doğar; geliştirme seed'ine dokunulur.
+- **D37 — `UpdateVehicleCommand`'ın eksik `Touch` çağrısı bu spec'te tamamlanır** ve PR'da
+  adıyla yazılır. *Gerekçe:* ölçüldü — `Touch`'ın çağıranları yalnız
+  `UpdateVehicleMediaCommand.cs:82` ve `ChangePrice`; başlık, kilometre veya renk
+  düzeltmesi "son güncellenen" sıralamasında görünmüyor. D20 geçişi görünür kılıyor;
+  düzenleme görünmez kalırsa sıralama *"fiyatı ve medyası değişenler"* eksenine dönüşür ve
+  tutarsızlığı D20'nin kendisi **yeni** fark edilir hâle getirir. *Bedel:* kapanmış
+  `0010b`'nin komutu, o spec'in istemediği bir davranış kazanır — kapsam kararı Takım
+  Yöneticisi'nin ve verildi.
+- **D38 — ADR `0008` / K3'e donma anı cümlesi eklendi:** R/C ile AC ayrı PR'larda `main`'e
+  giriyorsa donma anı **AC'yi taşıyan PR**'dır; ondan önceki R/C değişimi revizyon
+  sayılmaz. *Gerekçe:* `0012a`'nın kapanışı bu boşluğu ölçtü — sıkı okuma **1**, gevşek
+  okuma **0** veriyordu ve karta gerekçesiyle **1** yazıldı. `0012b` aynı dizilimle
+  ilerliyor (R/C #54'te girdi, AC kendi turunda girecek); aynı kuralı iki kart iki farklı
+  okumayla doldurursa ölçüm karşılaştırılamaz hâle gelir ve K3'ün hedefi *"yorum payı yok"*
+  idi. *Bedel:* bir ADR revizyonu; karar `0012a`'nın kartına **geriye dönük uygulanmaz**
+  (kart arşivde ve sayısı gerekçesiyle yazılı — K3'ün kendi "kapanmış kartlar düzeltilmez"
+  kuralı).
+
 ### Kapanan sorular
 
-`0012`'nin beş açık sorusundan dördü, onaylanan kararların doğal sonucu olarak kapandı.
-**Yorumum buysa ve aksini söylerseniz geri alınır:**
+`0012`'nin beş açık sorusundan dördü ilk turda, beşincisi ikinci turda kapandı. **Açık soru
+kalmadı.**
 
 | Eski soru | Durum | Kapatan karar |
 |---|---|---|
@@ -368,36 +623,51 @@ yazılı bölme kararıdır ve burada tekrarlanmaz.
 | **S2** — mockup'taki "Vitrine ekle" ne demek | ✅ kapandı | **D16**: ayrı bir eylem değil, **öne çıkarma**; etiketi "Öne çıkar" |
 | **S3** — `0011` önkoşul mu, medya şartı gevşetilsin mi | ✅ kapandı | önkoşul; `0011` 2026-10-11'de tamamlandı (PR #51) ve gevşetme yapılmadı. Şartın ölçülebilir hâle gelmesi `0012a` **D5/D6** |
 | **S5** — durum geçişi duyuruları hangi olaylardır | ✅ kapandı | **D11**: sekiz olay, `Vehicle*` önekli, § 1 iki adla güncellendi |
-| **S4** → **S1** | ⬜ **açık** | aşağıda |
+| **S4** → **S1** — eylemler rol ayrımı yapacak mı | ✅ kapandı | **D22**: rol ayrımı yok; `0012a` X2 ile aynı karar |
 
 ---
 
 ## Açık sorular
 
-**S1. Eylemler rol ayrımı yapacak mı?** *(eski S4; metni korunuyor)*
-Mockup "Personel rolündesiniz: ilan taslak olarak kaydedilir, fiyat alanı kilitlidir" diyor.
-*Öneri:* bu spec'te **rol ayrımı yok** (X4); tüm eylemler oturum açmış personele açık.
-*Gerekçe:* ADR 0003 unsur 3 alan/kayıt düzeyi yetkiyi ayrı bir karara bağladı ve § 6 bunu
-"basit rol modelini izin motoruna dönüştürür" diye uyardı.
-*Bedel:* satış danışmanı da yayına alabilir ve fiyat değiştirebilir. Küçük ekipte kabul
-edilebilir; değilse bu kararı önce vermek gerekir — **R1'in "yetkili" sözünün tanımı buna
-bağlı** ve kabul kriterleri bu cevap gelmeden yazılmaz.
+**Yok.** Son açık soru (**S1** — eylemler rol ayrımı yapacak mı) 2026-10-11'de **D22** ile
+kapandı: rol ayrımı yok, yetki tek bir şeydir — oturum. Mockup'ın *"Personel rolündesiniz:
+ilan taslak olarak kaydedilir, fiyat alanı kilitlidir"* cümlesinin karşılığı bu spec'te
+**yoktur** ve X4 onu kapsam dışında tutuyor.
+
+Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**.
 
 ---
 
 ## Acceptance Criteria
 
-> **S1 cevaplandıktan sonra yazılacak.** En az şu kümeleri kapsayacak:
+> **Kriter turunda yazılacak** — bekleyen karar kalmadı (**D22**). `0012a`'nın deseni
+> geçerli: kararlar bu PR'da donar, kriterler kendi PR'ında girer (ADR `0008` / K2).
+> En az şu kümeleri kapsayacak:
 >
-> A2'nin dört koşulunun ayrı ayrı reddi **ve birlikte reddi** (D2) · A3'teki her geçiş ve her
-> **geçersiz** geçiş (`Taslak → Arşiv` dâhil) · A4 terminal kuralı · arşivlemenin şase
-> muafiyetini açması (D9) · toplu eylem: kısmi başarı, boş seçim, yinelenen kimlik, üst sınır
-> (D3–D6) · A8'in yazma tarafı ve bayraklı aracın yayına alınamaması (D15) ·
-> eşzamanlılıkta kaybedenin **kural reddi** alması (D8) · sekiz olayın üretimi, adları ve
-> idempotentlik (D11) · vitrin satırının her yazma yolunda güncellenmesi (D12) · adresin ilk
-> yayında donması ve yeniden yayında **aynı** kalması (D13) · öne çıkarmanın sıralamaya
-> yansıması (D16) · arşivin varsayılan listede görünmemesi (D19) · geçişin "son güncellenen"i
-> ilerletmesi (D20) · beş ekran durumu (D7) · çok dil ve RTL.
+> **Yayın reddi:** A2'nin **üç** koşulunun ayrı ayrı reddi **ve birlikte reddi** (D2, D23) ·
+> zorunlu opsiyonel alan reddinin **hangi alanları** taşıdığı (D24) · A2 dışındaki iki red —
+> lokasyon bayrağı ve adres üretilemedi (D25) · reddin HTTP karşılığı (D26).
+> **Geçişler:** A3'teki her geçiş ve her **geçersiz** geçiş (`Taslak → Arşiv` ve
+> `Rezerve → Taslak` dâhil) · A4 terminal kuralı · arşivlemenin şase muafiyetini açması (D9) ·
+> eşzamanlılıkta kaybedenin **kural reddi** alması (D8) · geçişin, öne çıkarmanın **ve araç
+> düzenlemesinin** "son güncellenen"i ilerletmesi (D20, D36, D37).
+> **Toplu eylem:** kısmi başarı · boş seçim · yinelenen kimlik · üst sınırın **dâhil** olması
+> ve **kırpılmaması** · tekilleştirmenin sınırdan önce gelmesi (D3–D6, D29) · bulunamayan
+> ilanın satırı düşürmesi, tek kayıtta `404` olması (D27) · zaten hedef durumda olan kaydın
+> **güncel durumuyla** birlikte düşmesi (D28) · öne çıkarma **ve kaldırma**nın toplu çalışması
+> (D36).
+> **Duyurular:** sekiz olayın üretimi, adları ve idempotentliği (D11) · gövdenin beş alanı ve
+> **durum alanı taşımaması** (D30) · yeniden yayının duyurulması ve ilk yayın zamanını
+> taşıması (D31) · A8 yolundaki geçişlerin de duyurulması (D33).
+> **Vitrin ve liste:** vitrin satırının her yazma yolunda güncellenmesi (D12) · görünürlük
+> kararının tek yerde kalması, kopya kolon yazıcılarının dışarıda olması (D34) · adresin ilk
+> yayında donması ve yeniden yayında **aynı** kalması (D13) · yeniden yayının vitrin sırasını
+> **değiştirmemesi** (D31) · öne çıkarmanın sıralamaya yansıması (D16) · arşivin varsayılan
+> listede, **toplam sayıda ve özet sayaçlarında** görünmemesi (D19, D35).
+> **A8:** yazma tarafı, bayraklı aracın yayına alınamaması, `Rezerve` ilanın da yayından
+> kalkması, `Satıldı`/`Arşiv` kayda dokunulmaması (D15, D32).
+> **Yüzey:** beş ekran durumu (D7) · rol ayrımı olmadığı — oturum açmış her personelin her
+> eylemi çağırabildiği (D22) · çok dil ve RTL.
 
 ---
 
@@ -406,8 +676,13 @@ bağlı** ve kabul kriterleri bu cevap gelmeden yazılmaz.
 <!-- MADDE ÇIKARILAMAZ. Şablondaki her maddenin bir `<!-- DoD:Tn -->` işaretleyicisi vardır
      ve mimari test (ADR 0008 / K8) sayıyı şablondan okuyarak denetler. -->
 
-- [ ] **S1** karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
-- [ ] `0012a` tamamlandı (A2'nin medya koşulu ölçülebilir).
+- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi
+      (**D2–D21** ilk CLARIFY turu, **D22–D38** ikinci tur; açık soru kalmadı).
+- [x] `0012a` tamamlandı (A2'nin medya koşulu ölçülebilir).
+      *2026-10-11, `8fc862c` (#56) ve kapanışı `18e4adf` (#57); kart `specs/done/` altında.
+      Ölçüldü: `ReadyAmongAsync` (`MediaAssetContracts.cs:72`) ve parametreli
+      `EnsurePublishable` (`Vehicle.cs:353`) duruyor — ikisinin de üretim çağıranı bu spec'in
+      işi (`0012a` D18).*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012b-ac<n>.png`),
       **kısmi başarı** ve hata durumları dâhil, RTL için Arapça görüntü de var.
@@ -432,6 +707,25 @@ bağlı** ve kabul kriterleri bu cevap gelmeden yazılmaz.
       kaydedilebildiği testle gösterildi (D9).
 - [ ] Vitrin satırının her yazma yolunda güncellendiği, **araç düzenlemesi dâhil**, testle
       gösterildi (D12).
+- [ ] A2'nin **üç** koşulunun reddedilebildiği, çekirdek alan koşulu için **kod
+      yazılmadığı** ve zorunlu alan reddinin eksik **alan anahtarlarını** taşıdığı testle
+      gösterildi (D23, D24).
+- [ ] A2 dışındaki **iki** reddin (lokasyon bayrağı, adres üretilemedi) kendi kodunu
+      döndürdüğü ve reddin HTTP karşılığının C13'teki eşlemeye uyduğu testle gösterildi
+      (D25, D26).
+- [ ] Toplu eylemin dört sınır durumu testle gösterildi: bulunamayan ilan **satırı**
+      düşürüyor · zaten hedef durumdaki kayıt güncel durumuyla düşüyor · sınır **dâhil** ve
+      **kırpılmıyor** · tekilleştirme sınırdan önce (D27, D28, D29).
+- [ ] Sekiz olayın gövdesinin **durum alanı taşımadığı** ve adresi taşıdığı, yeniden yayının
+      da duyurulduğu ve ilk yayın zamanını taşıdığı testle gösterildi (D30, D31).
+- [ ] A8'in `Rezerve` ilanı da yayından kaldırdığı, `Satıldı`/`Arşiv` kayda dokunmadığı ve
+      geçişlerini duyurduğu testle gösterildi (D32, D33).
+- [ ] Görünürlük kararının yalnız yansıtmada olduğu, kopya kolon yazıcılarının (kapak URL'i,
+      şube adları) **bozulmadığı** testle gösterildi (D34).
+- [ ] Arşiv koşulunun liste, **toplam sayı ve özet sayaçlarında** birlikte uygulandığı
+      testle gösterildi; `0010b`'nin etkilenen kriterleri PR'da **adıyla** yazıldı (D35).
+- [ ] Öne çıkarmanın toplu kaldırılabildiği ve `UpdateVehicleCommand`'ın eksik `Touch`
+      çağrısının tamamlandığı testle gösterildi; ikisi de PR'da adıyla yazıldı (D36, D37).
 
 ---
 

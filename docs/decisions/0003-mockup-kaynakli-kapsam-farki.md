@@ -261,7 +261,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 2 | **Görsel dil ve marka teması** | `frontend-002` ✅ tamamlandı |
 | 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
-| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · **`0012b`** (Taslak — S1) |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · **`0012b`** (Taslak — **karar bekleyen soru yok**) |
 | 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
 | 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
@@ -304,10 +304,13 @@ hâlâ **hiçbir üretim çağıranı yok** — ölçüldü, tek çağıranı `V
 yayın eyleminin kendisi `0012b`'nin işi (`0012a` D7, D18). Vitrin okuma modeline yazan üretim
 yolu da hâlâ geliştirme seed'i (`0012a` D19).
 
-**Sekiz taslağın toplam 34 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-11'de
-ölçüldü; `0012a` kapandığı için taslak sayısı dokuzdan sekize indi, soru sayısı değişmedi —
-`0012a`'nın karar bekleyen sorusu hiç yoktu). `0012`'nin beş sorusundan dördü CLARIFY turunda
-kapandı, biri (**rol ayrımı**) `0012b` § Açık sorular **S1** olarak duruyor. Hiçbir taslağın
+**Sekiz taslağın toplam 33 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-11'de
+ölçüldü; `0012a` kapandığı için taslak sayısı dokuzdan sekize indi ve aynı gün `0012b`'nin
+son sorusu kapandığı için sayı 34'ten 33'e indi). `0012`'nin beş sorusundan dördü ilk
+CLARIFY turunda kapandı; beşincisi (**rol ayrımı**) `0012b`'nin **ikinci** CLARIFY turunda
+kapandı (**D22**: rol ayrımı yok, `0012a` X2 ile aynı karar). **`0012b`'nin karar bekleyen
+sorusu kalmadı** ve sıradaki tur kriter turudur; o tur on yedi karar daha ekledi
+(**D22–D38**), dördü spec'i bugünkü hâliyle yanlış kılan ölçümlerden. Hiçbir taslağın
 kabul kriteri yok; cevaplar onları belirliyor. `0014`'ün **S1**'i tablonun kendisini sorguluyor — üç bağımlılığı kendisinden
 SONRA sıralanmış.
 
