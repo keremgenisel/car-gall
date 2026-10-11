@@ -261,7 +261,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 2 | **Görsel dil ve marka teması** | `frontend-002` ✅ tamamlandı |
 | 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
-| 5 | Yayın ve durum eylemleri + toplu eylemler | **`0012a`** (Taslak — karar bekleyen soru yok) · **`0012b`** (Taslak — S1) |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · **`0012b`** (Taslak — S1) |
 | 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
 | 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
@@ -275,8 +275,9 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 kaydı, 2026-10-05) ve `0010b` (düzenleme ve liste, 2026-10-10). `4`. satır `0011` ile kapandı
 (2026-10-11). **`5`. satır da ikiye bölündü** — 2026-10-11 CLARIFY turu, `0012a` **D1**:
 `0012a` (aracın medya yüzeyi) ve `0012b` (yayın ve durum eylemleri). Bölme sınırı **A2'nin
-medya koşulu**: birinci dilim onu ölçülebilir kılar, ikinci dilim onu tüketir. Sıra
-DEĞİŞMEDİ; başlanmamış ilk iş hâlâ #5'tir ve artık iki dosyadır.
+medya koşulu**: birinci dilim onu ölçülebilir kılar, ikinci dilim onu tüketir. **Birinci
+dilim aynı gün kapandı** (`0012a`, 2026-10-11, `8fc862c`); sıra DEĞİŞMEDİ ve başlanmamış ilk
+iş artık #5'in **ikinci dilimi** (`0012b`).
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca
@@ -294,11 +295,20 @@ kendisi yok; `EnsurePublishable()`'ın hiçbir üretim çağıranı bulunmuyor v
 `mediaAssetIds.Count > 0`'a bakıyor. Birinci sebep `0012a`'nın, ikincisi `0012b`'nin işi.
 Vitrin bu yüzden hâlâ seed'e bağlı.
 
-**Dokuz taslağın toplam 34 açık sorusu var ve hepsinin önerisi yazılı.** `0012`'nin beş
-sorusundan dördü CLARIFY turunda kapandı, biri (**rol ayrımı**) `0012b` § Açık sorular
-**S1** olarak duruyor; `0012a`'nın karar bekleyen sorusu **yok** — sekiz kararı
-yazılı ve yalnız kriter turu bekliyor (`0012b`'nin yirmi kararı da yazılı). Hiçbir taslağın kabul kriteri yok; cevaplar onları
-belirliyor. `0014`'ün **S1**'i tablonun kendisini sorguluyor — üç bağımlılığı kendisinden
+**`0012a` birinci sebebi kapattı** (2026-10-11). Yeniden ölçüldü: fotoğrafı araca bağlayan bir
+üretim yolu artık **var** — `UpdateVehicleMediaCommand` → `Vehicle.ReplaceMediaAssets`, panelin
+`PUT {admin}/vehicles/{id}/media` ucu. `EnsurePublishable`'ın gövdesi de genişledi: imzası
+`EnsurePublishable(IReadOnlySet<Guid> readyMediaAssetIds)` ve kararı bağlı varlıklarla hazır
+varlıkların **kesişimine** bakıyor (`Vehicle.cs:353`). **İkinci sebep aynen duruyor:** o metodun
+hâlâ **hiçbir üretim çağıranı yok** — ölçüldü, tek çağıranı `VehicleTests.cs`'in beş testi — ve
+yayın eyleminin kendisi `0012b`'nin işi (`0012a` D7, D18). Vitrin okuma modeline yazan üretim
+yolu da hâlâ geliştirme seed'i (`0012a` D19).
+
+**Sekiz taslağın toplam 34 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-11'de
+ölçüldü; `0012a` kapandığı için taslak sayısı dokuzdan sekize indi, soru sayısı değişmedi —
+`0012a`'nın karar bekleyen sorusu hiç yoktu). `0012`'nin beş sorusundan dördü CLARIFY turunda
+kapandı, biri (**rol ayrımı**) `0012b` § Açık sorular **S1** olarak duruyor. Hiçbir taslağın
+kabul kriteri yok; cevaplar onları belirliyor. `0014`'ün **S1**'i tablonun kendisini sorguluyor — üç bağımlılığı kendisinden
 SONRA sıralanmış.
 
 ---

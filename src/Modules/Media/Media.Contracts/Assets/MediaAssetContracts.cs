@@ -43,9 +43,12 @@ public interface IMediaAssetQueries
     /// AC-42 — bir varlık KÜMESİNİN hazır olup olmadığını yanıtlar.
     ///
     /// <para>`0012` bunu A2'nin yayın şartına bağlayacak: *"en az bir medya varlığı
-    /// **hazır** durumda"* (`docs/domain.md` M3). Bu spec yüzeyi <b>sunar, tüketmez</b>
-    /// (D11, X7) — `Vehicle.EnsurePublishable()` bugün hâlâ yalnız sayıya bakıyor ve
-    /// kabul edilen bedel X7'de yazılı.</para>
+    /// **hazır** durumda"* (`docs/domain.md` M3). `0011` bu yüzeyi <b>sundu, tüketmedi</b>
+    /// (D11, X7) ve `Vehicle.EnsurePublishable()` o gün yalnız sayıya bakıyordu.
+    /// <b>Bu cümle 2026-10-11'de düzeltildi:</b> `0012a`/D6 gövdeyi "en az bir HAZIR varlık"
+    /// şartına genişletti ve şart artık `ReadyAmongAsync` üzerinden kuruluyor — A2'yi ölçen
+    /// okuma <b>bu metot değil</b>, onun altındaki `ReadyAmongAsync`'tir (`0012a` Tuzak 1:
+    /// "hepsi hazır" ile "en az bir hazır" aynı soru değil).</para>
     ///
     /// <para><b>Boş küme <c>false</c> döner</b> ve bu bilinçli: A2 en az bir varlık
     /// istiyor, yani "hiç varlık yok" sorusunun doğru cevabı "hazır değil". <c>true</c>
