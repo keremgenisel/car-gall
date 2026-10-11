@@ -485,6 +485,9 @@ altındaki ADR'lerdedir.
 | `VehicleCatalog` olayları | Sekiz entegrasyon olayı, hepsi `Vehicle*` önekli; yayıncısı `0012b` |
 | İlan adresi (slug) | Yazma modelinde; **ilk yayına alma** anında bir kez üretilir, bir daha değişmez |
 | Toplu eylem sonucu | `200` + ilan başına sonuç listesi; kısmi başarı dördüncü ekran durumudur |
+| `VehicleCatalog` olaylarının gövdesi | `(EventId, OccurredAt, VehicleId, ListingId, Slug)`; **durum alanı yok** — durumu olayın tipi söyler |
+| Vitrin okuma modeline yazma | **Görünürlük kararı** yalnız yansıtmada; kopyalanmış kolonları (kapak URL'i, şube adları) besleyen işleyiciler bunun dışında |
+| Sistem tepkisiyle gelen toplu geçiş | Şube kapanması (A8) personelin seçim üst sınırına tabi değil; şube olayı başına tek işlem, geçişleri duyurulur |
 | Proje sayısı | Modül başına 2 (`X`, `X.Contracts`) |
 | Syndication | V1 dışı, V1.1'de ayrı modül |
 | SSR | Yok; sunucu tarafı meta + JSON-LD enjeksiyonu |

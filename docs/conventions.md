@@ -139,6 +139,18 @@ Domain → (hiçbir şey; yalnızca BuildingBlocks primitive'leri)
   başarısız satır kendi `errorCode`'unu taşır. Boş seçim ve üst sınırın aşılması **istek
   düzeyi** hatadır (`422`). *Bedel, açıkça:* istemci başarıyı HTTP kodundan okuyamaz, gövdeyi
   okumak zorundadır. *(Spec `0012b` / D6, Takım Yöneticisi onayı 2026-10-11.)*
+  - **Bulunamayan kayıt** istek düzeyi hata **değildir**: o satır kendi `errorCode`'uyla
+    düşer, istek `200` kalır. Aynı durum **tek kayıtlı** uçta `404`'tür. *Neden:* bu durumun
+    normal sebebi bayat listedir; on dokuz geçerli kaydı bir bayat satır yüzünden reddetmek
+    kısmi başarı kararını anlamsız kılar.
+  - Kayıt başına sonuç satırı, kaydın **güncel durum kodunu** da taşır. *Neden:* tek başına
+    bir red kodu *"zaten o durumda"* ile *"koşulu sağlamıyor"*u ayırt ettirmez ve cümleyi
+    kuran uçtur (§ 6).
+  - **Seçim kırpılmaz.** Üst sınırı aşan seçim reddedilir; sınır **dâhildir** ve yinelenen
+    kimlikler **sınır kontrolünden önce** teklenir. *Neden:* § 3'ün `pageSize` kırpması
+    adres çubuğundan gelen bir **ipucu** içindir; seçim personelin açık eylemidir ve
+    kırpmak "17 kayıt uygulanmadı"yı sessizce üretir.
+  *(Üç madde: spec `0012b` / D27, D28, D29; Takım Yöneticisi onayı 2026-10-11.)*
 
 **`errorCode` adlandırması:** `<alan>.<durum>[.<ayrıntı>]`, hepsi snake_case, nokta ayraçlı.
 Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod eklenir.

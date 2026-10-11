@@ -64,6 +64,13 @@ doküman işleri artık `docs/` önekini adıyla kullanır.
 - `Spec revizyon sayısı`nda onay anındaki CLARIFY turunun sayılıp sayılmayacağı yazılır:
   **sayılır.** Bugün beş kart ikiye bölünmüş durumda (`0006`, `0009`, `frontend-002` **1**;
   `0010a`, `0010b` **0**).
+- **R/C ile AC ayrı PR'larda `main`'e giriyorsa donma anı, AC'yi taşıyan PR'dır;** ondan
+  önceki R/C değişimi revizyon **sayılmaz**. *(2026-10-11, spec `0012b` / D38, Takım
+  Yöneticisi onayı.)* Boşluk `0012a`'nın kapanışında ölçüldü: R/C #54'te, R9 ve 33 kriter
+  #55'te girdi; sıkı okuma **1**, gevşek okuma **0** veriyordu ve karta gerekçesiyle **1**
+  yazıldı. Aynı kuralı iki kart iki ayrı okumayla doldurursa sayılar karşılaştırılamaz —
+  K3'ün hedefi "yorum payı yok"tu. Kural **sonraki** karttan başlar: `0012a`'nın hücresi
+  olduğu gibi kalır (bu ADR'nin "kapanmış kartlar düzeltilmez" kuralı).
 
 *Bedel:* Yok sayılır. Kapanmış kartlar düzeltilmez — yeni yazım sonraki spec'ten başlar.
 

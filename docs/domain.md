@@ -102,10 +102,20 @@ Her kural test edilebilir bir ifadedir. Spec'ler bu kurallara atıf yapar.
 ```
 Taslak   → Yayında | Arşiv
 Yayında  → Rezerve | Satıldı | Taslak | Arşiv
-Rezerve  → Yayında | Satıldı
+Rezerve  → Yayında | Satıldı | Taslak
 Satıldı  → Arşiv
 Arşiv    → (terminal)
 ```
+
+`Rezerve → Taslak` **2026-10-11'de eklendi** (spec `0012b` / D32, Takım Yöneticisi onayı).
+Gerekçe ölçülerek bulundu: **A8** şube kapatıldığında o şubedeki araçların yayından
+kalkmasını istiyor, ama yayından kaldırma yalnız `Yayında`dan geçiyordu
+(`Listing.Unpublish`). Kapalı şubedeki **rezerve** bir ilan böylece vitrinden düşüyor
+(yansıtma "lokasyon ataması bekliyor" aracı göstermiyor) ama durumu `Rezerve` kalıyor ve
+tek çıkışı `Satıldı` oluyordu — çıkışı olmayan bir hâl ve A8'in *"sessizce vitrinde
+kalmazlar"* amacının tersi. *Elenen alternatif:* işleyicinin `Rezerve → Yayında → Taslak`
+zincirini kurması — tek bir nedenden **iki** duyuru üretiyor ve teslimat sıra garantisi
+vermediği için (`docs/architecture.md` § 2.C) tüketici diziyi ters sırada görebilir.
 
 `Taslak → Arşiv` **2026-10-11'de eklendi** (spec `0012b` / D10, Takım Yöneticisi onayı).
 Gerekçe ölçülerek bulundu: silme bu projede `Arşiv` durumudur (`0010b` § X19) ve şase

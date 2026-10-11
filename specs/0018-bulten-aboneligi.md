@@ -129,6 +129,12 @@ mesajı gitmez ve çıkmak isteyen tek adımda çıkar.**
   sayıyor ama kodda yok. 2026-10-11'de **karara bağlandı**: `0012b` / **D11** sekiz olayı
   üretiyor ve `VehiclePublished` onlardan biri. Yani bu spec `0012b`'ye bağlı ve olayın
   **geleceği artık belirsiz değil**, sırası belirsiz. → Açık soru **S3**.
+- **"Yeniden yayın" da bir `VehiclePublished`'dır.** `0012b` / **D31**: yayından kaldırılıp
+  yeniden yayınlanan ilan duyuruyu **yine** üretir ve ilanın **ilk** yayın zamanı değişmez
+  (ölçüldü: `Listing.PublishedAt` yalnız ilk yayında yazılıyor). Bu yüzden duyuru ilk yayın
+  zamanını da taşıyor: `OccurredAt > FirstPublishedAt` olan bir olay **yeni araç değildir**.
+  Bu ayrımı yapmayan bir pencere, aynı aracı her yeniden yayında yeniden postalar.
+  → Açık soru **S3**.
 - **KVKK metni yok.** R4'ün bağlantı verdiği sayfa `0017`'nin işi; `0017` § S5 bu metni
   `Content`'e koymayı öneriyor.
 
