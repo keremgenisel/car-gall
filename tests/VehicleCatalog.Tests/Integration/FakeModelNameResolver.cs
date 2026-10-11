@@ -36,4 +36,16 @@ internal sealed class FakeModelNameResolver : IVehicleModelNameResolver
 
         return Task.FromResult<IReadOnlyDictionary<Guid, string>>(resolved);
     }
+
+    /// <summary>
+    /// `0012b` **D13** — ilanın adresi kanonik addan türüyor. Sahte Latin bir ad veriyor:
+    /// boş ya da Arapça bir ad `ListingSlug`'ı `invalid_source` ile reddettirir ve testin
+    /// ölçtüğü şey adres üretimi değil.
+    /// </summary>
+    public Task<IReadOnlyDictionary<Guid, string>> ResolveCanonicalNamesAsync(
+        IReadOnlyCollection<Guid> vehicleModelIds,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, string>>(
+            vehicleModelIds.ToDictionary(id => id, _ => "Toyota Corolla"));
+
 }

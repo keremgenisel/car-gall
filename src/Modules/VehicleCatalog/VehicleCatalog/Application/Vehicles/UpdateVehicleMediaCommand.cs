@@ -1,5 +1,6 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Media.Contracts.Assets;
+using CarGallery.Modules.VehicleCatalog.Application.Projection;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ namespace CarGallery.Modules.VehicleCatalog.Application.Vehicles;
 internal sealed class UpdateVehicleMediaCommand(
     VehicleCatalogDbContext context,
     IMediaAssetQueries mediaAssets,
+    ShowcaseProjectionWriter projection,
     IClock clock)
 {
     internal async Task<Result> ExecuteAsync(
@@ -80,6 +82,11 @@ internal sealed class UpdateVehicleMediaCommand(
         }
 
         vehicle.Touch(clock.UtcNow);
+
+        // 0012b D41 — kapak sıralı listenin İLK elemanı; sıra değişince vitrindeki kapak
+        // değişiyor. R15'in saydığı yazma yolları arasında yoktu ve dışarıda bırakmak,
+        // fotoğrafı yeniden sıralayan personelin vitrinde ESKİ kapağı görmesi demekti.
+        await projection.ProjectAsync(vehicle, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
 

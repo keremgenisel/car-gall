@@ -16,4 +16,9 @@ internal sealed class VehicleModelNameResolver(IVehicleModelQueries queries) : I
         Locale locale,
         CancellationToken cancellationToken) =>
         queries.ResolveNamesAsync(vehicleModelIds, locale.Code, cancellationToken);
+
+    public Task<IReadOnlyDictionary<Guid, string>> ResolveCanonicalNamesAsync(
+        IReadOnlyCollection<Guid> vehicleModelIds,
+        CancellationToken cancellationToken) =>
+        queries.ResolveCanonicalNamesAsync(vehicleModelIds, cancellationToken);
 }

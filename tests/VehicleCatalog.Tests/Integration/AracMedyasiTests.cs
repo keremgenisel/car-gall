@@ -284,7 +284,8 @@ public sealed class AracMedyasiTests(ShowcaseDatabase database)
     {
         await using VehicleCatalogDbContext context = database.CreateContext();
 
-        UpdateVehicleMediaCommand komut = new(context, medya, new FixedClock(Simdi));
+        UpdateVehicleMediaCommand komut = new(
+            context, medya, KatalogYazicilari.Yansitma(context, medya), new FixedClock(Simdi));
 
         return await komut.ExecuteAsync(aracId, varliklar, CancellationToken.None);
     }

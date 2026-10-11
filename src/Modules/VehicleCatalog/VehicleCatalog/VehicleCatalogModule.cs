@@ -8,6 +8,7 @@ using CarGallery.Modules.VehicleCatalog.Application.Development;
 using CarGallery.Modules.VehicleCatalog.Application.EventHandlers;
 using CarGallery.Modules.VehicleCatalog.Application.FieldSettings;
 using CarGallery.Modules.VehicleCatalog.Application.Listings;
+using CarGallery.Modules.VehicleCatalog.Application.Projection;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
 using CarGallery.Modules.VehicleCatalog.Contracts.Admin;
@@ -101,6 +102,8 @@ public static class VehicleCatalogModule
         // tip hangi şemaya yazdığını imzasında taşıyor.
         services.AddScoped<OutboxWriter<VehicleCatalogDbContext>>();
         services.AddScoped<VehicleCatalogUnitOfWork>();
+        services.AddScoped<ShowcaseProjectionWriter>();
+        services.AddScoped<ListingTransitionCommands>();
 
         services.AddScoped(provider => new OutboxDispatcher<VehicleCatalogDbContext>(
             provider.GetRequiredService<VehicleCatalogDbContext>(),

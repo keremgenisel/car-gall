@@ -47,6 +47,30 @@ internal sealed class BranchQueries(DealershipDbContext context, Locale defaultL
         return new BranchNotificationContactDto(row.Id.Value, name, row.Email?.Value);
     }
 
+    /// <summary>
+    /// `0012b` **D40** — adın BÜTÜN dilleri. Varsayılan locale'e düşme YOK ve bu bilinçli:
+    /// çağıran bir haritayı kopyalıyor, bir metin göstermiyor. Eksik bir dili varsayılanla
+    /// doldurmak, o dilde çeviri varmış gibi görünen bir satır üretirdi ve `0010b`'nin
+    /// "eksik dil" göstergesi onu bir daha hiç yakalayamazdı.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, string>?> FindNamesAsync(
+        Guid branchId,
+        CancellationToken cancellationToken)
+    {
+        var row = await context.Branches
+            .AsNoTracking()
+            .Where(item => item.Id == new BranchId(branchId))
+            .Select(item => new { item.Names })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return row is null
+            ? null
+            : row.Names.ToDictionary().ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value,
+                StringComparer.Ordinal);
+    }
+
     public async Task<IReadOnlyList<BranchSummaryDto>> ListAsync(
         string locale,
         CancellationToken cancellationToken)

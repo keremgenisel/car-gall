@@ -10,6 +10,15 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel;
 /// </summary>
 internal sealed class ShowcaseListing
 {
+    /*
+      0012b D12 — satır artık YAZILMAKLA kalmıyor, GÜNCELLENİYOR. Bu spec'e kadar okuma
+      modeline yazan tek yol geliştirme seed'iydi ve her satır bir kez kuruluyordu; araçla
+      birlikte değişebilen alanlar bu yüzden `init` yazılmıştı.
+
+      `init` kalan ikisi gerçekten değişmez: ilanın kimliği ve ADRESİ (D13 — ilk yayında
+      üretilir ve bir daha değişmez). Aracın kimliği de öyle: satır ilanın satırıdır ve
+      ilan bir araca aittir.
+    */
     internal required Guid ListingId { get; init; }
 
     internal required Guid VehicleId { get; init; }
@@ -27,22 +36,22 @@ internal sealed class ShowcaseListing
     /// </summary>
     internal required string Slug { get; init; }
 
-    internal required string BodyTypeSlug { get; init; }
+    internal required string BodyTypeSlug { get; set; }
 
-    internal required string FuelTypeSlug { get; init; }
+    internal required string FuelTypeSlug { get; set; }
 
-    internal required string TransmissionTypeSlug { get; init; }
+    internal required string TransmissionTypeSlug { get; set; }
 
-    internal required string DrivetrainTypeSlug { get; init; }
+    internal required string DrivetrainTypeSlug { get; set; }
 
-    internal required string TrimLevelSlug { get; init; }
+    internal required string TrimLevelSlug { get; set; }
 
     /// <summary>Renk serbest metindir ve locale başına taşınır (architecture.md § 3).</summary>
     internal Dictionary<string, string> ColorNames { get; set; } = [];
 
-    internal required Guid VehicleModelId { get; init; }
+    internal required Guid VehicleModelId { get; set; }
 
-    internal required int ModelYear { get; init; }
+    internal required int ModelYear { get; set; }
 
     internal required int MileageKilometers { get; set; }
 
@@ -75,5 +84,5 @@ internal sealed class ShowcaseListing
     /// buraya HİÇ yazılmaz — gizleme sorgu tarafında değil, yansıtma anında uygulanır
     /// (C4, Yasak Listesi 41). Yanıta girmeyen alan, okuma modelinde de yoktur.
     /// </summary>
-    internal List<ShowcaseListingOptionalValue> OptionalValues { get; init; } = [];
+    internal List<ShowcaseListingOptionalValue> OptionalValues { get; set; } = [];
 }

@@ -1,9 +1,11 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Contracts;
+using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
 using CarGallery.Modules.VehicleCatalog.Contracts.Admin;
+using CarGallery.Modules.VehicleCatalog.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -59,6 +61,20 @@ internal static class VehicleAdminEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status422UnprocessableEntity);
 
+        // 0012b D28 — durum geçişleri FİİL rotada. `docs/conventions.md` § 2 fiili
+        // yalnız gerçek durum geçişlerinde rotaya koyuyor ve örneği birebir bu:
+        // `POST /api/catalog/vehicles/{id}/publish`.
+        foreach ((string yol, ListingAction eylem) in ListingActions)
+        {
+            vehicles.MapPost($"/{{vehicleId:guid}}/{yol}", (Guid vehicleId, ListingTransitionCommands command, CancellationToken ct) =>
+                    TransitionAsync(vehicleId, eylem, command, ct))
+                .WithName($"VehicleListing{eylem}")
+                .Produces(StatusCodes.Status204NoContent)
+                .Produces(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status409Conflict)
+                .Produces(StatusCodes.Status422UnprocessableEntity);
+        }
+
         vehicles.MapPut("/{vehicleId:guid}", UpdateAsync)
             .WithName("UpdateVehicle")
             .Produces(StatusCodes.Status204NoContent);
@@ -104,7 +120,11 @@ internal static class VehicleAdminEndpoints
             locales.ResolveOrDefault(query["locale"].ToString()).Code,
             int.TryParse(query["page"], out int page) ? page : 1,
             int.TryParse(query["pageSize"], out int pageSize) ? pageSize : null,
-            sort);
+            sort,
+            // 0012b D19 — arşiv AÇIK bir filtreyle görünür. Tanınmayan değer `false`'a
+            // düşüyor: `sort` ile aynı gerekçe — adres çubuğundan gelen bir ipucu, hata
+            // ekranının karşılığı değil.
+            string.Equals(query["archived"], "true", StringComparison.OrdinalIgnoreCase));
 
         return TypedResults.Ok(await queries.ListAsync(filter, cancellationToken));
     }
@@ -173,6 +193,36 @@ internal static class VehicleAdminEndpoints
     /// eksik gelen alan "dokunulmadı" değil GEÇERSİZ sayılır (AC-5): kısmi semantik
     /// "boş geldi = silindi mi, dokunulmadı mı" belirsizliğini üretirdi.
     /// </summary>
+    /// <summary>
+    /// `0012b` — durum geçişinin ince ucu: bağlama, komut çağrısı, sonuç eşleme. Geçiş
+    /// mantığı agregatta (**C2**, Yasak Listesi 20); burada tek bir `switch` bile yok.
+    /// </summary>
+    private static async Task<IResult> TransitionAsync(
+        Guid vehicleId,
+        ListingAction action,
+        ListingTransitionCommands command,
+        CancellationToken cancellationToken)
+    {
+        Result sonuc = await command.ExecuteAsync(vehicleId, action, cancellationToken);
+
+        return sonuc.IsFailure ? CatalogProblems.From(sonuc.Error) : TypedResults.NoContent();
+    }
+
+    /// <summary>
+    /// Altı durum geçişinin rota parçası ve eylemi. Elle yazılmış bir eşleme: rota adını
+    /// enum'dan TÜRETMEK `MarkSold` → `mark-sold` gibi bir dönüşüm kuralı gerektirirdi ve
+    /// o kural adresi enum adının rehinesi yapardı.
+    /// </summary>
+    private static readonly (string Route, ListingAction Action)[] ListingActions =
+    [
+        ("publish", ListingAction.Publish),
+        ("unpublish", ListingAction.Unpublish),
+        ("reserve", ListingAction.Reserve),
+        ("unreserve", ListingAction.Unreserve),
+        ("sold", ListingAction.MarkSold),
+        ("archive", ListingAction.Archive),
+    ];
+
     private static async Task<IResult> UpdateAsync(
         Guid vehicleId,
         UpdateVehicleBody body,
@@ -302,6 +352,12 @@ internal static class CatalogProblems
             // AC-16 — tekillik ihlali bir DURUM ÇAKIŞMASIDIR: istek geçerli, dünya uygun değil.
             VehicleErrors.DuplicateVin => StatusCodes.Status409Conflict,
             VehicleErrors.BranchNotFound => StatusCodes.Status422UnprocessableEntity,
+            // 0012b D26 — reddin HTTP karşılığı SABİT. A3'ün geçiş reddi bir DURUM
+            // ÇAKIŞMASIDIR (`409`): istek geçerli, ilan o durumda değil. A2'nin ve R21'in
+            // yayın reddi bir DOĞRULAMA hatasıdır (`422`): koşullar eksik. İkisini aynı
+            // koda toplamak, panelin "satırı tazele" ile "eksikleri göster" arasında
+            // seçim yapmasını imkânsız kılardı.
+            Listing.InvalidTransition => StatusCodes.Status409Conflict,
             ConcurrencyErrors.Lost => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status422UnprocessableEntity,
         };

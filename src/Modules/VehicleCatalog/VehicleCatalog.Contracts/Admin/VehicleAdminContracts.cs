@@ -31,7 +31,12 @@ public sealed record VehicleAdminListItemDto(
     /// 0010b **R9/C21** — zorunlu işaretli bir opsiyonel alanı boş olan araç. SAKLANMAZ,
     /// sorguda hesaplanır: ayar değiştiğinde hiçbir yazma olmadan değişmesi gerekiyor.
     /// </summary>
-    bool HasMissingRequiredInfo);
+    bool HasMissingRequiredInfo,
+    /// <summary>
+    /// `0012b` **R13**/**D15** — araç lokasyon ataması bekliyor: şubesi kapatıldı ve
+    /// yenisi atanmadı. Liste bunu AYIRT EDER; şubesi atanmadan yayına alınamaz.
+    /// </summary>
+    bool AwaitingBranchAssignment);
 
 /// <summary>
 /// "Fiyat sorunuz" AYRI bir durumdur, `0` değildir (P4). Tutar, para kodu ve minor unit
@@ -111,7 +116,17 @@ public sealed record VehicleAdminListFilter(
     string Locale,
     int Page,
     int? PageSize,
-    VehicleAdminListSort Sort);
+    VehicleAdminListSort Sort,
+    /// <summary>
+    /// `0012b` **R17**/**D19** — arşivlenen araç VARSAYILAN görünümde yer almaz; arşiv bu
+    /// projenin "silme"sidir (`0010b` X19) ve varsayılan listede kalırsa liste sonsuz
+    /// büyür, eylem de hiçbir şey yapmamış görünür.
+    ///
+    /// <para><b>Aynı koşul toplam sayıya ve özet sayaçlarına da uygulanır</b>
+    /// (**D35**): liste ile sayaç aynı evreni saymak zorunda, yoksa "12 araç" yazan bir
+    /// özetin altında 9 satır görünür.</para>
+    /// </summary>
+    bool IncludeArchived = false);
 
 public interface IVehicleAdminQueries
 {

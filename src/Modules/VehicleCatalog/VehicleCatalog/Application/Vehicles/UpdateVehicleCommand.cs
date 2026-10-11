@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.VehicleCatalog.Application.Projection;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +62,8 @@ internal sealed record OptionalFieldInput(
 internal sealed class UpdateVehicleCommand(
     VehicleCatalogDbContext context,
     VehicleWriteRules rules,
+    ShowcaseProjectionWriter projection,
+    VehicleCatalogUnitOfWork unitOfWork,
     IClock clock)
 {
     internal async Task<Result> ExecuteAsync(UpdateVehicleRequest request, CancellationToken cancellationToken)
@@ -228,7 +231,20 @@ internal sealed class UpdateVehicleCommand(
                     : VehicleFieldNames.ListingTitle);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        // D37 — eksik `Touch` çağrısı. Ölçüldü: `Touch`'ın çağıranları yalnız
+        // `UpdateVehicleMediaCommand` ve `ChangePrice`'tı; başlık, kilometre veya renk
+        // düzeltmesi "son güncellenen" sıralamasında GÖRÜNMÜYORDU. D20 geçişi görünür
+        // kılıyor ve aynı borcun düzenleme tarafı burada kapanıyor.
+        vehicle.Touch(now);
+
+        // D12/R15 — vitrin satırı AYNI İŞLEMDE güncelleniyor. Bu spec'e kadar hiçbir komut
+        // okuma modeline yazmıyordu: personel fiyatı düşürüyor, vitrinde eski fiyat
+        // kalıyordu.
+        await projection.ProjectAsync(vehicle, listing, cancellationToken);
+
+        // D11 — fiyat ve şube değişikliğinin duyurusu iş verisiyle aynı transaction'da
+        // outbox'a yazılıyor (C3).
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

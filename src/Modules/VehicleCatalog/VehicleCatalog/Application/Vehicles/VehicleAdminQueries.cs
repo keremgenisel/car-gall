@@ -1,6 +1,7 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Contracts.Admin;
+using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
 using CarGallery.Modules.VehicleReference.Contracts;
@@ -36,11 +37,15 @@ internal sealed class VehicleAdminQueries(
 
         VehicleAdminListRequest request = VehicleAdminListRequest.Normalize(filter, paging);
 
-        int totalCount = await context.Vehicles.CountAsync(cancellationToken);
+        // D19/D35 — arşiv koşulu listeye VE toplam sayıya birlikte uygulanıyor: ikisi
+        // ayrışırsa "12 araç" yazan bir özetin altında dokuz satır görünür.
+        IQueryable<Vehicle> evren = Evren(filter.IncludeArchived);
+
+        int totalCount = await evren.CountAsync(cancellationToken);
 
         IQueryable<Vehicle> sirali = request.Sort is VehicleAdminListSort.RecentlyAdded
-            ? context.Vehicles.OrderByDescending(vehicle => vehicle.Id)
-            : context.Vehicles
+            ? evren.OrderByDescending(vehicle => vehicle.Id)
+            : evren
                 .OrderByDescending(vehicle => vehicle.UpdatedAt)
                 .ThenByDescending(vehicle => vehicle.Id);
 
@@ -68,13 +73,17 @@ internal sealed class VehicleAdminQueries(
     /// </summary>
     public async Task<VehicleAdminSummaryDto> GetSummaryAsync(CancellationToken cancellationToken)
     {
-        int totalCount = await context.Vehicles.CountAsync(cancellationToken);
+        // D35 — özet sayaçları da arşivi SAYMAZ. Sayaç listenin üstünde duruyor ve iki
+        // sayının aynı evreni sayması bir tutarlılık meselesi, bir optimizasyon değil.
+        int totalCount = await Evren(includeArchived: false).CountAsync(cancellationToken);
 
         // Gerçekten İKİ KOLON: önceki hâli tüm `Listing` varlığını çekiyordu (durum,
         // ağırlık, yayın zamanı dâhil) ve üstündeki yorum "dar projeksiyon" diyordu.
         // Yorumla kod ayrışınca, bir sonraki okuyucu buraya hiç bakmaz.
         var metinler = await context.Listings
             .AsNoTracking()
+            .Where(listing => context.Vehicles
+                .Any(vehicle => vehicle.Id == listing.VehicleId && !vehicle.IsArchived))
             .Select(listing => new { listing.Title, listing.Description })
             .ToListAsync(cancellationToken);
 
@@ -197,18 +206,28 @@ internal sealed class VehicleAdminQueries(
                     .. (listing is null ? locales.Enabled : listing.MissingLocales(locales.Enabled))
                         .Select(item => item.Code)
                 ],
-                EksikBilgiVar(vehicle, zorunluAlanlar)))
+                EksikBilgiVar(vehicle, zorunluAlanlar),
+                vehicle.AwaitingBranchAssignment))
         ];
     }
+
+    /// <summary>
+    /// D19/D35 — listenin ve sayaçların okuduğu evren. Arşiv bu projenin "silme"sidir
+    /// (`0010b` X19) ve varsayılan görünümde yer almaz; açık bir filtre onu geri getirir.
+    /// </summary>
+    private IQueryable<Vehicle> Evren(bool includeArchived) =>
+        includeArchived ? context.Vehicles : context.Vehicles.Where(vehicle => !vehicle.IsArchived);
 
     /// <summary>
     /// R9/AC-16 — zorunlu işaretli bir opsiyonel alanı boş olan araç "eksik bilgi"dir.
     /// Çekirdek alanlar bu hesaba GİRMEZ: `0010a` D8 onları kayıt anında zorunlu kılıyor,
     /// yani her zaman doludurlar.
     /// </summary>
+    /// <para>`0012b` **D27** — kural artık TEK yerde: yayın kapısı da aynı hesabı
+    /// yapıyor ve ikisi ayrı yazılsaydı aynı invariant iki yerde iki farklı şey
+    /// olabilirdi (`0010b`'nin bilinen tuzağı 3).</para>
     private static bool EksikBilgiVar(Vehicle vehicle, HashSet<string> zorunluAlanlar) =>
-        zorunluAlanlar.Count > 0
-        && zorunluAlanlar.Except(vehicle.OptionalFieldValues.Select(value => value.FieldKey)).Any();
+        PublishEligibility.MissingRequiredFields(vehicle, zorunluAlanlar).Count > 0;
 
     private async Task<HashSet<string>> ZorunluOpsiyonelAlanlarAsync(CancellationToken cancellationToken) =>
         [

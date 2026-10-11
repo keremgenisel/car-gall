@@ -507,6 +507,15 @@ public sealed class AracDuzenlemeTests(ShowcaseDatabase database)
         ListingDescription: new Dictionary<string, string>(),
         OptionalValues: []);
 
-    private static UpdateVehicleCommand Komut(VehicleCatalogDbContext context) =>
-        new(context, AracKaydiTests.Kurallar(), new FixedClock(Duzenleme));
+    private static UpdateVehicleCommand Komut(VehicleCatalogDbContext context)
+    {
+        FixedClock saat = new(Duzenleme);
+
+        return new UpdateVehicleCommand(
+            context,
+            AracKaydiTests.Kurallar(),
+            Integration.KatalogYazicilari.Yansitma(context),
+            Integration.KatalogYazicilari.Birim(context, saat),
+            saat);
+    }
 }
