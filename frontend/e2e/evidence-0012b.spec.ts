@@ -8,11 +8,14 @@ import { pngUret } from './gorsel'
  * `docs/testing.md` § 3); normal e2e koşusunda buradaki `expect`'ler çalışır ama dosya
  * yazılmaz.
  *
- * <p><b>Üç kanıt STUB'lu</b> ve gerekçesi ölçülmüş bir imkânsızlık: "lokasyon ataması
+ * <p><b>İki kanıt STUB'lu</b> ve gerekçesi ölçülmüş bir imkânsızlık: "lokasyon ataması
  * bekliyor" hâli ancak bir şube KAPATILARAK doğar ve şube kapatmanın HTTP ucu yok
- * (`0003` § D1 — o modülün korumasız yazma ucu olamaz); okuma hatası ve arşivli liste de
- * istenen anda üretilemez. `0010b` ve `0012a`'nın kanıt spec'leri aynı kararı verdi:
- * <i>ekran gerçek, veri sahte.</i></p>
+ * (`0003` § D1 — o modülün korumasız yazma ucu olamaz); okuma hatası da istenen anda
+ * üretilemez. `0010b` ve `0012a`'nın kanıt spec'leri aynı kararı verdi: <i>ekran gerçek,
+ * veri sahte.</i></p>
+ *
+ * <p>Arşivli liste bu sayının DIŞINDA: araç gerçekten kaydedilip gerçekten arşivleniyor
+ * ve satırın kendisi iddia ediliyor (AC-51).</p>
  */
 
 const SEED_KIMLIK = 'yonetici@cargallery.local'
@@ -179,11 +182,27 @@ test('0012b/AC-14: `Satıldı` terminaldir ve ekran bunu söyler', async ({ page
 test('0012b/AC-50, 0012b/AC-51: arşiv varsayılanda gizli, açık filtreyle görünür', async ({
   page,
 }) => {
+  const sase = benzersizSase('K12B51')
+
   await yoneticiOlarakGirAsync(page)
+  await aracKaydetAsync(page, sase)
+  const vehicleId = await aracaGitAsync(page, sase)
+
+  // Kanıt GERÇEK bir arşivli araç gösteriyor: önceki hâli yalnız onay kutusunun
+  // işaretini ölçüyordu ve "arşivli bir araç GÖRÜNDÜ" iddiası hiç kurulmuyordu —
+  // filtre hiçbir satır getirmese de yeşil kalırdı.
+  await page.getByTestId('vehicle-action-archive').click()
+  await expect(page.getByTestId('vehicle-action-done')).toBeVisible()
+
+  const satir = page.locator(`[data-testid="vehicle-row"] a[href="/admin/vehicles/${vehicleId}"]`)
+
   await page.goto('/admin/vehicles?page=1&sort=recently-added')
 
   await expect(page.getByTestId('vehicle-table')).toBeVisible()
   await expect(page.getByLabel('Arşivi göster')).not.toBeChecked()
+
+  // AC-50 — arşivlenen araç varsayılan listede YOK.
+  await expect(satir).toHaveCount(0)
 
   await kanitSayfa(page, '0012b-ac50.png')
 
@@ -191,6 +210,19 @@ test('0012b/AC-50, 0012b/AC-51: arşiv varsayılanda gizli, açık filtreyle gö
 
   await expect(page.getByLabel('Arşivi gizle')).toBeChecked()
   await expect(page).toHaveURL(/archived=true/)
+
+  // AC-51 — AÇIK filtreyle aynı araç göründü ve durumu `Arşiv`. İddia aynı zamanda
+  // kanıtın bir sonraki satırını `loading` hâlinde yakalamasını da engelliyor:
+  // satır ancak yükleme bittikten sonra var.
+  await expect(satir).toHaveCount(1)
+  await expect(satir).toBeVisible()
+  await expect(page.getByTestId('vehicle-skeleton')).toHaveCount(0)
+
+  const hucreler = page
+    .locator('[data-testid="vehicle-table"] tbody tr')
+    .filter({ has: page.locator(`a[href="/admin/vehicles/${vehicleId}"]`) })
+
+  await expect(hucreler).toContainText('Arşiv')
 
   await kanitSayfa(page, '0012b-ac51.png')
 })

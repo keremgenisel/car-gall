@@ -353,5 +353,13 @@
   "vehicle.list.archived.hint": "Arşivlenen araçlar varsayılan listede görünmez.",
   "vehicle.badge.awaitingBranch": "Şube bekliyor",
   "vehicle.badge.awaitingBranch.hint": "Şubesi kapatıldı; yeni bir şube atanmadan yayına alınamaz.",
-  "vehicle.field.warranty_status": "Garanti durumu"
+  "vehicle.field.warranty_status": "Garanti durumu",
+  "vehicle.action.error.title": "Eylem uygulanamadı",
+  "vehicle.action.error.title.publish": "Araç yayına alınamadı",
+  "vehicle.action.error.title.unpublish": "İlan yayından kaldırılamadı",
+  "vehicle.action.error.title.reserve": "İlan rezerve edilemedi",
+  "vehicle.action.error.title.unreserve": "Rezervasyon kaldırılamadı",
+  "vehicle.action.error.title.sold": "İlan satıldı olarak işaretlenemedi",
+  "vehicle.action.error.title.archive": "İlan arşivlenemedi",
+  "vehicle.action.refresh": "Satırı tazele"
 }

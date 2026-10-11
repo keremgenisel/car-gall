@@ -61,9 +61,9 @@ internal static class VehicleAdminEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status422UnprocessableEntity);
 
-        // 0012b D28 — durum geçişleri FİİL rotada. `docs/conventions.md` § 2 fiili
-        // yalnız gerçek durum geçişlerinde rotaya koyuyor ve örneği birebir bu:
-        // `POST /api/catalog/vehicles/{id}/publish`.
+        // Durum geçişleri FİİL rotada. Kuralın kaynağı `docs/conventions.md` § 2 ve
+        // örneği birebir bu: `POST /api/catalog/vehicles/{id}/publish`. Bu spec'in ayrı
+        // bir kararı YOK — konvansiyon zaten söylüyor.
         foreach ((string yol, ListingAction eylem) in ListingActions)
         {
             vehicles.MapPost($"/{{vehicleId:guid}}/{yol}", (Guid vehicleId, ListingTransitionCommands command, CancellationToken ct) =>
@@ -124,15 +124,18 @@ internal static class VehicleAdminEndpoints
             // 0012b D19 — arşiv AÇIK bir filtreyle görünür. Tanınmayan değer `false`'a
             // düşüyor: `sort` ile aynı gerekçe — adres çubuğundan gelen bir ipucu, hata
             // ekranının karşılığı değil.
-            string.Equals(query["archived"], "true", StringComparison.OrdinalIgnoreCase));
+            ArsivIstendi(query));
 
         return TypedResults.Ok(await queries.ListAsync(filter, cancellationToken));
     }
 
     private static async Task<Ok<VehicleAdminSummaryDto>> SummaryAsync(
+        HttpContext httpContext,
         IVehicleAdminQueries queries,
         CancellationToken cancellationToken) =>
-        TypedResults.Ok(await queries.GetSummaryAsync(cancellationToken));
+        TypedResults.Ok(await queries.GetSummaryAsync(
+            ArsivIstendi(httpContext.Request.Query),
+            cancellationToken));
 
     private static async Task<Ok<IReadOnlyList<VehicleAdminFieldDto>>> FormFieldsAsync(
         IVehicleAdminQueries queries,
@@ -189,10 +192,13 @@ internal static class VehicleAdminEndpoints
     }
 
     /// <summary>
-    /// R2/C25 — düzenleme TAM DEĞİŞTİRMEDİR. Gövde çekirdek alanların tamamını taşır ve
-    /// eksik gelen alan "dokunulmadı" değil GEÇERSİZ sayılır (AC-5): kısmi semantik
-    /// "boş geldi = silindi mi, dokunulmadı mı" belirsizliğini üretirdi.
+    /// `0012b` **D19** — arşiv AÇIK bir filtreyle görünür. Tanınmayan değer `false`'a
+    /// düşüyor: `sort` ile aynı gerekçe — adres çubuğundan gelen bir ipucu, hata
+    /// ekranının karşılığı değil. Liste ve ÖZET aynı bayrağı okuyor (**D35**).
     /// </summary>
+    private static bool ArsivIstendi(IQueryCollection query) =>
+        string.Equals(query["archived"], "true", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>
     /// `0012b` — durum geçişinin ince ucu: bağlama, komut çağrısı, sonuç eşleme. Geçiş
     /// mantığı agregatta (**C2**, Yasak Listesi 20); burada tek bir `switch` bile yok.
@@ -223,6 +229,11 @@ internal static class VehicleAdminEndpoints
         ("archive", ListingAction.Archive),
     ];
 
+    /// <summary>
+    /// R2/C25 — düzenleme TAM DEĞİŞTİRMEDİR. Gövde çekirdek alanların tamamını taşır ve
+    /// eksik gelen alan "dokunulmadı" değil GEÇERSİZ sayılır (AC-5): kısmi semantik
+    /// "boş geldi = silindi mi, dokunulmadı mı" belirsizliğini üretirdi.
+    /// </summary>
     private static async Task<IResult> UpdateAsync(
         Guid vehicleId,
         UpdateVehicleBody body,

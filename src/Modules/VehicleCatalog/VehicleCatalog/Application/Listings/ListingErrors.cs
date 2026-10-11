@@ -3,13 +3,13 @@ using CarGallery.BuildingBlocks;
 namespace CarGallery.Modules.VehicleCatalog.Application.Listings;
 
 /// <summary>
-/// Yayın reddinin kararlı kodları (`0012b` **D2**, **D25**, **D33**).
+/// Yayın reddinin kararlı kodları (`0012b` **D2**, **D25**).
 ///
 /// <para>Ortak önek bilinçli: yanıt bir <b>liste</b> taşıyor ve personele "yayına
 /// alınamadı, şunlar eksik" demek için çağıranın kodları tek bir aileye göre
 /// gruplayabilmesi gerekiyor (`docs/conventions.md` § 5).</para>
 ///
-/// <para><b><c>NoMedia</c> yeniden adlandırılmış bir koddur</b> (**D33**): `Vehicle`'ın
+/// <para><b><c>NoMedia</c> yeniden adlandırılmış bir koddur</b> (**D2**): `Vehicle`'ın
 /// içinde `vehicle.media_required` olarak duruyordu, <b>sıfır tüketicisi</b> vardı ve
 /// dokümanlar zaten iki yerde bu adı yazıyordu (`conventions.md:121`, `frontend.md:111`).
 /// Konvansiyonun "yayınlanmış kodun anlamı değişmez" kuralı bağlamıyor — bu kodu bugün

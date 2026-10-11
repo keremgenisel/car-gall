@@ -74,13 +74,45 @@ describe("0012b/AC-19: A3'te yazılı olmayan her geçiş `listing.invalid_statu
       new ApiError('listing.invalid_status_transition', null, 409),
     )
 
-    ekran('Published')
+    const uygulandi = ekran('Published')
 
     fireEvent.click(screen.getByTestId('vehicle-action-reserve'))
 
     const hata = await screen.findByTestId('vehicle-action-error')
 
     expect(hata.textContent).toContain('aracın şu anki durumunda yapılamaz')
+
+    // BAŞLIK yapılan eylemi anlatıyor; sabit bir "yayına alınamadı" başlığı altı eylemin
+    // beşinde yanlış bir olguyu bildirirdi.
+    expect(hata.textContent).toContain('İlan rezerve edilemedi')
+    expect(hata.textContent).not.toContain('yayına alınamadı')
+
+    // D26 — `409`'da TEKRAR DENE YOK: kural gereği reddedilene tekrar denemesini
+    // söylemek, sonsuza kadar denemesini söylemektir (0007/AC-12).
+    expect(screen.queryByTestId('vehicle-action-retry')).toBeNull()
+
+    fireEvent.click(screen.getByTestId('vehicle-action-refresh'))
+
+    expect(uygulandi).toHaveBeenCalled()
+  })
+
+  it.each([
+    ['sold', 'İlan satıldı olarak işaretlenemedi'],
+    ['unpublish', 'İlan yayından kaldırılamadı'],
+    ['archive', 'İlan arşivlenemedi'],
+  ])('%s eyleminin hatası kendi başlığını taşıyor', async (eylem, baslik) => {
+    vi.mocked(applyListingAction).mockRejectedValue(new ApiError('api.unavailable', null, 503))
+
+    ekran('Published')
+
+    fireEvent.click(screen.getByTestId(`vehicle-action-${eylem}`))
+
+    const hata = await screen.findByTestId('vehicle-action-error')
+
+    expect(hata.textContent).toContain(baslik)
+
+    // `409` DEĞİL: burada tekrar denemek anlamlı ve düğme o.
+    expect(screen.getByTestId('vehicle-action-retry')).toBeTruthy()
   })
 })
 
@@ -116,6 +148,9 @@ describe('0012b/AC-9: Reddedilen yayın isteği çevrilmiş metin değil **kod l
     // D24 — alan anahtarı UÇTA çevriliyor; sunucudan metin gelmiyor.
     expect(hata.textContent).toContain('Tramer tutarı')
 
+    // Yayın reddinin başlığı KENDİ eylemini anlatıyor.
+    expect(hata.textContent).toContain('Araç yayına alınamadı')
+
     // AC-55 — hiçbir teknik detay yok.
     expect(hata.textContent).not.toContain('vehicle.cannot_publish')
     expect(hata.textContent).not.toContain('422')
@@ -142,7 +177,7 @@ describe('0012b/AC-55: Ekranda hiçbir teknik detay görünmez: durum kodu, `err
   })
 })
 
-describe('0012b/AC-2: Lokasyon ataması bekleyen araç yayına alınamaz; yanıt `vehicle.cannot_publish.branch_unassigned` taşır', () => {
+describe('0012b/AC-6: Lokasyon ataması bekleyen araç yayına alınamaz; yanıt `vehicle.cannot_publish.branch_unassigned` taşır', () => {
   it('bayraklı araçta neden düğmeye basılmadan söyleniyor', () => {
     ekran('Draft', { bekliyor: true })
 

@@ -71,11 +71,13 @@ internal sealed class VehicleAdminQueries(
     /// çeviremez. İki kolonluk dar bir projeksiyon bir galeri ölçeğinde ucuz; ölçek
     /// büyüdüğünde doğru yol ham SQL (`title ? 'tr' AND description ? 'tr'`) olur.</para>
     /// </summary>
-    public async Task<VehicleAdminSummaryDto> GetSummaryAsync(CancellationToken cancellationToken)
+    public async Task<VehicleAdminSummaryDto> GetSummaryAsync(
+        bool includeArchived,
+        CancellationToken cancellationToken)
     {
-        // D35 — özet sayaçları da arşivi SAYMAZ. Sayaç listenin üstünde duruyor ve iki
-        // sayının aynı evreni sayması bir tutarlılık meselesi, bir optimizasyon değil.
-        int totalCount = await Evren(includeArchived: false).CountAsync(cancellationToken);
+        // D35 — sayaç listeyle AYNI evreni sayar; bayrak buraya da geliyor. İki sayının
+        // aynı evreni sayması bir tutarlılık meselesi, bir optimizasyon değil.
+        int totalCount = await Evren(includeArchived).CountAsync(cancellationToken);
 
         // Gerçekten İKİ KOLON: önceki hâli tüm `Listing` varlığını çekiyordu (durum,
         // ağırlık, yayın zamanı dâhil) ve üstündeki yorum "dar projeksiyon" diyordu.
@@ -83,7 +85,8 @@ internal sealed class VehicleAdminQueries(
         var metinler = await context.Listings
             .AsNoTracking()
             .Where(listing => context.Vehicles
-                .Any(vehicle => vehicle.Id == listing.VehicleId && !vehicle.IsArchived))
+                .Any(vehicle => vehicle.Id == listing.VehicleId
+                    && (includeArchived || !vehicle.IsArchived)))
             .Select(listing => new { listing.Title, listing.Description })
             .ToListAsync(cancellationToken);
 
@@ -224,9 +227,9 @@ internal sealed class VehicleAdminQueries(
     /// Çekirdek alanlar bu hesaba GİRMEZ: `0010a` D8 onları kayıt anında zorunlu kılıyor,
     /// yani her zaman doludurlar.
     /// </summary>
-    /// <para>`0012b` **D27** — kural artık TEK yerde: yayın kapısı da aynı hesabı
-    /// yapıyor ve ikisi ayrı yazılsaydı aynı invariant iki yerde iki farklı şey
-    /// olabilirdi (`0010b`'nin bilinen tuzağı 3).</para>
+    /// <para>`0012b` — kural artık TEK yerde: yayın kapısı da aynı hesabı yapıyor ve
+    /// ikisi ayrı yazılsaydı aynı invariant iki yerde iki farklı şey olabilirdi
+    /// (`0010b`'nin bilinen tuzağı 3).</para>
     private static bool EksikBilgiVar(Vehicle vehicle, HashSet<string> zorunluAlanlar) =>
         PublishEligibility.MissingRequiredFields(vehicle, zorunluAlanlar).Count > 0;
 

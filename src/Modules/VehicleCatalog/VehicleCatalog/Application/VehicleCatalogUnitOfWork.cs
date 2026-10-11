@@ -97,10 +97,12 @@ internal sealed class VehicleCatalogUnitOfWork(
     /// en-az-bir-kezdir ve alıcıların yinelenen işleme koruması bu kimliğe dayanır
     /// (`docs/architecture.md` § 2.C).
     ///
-    /// <para><b>Adres `string.Empty` olabilir</b> ve bu bilinçli: yalnız hiç yayınlanmamış
-    /// bir ilanın adresi yoktur (AC-49) ve o ilandan çıkan tek olay `VehicleArchived`'dir
-    /// (`Taslak → Arşiv`, **D10**). `null` yerine boş dize, sözleşmeyi nullable yapmadan
-    /// aynı şeyi söylüyor; tüketici "adres yok" ile "adres boş"u ayırmak zorunda değil.</para>
+    /// <para><b>Adres `string.Empty` olabilir</b> ve bu bilinçli: hiç yayınlanmamış bir
+    /// ilanın adresi yoktur (AC-49). O ilandan **üç** olay çıkabilir — `VehicleArchived`
+    /// (`Taslak → Arşiv`, **D10**) ile taslak bir aracın fiyatı veya şubesi düzenlendiğinde
+    /// `VehiclePriceChanged` ve `VehicleRelocated`. `null` yerine boş dize, sözleşmeyi
+    /// nullable yapmadan aynı şeyi söylüyor; tüketici "adres yok" ile "adres boş"u ayırmak
+    /// zorunda değil.</para>
     /// </summary>
     private IIntegrationEvent? Translate(IDomainEvent domainEvent, Listing listing)
     {

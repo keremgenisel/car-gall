@@ -353,5 +353,13 @@
   "vehicle.list.archived.hint": "لا تظهر السيارات المؤرشفة في القائمة الافتراضية.",
   "vehicle.badge.awaitingBranch": "بانتظار الفرع",
   "vehicle.badge.awaitingBranch.hint": "أُغلق فرعها؛ لا يمكن نشرها قبل تعيين فرع جديد.",
-  "vehicle.field.warranty_status": "حالة الضمان"
+  "vehicle.field.warranty_status": "حالة الضمان",
+  "vehicle.action.error.title": "تعذّر تنفيذ الإجراء",
+  "vehicle.action.error.title.publish": "تعذّر نشر السيارة",
+  "vehicle.action.error.title.unpublish": "تعذّر إلغاء نشر الإعلان",
+  "vehicle.action.error.title.reserve": "تعذّر حجز الإعلان",
+  "vehicle.action.error.title.unreserve": "تعذّر إلغاء الحجز",
+  "vehicle.action.error.title.sold": "تعذّر وضع علامة مباعة",
+  "vehicle.action.error.title.archive": "تعذّر أرشفة الإعلان",
+  "vehicle.action.refresh": "تحديث الصف"
 }

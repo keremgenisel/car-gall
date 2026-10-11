@@ -38,7 +38,7 @@ public sealed class GecisKomutlariTests(ShowcaseDatabase database)
         Assert.Equal(ListingStatus.Published, await DurumAsync(aracId));
     }
 
-    [Fact(DisplayName = "0012b/AC-3: Hazır medya varlığı olmayan araç yayına alınamaz; yanıt `vehicle.cannot_publish.no_media` taşır")]
+    [Fact(DisplayName = "0012b/AC-2: Hazır medya varlığı olmayan araç yayına alınamaz; yanıt `vehicle.cannot_publish.no_media` taşır")]
     public async Task Alinamaz_Yayina_HazirMedyaYoksa()
     {
         FakeMediaAssetQueries medya = new();
@@ -53,7 +53,7 @@ public sealed class GecisKomutlariTests(ShowcaseDatabase database)
         Assert.Equal(ListingStatus.Draft, await DurumAsync(aracId));
     }
 
-    [Fact(DisplayName = "0012b/AC-2: Lokasyon ataması bekleyen araç yayına alınamaz; yanıt `vehicle.cannot_publish.branch_unassigned` taşır")]
+    [Fact(DisplayName = "0012b/AC-6: Lokasyon ataması bekleyen araç yayına alınamaz; yanıt `vehicle.cannot_publish.branch_unassigned` taşır")]
     public async Task Alinamaz_Yayina_LokasyonAtamasiBekliyorsa()
     {
         FakeMediaAssetQueries medya = new();

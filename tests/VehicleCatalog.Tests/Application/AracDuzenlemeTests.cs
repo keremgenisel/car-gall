@@ -508,12 +508,6 @@ public sealed class AracDuzenlemeTests(ShowcaseDatabase database)
         OptionalValues: []);
 
     /// <summary>
-    /// **D37** — ölçüldü: `Touch`'ın çağıranları yalnız `UpdateVehicleMediaCommand` ve
-    /// `ChangePrice`'tı. Başlık, kilometre veya renk düzeltmesi "son güncellenen"
-    /// sıralamasında GÖRÜNMÜYORDU; personel bir aracı düzeltiyor ve araç listede yerinden
-    /// kıpırdamıyordu.
-    /// </summary>
-    /// <summary>
     /// **D37**'nin kriteri. <b>Kararın ölçümü tutmadı ve bu PR'da yazılı:</b> karar
     /// *"`Touch`'ın çağıranları yalnız `UpdateVehicleMediaCommand` ve `ChangePrice`"*
     /// diyordu, oysa `Vehicle.ChangeCoreDetails` de `Touch` çağırıyor (`:205`) ve

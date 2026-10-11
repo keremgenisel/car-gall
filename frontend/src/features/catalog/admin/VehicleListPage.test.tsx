@@ -322,6 +322,18 @@ describe('0012b/AC-51: Açık bir filtreyle arşivlenen araçlar görülebilir',
 
     expect(screen.getByLabelText('Arşivi gizle')).toHaveProperty('checked', true)
   })
+
+  it('0012b/AC-52: ÖZET sayacı da aynı bayrağı alıyor — liste ile aynı evren', async () => {
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    expect(vi.mocked(fetchVehicleSummary).mock.calls[0][2]).toBe(false)
+
+    fireEvent.click(screen.getByLabelText('Arşivi göster'))
+
+    await waitFor(() => expect(vi.mocked(fetchVehicleSummary).mock.calls.at(-1)?.[2]).toBe(true))
+  })
 })
 
 describe('0012b/AC-53: Lokasyon ataması bekleyen araç panel listesinde ayırt edilir', () => {

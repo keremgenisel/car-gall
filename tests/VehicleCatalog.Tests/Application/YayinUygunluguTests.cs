@@ -12,7 +12,7 @@ public sealed class YayinUygunluguTests
 {
     private static readonly IReadOnlySet<string> AlanYok = new HashSet<string>(StringComparer.Ordinal);
 
-    [Fact(DisplayName = "0012b/AC-3: Hazır medya varlığı olmayan araç yayına alınamaz; yanıt `vehicle.cannot_publish.no_media` taşır")]
+    [Fact(DisplayName = "0012b/AC-2: Hazır medya varlığı olmayan araç yayına alınamaz; yanıt `vehicle.cannot_publish.no_media` taşır")]
     public void Alinamaz_Yayina_HazirMedyaYoksa()
     {
         Vehicle arac = new VehicleBuilder().WithoutMedia().Build();
@@ -45,7 +45,7 @@ public sealed class YayinUygunluguTests
         Assert.Empty(PublishEligibility.Evaluate(arac, Hazir(isleniyor), AlanYok));
     }
 
-    [Fact(DisplayName = "0012b/AC-4: Zorunlu işaretli bir opsiyonel alanı boş olan araç yayına alınamaz; yanıt `vehicle.cannot_publish.required_field` ve eksik alanların anahtarlarını taşır")]
+    [Fact(DisplayName = "0012b/AC-3: Zorunlu işaretli bir opsiyonel alanı boş olan araç yayına alınamaz; yanıt `vehicle.cannot_publish.required_field` ve **eksik alanların anahtarlarını** taşır")]
     public void Alinamaz_Yayina_ZorunluAlanBossa()
     {
         Vehicle arac = new VehicleBuilder().WithoutMedia().Build();
@@ -66,7 +66,7 @@ public sealed class YayinUygunluguTests
         Assert.Equal("damage_record_amount,warranty_status", eksik.Parameters!["fields"]);
     }
 
-    [Fact(DisplayName = "0012b/AC-2: Lokasyon ataması bekleyen araç yayına alınamaz; yanıt `vehicle.cannot_publish.branch_unassigned` taşır")]
+    [Fact(DisplayName = "0012b/AC-6: Lokasyon ataması bekleyen araç yayına alınamaz; yanıt `vehicle.cannot_publish.branch_unassigned` taşır")]
     public void Tasir_Kod_LokasyonAtamasiBekleyenArac()
     {
         // R21/D25 — bu red A2'nin DIŞINDA ve `PublishEligibility`'de değil, komutta
@@ -76,7 +76,7 @@ public sealed class YayinUygunluguTests
         Assert.Equal("vehicle.cannot_publish.branch_unassigned", PublishErrors.BranchUnassigned);
     }
 
-    [Fact(DisplayName = "0012b/AC-6: Birden çok koşul sağlanmıyorsa yanıt eksiklerin **hepsini birlikte** taşır; ilk eksikte durmaz")]
+    [Fact(DisplayName = "0012b/AC-4: Birden çok koşul sağlanmıyorsa yanıt eksiklerin **hepsini birlikte** taşır; ilk eksikte durmaz")]
     public void Tasir_TumEksikler_Birlikte()
     {
         Vehicle arac = new VehicleBuilder().WithoutMedia().Build();

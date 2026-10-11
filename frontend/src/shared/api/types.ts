@@ -188,9 +188,9 @@ export const VEHICLE_SORTS = ['last-updated', 'recently-added'] as const
 export type VehicleSort = (typeof VEHICLE_SORTS)[number]
 
 /**
- * 0012b **D28** — bir ilan üzerinde çalışan altı durum geçişi. Değerler **rota
- * parçalarıdır**: fiil rotada, çünkü bunlar gerçek durum geçişleri
- * (`docs/conventions.md` § 2'nin saydığı istisna).
+ * 0012b — bir ilan üzerinde çalışan altı durum geçişi. Değerler **rota parçalarıdır**:
+ * fiil rotada, çünkü bunlar gerçek durum geçişleri (`docs/conventions.md` § 2'nin saydığı
+ * istisna).
  */
 export const LISTING_ACTIONS = [
   'publish',

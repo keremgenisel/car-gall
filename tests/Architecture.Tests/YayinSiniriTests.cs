@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace CarGallery.Architecture.Tests;
@@ -137,6 +138,112 @@ public sealed partial class YayinSiniriTests
         Assert.DoesNotContain("IOutboxWriter", modul, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// **Kriter → test eşlemesinin kendisi bir kapı.** Her `0012b/AC-n` etiketinin METNİ,
+    /// spec'teki aynı numaralı kriterin metniyle birebir aynı olmalı
+    /// (`docs/testing.md` § 1: *"metin spec'ten KOPYALANIR"*).
+    ///
+    /// <para><b>Bu test bir dış bulgunun bedeliydi.</b> Yedi etiketin numarası kaymıştı ve
+    /// bir PERMÜTASYON kuruyordu: 2→6, 6→4, 4→3, 3→2. Dört davranışın dördü de test
+    /// ediliyordu — hiçbir kriter kapısız değildi — ama dördünün de ADRESİ yanlıştı.
+    /// Etiket SAYAN bir ölçüm bunu göremez: permütasyon her numarayı bir kez kullanıyor ve
+    /// 58/58 çıkıyor. PR'ın ölçümü tam olarak bu yüzden kaçırdı.</para>
+    ///
+    /// <para><b>Kapı neden yalnız `0012b`'yi tarıyor:</b> ölçtüm — aynı karşılaştırma
+    /// depo genelinde 571 etiketin 299'unda uyuşmazlık veriyor. Çoğu eski spec'lerin
+    /// kısaltılmış ya da birden çok kriteri birleştiren etiketleri; hepsini düzeltmek bu
+    /// triyajın kapsamı dışında ve kendi işini hak ediyor. Susturulmuş bir kapı yerine
+    /// <b>dar ama gerçek</b> bir kapı: `0012b` için bugün yeşil ve yarın kayarsa kırmızı.</para>
+    /// </summary>
+    [Fact]
+    public void Ayni_EtiketMetni_SpectekiKriterle()
+    {
+        Dictionary<int, string> kriterler = SpectekiKriterler();
+
+        Assert.Equal(58, kriterler.Count);
+
+        List<string> violations = [];
+        int sayilan = 0;
+
+        foreach (string file in TestSourceFiles())
+        {
+            string[] lines = File.ReadAllLines(file);
+
+            for (int index = 0; index < lines.Length; index++)
+            {
+                foreach (Match match in EtiketliDisplayName().Matches(lines[index]))
+                {
+                    int numara = int.Parse(match.Groups["no"].Value, CultureInfo.InvariantCulture);
+                    string metin = Sadelestir(match.Groups["metin"].Value);
+
+                    sayilan++;
+
+                    if (!kriterler.TryGetValue(numara, out string? beklenen))
+                    {
+                        violations.Add($"{SolutionLayout.Relative(file)}:{index + 1}  AC-{numara} spec'te yok");
+                        continue;
+                    }
+
+                    if (!string.Equals(metin, beklenen, StringComparison.Ordinal))
+                    {
+                        violations.Add(
+                            $"{SolutionLayout.Relative(file)}:{index + 1}  AC-{numara} etiketi başka bir kriterin metnini taşıyor");
+                    }
+                }
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            "Etiketin metni kendi kriterinin metni olmalı (`docs/testing.md` § 1):"
+            + $"{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+
+        // Tarama BOŞ geçmemeli: hiç etiket bulamayan bir tarama da "hepsi doğru" der.
+        Assert.True(sayilan > 20, $"Yalnız {sayilan} etiket tarandı; tarama anlamsız.");
+    }
+
+    private static Dictionary<int, string> SpectekiKriterler()
+    {
+        DirectoryInfo? dizin = new(AppContext.BaseDirectory);
+
+        // Kök YUKARI YÜRÜNEREK bulunuyor, sabit sayıda `..` ile değil (`docs/testing.md` § 3).
+        while (dizin is not null
+            && !File.Exists(Path.Combine(dizin.FullName, "specs", "0012b-yayin-ve-durum-eylemleri.md")))
+        {
+            dizin = dizin.Parent;
+        }
+
+        Assert.NotNull(dizin);
+
+        string spec = File.ReadAllText(
+            Path.Combine(dizin.FullName, "specs", "0012b-yayin-ve-durum-eylemleri.md"));
+
+        Dictionary<int, string> kriterler = [];
+
+        foreach (Match match in KriterSatiri().Matches(spec))
+        {
+            kriterler[int.Parse(match.Groups["no"].Value, CultureInfo.InvariantCulture)] =
+                Sadelestir(match.Groups["metin"].Value);
+        }
+
+        return kriterler;
+    }
+
+    /// <summary>
+    /// Karşılaştırma biçimden arındırılıyor: kaçış karakterleri çözülüyor, boşluklar
+    /// tekleniyor, sondaki nokta düşüyor. Vurgu işaretleri (`**`, backtick) KALIYOR —
+    /// `docs/testing.md` metnin kopyalanmasını istiyor ve vurgu da metnin parçası.
+    /// </summary>
+    private static string Sadelestir(string value) =>
+        string.Join(' ', value.Replace("\\\"", "\"", StringComparison.Ordinal).Split(
+            (char[]?)null,
+            StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
+
+    private static IEnumerable<string> TestSourceFiles() =>
+        Directory.EnumerateFiles(Path.Combine(SolutionLayout.Root, "tests"), "*.cs", SearchOption.AllDirectories)
+            .Where(file => !SolutionLayout.Relative(file).Contains("/obj/", StringComparison.Ordinal))
+            .Where(file => !SolutionLayout.Relative(file).Contains("/bin/", StringComparison.Ordinal));
+
     private static bool Istisna(string relative) =>
         // Yayın komutu: geçiş reddi A2'nin ÖNÜNE geçiyor (D26) — geçiş yürütmüyor, hangi
         // reddin döneceğini seçiyor.
@@ -181,4 +288,10 @@ public sealed partial class YayinSiniriTests
 
     [GeneratedRegex(@"ShowcaseListings\.(Add|Remove|RemoveRange|AddRange)|ShowcaseListings[\s\S]{0,40}ExecuteDelete")]
     private static partial Regex ShowcaseRowWrite();
+
+    [GeneratedRegex(@"DisplayName = ""0012b/AC-(?<no>\d+): (?<metin>(?:[^""\\]|\\.)*)""")]
+    private static partial Regex EtiketliDisplayName();
+
+    [GeneratedRegex(@"^- \*\*AC-(?<no>\d+)\.\*\* (?<metin>.+)$", RegexOptions.Multiline)]
+    private static partial Regex KriterSatiri();
 }

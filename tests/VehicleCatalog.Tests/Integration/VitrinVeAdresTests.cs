@@ -2,6 +2,7 @@ using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Application.Listings;
+using CarGallery.Modules.VehicleCatalog.Application.Projection;
 using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
@@ -91,22 +92,87 @@ public sealed class VitrinVeAdresTests(ShowcaseDatabase database)
 
         await UygulaAsync(aracId, ListingAction.Publish, medya, IlkYayin);
 
-        Assert.Equal(125_000, (await SatirAsync(aracId))!.MileageKilometers);
+        ShowcaseListing once = (await SatirAsync(aracId))!;
+
+        Assert.Equal(125_000, once.MileageKilometers);
+        Assert.Equal("sedan", once.BodyTypeSlug);
 
         // Düzenleme komutunun tamamını kurmak yerine agregatı değiştirip YANSITMAYI
         // çağırıyoruz: ölçülen şey yansıtmanın güncelleme yolu — satır zaten varken
         // `Add` çağıran bir uygulama burada çakışırdı.
+        //
+        // **Aracın YAZILABİLİR her alanı değiştiriliyor** ve bu bir dış bulgunun bedeli:
+        // ilk hâlinde test yalnız kilometreyi değiştiriyordu ve o, kopyalanan kolonlardan
+        // biriydi — beş kolonun atlandığı kapı sessiz kaldı. Tek elemanlı bir küme bir
+        // kümeyi ölçmez.
         await using (VehicleCatalogDbContext context = database.CreateContext())
         {
             Vehicle arac = await context.Vehicles.SingleAsync(item => item.Id == new VehicleId(aracId));
-            arac.ChangeMileage(61_250);
-            arac.Touch(IkinciYayin);
+
+            arac.ChangeCoreDetails(
+                VehicleSpecification.Create(
+                    BodyTypeSlug.Create("suv").Value,
+                    "gasoline",
+                    "manual",
+                    "all-wheel-drive",
+                    "premium").Value,
+                LocalizedText.From([new KeyValuePair<Locale, string>(Locale.Create("tr").Value, "Siyah")]),
+                2022,
+                61_250,
+                IkinciYayin);
+
+            arac.ChangePrice(ListingPrice.OnRequest(), IkinciYayin);
 
             await KatalogYazicilari.Yansitma(context, medya).ProjectAsync(arac, CancellationToken.None);
             await context.SaveChangesAsync();
         }
 
-        Assert.Equal(61_250, (await SatirAsync(aracId))!.MileageKilometers);
+        ShowcaseListing sonra = (await SatirAsync(aracId))!;
+
+        Assert.Equal(61_250, sonra.MileageKilometers);
+        Assert.Equal(2022, sonra.ModelYear);
+        Assert.Equal("Siyah", sonra.ColorNames["tr"]);
+        Assert.True(sonra.PriceOnRequest);
+        Assert.Null(sonra.PriceAmount);
+
+        // Ziyaretçinin gövde tipi FİLTRESİ bu kolonu okuyor: atlanırsa "sedan" diye
+        // kaydedilip "suv" olarak düzeltilen araç sedan filtresinde kalırdı.
+        Assert.Equal("suv", sonra.BodyTypeSlug);
+        Assert.Equal("gasoline", sonra.FuelTypeSlug);
+        Assert.Equal("manual", sonra.TransmissionTypeSlug);
+        Assert.Equal("all-wheel-drive", sonra.DrivetrainTypeSlug);
+        Assert.Equal("premium", sonra.TrimLevelSlug);
+
+        // D13 — adres DEĞİŞMEZ ve kopyalanmıyor.
+        Assert.Equal(once.Slug, sonra.Slug);
+    }
+
+    /// <summary>
+    /// Kolon kümesinin kendisi bir kapı: `ShowcaseListing`'e yazılabilir bir alan
+    /// eklendiğinde yansıtma onu kendiliğinden kopyalamalı. Elle sayılan bir liste
+    /// altıncı kolonda aynı hatayı tekrarlardı — dış bulgu tam olarak buydu.
+    /// </summary>
+    [Fact]
+    public void Kopyalar_YansitmaGuncellemesi_HerYazilabilirKolonu()
+    {
+        IReadOnlyList<string> kopyalanan =
+        [
+            .. ShowcaseProjectionWriter.KopyalanacakOzellikler.Select(ozellik => ozellik.Name).Order()
+        ];
+
+        // Dışarıda kalan ÜÇ ad: satırın anahtarı, aracın kimliği ve ilanın adresi (D13).
+        // Dördüncü bir ad eklenirse o kolon sessizce kopyalanmaz olur.
+        Assert.Equal(
+            [nameof(ShowcaseListing.ListingId), nameof(ShowcaseListing.Slug), nameof(ShowcaseListing.VehicleId)],
+            ShowcaseProjectionWriter.Degismezler.Order());
+
+        // Ve atlanan beşi kopyalanıyor.
+        Assert.Contains(nameof(ShowcaseListing.BodyTypeSlug), kopyalanan);
+        Assert.Contains(nameof(ShowcaseListing.FuelTypeSlug), kopyalanan);
+        Assert.Contains(nameof(ShowcaseListing.TransmissionTypeSlug), kopyalanan);
+        Assert.Contains(nameof(ShowcaseListing.DrivetrainTypeSlug), kopyalanan);
+        Assert.Contains(nameof(ShowcaseListing.TrimLevelSlug), kopyalanan);
+        Assert.DoesNotContain(nameof(ShowcaseListing.Slug), kopyalanan);
     }
 
     [Fact(DisplayName = "0012b/AC-44: Aracın medya sırası değiştiğinde vitrin satırının kapağı güncellenir")]

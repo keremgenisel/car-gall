@@ -54,7 +54,7 @@ export function VehicleListPage() {
 
     Promise.all([
       fetchVehicles(locale, page, sort, controller.signal, archived),
-      fetchVehicleSummary(locale, controller.signal),
+      fetchVehicleSummary(locale, controller.signal, archived),
     ])
       .then(([vehicles, summary]) =>
         setResult({ key: requestKey, value: { kind: 'ready', page: vehicles, summary } }),

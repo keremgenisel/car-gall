@@ -55,7 +55,7 @@ public sealed class YonetimListesiArsivTests(ShowcaseDatabase database)
         // yazılmaz (`docs/testing.md` § 4) — ilk yazımda mutlak saydım ve test başka
         // sınıfların bıraktığı satırlar yüzünden kırmızı verdi.
         int oncekiToplam = (await Sorgu().ListAsync(Filtre(includeArchived: false), CancellationToken.None)).TotalCount;
-        VehicleAdminSummaryDto oncekiOzet = await Sorgu().GetSummaryAsync(CancellationToken.None);
+        VehicleAdminSummaryDto oncekiOzet = await Sorgu().GetSummaryAsync(includeArchived: false, CancellationToken.None);
 
         await AracEkleAsync(arsiv: false);
         await AracEkleAsync(arsiv: true);
@@ -64,7 +64,7 @@ public sealed class YonetimListesiArsivTests(ShowcaseDatabase database)
         PagedResult<VehicleAdminListItemDto> sayfa =
             await Sorgu().ListAsync(Filtre(includeArchived: false), CancellationToken.None);
 
-        VehicleAdminSummaryDto ozet = await Sorgu().GetSummaryAsync(CancellationToken.None);
+        VehicleAdminSummaryDto ozet = await Sorgu().GetSummaryAsync(includeArchived: false, CancellationToken.None);
 
         // Üç araç eklendi, ikisi arşiv: hem liste sayısı hem özet YALNIZ biri kadar arttı.
         Assert.Equal(oncekiToplam + 1, sayfa.TotalCount);
@@ -73,6 +73,23 @@ public sealed class YonetimListesiArsivTests(ShowcaseDatabase database)
         // Çeviri eksiği sayacı da aynı evreni sayıyor: arşivlenmiş iki aracın metni de
         // eksik ama ikisi de sayılmıyor.
         Assert.Equal(oncekiOzet.TranslationIncompleteCount + 1, ozet.TranslationIncompleteCount);
+
+        // **AÇIK modda sayaç da arşivi SAYAR.** İlk hâlinde `GetSummaryAsync` bayrağı hiç
+        // almıyordu ve sayaç her zaman arşivi eliyordu: personel arşiv modunda "3 araç"
+        // yazan bir özetin altında beş satır görüyordu. Kriterin lafzı karşılanıyor,
+        // kararın amacı karşılanmıyordu — dış bulgu.
+        PagedResult<VehicleAdminListItemDto> acikSayfa =
+            await Sorgu().ListAsync(Filtre(includeArchived: true), CancellationToken.None);
+
+        VehicleAdminSummaryDto acikOzet =
+            await Sorgu().GetSummaryAsync(includeArchived: true, CancellationToken.None);
+
+        // Ölçülen şey İKİ SAYININ AYNI EVRENİ saydığı; mutlak sayı değil — koleksiyon tek
+        // veritabanı paylaşıyor ve başka sınıflar da araç arşivliyor.
+        Assert.Equal(acikSayfa.TotalCount, acikOzet.TotalCount);
+        Assert.True(
+            acikSayfa.TotalCount >= sayfa.TotalCount + 2,
+            $"Açık mod arşivlileri saymıyor: {acikSayfa.TotalCount} vs {sayfa.TotalCount}");
     }
 
     [Fact(DisplayName = "0012b/AC-53: Lokasyon ataması bekleyen araç panel listesinde ayırt edilir")]

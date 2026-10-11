@@ -80,7 +80,7 @@ public sealed class DuyuruTests(ShowcaseDatabase database)
         Assert.Equal(belgedeki.Order(), uretilen);
     }
 
-    [Fact(DisplayName = "0012b/AC-35: Olay gövdesi beş alan taşır ve **yeni durumu ayrı bir alan olarak taşımaz**")]
+    [Fact(DisplayName = "0012b/AC-35: Olay gövdesi **yeni durumu ayrı bir alan olarak taşımaz**; yedi olay beş alan taşır, `VehiclePublished` ek olarak ilk yayın zamanını taşır (**D31**)")]
     public async Task Tasimaz_DurumAlani_OlayGovdesinde()
     {
         FakeMediaAssetQueries medya = new();

@@ -144,7 +144,17 @@ public interface IVehicleAdminQueries
         VehicleAdminListFilter filter,
         CancellationToken cancellationToken);
 
-    Task<VehicleAdminSummaryDto> GetSummaryAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// `0012b` **D35** — sayaç listeyle **AYNI evreni** sayar. Arşiv bayrağı buraya da
+    /// geliyor ve varsayılanı `false`: parametre eklemeli, mevcut çağıranlar kırılmıyor.
+    ///
+    /// <para>İlk hâli bayrağı hiç almıyordu ve sayaç her zaman arşivi eliyordu; personel
+    /// arşiv modunda "3 araç" yazan bir özetin altında beş satır görüyordu. Kriterin
+    /// lafzı karşılanıyordu, kararın amacı karşılanmıyordu.</para>
+    /// </summary>
+    Task<VehicleAdminSummaryDto> GetSummaryAsync(
+        bool includeArchived,
+        CancellationToken cancellationToken);
 
     /// <summary>Bulunamayan araç için <c>null</c> döner; çağıran `404`'e çevirir (AC-4).</summary>
     Task<VehicleAdminDetailDto?> FindAsync(Guid vehicleId, CancellationToken cancellationToken);

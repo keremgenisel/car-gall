@@ -21,10 +21,18 @@ type Durum =
       readonly action: ListingAction
       readonly messageKeys: readonly string[]
       readonly fieldKeys: readonly string[]
+      /**
+       * **D26**'nın ikinci yarısı: panelin yapacağı iş REDDE GÖRE değişiyor. `422`
+       * koşullar eksik → personel onları düzeltip **tekrar dener**. `409` ilan o durumda
+       * değil → tekrar denemek tanımı gereği yine başarısız olur; yapılacak şey satırı
+       * **tazelemek**. `0007`/AC-12'nin kuralı burada da geçerli: kural gereği reddedilene
+       * tekrar denemesini söylemek, sonsuza kadar denemesini söylemektir.
+       */
+      readonly conflict: boolean
     }
 
 /**
- * `0012b` — bir ilanın durum eylemleri (**R1**, **R5**–**R7**, **D28**).
+ * `0012b` — bir ilanın durum eylemleri (**R1**, **R5**–**R7**).
  *
  * <p><b>Yalnız A3'ün izin verdiği eylemler basılıyor</b> (`listingActionState`): taslak
  * bir ilanda "rezerve et" düğmesi, sunucunun `409`'una yürüyen bir davet olurdu. Sunucu
@@ -73,6 +81,7 @@ export function ListingActionBar({
             ? publishRejectionKeys(hata.parameters?.['reasons'], locale)
             : [messageKey(hata?.errorCode ?? 'api.unavailable', locale)],
         fieldKeys: missingFieldKeys(hata?.parameters?.['fields']),
+        conflict: hata?.status === 409,
       })
     }
   }
@@ -136,7 +145,14 @@ export function ListingActionBar({
 
       {durum.kind === 'failed' ? (
         <div className="admin-form__error" role="alert" data-testid="vehicle-action-error">
-          <p className="admin-form__error-title">{t('vehicle.action.error.cannot_publish')}</p>
+          {/*
+            Başlık YAPILAN EYLEME bağlı. Sabit bir "Araç yayına alınamadı" başlığı, altı
+            eylemin beşinde yanlış bir olguyu bildiriyordu: personel "satıldı işaretle"ye
+            basıyor, ekran yayından söz ediyordu.
+          */}
+          <p className="admin-form__error-title">
+            {t(`vehicle.action.error.title.${durum.action}`)}
+          </p>
           <ul className="vehicle-actions__reasons">
             {durum.messageKeys.map((key) => (
               <li key={key}>
@@ -147,9 +163,19 @@ export function ListingActionBar({
             ))}
           </ul>
           <div className="admin-form__banner-action">
-            <Button variant="secondary" onClick={() => void uygula(durum.action)}>
-              {t('vehicle.action.retry')}
-            </Button>
+            {durum.conflict ? (
+              <Button variant="secondary" onClick={onApplied} data-testid="vehicle-action-refresh">
+                {t('vehicle.action.refresh')}
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => void uygula(durum.action)}
+                data-testid="vehicle-action-retry"
+              >
+                {t('vehicle.action.retry')}
+              </Button>
+            )}
           </div>
         </div>
       ) : null}

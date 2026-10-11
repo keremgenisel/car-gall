@@ -50,12 +50,23 @@ export function fetchVehicles(
   )
 }
 
-/** AC-23 — sayı TÜM araçlar üzerinden; bu yüzden sayfadan ayrı bir okuma. */
+/**
+ * AC-23 — sayı TÜM araçlar üzerinden; bu yüzden sayfadan ayrı bir okuma.
+ *
+ * <p>0012b **D35** — arşiv bayrağı buraya da geliyor: sayaç listeyle **aynı evreni**
+ * saymak zorunda. Bayraksız hâlinde personel arşiv modunda "3 araç" yazan bir özetin
+ * altında beş satır görüyordu.</p>
+ */
 export function fetchVehicleSummary(
   locale: AppLocale,
   signal?: AbortSignal,
+  includeArchived = false,
 ): Promise<VehicleAdminSummary> {
-  return getJson<VehicleAdminSummary>(`${ADMIN_VEHICLES}/summary`, locale, signal)
+  return getJson<VehicleAdminSummary>(
+    `${ADMIN_VEHICLES}/summary?archived=${includeArchived}`,
+    locale,
+    signal,
+  )
 }
 
 export function fetchVehicle(
@@ -71,7 +82,7 @@ export function fetchVehicle(
 }
 
 /**
- * 0012b **D28** — bir ilanın durum geçişi. Yanıt `204`: gövde yok ve istemci onu JSON diye
+ * 0012b — bir ilanın durum geçişi (rota kuralı `docs/conventions.md` § 2). Yanıt `204`: gövde yok ve istemci onu JSON diye
  * okumaya çalışmaz (`sendJson`'ın gövdesizlik kontrolü `0012a`'nın dış bulgusuyla geldi).
  *
  * <p>Reddin HTTP karşılığı SABİT (**D26**): `422` koşullar eksik, `409` ilan o durumda

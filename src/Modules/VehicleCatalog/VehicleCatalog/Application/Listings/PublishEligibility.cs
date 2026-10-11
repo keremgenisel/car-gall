@@ -74,9 +74,9 @@ internal static class PublishEligibility
     }
 
     /// <summary>
-    /// **D27** — kural TEK yerde. `VehicleAdminQueries` aynı hesabı liste rozeti için
-    /// yapıyordu; ikisi ayrı yazılsaydı aynı invariant iki yerde iki farklı şey olabilirdi
-    /// (`0010b`'nin bilinen tuzağı 3). Çekirdek alanlar bu hesaba GİRMEZ: `0010a` D8 onları
+    /// Kural TEK yerde. `VehicleAdminQueries` aynı hesabı liste rozeti için yapıyordu;
+    /// ikisi ayrı yazılsaydı aynı invariant iki yerde iki farklı şey olabilirdi —
+    /// `0010b`'nin bilinen tuzağı 3. Bu spec'in ayrı bir kararı yok. Çekirdek alanlar bu hesaba GİRMEZ: `0010a` D8 onları
     /// kayıt anında zorunlu kılıyor.
     /// </summary>
     internal static IReadOnlyList<string> MissingRequiredFields(

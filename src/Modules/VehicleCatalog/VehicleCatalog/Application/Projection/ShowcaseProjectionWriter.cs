@@ -88,24 +88,49 @@ internal sealed class ShowcaseProjectionWriter(
         }
     }
 
+    /// <summary>
+    /// Var olan satırı yansıtmanın ürettiği satıra eşitler.
+    ///
+    /// <para><b>Kolonlar ELLE SAYILMIYOR ve bu bir dış bulgunun bedeliydi.</b> İlk yazımda
+    /// on beş kolonu tek tek kopyalıyordum ve <b>beşini atlamıştım</b>: gövde tipi, yakıt,
+    /// vites, çekiş ve donanım paketi. Beşi de `Vehicle.Specification`'dan geliyor,
+    /// `ChangeCoreDetails` o nesnenin tamamını değiştiriyor ve vitrin satırına yazan tek
+    /// yer burası (C12) — yani "sedan" diye kaydedilip "suv" olarak düzeltilen araç
+    /// ziyaretçinin gövde tipi filtresinde <b>kalıcı olarak</b> sedan kalıyordu.</para>
+    ///
+    /// <para>Yansıma ile kopyalamak altıncı kolonda aynı hatayı imkânsız kılıyor:
+    /// `ShowcaseListing`'e bir alan eklendiğinde kopyalanacaklar listesine de eklenmiş
+    /// olur. <b>Dışarıda kalan üçü değişmez</b> ve adıyla yazılı: satırın anahtarı
+    /// (`ListingId`), aracın kimliği ve ilanın ADRESİ (**D13** — ilk yayında üretilir,
+    /// bir daha değişmez).</para>
+    /// </summary>
     private static void Guncelle(ShowcaseListing mevcut, ShowcaseListing hedef)
     {
-        mevcut.IsReserved = hedef.IsReserved;
-        mevcut.ShowcaseSortWeight = hedef.ShowcaseSortWeight;
-        mevcut.PublishedAt = hedef.PublishedAt;
-        mevcut.ColorNames = hedef.ColorNames;
-        mevcut.ModelYear = hedef.ModelYear;
-        mevcut.MileageKilometers = hedef.MileageKilometers;
-        mevcut.PriceAmount = hedef.PriceAmount;
-        mevcut.PriceCurrencyCode = hedef.PriceCurrencyCode;
-        mevcut.PriceMinorUnitExponent = hedef.PriceMinorUnitExponent;
-        mevcut.PriceOnRequest = hedef.PriceOnRequest;
-        mevcut.BranchId = hedef.BranchId;
-        mevcut.BranchNames = hedef.BranchNames;
-        mevcut.CoverAssetId = hedef.CoverAssetId;
-        mevcut.CoverMediaUrl = hedef.CoverMediaUrl;
-        mevcut.OptionalValues = hedef.OptionalValues;
+        foreach (System.Reflection.PropertyInfo ozellik in KopyalanacakOzellikler)
+        {
+            ozellik.SetValue(mevcut, ozellik.GetValue(hedef));
+        }
     }
+
+    /// <summary>
+    /// Değişmezler: satırın anahtarı, aracın kimliği ve ilanın adresi. **Test tarafından
+    /// okunuyor**: listeye dördüncü bir ad girdiği gün o kolon sessizce kopyalanmaz olur
+    /// ve kapı bunu yakalamak zorunda.
+    /// </summary>
+    internal static readonly string[] Degismezler =
+    [
+        nameof(ShowcaseListing.ListingId),
+        nameof(ShowcaseListing.VehicleId),
+        nameof(ShowcaseListing.Slug),
+    ];
+
+    internal static readonly System.Reflection.PropertyInfo[] KopyalanacakOzellikler =
+    [
+        .. typeof(ShowcaseListing)
+            .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            .Where(ozellik => ozellik.CanWrite)
+            .Where(ozellik => !Degismezler.Contains(ozellik.Name))
+    ];
 
     /// <summary>
     /// Kapak görselinin türev adı. `Media`'nın `MediaVariant.Display` sabiti o modülün

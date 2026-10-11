@@ -353,5 +353,13 @@
   "vehicle.list.archived.hint": "Archived vehicles are not shown in the default list.",
   "vehicle.badge.awaitingBranch": "Awaiting branch",
   "vehicle.badge.awaitingBranch.hint": "Its branch was closed; it cannot be published until a new branch is assigned.",
-  "vehicle.field.warranty_status": "Warranty status"
+  "vehicle.field.warranty_status": "Warranty status",
+  "vehicle.action.error.title": "The action could not be applied",
+  "vehicle.action.error.title.publish": "The vehicle could not be published",
+  "vehicle.action.error.title.unpublish": "The listing could not be unpublished",
+  "vehicle.action.error.title.reserve": "The listing could not be reserved",
+  "vehicle.action.error.title.unreserve": "The reservation could not be removed",
+  "vehicle.action.error.title.sold": "The listing could not be marked as sold",
+  "vehicle.action.error.title.archive": "The listing could not be archived",
+  "vehicle.action.refresh": "Refresh the row"
 }
