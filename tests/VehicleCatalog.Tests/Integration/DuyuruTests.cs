@@ -40,15 +40,20 @@ public sealed class DuyuruTests(ShowcaseDatabase database)
 
         IReadOnlyList<string> tipler = await TiplerAsync();
 
+        // SIRA İDDİA EDİLMİYOR ve bu bilinçli: `docs/architecture.md` § 2.C "sıra garantisi
+        // yoktur" diyor ve outbox satırlarının kimliği `Guid.CreateVersion7()` — aynı
+        // milisaniyede üretilen iki kimliğin sırası rastgele kuyruğa bağlı. İlk yazımda
+        // sıralı iddia ettim ve test aralıklı kırmızı verdi.
         Assert.Equal(
-            [
+            new[]
+            {
                 Tip<VehiclePublished>(),
                 Tip<VehicleReserved>(),
                 Tip<VehicleReturnedToShowcase>(),
                 Tip<VehicleSold>(),
                 Tip<VehicleArchived>(),
-            ],
-            tipler);
+            }.Order(),
+            tipler.Order());
     }
 
     /// <summary>
@@ -128,7 +133,12 @@ public sealed class DuyuruTests(ShowcaseDatabase database)
 
         Assert.Equal(3, mesajlar.Count);
 
-        JsonElement ikinciYayin = JsonDocument.Parse(mesajlar[2].Payload).RootElement;
+        // İKİ yayın duyurusu var ve ikisi de aynı ilk yayın zamanını taşıyor; hangisinin
+        // önce yazıldığı iddia edilmiyor (§ 2.C: sıra garantisi yoktur).
+        JsonElement ikinciYayin = mesajlar
+            .Where(mesaj => mesaj.Type == Tip<VehiclePublished>())
+            .Select(mesaj => JsonDocument.Parse(mesaj.Payload).RootElement)
+            .Last();
 
         // Olay YİNE yayıldı (tüketici tazelemek zorunda) ama taşıdığı zaman İLK yayının
         // zamanı — ilan vitrinde yerini değiştirmiyor.
@@ -153,7 +163,9 @@ public sealed class DuyuruTests(ShowcaseDatabase database)
 
         IReadOnlyList<string> tipler = await TiplerAsync();
 
-        Assert.Equal([Tip<VehiclePriceChanged>(), Tip<VehicleRelocated>()], tipler);
+        Assert.Equal(
+            new[] { Tip<VehiclePriceChanged>(), Tip<VehicleRelocated>() }.Order(),
+            tipler.Order());
     }
 
     private static string Tip<TEvent>() => typeof(TEvent).FullName!;
