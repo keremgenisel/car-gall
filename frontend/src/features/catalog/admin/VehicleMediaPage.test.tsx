@@ -415,6 +415,33 @@ describe('Kaydetme akışı', () => {
     expect(screen.getByTestId('vehicle-media-save')).toHaveProperty('disabled', true)
   })
 
+  /**
+   * Bu testi e2e yazdırdı: kaydetme başarıdan sonra sunucudan yeniden okuyor ve ilk
+   * hâlimde okuma, bildirimi siliyordu — personel kaydettiğine dair hiçbir işaret
+   * görmüyordu. Burada iki okuma AYRI yanıt döndürüyor, yani yeniden okuma gerçekten
+   * koşuyor.
+   */
+  it('kaydetme bildirimi yeniden okumadan sağ çıkar', async () => {
+    vi.mocked(fetchVehicleMedia)
+      .mockResolvedValueOnce(medya([oge(BIR), oge(IKI)]))
+      .mockResolvedValue(medya([oge(IKI), oge(BIR)]))
+
+    ekran()
+
+    const kutu = await screen.findByTestId(`vehicle-media-item-${IKI}`)
+
+    fireEvent.click(kutu.querySelector('[data-testid="vehicle-media-up"]') as HTMLElement)
+    fireEvent.click(screen.getByTestId('vehicle-media-save'))
+
+    await screen.findByTestId('vehicle-media-saved')
+
+    // Yeniden okuma gerçekten koştu: sunucunun YENİ sırası ekranda.
+    await waitFor(() => expect(vi.mocked(fetchVehicleMedia).mock.calls.length).toBeGreaterThan(1))
+
+    expect(screen.getByTestId('vehicle-media-saved')).toBeTruthy()
+    expect(screen.getByTestId('vehicle-media-save')).toHaveProperty('disabled', true)
+  })
+
   it('kaydetme reddedilirse taslak KAYBOLMAZ ve şerit tekrar dener', async () => {
     vi.mocked(updateVehicleMedia).mockRejectedValueOnce(
       new ApiError('vehicle.media_asset_not_found', null, 422),

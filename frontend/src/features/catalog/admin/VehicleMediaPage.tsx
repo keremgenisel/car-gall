@@ -71,9 +71,18 @@ export function VehicleMediaPage({ vehicleId }: { readonly vehicleId: string }) 
   const [pending, setPending] = useState<readonly VehicleMediaItem[]>([])
   const [save, setSave] = useState<Save>({ kind: 'idle' })
 
-  const sourceKey = `${locale}|${vehicleId}|${sourceToken}`
+  /**
+   * Veri anahtarı TOKEN TAŞIMAZ ve bu bilinçli: yeniden okuma sırasında ekran ELDEKİ
+   * veriyi göstermeye devam ediyor, iskelete DÜŞMÜYOR. Araç ya da dil değiştiğinde
+   * anahtar değişir ve iskelet basılır — o veri gerçekten başka bir aracın verisidir.
+   *
+   * <p>Bu da e2e'nin yazdırdığı bir düzeltme: token'ı anahtara koyan ilk hâlimde her
+   * tazeleme bütün listeyi SÖKÜYORDU, kartlar yeniden monte oluyor ve kartın kendi
+   * durumu ("tanımlar kaydedildi") onunla birlikte kayboluyordu.</p>
+   */
+  const dataKey = `${locale}|${vehicleId}`
   const source: Source =
-    loaded !== null && loaded.key === sourceKey ? loaded.value : { kind: 'loading' }
+    loaded !== null && loaded.key === dataKey ? loaded.value : { kind: 'loading' }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -82,8 +91,16 @@ export function VehicleMediaPage({ vehicleId }: { readonly vehicleId: string }) 
       .then((media) => {
         setDraft(toDraft(media))
         setPending([])
-        setSave({ kind: 'idle' })
-        setLoaded({ key: sourceKey, value: { kind: 'ready', media } })
+
+        /*
+          Kaydetme bildirimi yeniden okumadan SAĞ ÇIKIYOR. İlk hâlim burada koşulsuz
+          `idle` yazıyordu ve bildirim hiç görünmüyordu: kaydetme başarıdan sonra
+          sunucudan yeniden okuyor, okuma da bildirimi siliyordu. e2e yakaladı — birim
+          testlerinde `fetch` anında çözüldüğü için iki `setState` aynı turda birleşiyor
+          ve bildirim görünür kalıyordu.
+        */
+        setSave((current) => (current.kind === 'saved' ? current : { kind: 'idle' }))
+        setLoaded({ key: dataKey, value: { kind: 'ready', media } })
       })
       .catch((cause: unknown) => {
         if (cause instanceof DOMException && cause.name === 'AbortError') {
@@ -93,11 +110,11 @@ export function VehicleMediaPage({ vehicleId }: { readonly vehicleId: string }) 
         // Olmayan araç bir HATA değil: "tekrar dene" onu getirmez.
         const missing = cause instanceof ApiError && cause.status === 404
 
-        setLoaded({ key: sourceKey, value: { kind: missing ? 'missing' : 'error' } })
+        setLoaded({ key: dataKey, value: { kind: missing ? 'missing' : 'error' } })
       })
 
     return () => controller.abort()
-  }, [locale, vehicleId, sourceToken, sourceKey])
+  }, [locale, vehicleId, sourceToken, dataKey])
 
   function reload() {
     setSourceToken((token) => token + 1)
