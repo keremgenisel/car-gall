@@ -29,6 +29,12 @@ internal static class MediaAdminEndpoints
     /// </summary>
     internal sealed record UploadMediaAssetResponse(Guid Id, string Status);
 
+    /// <summary>
+    /// `alt` metni gövdesi: locale → metin. Eksik locale boş sayılır (D16); gövdenin
+    /// kendisi eksikse de boş harita olarak okunur — "hepsini sil" geçerli bir istek.
+    /// </summary>
+    internal sealed record SetAltTextBody(IReadOnlyDictionary<string, string>? AltText);
+
     internal static void MapMediaAdminEndpoints(this IEndpointRouteBuilder builder)
     {
         RouteGroupBuilder assets = builder
@@ -52,6 +58,14 @@ internal static class MediaAdminEndpoints
         //
         // **Ekran `0012`'nin işi** (X8): bu spec komutu ve ucunu sunar. Uç olmadan komutu
         // modül dışından hiçbir şey tetikleyemez ve AC-14 kâğıt üstünde kalırdı.
+        // `0012a` AC-11…15 — `alt` metninin yazma ucu. Fiil rotada değil, HTTP
+        // metodunda; `PUT` çünkü gövde kaynağın o alanını BÜTÜNÜYLE yerine koyuyor.
+        assets.MapPut("/{id:guid}/alt-text", SetAltTextAsync)
+            .WithName("SetMediaAssetAltText")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status422UnprocessableEntity);
+
         assets.MapPost("/{id:guid}/retry", RetryAsync)
             .WithName("RetryMediaAsset")
             .Produces(StatusCodes.Status202Accepted)
@@ -144,6 +158,27 @@ internal static class MediaAdminEndpoints
     /// AC-14 — `başarısız` bir varlığı tekrar kuyruğa alır ve **aynı kimliği korur**.
     /// <c>202</c>: iş kabul edildi, bitmedi — işleme turu onu bir sonraki tikte alacak.
     /// </summary>
+    /// <summary>
+    /// `0012a` D3/D16 — `alt` metnini bütünüyle yerine koyar. Eksik locale <b>boş</b>
+    /// sayılır; bir dili boş bırakmak geçerli bir durumdur (R4).
+    ///
+    /// <para>Uç <c>Media</c> modülünde çünkü metin <c>MediaAsset</c>'in alanıdır
+    /// (Yasak Listesi 1). `0011` D16 alanı tutup ucu bilerek açmadı.</para>
+    /// </summary>
+    private static async Task<IResult> SetAltTextAsync(
+        Guid id,
+        SetAltTextBody body,
+        SetAltTextCommand command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        Result sonuc = await command.ExecuteAsync(
+            id, body.AltText ?? new Dictionary<string, string>(), cancellationToken);
+
+        return sonuc.IsFailure ? MediaProblems.From(sonuc.Error) : TypedResults.NoContent();
+    }
+
     private static async Task<IResult> RetryAsync(
         Guid id,
         RetryMediaAssetCommand command,

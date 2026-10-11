@@ -29,6 +29,11 @@ namespace CarGallery.Modules.Media.Contracts.Setup;
 /// D10(c) — boyut sınırı bunu GÖRMEZ. 2 MB'lık bir PNG gigapiksele açılabilir ve tek
 /// istekle sunucu CPU'sunu tüketir.
 /// </param>
+/// <param name="EnabledLocales">
+/// `0012a`/AC-14 — `alt` metni yalnız ETKİN bir locale için yazılabilir. Liste dağıtım
+/// yapılandırmasıdır (`docs/architecture.md` § 3); `Media` onu kendi başına bilemez ve
+/// bir `Localization` modülü yok.
+/// </param>
 /// <param name="AllowedImageFormats">
 /// AC-9 / C14 — kabul edilen tür kümesi YAPILANDIRMADAN gelir; koda gömülü bir sabit
 /// yoktur. Değerler <c>jpeg</c>, <c>png</c>, <c>webp</c>.
@@ -49,4 +54,5 @@ public sealed record MediaSetup(
     string WatermarkObjectKey,
     long MaximumByteSize,
     long MaximumPixelCount,
-    IReadOnlyList<string> AllowedImageFormats);
+    IReadOnlyList<string> AllowedImageFormats,
+    IReadOnlyList<string> EnabledLocales);

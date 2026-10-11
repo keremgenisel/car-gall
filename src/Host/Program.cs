@@ -160,7 +160,12 @@ builder.Services.AddMedia(new MediaSetup(
     builder.Configuration.GetValue<long?>("Media:MaximumPixelCount") ?? 0,
     // AC-9 — kabul edilen tür kümesi de yapılandırmadan. `??` ile üretilmiş varsayılan
     // YOK: boş küme kuruluşta reddediliyor (AC-5'in aynı kapısı).
-    builder.Configuration.GetSection("Media:AllowedImageFormats").Get<string[]>() ?? []));
+    builder.Configuration.GetSection("Media:AllowedImageFormats").Get<string[]>() ?? [],
+    // 0012a/AC-14 — `alt` metni yalnız ETKİN bir locale için yazılabilir. Liste
+    // `Localization` bölümünden geliyor: etkin dil kümesi kurulum genelindedir ve
+    // modül başına ikinci bir kopyası olsaydı ikisi ayrışırdı (Yasak Listesi 21'in
+    // aynı mantığı).
+    localization.EnabledLocales));
 
 // İlk yazma uçları ilk hata sözleşmesini getirdi. `500` yanıtı ASLA iç detay taşımaz:
 // stack trace, SQL, dosya yolu, tip adı yok — yalnız `traceId`

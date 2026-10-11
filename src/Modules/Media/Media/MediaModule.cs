@@ -117,6 +117,7 @@ public static class MediaModule
         services.AddScoped<OutboxWriter<MediaDbContext>>();
         services.AddScoped<UploadMediaAssetCommand>();
         services.AddScoped<RetryMediaAssetCommand>();
+        services.AddScoped<SetAltTextCommand>();
         services.AddScoped<MediaProcessingService>();
         services.AddScoped<IMediaAssetQueries, MediaAssetQueries>();
 

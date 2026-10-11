@@ -24,7 +24,8 @@ public sealed class YapilandirmaTests
         WatermarkObjectKey: "private/brand/watermark.png",
         MaximumByteSize: 15_728_640,
         MaximumPixelCount: 50_000_000,
-        AllowedImageFormats: ["jpeg", "png", "webp"]);
+        AllowedImageFormats: ["jpeg", "png", "webp"],
+        EnabledLocales: ["tr", "ar", "en"]);
 
     [Fact]
     public void Gecerlidir_TamYapilandirma()

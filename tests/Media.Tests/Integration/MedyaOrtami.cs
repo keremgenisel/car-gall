@@ -94,7 +94,8 @@ public sealed class MedyaOrtami : IAsyncLifetime
         long maximumByteSize = 15_728_640,
         long maximumPixelCount = 50_000_000,
         string watermarkObjectKey = WatermarkKey,
-        IReadOnlyList<string>? allowedImageFormats = null) =>
+        IReadOnlyList<string>? allowedImageFormats = null,
+        IReadOnlyList<string>? enabledLocales = null) =>
         new(
             ConnectionString,
             StorageServiceUrl,
@@ -107,16 +108,18 @@ public sealed class MedyaOrtami : IAsyncLifetime
             WatermarkObjectKey: watermarkObjectKey,
             MaximumByteSize: maximumByteSize,
             MaximumPixelCount: maximumPixelCount,
-            AllowedImageFormats: allowedImageFormats ?? ["jpeg", "png", "webp"]);
+            AllowedImageFormats: allowedImageFormats ?? ["jpeg", "png", "webp"],
+            EnabledLocales: enabledLocales ?? ["tr", "ar", "en"]);
 
     internal MediaOptions Options(
         long maximumByteSize = 15_728_640,
         long maximumPixelCount = 50_000_000,
         string watermarkObjectKey = WatermarkKey,
-        IReadOnlyList<string>? allowedImageFormats = null)
+        IReadOnlyList<string>? allowedImageFormats = null,
+        IReadOnlyList<string>? enabledLocales = null)
     {
-        Result<MediaOptions> options = MediaOptions.Create(
-            Setup(maximumByteSize, maximumPixelCount, watermarkObjectKey, allowedImageFormats));
+        Result<MediaOptions> options = MediaOptions.Create(Setup(
+            maximumByteSize, maximumPixelCount, watermarkObjectKey, allowedImageFormats, enabledLocales));
 
         Assert.True(options.IsSuccess, $"Test yapılandırması geçersiz: {options.Error.Code}");
 
