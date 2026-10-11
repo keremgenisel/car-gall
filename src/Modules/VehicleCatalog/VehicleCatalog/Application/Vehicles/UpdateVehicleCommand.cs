@@ -231,11 +231,11 @@ internal sealed class UpdateVehicleCommand(
                     : VehicleFieldNames.ListingTitle);
         }
 
-        // D37 — eksik `Touch` çağrısı. Ölçüldü: `Touch`'ın çağıranları yalnız
-        // `UpdateVehicleMediaCommand` ve `ChangePrice`'tı; başlık, kilometre veya renk
-        // düzeltmesi "son güncellenen" sıralamasında GÖRÜNMÜYORDU. D20 geçişi görünür
-        // kılıyor ve aynı borcun düzenleme tarafı burada kapanıyor.
-        vehicle.Touch(now);
+        // D37 bir `Touch` çağrısı eklemeyi istiyordu; ÖLÇTÜM VE GEREKMİYOR:
+        // `ChangeCoreDetails` zaten `Touch` çağırıyor (`Vehicle.cs:205`) ve bu komut her
+        // zaman ondan geçiyor. İkinci bir çağrı aynı değeri iki kez yazardı — ölü kod
+        // (`docs/conventions.md` § 13). Kararın ölçümü tutmadı ve PR'da adıyla yazılı;
+        // kriterin (AC-21) etiketli testi `AracDuzenlemeTests`'te.
 
         // D12/R15 — vitrin satırı AYNI İŞLEMDE güncelleniyor. Bu spec'e kadar hiçbir komut
         // okuma modeline yazmıyordu: personel fiyatı düşürüyor, vitrinde eski fiyat

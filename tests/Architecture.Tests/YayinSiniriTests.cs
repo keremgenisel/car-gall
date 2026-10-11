@@ -117,6 +117,26 @@ public sealed partial class YayinSiniriTests
         Assert.Contains("FindNamesAsync", sozlesme, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// **C11** — `OutboxYazicisiTests` bunu zaten JENERİK olarak tarıyor ve `VehicleCatalog`
+    /// outbox'ı kurduğu an kapsıyor (ölçüldü). Bu test onun yerine geçmiyor, onu `0012b`'nin
+    /// kriterine BAĞLIYOR: etiketsiz bir jenerik test, kriter → test eşlemesinde görünmez
+    /// (`0012a`'nın AC-46'sıyla aynı gerekçe).
+    /// </summary>
+    [Fact(DisplayName = "0012b/AC-37: Outbox yazıcısı **konkret** `OutboxWriter<VehicleCatalogDbContext>` tipiyle kaydedilir")]
+    public void Kaydedilir_Yazici_KonkretTiple()
+    {
+        string modul = File.ReadAllText(Path.Combine(
+            SolutionLayout.SourceRoot, "Modules/VehicleCatalog/VehicleCatalog/VehicleCatalogModule.cs"));
+
+        Assert.Contains("AddScoped<OutboxWriter<VehicleCatalogDbContext>>()", modul, StringComparison.Ordinal);
+
+        // Paylaşılan bir soyutlama altında kayıt YOK: `IOutboxWriter` 2026-10-11'de
+        // silindi (`7e8bdef`, #52) çünkü DI'da son kayıt kazanıyordu ve bir modülün
+        // duyurusu HİÇ kalıcı olmuyordu.
+        Assert.DoesNotContain("IOutboxWriter", modul, StringComparison.Ordinal);
+    }
+
     private static bool Istisna(string relative) =>
         // Yayın komutu: geçiş reddi A2'nin ÖNÜNE geçiyor (D26) — geçiş yürütmüyor, hangi
         // reddin döneceğini seçiyor.

@@ -507,6 +507,40 @@ public sealed class AracDuzenlemeTests(ShowcaseDatabase database)
         ListingDescription: new Dictionary<string, string>(),
         OptionalValues: []);
 
+    /// <summary>
+    /// **D37** — ölçüldü: `Touch`'ın çağıranları yalnız `UpdateVehicleMediaCommand` ve
+    /// `ChangePrice`'tı. Başlık, kilometre veya renk düzeltmesi "son güncellenen"
+    /// sıralamasında GÖRÜNMÜYORDU; personel bir aracı düzeltiyor ve araç listede yerinden
+    /// kıpırdamıyordu.
+    /// </summary>
+    /// <summary>
+    /// **D37**'nin kriteri. <b>Kararın ölçümü tutmadı ve bu PR'da yazılı:</b> karar
+    /// *"`Touch`'ın çağıranları yalnız `UpdateVehicleMediaCommand` ve `ChangePrice`"*
+    /// diyordu, oysa `Vehicle.ChangeCoreDetails` de `Touch` çağırıyor (`:205`) ve
+    /// düzenleme komutu her zaman ondan geçiyor. Yani davranış zaten vardı; eksik olan
+    /// ETİKETLİ testti.
+    ///
+    /// <para>Fiyat bilerek DEĞİŞTİRİLMİYOR: `ChangePrice`'ın kendi `Touch` çağrısı sonucu
+    /// gizler ve test yanlış sebeple yeşil kalırdı.</para>
+    /// </summary>
+    [Fact(DisplayName = "0012b/AC-21: Araç düzenlemesi de aracın son güncellenme zamanını ilerletir")]
+    public async Task Ilerletir_SonGuncellenme_AracDuzenlemesi()
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+        (Guid Id, string Vin) arac = await AracKaydetAsync(context, "DUZTOUCH");
+
+        Result sonuc = await Komut(context).ExecuteAsync(
+            Istek(arac) with { MileageKilometers = 61_250 },
+            CancellationToken.None);
+
+        Assert.True(sonuc.IsSuccess, sonuc.IsFailure ? sonuc.Error.Code : string.Empty);
+
+        Vehicle okunan = await Oku(arac.Id);
+
+        Assert.Equal(Duzenleme, okunan.UpdatedAt);
+        Assert.Equal(61_250, okunan.MileageKilometers);
+    }
+
     private static UpdateVehicleCommand Komut(VehicleCatalogDbContext context)
     {
         FixedClock saat = new(Duzenleme);

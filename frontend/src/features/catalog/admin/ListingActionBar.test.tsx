@@ -122,6 +122,26 @@ describe('0012b/AC-9: Reddedilen yayın isteği çevrilmiş metin değil **kod l
   })
 })
 
+describe('0012b/AC-55: Ekranda hiçbir teknik detay görünmez: durum kodu, `errorCode`, `traceId`, yol', () => {
+  it('reddin kodu, durum kodu, traceId ve yol EKRANDA YOK', async () => {
+    vi.mocked(applyListingAction).mockRejectedValue(
+      new ApiError('concurrency.lost', 'trace-0012b', 409, null, {}),
+    )
+
+    ekran('Published')
+
+    fireEvent.click(screen.getByTestId('vehicle-action-sold'))
+
+    const hata = await screen.findByTestId('vehicle-action-error')
+
+    expect(hata.textContent).toContain('başka bir değişiklik oldu')
+    expect(hata.textContent).not.toContain('concurrency.lost')
+    expect(hata.textContent).not.toContain('trace-0012b')
+    expect(hata.textContent).not.toContain('409')
+    expect(hata.textContent).not.toContain('/api/admin/')
+  })
+})
+
 describe('0012b/AC-2: Lokasyon ataması bekleyen araç yayına alınamaz; yanıt `vehicle.cannot_publish.branch_unassigned` taşır', () => {
   it('bayraklı araçta neden düğmeye basılmadan söyleniyor', () => {
     ekran('Draft', { bekliyor: true })

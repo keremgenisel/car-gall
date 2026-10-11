@@ -1,4 +1,7 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
+using CarGallery.Modules.Media.Contracts.Assets;
+using CarGallery.Modules.VehicleCatalog.Application.Listings;
 using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.VehicleCatalog.Application.EventHandlers;
 using CarGallery.Modules.VehicleCatalog.Domain;
@@ -91,6 +94,40 @@ public sealed class SubeKapanisiTests(ShowcaseDatabase database)
         Assert.Equal(2, tipler.Count(tip => tip.EndsWith("VehicleUnpublished", StringComparison.Ordinal)));
     }
 
+    [Fact(DisplayName = "0012b/AC-29: Bayraklı araç yayına alınamaz")]
+    public async Task Alinamaz_Yayina_BayrakliArac()
+    {
+        FakeMediaAssetQueries medya = new();
+        Guid varlik = medya.Ekle(MediaProcessingStatus.Ready);
+        Guid sube = Guid.CreateVersion7();
+        Guid aracId = await AracEkleAsync(sube, ListingStatus.Published, varlik);
+
+        await KapatAsync(sube);
+
+        // Şube kapandı, ilan taslağa döndü ve bayrak yazıldı. Yeniden yayınlamak,
+        // aracı ÖLÜ bir şubeyle vitrine çıkarırdı — A8'in bütün gerekçesi bu.
+        await using VehicleCatalogDbContext context = database.CreateContext();
+
+        FixedClock saat = new(Kapanis);
+
+        ListingTransitionCommands komut = new(
+            context,
+            KatalogYazicilari.Birim(context, saat),
+            KatalogYazicilari.Yansitma(context, medya),
+            medya,
+            new FakeModelNameResolver(),
+            InvariantGuardOptions.Default,
+            saat);
+
+        Result sonuc = await komut.ExecuteAsync(aracId, ListingAction.Publish, CancellationToken.None);
+
+        Assert.True(sonuc.IsFailure);
+        Assert.Contains(
+            "vehicle.cannot_publish.branch_unassigned",
+            sonuc.Error.Parameters!["reasons"],
+            StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// **D33** — eylem şubedeki **bütün** araçlara uygulanır ve seçim üst sınırına tabi
     /// değildir. Kısmi başarı bir PERSONEL kararının karşılığıdır; sistemin kendi
@@ -115,13 +152,18 @@ public sealed class SubeKapanisiTests(ShowcaseDatabase database)
         Assert.Equal(12, bekleyen);
     }
 
-    private async Task<Guid> AracEkleAsync(Guid sube, ListingStatus durum)
+    private async Task<Guid> AracEkleAsync(Guid sube, ListingStatus durum, Guid? medya = null)
     {
         Vehicle arac = new VehicleBuilder()
             .WithoutMedia()
             .WithBranch(sube)
             .WithVin($"SUBE{Interlocked.Increment(ref sayac):D13}")
             .Build();
+
+        if (medya is not null)
+        {
+            arac.AttachMediaAsset(medya.Value);
+        }
 
         Listing listing = Listing.CreateDraft(arac.Id, showcaseSortWeight: 0);
         FixedClock saat = new(Kapanis);
