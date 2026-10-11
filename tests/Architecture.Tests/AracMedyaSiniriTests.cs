@@ -142,6 +142,56 @@ public sealed partial class AracMedyaSiniriTests
             "`VehicleCatalog` hiçbir yerde `Media.Contracts`'ı tüketmiyor; tarama anlamsız.");
     }
 
+    /// <summary>
+    /// AC-13'ün İKİNCİ yarısı: `VehicleCatalog` `alt` metninin KOPYASINI tutmaz.
+    ///
+    /// <para><b>Bu test bir yanlış atıfın bedeliydi.</b> `AltMetniKaliciligiTests`'in doc
+    /// comment'i bu yarının "`MedyaSinirTests` içinde" olduğunu yazıyordu; PR tablosunu
+    /// kurarken ölçtüm ve <b>öyle bir test yoktu</b>. Yazılı bir atıf, testin var
+    /// olduğunu garanti etmiyor.</para>
+    ///
+    /// <para><b>Nerede arandığı önemli:</b> metnin yanıt DTO'sundan GEÇMESİ meşrudur ve
+    /// AC-24 bunu zaten istiyor — sorgu `Media`'nın `alt` metnini birleştiriyor. Yasak
+    /// olan SAKLAMAK: agregatta bir alan, şemada bir kolon, migration'da bir satır.
+    /// Tarama bu yüzden yalnız `Domain` ve `Infrastructure` katmanlarına bakıyor;
+    /// `Application` ve `Contracts`'taki geçişi ihlal saymak, AC-24'ü yasaklamak olurdu.</para>
+    /// </summary>
+    [Fact(DisplayName = "0012a/AC-13: `alt` metni `Media`'da saklanır; `VehicleCatalog` metnin kopyasını tutmaz")]
+    public void Tutmaz_VehicleCatalog_AltMetninKopyasini()
+    {
+        string[] saklamaKatmanlari =
+        [
+            .. ModuleSourceFiles("VehicleCatalog").Where(file =>
+            {
+                string relative = SolutionLayout.Relative(file);
+
+                return relative.Contains("/VehicleCatalog/Domain/", StringComparison.Ordinal)
+                    || relative.Contains("/VehicleCatalog/Infrastructure/", StringComparison.Ordinal);
+            })
+        ];
+
+        Assert.NotEmpty(saklamaKatmanlari);
+
+        List<string> violations = [];
+
+        foreach (string file in saklamaKatmanlari)
+        {
+            violations.AddRange(CodeLines(file, AltTextStorage()));
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            "`alt` metni `Media`'nın verisidir; `VehicleCatalog` kopyasını tutmaz "
+            + $"(C5, D3, Yasak Listesi 1 ve 10):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+
+        // Tarama anlamsız olmasın: metin GERÇEKTEN geçiyor, yalnız saklanmıyor.
+        string sorgu = File.ReadAllText(Path.Combine(
+            SolutionLayout.SourceRoot,
+            "Modules/VehicleCatalog/VehicleCatalog/Application/Vehicles/VehicleMediaQueries.cs"));
+
+        Assert.Contains("AltText", sorgu, StringComparison.Ordinal);
+    }
+
     private static IEnumerable<string> ModuleSourceFiles(string module) =>
         SolutionLayout.SourceFiles().Where(file => SolutionLayout.ModuleNameOf(file) == module);
 
@@ -180,4 +230,7 @@ public sealed partial class AracMedyaSiniriTests
 
     [GeneratedRegex(@"using\s+CarGallery\.Modules\.Media\b")]
     private static partial Regex MediaUsing();
+
+    [GeneratedRegex(@"\bAltText\b|""alt_text""")]
+    private static partial Regex AltTextStorage();
 }

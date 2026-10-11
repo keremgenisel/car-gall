@@ -65,7 +65,10 @@ public sealed class AltMetniKaliciligiTests(MedyaOrtami ortam)
     ///
     /// <para>Yeni iddia `0012a`/AC-13'ün yarısı: `alt` metninin yazma ucu <b>`Media`
     /// modülünde</b>. Diğer yarısı — `VehicleCatalog`'un metnin kopyasını tutmaması —
-    /// `Architecture.Tests/MedyaSinirTests` içinde, çünkü o bir sınır sorusu.</para>
+    /// `Architecture.Tests/AracMedyaSiniriTests.Tutmaz_VehicleCatalog_AltMetninKopyasini`
+    /// içinde, çünkü o bir sınır sorusu. <b>Bu satır bir kez YANLIŞTI:</b> atıf
+    /// `MedyaSinirTests`'i gösteriyordu ve orada öyle bir test yoktu — yazılı bir atıf,
+    /// testin var olduğunu garanti etmiyor. Ölçüldü ve test yazıldı.</para>
     /// </summary>
     [Fact(DisplayName = "0012a/AC-13: `alt` metni `Media`'da saklanır; `VehicleCatalog` metnin kopyasını tutmaz")]
     public void Acilir_AltMetniYazmaUcu_MediaModulunde()
