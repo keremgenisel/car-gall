@@ -122,7 +122,7 @@ function medyaYaniti(arac: string, ogeler: readonly object[]) {
   }
 }
 
-test('0012a/AC-1, AC-26: yükleme kontrolü ve boş durum', async ({ page }) => {
+test('0012a/AC-1, 0012a/AC-26: yükleme kontrolü ve boş durum', async ({ page }) => {
   const sase = benzersizSase('K12AC1')
 
   await yoneticiOlarakGirAsync(page)
@@ -144,7 +144,7 @@ test('0012a/AC-1, AC-26: yükleme kontrolü ve boş durum', async ({ page }) => 
   await kanit(page, bos, '0012a-ac26.png')
 })
 
-test('0012a/AC-4, AC-5: kapak sıranın ilk elemanı ve sırayla taşınır', async ({ page }) => {
+test('0012a/AC-4, 0012a/AC-5: kapak sıranın ilk elemanı ve sırayla taşınır', async ({ page }) => {
   const sase = benzersizSase('K12AC4')
 
   await yoneticiOlarakGirAsync(page)
@@ -267,7 +267,7 @@ test('0012a/AC-28: `işleniyor` varlığın hâli; ekranın iskeletiyle karışm
   await kanit(page, page.getByTestId(/^vehicle-media-item-/).first(), '0012a-ac28.png')
 })
 
-test('0012a/AC-27, AC-29: okuma hatası tekrar dene sunar ve teknik detay sızdırmaz', async ({
+test('0012a/AC-27, 0012a/AC-29: okuma hatası tekrar dene sunar ve teknik detay sızdırmaz', async ({
   page,
 }) => {
   const sase = benzersizSase('K12A27')
@@ -307,7 +307,9 @@ test('0012a/AC-27, AC-29: okuma hatası tekrar dene sunar ve teknik detay sızd�
   await kanit(page, hata, '0012a-ac27.png')
 })
 
-test('0012a/AC-30, AC-31: Arapça personelde ekran RTL ve metinler Arapça', async ({ page }) => {
+test('0012a/AC-30, 0012a/AC-31: Arapça personelde ekran RTL ve metinler Arapça', async ({
+  page,
+}) => {
   const kimlik = benzersizKimlik('arapca-medya')
   const ilkParola = 'ilk-parola-1234'
   const yeniParola = 'arapca-parola-12'

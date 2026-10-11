@@ -90,7 +90,7 @@ async function fotografYukleAsync(page: Page, ad: string) {
   await expect(page.getByTestId(/^vehicle-media-item-/)).toHaveCount(oncesi + 1)
 }
 
-test('0012a/AC-1, AC-2, AC-3, AC-4: fotoğraf yüklenir, araca bağlanır, sıralanır ve ilki kapaktır', async ({
+test('0012a/AC-1, 0012a/AC-2, 0012a/AC-3, 0012a/AC-4: fotoğraf yüklenir, araca bağlanır, sıralanır ve ilki kapaktır', async ({
   page,
 }) => {
   const sase = benzersizSase('E2EMED')
@@ -134,7 +134,7 @@ test('0012a/AC-1, AC-2, AC-3, AC-4: fotoğraf yüklenir, araca bağlanır, sıra
   await expect(page.getByTestId(/^vehicle-media-item-/).nth(0)).toContainText('Kapak')
 })
 
-test('0012a/AC-6, AC-11: fotoğraf araçtan çıkarılır ve `alt` metni üç dilde yazılır', async ({
+test('0012a/AC-6, 0012a/AC-11: fotoğraf araçtan çıkarılır ve `alt` metni üç dilde yazılır', async ({
   page,
 }) => {
   const sase = benzersizSase('E2EALT')
