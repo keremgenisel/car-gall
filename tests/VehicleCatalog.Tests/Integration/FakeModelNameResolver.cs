@@ -7,7 +7,7 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Integration;
 /// Model adı VehicleReference'a aittir; bu testlerde o sınırın ötesi sahtelenir.
 /// Gerçek adaptör adım 9'da, VehicleReference.Contracts üzerinden gelir.
 /// </summary>
-internal sealed class FakeModelNameResolver : IVehicleModelNameResolver
+internal sealed class FakeModelNameResolver(string kanonikAd = "Toyota Corolla") : IVehicleModelNameResolver
 {
     private readonly Dictionary<Guid, Dictionary<string, string>> namesByModel = [];
 
@@ -46,6 +46,8 @@ internal sealed class FakeModelNameResolver : IVehicleModelNameResolver
         IReadOnlyCollection<Guid> vehicleModelIds,
         CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<Guid, string>>(
-            vehicleModelIds.ToDictionary(id => id, _ => "Toyota Corolla"));
+            kanonikAd.Length == 0
+                ? new Dictionary<Guid, string>()
+                : vehicleModelIds.ToDictionary(id => id, _ => kanonikAd));
 
 }

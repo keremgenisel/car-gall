@@ -94,9 +94,18 @@ internal sealed class BranchDeactivatedHandler(
                 continue;
             }
 
-            // `Satıldı` ve `Arşiv` dışarıda; `Unpublish` zaten onları reddediyor ve
-            // sonucu bilerek yok sayılıyor — burada "yayında değilse dokunma" demek
-            // isteniyor, bir hata bildirilmek değil.
+            // `Satıldı` ve `Arşiv` kayıtlara HİÇ dokunulmuyor — bayrak dâhil. İlk
+            // yazımımda yalnız `Unpublish`'i atlıyordum ve bayrağı yine de yazıyordum;
+            // test yakaladı (AC-28). Satılmış bir aracı "lokasyon bekliyor" yapmak,
+            // kapanan şubenin satış geçmişini bozardı.
+            if (listing.Status is ListingStatus.Sold or ListingStatus.Archived)
+            {
+                continue;
+            }
+
+            // `Taslak` ilan da bayraklanıyor: aksi hâlde kapanmış bir şubedeki taslak
+            // doğrudan yayına alınabilir ve araç ÖLÜ bir şubeyle vitrine çıkardı — A8'in
+            // bütün gerekçesi buydu. `Unpublish` yalnız yayındakilerden geçiyor.
             if (listing.Status is ListingStatus.Published or ListingStatus.Reserved)
             {
                 listing.Unpublish();
