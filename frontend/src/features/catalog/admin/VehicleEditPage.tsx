@@ -18,6 +18,7 @@ import type {
 import { SUPPORTED_LOCALES } from '../../../shared/lib/locale'
 import { adminPath, vehicleMediaPath } from '../../../shared/lib/route'
 import { Button, Card, ErrorState, Field, Skeleton } from '../../../shared/ui'
+import { ListingActionBar } from './ListingActionBar'
 import { OptionalFieldInput } from './OptionalFieldInput'
 import { VehicleSelect } from './VehicleSelect'
 import {
@@ -250,6 +251,18 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
           </div>
         </div>
       ) : null}
+
+      {/*
+        0012b — yayın durumu eylemleri. Formun ÜSTÜNDE ve ayrı bir bölüm: durum geçişi
+        bir kaydetme değil, kendi başına bir karardır ve formun "değişiklikleri kaydet"
+        düğmesiyle karışmamalı.
+      */}
+      <ListingActionBar
+        vehicleId={vehicleId}
+        listingStatus={sources.detail.listingStatus}
+        awaitingBranchAssignment={sources.detail.awaitingBranchAssignment}
+        onApplied={() => setSourceToken((token) => token + 1)}
+      />
 
       <Card as="div" testId="vehicle-edit-form">
         <form

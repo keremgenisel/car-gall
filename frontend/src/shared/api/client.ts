@@ -20,12 +20,25 @@ export class ApiError extends Error {
    * (docs/frontend.md § 4): ErrorState zaten durum kodu alan bir prop taşımıyor.
    */
   readonly status: number | null
+  /**
+   * 0012b **D2** · **D24** — sunucunun gönderdiği DİĞER yapısal parametreler, ham hâliyle.
+   *
+   * <p>`field` tek bir alanı işaret ediyordu ve yetmedi: yayın reddi **koşul başına bir
+   * kod** taşıyor (`reasons`) ve zorunlu alan reddi **alan anahtarlarının listesini**
+   * (`fields`). İkisi de virgüllü dize — `BuildingBlocks`'un `Error` tipi yapısal bir dizi
+   * taşımıyor ve onu zenginleştirmek Yasak Listesi 11'e girerdi.</p>
+   *
+   * <p>İçeriği ASLA doğrudan basılmaz: her değer uçta kendi çeviri anahtarına çevrilir
+   * (Yasak Listesi 23, `docs/frontend.md` § 3.1).</p>
+   */
+  readonly parameters: Readonly<Record<string, string>>
 
   constructor(
     errorCode: string,
     traceId: string | null,
     status: number | null = null,
     field: string | null = null,
+    parameters: Readonly<Record<string, string>> = {},
   ) {
     // Mesaj yalnız geliştirici içindir; ziyaretçiye ASLA gösterilmez (docs/frontend.md § 4).
     super(errorCode)
@@ -34,6 +47,7 @@ export class ApiError extends Error {
     this.traceId = traceId
     this.status = status
     this.field = field
+    this.parameters = parameters
   }
 }
 
@@ -115,16 +129,38 @@ export async function getJson<TResponse>(
 
 async function toApiError(response: Response): Promise<ApiError> {
   try {
-    const problem = (await response.json()) as {
+    const problem = (await response.json()) as Record<string, unknown> & {
       errorCode?: string
       traceId?: string
       field?: string
     }
+
+    // RFC 7807'nin kendi alanları ayıklanıyor; kalanı sunucunun yapısal parametreleridir.
+    // Ayıklama olmadan `status` ve `type` de "parametre" sayılır ve ekrana teknik detay
+    // sızdırma riski doğar.
+    const bilinen = new Set([
+      'type',
+      'title',
+      'detail',
+      'instance',
+      'status',
+      'errorCode',
+      'traceId',
+    ])
+    const parameters: Record<string, string> = {}
+
+    for (const [key, value] of Object.entries(problem)) {
+      if (!bilinen.has(key) && typeof value === 'string') {
+        parameters[key] = value
+      }
+    }
+
     return new ApiError(
       problem.errorCode ?? DEFAULT_ERROR_CODE,
       problem.traceId ?? null,
       response.status,
       problem.field ?? null,
+      parameters,
     )
   } catch {
     // Gövde okunamadıysa da kullanıcıya teknik detay sızmaz; genel kodla devam edilir.

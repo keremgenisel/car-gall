@@ -10,6 +10,7 @@ import type {
   VehicleAdminField,
   VehicleAdminListItem,
   VehicleAdminSummary,
+  ListingAction,
   VehicleMedia,
   VehicleSort,
 } from './types'
@@ -35,9 +36,15 @@ export function fetchVehicles(
   page: number,
   sort: VehicleSort,
   signal?: AbortSignal,
+  /**
+   * 0012b **D19** — arşiv AÇIK bir filtreyle görünür. Varsayılan `false`: arşiv bu
+   * projenin "silme"sidir ve varsayılan listede kalırsa liste sonsuz büyür, eylem de
+   * hiçbir şey yapmamış görünür.
+   */
+  includeArchived = false,
 ): Promise<PagedResult<VehicleAdminListItem>> {
   return getJson<PagedResult<VehicleAdminListItem>>(
-    `${ADMIN_VEHICLES}?locale=${locale}&page=${page}&sort=${sort}`,
+    `${ADMIN_VEHICLES}?locale=${locale}&page=${page}&sort=${sort}&archived=${includeArchived}`,
     locale,
     signal,
   )
@@ -60,6 +67,27 @@ export function fetchVehicle(
     `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}`,
     locale,
     signal,
+  )
+}
+
+/**
+ * 0012b **D28** — bir ilanın durum geçişi. Yanıt `204`: gövde yok ve istemci onu JSON diye
+ * okumaya çalışmaz (`sendJson`'ın gövdesizlik kontrolü `0012a`'nın dış bulgusuyla geldi).
+ *
+ * <p>Reddin HTTP karşılığı SABİT (**D26**): `422` koşullar eksik, `409` ilan o durumda
+ * değil, `404` araç yok. Panelin tepkisi üçünde de farklı ve `ApiError.status` onu
+ * taşıyor.</p>
+ */
+export async function applyListingAction(
+  vehicleId: string,
+  action: ListingAction,
+  locale: AppLocale,
+): Promise<void> {
+  await sendJson<null>(
+    'POST',
+    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}/${action}`,
+    undefined,
+    locale,
   )
 }
 

@@ -73,7 +73,13 @@ public sealed record VehicleAdminDetailDto(
     IReadOnlyDictionary<string, string> ListingTitle,
     IReadOnlyDictionary<string, string> ListingDescription,
     IReadOnlyList<VehicleAdminOptionalValueDto> OptionalValues,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    /// <summary>
+    /// `0012b` **R13** · **D15** — araç lokasyon ataması bekliyor. Düzenleme ekranı bunu
+    /// **düğmeye basılmadan** söylüyor: sunucu da reddediyor, ama personeli boşuna
+    /// denemekten kurtarmak eylem yüzeyinin işi.
+    /// </summary>
+    bool AwaitingBranchAssignment = false);
 
 /// <summary>
 /// Opsiyonel alanın değeri, TİPİYLE birlikte. Biçimlendirme UÇTA yapılır

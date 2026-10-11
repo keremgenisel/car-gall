@@ -142,7 +142,8 @@ internal sealed class VehicleAdminQueries(
                     .OrderBy(value => value.FieldKey, StringComparer.Ordinal)
                     .Select(value => OptionalValue(value))
             ],
-            vehicle.UpdatedAt);
+            vehicle.UpdatedAt,
+            vehicle.AwaitingBranchAssignment);
     }
 
     public async Task<IReadOnlyList<VehicleAdminFieldDto>> GetFormFieldsAsync(CancellationToken cancellationToken)

@@ -52,6 +52,7 @@ const KAYIT: VehicleAdminDetail = {
     { fieldKey: 'damage_record_amount', kind: 'Amount', value: '9900.00', values: null },
   ],
   updatedAt: '2026-10-10T12:30:00Z',
+  awaitingBranchAssignment: false,
 }
 
 const TRAMER: VehicleAdminField = {
