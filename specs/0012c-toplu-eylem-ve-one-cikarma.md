@@ -434,7 +434,8 @@ doğrular, spec'e kopyalanmış bir sabiti değil.
 - [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
       *Üç satır: okuma bütçesi (**D46**), öne çıkarma (**D16**/**D48**) ve modülün kendi
       DI kaydı (**D55**).*
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *`CI` ve `Performans`
+      iş akışlarının ikisi de **ilk koşuda** başarılı (`23af1e7`).*
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
