@@ -102,6 +102,14 @@ export function VehicleListPage() {
   const seciliKimlikler: ReadonlySet<string> =
     selected.key === evrenKey ? selected.ids : new Set<string>()
 
+  /**
+   * SON başarıyla yüklenen sayfa. Tazeleme sırasında `state` yükleniyor hâline dönüyor;
+   * kısmi başarı listesi araç ADLARINI o anda da gösterebilmeli — kimlik personele bir
+   * şey söylemez.
+   */
+  const sonYuklenen: readonly VehicleAdminListItem[] =
+    result?.value.kind === 'ready' ? result.value.page.items : []
+
   const gorunenler: readonly string[] =
     state.kind === 'ready' ? state.page.items.map((item) => item.vehicleId) : []
 
@@ -244,6 +252,25 @@ export function VehicleListPage() {
         />
       ) : null}
 
+      {/*
+        Toplu eylem çubuğu tablonun ÜSTÜNDE ve "hazır" dalının DIŞINDA.
+
+        Dışında olması bir kusurun bedeli: içindeyken her tazeleme onu UNMOUNT ediyordu ve
+        eylemin sonucu — başarı bildirimi ya da kısmi başarı listesi — ekrandan siliniyordu.
+        Eylem listeyi tazeliyor, yani kutu tam olarak gösterilmesi gereken anda kayboluyordu.
+        `0012b`'de aynı sınıftan bir kusur düzenleme ekranında yakalanmıştı ve e2e yakaladı.
+      */}
+      {sonYuklenen.length > 0 ? (
+        <BulkActionBar
+          selection={secim}
+          labelOf={(vehicleId) => AracAdi(sonYuklenen, vehicleId, locale, t)}
+          onApplied={() => {
+            yazSecim(new Set())
+            setReloadToken((token) => token + 1)
+          }}
+        />
+      ) : null}
+
       {state.kind === 'ready' && state.page.items.length > 0 ? (
         <>
           {/*
@@ -252,20 +279,6 @@ export function VehicleListPage() {
             hücreleri yakalıyordu. Taşma tablonun KENDİ kapsayıcısında kalıyor; sayfanın
             yatay kaydırması yok (docs/frontend.md § 7).
           */}
-          {/*
-            Toplu eylem çubuğu tablonun ÜSTÜNDE: seçim yapılan yerle eylemin uygulandığı
-            yer arasında sayfa kaydırmak gerekmesin. Öne çıkarma da burada yaşıyor
-            (**D51**) — düzenleme ekranının eylem çubuğunda yok.
-          */}
-          <BulkActionBar
-            selection={secim}
-            labelOf={(vehicleId) => AracAdi(state.page.items, vehicleId, locale, t)}
-            onApplied={() => {
-              yazSecim(new Set())
-              setReloadToken((token) => token + 1)
-            }}
-          />
-
           <div className="admin-table__scroll">
             <table className="admin-table" data-testid="vehicle-table">
               <thead>

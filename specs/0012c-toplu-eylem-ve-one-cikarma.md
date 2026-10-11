@@ -413,44 +413,64 @@ doğrular, spec'e kopyalanmış bir sabiti değil.
       *2026-10-11, `e67a61d` (#60) ve kapanışı `2255370` (#61); kart `specs/done/` altında,
       58 kriter, 29 DoD kutusu. Ölçüldü: altı eylem ucu
       `VehicleAdminEndpoints.cs:69`'da, duyurular `VehicleCatalogUnitOfWork`'te.*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012c-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+      *Kırk iki kriterin kırk ikisi; tablo PR'da.*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012c-ac<n>.png`),
       **kısmi başarı** ve hata durumları dâhil, RTL için Arapça görüntü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil; durum geçişi mantığı agregatta kaldı.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca `vehicle_catalog` şemasına dokunuyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+      *Beş görüntü, **hiçbiri stub değil**. Sınır kriterlerinin (AC-5, AC-6, AC-7) görsel
+      kanıtı YOK ve gerekçesi **D52**: istemci `pageSize` göndermiyor, sınır panelden
+      tetiklenemiyor.*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). *1097 test.*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil; durum geçişi mantığı agregatta kaldı. *50 test;
+      `TopluEylemSiniriTests` toplu komutun agregat metodu çağırmadığını ve toplu SQL ile
+      yazmadığını denetliyor.*
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca `vehicle_catalog` şemasına dokunuyor.
+      *Migration **YOK**: öne çıkarma mevcut `showcase_sort_weight` kolonunu iki değerli
+      kullanıyor (**D16**) ve yeni kolon açmıyor.*
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+      *23 anahtar × 3 katalog; 386 anahtar eşit.*
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+      *«Öne Çıkarma» — sözlükte hiçbir dokümanda geçmiyordu, ölçüldü.*
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+      *Üç satır: okuma bütçesi (**D46**), öne çıkarma (**D16**/**D48**) ve modülün kendi
+      DI kaydı (**D55**).*
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+      *Karşılanmayan kriter yok.*
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
-- [ ] Kısmi başarının **dördüncü ekran durumu** olarak basıldığı görsel kanıtla gösterildi.
-- [ ] Öne çıkarmanın duyuru **üretmediği** testle gösterildi (`0012b` **D16**).
-- [ ] Seçim sınırının **dâhil** olduğu, **kırpılmadığı** ve tekilleştirmenin sınırdan
+- [x] Kısmi başarının **dördüncü ekran durumu** olarak basıldığı görsel kanıtla gösterildi.
+      *`0012c-ac38.png` — gerçekten reddedilen bir satırla.*
+- [x] Öne çıkarmanın duyuru **üretmediği** testle gösterildi (`0012b` **D16**).
+      *`OneCikarmaKomutuTests` outbox TABLOSUNU sayıyor: iki eylem, sıfır satır.*
+- [x] Seçim sınırının **dâhil** olduğu, **kırpılmadığı** ve tekilleştirmenin sınırdan
       **önce** geldiği testle gösterildi (`0012b` **D29**) — kriter **API düzeyinde** ve
-      görsel kanıtı yok; gerekçesi **D52**.
-- [ ] Başarısız satırın tekil uçla **aynı gerekçeyi** (kod + yapısal parametreler) taşıdığı
+      görsel kanıtı yok; gerekçesi **D52**. *`TopluSecimTests` + `TopluEylemZinciriTests`;
+      uç testi sınırı yapılandırmadan okuyor ve üretim varsayılanını DEĞİŞTİREREK ölçüyor.*
+- [x] Başarısız satırın tekil uçla **aynı gerekçeyi** (kod + yapısal parametreler) taşıdığı
       testle gösterildi; toplu yayın reddinde `reasons` parametresi satırda duruyor (**D45**).
-- [ ] İstek başına bir kez okunan dört okumanın gerçekten **bir kez** okunduğu ve medya
+      *`TopluEylemTests.Tasir_AyniGerekceyi_TekilUcla` + `bulkActionState.test.ts`.*
+- [x] İstek başına bir kez okunan dört okumanın gerçekten **bir kez** okunduğu ve medya
       hazırlığının **kayıt başına, kilidin altında** kaldığı testle gösterildi (**D46**).
-- [ ] Bir satırın eşzamanlılık kaybının diğer satırları **düşürmediği** ve satırların
+      *Sayan sahtelerle: dört araç tek şube → bir okuma; üç yayın → üç hazırlık okuması.*
+- [x] Bir satırın eşzamanlılık kaybının diğer satırları **düşürmediği** ve satırların
       gönderildiği **sırada** işlendiği testle gösterildi (**D47**).
-- [ ] Öne çıkarmanın **idempotent** olduğu (zaten o hâlde olan kayıt **başarılı**) ve
+      *Ortadaki ilanın satırı başka bir bağlantıda `FOR UPDATE` ile tutuluyor; o satır
+      `concurrency.lost` alıyor, komşuları uygulanıyor.*
+- [x] Öne çıkarmanın **idempotent** olduğu (zaten o hâlde olan kayıt **başarılı**) ve
       arşivlenmiş ilanın `listing.cannot_feature.archived` ile **`409`** aldığı testle
-      gösterildi (**D48**, **D49**).
-- [ ] Öne çıkarma durumunun panel listesinde **göründüğü** görsel kanıtla gösterildi; eylem
+      gösterildi (**D48**, **D49**). *İki yön de idempotent; `409` uç testinde.*
+- [x] Öne çıkarma durumunun panel listesinde **göründüğü** görsel kanıtla gösterildi; eylem
       **yalnız liste ekranında** (**D50**, **D51**). `0010b`'nin sözleşmesine eklenen alan
-      PR'da **adıyla** yazıldı.
-- [ ] Seçimin **sayfaya ait** olduğu ve sayfa değişince temizlendiği testle gösterildi
-      (**D43**).
-- [ ] `VehicleCatalog`'un `InvariantGuardOptions`'ı **kendi** kaydettiği testle gösterildi;
+      PR'da **adıyla** yazıldı. *`VehicleAdminListItemDto.IsFeatured`; `0012c-ac32.png`.*
+- [x] Seçimin **sayfaya ait** olduğu ve sayfa değişince temizlendiği testle gösterildi
+      (**D43**). *Sayfa VE arşiv filtresi için ayrı iki test.*
+- [x] `VehicleCatalog`'un `InvariantGuardOptions`'ı **kendi** kaydettiği testle gösterildi;
       `0012b`'nin kartındaki `Kaçan hata` hücresi **1**'e çekildi ve düzeltme PR'da adıyla
-      yazıldı (**D55**, **C9**).
+      yazıldı (**D55**, **C9**). *`ModulKaydiTests` kayıt defterini okuyor; sonda yapıldı.*
 
 ---
 

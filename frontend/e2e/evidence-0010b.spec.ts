@@ -53,8 +53,11 @@ test('0010b/AC-24: liste yedi sütunuyla', async ({ page }) => {
   await expect(page.getByTestId('vehicle-table')).toBeVisible()
   await expect(page.getByTestId('vehicle-summary')).toBeVisible()
 
+  // `exact` ZORUNLU oldu: `0012c` listeye bir seçim sütunu ekledi ve onun başlığı
+  // "Sayfadaki araçların hepsini seç". Gevşek eşleşme "Araç" için iki başlık buluyor ve
+  // locator katı kipte patlıyor. Kriterin iddiası değişmedi — altı başlık hâlâ yerinde.
   for (const baslik of ['Araç', 'Fiyat', 'Kilometre', 'Durum', 'Tamlık', 'Son güncelleme']) {
-    await expect(page.getByRole('columnheader', { name: baslik })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: baslik, exact: true })).toBeVisible()
   }
 
   await kanitSayfa(page, '0010b-ac24.png')
