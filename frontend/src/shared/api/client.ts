@@ -170,6 +170,82 @@ export async function sendJson<TResponse>(
     throw await toApiError(response)
   }
 
-  // 204 gövdesizdir; her yazma ucu bir gövde döndürmez.
-  return response.status === 204 ? null : ((await response.json()) as TResponse)
+  return jsonGovdesiVar(response) ? ((await response.json()) as TResponse) : null
+}
+
+/**
+ * Yanıtta ayrıştırılacak bir JSON gövdesi var mı?
+ *
+ * <b>Bu fonksiyon bir kusurun bedeliydi.</b> Önceki hâl yalnız `204`'ü gövdesiz
+ * sayıyordu; tekrar deneme ucu ise `202 Accepted` + **boş gövde** dönüyor
+ * (`MediaAdminEndpoints.RetryAsync` — "iş kabul edildi, bitmedi"). `response.json()`
+ * boş gövdede `SyntaxError: Unexpected end of JSON input` atıyor, çağıran onu
+ * `api.unavailable`'a çeviriyor ve **başarılı** bir tekrar deneme personele genel hata
+ * olarak görünüyordu — sunucu işi kabul etmiş olmasına rağmen.
+ *
+ * Kontrol durum koduna değil, yanıtın KENDİSİNE bakıyor: bir sonraki gövdesiz `2xx`
+ * aynı duvara çarpmasın. `Content-Length: 0` ya da JSON olmayan/eksik `Content-Type`
+ * gövdesizlik demektir.
+ */
+function jsonGovdesiVar(response: Response): boolean {
+  // `205 Reset Content` da tanım gereği gövdesizdir; `204` ile aynı aileden.
+  if (response.status === 204 || response.status === 205) {
+    return false
+  }
+
+  if (response.headers.get('Content-Length') === '0') {
+    return false
+  }
+
+  const tip = response.headers.get('Content-Type')
+
+  return tip !== null && tip.includes('json')
+}
+
+/**
+ * 0012a **D9** — tek dosya yüklemesi. `multipart/form-data`; gövde `FormData` olduğu için
+ * `Content-Type` AÇIKÇA yazılmaz — tarayıcı `boundary` ile birlikte kendisi üretir ve elle
+ * yazılan bir `Content-Type` o sınır çizgisini kaybettirir, sunucu da gövdeyi
+ * ayrıştıramaz.
+ *
+ * `Idempotency-Key` TAŞIMAZ ve bu bilinçli: aynı dosyayı iki kez yüklemek iki ayrı medya
+ * varlığı demektir ve ikisi de geçerlidir — personel aynı fotoğrafı bilerek iki kez
+ * ekleyebilir. İdempotentlik, kaydın TEKİL olması gereken yerde gerekir (0005'in talep
+ * ucu); burada kayıt tekil değil.
+ */
+export async function sendFile<TResponse>(
+  path: string,
+  file: File,
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<TResponse> {
+  const body = new FormData()
+  body.append('file', file)
+
+  let response: Response
+
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      signal,
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        'Accept-Language': locale,
+      },
+      body,
+    })
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === 'AbortError') {
+      throw cause
+    }
+
+    throw new ApiError(DEFAULT_ERROR_CODE, null)
+  }
+
+  if (!response.ok) {
+    throw await toApiError(response)
+  }
+
+  return (await response.json()) as TResponse
 }

@@ -54,23 +54,37 @@ public sealed class AltMetniKaliciligiTests(MedyaOrtami ortam)
     }
 
     /// <summary>
-    /// D5 — `0011` `alt` metni için HTTP yazma ucu açmıyor; giriş `0012` ile gelecek.
-    /// Kritere değil KARARA bağlı bir test: yarın biri sessizce bir uç açarsa, kararın
-    /// değiştiği burada görünür.
+    /// <b>Bu test bir kararın tersine çevrildiği yer.</b>
+    ///
+    /// <para>Önceki hâli `0011`/D5'in kararını koruyordu: *"`0011` `alt` metni için HTTP
+    /// yazma ucu açmıyor; giriş `0012` ile gelecek"* — ve `MapPut`/`MapPatch`/`alt-text`
+    /// dizelerinin uç dosyalarında **bulunmadığını** iddia ediyordu. `0012a`/D3 o girişi
+    /// açtı ve test, tam tasarlandığı gibi, kırmızı verdi: *"yarın biri sessizce bir uç
+    /// açarsa, kararın değiştiği burada görünür."* Açan sessizce değil, adıyla yazılı bir
+    /// kararla geldi (`0012a` D3), bu yüzden iddia **tersine çevrildi** — silinmedi.</para>
+    ///
+    /// <para>Yeni iddia `0012a`/AC-13'ün yarısı: `alt` metninin yazma ucu <b>`Media`
+    /// modülünde</b>. Diğer yarısı — `VehicleCatalog`'un metnin kopyasını tutmaması —
+    /// `Architecture.Tests/AracMedyaSiniriTests.Tutmaz_VehicleCatalog_AltMetninKopyasini`
+    /// içinde, çünkü o bir sınır sorusu. <b>Bu satır bir kez YANLIŞTI:</b> atıf
+    /// `MedyaSinirTests`'i gösteriyordu ve orada öyle bir test yoktu — yazılı bir atıf,
+    /// testin var olduğunu garanti etmiyor. Ölçüldü ve test yazıldı.</para>
     /// </summary>
-    [Fact]
-    public void Acilmaz_AltMetniIcin_YazmaUcu()
+    [Fact(DisplayName = "0012a/AC-13: `alt` metni `Media`'da saklanır; `VehicleCatalog` metnin kopyasını tutmaz")]
+    public void Acilir_AltMetniYazmaUcu_MediaModulunde()
     {
-        string[] uclar = [.. System.IO.Directory
-            .EnumerateFiles(KaynakKoku("src/Modules/Media/Media/Endpoints"), "*.cs")
-            .Select(System.IO.File.ReadAllText)];
+        string uclar = string.Join(
+            '\n',
+            System.IO.Directory
+                .EnumerateFiles(KaynakKoku("src/Modules/Media/Media/Endpoints"), "*.cs")
+                .Select(System.IO.File.ReadAllText));
 
-        foreach (string govde in uclar)
-        {
-            Assert.DoesNotContain("alt-text", govde, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("MapPut", govde, StringComparison.Ordinal);
-            Assert.DoesNotContain("MapPatch", govde, StringComparison.Ordinal);
-        }
+        Assert.Contains("alt-text", uclar, StringComparison.Ordinal);
+        Assert.Contains("MapPut", uclar, StringComparison.Ordinal);
+
+        // Ve uç GERÇEKTEN komutu çağırıyor: yolun var olması, yazmanın olduğunu
+        // kanıtlamaz.
+        Assert.Contains("SetAltTextCommand", uclar, StringComparison.Ordinal);
     }
 
     [Fact(DisplayName = "0011/AC-39: `alt` metni boş olan bir varlık yine hazır olabilir")]

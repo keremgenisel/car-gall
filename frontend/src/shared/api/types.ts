@@ -274,3 +274,46 @@ export interface BranchSummary {
   readonly name: string
   readonly status: string
 }
+
+/**
+ * 0012a — bir medya varlığının işleme durumu. `docs/domain.md` **M1**'in dört hâli; KOD
+ * olarak geliyor ve ekran onu çeviri kataloğundan çeviriyor (Yasak Listesi 22–23).
+ */
+export type MediaProcessingStatus = 'uploaded' | 'processing' | 'ready' | 'failed'
+
+/** Yüklemenin yanıtı (AC-1): kimlik ve işleme durumu. */
+export interface MediaAssetUploaded {
+  readonly id: string
+  readonly status: MediaProcessingStatus
+}
+
+/** Türevin boyutu ve erişim yolu. `docs/frontend.md` § 7 açık `width`/`height` istiyor. */
+export interface VehicleMediaDerivative {
+  readonly variant: string
+  readonly width: number
+  readonly height: number
+  readonly url: string
+}
+
+/**
+ * Aracın sıralı listesindeki bir fotoğraf, `Media`'nın hâliyle birlikte. Sıra listenin
+ * İNDEKSİNDE taşınıyor; ayrı bir "sıra" alanı aynı olguyu iki yerde tutardı.
+ */
+export interface VehicleMediaItem {
+  readonly mediaAssetId: string
+  readonly status: MediaProcessingStatus
+  /** Yalnız `failed` durumda dolu; kapalı bir kümeden bir kod (`0011`/AC-33). */
+  readonly failureReason: string | null
+  readonly altText: Readonly<Record<string, string>>
+  readonly derivatives: readonly VehicleMediaDerivative[]
+}
+
+/**
+ * Aracın medya yüzeyi. `coverMediaAssetId` **türetilmiş**: sıralı listenin ilk elemanı
+ * (**D2**); liste boşsa `null`.
+ */
+export interface VehicleMedia {
+  readonly vehicleId: string
+  readonly coverMediaAssetId: string | null
+  readonly items: readonly VehicleMediaItem[]
+}

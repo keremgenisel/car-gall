@@ -58,6 +58,8 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           label: 'Tramer tutarı',
           current: 'Beyaz',
           locale: 'Türkçe',
+          // 0012a — medya kartı fotoğrafın sırasını söylüyor (AC-4: "ilk eleman kapaktır").
+          position: 1,
         })
         expect(value).not.toBe(key)
         expect(value.trim()).not.toBe('')

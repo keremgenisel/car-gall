@@ -29,6 +29,12 @@ internal static class MediaAdminEndpoints
     /// </summary>
     internal sealed record UploadMediaAssetResponse(Guid Id, string Status);
 
+    /// <summary>
+    /// `alt` metni gövdesi: locale → metin. Eksik locale boş sayılır (D16); gövdenin
+    /// kendisi eksikse de boş harita olarak okunur — "hepsini sil" geçerli bir istek.
+    /// </summary>
+    internal sealed record SetAltTextBody(IReadOnlyDictionary<string, string>? AltText);
+
     internal static void MapMediaAdminEndpoints(this IEndpointRouteBuilder builder)
     {
         RouteGroupBuilder assets = builder
@@ -47,11 +53,19 @@ internal static class MediaAdminEndpoints
             .Produces<MediaAssetDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
-        // AC-14 — tekrar denemenin AÇIK komutu. Fiil rotada, çünkü bu gerçek bir durum
-        // geçişi (`docs/conventions.md` § 2'nin saydığı istisna).
+        // `0012a` AC-11…15 — `alt` metninin yazma ucu. Fiil rotada değil, HTTP
+        // metodunda; `PUT` çünkü gövde kaynağın o alanını BÜTÜNÜYLE yerine koyuyor.
+        assets.MapPut("/{id:guid}/alt-text", SetAltTextAsync)
+            .WithName("SetMediaAssetAltText")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status422UnprocessableEntity);
+
+        // `0011` AC-14 — tekrar denemenin AÇIK komutu. Fiil rotada, çünkü bu gerçek bir
+        // durum geçişi (`docs/conventions.md` § 2'nin saydığı istisna).
         //
-        // **Ekran `0012`'nin işi** (X8): bu spec komutu ve ucunu sunar. Uç olmadan komutu
-        // modül dışından hiçbir şey tetikleyemez ve AC-14 kâğıt üstünde kalırdı.
+        // Ekranı `0012a` bastı (`0011` X8); bu uç komutu dışarıya açan yerdir. Yanıt
+        // `202 Accepted` ve gövdesizdir: iş kabul edildi, bitmedi.
         assets.MapPost("/{id:guid}/retry", RetryAsync)
             .WithName("RetryMediaAsset")
             .Produces(StatusCodes.Status202Accepted)
@@ -141,8 +155,36 @@ internal static class MediaAdminEndpoints
     }
 
     /// <summary>
-    /// AC-14 — `başarısız` bir varlığı tekrar kuyruğa alır ve **aynı kimliği korur**.
-    /// <c>202</c>: iş kabul edildi, bitmedi — işleme turu onu bir sonraki tikte alacak.
+    /// `0012a` D3/D16 — `alt` metnini bütünüyle yerine koyar. Eksik locale <b>boş</b>
+    /// sayılır; bir dili boş bırakmak geçerli bir durumdur (R4).
+    ///
+    /// <para>Uç <c>Media</c> modülünde çünkü metin <c>MediaAsset</c>'in alanıdır
+    /// (Yasak Listesi 1). `0011` D16 alanı tutup ucu bilerek açmadı.</para>
+    /// </summary>
+    private static async Task<IResult> SetAltTextAsync(
+        Guid id,
+        SetAltTextBody body,
+        SetAltTextCommand command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        Result sonuc = await command.ExecuteAsync(
+            id, body.AltText ?? new Dictionary<string, string>(), cancellationToken);
+
+        return sonuc.IsFailure ? MediaProblems.From(sonuc.Error) : TypedResults.NoContent();
+    }
+
+    /// <summary>
+    /// `0011` AC-14 — `başarısız` bir varlığı tekrar kuyruğa alır ve <b>aynı kimliği
+    /// korur</b>. <c>202</c>: iş kabul edildi, bitmedi — işleme turu onu bir sonraki
+    /// tikte alacak.
+    ///
+    /// <para><b>Yanıt GÖVDESİZDİR</b> ve bu, istemcinin uyması gereken bir sözleşme:
+    /// `0012a`'nın dış gözden geçirmesi, yalnız <c>204</c>'ü gövdesiz sayan bir
+    /// istemcinin burada <c>SyntaxError</c> alıp <b>başarılı</b> bir tekrar denemeyi
+    /// genel hata olarak gösterdiğini ölçtü. Kapısı
+    /// <c>Host.Tests/AracMedyasiZinciriTests</c> ve <c>client.test.ts</c>.</para>
     /// </summary>
     private static async Task<IResult> RetryAsync(
         Guid id,

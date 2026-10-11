@@ -16,7 +16,7 @@ import type {
   VehicleAdminField,
 } from '../../../shared/api/types'
 import { SUPPORTED_LOCALES } from '../../../shared/lib/locale'
-import { adminPath } from '../../../shared/lib/route'
+import { adminPath, vehicleMediaPath } from '../../../shared/lib/route'
 import { Button, Card, ErrorState, Field, Skeleton } from '../../../shared/ui'
 import { OptionalFieldInput } from './OptionalFieldInput'
 import { VehicleSelect } from './VehicleSelect'
@@ -221,6 +221,14 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
     <div className="admin-page admin-page--narrow">
       <div className="admin-page__header">
         <h1 className="admin-page__title">{t('vehicle.edit.title')}</h1>
+        {/*
+          0012a D17 — medya yüzeyi AYRI bir ekran ve oraya giden tek yol bu bağlantı.
+          Sekme yapılmadı: iki kaydetme akışını birbirine bağlamak, hangi düğmenin neyi
+          kaydettiğini belirsizleştirirdi.
+        */}
+        <a className="ui-button ui-button--text" href={vehicleMediaPath(vehicleId)}>
+          {t('vehicle.media.open')}
+        </a>
         <a className="ui-button ui-button--text" href={adminPath('vehicles')}>
           {t('vehicle.form.saved.action')}
         </a>

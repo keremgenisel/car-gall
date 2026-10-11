@@ -47,6 +47,13 @@ internal sealed class MediaOptions
     internal required IReadOnlySet<DetectedImageFormat> AllowedFormats { get; init; }
 
     /// <summary>
+    /// `0012a`/AC-14 — `alt` metninin yazılabileceği locale'ler. Boş liste kuruluşta
+    /// reddedilir: hiçbir dilin etkin olmadığı bir kurulum, `alt` metnini tümden
+    /// yazılamaz kılardı ve bu sessiz bir erişilebilirlik kaybı olurdu.
+    /// </summary>
+    internal required IReadOnlySet<string> EnabledLocales { get; init; }
+
+    /// <summary>
     /// "Mutlak mı" DEĞİL, <b>çağrılabilir mi</b>. Bu ayrım ölçülerek öğrenildi: Unix'te
     /// <c>Uri.TryCreate("/goreli/yol", UriKind.Absolute, out _)</c> <b>true</b> döner ve
     /// <c>file:///goreli/yol</c> üretir. Yani yalnız mutlaklığa bakan bir kontrol, göreli
@@ -152,6 +159,13 @@ internal sealed class MediaOptions
             return Result.Failure<MediaOptions>(formats.Error);
         }
 
+        Result<IReadOnlySet<string>> locales = ParseEnabledLocales(setup.EnabledLocales);
+
+        if (locales.IsFailure)
+        {
+            return Result.Failure<MediaOptions>(locales.Error);
+        }
+
         return Result.Success(new MediaOptions
         {
             StorageServiceUrl = serviceUrl!,
@@ -165,6 +179,7 @@ internal sealed class MediaOptions
             MaximumByteSize = setup.MaximumByteSize,
             MaximumPixelCount = setup.MaximumPixelCount,
             AllowedFormats = formats.Value,
+            EnabledLocales = locales.Value,
         });
     }
 
@@ -206,5 +221,36 @@ internal sealed class MediaOptions
         }
 
         return Result.Success<IReadOnlySet<DetectedImageFormat>>(cozulen);
+    }
+
+    /// <summary>
+    /// Etkin locale listesini çözer. Boş liste ve ayrıştırılamayan bir kod kuruluşta
+    /// reddedilir — "var mı" değil, <b>kullanılabilir mi</b> (`0009`'un `IsSendableAddress`
+    /// deseni): sessizce atlanan bir kod, operatörün etkin sandığı dilin `alt` metnini
+    /// hiç kabul etmemesi demekti.
+    /// </summary>
+    private static Result<IReadOnlySet<string>> ParseEnabledLocales(IReadOnlyList<string> configured)
+    {
+        if (configured is null || configured.Count == 0)
+        {
+            return Result.Failure<IReadOnlySet<string>>(new Error("media.enabled_locales_missing"));
+        }
+
+        HashSet<string> cozulen = [];
+
+        foreach (string kod in configured)
+        {
+            Result<Locale> locale = Locale.Create((kod ?? string.Empty).Trim());
+
+            if (locale.IsFailure)
+            {
+                return Result.Failure<IReadOnlySet<string>>(
+                    Error.With("media.enabled_locale_invalid", "locale", kod ?? string.Empty));
+            }
+
+            cozulen.Add(locale.Value.Code);
+        }
+
+        return Result.Success<IReadOnlySet<string>>(cozulen);
     }
 }

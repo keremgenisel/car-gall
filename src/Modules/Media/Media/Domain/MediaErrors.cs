@@ -24,6 +24,12 @@ internal static class MediaErrors
     /// <summary>AC-14 — tekrar deneme yalnız `başarısız` durumdan tetiklenebilir.</summary>
     internal const string NotRetryable = "media.not_retryable";
 
+    /// <summary>`0012a`/AC-14 — `alt` metni yalnız etkin bir locale için yazılabilir.</summary>
+    internal const string LocaleNotEnabled = "media.locale_not_enabled";
+
+    /// <summary>`0012a` — `alt` metni bir locale için üst sınırı aşıyor.</summary>
+    internal const string AltTextTooLong = "media.alt_text_too_long";
+
     internal const string NotFound = "media.not_found";
 
     /// <summary>

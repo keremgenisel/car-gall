@@ -742,3 +742,106 @@ body {
   gap: var(--space-4);
   justify-content: flex-end;
 }
+
+/* --- Aracın medya yüzeyi (0012a) --- */
+
+.vehicle-media__condition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  margin-block: var(--space-0);
+}
+
+.vehicle-media__upload {
+  display: grid;
+  gap: var(--space-5);
+  justify-items: start;
+  padding-block: var(--space-6);
+  padding-inline: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.vehicle-media__list {
+  display: grid;
+  gap: var(--space-7);
+  margin-block: var(--space-0);
+  padding-inline-start: var(--space-0);
+  list-style: none;
+}
+
+/*
+  Kart içi düzen: küçük ekranda tek kolon, geniş ekranda görsel solda (RTL'de SAĞDA —
+  `grid-template-columns` yazı yönünü izler, `float` izlemezdi).
+*/
+.vehicle-media__item {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (width >= 48rem) {
+  .vehicle-media__item {
+    grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.vehicle-media__thumb {
+  position: relative;
+  aspect-ratio: var(--media-aspect-ratio);
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.vehicle-media__image,
+.vehicle-media__thumb-placeholder {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.vehicle-media__body {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.vehicle-media__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  margin-block: var(--space-0);
+}
+
+.vehicle-media__processing {
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Başarısız varlık: zeminle ayrılıyor, RENKLE değil — metin nedeni söylüyor (§ 7). */
+.vehicle-media__failure {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-5);
+  padding-block: var(--space-5);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-surface);
+}
+
+.vehicle-media__order {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.vehicle-media__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-6);
+}

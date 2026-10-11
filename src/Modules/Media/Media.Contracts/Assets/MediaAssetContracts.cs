@@ -54,4 +54,36 @@ public interface IMediaAssetQueries
     Task<bool> AreAllReadyAsync(
         IReadOnlyCollection<Guid> mediaAssetIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// `0012a`/AC-23 — verilen kümeden **HAZIR OLANLARIN** kümesini döner.
+    ///
+    /// <para><b>Neden <see cref="AreAllReadyAsync"/> yetmiyor:</b> o "hepsi hazır mı" diye
+    /// soruyor, **A2** ise *"en az bir medya varlığı hazır"* istiyor. Üç varlıklı, biri
+    /// hazır bir araçta ikisi <b>zıt</b> cevap verir ve `AreAllReadyAsync` ile A2'yi ölçen
+    /// bir uygulama o aracı yayına uygun saymaz (`0012a` D5, Tuzak 1).</para>
+    ///
+    /// <para>Dönen küme çağıranın verdiğinin alt kümesidir; bilinmeyen kimlikler sessizce
+    /// düşer — "var olmayan varlık hazır değildir" ile "hazır değildir" aynı cevap.</para>
+    /// </summary>
+    Task<IReadOnlySet<Guid>> ReadyAmongAsync(
+        IReadOnlyCollection<Guid> mediaAssetIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// `0012a`/AC-24, D10 — birden çok varlığın detayını **tek** çağrıda okur.
+    ///
+    /// <para><b>Neden toplu:</b> panel aracın sıralı listesini durum, `alt` metni ve türev
+    /// yollarıyla birlikte gösteriyor. Varlık başına <see cref="FindAsync"/> çağırmak N+1
+    /// istek üretir ve sıralama/birleştirme kuralını tarayıcıya taşır; birleştirme
+    /// `VehicleCatalog`'un sorgusunda, sunucuda yapılıyor
+    /// (`docs/architecture.md` § 2.A, tek atlama).</para>
+    ///
+    /// <para>Sonuç çağıranın verdiği SIRADA değil, kimlikle eşlenebilir biçimde döner:
+    /// sıra `VehicleCatalog`'un verisidir (M2) ve `Media` onu bilemez.</para>
+    /// </summary>
+    Task<IReadOnlyList<MediaAssetDto>> FindManyAsync(
+        IReadOnlyCollection<Guid> mediaAssetIds,
+        CancellationToken cancellationToken);
 }
+

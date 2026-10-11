@@ -12,6 +12,12 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     internal const string ImplausibleModelYear = "vehicle.implausible_model_year";
     internal const string MediaRequired = "vehicle.media_required";
 
+    /// <summary>`0012a`/AC-8 — aynı varlık bir araca iki kez bağlanamaz.</summary>
+    internal const string DuplicateMediaAsset = "vehicle.duplicate_media_asset";
+
+    /// <summary>`0012a`/AC-9 — bağlanmak istenen varlık `Media`'da yok.</summary>
+    internal const string MediaAssetNotFound = "vehicle.media_asset_not_found";
+
     private readonly List<Guid> mediaAssetIds = [];
     private readonly List<VehicleOptionalFieldValue> optionalFieldValues = [];
     private readonly List<PriceChange> priceChanges = [];
@@ -224,6 +230,39 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     }
 
     /// <summary>
+    /// `0012a` D12/AC-2…6 — aracın sıralı medya listesini **bütünüyle yerine koyar**.
+    /// Bağlama, sıralama ve çıkarma tek **idempotent** işlemdir.
+    ///
+    /// <para><b>Kapak ayrı bir alan DEĞİL</b> (D2): sıralı listenin ilk elemanıdır
+    /// (<see cref="CoverAssetId"/>) ve sözlük onu böyle tanımlıyor. İkinci bir "kapak"
+    /// alanı aynı olguyu iki yerde tutar ve biri bayatlar; bu yüzden "kapak yap" bir
+    /// <b>sıra</b> işlemidir.</para>
+    ///
+    /// <para><b>Durum ön koşulu yoktur</b> (D14): `işleniyor` ve `başarısız` varlıklar da
+    /// bağlanabilir. R5 başarısız varlığın panelde görünmesini istiyor ve görünmesi için
+    /// bağlı olması gerekir; **M3** yalnız YAYIN koşulunu `hazır`a bağlıyor. Yasaklamak,
+    /// işlemenin sürdüğü dakikalarda paneli kullanılamaz kılardı.</para>
+    ///
+    /// <para>Varlıkların GERÇEKTEN var olduğunu bu metot bilemez — o `Media`'nın bilgisi
+    /// ve kontrol `Application` katmanında (AC-9). Domain yalnız kendi invariantını
+    /// koruyor: liste **yinelenen** taşımaz (AC-8).</para>
+    /// </summary>
+    internal Result ReplaceMediaAssets(IReadOnlyList<Guid> ordered)
+    {
+        ArgumentNullException.ThrowIfNull(ordered);
+
+        if (ordered.Distinct().Count() != ordered.Count)
+        {
+            return Result.Failure(new Error(DuplicateMediaAsset));
+        }
+
+        mediaAssetIds.Clear();
+        mediaAssetIds.AddRange(ordered);
+
+        return Result.Success();
+    }
+
+    /// <summary>
     /// A6 — fiyat değişikliği geçmişe YAZILIR ve eski kayıt olduğu gibi kalır. Geçmiş
     /// `Vehicle`'ın içinde yaşıyor çünkü invariant agregatın invariantı: dışarıdan bir
     /// servis yazsaydı, fiyatı değiştirip geçmişi yazmayan bir yol açık kalırdı.
@@ -289,8 +328,34 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// </summary>
     internal void MarkArchived() => IsArchived = true;
 
-    /// <summary>A2'nin bu spec'te doğrulanabilen kısmı: en az bir medya varlığı hazır olmalı.</summary>
-    internal Result EnsurePublishable() => mediaAssetIds.Count > 0
-        ? Result.Success()
-        : Result.Failure(new Error(MediaRequired));
+    /// <summary>
+    /// **A2**'nin medya koşulu: en az bir bağlı varlık **`hazır`** durumunda olmalı
+    /// (`docs/domain.md` **M3**).
+    ///
+    /// <para><b>Hazırlık bilgisi PARAMETRE olarak geliyor</b> (`0012a` D11): `Domain` dış
+    /// dünyayı bilmez (`docs/conventions.md` § 4) ve `Media`'yı hiç bilemez. Çağıran onu
+    /// `Media`'nın okuma yüzeyinden çözüyor (**C4**: olay gövdesinden değil).</para>
+    ///
+    /// <para><b>Önceki hâli yalnız SAYIYA bakıyordu</b> (<c>mediaAssetIds.Count > 0</c>) ve
+    /// `0011` X7 bu bedeli açıkça kabul etmişti: *"yüklenmiş ama işlenmemiş bir görseli
+    /// olan araç yayına alınabilir görünür"*. `0012a` D6 şartı genişletiyor; `0011`'in
+    /// uyarısı buydu — *"orada yazılı olmazsa sahipsiz kalır"*.</para>
+    ///
+    /// <para><b>Dört sınır durumu</b> (AC-19…22) bu tek satırdan çıkıyor: hiç varlık yok ·
+    /// hepsi `işleniyor` · biri `hazır` ikisi `işleniyor` · hepsi `başarısız`. Kesişimin
+    /// boş olup olmaması dördünü birlikte ayırıyor.</para>
+    /// </summary>
+    /// <param name="readyMediaAssetIds">
+    /// `Media`'ya göre `hazır` durumdaki varlıkların kimlikleri. Aracın listesiyle
+    /// kesişimi alınıyor: çağıran fazlasını verse bile karar yalnız BAĞLI varlıklara göre
+    /// verilir.
+    /// </param>
+    internal Result EnsurePublishable(IReadOnlySet<Guid> readyMediaAssetIds)
+    {
+        ArgumentNullException.ThrowIfNull(readyMediaAssetIds);
+
+        return mediaAssetIds.Exists(readyMediaAssetIds.Contains)
+            ? Result.Success()
+            : Result.Failure(new Error(MediaRequired));
+    }
 }

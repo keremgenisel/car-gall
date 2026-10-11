@@ -19,7 +19,14 @@ export const ADMIN_SEGMENT = 'admin'
  * 0010a — panele araç yüzeyi eklendi. `vehicles` liste, `vehicle-new` kayıt formu;
  * düzenleme adresi `0010b`'nin işi (X18).
  */
-export type AdminView = 'staff' | 'password' | 'vehicles' | 'vehicle-new' | 'vehicle-edit'
+export type AdminView =
+  | 'staff'
+  | 'password'
+  | 'vehicles'
+  | 'vehicle-new'
+  | 'vehicle-edit'
+  /** 0012a **D17** — aracın medya yüzeyi: `/admin/vehicles/{id}/media`. */
+  | 'vehicle-media'
 
 export type Route =
   | { readonly kind: 'list' }
@@ -52,7 +59,7 @@ function adminViewOf(segment: string | undefined): AdminView {
 }
 
 export function parseRoute(pathname: string): Route {
-  const [localeSegment, sectionSegment, slugSegment] = pathname
+  const [localeSegment, sectionSegment, slugSegment, tailSegment] = pathname
     .split('/')
     .filter((segment) => segment.length > 0)
 
@@ -61,7 +68,21 @@ export function parseRoute(pathname: string): Route {
     // `/admin/vehicles/{id}` düzenleme, `/admin/vehicles` liste. Üçüncü parça yalnız
     // araç yüzeyinde anlamlı; başka bir bölümde yok sayılır.
     if (sectionSegment === 'vehicles' && slugSegment !== undefined) {
-      return { kind: 'admin', view: 'vehicle-edit', vehicleId: decodeURIComponent(slugSegment) }
+      /*
+       * 0012a **D17** — dördüncü parça medya yüzeyi: `/admin/vehicles/{id}/media`.
+       * Ayrı ekran, çünkü düzenleme ekranı 0010b ile zaten büyük ve medya yüzeyinin kendi
+       * üç durumu ve kendi kaydetme akışı var; sekme yapmak iki kaydetme akışını
+       * birbirine bağlardı.
+       *
+       * Tanınmayan bir dördüncü parça DÜZENLEMEye düşüyor — 0001'den gelen "tanınmayan
+       * alt yol daha temel olana düşer" davranışı; yeni bir "sayfa bulunamadı" tanımlamak
+       * bu spec'in işi değil.
+       */
+      const vehicleId = decodeURIComponent(slugSegment)
+
+      return tailSegment === 'media'
+        ? { kind: 'admin', view: 'vehicle-media', vehicleId }
+        : { kind: 'admin', view: 'vehicle-edit', vehicleId }
     }
 
     return { kind: 'admin', view: adminViewOf(sectionSegment) }
@@ -91,4 +112,9 @@ export function adminPath(view: AdminView = 'staff'): string {
 /** Düzenleme adresi (D29). Listeye dönüş `adminPath('vehicles')`. */
 export function vehicleEditPath(vehicleId: string): string {
   return `/${ADMIN_SEGMENT}/vehicles/${encodeURIComponent(vehicleId)}`
+}
+
+/** 0012a **D17** — medya yüzeyinin adresi; düzenlemenin bir alt yolu. */
+export function vehicleMediaPath(vehicleId: string): string {
+  return `${vehicleEditPath(vehicleId)}/media`
 }

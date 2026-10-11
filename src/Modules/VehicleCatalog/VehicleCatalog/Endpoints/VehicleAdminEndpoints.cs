@@ -46,6 +46,19 @@ internal static class VehicleAdminEndpoints
             .Produces<VehicleAdminDetailDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+        // `0012a` — aracın medya yüzeyi. İkisi de aynı yönetim kökünde ve aynı oturum
+        // politikasını taşıyor; `0006`/C18'in rota TARAYAN testi ikisini de görüyor.
+        vehicles.MapGet("/{vehicleId:guid}/media", MediaAsync)
+            .WithName("FindVehicleMedia")
+            .Produces<VehicleMediaDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
+        vehicles.MapPut("/{vehicleId:guid}/media", UpdateMediaAsync)
+            .WithName("UpdateVehicleMedia")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status422UnprocessableEntity);
+
         vehicles.MapPut("/{vehicleId:guid}", UpdateAsync)
             .WithName("UpdateVehicle")
             .Produces(StatusCodes.Status204NoContent);
@@ -119,6 +132,43 @@ internal static class VehicleAdminEndpoints
     }
 
     /// <summary>
+    /// `0012a`/AC-24 — aracın sıralı medyası, `Media`'nın durumlarıyla birleştirilmiş
+    /// hâlde. Birleştirme SUNUCUDA (D10): panel tek çağrı yapıyor.
+    /// </summary>
+    private static async Task<IResult> MediaAsync(
+        Guid vehicleId,
+        IVehicleMediaQueries queries,
+        CancellationToken cancellationToken)
+    {
+        VehicleMediaDto? sonuc = await queries.FindAsync(vehicleId, cancellationToken);
+
+        return sonuc is null
+            ? CatalogProblems.From(Error.With(VehicleErrors.NotFound, "field", VehicleFieldNames.VehicleId))
+            : TypedResults.Ok(sonuc);
+    }
+
+    /// <summary>
+    /// `0012a` D12/AC-2…9 — sıralı kimlik listesinin TAMAMINI yerine koyar. Bağlama,
+    /// sıralama ve çıkarma tek idempotent istek; kapak sıranın sonucu (D2).
+    ///
+    /// <para>Boş liste geçerli: "bütün fotoğrafları çıkar" demek ve varlıkları
+    /// SİLMEZ (R3).</para>
+    /// </summary>
+    private static async Task<IResult> UpdateMediaAsync(
+        Guid vehicleId,
+        UpdateVehicleMediaBody body,
+        UpdateVehicleMediaCommand command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        Result sonuc = await command.ExecuteAsync(
+            vehicleId, body.MediaAssetIds ?? [], cancellationToken);
+
+        return sonuc.IsFailure ? CatalogProblems.From(sonuc.Error) : TypedResults.NoContent();
+    }
+
+    /// <summary>
     /// R2/C25 — düzenleme TAM DEĞİŞTİRMEDİR. Gövde çekirdek alanların tamamını taşır ve
     /// eksik gelen alan "dokunulmadı" değil GEÇERSİZ sayılır (AC-5): kısmi semantik
     /// "boş geldi = silindi mi, dokunulmadı mı" belirsizliğini üretirdi.
@@ -173,6 +223,12 @@ internal sealed record CreateVehicleBody(
 }
 
 internal sealed record CreateVehicleResponse(Guid VehicleId);
+
+/// <summary>
+/// `0012a` D12 — sıralı kimlik listesinin tamamı. Gövde eksikse boş liste okunur:
+/// "bütün fotoğrafları çıkar" geçerli bir istek (R3).
+/// </summary>
+internal sealed record UpdateVehicleMediaBody(IReadOnlyList<Guid>? MediaAssetIds);
 
 /// <summary>
 /// Düzenleme gövdesi. Şase TAŞINIR ama değiştirilemez (**D24**): gövdede olmasaydı
