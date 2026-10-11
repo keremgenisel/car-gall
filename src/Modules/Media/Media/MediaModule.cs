@@ -103,9 +103,9 @@ public static class MediaModule
         // KONKRET tip olarak kaydediliyor, `IOutboxWriter` arayüzü olarak DEĞİL — ve bu
         // ölçülmüş bir karar.
         //
-        // `IOutboxWriter` non-generic bir arayüz ve dört modül onu kendi `DbContext`'iyle
+        // `IOutboxWriter` non-generic bir arayüzDU ve dört modül onu kendi `DbContext`'iyle
         // kaydediyor; DI'da **son kayıt kazanıyor**. `AddMedia` Host'ta `AddLeads`'ten
-        // SONRA çağrıldığı için `Leads`'in `IOutboxWriter`'ı bir anda
+        // SONRA çağrıldığı için `Leads`'in yazıcısı bir anda
         // `OutboxWriter<MediaDbContext>` oldu: `LeadCaptured` olayı `media` şemasının
         // outbox'ına yazıldı, `Leads`'in dağıtıcısı kendi tablosunda hiçbir şey bulamadı
         // ve bildirim zinciri SESSİZCE durdu. `TalepBildirimiZinciriTests` 30 saniye

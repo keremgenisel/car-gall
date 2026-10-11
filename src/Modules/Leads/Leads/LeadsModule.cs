@@ -53,7 +53,7 @@ public static class LeadsModule
                 provider.GetRequiredService<LeadsDbContext>(),
                 "Leads"));
 
-        services.AddScoped<IOutboxWriter, OutboxWriter<LeadsDbContext>>();
+        services.AddScoped<OutboxWriter<LeadsDbContext>>();
         services.AddScoped<LeadsUnitOfWork>();
         services.AddScoped<IListingSnapshotSource, ListingSnapshotSource>();
         services.AddScoped<ICanonicalModelNameSource, CanonicalModelNameSource>();

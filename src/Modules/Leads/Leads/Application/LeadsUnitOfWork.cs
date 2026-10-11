@@ -16,7 +16,10 @@ namespace CarGallery.Modules.Leads.Application;
 /// kaydetmenin kendisidir. Talep kaydedildiyse duyuru da kaydedilmiştir; talep
 /// kaydedilmediyse duyuru da kaydedilmemiştir (R14, AC-30, AC-31).
 /// </summary>
-internal sealed class LeadsUnitOfWork(LeadsDbContext context, IOutboxWriter outbox, IClock clock)
+internal sealed class LeadsUnitOfWork(
+    LeadsDbContext context,
+    OutboxWriter<LeadsDbContext> outbox,
+    IClock clock)
 {
     internal async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {

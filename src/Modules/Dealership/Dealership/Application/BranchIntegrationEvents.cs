@@ -17,7 +17,7 @@ namespace CarGallery.Modules.Dealership.Application;
 /// </summary>
 internal sealed class DealershipUnitOfWork(
     DealershipDbContext context,
-    IOutboxWriter outbox,
+    OutboxWriter<DealershipDbContext> outbox,
     IClock clock)
 {
     internal async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

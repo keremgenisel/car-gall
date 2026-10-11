@@ -72,7 +72,7 @@ public static class IdentityModule
                 provider.GetRequiredService<IdentityDbContext>(),
                 "Identity"));
 
-        services.AddScoped<IOutboxWriter, OutboxWriter<IdentityDbContext>>();
+        services.AddScoped<OutboxWriter<IdentityDbContext>>();
         services.AddScoped<IdentityUnitOfWork>();
         services.AddScoped<IBranchValidator, BranchValidator>();
         services.AddScoped<IStaffSessionQueries, StaffSessionQueries>();
