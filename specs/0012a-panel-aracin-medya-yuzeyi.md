@@ -2,17 +2,23 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
-| **Sahip** | — |
+| **Durum** | Onaylandı |
+| **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `VehicleCatalog` (komut yüzeyi) · `Media` (yalnız `alt` metni yazma ucu) + `Media.Contracts` (okuma) · `frontend/` yönetim paneli |
+| **Modül(ler)** | `VehicleCatalog` (komut ve sorgu yüzeyi) · `Media` (`alt` metni yazma ucu + iki okuma) + `Media.Contracts` · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | `0010a` + `0010b` (araç kaydı, düzenleme ve liste — tamamlandı) · `0011` (Media — tamamlandı) |
 | **Dayanak** | ADR 0003 Ek 1, sıra #5'in **birinci dilimi** (→ **D1**) · `0011` § X3, § X7, § X8 ve **D16** |
-| **Karar bekliyor** | yok — `0012`'nin 2026-10-11 CLARIFY turunda sekiz karar verildi (**D1–D8**). Kabul kriterleri ayrı bir turda yazılır. |
+| **Kararlar** | **D1–D19**. D1–D8 `0012`'nin 2026-10-11 CLARIFY turundan; **D9–D19** kriter turunda **ölçülerek** eklendi. Açık soru yok. |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri henüz yazılmadı; kararların hepsi verilmiş
-> durumdadır ve yalnız kriter turu bekliyor. **Bu dosya `0012`'nin ikiye bölünmesiyle
-> doğdu** — gerekçesi ve bedeli **D1**'de yazılı.
+> **R/C/AC bu PR'da `main`'e giriyor ve orada donuyor** (ADR `0008` / K2, `docs/git.md` § 1).
+> Bu commit'ten sonra Requirements, Constraints veya Acceptance Criteria'da yapılan her
+> değişiklik **sayılan bir revizyondur** ve kendi commit'ine girer.
+>
+> **Bu dosya `0012`'nin ikiye bölünmesiyle doğdu** — gerekçesi ve bedeli **D1**'de yazılı.
+> CLARIFY turu kararları verdi ve kriterleri bilerek yazmadı; bu tur on bir karar daha
+> **ölçerek** ekledi (**D9–D19**) ve otuz üç kriteri yazdı. `0011`'de kriterler
+> implementasyondan **sonra** büyümüştü ve K2'nin ölçümü o yüzden delinmişti; bu kez
+> sıralama doğru.
 
 ---
 
@@ -52,6 +58,7 @@ kendisi bu dilimin işi değildir (**D7**).
   **işleniyor** hâli ekranda ayrı görünür — o bir yükleme durumu değil, varlığın durumudur.
   → `docs/frontend.md` § 3, **M1**
 - **R8.** Panel personelin tercih ettiği dilde çalışır; Arapça'da RTL.
+- **R9.** Personel panelden **tek bir fotoğraf** yükleyebilir. → **D9**
 
 ---
 
@@ -192,6 +199,81 @@ Hepsi 2026-10-11 CLARIFY turunda Takım Yöneticisi onayıyla verildi.
   varlığın durumudur, ekranın yükleme durumu değil; ikisini aynı iskeletle göstermek,
   dakikalarca süren işlemeyi "sayfa yükleniyor" gibi gösterirdi.
 
+#### Kriter turu — D9–D19 (2026-10-11)
+
+Takım Yöneticisi, aynı gün. Hepsi `origin/main` (`418f7a6`) ve `docs/0012-clarify`
+(`d8d16c4`) üzerinde **ölçülerek** çıktı.
+
+- **D9 — Tek dosya yükleme kontrolü BU dilimde** (R9). *Ölçüldü:* `frontend/src/` içinde
+  `input type="file"`, `FormData` ve `multipart` → **sıfır eşleşme**; panelden hiçbir
+  fotoğraf yüklenemiyor. R1 *"yüklenmiş bir fotoğrafı bağlar"* diyor ve o ön koşul bugün
+  hiçbir yoldan sağlanamıyor. *Gerekçe:* kontrol olmadan bu dilim, var olmayan
+  fotoğrafları sıralayan bir ekran teslim eder ve *"bir aracın fotoğrafları sıralı"*
+  başarı ölçütü ölçülemez. X3 yalnız **çoklu/sürükle-bırak ve sihirbazı** dışlıyor
+  (`0011` X5'in aynısı), tek dosya yolunu değil. *Bedel:* bir kontrol daha ve onun üç
+  durumu; `413`/`415` hatalarının çevirisi.
+- **D10 — `Media.Contracts` TOPLU bir detay okuması kazanır.** D5 yalnız "hazır olanların
+  kümesi"ni zorunlu kılıyordu; ekran varlık başına **durum + `alt` + türev yolları**
+  istiyor. *Karar:* `Media` toplu detay okuması sunar ve **`VehicleCatalog`'un sorgusu
+  sunucuda birleştirir**; panel tek HTTP çağrısı yapar. *Gerekçe:* istemci tarafı
+  birleştirme varlık başına bir istek (N+1) ve sıralama/birleştirme kuralını tarayıcıya
+  taşır; `docs/architecture.md` § 2.A'nın saydığı meşru okuma tam bu. *Bedel:*
+  `Media.Contracts` D5'in istediğinden **bir okuma fazla** kazanıyor. *Elenen alternatif:*
+  panelin `GET /media/assets/{id}`'yi varlık başına çağırması — sözleşme daha dar, gecikme
+  daha kötü.
+- **D11 — `EnsurePublishable` hazırlık bilgisini PARAMETRE olarak alır:**
+  `EnsurePublishable(IReadOnlySet<Guid> readyMediaAssetIds)`. *Gerekçe:* `Domain` dış
+  dünyayı bilmez (`docs/conventions.md` § 4) ve `Media`'yı hiç bilemez; `0011`'in
+  `MediaAsset.HasAttemptsLeft(max)` deseni birebir aynı. *Ölçüldü:* metodun **tek** çağıranı
+  `VehicleTests.cs:26`; başka çağıran yok, yani imza değişikliği tek testi etkiliyor ve
+  **D6** bunu zaten kabul etti. *Bedel:* yok.
+- **D12 — Yazma yüzeyi TAM LİSTE `PUT`.** `PUT {admin}/vehicles/{id}/media` sıralı kimlik
+  listesinin tamamını alır ve yerine koyar. *Gerekçe:* R1 + R2 + R3 tek **idempotent**
+  işleme iner ve kapak **sıranın sonucu** olur (**D2**); ayrı bir "kapak yap" eylemi, D2'nin
+  reddettiği ikinci kaynağı geri getirirdi. *Bedel:* istemci her kaydetmede listenin
+  tamamını gönderir ve iki personel eşzamanlı düzenlerse **son yazan kazanır** (→ D13).
+- **D13 — Bu dilimde YENİ eşzamanlılık mekanizması eklenmez.** *Ölçüldü:*
+  `UpdateVehicleCommand` hiçbir koruma taşımıyor (`SaveChangesAsync`, belirteç yok).
+  *Gerekçe:* yalnız medya sıralamasına koruma koymak, **aynı agregatın** iki yazma
+  yolundan birini korumalı diğerini korumasız bırakır — tutarsız ve yanıltıcı; kriterlerin
+  hiçbiri istemiyor. *Bedel, açıkça:* eşzamanlı iki düzenlemede son yazan kazanır ve
+  birinin sıralaması sessizce kaybolur. *Elenen alternatif:* `Vehicle`'a `xmin` belirteci
+  (`MediaAsset`'in deseni) — o zaman `UpdateVehicleCommand` da kapsanmalı ve bu `0010b`'nin
+  kapsamına dokunmak olurdu.
+- **D14 — Bağlamanın DURUM ön koşulu yoktur:** `İşleniyor` ve `Başarısız` varlıklar da
+  bağlanabilir. *Gerekçe:* R5 başarısız varlığın panelde görünmesini istiyor ve görünmesi
+  için bağlı olması gerekir; **M3** yalnız **yayın koşulunu** `Hazır`a bağlıyor, bağlamayı
+  değil. Yasaklamak, işlemenin sürdüğü dakikalarda paneli kullanılamaz kılardı. *Bedel:*
+  yalnız başarısız fotoğrafı olan bir araç oluşabilir — ve medya koşulu onu doğru biçimde
+  reddeder (dört sınır durumundan biri).
+- **D15 — Aynı varlığın iki ayrı araca bağlanması KISITLANMAZ.** *Ölçüldü:*
+  `AttachMediaAsset` yalnız **aynı araç içinde** tekilleştiriyor; araçlar arası paylaşımı
+  hiçbir şey engellemiyor. *Gerekçe:* **M2** medyayı sahipsiz sayıyor ve paylaşımı
+  yasaklamıyor; X4 kütüphane/yeniden kullanım ekranını dışladığı için böyle bir durumu
+  **üreten arayüz yok**. *Bedel:* API seviyesinde mümkün kalır. Tekillik istenirse yeni bir
+  kriter ve `Media` tarafında "bu varlık bağlı mı" sorusu gerekir — ki o **C2**'yi delerdi.
+- **D16 — `alt` metni ucu bütünüyle yerine koyar.**
+  `PUT {admin}/media/assets/{id}/alt-text`, gövde locale → metin haritası; **eksik locale
+  boş sayılır** (R4). *Gerekçe:* R4 bir dilin boş kalmasını geçerli sayıyor; locale başına
+  `PATCH` yüzeyi ikiye katlar ve "boşa çek" ile "dokunma" ayrımını API'ye taşır. *Bedel:*
+  istemci her kaydetmede üç dili birlikte gönderir.
+- **D17 — Medya yüzeyi AYRI bir ekran ve adresi dördüncü rota parçası:**
+  `/admin/vehicles/{id}/media`. *Gerekçe:* düzenleme ekranı `0010b` ile zaten büyük ve medya
+  yüzeyinin kendi üç durumu, kendi kaydetme akışı var; sekme yapmak iki kaydetme akışını
+  birbirine bağlar. *Bedel:* `parseRoute` bir parça, `AdminView` bir değer kazanır ve
+  `0010b`'nin rota testleri gözden geçirilir.
+- **D18 — D5'in okumasının ve D6'nın yeni gövdesinin bu dilimde ÜRETİM ÇAĞIRANI YOKTUR.**
+  A2'nin koşulunu tüketen `0012b`'dir (**D7**); burada ikisi de yalnız testlerden çağrılır.
+  *Gerekçe:* D5 ve D6 ikisini de zorunlu kılıyor ve `0011` X7'nin bedeli birebir buydu —
+  *"orada yazılı olmazsa sahipsiz kalır"* diye uyarmıştı. *Bedel:* PR'da **adıyla** yazılır;
+  sessiz bırakmak aynı öksüzlüğü üretir.
+- **D19 — Vitrin bu dilimde DEĞİŞMEZ.** *Ölçüldü:* `ShowcaseListingProjector.Project`'ın
+  tek çağıranı geliştirme seed'i (`ShowcaseSeeder.cs:160`); üretimde vitrin okuma modeline
+  yazan hiçbir yol yok. Fotoğraf bağlamak **yazma modelini** değiştirir, vitrini
+  değiştirmez. *Gerekçe:* yansıtma yolu `0012b`'nin işi (onun `Modül(ler)` satırı, C12,
+  D12) ve **D7** bu bedeli zaten kabul etti. *Bedel:* PR'da yazılmazsa *"fotoğraf ekledim,
+  vitrinde görünmüyor"* bir kusur sanılır.
+
 ### Doğrulanmış bulgular — 2026-10-11 CLARIFY turu
 
 Kararların dayandığı ölçümler, hepsi `origin/main` (`b99912a`) üzerinde:
@@ -210,14 +292,63 @@ Kararların dayandığı ölçümler, hepsi `origin/main` (`b99912a`) üzerinde:
 
 ## Acceptance Criteria
 
-> **Kriterler ayrı bir turda yazılacak** — kararların hepsi verilmiş durumda (D1–D8) ve
-> kriter yazımı bu dosyanın bir sonraki revizyonudur. En az şu kümeleri kapsayacak:
->
-> bağlama ve **sıra** · kapağın sıralı listenin ilk elemanı olması · çıkarmanın varlığı
-> silmemesi · `alt` metninin üç dilde yazılması ve bir dilin boş kalabilmesi · başarısız
-> varlığın ayırt edilmesi ve tekrar denemenin **aynı kimlikle** dönmesi · medya koşulunun
-> **dört** sınır durumu (hiç varlık yok · hepsi işleniyor · biri hazır ikisi işleniyor ·
-> hepsi başarısız) · üç ekran durumu ve "işleniyor" hâli · çok dil ve RTL.
+Otuz üç kriter, yedi grupta. CLARIFY turunun saydığı sekiz kümeyi ve D1–D19'u kapsar.
+Yapılandırmadan ya da yapılandırılmış locale listesinden gelen her değer için kriter
+**yapılandırılan değeri** doğrular, spec'e kopyalanmış bir sabiti değil.
+
+### A. Yükleme, bağlama, sıra ve kapak
+
+- **AC-1.** Oturum açmış personel panelden tek bir fotoğraf yükler ve varlık `yüklendi` durumunda oluşur.
+- **AC-2.** Personel yüklenmiş bir fotoğrafı araca bağlar; aracın bağlı listesi onu içerir.
+- **AC-3.** Bağlı fotoğraflar personelin verdiği sırada durur ve sıra kalıcıdır.
+- **AC-4.** Sıralı listenin ilk elemanı kapak görselidir; ayrı bir kapak alanı yoktur.
+- **AC-5.** Sıra değiştiğinde kapak da değişir.
+- **AC-6.** Personel bağlı bir fotoğrafı çıkarabilir; aracın listesi onu artık içermez.
+- **AC-7.** Çıkarmak varlığı silmez: varlık `Media`'da durur ve türevleri okunabilir.
+- **AC-8.** Aynı varlık bir araca iki kez bağlanamaz.
+- **AC-9.** Var olmayan bir varlık bağlanamaz; istek çevrilmiş metin değil `errorCode` döner.
+- **AC-10.** Oturumu olmayan biri bağlama, sıralama veya çıkarma yapamaz.
+
+### B. `alt` metni
+
+- **AC-11.** Personel bir fotoğrafın `alt` metnini etkin her dilde yazabilir.
+- **AC-12.** Bir dili boş bırakmak geçerli bir durumdur; varlık yine okunabilir.
+- **AC-13.** `alt` metni `Media`'da saklanır; `VehicleCatalog` metnin kopyasını tutmaz.
+- **AC-14.** Etkin olmayan bir locale için `alt` metni yazılamaz.
+- **AC-15.** Oturumu olmayan biri `alt` metni yazamaz.
+
+### C. Başarısız varlık ve tekrar deneme
+
+- **AC-16.** İşlemesi başarısız olmuş fotoğraf panelde ayırt edilir.
+- **AC-17.** Personel tekrar dene eylemini çağırır ve varlık **aynı kimlikle** yeniden kuyruğa alınır.
+- **AC-18.** Tekrar deneme otomatik tetiklenmez; eylem çağrılmadan durum kendiliğinden değişmez.
+
+### D. Medya koşulu — dört sınır durumu
+
+- **AC-19.** Hiç bağlı varlığı olmayan araç medya koşulunu karşılamaz.
+- **AC-20.** Bağlı varlıklarının hepsi `işleniyor` olan araç medya koşulunu karşılamaz.
+- **AC-21.** Biri `hazır`, ikisi `işleniyor` olan araç medya koşulunu **karşılar**.
+- **AC-22.** Bağlı varlıklarının hepsi `başarısız` olan araç medya koşulunu karşılamaz.
+- **AC-23.** `Media`'nın okuma yüzeyi verilen kümeden **hazır olanların** kümesini döndürür.
+- **AC-24.** Aracın medya sorgusu sıralı listeyi `Media`'nın durum, `alt` ve türev bilgisiyle birleştirir.
+
+### E. Ekran durumları
+
+- **AC-25.** Medya ekranı yükleniyor durumunda iskelet gösterir.
+- **AC-26.** Bağlı fotoğrafı olmayan araçta boş durum neden boş olduğunu ve ne yapılabileceğini söyler.
+- **AC-27.** Okuma başarısız olduğunda hata durumu anlamlı mesaj ve **tekrar dene** eylemi gösterir.
+- **AC-28.** `işleniyor` bir varlık ekranda ayrı bir hâl olarak görünür ve ekranın yükleme iskeletiyle karışmaz.
+- **AC-29.** Ekranda hiçbir teknik detay görünmez: durum kodu, `errorCode`, `traceId`, yol.
+
+### F. Çok dil ve RTL
+
+- **AC-30.** Ekranın metinleri TR / AR / EN üçünde de vardır; eksik çeviri anahtarı yoktur.
+- **AC-31.** Arapça'da ekran RTL yönünde çalışır.
+
+### G. Sınır
+
+- **AC-32.** `Media` hiçbir modüle senkron çağrı yapmaz; bir fotoğrafın hangi araca bağlı olduğu `Media`'da tutulmaz.
+- **AC-33.** `VehicleCatalog`'un `Media`'ya erişimi yalnız `Media.Contracts` üzerinden ve tek atlamadır.
 
 ---
 
@@ -226,7 +357,7 @@ Kararların dayandığı ölçümler, hepsi `origin/main` (`b99912a`) üzerinde:
 <!-- MADDE ÇIKARILAMAZ. Şablondaki her maddenin bir `<!-- DoD:Tn -->` işaretleyicisi vardır
      ve mimari test (ADR 0008 / K8) sayıyı şablondan okuyarak denetler. -->
 
-- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi (D1–D8).
+- [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi (D1–D8 CLARIFY turu, **D9–D19** kriter turu; açık soru kalmadı).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012a-ac<n>.png`),
       boş ve hata durumları dâhil, RTL için Arapça görüntü de var.
