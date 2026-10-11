@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | **Tamamlandı** (2026-10-11) |
 | **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (komut yüzeyi, outbox, vitrin yansıtması) · `Dealership` (**eklemeli** bir okuma — **D40**) · `frontend/` yönetim paneli |
@@ -803,58 +803,163 @@ kopyalanmış bir sabiti değil.
 <!-- MADDE ÇIKARILAMAZ. Şablondaki her maddenin bir `<!-- DoD:Tn -->` işaretleyicisi vardır
      ve mimari test (ADR 0008 / K8) sayıyı şablondan okuyarak denetler. -->
 
-- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi
+- [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi
       (**D2–D21** ilk CLARIFY turu, **D22–D38** ikinci tur; açık soru kalmadı).
+      *Ölçüldü: § Açık sorular "**Yok.**" diyor; **D39–D42** kriter turunda ölçülerek eklendi,
+      toplam **D2–D42**. Kararların ikisi `0012c`'ye taşındı (D39).*
 - [x] `0012a` tamamlandı (A2'nin medya koşulu ölçülebilir).
       *2026-10-11, `8fc862c` (#56) ve kapanışı `18e4adf` (#57); kart `specs/done/` altında.
       Ölçüldü: `ReadyAmongAsync` (`MediaAssetContracts.cs:72`) ve parametreli
       `EnsurePublishable` (`Vehicle.cs:353`) duruyor — ikisinin de üretim çağıranı bu spec'in
-      işi (`0012a` D18).*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012b-ac<n>.png`),
+      işi (`0012a` D18). **Bu spec o borcu kapattı:** yayın komutu ikisini de çağırıyor.*
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+      *Ölçüldü: PR #60'ın "Kabul kriteri → kanıt" tablosu **58 satır**. Bağımsız doğrulama —
+      `grep -rhoE '0012b/AC-[0-9]+' tests/ frontend/src frontend/e2e` → **58/58**, eksik yok.
+      AC-57'nin etiketi `evidence-0012b.spec.ts:287`'de AC-56 ile aynı test adında duruyor.*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012b-ac<n>.png`),
       **boş** ve **hata** durumları dâhil, RTL için Arapça görüntü de var. (Kısmi başarı
       `0012c`'nin kanıtıdır — **D39**.)
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil; durum geçişi mantığı agregatta kaldı (C2).
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `vehicle_catalog` şemasına dokunuyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      *Dokuz görüntü: `0012b-ac1` · `ac9` · `ac14` · `ac50` · `ac51` · `ac53` · `ac54` (yükleniyor /
+      boş / başarılı) · `ac55` (hata, teknik detay yok) · `ac57-ar` (RTL, Arapça).*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+      *Otorite `main` koşusu **38161903868** (`e67a61d`): **1042** test, **0** kırmızı —
+      Architecture 48 · Dealership 69 · Identity 124 · Leads 112 · Media 108 · Notifications 45 ·
+      VehicleCatalog 327 · VehicleReference 34 · Host 175. On bir yeni test dosyası
+      (`GecisKomutlariTests`, `GecisTablosuTests`, `YayinUygunluguTests`, `DuyuruTests`,
+      `EszamanliGecisTests`, `SubeKapanisiTests`, `VitrinVeAdresTests`, `YonetimListesiArsivTests`,
+      `KatalogYazicilari`, `YayinZinciriTests`, `YayinSiniriTests`) — hepsinin varlığı dosya
+      yolundan doğrulandı.*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil; durum geçişi mantığı agregatta kaldı (C2).
+      *Architecture.Tests **48/48** yeşil. Kapı adıyla: `YayinSiniriTests.cs:28` —
+      "0012b/AC-58: Durum geçişi mantığı agregatta kalır; komut ve uç katmanı durum ataması
+      yapmaz". Sonda PR'da yazılı: komut katmanına bir durum dallanması sızdırmak AC-58'i
+      kırmızıya döndürdü.*
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `vehicle_catalog` şemasına dokunuyor.
+      *`20261011115335_AddListingSlugAndOutbox` — `schema: "vehicle_catalog"` **yedi** kez
+      geçiyor, başka şema adı geçmiyor (ölçüldü). `listings.slug` **nullable** ve mevcut
+      satırlar `showcase_listings`'ten geri dolduruluyor: yeniden üretmek bugün yayında olan
+      her ilanın adresini değiştirir ve paylaşılmış her bağlantıyı kırardı (D31).*
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+      *Ölçüldü: üç katalogda da **363** anahtar ve anahtar kümeleri **birebir eşit**
+      (`tr == ar == en`). Bu spec **36** anahtar ekledi (327 → 363). Frontend işi, eksik
+      anahtar kapısı dâhil, `main` koşusunda yeşil.*
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
+      *`docs/domain.md` **#58'de** güncellendi (`18e4adf..2148c37`: +12/−1) — A3'ün durum
+      sözlüğü ve `İlan Adresi`. Bu PR dokümanlara dokunmuyor, çünkü terim kriterlerden önce
+      girdi.*
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+      *`docs/architecture.md` **#58'de** güncellendi (`18e4adf..2148c37`: +3). Sekiz olay adı
+      § 1'de duruyor ve testler adları **oradan okuyarak** doğruluyor — spec'e kopyalanmış
+      sabitten değil.*
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+      *#60'ın dört kapısı da (`Backend`, `Frontend`, `E2E`, `C3 eşikleri`) `f16b18c` üzerinde
+      `SUCCESS`. Merge sonrası `main` koşusu **38161903868** (`e67a61d`): Backend · Frontend ·
+      E2E üçü de `success`. Yığının diğer iki adımı da ayrı ayrı doğrulandı: `2148c37` →
+      yeşil, `1afa041` → yeşil. **Doğrulama her adımda merge'den ayrı bir adımdı.**
+      Frontend: **357** birim testi (26 dosya) · **214** e2e.*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
-- [ ] Eksiklerin **birlikte** döndüğü testle gösterildi (Tuzak 1, Tuzak 2). *Koşul sayısı
+      *Turun yedi bulgusu PR #60'ta tek tek yazılı ve altısı `f16b18c` ile düzeltildi
+      (eksik beş vitrin kolonu · yedi kaymış `DisplayName` · sabit hata başlığı ve eksik 409
+      tazelemesi · arşiv bayrağını almayan özet sayacı · hiçbir araç göstermeyen AC-51 kanıtı ·
+      sekiz yanlış karar atfı ve kaymış yorumlar). Yedincisi (spec tutarlılığı, AP-10) kriter
+      dalında `8872888` ile düzeltildi. **Eksik:** turun kendisi PR'da bir inceleme ya da yorum
+      bırakmadı (ölçüldü: #58/#59/#60 → 0 inceleme, 0 yorum), yani tur yalnız yazarın
+      aktardığı hâliyle kayıtlı; TM kapanış turunda turun yapıldığını doğruladı.*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+      *PR #60: Spec · Ne değişti · 58 satırlık kriter→kanıt tablosu · DoD'un adıyla istenen
+      maddeleri · Mimari etkisi · Ölçümler · dış gözden geçirme turu · **yedi açık konu** ·
+      kontrol listesi. Karşılanmayan kriter yok; kapsam dışı bırakılanlar `0012c`'ye adıyla
+      taşındı (D39).*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+      *Yığın sırayla: #58 → `2148c37`, #59 → `1afa041`, #60 → `e67a61d` (2026-10-11).
+      #59, #58'in squash'i yüzünden `DIRTY` düştü; ağaç kimliği kanıtlanıp
+      (`tree(2148c37) == tree(3c72936) == 2f6e003d`) `-s ours` ile çözüldü ve kaybın
+      olmadığı `diff(main→HEAD) == diff(3c72936→8872888)` ile gösterildi. #60 çakışmadı:
+      `git merge-tree --write-tree 1afa041 f16b18c` → `93f4296e` = `tree(f16b18c)`, yani
+      CI'ın test ettiği içerik merge sonucuyla birebir. Sonuç doğrulandı:
+      `tree(e67a61d) == tree(f16b18c)`.*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      *Bu commit.*
+- [x] Eksiklerin **birlikte** döndüğü testle gösterildi (Tuzak 1, Tuzak 2). *Koşul sayısı
       için alttaki maddeye bakınız: **D23** ve **D42** dördün ikisini eledi.*
-- [ ] **Üretilen her olayın** adı `docs/architecture.md` § 1'deki adıyla birebir aynı (D11).
-- [ ] Outbox yazıcısının **konkret** tiple kaydedildiği testle gösterildi (C11, Tuzak 8).
-- [ ] Arşivlemenin aracın bayrağını **aynı işlemde** yazdığı ve aynı şasenin yeniden
+      *`YayinUygunluguTests` (AC-4) tek yanıtta birden çok kodu doğruluyor; ilk eksikte
+      durmuyor. Panel tarafında `listingActionState.test.ts` aynı şeyi ekran metninde ölçüyor.*
+- [x] **Üretilen her olayın** adı `docs/architecture.md` § 1'deki adıyla birebir aynı (D11).
+      *Sekiz olay: `VehiclePublished` · `VehicleUnpublished` · `VehicleReserved` ·
+      `VehicleReturnedToShowcase` · `VehicleSold` · `VehicleArchived` · `VehiclePriceChanged` ·
+      `VehicleRelocated` (AC-34). Test adları § 1'den **okuyor**; kopyalanmış sabit yok.*
+- [x] Outbox yazıcısının **konkret** tiple kaydedildiği testle gösterildi (C11, Tuzak 8).
+      *`YayinSiniriTests.cs:127` — AC-37; iddia `AddScoped<OutboxWriter<VehicleCatalogDbContext>>()`
+      dizgisini modül kaydında arıyor (satır 133). `0006`'nın kaçan hatasının (`IOutboxWriter`
+      paylaşılan arayüz tuzağı, #52) tekrarına karşı kapı.*
+- [x] Arşivlemenin aracın bayrağını **aynı işlemde** yazdığı ve aynı şasenin yeniden
       kaydedilebildiği testle gösterildi (D9).
-- [ ] Vitrin satırının her yazma yolunda güncellendiği — **araç düzenlemesi ve medya sırası
+      *AC-23, AC-24, AC-25 — gerçek PostgreSQL üzerinde, çünkü kısmi tekil indeks ancak orada
+      görünür (`GecisKomutlariTests` / `YonetimListesiArsivTests`).*
+- [x] Vitrin satırının her yazma yolunda güncellendiği — **araç düzenlemesi ve medya sırası
       dâhil** (**D41**) — testle
       gösterildi (D12).
-- [ ] A2'nin **iki** koşulunun reddedilebildiği; çekirdek alan **ve fiyat** koşulları için
+      *AC-41…AC-44 (`VitrinVeAdresTests`). D41: `0012a`'nın medya komutu da yansıtmayı
+      çağırıyor (AC-44). Dış gözden geçirmenin **BULGU-1**'i tam buradaydı — yansıtma beş
+      kolonu kopyalamıyordu ve AC-43'ün testi yalnız kilometre değiştirdiği için göremiyordu;
+      düzeltmeden sonra test aracın **her** alanını değiştiriyor ve kolon listesini sayan bir
+      kapı var.*
+- [x] A2'nin **iki** koşulunun reddedilebildiği; çekirdek alan **ve fiyat** koşulları için
       **kod yazılmadığı** ve ikisinin de temsil edilemez olduğu **tripwire** ile gösterildi
       (**D23**, **D42**).
-- [ ] A2 dışındaki **iki** reddin (lokasyon bayrağı, adres üretilemedi) kendi kodunu
+      *`YayinUygunluguTests.cs:104` — tripwire. `ListingPrice` "fiyatsız" bir hâl üretebilir
+      hâle gelirse kapı kırmızıya döner (AC-10). Vakum bir kontrol yazılmadı.*
+- [x] A2 dışındaki **iki** reddin (lokasyon bayrağı, adres üretilemedi) kendi kodunu
       döndürdüğü ve reddin HTTP karşılığının C13'teki eşlemeye uyduğu testle gösterildi
       (D25, D26).
-- [ ] Toplu eylem bu dilimde **yok**; maddesi `0012c`'ye taşındı (**D39**).
-- [ ] Sekiz olayın gövdesinin **durum alanı taşımadığı** ve adresi taşıdığı, yeniden yayının
+      *AC-6 (`branch_unassigned`) · AC-7 (`slug_unavailable`) · AC-8 (422 / 409 / 404,
+      `YayinZinciriTests`). Dış gözden geçirmenin **BULGU-3**'ü D26'nın 409 yarısının
+      ekranda karşılığı olmadığını buldu; başlık `durum.action`'a bağlandı (8 anahtar × 3
+      katalog) ve 409'da satırı tazeleyen bir düğme eklendi.*
+- [x] Toplu eylem bu dilimde **yok**; maddesi `0012c`'ye taşındı (**D39**).
+      *`specs/0012c-toplu-eylem-ve-one-cikarma.md` bu yığında açıldı (#59, `1afa041`):
+      Taslak, açık soru yok, kararları buradan taşındı (D3–D7, D16, D18, D27–D29, D36),
+      kriterleri yazılmadı.*
+- [x] Sekiz olayın gövdesinin **durum alanı taşımadığı** ve adresi taşıdığı, yeniden yayının
       da duyurulduğu ve ilk yayın zamanını taşıdığı testle gösterildi (D30, D31).
-- [ ] A8'in `Rezerve` ilanı da yayından kaldırdığı, `Satıldı`/`Arşiv` kayda dokunmadığı ve
+      *AC-35 · AC-40 (`DuyuruTests`): yedi olay beş alan, `VehiclePublished` ek olarak ilk
+      yayın zamanını taşıyor. İddialardan **sıra** bilerek kaldırıldı —
+      `docs/architecture.md` § 2.C sıra garantisi vermiyor ve `Guid.CreateVersion7()` aynı
+      milisaniyede sıralı değil.*
+- [x] A8'in `Rezerve` ilanı da yayından kaldırdığı, `Satıldı`/`Arşiv` kayda dokunmadığı ve
       geçişlerini duyurduğu testle gösterildi (D32, D33).
-- [ ] Görünürlük kararının yalnız yansıtmada olduğu, kopya kolon yazıcılarının (kapak URL'i,
+      *AC-26…AC-30, AC-39 (`SubeKapanisiTests`). Yazarın kendi testi burada iki kusur buldu:
+      `Satıldı` ilanda `Unpublish` atlanıyordu ama bayrak **yine de yazılıyordu** — satılmış
+      bir aracı "lokasyon bekliyor" yapmak kapanan şubenin satış geçmişini bozardı.*
+- [x] Görünürlük kararının yalnız yansıtmada olduğu, kopya kolon yazıcılarının (kapak URL'i,
       şube adları) **bozulmadığı** testle gösterildi (D34).
-- [ ] Arşiv koşulunun liste, **toplam sayı ve özet sayaçlarında** birlikte uygulandığı
+      *`YayinSiniriTests.cs:65` — "0012b/AC-45: Görünürlük kararını yalnız yansıtma verir".*
+- [x] Arşiv koşulunun liste, **toplam sayı ve özet sayaçlarında** birlikte uygulandığı
       testle gösterildi; `0010b`'nin etkilenen kriterleri PR'da **adıyla** yazıldı (D35).
-- [ ] `UpdateVehicleCommand`'ın eksik `Touch` çağrısının tamamlandığı testle gösterildi ve
+      *AC-50…AC-52 (`YonetimListesiArsivTests`, 155 satır yeni). Dış gözden geçirmenin
+      **BULGU-4**'ü özet sayacının arşiv bayrağını almadığını buldu; `GetSummaryAsync`
+      `includeArchived` aldı ve uçta tek `ArsivIstendi(query)` ikisini de besliyor.
+      **Maddenin ikinci yarısı PR'da EKSİK kaldı:** #60 `0010b`'nin etkilenen kriterini adıyla
+      yazmıyor. Kapanış turunda ölçüldü — etkilenen kriter **`0010b`/AC-23** ("liste, çeviri
+      eksik ilan sayısını tüm araçlar üzerinden gösterir"): iddiasının iki çağrı yeri
+      `GetSummaryAsync(includeArchived: false, …)` olarak yeniden yazıldı ve yeşil kaldı.
+      `GetSummaryAsync` imzası **eklemeli değil, değişti**; aynı dosyadaki diğer on `0010b`
+      kriteri (AC-14, 16, 17, 21, 24, 25, 26, 27, 28, 29) dokunulmadan yeşil koştu.*
+- [x] `UpdateVehicleCommand`'ın eksik `Touch` çağrısının tamamlandığı testle gösterildi ve
       PR'da **adıyla** yazıldı (**D37**). Öne çıkarma `0012c`'dedir (**D39**).
-- [ ] `Dealership.Contracts`'a eklenen okumanın **eklemeli** olduğu ve mevcut imzaları
+      *Maddenin varsaydığı eksiklik **YOKTU** — bu kutu, kararın ölçümünün tutmadığının
+      kaydıyla işaretlendi. D37 "`Touch`'ın çağıranları yalnız `UpdateVehicleMediaCommand` ve
+      `ChangePrice`" diyordu; ölçüm: `Vehicle.ChangeCoreDetails` de `Touch` çağırıyor
+      (`Vehicle.cs:205`) ve düzenleme komutu **her zaman** ondan geçiyor. Davranış zaten
+      vardı; eksik olan **etiketli testti** (AC-21) ve o yazıldı. Kararın istediği ikinci
+      çağrı ölü kod olurdu (`docs/conventions.md` § 13) ve eklenmedi. Sonda: `ChangeCoreDetails`'ten
+      `Touch`'ı kaldırmak AC-21'i kırmızıya döndürdü. PR #60 bunu adıyla yazıyor.*
+- [x] `Dealership.Contracts`'a eklenen okumanın **eklemeli** olduğu ve mevcut imzaları
       kırmadığı testle gösterildi (**D40**).
+      *`YayinSiniriTests.Eklemelidir_SubeOkumasi` (`:105`). Eklenen: `IBranchQueries.FindNamesAsync`;
+      mevcut iki imza yerinde.*
 
 ---
 
@@ -867,13 +972,50 @@ Dürüst doldurulmayan scorecard işe yaramaz — abartılmış iyi sayılar en 
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3). Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı. Dış bulguyla aynı sütunda toplanmaz. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır.** Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak (ADR 0008 / K3). |
+| **Kriterler önce `main`'de miydi?** | evet | `git cat-file -e e67a61d^:specs/0012b-…md` → var; `e67a61d^` = `1afa041` (#59). Ayrıca R/C/AC bölümlerinin sha1'i `1afa041` ile `e67a61d` arasında **değişmedi** (R `d976f39f`, C `a75ea9da`, AC `733f962d`) — implementasyon kriterlere dokunmadı. |
+| **Kriter sayısı: önce → bugün** | 58 → 58 | `git show e67a61d^:…  \| grep -c '^- \*\*AC-'` → 58; bugün → 58. Kriter eklenmedi, çıkarılmadı. |
+| **Spec revizyon sayısı** | 2 | **Sıkı okuma seçildi.** Ölçüm: R/C ilk kez `main`'e `0012`'nin bölünmesiyle girdi (`18e4adf`, #54); sonra **#58** (`2148c37`) R/C/AC'nin üçünü de değiştirdi (CLARIFY turu — K3 "onay anındaki CLARIFY turu SAYILIR") ve **#59** (`1afa041`) R/C'yi yine değiştirip AC'yi yazdı → **2**. Gevşek okuma, kartın kendi donma cümlesini (D38, donma anı = #59) esas alıp **0** verir; ortadaki okuma yalnız CLARIFY turunu sayıp **1** verir. `0012a`'da da sıkı okuma seçilmişti; ADR 0008'in bu belirsizliği çözen cümlesi **hâlâ yazılmadı**. |
+| **Düzeltme turu sayısı** | 2 | Ölçülebilen: PR bir kez geri döndü ve yedi bulgulu turun ardından `f16b18c` ile düzeltildi. Tur hem PR'da hem commit mesajında **"tur 2"** diye adlandırılıyor, yani ondan önce bir tur daha koşmuş; tur 1'in bulgu listesi hiçbir yerde yok (GitHub'da #58/#59/#60 → 0 inceleme, 0 yorum). İzlenebilir tur **1**, adlandırmanın ima ettiği **2**; büyük olan yazıldı. DoD'un dış gözden geçirme kutusu `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | 7 / — | Yedisi de gerçekti: altısı `f16b18c`'de, yedincisi (AP-10, spec tutarlılığı) kriter dalında `8872888`'de düzeltildi. Dördü "önemli", üçü "küçük" etiketliydi. Gürültü bölenine `—` yazıldı çünkü QA'nın gürültü saydığı maddelerin **sayısı hiçbir yere kaydedilmemiş** — PR yalnız "dokunulmadı" diyor. |
+| **Uygulama içi bulgu** | 7 | Yazarın kendi testlerinin bulduğu üç kusur (kapanan şubede `Satıldı` ilanın bayrağı yine yazılıyordu · vitrin satırı silme "bu şubede araç yok" dalının arkasındaydı · düzenleme ekranının veri anahtarı tazeleme token'ı taşıyıp bildirimi siliyordu) + iki kendi kırılgan testi (duyuru iddialarındaki **sıra**) + bir `0012a` kırılgan testi (AC-17, `getBy…textContent` → `findBy*`) + bir yorum tuzağı (`**R13**/**D15**` doc comment'te `*/` üretti). |
+| **Regresyon sayısı** | 0 | Daha önce çalışan hiçbir davranış bozulmadı; 1042 backend · 357 birim · 214 e2e testinin hiçbiri bu iş yüzünden kırmızıya düşmedi. `0012a`'nın AC-17 testindeki kırılganlık bir regresyon değil, merge edilmiş bir kapının kırılganlığıydı. `0012a`'da düzeltilmiş doc comment kusurunun geri dönmesi (BULGU-6) bir **kayıt** kusurunun tekrarı, bozulan bir davranış değil. |
+| **Kaçan hata** | izleniyor | Merge 2026-10-11 (`e67a61d`). Takip edilecek iki yer: `VehiclePriceChanged` ve `VehicleRelocated` olaylarının **tüketicisi yok** (D11'de yazılı bedel) ve `listings.slug`'ın geri doldurulması bugün yayında olan ilanların adreslerini korudu — doğrulanması gereken ilk üretim verisi orada. |
 
 **Bu spec'ten çıkarılan ders:**
+
+**`0012`'yi üç kez bölmek doğru karardı ve üçüncü bölme en ucuzu oldu.** `0012c` kriter
+yazılmadan, yalnız kararları taşıyarak ayrıldı (D39) — yani bölme bedeli sıfıra yakındı.
+Buna karşılık bölmenin **ne zaman** yapıldığı önemliydi: `0012b`'nin kendi CLARIFY turu
+(#58) on yedi boşluk buldu, çünkü `0012a` bittikten sonra kart bugünkü `main` üzerinde
+**yeniden okundu**. Bir kartı yazıldığı gün değil, uygulanacağı gün okumak bu turda on yedi
+karar kazandırdı.
+
+Dört ders daha, hepsi ölçümle:
+
+1. **"Kriter başına test" iddiası kâğıt üzerinde tutabilir.** Dış gözden geçirmenin
+   BULGU-2'si yedi `DisplayName`'in bir permütasyonla kaymış olduğunu buldu (2→6, 6→4, 4→3,
+   3→2). Testler yeşildi, sayı 58/58'di, eşleme tablosu doluydu — ve yedi kriter yanlış
+   testi gösteriyordu. Düzeltme tek başına yetmedi: artık `Ayni_EtiketMetni_SpectekiKriterle`
+   kapısı etiket metnini **spec'ten okuyup** karşılaştırıyor. **Bir sayının doğru olması,
+   saydığı şeyin doğru olduğunu göstermez.**
+2. **Bir kriterin testi, kriterin kendisinden daha az şey ölçebilir.** BULGU-1'de AC-43'ün
+   testi yalnız kilometreyi değiştiriyordu; yansıtma beş kolonu kopyalamıyordu ve test bunu
+   **göremezdi**. BULGU-5'te AC-51'in kanıt testi yalnız onay kutusunu ölçüyordu — filtre
+   hiç satır getirmese de yeşil kalırdı. İkisi de "yeşil" idi. **Testin ne ölçtüğünü değil,
+   neyi ölçmediğini sor.**
+3. **Bir karar, var olmayan bir eksikliği tarif edebilir.** D37 `Touch`'ın çağıranlarını
+   sayıyordu ve sayım yanlıştı (`ChangeCoreDetails` de çağırıyor, `Vehicle.cs:205`). Kararın
+   istediği ikinci çağrı yazılsa **ölü kod** olurdu. Eksik olan davranış değil etiketli
+   testti. **Bir karar ölçüm iddia ediyorsa, uygulayan oturum o ölçümü tekrar yapmalı** —
+   `0012a`'nın "bugün gerekli değil" varsayımı dersinin ikizi.
+4. **Aynı yorum tuzağına iki spec üst üste düşüldü.** `**R13**/**D15**` bir doc comment'te
+   `*/` üretip yorumu erken kapattı; `0012a`'da da olmuştu. Ve `0012a`'da düzeltilen "doc
+   comment kendi üyesinin üstünde durur" kusuru bu PR'da aynen tekrarlandı (BULGU-6).
+   **Bir kusuru düzeltmek, tekrarını engellemez; kapı yazmak engeller.** İkisi için de kapı
+   önerisi PR'da yazılı ve ikisi de henüz yazılmadı.
+
+**Adıyla devredilen borç:** `VehiclePriceChanged` ve `VehicleRelocated` olaylarının
+tüketicisi yok (D11) · panel listesinde durum filtresi yok, yalnız arşiv filtresi var (D19;
+eksen `0015`'in konusu) · "bir üyenin üstünde birden fazla `<summary>` olamaz" kapısı
+yazılmadı · `docs/frontend.md` § 5'e "`**X**/**Y**` yazma, ayraç `·`" notu yazılmadı ·
+`0012c` (toplu eylem ve öne çıkarma) kriter turu bekliyor.
