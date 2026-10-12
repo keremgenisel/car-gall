@@ -143,9 +143,16 @@ Domain → (hiçbir şey; yalnızca BuildingBlocks primitive'leri)
     düşer, istek `200` kalır. Aynı durum **tek kayıtlı** uçta `404`'tür. *Neden:* bu durumun
     normal sebebi bayat listedir; on dokuz geçerli kaydı bir bayat satır yüzünden reddetmek
     kısmi başarı kararını anlamsız kılar.
-  - Kayıt başına sonuç satırı, kaydın **güncel durum kodunu** da taşır. *Neden:* tek başına
-    bir red kodu *"zaten o durumda"* ile *"koşulu sağlamıyor"*u ayırt ettirmez ve cümleyi
-    kuran uçtur (§ 6).
+  - Kayıt başına sonuç satırı, kaydın **güncel durum kodunu** da taşır — **başarılı
+    satırlarda da**. *Neden:* tek başına bir red kodu *"zaten o durumda"* ile *"koşulu
+    sağlamıyor"*u ayırt ettirmez ve cümleyi kuran uçtur (§ 6); güncel durumun başarılı
+    satırda da gelmesi istemciyi listeyi yeniden çekmekten kurtarır.
+  - **Başarısız satır, tekil ucun döndüğü gerekçenin AYNISINI taşır:** `errorCode` **ve**
+    onun **yapısal parametreleri**. *Neden:* bir red birden çok nedeni parametresinde
+    taşıyabiliyor (örn. yayın reddi `reasons`); parametre düşerse toplu uç *"olmadı"* der,
+    tekil uç aynı kayıt için *"şu üçü eksik"* der ve `docs/frontend.md` § 3'ün kısmi başarı
+    kuralı ("uygulanmayanlar tek tek, **gerekçesiyle**") karşılanamaz.
+    *(Spec `0012c` / D45, Takım Yöneticisi onayı 2026-10-11.)*
   - **Seçim kırpılmaz.** Üst sınırı aşan seçim reddedilir; sınır **dâhildir** ve yinelenen
     kimlikler **sınır kontrolünden önce** teklenir. *Neden:* § 3'ün `pageSize` kırpması
     adres çubuğundan gelen bir **ipucu** içindir; seçim personelin açık eylemidir ve
