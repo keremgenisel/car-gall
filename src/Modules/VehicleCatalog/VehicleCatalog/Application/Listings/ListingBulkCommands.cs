@@ -1,5 +1,6 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Dealership.Contracts.Events;
+using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
 using CarGallery.Modules.VehicleCatalog.Domain;
@@ -47,6 +48,7 @@ internal sealed class ListingBulkCommands(
     ListingFeatureCommands features,
     IBranchQueries branches,
     IVehicleModelNameResolver modelNames,
+    IMediaAssetQueries mediaAssets,
     CatalogAdminPagingOptions paging)
 {
     /// <summary>
@@ -67,10 +69,13 @@ internal sealed class ListingBulkCommands(
 
         IReadOnlyList<Guid> kimlikler = secim.Value.VehicleIds;
 
-        // **D46** — aynı yanıtı veren dört okuma BURADA, istek başına bir kez. Medya
-        // hazırlığı bilinçle dışarıda: o kayıt başına ve kilidin altında kalıyor.
+        // **D46** — aynı yanıtı veren dört okuma BURADA, istek başına bir kez; **D56** ile
+        // beşinci olarak kapak adresleri de burada, tek `FindManyAsync` ile. Medya
+        // HAZIRLIĞI bilinçle dışarıda: o kayıt başına ve kilidin altında kalıyor, çünkü
+        // bayat bir "hazır" cevabı yanlış bir yayın kararı üretir — bayat bir kapak ise
+        // bir sonraki `MediaAssetReady`'de düzelir.
         ListingReadContext read = await ListingReadContext.LoadAsync(
-            context, branches, modelNames, kimlikler, cancellationToken);
+            context, branches, modelNames, mediaAssets, kimlikler, cancellationToken);
 
         List<(Guid VehicleId, Error? Error)> sonuclar = [];
 

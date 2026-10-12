@@ -6,6 +6,7 @@ using CarGallery.Modules.VehicleCatalog.Application.Projection;
 using CarGallery.Modules.VehicleCatalog.Application.Vehicles;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
+using CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -318,7 +319,7 @@ public sealed class TopluEylemTests(ShowcaseDatabase database)
         Assert.All(tipler, tip => Assert.EndsWith("VehicleSold", tip, StringComparison.Ordinal));
     }
 
-    [Fact(DisplayName = "0012c/AC-34: Aynı yanıtı veren dört okuma istek başına **bir kez** yapılır: zorunlu alan kümesi · public alan anahtarları · şube başına ad haritası · kanonik model adları")]
+    [Fact(DisplayName = "0012c/AC-34: Beş okuma istek başına **bir kez** yapılır: zorunlu alan kümesi · public alan anahtarları · şube başına ad haritası · kanonik model adları · seçimdeki araçların kapak görseli adresleri")]
     public async Task Okur_BirKez_AyniYanitiVerenOkumalari()
     {
         FakeMediaAssetQueries medya = new();
@@ -333,6 +334,9 @@ public sealed class TopluEylemTests(ShowcaseDatabase database)
         SayanSubeSorgusu subeler = new();
         SayanModelAdCozucu modeller = new();
 
+        // Kurulum sırasında yansıtma kayıt başına çağrıldı; ölçülen şey TOPLU yolun kendisi.
+        int kapakOncesi = medya.TopluOkumaSayisi;
+
         await UygulaAsync(ListingOperation.Archive, secim, medya, subeler, modeller);
 
         // Dört araç, TEK şube: `Dealership` bir kez okundu. Araç başına okunsaydı dört.
@@ -340,6 +344,53 @@ public sealed class TopluEylemTests(ShowcaseDatabase database)
 
         // Kanonik adlar da bir kez: küme hâlinde soruluyor.
         Assert.Equal(1, modeller.KanonikOkumaSayisi);
+
+        // **D56** — kapak adresleri de tek `FindManyAsync` ile. Bu sayı bir dış bulgunun
+        // bedeli: yansıtma kapağı KAYIT BAŞINA okuyordu ve hiçbir kriter onu saymıyordu,
+        // yani 25 satırlık bir yayın 25 hazırlık + 25 kapak çağrısı yapıyordu.
+        Assert.Equal(1, medya.TopluOkumaSayisi - kapakOncesi);
+    }
+
+    /// <summary>
+    /// **D56**'nın bedel satırı: bağlam kapak adresini çözemediyse yansıtma kayıt başına
+    /// okumaya DÜŞER ve satır görselsiz kalmaz.
+    ///
+    /// <para>Ölçüm şuydu: `MediaAssetReady` yalnız VAR OLAN vitrin satırlarını tazeliyor
+    /// (`MediaAssetReadyHandler` `ExecuteUpdate` ile). Bağlam kurulurken henüz hazır olmayan
+    /// bir kapak, satır o istekte doğduktan sonra hiçbir olayla tazelenmez — "fotoğrafları
+    /// yükle, hemen yayına al" sırası tam bu pencereye düşüyor ve araç vitrine
+    /// <b>görselsiz</b> girerdi. Bayat kapağı kabul eden karar var olan satır için geçerli,
+    /// yeni doğan satır için değil.</para>
+    /// </summary>
+    [Fact(DisplayName = "0012c/D56: kapak bağlamda çözülemediyse yansıtma kayıt başına okur ve satır görselsiz kalmaz")]
+    public async Task Okur_KayitBasina_BaglamdaCozulemeyenKapagi()
+    {
+        FakeMediaAssetQueries medya = new();
+        Guid aracId = await AracEkleAsync(medya, yayinda: true);
+
+        // Kapak haritası BOŞ: bağlam kurulduğunda varlık henüz hazır değildi.
+        ListingReadContext bos = new(
+            new HashSet<string>(StringComparer.Ordinal),
+            new HashSet<string>(StringComparer.Ordinal),
+            new Dictionary<Guid, IReadOnlyDictionary<string, string>>(),
+            new Dictionary<Guid, string>(),
+            new Dictionary<Guid, string>());
+
+        await using VehicleCatalogDbContext context = database.CreateContext();
+        Vehicle arac = await context.Vehicles.SingleAsync(item => item.Id == new VehicleId(aracId));
+        Listing ilan = await context.Listings.SingleAsync(item => item.VehicleId == arac.Id);
+
+        int oncesi = medya.TopluOkumaSayisi;
+
+        await KatalogYazicilari.Yansitma(context, medya).ProjectAsync(arac, ilan, bos, CancellationToken.None);
+        await context.SaveChangesAsync();
+
+        Assert.Equal(1, medya.TopluOkumaSayisi - oncesi);
+
+        ShowcaseListing satir = await context.ShowcaseListings.AsNoTracking()
+            .SingleAsync(row => row.VehicleId == aracId);
+
+        Assert.False(string.IsNullOrEmpty(satir.CoverMediaUrl));
     }
 
     [Fact(DisplayName = "0012c/AC-35: Medya hazırlığı **kayıt başına** ve **kilidin altında** okunur")]
@@ -442,9 +493,9 @@ public sealed class TopluEylemTests(ShowcaseDatabase database)
         FixedClock saat = new(Eylem);
         SayanSubeSorgusu subeSorgusu = subeler ?? new SayanSubeSorgusu();
         SayanModelAdCozucu modelCozucu = modeller ?? new SayanModelAdCozucu();
-        InvariantGuardOptions kilit = kilitSuresi is null
-            ? InvariantGuardOptions.Default
-            : new InvariantGuardOptions(kilitSuresi.Value);
+        InvariantGuardOptions<VehicleCatalogDbContext> kilit = kilitSuresi is null
+            ? InvariantGuardOptions<VehicleCatalogDbContext>.Default
+            : new InvariantGuardOptions<VehicleCatalogDbContext>(kilitSuresi.Value);
 
         ListingBulkCommands komut = new(
             context,
@@ -464,6 +515,7 @@ public sealed class TopluEylemTests(ShowcaseDatabase database)
                 saat),
             subeSorgusu,
             modelCozucu,
+            medya,
             new CatalogAdminPagingOptions(25, 100));
 
         Result<IReadOnlyList<BulkListingRow>> sonuc =

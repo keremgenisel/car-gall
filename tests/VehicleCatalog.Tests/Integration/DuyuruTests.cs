@@ -241,7 +241,7 @@ public sealed class DuyuruTests(ShowcaseDatabase database)
             KatalogYazicilari.Yansitma(context, medya),
             medya,
             new FakeModelNameResolver(),
-            InvariantGuardOptions.Default,
+            InvariantGuardOptions<VehicleCatalogDbContext>.Default,
             saat);
 
         Result sonuc = await komut.ExecuteAsync(aracId, eylem, CancellationToken.None);

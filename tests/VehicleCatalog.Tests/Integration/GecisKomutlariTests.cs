@@ -244,7 +244,7 @@ public sealed class GecisKomutlariTests(ShowcaseDatabase database)
             KatalogYazicilari.Yansitma(context, medya),
             medya,
             new FakeModelNameResolver(kanonikAd),
-            InvariantGuardOptions.Default,
+            InvariantGuardOptions<VehicleCatalogDbContext>.Default,
             saat);
 
         return await komut.ExecuteAsync(aracId, eylem, CancellationToken.None);

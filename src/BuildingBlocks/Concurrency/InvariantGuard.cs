@@ -5,14 +5,28 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace CarGallery.BuildingBlocks.Concurrency;
 
-/// <summary>Kilidin ne kadar bekleyeceği. Testler uzatır, üretim varsayılanı kullanır.</summary>
+/// <summary>
+/// Kilidin ne kadar bekleyeceği. Testler uzatır, üretim varsayılanı kullanır.
+///
+/// <para><b>Tip parametresi MODÜLÜN <see cref="DbContext"/>'i</b> (`0012c` **D57**) ve bu
+/// bir dış bulgunun bedeliydi: non-generic hâlinde üç modül aynı tipi singleton
+/// kaydediyordu, kap tek ve <b>son kayıt kazanıyordu</b>. Üçü de <c>Default</c> kaydettiği
+/// için zararsız görünüyordu; bir modül kendi kilit süresini ayarladığı gün diğer ikisinin
+/// süresi sessizce onunla değişirdi. Aynı şekil #52'de bedeli ödenen <c>IOutboxWriter</c>
+/// tuzağıydı ve çözümü de aynı: <c>OutboxWriter&lt;TDbContext&gt;</c> emsali.</para>
+///
+/// <para>Parametre <see cref="InvariantGuard.ExecuteAsync"/>'in imzasında da yaşıyor, yani
+/// başka modülün seçeneğini geçirmek <b>derleme hatası</b>. Yasaklayan bir kapıdan güçlü
+/// olan, ifade edilemez kılmaktır.</para>
+/// </summary>
 /// <param name="LockTimeout">
 /// Aşılırsa sonuç <see cref="ConcurrencyErrors.Lost"/> olur. Sınırsız bekleme, kilitte
 /// asılı kalan bir isteğin bağlantı havuzunu tüketmesi demekti.
 /// </param>
-public sealed record InvariantGuardOptions(TimeSpan LockTimeout)
+public sealed record InvariantGuardOptions<TContext>(TimeSpan LockTimeout)
+    where TContext : DbContext
 {
-    public static InvariantGuardOptions Default { get; } = new(TimeSpan.FromSeconds(3));
+    public static InvariantGuardOptions<TContext> Default { get; } = new(TimeSpan.FromSeconds(3));
 }
 
 /// <summary>
@@ -51,20 +65,25 @@ public static class InvariantGuard
     /// <summary>
     /// Kilit altında karar verir ve yazar.
     /// </summary>
-    /// <param name="context">Modülün kendi <see cref="DbContext"/>'i.</param>
+    /// <param name="context">
+    /// Modülün kendi <see cref="DbContext"/>'i. Seçeneğin tip parametresi de odur
+    /// (**D57**): kilidi alan bağlam ile süresini veren seçenek <b>aynı modüle</b> ait
+    /// olmak zorunda ve derleyici bunu kontrol ediyor.
+    /// </param>
     /// <param name="rows">Kilitlenecek satırların tarifi.</param>
     /// <param name="excluded">Sayıdan düşülecek satır; kilitten düşülmez.</param>
     /// <param name="decideAndWrite">
     /// Kilit alındıktan sonra çalışır. Agregatı <b>burada</b> okur, domain metodunu çağırır
     /// ve modülün kendi birimiyle kaydeder. Başarısız dönerse hiçbir şey commit edilmez.
     /// </param>
-    public static async Task<Result> ExecuteAsync(
-        DbContext context,
+    public static async Task<Result> ExecuteAsync<TContext>(
+        TContext context,
         InvariantLock rows,
         Guid excluded,
         Func<int, CancellationToken, Task<Result>> decideAndWrite,
-        InvariantGuardOptions options,
+        InvariantGuardOptions<TContext> options,
         CancellationToken cancellationToken)
+        where TContext : DbContext
     {
         try
         {

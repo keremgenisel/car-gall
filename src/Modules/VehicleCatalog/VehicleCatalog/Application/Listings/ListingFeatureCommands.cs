@@ -25,7 +25,7 @@ internal sealed class ListingFeatureCommands(
     VehicleCatalogDbContext context,
     VehicleCatalogUnitOfWork unitOfWork,
     ShowcaseProjectionWriter projection,
-    InvariantGuardOptions guardOptions,
+    InvariantGuardOptions<VehicleCatalogDbContext> guardOptions,
     IClock clock)
 {
     internal Task<Result> ExecuteAsync(Guid vehicleId, bool featured, CancellationToken cancellationToken) =>

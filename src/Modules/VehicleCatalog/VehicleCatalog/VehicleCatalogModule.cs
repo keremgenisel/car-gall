@@ -112,7 +112,12 @@ public static class VehicleCatalogModule
         // düşerdi ve hiçbir test bunu yakalamazdı: entegrasyon testleri komutu elle
         // kuruyor. Aynı aile #52'nin bedeli ödenen tuzağıydı — DI'da kimin neyi
         // kaydettiği sessizce yanlış olabiliyor.
-        services.AddSingleton(InvariantGuardOptions.Default);
+        //
+        // Tip parametresi D57 ile geldi ve D55'in yarım bıraktığı yeri kapatıyor: kayıt
+        // eklendikten sonra ÜÇ modül aynı non-generic tipi kaydediyordu, kap tek ve son
+        // kayıt kazanıyordu. Üçü de `.Default` olduğu için fark görünmüyordu; bir modül
+        // kendi kilit süresini ayarladığı gün diğer ikisinin süresi onunla değişirdi.
+        services.AddSingleton(InvariantGuardOptions<VehicleCatalogDbContext>.Default);
 
         services.AddScoped<ListingTransitionCommands>();
         services.AddScoped<ListingFeatureCommands>();

@@ -159,7 +159,7 @@ public sealed class OneCikarmaKomutuTests(ShowcaseDatabase database)
             context,
             KatalogYazicilari.Birim(context, saat),
             KatalogYazicilari.Yansitma(context, medya),
-            InvariantGuardOptions.Default,
+            InvariantGuardOptions<VehicleCatalogDbContext>.Default,
             saat);
 
         return await komut.ExecuteAsync(aracId, featured, CancellationToken.None);

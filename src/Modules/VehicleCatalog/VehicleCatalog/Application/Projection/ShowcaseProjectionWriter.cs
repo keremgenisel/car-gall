@@ -33,8 +33,9 @@ internal sealed class ShowcaseProjectionWriter(
     /// Aracın vitrin satırını yazar, günceller ya da siler. Çağıran bunu
     /// <c>SaveChanges</c>'ten ÖNCE çağırır; yazma ile yansıtma aynı transaction'a girer.
     ///
-    /// <para><c>read</c> `0012c` **D46**'nın ön okuma bağlamı: verildiğinde şube adları ve
-    /// public alan anahtarları oradan gelir, verilmediğinde buradan okunur. İkinci yol
+    /// <para><c>read</c> `0012c` **D46**'nın ön okuma bağlamı: verildiğinde şube adları,
+    /// public alan anahtarları ve kapak adresi (**D56**) oradan gelir, verilmediğinde
+    /// buradan okunur. İkinci yol
     /// <b>kaldırılmadı</b> çünkü yansıtmanın dört çağıranı var ve üçü tek kayıt üzerinde
     /// çalışıyor; hepsini bağlam kurmaya zorlamak `0012c`'nin işini üç komuda
     /// genişletirdi. Toplu yol bağlamı verir ve 25 satır için `Dealership`'i şube başına
@@ -63,7 +64,7 @@ internal sealed class ShowcaseProjectionWriter(
                 read is null
                     ? await SubeAdlariAsync(vehicle.BranchId, cancellationToken)
                     : read.BranchNamesOf(vehicle.BranchId),
-                await KapakAdresiAsync(vehicle.CoverAssetId, cancellationToken),
+                await KapakAdresiAsync(vehicle.CoverAssetId, read, cancellationToken),
                 read?.PublicFieldKeys ?? await PublicAlanlarAsync(cancellationToken));
 
         if (hedef is null)
@@ -151,8 +152,12 @@ internal sealed class ShowcaseProjectionWriter(
     /// `internal`'ı (Yasak Listesi 6); sınırın bu yanında dize olarak tekrarlanıyor ve
     /// tekrar BİLİNÇLİ (Yasak Listesi 10). `MediaAssetReadyHandler` aynı sabiti aynı
     /// gerekçeyle taşıyor.
+    ///
+    /// <para><c>internal</c>: `0012c` **D56**'dan sonra kapak adresini ön okuma bağlamı da
+    /// çözüyor ve türev adı MODÜL İÇİNDE iki yerde yaşamamalı — iki kopya, birinin sessizce
+    /// başka bir türeve kayması demekti.</para>
     /// </summary>
-    private const string DisplayVariant = "display";
+    internal const string DisplayVariant = "display";
 
     private async Task<IReadOnlyDictionary<string, string>> SubeAdlariAsync(
         Guid branchId,
@@ -164,12 +169,32 @@ internal sealed class ShowcaseProjectionWriter(
     /// Kapak görselinin GÖSTERİM türevi. Varlık yoksa ya da henüz hazır değilse
     /// <c>null</c> döner — `MediaAssetReady` geldiğinde kolon o yoldan tazelenir
     /// (`0011` AC-36, **D34**).
+    ///
+    /// <para><b>Bağlam varsa oradan</b> (**D56**): toplu yol kapak adreslerini istek başına
+    /// bir kez, tek `FindManyAsync` ile okuyor.</para>
+    ///
+    /// <para><b>Bağlamda YOKSA kayıt başına okumaya düşüyor</b> ve bu bir ölçümün sonucu:
+    /// `MediaAssetReady` yalnız VAR OLAN vitrin satırlarını tazeliyor
+    /// (`MediaAssetReadyHandler`, `ExecuteUpdate`). Bağlam kurulurken henüz hazır olmayan
+    /// bir kapak, satır doğduktan sonra hiçbir olayla tazelenmez — 25 satırlık bir toplu
+    /// yayın saniyeler sürüyor ve "fotoğrafları yükle, hemen yayına al" sırası tam bu
+    /// pencereye düşüyor. D56'nın bayat-kapak kabulü <b>var olan</b> bir satır için geçerli;
+    /// yeni doğan satır için kapağı atlamak, aracı vitrine <b>görselsiz</b> koymak olurdu.
+    /// Bedel yalnızca çözülemeyen kapak başına bir okuma.</para>
     /// </summary>
-    private async Task<string?> KapakAdresiAsync(Guid? coverAssetId, CancellationToken cancellationToken)
+    private async Task<string?> KapakAdresiAsync(
+        Guid? coverAssetId,
+        ListingReadContext? read,
+        CancellationToken cancellationToken)
     {
         if (coverAssetId is null)
         {
             return null;
+        }
+
+        if (read?.CoverUrlOf(coverAssetId) is string hazirAdres)
+        {
+            return hazirAdres;
         }
 
         IReadOnlyList<MediaAssetDto> varliklar =

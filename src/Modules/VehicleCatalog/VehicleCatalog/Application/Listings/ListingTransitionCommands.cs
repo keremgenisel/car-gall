@@ -42,7 +42,7 @@ internal sealed class ListingTransitionCommands(
     ShowcaseProjectionWriter projection,
     IMediaAssetQueries mediaAssets,
     IVehicleModelNameResolver modelNames,
-    InvariantGuardOptions guardOptions,
+    InvariantGuardOptions<VehicleCatalogDbContext> guardOptions,
     IClock clock)
 {
     internal Task<Result> ExecuteAsync(

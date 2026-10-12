@@ -18,7 +18,7 @@ namespace CarGallery.Modules.Dealership.Application;
 internal sealed class BranchCommands(
     DealershipDbContext context,
     DealershipUnitOfWork unitOfWork,
-    InvariantGuardOptions guardOptions)
+    InvariantGuardOptions<DealershipDbContext> guardOptions)
 {
     /// <summary>
     /// B5 — son aktif şube kapatılamaz. Okuma, karar ve yazma tek transaction içinde ve
