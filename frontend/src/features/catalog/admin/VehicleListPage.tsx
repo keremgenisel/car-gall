@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocale } from '../../../app/localeContext'
+import { ApiError } from '../../../shared/api/client'
 import type { AppLocale } from '../../../shared/lib/locale'
 import {
   applyListingFeature,
@@ -18,6 +19,7 @@ import { Badge, EmptyState, ErrorState, Skeleton } from '../../../shared/ui'
 import { codeKey } from './vehicleFormState'
 import { BulkActionBar } from './BulkActionBar'
 import { retainVisible, selectionOf } from './bulkActionState'
+import { canFeature, messageKey } from './listingActionState'
 
 type LoadState =
   | { readonly kind: 'loading' }
@@ -67,6 +69,15 @@ export function VehicleListPage() {
     readonly key: string
     readonly ids: ReadonlySet<string>
   }>(() => ({ key: '', ids: new Set() }))
+  /**
+   * `0012c` **AC-44** — satır başına öne çıkarmanın reddi. Araç KİMLİĞİYLE saklanıyor,
+   * çünkü gerekçe eylemin yaşadığı satırda görünmeli: listenin başındaki ortak bir kutu,
+   * yirmi satırlık bir sayfada hangi aracın reddedildiğini söylemezdi.
+   */
+  const [oneCikarmaHatasi, setOneCikarmaHatasi] = useState<{
+    readonly vehicleId: string
+    readonly messageKey: string
+  } | null>(null)
 
   const requestKey = `${locale}|${page}|${sort}|${archived}|${reloadToken}`
   const state: LoadState =
@@ -140,10 +151,33 @@ export function VehicleListPage() {
     yazSecim(sonraki)
   }
 
-  /** `0012c` **R5** — satır başına öne çıkarma anahtarı; eylem YALNIZ burada (**D51**). */
+  /**
+   * `0012c` **R5** — satır başına öne çıkarma anahtarı; eylem YALNIZ burada (**D51**).
+   *
+   * <p><b>Her başarısızlık yolu personele söyleniyor</b> (**AC-44**, `docs/frontend.md`
+   * § 3). İlk yazımda `catch` yoktu ve çağrı `void` ile yapılıyordu: red yutuluyor,
+   * ekranda hiçbir şey olmuyordu — ne mesaj, ne rozet değişimi, ne tazeleme. Sessizce
+   * hiçbir şey yapmayan bir düğme, personele ürünün bozuk olduğunu söyler.</p>
+   *
+   * <p>Arşivlenmiş satırda düğme HİÇ basılmıyor (**AC-43** · `canFeature`); bu `catch` ağ
+   * hatasını, `404`'ü ve `concurrency.lost`'u karşılıyor. Hata KODU asla ekrana yazılmıyor:
+   * `messageKey` onu çeviri anahtarına çeviriyor ve bilinmeyen kod genel mesaja düşüyor
+   * (**AC-39**).</p>
+   */
   async function oneCikar(vehicleId: string, featured: boolean) {
-    await applyListingFeature(vehicleId, featured, locale)
-    setReloadToken((token) => token + 1)
+    setOneCikarmaHatasi(null)
+
+    try {
+      await applyListingFeature(vehicleId, featured, locale)
+      setReloadToken((token) => token + 1)
+    } catch (cause) {
+      const hata = cause instanceof ApiError ? cause : null
+
+      setOneCikarmaHatasi({
+        vehicleId,
+        messageKey: messageKey(hata?.errorCode ?? 'api.unavailable', locale),
+      })
+    }
   }
 
   /** Adres ekranla birlikte değişir; tam gezinme YOK, yalnız adres çubuğu güncellenir. */
@@ -411,16 +445,34 @@ export function VehicleListPage() {
                             <Badge>{t('vehicle.badge.featured')}</Badge>
                           </span>
                         ) : null}
-                        <button
-                          type="button"
-                          className="ui-button ui-button--secondary vehicle-list__feature"
-                          onClick={() => void oneCikar(vehicle.vehicleId, !vehicle.isFeatured)}
-                          data-testid={`vehicle-feature-${vehicle.vehicleId}`}
-                        >
-                          {vehicle.isFeatured
-                            ? t('vehicle.action.unfeature')
-                            : t('vehicle.action.feature')}
-                        </button>
+                        {/*
+                          AC-43 — arşivlenmiş satırda düğme YOK: sunucu onu
+                          `listing.cannot_feature.archived` ile reddediyor (**D36**) ve
+                          `availableActions`'ın gerekçesi birebir burada da geçerli —
+                          personele olmayan bir düğme gösterilmez.
+                        */}
+                        {canFeature(vehicle.listingStatus) ? (
+                          <button
+                            type="button"
+                            className="ui-button ui-button--secondary vehicle-list__feature"
+                            onClick={() => void oneCikar(vehicle.vehicleId, !vehicle.isFeatured)}
+                            data-testid={`vehicle-feature-${vehicle.vehicleId}`}
+                          >
+                            {vehicle.isFeatured
+                              ? t('vehicle.action.unfeature')
+                              : t('vehicle.action.feature')}
+                          </button>
+                        ) : null}
+
+                        {oneCikarmaHatasi?.vehicleId === vehicle.vehicleId ? (
+                          <p
+                            className="admin-form__field-error"
+                            role="alert"
+                            data-testid={`vehicle-feature-error-${vehicle.vehicleId}`}
+                          >
+                            {t(oneCikarmaHatasi.messageKey, { limit: '' })}
+                          </p>
+                        ) : null}
                       </td>
                     </tr>
                   )

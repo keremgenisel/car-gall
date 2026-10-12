@@ -485,9 +485,10 @@ altındaki ADR'lerdedir.
 | `VehicleCatalog` olayları | Sekiz entegrasyon olayı, hepsi `Vehicle*` önekli; yayıncısı `0012b` |
 | İlan adresi (slug) | Yazma modelinde; **ilk yayına alma** anında bir kez üretilir, bir daha değişmez |
 | Toplu eylem sonucu | `200` + ilan başına sonuç listesi; kısmi başarı dördüncü ekran durumudur |
-| Toplu eylemde okuma bütçesi | **Aynı yanıtı veren** okumalar istek başına bir kez ve komuta verilir; **tazeliği gereken** okuma (medya hazırlığı) kayıt başına ve kilidin altında |
+| Toplu eylemde okuma bütçesi | **Aynı yanıtı veren** okumalar ve **küme hâlinde sorulabilen** kapak adresleri istek başına bir kez, komuta verilir; **tazeliği gereken** okuma (medya hazırlığı) kayıt başına ve kilidin altında |
 | Öne çıkarma | Vitrin sıralama ağırlığının **iki değerli** kullanımı; ayrı kolon yok, duyuru yok, arşiv dışında her durumda çalışır ve **idempotenttir** |
 | Modülün DI kaydı | Modül **kendi** bağımlılığını kendi kaydeder; başka modülün kaydına yaşayan bir bağımlılık bırakılmaz (iki kez ödendi: #52 ve `0012b`'nin kaçan hatası) |
+| Paylaşılan altyapı seçenekleri | Modül başına **tiplenir** (`InvariantGuardOptions<TContext>`, `OutboxWriter<TDbContext>`); non-generic paylaşılan bir kayıt yok — kap tek ve son kayıt kazanır |
 | `VehicleCatalog` olaylarının gövdesi | `(EventId, OccurredAt, VehicleId, ListingId, Slug)`; **durum alanı yok** — durumu olayın tipi söyler |
 | Vitrin okuma modeline yazma | **Görünürlük kararı** yalnız yansıtmada; kopyalanmış kolonları (kapak URL'i, şube adları) besleyen işleyiciler bunun dışında |
 | Sistem tepkisiyle gelen toplu geçiş | Şube kapanması (A8) personelin seçim üst sınırına tabi değil; şube olayı başına tek işlem, geçişleri duyurulur |

@@ -447,28 +447,37 @@ tam olarak buydu (yedi etiketin permütasyonu, hepsi "ölçüldü" görünüyord
       58 kriter, 29 DoD kutusu. Ölçüldü: altı eylem ucu
       `VehicleAdminEndpoints.cs:69`'da, duyurular `VehicleCatalogUnitOfWork`'te.*
 - [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-      *Kırk iki kriterin kırk ikisi; tablo PR'da.*
+      *Kırk dört kriterin kırk dördü; tablo PR'da. Dış triyajdan gelen AC-43 ve AC-44 da
+      kapılı (`listingActionState.test.ts`, `VehicleListPage.test.tsx`, `toplu-eylem.spec.ts`).*
 - [x] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0012c-ac<n>.png`),
       **kısmi başarı** ve hata durumları dâhil, RTL için Arapça görüntü de var.
-      *Beş görüntü, **hiçbiri stub değil**. Sınır kriterlerinin (AC-5, AC-6, AC-7) görsel
-      kanıtı YOK ve gerekçesi **D52**: istemci `pageSize` göndermiyor, sınır panelden
-      tetiklenemiyor.*
-- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). *1097 test.*
-- [x] <!-- DoD:T4 --> Mimari testler yeşil; durum geçişi mantığı agregatta kaldı. *50 test;
+      *Sekiz görüntü. Yedisi gerçek veriyle; **tek istisna AC-44** ve gerekçesi yazılı —
+      arşivlenmiş satırda düğme artık hiç basılmıyor (AC-43) ve kalan başarısızlık yolları
+      gerçek bir yarışla üretilemiyor, yanıt `0008`/AC-18'in emsaliyle sahteleniyor.
+      Sınır kriterlerinin (AC-5, AC-6, AC-7) görsel kanıtı YOK ve gerekçesi **D52**:
+      istemci `pageSize` göndermiyor, sınır panelden tetiklenemiyor.*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). *1100 test.*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil; durum geçişi mantığı agregatta kaldı. *52 test;
       `TopluEylemSiniriTests` toplu komutun agregat metodu çağırmadığını ve toplu SQL ile
-      yazmadığını denetliyor.*
+      yazmadığını denetliyor. `InvariantGuardSecenekleriTests` (**D57**) paylaşılan
+      non-generic bir seçenek kaydını yasaklıyor ve korumayı çağıran her modülün KENDİ
+      seçeneğini kaydettiğini ölçüyor.*
 - [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca `vehicle_catalog` şemasına dokunuyor.
       *Migration **YOK**: öne çıkarma mevcut `showcase_sort_weight` kolonunu iki değerli
       kullanıyor (**D16**) ve yeni kolon açmıyor.*
 - [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-      *23 anahtar × 3 katalog; 386 anahtar eşit.*
+      *23 anahtar × 3 katalog; 386 anahtar eşit. Dış triyajdan sonra `check:locales`
+      Arapçanın çoğul BİÇİMLERİNİ de denetliyor: altı mesaj yalnız `other` taşıyordu ve
+      anahtar sayan kapı bunu göremiyordu.*
 - [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
       *«Öne Çıkarma» — sözlükte hiçbir dokümanda geçmiyordu, ölçüldü.*
 - [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-      *Üç satır: okuma bütçesi (**D46**), öne çıkarma (**D16**/**D48**) ve modülün kendi
-      DI kaydı (**D55**).*
+      *Dört satır: okuma bütçesi (**D46**/**D56**), öne çıkarma (**D16**/**D48**), modülün
+      kendi DI kaydı (**D55**) ve paylaşılan altyapı seçeneklerinin modül başına
+      tiplenmesi (**D57**).*
 - [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *`CI` ve `Performans`
-      iş akışlarının ikisi de **ilk koşuda** başarılı (`23af1e7`).*
+      iş akışlarının ikisi de **ilk koşuda** başarılı (`23af1e7`); triyaj düzeltmelerinden
+      sonra yeniden koşuldu.*
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
@@ -505,11 +514,14 @@ tam olarak buydu (yedi etiketin permütasyonu, hepsi "ölçüldü" görünüyord
 - [x] `VehicleCatalog`'un `InvariantGuardOptions`'ı **kendi** kaydettiği testle gösterildi;
       `0012b`'nin kartındaki `Kaçan hata` hücresi **1**'e çekildi ve düzeltme PR'da adıyla
       yazıldı (**D55**, **C9**). *`ModulKaydiTests` kayıt defterini okuyor; sonda yapıldı.*
-- [ ] Satır başına öne çıkarmanın **hata yolu** gösterildi: arşivlenmiş satırda düğme
+- [x] Satır başına öne çıkarmanın **hata yolu** gösterildi: arşivlenmiş satırda düğme
       **yok** ve sunucunun reddi **o satırda** gerekçesiyle görünüyor (**AC-43**, **AC-44**);
-      ikisinin görsel kanıtı var.
-- [ ] Modül başına tiplenen kilit seçeneği (**D57**) kuruldu ve paylaşılan non-generic bir
-      seçenek kaydının geri gelmesini **bir mimari kapı** yasaklıyor.
+      ikisinin görsel kanıtı var. *`0012c-ac43.png` gerçekten arşivlenmiş bir satır;
+      `0012c-ac44.png` sahtelenmiş `409` — gerekçesi T2'de yazılı. Ağ hatası ve başarıdan
+      sonra mesajın silinmesi birim testinde.*
+- [x] Modül başına tiplenen kilit seçeneği (**D57**) kuruldu ve paylaşılan non-generic bir
+      seçenek kaydının geri gelmesini **bir mimari kapı** yasaklıyor. *Kapı iki yönden de
+      sondalandı: kaydı silince ve non-generic bir seçeneği kaydedince kırmızıya döndü.*
 
 ---
 

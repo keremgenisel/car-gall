@@ -492,4 +492,84 @@ describe('0012c: toplu eylem ve öne çıkarma yüzeyi', () => {
       expect(applyListingFeature).toHaveBeenCalledWith(ikinci.vehicleId, true, 'tr'),
     )
   })
+
+  it('0012c/AC-43: arşivlenmiş satırda öne çıkarma düğmesi yoktur', async () => {
+    ikiArac({ listingStatus: 'Archived', isFeatured: true })
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    // Düğme YOK: sunucu arşivlenmiş ilanda iki yönü de reddediyor (**D36**) ve personele
+    // olmayan bir düğme gösterilmez.
+    expect(screen.queryByTestId(`vehicle-feature-${arac.vehicleId}`)).toBeNull()
+
+    // Rozet DURUYOR: bir olguyu bildiriyor ve arşivlenen ilan öne çıkarılmış hâlde
+    // kalabilir — düğmenin yokluğu rozeti de silmemeli.
+    expect(screen.getByTestId('vehicle-featured').textContent).toContain('Öne çıkarıldı')
+
+    // Arşivlenmemiş komşu satırda düğme yerinde.
+    expect(screen.getByTestId(`vehicle-feature-${ikinci.vehicleId}`)).toBeTruthy()
+  })
+
+  it('0012c/AC-44: satır başına öne çıkarmanın reddi O SATIRDA gerekçesiyle görünür', async () => {
+    ikiArac()
+    vi.mocked(applyListingFeature).mockRejectedValue(new ApiError('concurrency.lost', null, 409))
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+
+    const kutu = await screen.findByTestId(`vehicle-feature-error-${arac.vehicleId}`)
+
+    expect(kutu.textContent).toContain('başka bir değişiklik oldu')
+    expect(kutu.getAttribute('role')).toBe('alert')
+
+    // Gerekçe EYLEMİN YAŞADIĞI satırda: komşu satır temiz kalıyor.
+    expect(screen.queryByTestId(`vehicle-feature-error-${ikinci.vehicleId}`)).toBeNull()
+
+    // AC-39 — hata kodu ve HTTP durumu ekranda görünmez.
+    expect(document.body.textContent).not.toContain('concurrency.lost')
+    expect(document.body.textContent).not.toContain('409')
+  })
+
+  it('0012c/AC-44: ağ hatası da sessiz kalmıyor — genel mesaja düşüyor', async () => {
+    ikiArac()
+    // `ApiError` DEĞİL: `fetch` ağ seviyesinde düştüğünde kod yoktur ve ilk yazımda bu yol
+    // da yutuluyordu. Yakalanmamış bir promise reddi kalıyor, ekranda hiçbir şey olmuyordu.
+    vi.mocked(applyListingFeature).mockRejectedValue(new Error('ağ yok'))
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+
+    const kutu = await screen.findByTestId(`vehicle-feature-error-${arac.vehicleId}`)
+
+    expect(kutu.textContent).toContain('tamamlanamadı')
+  })
+
+  it('0012c/AC-44: başarılı eylemden sonra önceki red mesajı kalmıyor', async () => {
+    ikiArac()
+    vi.mocked(applyListingFeature).mockRejectedValueOnce(
+      new ApiError('vehicle.not_found', null, 404),
+    )
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+    await screen.findByTestId(`vehicle-feature-error-${arac.vehicleId}`)
+
+    vi.mocked(applyListingFeature).mockResolvedValue(undefined)
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+
+    await waitFor(() =>
+      expect(screen.queryByTestId(`vehicle-feature-error-${arac.vehicleId}`)).toBeNull(),
+    )
+  })
 })

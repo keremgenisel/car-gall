@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   availableActions,
   canAct,
+  canFeature,
   messageKey,
   missingFieldKeys,
   publishRejectionKeys,
@@ -22,6 +23,18 @@ describe('listingActionState', () => {
   it('`Arşiv` hiçbir eylem sunmaz; tanınmayan durum da', () => {
     expect(availableActions('Archived')).toEqual([])
     expect(availableActions('Bilinmeyen')).toEqual([])
+  })
+
+  it('0012c/AC-43: arşivlenmiş satırda öne çıkarma düğmesi YOKTUR', () => {
+    // Tek ön koşul arşiv (**D36**) ve iki yön de reddediliyor: arşivlenmiş bir ilanda
+    // "öne çıkarmayı kaldır" da `listing.cannot_feature.archived` alır.
+    expect(canFeature('Archived')).toBe(false)
+  })
+
+  it('0012c/AC-29: öne çıkarma arşiv dışındaki her durumda çağrılabilir', () => {
+    for (const status of ['Draft', 'Published', 'Reserved', 'Sold']) {
+      expect(canFeature(status)).toBe(true)
+    }
   })
 
   it('0012b/AC-58: rol ayrımı yok — oturum açmış her personel her eylemi çağırabilir', () => {
