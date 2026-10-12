@@ -167,11 +167,14 @@ test('0012c/AC-43, 0012c/AC-44: arşivlenmiş satırda düğme yok; red satırda
   page,
 }) => {
   const sase = benzersizSase('K12C43')
+  const reddedilecek = benzersizSase('K12C44')
 
   await yoneticiOlarakGirAsync(page)
   await aracKaydetAsync(page, sase)
+  await aracKaydetAsync(page, reddedilecek)
 
   const aracId = await aracKimligiAsync(page, sase)
+  const reddedilecekId = await aracKimligiAsync(page, reddedilecek)
 
   await page.goto('/admin/vehicles?page=1&sort=recently-added')
   await expect(page.getByTestId('vehicle-table')).toBeVisible()
@@ -194,7 +197,12 @@ test('0012c/AC-43, 0012c/AC-44: arşivlenmiş satırda düğme yok; red satırda
   // Düğmenin kalan her başarısızlık yolu da sessiz değil. Red SAHTELENİYOR çünkü
   // arşivlenmiş satırda düğme artık hiç yok ve `concurrency.lost` gerçek bir yarışla
   // üretilemez; ölçülen şey sunucunun kararı değil (onu AC-19 ölçtü), EKRANIN tepkisi.
-  await page.route(`**/api/admin/vehicles/*/feature*`, async (route) => {
+  //
+  // Yol KENDİ aracının kimliğiyle yazılı ve bu bir CI kusurunun bedeli: ilk yazımda
+  // listenin BİRİNCİ satırına tıklıyordum. Sıra `recently-added` ve paralel koşan başka
+  // bir test en yeni aracı öne çıkarıyor — o satırın düğmesi `unfeature` gönderiyor, yol
+  // eşleşmiyor ve red hiç doğmuyordu. Yerelde geçti, CI'da iki projede birden düştü.
+  await page.route(`**/api/admin/vehicles/${reddedilecekId}/feature*`, async (route) => {
     await route.fulfill({
       status: 409,
       contentType: 'application/problem+json',
@@ -204,20 +212,10 @@ test('0012c/AC-43, 0012c/AC-44: arşivlenmiş satırda düğme yok; red satırda
 
   await page.goto('/admin/vehicles?page=1&sort=recently-added')
   await expect(page.getByTestId('vehicle-table')).toBeVisible()
-  await page.getByTestId(`vehicle-feature-${await ilkAracIdAsync(page)}`).click()
+  await page.getByTestId(`vehicle-feature-${reddedilecekId}`).click()
 
-  const hata = page.getByTestId(/vehicle-feature-error-/)
+  const hata = page.getByTestId(`vehicle-feature-error-${reddedilecekId}`)
 
   await expect(hata).toContainText('başka bir değişiklik oldu')
   await expect(page.locator('body')).not.toContainText('concurrency.lost')
 })
-
-/** Listedeki ilk satırın araç kimliği: seçim kutusunun `data-testid`'inden okunuyor. */
-async function ilkAracIdAsync(page: Page): Promise<string> {
-  const kutu = page.locator('tbody tr [data-testid^="vehicle-select-"]').first()
-  const testId = await kutu.getAttribute('data-testid')
-
-  expect(testId).not.toBeNull()
-
-  return testId!.replace('vehicle-select-', '')
-}
