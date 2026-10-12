@@ -89,6 +89,18 @@ durum kapısı diye bir şey yok ve atlanan iş hiçbir PR'ı kilitlemez.
 Backend** konur. Frontend/E2E/Performans zorunlu işaretlenirse metin-PR'ları sonsuza kadar
 "bekliyor" durumunda kalır.
 
+### K4.1 — Koşul **atlamaya değil koşmaya** meyleder (fail-safe)
+
+Ağır işlerin koşulu `if: always() && needs.changes.outputs.<ad> != 'false'` biçiminde
+yazılır; `== 'true'` DEĞİL.
+
+*Gerekçe ölçümle:* ilk yazımda koşul `== 'true'`'ydu ve #68'in ilk koşusu kusuru gösterdi
+— dakika bittiği için `changes` işi düştü, çıktıları boş kaldı ve Frontend ile E2E
+**SKIPPED** oldu. Yani **tespitin kendi arızası ağır kapıları sessizce atlatıyordu.**
+`always()` olmadan düşen bir `needs` bağımlılığı bağlı işi hiç çalıştırmaz; `!= 'false'`
+ile boş çıktı "bilmiyorum" demek olur ve bilmediğimizde koşarız. Bu, `changes` işinin
+içindeki "taban okunamadı → hepsini koş" dalının dış kardeşi: aynı ilke, iki yerde.
+
 ### K5 — `schedule` ve `workflow_dispatch` her şeyi koşar
 
 Gece koşusu bütünü ölçer; orada diff yok ve olmamalı. K6'nın (ADR 0008) ölçtüğü şey tam

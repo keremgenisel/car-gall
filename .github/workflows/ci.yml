@@ -154,7 +154,11 @@ jobs:
     # ADR 0010 / K2 — altı `check:*` betiğinin hiçbiri `frontend/` dışını okumuyor
     # (ölçüldü), bu yüzden `docs/` ya da `specs/` değişikliği bu işi kıramaz.
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    # `always()` + `!= 'false'`: tespit işi DÜŞERSE çıktı boş kalır ve iş KOŞAR.
+    # Ölçüldü (#68'in ilk koşusu): koşul `== 'true'` yazıldığında, dakika bittiği için
+    # düşen `changes` işi bu kapıyı SKIPPED yapıyordu — yani tespitin kendi arızası
+    # kapıyı sessizce atlatıyordu. Şüphe hâlinde koşmak, şüphe hâlinde atlamaktan iyidir.
+    if: always() && needs.changes.outputs.frontend != 'false'
     defaults:
       run:
         working-directory: frontend
@@ -219,7 +223,8 @@ jobs:
     runs-on: ubuntu-latest
     # ADR 0010 / K3 — yığında yer almayan bir dosya E2E sonucunu değiştirmiyor.
     needs: changes
-    if: needs.changes.outputs.kod == 'true'
+    # Aynı fail-safe: tespit düşerse E2E koşar (yukarıdaki not).
+    if: always() && needs.changes.outputs.kod != 'false'
 
     env:
       # TEK KAYNAK. Host'un kurulum hesabı ile E2E'nin globalSetup'ı aynı parolayı
