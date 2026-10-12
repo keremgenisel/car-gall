@@ -26,6 +26,72 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ADR 0010 — hangi kapı hangi değişiklikte koşar. Bu iş SADECE diff'i okur (~15 s) ve
+  # ağır işlere koşul üretir. Backend bilerek koşulsuz: mimari kapılar `specs/`, `docs/`
+  # ve `frontend/src` altını okuyor; metin değişikliği onları gerçekten kırdı (#61).
+  changes:
+    name: Değişen yollar
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.tespit.outputs.frontend }}
+      kod: ${{ steps.tespit.outputs.kod }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Diff için geçmiş gerekiyor; sığ klon taban commit'i bulamaz.
+          fetch-depth: 0
+
+      - name: Diff'i oku ve koşulları üret
+        id: tespit
+        env:
+          OLAY: ${{ github.event_name }}
+          TABAN_REF: ${{ github.base_ref }}
+          ONCE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          # Gece koşusu ve elle tetikleme BÜTÜNÜ ölçer — orada diff yok (ADR 0010 / K5).
+          if [ "$OLAY" = "schedule" ] || [ "$OLAY" = "workflow_dispatch" ]; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            echo "kod=true" >> "$GITHUB_OUTPUT"
+            echo "Olay '$OLAY' — bütün işler koşar."
+            exit 0
+          fi
+
+          if [ "$OLAY" = "pull_request" ]; then
+            git fetch --quiet origin "$TABAN_REF"
+            DOSYALAR=$(git diff --name-only "origin/$TABAN_REF...HEAD")
+          elif [ -n "${ONCE:-}" ] &&
+               [ "$ONCE" != "0000000000000000000000000000000000000000" ] &&
+               git cat-file -e "$ONCE^{commit}" 2>/dev/null
+          then
+            DOSYALAR=$(git diff --name-only "$ONCE" "$SHA")
+          else
+            # Yeni dal ya da ulaşılamayan taban: ölçemediğimiz şeyi atlamıyoruz.
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            echo "kod=true" >> "$GITHUB_OUTPUT"
+            echo "Taban okunamadı — bütün işler koşar."
+            exit 0
+          fi
+
+          frontend=false
+          kod=false
+          while IFS= read -r d; do
+            [ -z "$d" ] && continue
+            case "$d" in
+              frontend/*|.github/workflows/*) frontend=true; kod=true ;;
+              src/*|scripts/*|*.slnx)        kod=true ;;
+            esac
+          done <<< "$DOSYALAR"
+
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+          echo "kod=$kod" >> "$GITHUB_OUTPUT"
+
+          echo "Değişen dosya: $(echo "$DOSYALAR" | grep -c . || true)"
+          echo "frontend=$frontend  kod=$kod"
+          echo "$DOSYALAR"
+
   backend:
     name: Backend — build, xUnit, mimari testler, migration şema kontrolü
     runs-on: ubuntu-latest
@@ -85,6 +151,10 @@ jobs:
   frontend:
     name: Frontend — lint, tip kontrolü, testler, build, çeviri anahtarları
     runs-on: ubuntu-latest
+    # ADR 0010 / K2 — altı `check:*` betiğinin hiçbiri `frontend/` dışını okumuyor
+    # (ölçüldü), bu yüzden `docs/` ya da `specs/` değişikliği bu işi kıramaz.
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     defaults:
       run:
         working-directory: frontend
@@ -147,6 +217,9 @@ jobs:
   e2e:
     name: E2E — kritik akışlar, üç durum ve RTL
     runs-on: ubuntu-latest
+    # ADR 0010 / K3 — yığında yer almayan bir dosya E2E sonucunu değiştirmiyor.
+    needs: changes
+    if: needs.changes.outputs.kod == 'true'
 
     env:
       # TEK KAYNAK. Host'un kurulum hesabı ile E2E'nin globalSetup'ı aynı parolayı
