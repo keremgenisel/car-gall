@@ -2,17 +2,17 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
-| **Sahip** | — |
+| **Durum** | Onaylandı |
+| **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (toplu komut yüzeyi) · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | **`0012b` ÖNKOŞUL — tamamlandı** (2026-10-11, `e67a61d`; tekil geçiş komutları, duyurular, yansıtma) · `0010b` (panel listesi) |
 | **Dayanak** | `0012b` **D39** — `0012`'nin üçüncü dilimi |
-| **Kararlar** | Taşınanlar `0012b`'de verildi (**D3–D7**, **D16**, **D18**, **D27–D29**, **D36**); **D43–D55** bu spec'in kendi CLARIFY turunda (2026-10-11, `2255370` üzerinde) **ölçülerek** eklendi. **Açık soru yok.** Kriterler yazılmadı. |
+| **Kararlar** | Taşınanlar `0012b`'de verildi (**D3–D7**, **D16**, **D18**, **D27–D29**, **D36**); **D43–D55** bu spec'in kendi CLARIFY turunda (2026-10-11, `2255370` üzerinde) **ölçülerek** eklendi; **D56–D57** kriter PR'ı hâlâ açıkken dış triyajın ölçümünden (2026-10-12) doğdu. **Açık soru yok.** |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı; sıradaki tur **kriter turudur**
-> (`0012a`/`0012b`'nin deseni: kararlar bu PR'da donar, kriterler kendi PR'ında girer —
-> ADR `0008` / K2).
+> **R/C/AC bu PR'da `main`'e giriyor ve orada donuyor** (ADR `0008` / K2 ve K3'ün donma
+> anı cümlesi — `0012b` **D38**). Bu commit'ten sonra Requirements, Constraints veya
+> Acceptance Criteria'da yapılan her değişiklik **sayılan bir revizyondur**.
 >
 > **CLARIFY turu, 2026-10-11.** Bu dosya `0012b` **bitmeden** yazılmıştı ve Context'i
 > *"`0012b` bittiğinde"* diye konuşuyordu; `0012b` bittikten sonra (#59→#61) hepsi bugünkü
@@ -317,6 +317,29 @@ onayıyla verildi. Taşınan kararlar yukarıda; bunlar **bu spec'in kendi** kar
   kimin neyi kaydettiği sessizce yanlış olabiliyor. *Bedel:* kapanmış bir kartın SCORECARD
   hücresi güncellenir; ADR `0008`/K3 kapanmış kartları düzeltmiyor ama `Kaçan hata` hücresi
   tam bu amaçla `izleniyor` bırakılıyor.
+- **D56 — Kapak görselinin adresi de ÖN OKUMA BAĞLAMINA girer; D46'nın bütçesi beş
+  okumadır.** *Gerekçe:* ölçüldü (dış triyaj, 2026-10-12) — yansıtma kapak adresini **kayıt
+  başına** okuyor (`ShowcaseProjectionWriter.cs:66`) ve D46 onu hiç saymamıştı: 25 satırlık
+  bir toplu yayın 25 hazırlık + 25 kapak = **50** modüller arası çağrı yapıyor, yani Tuzak
+  3'ün adını koyduğu sayı. Kapak hazırlıktan **farklıdır** ve öne alınabilir: tazelik
+  gerektirmiyor, kopyalanmış bir kolonu besliyor ve `MediaAssetReadyHandler` onu kendi
+  yolundan tazeliyor (`0011`/AC-36, **D34**) — bayat bir kapak bir sonraki
+  `MediaAssetReady`'de düzelir, oysa bayat bir "hazır" cevabı **yanlış bir yayın kararı**
+  üretir. `FindManyAsync` zaten küme imzalı. *Bedel:* bağlam beşinci bir alan kazanır ve
+  `Media` okuması artık iki ayrı gerekçeyle iki ayrı yerde yaşar (hazırlık kilidin altında,
+  kapak kilidin dışında); ikisinin farkı AC-34 ile AC-35'te adıyla yazılı.
+- **D57 — `InvariantGuardOptions` MODÜL BAŞINA tiplenir: `InvariantGuardOptions<TContext>`.**
+  *Gerekçe:* D55 kaydı ekledi ama tuzak sınıfını kapatmadı — ölçüldü (dış triyaj,
+  2026-10-12): üç modül aynı non-generic tipi singleton kaydediyor, kap tek ve **son kayıt
+  kazanıyor**. Bugün zararsız (üçü de `.Default`), ama bağımlılık **yön değiştirdi, kalkmadı**:
+  bir modül kendi kilit süresini ayarladığı gün — ki D47'nin bedel satırı bunu adıyla
+  öneriyor — diğer ikisinin süresi sessizce onunla değişir. Bu, #52'de bedeli ödenen
+  `IOutboxWriter` tuzağının birebir şekli ve çözümü de aynı: `OutboxWriter<TDbContext>`
+  emsali. Tip parametresi `ExecuteAsync`'in imzasında da yaşıyor, yani **başka modülün
+  seçeneğini geçirmek derleme hatası** olur. *Bedel:* `BuildingBlocks`'un tipi ve onu isteyen
+  dört komut sınıfı imza değiştirir; ayrıca bir mimari kapı (`InvariantGuardSecenekleriTests`)
+  paylaşılan non-generic seçenek kaydını yasaklar ve guard'ı çağıran her modülün **kendi**
+  seçeneğini kaydettiğini ölçer.
 
 ---
 
@@ -325,16 +348,24 @@ onayıyla verildi. Taşınan kararlar yukarıda; bunlar **bu spec'in kendi** kar
 **Yok.** Son açık soru (**S1** — "hepsini seç" sayfa değiştiğinde ne olur) 2026-10-11'de
 **D43** ile kapandı: seçim sayfaya aittir ve sayfa değişince temizlenir.
 
-Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**.
+Kabul kriterlerini bekleten bir karar kalmadı; kriterler bu PR'da yazıldı.
 
 ---
 
 ## Acceptance Criteria
 
-Kırk iki kriter, yedi grupta. Bekleyen karar yoktu (**D43**); kapsamı **D52** (sınır
+Kırk dört kriter, yedi grupta. Bekleyen karar yoktu (**D43**); kapsamı **D52** (sınır
 kriterleri API düzeyinde), **D53** (filtreye uygulama kapsam dışı) ve **D54** (R6 ikiye
 ayrıldı) belirledi. Yapılandırmadan gelen her değer için kriter **yapılandırılan değeri**
 doğrular, spec'e kopyalanmış bir sabiti değil.
+
+**AC-43 ve AC-44 bu PR hâlâ açıkken eklendi, AC-34'ün ölçüsü de bu turda büyüdü** (dış
+triyaj, 2026-10-12): satır başına öne çıkarmanın **hata yolunu** hiçbir kriter istemiyordu
+ve okuma bütçesi kapak adresini saymıyordu. Donma anı AC'yi taşıyan PR'dır (K3 · `0012b`
+**D38**), yani ikisi de **revizyon değil**. **Numaralar APPEND edilir:** AC-43 F grubunun
+sonuna 40'tan sonra giriyor, araya değil — var olan bir numarayı kaydırmak testlerdeki
+`0012c/AC-n` etiketlerini sessizce başka kriterlere bağlardı ve `0012b`'nin kaçan hatası
+tam olarak buydu (yedi etiketin permütasyonu, hepsi "ölçüldü" görünüyordu).
 
 ### A. Seçim ve istek düzeyi reddi
 
@@ -383,7 +414,7 @@ doğrular, spec'e kopyalanmış bir sabiti değil.
 
 ### E. Okuma bütçesi
 
-- **AC-34.** Aynı yanıtı veren dört okuma istek başına **bir kez** yapılır: zorunlu alan kümesi · public alan anahtarları · şube başına ad haritası · kanonik model adları.
+- **AC-34.** Beş okuma istek başına **bir kez** yapılır: zorunlu alan kümesi · public alan anahtarları · şube başına ad haritası · kanonik model adları · seçimdeki araçların kapak görseli adresleri.
 - **AC-35.** Medya hazırlığı **kayıt başına** ve **kilidin altında** okunur.
 
 ### F. Panel yüzeyi
@@ -393,6 +424,8 @@ doğrular, spec'e kopyalanmış bir sabiti değil.
 - **AC-38.** **Kısmi başarı** dördüncü ekran durumu olarak basılır: uygulanmayanlar **tek tek gerekçesiyle** listelenir ve sonuç "başarılı" ya da "hata" olarak yuvarlanmaz.
 - **AC-39.** Panel hiçbir teknik detay göstermez: hata kodu, HTTP durumu ve rota yolu ekranda görünmez.
 - **AC-40.** Panel personelin tercih ettiği dilde çalışır; Arapça'da yüzey RTL ve metinler Arapçadır.
+- **AC-43.** Arşivlenmiş satırda öne çıkarma düğmesi **yoktur**: panel, sunucunun reddedeceği bir eylemi göstermez.
+- **AC-44.** Satır başına öne çıkarmanın reddi **o satırda** gerekçesiyle görünür; sessizce hiçbir şey yapmayan bir düğme yoktur.
 
 ### G. Sınır ve kayıt
 
@@ -454,7 +487,7 @@ doğrular, spec'e kopyalanmış bir sabiti değil.
 - [x] Başarısız satırın tekil uçla **aynı gerekçeyi** (kod + yapısal parametreler) taşıdığı
       testle gösterildi; toplu yayın reddinde `reasons` parametresi satırda duruyor (**D45**).
       *`TopluEylemTests.Tasir_AyniGerekceyi_TekilUcla` + `bulkActionState.test.ts`.*
-- [x] İstek başına bir kez okunan dört okumanın gerçekten **bir kez** okunduğu ve medya
+- [x] İstek başına bir kez okunan beş okumanın gerçekten **bir kez** okunduğu ve medya
       hazırlığının **kayıt başına, kilidin altında** kaldığı testle gösterildi (**D46**).
       *Sayan sahtelerle: dört araç tek şube → bir okuma; üç yayın → üç hazırlık okuması.*
 - [x] Bir satırın eşzamanlılık kaybının diğer satırları **düşürmediği** ve satırların
@@ -472,6 +505,11 @@ doğrular, spec'e kopyalanmış bir sabiti değil.
 - [x] `VehicleCatalog`'un `InvariantGuardOptions`'ı **kendi** kaydettiği testle gösterildi;
       `0012b`'nin kartındaki `Kaçan hata` hücresi **1**'e çekildi ve düzeltme PR'da adıyla
       yazıldı (**D55**, **C9**). *`ModulKaydiTests` kayıt defterini okuyor; sonda yapıldı.*
+- [ ] Satır başına öne çıkarmanın **hata yolu** gösterildi: arşivlenmiş satırda düğme
+      **yok** ve sunucunun reddi **o satırda** gerekçesiyle görünüyor (**AC-43**, **AC-44**);
+      ikisinin görsel kanıtı var.
+- [ ] Modül başına tiplenen kilit seçeneği (**D57**) kuruldu ve paylaşılan non-generic bir
+      seçenek kaydının geri gelmesini **bir mimari kapı** yasaklıyor.
 
 ---
 
