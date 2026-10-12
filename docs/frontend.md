@@ -167,6 +167,10 @@ içinde kalır.
   1, 2 ve 3–10 için dilbilgisi hatalı çıkar — yani gerçekçi her sayıda. `check:locales`
   bunu denetliyor ve kapı bir dış bulgunun bedeli (`0012c`): anahtar kümeleri eşitti,
   altı mesajın biçim kapsamı değildi.
+- **Blok yorumunda iki referans `/` ile ayrılmaz; ayraç `·`'tır.** `**R4**` ile `**D6**`
+  arasına `/` koymak kaynakta `**` + `/` üretir — yani blok yorumunun sonlandırıcısını — ve
+  yorumun kalanı koda döner. `0012a`, `0012b` ve `0012c`'de **üç kez** tekrarladı; artık
+  `check:comments` denetliyor (§ 8). Doğrusu: `**R4** · **D6**`.
 - Tarih, sayı ve para biçimlendirmesi **uçta**, aktif locale ile yapılır. Sunucu ham sayı + para
   birimi kodu döner (`docs/conventions.md` § 7).
 - **Rakam sistemi açıkça sabitlenir.** Varsayılana güvenilmez: `ar` locale'inin ICU varsayılanı
@@ -225,6 +229,7 @@ komutu olmayan kapı, kapı değildir.
 | Sert kodlanmış metin | `npm run check:text` | Bileşene gömülü kullanıcı metni (§ 5) |
 | Eksik çeviri anahtarı | `npm run check:locales` | `tr`/`ar`/`en` anahtar bazında eşit değilse. **Üçünde de eksik olan anahtarı yakalamaz** — o kapı backend'de, `docs/testing.md` § 3 |
 | Arapça çoğul biçimleri | `npm run check:locales` | Arapça bir `plural` mesajı `one`/`two`/`few`/`many`/`other` biçimlerinden birini tanımlamıyorsa (§ 5) |
+| Blok yorumu ayracı | `npm run check:comments` | Blok yorumunun içinde `**/` varsa — yorumu erken kapatır (§ 5) |
 | Birim + smoke test | `npm run test` | Vitest + Testing Library |
 | Production build | `npm run build` | Build başarısız olursa |
 

@@ -386,15 +386,6 @@ internal sealed record UpdateVehicleOptionalValue(
     Dictionary<string, string>? Values);
 
 /// <summary>
-/// `Result`'ın hatasını RFC 7807 gövdesine çevirir. Gövde KARARLI bir `errorCode` ve
-/// gerekirse hangi ALANIN düştüğünü taşır; çevrilmiş metin taşımaz — uç kendi
-/// kataloğundan çevirir (C10, AC-42).
-///
-/// <para>`title` ve `detail` bilerek yok: ASP.NET'in varsayılan İngilizce başlığı
-/// ziyaretçiye gösterilebilecek bir metin gibi görünür ve uçta yanlışlıkla basılabilir —
-/// `0006`'da aynı karar verilmişti.</para>
-/// </summary>
-/// <summary>
 /// Toplu eylemin isteği. Seçim **araç kimliğiyle** taşınıyor (**D44**): `0012b`'nin uçları
 /// araç kimliğiyle çalışıyor ve yönetim sözleşmesinde ilan kimliği diye bir yüzey yok.
 /// </summary>
@@ -414,6 +405,15 @@ internal sealed record BulkListingResultBody(
 /// </summary>
 internal sealed record BulkListingResponse(IReadOnlyList<BulkListingResultBody> Results);
 
+/// <summary>
+/// `Result`'ın hatasını RFC 7807 gövdesine çevirir. Gövde KARARLI bir `errorCode` ve
+/// gerekirse hangi ALANIN düştüğünü taşır; çevrilmiş metin taşımaz — uç kendi
+/// kataloğundan çevirir (C10, AC-42).
+///
+/// <para>`title` ve `detail` bilerek yok: ASP.NET'in varsayılan İngilizce başlığı
+/// ziyaretçiye gösterilebilecek bir metin gibi görünür ve uçta yanlışlıkla basılabilir —
+/// `0006`'da aynı karar verilmişti.</para>
+/// </summary>
 internal static class CatalogProblems
 {
     internal static JsonHttpResult<Dictionary<string, object?>> From(Error error)

@@ -21,6 +21,7 @@
     "check:structure": "node scripts/check-structure.mjs",
     "check:session": "node scripts/check-no-session-storage.mjs",
     "check:tokens": "node scripts/check-tokens.mjs",
+    "check:comments": "node scripts/check-doc-comments.mjs",
     "evidence": "EVIDENCE_WRITE=1 playwright test --project=masaustu"
   },
   "dependencies": {
