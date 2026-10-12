@@ -250,6 +250,10 @@ Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod ek
 - `nullable` etkin, uyarılar hata. `TreatWarningsAsErrors` açık.
 - `var` yalnızca tip sağ tarafta açıkça görünüyorsa.
 - Yorum **neden**i anlatır, **ne**yi değil. Kodu tekrar eden yorum silinir.
+- **Bir üyenin üstünde tek doküman yorumu bulunur.** Yeni bir üyeyi var olan bir yorumla
+  sahibi arasına eklemek, yorumu yanlış üyeye bağlar ve asıl üyeyi yorumsuz bırakır;
+  derleyici bunu söylemez. `0012a`–`0012c` arasında **dört kez** tekrarladı, bu yüzden
+  mimari bir kapı denetliyor (`YorumKapisiTests`).
 - `TODO` yazılmaz. Yapılacak iş varsa spec'e girer (`AGENTS.md` Altın Kural 1).
 - Ölü kod, kullanılmayan using, yoruma alınmış blok bırakılmaz. Geçmiş git'tedir.
 - Bir dosya bir kavram. 400 satırı aşan dosya gözden geçirilir.

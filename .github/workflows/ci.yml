@@ -131,6 +131,10 @@ jobs:
       - name: Token katmanı kontrolü
         run: npm run check:tokens
 
+      # docs/frontend.md § 5 — blok yorumunda `**/` yorumu erken kapatır; ayraç `·`.
+      - name: Blok yorumu ayracı kontrolü
+        run: npm run check:comments
+
       - name: Tip kontrolü
         run: npm run typecheck
 
