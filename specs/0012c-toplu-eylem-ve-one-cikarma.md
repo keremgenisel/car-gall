@@ -476,8 +476,11 @@ tam olarak buydu (yedi etiketin permütasyonu, hepsi "ölçüldü" görünüyord
       kendi DI kaydı (**D55**) ve paylaşılan altyapı seçeneklerinin modül başına
       tiplenmesi (**D57**).*
 - [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *`CI` ve `Performans`
-      iş akışlarının ikisi de **ilk koşuda** başarılı (`23af1e7`); triyaj düzeltmelerinden
-      sonra yeniden koşuldu.*
+      iş akışlarının ikisi de **ilk koşuda** başarılı (`23af1e7`). Triyaj
+      düzeltmelerinden sonra `CI` **bir kez düştü** (`0b7d977`): AC-44'ün e2e'si listenin
+      BİRİNCİ satırına tıklıyordu ve paralel koşan AC-32 en yeni aracı öne çıkardığı için
+      sahtelenen yol eşleşmiyordu — yerelde geçmişti, CI'da iki projede birden düştü.
+      `ae8135f` ile ikisi de yeşil.*
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
