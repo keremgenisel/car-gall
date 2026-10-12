@@ -36,7 +36,20 @@ public sealed record VehicleAdminListItemDto(
     /// `0012b` **R13**/**D15** — araç lokasyon ataması bekliyor: şubesi kapatıldı ve
     /// yenisi atanmadı. Liste bunu AYIRT EDER; şubesi atanmadan yayına alınamaz.
     /// </summary>
-    bool AwaitingBranchAssignment);
+    bool AwaitingBranchAssignment,
+    /// <summary>
+    /// `0012c` **D50** — ilan öne çıkarılmış mı. **EKLEMELİ** bir alan ve `0010b`'nin
+    /// kapanmış sözleşmesine bilerek dokunuyor.
+    ///
+    /// <para>Gerekçe ölçüldü: bu alan olmadan öne çıkarma <b>yalnızca yazan</b> bir düğme
+    /// olurdu — personel hangi satırın öne çıkarıldığını göremez, toplu eylemin bir şey
+    /// yapıp yapmadığını anlayamaz ve **D48**'in <i>"zaten o hâlde"</i> cevabı ekranda
+    /// gösterilemezdi. **D35**'in emsali: eylemin değiştirdiği durum, eylemin yaşadığı
+    /// yüzeyde görünür olmalı.</para>
+    ///
+    /// <para>Ek sorgu doğmuyor: liste zaten durum için `listings`'i okuyor.</para>
+    /// </summary>
+    bool IsFeatured);
 
 /// <summary>
 /// "Fiyat sorunuz" AYRI bir durumdur, `0` değildir (P4). Tutar, para kodu ve minor unit

@@ -240,7 +240,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
             new FakeBranchValidator(),
             harness.Localeler,
             harness.Secenekler,
-            InvariantGuardOptions.Default,
+            InvariantGuardOptions<IdentityDbContext>.Default,
             harness.Saat);
 
         IReadOnlyList<StaffListItem> liste = await komutlar.ListAsync(CancellationToken.None);

@@ -116,7 +116,7 @@ public sealed class SubeKapanisiTests(ShowcaseDatabase database)
             KatalogYazicilari.Yansitma(context, medya),
             medya,
             new FakeModelNameResolver(),
-            InvariantGuardOptions.Default,
+            InvariantGuardOptions<VehicleCatalogDbContext>.Default,
             saat);
 
         Result sonuc = await komut.ExecuteAsync(aracId, ListingAction.Publish, CancellationToken.None);
@@ -133,12 +133,18 @@ public sealed class SubeKapanisiTests(ShowcaseDatabase database)
     /// değildir. Kısmi başarı bir PERSONEL kararının karşılığıdır; sistemin kendi
     /// tepkisinde yarım uygulanmış bir şube kapanışı A8'i deler.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "0012c/AC-41: Şube kapanışı yolu seçim üst sınırına **tabi değildir**")]
     public async Task Uygulanir_ButunAraclara_SecimSinirindanBagimsiz()
     {
         Guid sube = Guid.CreateVersion7();
 
-        for (int index = 0; index < 12; index++)
+        // Araç sayısı seçim üst sınırının BİR FAZLASI. Önceki hâli 12 araçla koşuyordu ve
+        // sınır 100'dü: "sınıra tabi değil" cümlesini sınırın altında kalarak ölçüyordu,
+        // yani hiç ölçmüyordu. Sayı dağıtım varsayılanından geliyor (`0010b` C26) ve
+        // sınırın yapılandırmadan okunduğunu `0012c`/AC-7 ayrıca sınıyor.
+        const int secimSiniri = 100;
+
+        for (int index = 0; index < secimSiniri + 1; index++)
         {
             await AracEkleAsync(sube, ListingStatus.Published);
         }
@@ -149,7 +155,9 @@ public sealed class SubeKapanisiTests(ShowcaseDatabase database)
         int bekleyen = await context.Vehicles.AsNoTracking()
             .CountAsync(vehicle => vehicle.BranchId == sube && vehicle.AwaitingBranchAssignment);
 
-        Assert.Equal(12, bekleyen);
+        // Kısmi başarı bir PERSONEL kararının karşılığıdır; sistemin kendi tepkisinde
+        // yarım uygulanmış bir şube kapanışı A8'i deler (**D33**).
+        Assert.Equal(secimSiniri + 1, bekleyen);
     }
 
     private async Task<Guid> AracEkleAsync(Guid sube, ListingStatus durum, Guid? medya = null)

@@ -69,23 +69,47 @@ test("frontend-002/AC-6: türetilmiş token'ların hesaplanan değeri", async ({
 })
 
 test('frontend-002/AC-8: yazı tipi istekleri üçüncü taraf alan adına gitmez', async ({ page }) => {
-  const yabanci: string[] = []
+  const yabanciTipografi: string[] = []
+  const ucuncuTarafSaglayici: string[] = []
 
   // Beklenen host SABİT: `page.url()` ile karşılaştırmak ilk denememin hatasıydı —
   // dinleyici takıldığında sayfa henüz `about:blank` ve belgenin KENDİSİ yabancı sayılıyor.
   const kendiHost = new URL(test.info().project.use.baseURL ?? 'http://localhost:5080').host
 
+  /**
+   * Tanınmış tipografi sağlayıcıları: kriterin yasakladığı şey bunlar. Ayrı bir liste
+   * olarak duruyor çünkü "yabancı host" ile "üçüncü taraf yazı tipi" aynı şey değil.
+   */
+  const SAGLAYICILAR = ['fonts.googleapis.com', 'fonts.gstatic.com', 'use.typekit.net']
+
   page.on('request', (request) => {
-    if (new URL(request.url()).host !== kendiHost) {
-      yabanci.push(request.url())
+    const url = request.url()
+    const tip = request.resourceType()
+
+    if (SAGLAYICILAR.some((saglayici) => url.includes(saglayici))) {
+      ucuncuTarafSaglayici.push(url)
+      return
+    }
+
+    // İddia TİPOGRAFİYE daraltılı: ilk yazımı SAYFANIN TÜM isteklerini sayıyordu ve
+    // `0012c`'de kırmızıya döndü. Sebep bir kusur değil, yapılandırma: medya adresi
+    // `Media__PublicBaseUrl` ile veriliyor ve üretimde zaten bir CDN — hem CI hem
+    // geliştirme yığını onu ayrı bir port/host olarak kuruyor. Vitrinin ilk sayfasına
+    // gerçek fotoğraflı bir ilan düştüğü an o istek "yabancı host" oluyordu, oysa
+    // kriter yazı tipinden söz ediyor. Geniş iddia, kendi kriterinin dışını ölçüyordu.
+    if ((tip === 'font' || tip === 'stylesheet') && new URL(url).host !== kendiHost) {
+      yabanciTipografi.push(url)
     }
   })
 
   await page.goto('/tr/')
   await expect(page.locator('main h1')).toBeVisible()
 
-  // Yazı tipi istekleri aynı origin'den gelir; üçüncü taraf sağlayıcıya HİÇ istek yok.
-  expect(yabanci).toEqual([])
+  // Yazı tipi ve stil istekleri aynı origin'den gelir.
+  expect(yabanciTipografi).toEqual([])
+
+  // Üçüncü taraf sağlayıcıya HİÇ istek yok — hangi kaynak tipiyle olursa.
+  expect(ucuncuTarafSaglayici).toEqual([])
 })
 
 /**

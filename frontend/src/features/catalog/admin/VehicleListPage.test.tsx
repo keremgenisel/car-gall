@@ -16,9 +16,12 @@ import { VehicleListPage } from './VehicleListPage'
 vi.mock('../../../shared/api/catalogAdmin', () => ({
   fetchVehicles: vi.fn(),
   fetchVehicleSummary: vi.fn(),
+  applyListingFeature: vi.fn(),
+  applyBulkListingAction: vi.fn(),
 }))
 
-const { fetchVehicles, fetchVehicleSummary } = await import('../../../shared/api/catalogAdmin')
+const { fetchVehicles, fetchVehicleSummary, applyListingFeature, applyBulkListingAction } =
+  await import('../../../shared/api/catalogAdmin')
 
 const arac: VehicleAdminListItem = {
   vehicleId: '0192c000-0000-7000-8000-000000000001',
@@ -28,6 +31,7 @@ const arac: VehicleAdminListItem = {
   price: { onRequest: false, amount: 750000, currencyCode: 'TRY', minorUnitExponent: 2 },
   listingStatus: 'Draft',
   vin: 'VIN0000000000001',
+  isFeatured: false,
   awaitingBranchAssignment: false,
   updatedAt: '2026-10-10T12:30:00Z',
   missingLocales: [],
@@ -355,5 +359,217 @@ describe('0012b/AC-53: Lokasyon ataması bekleyen araç panel listesinde ayırt 
     const satir = screen.getByTestId('vehicle-table').querySelector('tbody')
 
     expect(satir?.textContent).not.toContain('Tam')
+  })
+})
+
+/**
+ * `0012c` — liste ekranının toplu eylem ve öne çıkarma yüzeyi.
+ *
+ * <p>Seçimin **sayfaya ait** olması (**D43**) ve öne çıkarmanın **yalnız burada**
+ * yaşaması (**D51**) bu ekranın iki kararı; ikisi de bileşenin dışından görünmüyor ve
+ * ancak ekranın kendisinden ölçülebiliyor.</p>
+ */
+describe('0012c: toplu eylem ve öne çıkarma yüzeyi', () => {
+  const ikinci = { ...arac, vehicleId: '0192c000-0000-7000-8000-000000000002' }
+
+  function ikiArac(overrides: Partial<VehicleAdminListItem> = {}) {
+    vi.mocked(fetchVehicles).mockResolvedValue({
+      items: [{ ...arac, ...overrides }, ikinci],
+      page: 1,
+      pageSize: 25,
+      totalCount: 2,
+      totalPages: 1,
+    })
+  }
+
+  it('0012c/AC-1: seçilen araçlar toplu eyleme GÖNDERİLİR ve sıra sayfa sırasıdır', async () => {
+    ikiArac()
+    vi.mocked(applyBulkListingAction).mockResolvedValue({ results: [] })
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    // Tıklama sırası TERS: gönderilen sıra yine sayfa sırası olmalı (**D47**).
+    fireEvent.click(screen.getByTestId(`vehicle-select-${ikinci.vehicleId}`))
+    fireEvent.click(screen.getByTestId(`vehicle-select-${arac.vehicleId}`))
+    fireEvent.click(screen.getByTestId('vehicle-bulk-apply'))
+
+    await waitFor(() =>
+      expect(applyBulkListingAction).toHaveBeenCalledWith(
+        'publish',
+        [arac.vehicleId, ikinci.vehicleId],
+        'tr',
+      ),
+    )
+  })
+
+  it('0012c/AC-36: seçim SAYFAYA aittir; sayfa değişince temizlenir', async () => {
+    vi.mocked(fetchVehicles).mockResolvedValue({
+      items: [arac, ikinci],
+      page: 1,
+      pageSize: 25,
+      totalCount: 50,
+      totalPages: 2,
+    })
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId(`vehicle-select-${arac.vehicleId}`))
+
+    expect(screen.getByTestId('vehicle-bulk-selection').textContent).toContain('1 araç seçildi')
+
+    fireEvent.click(screen.getByText('Sonraki'))
+
+    // Sayfalar arası biriken bir seçim, personelin GÖRMEDİĞİ araçlara eylem uygulardı ve
+    // üst sınır (**D4**) o anda anlamını yitirirdi.
+    await waitFor(() =>
+      expect(screen.getByTestId('vehicle-bulk-selection').textContent).toContain(
+        'Önce listeden araç seçin',
+      ),
+    )
+  })
+
+  it('0012c/AC-36: arşiv filtresi değişince de seçim temizlenir', async () => {
+    ikiArac()
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId('vehicle-select-all'))
+
+    expect(screen.getByTestId('vehicle-bulk-selection').textContent).toContain('2 araç seçildi')
+
+    // Arşiv filtresi listelenen EVRENİ değiştiriyor: sayfa numarası aynı kalsa bile
+    // ekrandaki araçlar başka bir kümedir.
+    fireEvent.click(screen.getByLabelText('Arşivi göster'))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('vehicle-bulk-selection').textContent).toContain(
+        'Önce listeden araç seçin',
+      ),
+    )
+  })
+
+  it('0012c/AC-32: öne çıkarılmış araç satırda rozetle ayırt edilir', async () => {
+    ikiArac({ isFeatured: true })
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    const rozetler = screen.getAllByTestId('vehicle-featured')
+
+    expect(rozetler).toHaveLength(1)
+    expect(rozetler[0]?.textContent).toContain('Öne çıkarıldı')
+  })
+
+  it('0012c/AC-33: öne çıkarma satır başına da uygulanabilir ve durumun TERSİNİ gönderir', async () => {
+    ikiArac({ isFeatured: true })
+    vi.mocked(applyListingFeature).mockResolvedValue(undefined)
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+
+    await waitFor(() =>
+      expect(applyListingFeature).toHaveBeenCalledWith(arac.vehicleId, false, 'tr'),
+    )
+
+    // Eylem listeyi TAZELİYOR: ikinci düğme yeni render'dan bekleniyor. `getBy…` ile
+    // okumak o anki DOM'u okur ve tazeleme ortasında kırılgan bir test üretir.
+    const ikinciDugme = await screen.findByTestId(`vehicle-feature-${ikinci.vehicleId}`)
+
+    // Öne çıkarılmamış satırda düğme TERS yönü gönderiyor.
+    fireEvent.click(ikinciDugme)
+
+    await waitFor(() =>
+      expect(applyListingFeature).toHaveBeenCalledWith(ikinci.vehicleId, true, 'tr'),
+    )
+  })
+
+  it('0012c/AC-43: arşivlenmiş satırda öne çıkarma düğmesi yoktur', async () => {
+    ikiArac({ listingStatus: 'Archived', isFeatured: true })
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    // Düğme YOK: sunucu arşivlenmiş ilanda iki yönü de reddediyor (**D36**) ve personele
+    // olmayan bir düğme gösterilmez.
+    expect(screen.queryByTestId(`vehicle-feature-${arac.vehicleId}`)).toBeNull()
+
+    // Rozet DURUYOR: bir olguyu bildiriyor ve arşivlenen ilan öne çıkarılmış hâlde
+    // kalabilir — düğmenin yokluğu rozeti de silmemeli.
+    expect(screen.getByTestId('vehicle-featured').textContent).toContain('Öne çıkarıldı')
+
+    // Arşivlenmemiş komşu satırda düğme yerinde.
+    expect(screen.getByTestId(`vehicle-feature-${ikinci.vehicleId}`)).toBeTruthy()
+  })
+
+  it('0012c/AC-44: satır başına öne çıkarmanın reddi O SATIRDA gerekçesiyle görünür', async () => {
+    ikiArac()
+    vi.mocked(applyListingFeature).mockRejectedValue(new ApiError('concurrency.lost', null, 409))
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+
+    const kutu = await screen.findByTestId(`vehicle-feature-error-${arac.vehicleId}`)
+
+    expect(kutu.textContent).toContain('başka bir değişiklik oldu')
+    expect(kutu.getAttribute('role')).toBe('alert')
+
+    // Gerekçe EYLEMİN YAŞADIĞI satırda: komşu satır temiz kalıyor.
+    expect(screen.queryByTestId(`vehicle-feature-error-${ikinci.vehicleId}`)).toBeNull()
+
+    // AC-39 — hata kodu ve HTTP durumu ekranda görünmez.
+    expect(document.body.textContent).not.toContain('concurrency.lost')
+    expect(document.body.textContent).not.toContain('409')
+  })
+
+  it('0012c/AC-44: ağ hatası da sessiz kalmıyor — genel mesaja düşüyor', async () => {
+    ikiArac()
+    // `ApiError` DEĞİL: `fetch` ağ seviyesinde düştüğünde kod yoktur ve ilk yazımda bu yol
+    // da yutuluyordu. Yakalanmamış bir promise reddi kalıyor, ekranda hiçbir şey olmuyordu.
+    vi.mocked(applyListingFeature).mockRejectedValue(new Error('ağ yok'))
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+
+    const kutu = await screen.findByTestId(`vehicle-feature-error-${arac.vehicleId}`)
+
+    expect(kutu.textContent).toContain('tamamlanamadı')
+  })
+
+  it('0012c/AC-44: başarılı eylemden sonra önceki red mesajı kalmıyor', async () => {
+    ikiArac()
+    vi.mocked(applyListingFeature).mockRejectedValueOnce(
+      new ApiError('vehicle.not_found', null, 404),
+    )
+
+    ekran()
+
+    await screen.findByTestId('vehicle-table')
+
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+    await screen.findByTestId(`vehicle-feature-error-${arac.vehicleId}`)
+
+    vi.mocked(applyListingFeature).mockResolvedValue(undefined)
+    fireEvent.click(screen.getByTestId(`vehicle-feature-${arac.vehicleId}`))
+
+    await waitFor(() =>
+      expect(screen.queryByTestId(`vehicle-feature-error-${arac.vehicleId}`)).toBeNull(),
+    )
   })
 })

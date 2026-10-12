@@ -219,3 +219,20 @@ describe('0012b/AC-56: Ekranın metinleri TR / AR / EN üçünde de vardır; eks
     expect(screen.getByTestId('vehicle-actions').textContent).not.toContain('vehicle.action')
   })
 })
+
+/**
+ * `0012c` **D51** — öne çıkarma **yalnız liste ekranında** yaşar. Bu testin yeri de
+ * kararın kendisi: düzenleme ekranının eylem çubuğunda bir SIRALAMA kontrolü olmamalı,
+ * yoksa yüzey ikiye bölünür ve personel aynı işi iki yerde arar.
+ */
+describe('0012c: öne çıkarma eylem çubuğunda YOK', () => {
+  it('0012c/AC-33: düzenleme ekranının eylem çubuğu öne çıkarma düğmesi basmaz', () => {
+    ekran('Published')
+
+    expect(screen.queryByTestId('vehicle-action-feature')).toBeNull()
+    expect(screen.queryByTestId('vehicle-action-unfeature')).toBeNull()
+
+    // Metin de yok: düğme testid'siz basılsaydı bu iddia yakalardı.
+    expect(screen.getByTestId('vehicle-actions').textContent).not.toContain('Öne çıkar')
+  })
+})

@@ -75,7 +75,7 @@ internal sealed class IdentityHarness(IdentityDatabase database)
     /// </summary>
     internal async Task<TSonuc> KomutAsync<TSonuc>(
         Func<StaffCommands, Task<TSonuc>> islem,
-        InvariantGuardOptions? guardOptions = null)
+        InvariantGuardOptions<IdentityDbContext>? guardOptions = null)
     {
         await using IdentityDbContext context = database.CreateContext();
 
@@ -108,13 +108,13 @@ internal sealed class IdentityHarness(IdentityDatabase database)
 
     private Pbkdf2PasswordHasher Ozetleyici() => new(Secenekler);
 
-    private StaffCommands Komutlar(IdentityDbContext context, InvariantGuardOptions? guardOptions = null) => new(
+    private StaffCommands Komutlar(IdentityDbContext context, InvariantGuardOptions<IdentityDbContext>? guardOptions = null) => new(
         context,
         IdentityDatabase.CreateUnitOfWork(context, Saat),
         Ozetleyici(),
         new FakeBranchValidator(),
         Localeler,
         Secenekler,
-        guardOptions ?? InvariantGuardOptions.Default,
+        guardOptions ?? InvariantGuardOptions<IdentityDbContext>.Default,
         Saat);
 }

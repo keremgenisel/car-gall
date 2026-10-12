@@ -211,7 +211,10 @@ internal sealed class VehicleAdminQueries(
                         .Select(item => item.Code)
                 ],
                 EksikBilgiVar(vehicle, zorunluAlanlar),
-                vehicle.AwaitingBranchAssignment))
+                vehicle.AwaitingBranchAssignment,
+                // `0012c` D50 — ilanı olmayan araç öne çıkarılmış olamaz; eşik tek yerde
+                // (`Listing.IsFeatured`) ve sorgu onu tekrar yazmıyor.
+                listing?.IsFeatured ?? false))
         ];
     }
 

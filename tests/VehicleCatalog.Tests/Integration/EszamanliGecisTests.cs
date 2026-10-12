@@ -96,7 +96,7 @@ public sealed class EszamanliGecisTests(ShowcaseDatabase database)
             // Kilit süresi UZATILDI: üretim varsayılanı üç saniye ve iki isteğin
             // serileşmesi test makinesinde ondan uzun sürebilir. Uzatmak testin ölçtüğü
             // şeyi değiştirmiyor — ölçülen şey KURAL reddi, mekanizma kaybı değil.
-            new InvariantGuardOptions(TimeSpan.FromSeconds(20)),
+            new InvariantGuardOptions<VehicleCatalogDbContext>(TimeSpan.FromSeconds(20)),
             saat);
 
         return await komut.ExecuteAsync(aracId, eylem, CancellationToken.None);

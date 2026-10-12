@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.Modules.Dealership.Contracts.Events;
@@ -103,7 +104,24 @@ public static class VehicleCatalogModule
         services.AddScoped<OutboxWriter<VehicleCatalogDbContext>>();
         services.AddScoped<VehicleCatalogUnitOfWork>();
         services.AddScoped<ShowcaseProjectionWriter>();
+
+        // 0012c C9/D55 — `0012b`'nin KAÇAN HATASI. `ListingTransitionCommands` bu seçeneği
+        // kurucusunda istiyor ama modül onu kaydetmiyordu; uygulama yalnızca `Identity` ve
+        // `Dealership` aynı tipi singleton olarak kaydettiği için ayakta kalıyordu. O iki
+        // satırdan biri kalksaydı katalogun BÜTÜN durum geçişleri çalışma zamanında
+        // düşerdi ve hiçbir test bunu yakalamazdı: entegrasyon testleri komutu elle
+        // kuruyor. Aynı aile #52'nin bedeli ödenen tuzağıydı — DI'da kimin neyi
+        // kaydettiği sessizce yanlış olabiliyor.
+        //
+        // Tip parametresi D57 ile geldi ve D55'in yarım bıraktığı yeri kapatıyor: kayıt
+        // eklendikten sonra ÜÇ modül aynı non-generic tipi kaydediyordu, kap tek ve son
+        // kayıt kazanıyordu. Üçü de `.Default` olduğu için fark görünmüyordu; bir modül
+        // kendi kilit süresini ayarladığı gün diğer ikisinin süresi onunla değişirdi.
+        services.AddSingleton(InvariantGuardOptions<VehicleCatalogDbContext>.Default);
+
         services.AddScoped<ListingTransitionCommands>();
+        services.AddScoped<ListingFeatureCommands>();
+        services.AddScoped<ListingBulkCommands>();
 
         services.AddScoped(provider => new OutboxDispatcher<VehicleCatalogDbContext>(
             provider.GetRequiredService<VehicleCatalogDbContext>(),

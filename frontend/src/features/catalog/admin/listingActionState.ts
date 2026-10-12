@@ -32,6 +32,24 @@ export function availableActions(listingStatus: string): readonly ListingAction[
 }
 
 /**
+ * `0012c` **AC-43** — öne çıkarma bu durumda çağrılabilir mi? Tek ön koşul **arşiv**
+ * (**D36**): arşivlenmiş ilan vitrinde değil ve onu öne çıkarmak hiçbir sıralamayı
+ * değiştirmez, sunucu da `listing.cannot_feature.archived` ile reddeder.
+ *
+ * <p>`availableActions`'ın aynı gerekçesi: liste reddi ÖNLEMEK için değil, personele
+ * <b>olmayan bir düğmeyi göstermemek</b> için. Arşivlenmiş satırda duran bir "öne çıkar"
+ * düğmesi, sunucunun `409`'una yürüyen bir davettir.</p>
+ *
+ * <p><b>Kaldırma da reddediliyor</b> ve bu bilinçli: koşul ağırlığı YAZAN tek yerde
+ * (`Listing.OneCikarmayiYaz`) ve iki yönü de kapsıyor. Yani arşivlenmiş ve öne çıkarılmış
+ * bir ilanda rozet durur, düğme durmaz — rozet bir olguyu bildiriyor, düğme ise sunucunun
+ * yapmayacağı bir şeyi vaat ederdi.</p>
+ */
+export function canFeature(listingStatus: string): boolean {
+  return listingStatus !== 'Archived'
+}
+
+/**
  * **D22** — rol ayrımı YOK: eylemler oturum açmış her personele açık. Bu fonksiyonun
  * varlığı kararın kendisini görünür kılıyor; bir gün rol ayrımı gelirse değişecek tek
  * yer burası olur.

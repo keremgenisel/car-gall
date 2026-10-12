@@ -34,6 +34,36 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
 
     public Task DisposeAsync() => container.DisposeAsync().AsTask();
 
+    [Fact(DisplayName = "0012c/AC-31: Öne çıkarma anahtarı **iki değerlidir** ve geliştirme seed'i o iki değere hizalıdır")]
+    public async Task Yazar_IkiDegerli_OneCikarmaAnahtarini()
+    {
+        const int sayi = 20;
+
+        await using (VehicleCatalogDbContext yazma = CreateContext())
+        {
+            await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 10, 5, 12, 0, 0, TimeSpan.Zero)), Para)
+                .SeedAsync(sayi, Guid.Parse("0192c000-0000-7000-8000-00000000000a"), CancellationToken.None);
+        }
+
+        await using VehicleCatalogDbContext okuma = CreateContext();
+
+        List<int> agirliklar = await okuma.Listings.AsNoTracking()
+            .Select(listing => listing.ShowcaseSortWeight)
+            .Distinct()
+            .OrderBy(agirlik => agirlik)
+            .ToListAsync();
+
+        // Önceki hâli `listingCount - index` yazıyordu: 20 ilan, 20 ayrı ağırlık. Karar
+        // VERİ tarafında deliniyordu ve "öne çıkarılmış ilan" geliştirme ortamında hiç
+        // görünmüyordu — her ilan farklı bir ağırlıktaysa hiçbiri öne çıkarılmış değildir.
+        Assert.Equal([Listing.NormalWeight, Listing.FeaturedWeight], agirliklar);
+
+        // İki değer de GERÇEKTEN yazılıyor: yalnız birinin yazıldığı bir seed de "iki
+        // değerli" sayılırdı ama rozetin karşılığı yine olmazdı.
+        Assert.True(await okuma.Listings.AnyAsync(listing => listing.ShowcaseSortWeight == Listing.FeaturedWeight));
+        Assert.True(await okuma.Listings.AnyAsync(listing => listing.ShowcaseSortWeight == Listing.NormalWeight));
+    }
+
     [Fact]
     public async Task Yazar_AracVeIlanKayitlarini_VitrinSatirlariylaBirlikte()
     {

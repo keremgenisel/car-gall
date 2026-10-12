@@ -63,10 +63,54 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           // 0012b — yayın reddi hangi ALANLARIN eksik olduğunu da söylüyor (D24) ve
           // durumu adıyla anıyor.
           fields: 'Tramer tutarı',
+          // 0012c — toplu eylemin sayıları ve seçim sınırı (**D29**, **D45**).
+          limit: 100,
+          applied: 2,
+          failed: 1,
         })
         expect(value).not.toBe(key)
         expect(value.trim()).not.toBe('')
       }
     }
+  })
+})
+
+describe('0012c/AC-37: toplu eylemin sayısı Arapçada da doğru çoğul biçimini kullanır', () => {
+  /**
+   * Bu test bir dış bulgunun bedeli. Altı başarı mesajının **beşi** ve kısmi başarı
+   * paneli yalnız `other` biçimini taşıyordu: aynı ekranda "yayına al" doğru cümle
+   * kurarken "arşivle" 1, 2 ve 3-10 için dilbilgisi hatalı cümle basıyordu — yani
+   * gerçekçi her toplu eylem boyutunda. `check:locales` o gün "386 anahtar eşit" diyordu,
+   * çünkü anahtar kümelerini karşılaştırıyor, biçim kapsamını değil.
+   */
+  const anahtarlar = [
+    'vehicle.bulk.selected',
+    'vehicle.bulk.success.publish',
+    'vehicle.bulk.success.unpublish',
+    'vehicle.bulk.success.sold',
+    'vehicle.bulk.success.archive',
+    'vehicle.bulk.success.feature',
+    'vehicle.bulk.success.unfeature',
+  ] as const
+
+  it.each(anahtarlar)('%s — 1, 2 ve 3 ayrı cümleler', (key) => {
+    const t = createTranslator('ar')
+    const ciktilar = [1, 2, 3].map((count) => t(key, { count }))
+
+    // Tekil · ikil · çoğul: üçü de birbirinden farklı olmak zorunda. `other`'a düşen bir
+    // mesaj üçünde de aynı cümleyi basar ve kapı tam burada açılırdı.
+    expect(new Set(ciktilar).size).toBe(3)
+
+    // İkil biçimde sayı RAKAMLA yazılmaz: Arapçada ikil kelimenin kendisinde yaşıyor.
+    expect(ciktilar[1]).not.toContain('2')
+  })
+
+  it('kısmi başarı paneli iki sayısını da ayrı ayrı çekimliyor', () => {
+    const t = createTranslator('ar')
+
+    expect(t('vehicle.bulk.partial', { applied: 1, failed: 2 })).not.toBe(
+      t('vehicle.bulk.partial', { applied: 2, failed: 1 }),
+    )
+    expect(t('vehicle.bulk.partial', { applied: 3, failed: 11 })).not.toContain('plural')
   })
 })

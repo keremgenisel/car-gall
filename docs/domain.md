@@ -32,6 +32,7 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Araç** | `Vehicle` | Galerinin elindeki fiziksel araç. Şase numarasıyla tekildir. |
 | **İlan** | `Listing` | Bir aracın vitrindeki yayın hâli. Araç ≠ ilan: araç fiziksel, ilan yayınsal gerçektir. |
 | **Vitrin** | — | Sitenin ziyaretçiye açık araç listesi ve detay sayfaları. |
+| **Öne Çıkarma** | `Listing.Feature` | Bir ilanı vitrin sıralamasının başına taşıyan **sıralama** eylemi. Durum geçişi DEĞİLDİR: A3 onu tanımaz, duyuru üretmez ve arşiv dışındaki her durumda çalışır. Anahtar iki değerlidir; öne çıkarılmışların kendi aralarındaki sıra eşitlik hâlinde yayın tarihiyle kırılır. *(spec `0012c`, 2026-10-11.)* |
 | **Yayın Durumu** | `ListingStatus` | `Taslak` · `Yayında` · `Rezerve` · `Satıldı` · `Arşiv` |
 | **Referans Veri** | `VehicleReference` | Marka / model / kasa / donanım sözlüğü. Galeri yazmaz, sistem besler. |
 | **Kanonik Ad** | `CanonicalName` | Referans verinin Latin harfli, dilden bağımsız adı. Slug bundan üretilir. |

@@ -42,16 +42,32 @@ internal sealed class ListingTransitionCommands(
     ShowcaseProjectionWriter projection,
     IMediaAssetQueries mediaAssets,
     IVehicleModelNameResolver modelNames,
-    InvariantGuardOptions guardOptions,
+    InvariantGuardOptions<VehicleCatalogDbContext> guardOptions,
     IClock clock)
 {
     internal Task<Result> ExecuteAsync(
         Guid vehicleId,
         ListingAction action,
         CancellationToken cancellationToken) =>
+        ExecuteAsync(vehicleId, action, read: null, cancellationToken);
+
+    /// <summary>
+    /// `0012c` **D46** — aynı komut, **ön okuma bağlamıyla**. Toplu yol bağlamı istek
+    /// başına bir kez kurar ve her satıra verir; tekil yol <c>null</c> geçer ve bugünkü
+    /// davranışını korur (tek kayıtta "istek başına bir kez" ile "kayıt başına" zaten aynı
+    /// şey).
+    ///
+    /// <para>Bağlamda OLMAYAN okuma — medya hazırlığı — her iki yolda da kilidin altında
+    /// ve kayıt başına kalıyor (**AC-35**).</para>
+    /// </summary>
+    internal Task<Result> ExecuteAsync(
+        Guid vehicleId,
+        ListingAction action,
+        ListingReadContext? read,
+        CancellationToken cancellationToken) =>
         InvariantGuard.ExecuteAsync(
             context,
-            ListingRow(vehicleId),
+            ListingLock.Row(vehicleId),
             excluded: Guid.Empty,
             async (_, ct) =>
             {
@@ -70,7 +86,7 @@ internal sealed class ListingTransitionCommands(
                     return Result.Failure(Error.With(VehicleErrors.NotFound, "field", VehicleFieldNames.VehicleId));
                 }
 
-                Result sonuc = await UygulaAsync(vehicle, listing, action, ct);
+                Result sonuc = await UygulaAsync(vehicle, listing, action, read, ct);
 
                 if (sonuc.IsFailure)
                 {
@@ -82,7 +98,7 @@ internal sealed class ListingTransitionCommands(
                 // bir aracı yayına alır ve araç listede yerinden kıpırdamazdı.
                 vehicle.Touch(clock.UtcNow);
 
-                await projection.ProjectAsync(vehicle, listing, ct);
+                await projection.ProjectAsync(vehicle, listing, read, ct);
                 await unitOfWork.SaveChangesAsync(ct);
 
                 return Result.Success();
@@ -94,9 +110,10 @@ internal sealed class ListingTransitionCommands(
         Vehicle vehicle,
         Listing listing,
         ListingAction action,
+        ListingReadContext? read,
         CancellationToken cancellationToken) => action switch
     {
-        ListingAction.Publish => await PublishAsync(vehicle, listing, cancellationToken),
+        ListingAction.Publish => await PublishAsync(vehicle, listing, read, cancellationToken),
         ListingAction.Unpublish => listing.Unpublish(),
         ListingAction.Reserve => listing.Reserve(),
         ListingAction.Unreserve => listing.ReturnToShowcase(),
@@ -125,7 +142,11 @@ internal sealed class ListingTransitionCommands(
     /// Yayına alma: önce **A2**'nin ölçülebilen koşulları, sonra **R21**'in iki reddi,
     /// sonra geçiş. Eksiklerin <b>hepsi birlikte</b> dönüyor (**D2**).
     /// </summary>
-    private async Task<Result> PublishAsync(Vehicle vehicle, Listing listing, CancellationToken cancellationToken)
+    private async Task<Result> PublishAsync(
+        Vehicle vehicle,
+        Listing listing,
+        ListingReadContext? read,
+        CancellationToken cancellationToken)
     {
         if (listing.Status is not ListingStatus.Draft)
         {
@@ -146,11 +167,11 @@ internal sealed class ListingTransitionCommands(
             ? new HashSet<Guid>()
             : await mediaAssets.ReadyAmongAsync(vehicle.MediaAssetIds, cancellationToken);
 
-        IReadOnlySet<string> zorunlu = await ZorunluAlanlarAsync(cancellationToken);
+        IReadOnlySet<string> zorunlu = read?.RequiredFieldKeys ?? await ZorunluAlanlarAsync(cancellationToken);
 
         eksikler.AddRange(PublishEligibility.Evaluate(vehicle, hazir, zorunlu));
 
-        Result<ListingSlug> adres = await AdresAsync(vehicle, listing, cancellationToken);
+        Result<ListingSlug> adres = await AdresAsync(vehicle, listing, read, cancellationToken);
 
         if (adres.IsFailure)
         {
@@ -172,6 +193,7 @@ internal sealed class ListingTransitionCommands(
     private async Task<Result<ListingSlug>> AdresAsync(
         Vehicle vehicle,
         Listing listing,
+        ListingReadContext? read,
         CancellationToken cancellationToken)
     {
         if (listing.Slug is not null)
@@ -179,8 +201,8 @@ internal sealed class ListingTransitionCommands(
             return Result.Success(listing.Slug.Value);
         }
 
-        IReadOnlyDictionary<Guid, string> adlar =
-            await modelNames.ResolveCanonicalNamesAsync([vehicle.VehicleModelId], cancellationToken);
+        IReadOnlyDictionary<Guid, string> adlar = read?.CanonicalModelNames
+            ?? await modelNames.ResolveCanonicalNamesAsync([vehicle.VehicleModelId], cancellationToken);
 
         return adlar.TryGetValue(vehicle.VehicleModelId, out string? ad)
             ? ListingSlug.Create(ad, vehicle.ModelYear, listing.Id)
@@ -195,14 +217,4 @@ internal sealed class ListingTransitionCommands(
                 .Select(setting => setting.FieldKey)
                 .ToListAsync(cancellationToken),
             StringComparer.Ordinal);
-
-    /// <summary>
-    /// Kilitlenecek satır: ilanın KENDİSİ. Yüklem `const`'tur ve değer parametredir;
-    /// dizeye gömülmez (`InvariantLock`, `0007`/AC-9).
-    /// </summary>
-    private static InvariantLock ListingRow(Guid vehicleId) => new(
-        VehicleCatalogDbContext.Schema,
-        "listings",
-        "vehicle_id = {0}",
-        [vehicleId]);
 }

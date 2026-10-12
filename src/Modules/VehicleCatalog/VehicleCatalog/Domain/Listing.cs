@@ -26,6 +26,27 @@ internal sealed class Listing : AggregateRoot<ListingId>
 
     internal const string DescriptionTooLong = "listing.description_too_long";
 
+    /// <summary>
+    /// `0012c` **C8**/**D49** — arşivlenmiş ilan öne çıkarılamaz ve reddin **KENDİ** kodu
+    /// var. `listing.invalid_status_transition` burada yalan söylerdi: öne çıkarma bir
+    /// durum geçişi değil, bir **sıralama** eylemidir ve panel "geçersiz durum geçişi"
+    /// derse personel olmayan bir geçişi arar.
+    /// </summary>
+    internal const string CannotFeatureArchived = "listing.cannot_feature.archived";
+
+    /// <summary>
+    /// `0012b` **D16** — öne çıkarma anahtarı **İKİ DEĞERLİ**. Öne çıkarılmış ilanların
+    /// kendi aralarında sıralanması `0015`'in işi (`0012c` X2); eşitlik yayın tarihiyle
+    /// kırılıyor ve vitrin sorgusunun ikinci ölçütü zaten o.
+    ///
+    /// <para>Kolon yine de <c>int</c>: `bool`'a indirmek `0015`'te geri migration
+    /// isterdi ve `(showcase_sort_weight, published_at, listing_id)` indeksi bugün bu
+    /// kolonun üzerinde duruyor.</para>
+    /// </summary>
+    internal const int FeaturedWeight = 1;
+
+    internal const int NormalWeight = 0;
+
     /// <summary>YALNIZCA EF içindir (0010a D10); davranış değişmiyor.</summary>
     private Listing()
         : base(default)
@@ -240,5 +261,45 @@ internal sealed class Listing : AggregateRoot<ListingId>
         return Result.Success();
     }
 
-    internal void ChangeShowcaseSortWeight(int weight) => ShowcaseSortWeight = weight;
+    /// <summary>
+    /// `0012c` **R5** — ilanı öne çıkarır. **İDEMPOTENT** (**D48**): zaten öne çıkarılmış
+    /// ilan **başarılı** döner.
+    ///
+    /// <para>Bu, geçişlerin katılığından bilinçli bir ayrılıktır. **D28** zaten hedef
+    /// durumdaki kaydı başarısız sayıyor çünkü orada personelin niyeti <b>reddediliyor</b>;
+    /// burada niyet zaten gerçekleşmiş durumda. Yirmi satırın sekizini "zaten öne
+    /// çıkarılmış" diye kırmızı göstermek personeli kırmızıyı görmezden gelmeye
+    /// alıştırır.</para>
+    /// </summary>
+    internal Result Feature() => OneCikarmayiYaz(FeaturedWeight);
+
+    /// <summary>Öne çıkarmayı kaldırır. O da idempotenttir (**D48**).</summary>
+    internal Result Unfeature() => OneCikarmayiYaz(NormalWeight);
+
+    /// <summary>
+    /// **D36** — arşiv **tek** ön koşul. Arşivlenmiş ilan vitrinde değil ve onu "öne
+    /// çıkarmak" hiçbir sıralamayı değiştirmez; sessizce başarılı dönmek personele bir
+    /// şey yapıldığını söylerdi.
+    ///
+    /// <para><b>Olay yayılmıyor</b> (**D16**): öne çıkarma bir yayın olgusu değil, vitrin
+    /// sırasının ayarı. `Audit` ve `Engagement` için yeni bir olgu doğmuyor; duyuru
+    /// üretmek sekiz olaylı sözleşmeye dokuzuncuyu anlamsız yere eklerdi.</para>
+    /// </summary>
+    private Result OneCikarmayiYaz(int weight)
+    {
+        if (Status is ListingStatus.Archived)
+        {
+            return Result.Failure(new Error(CannotFeatureArchived));
+        }
+
+        ShowcaseSortWeight = weight;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// `0012c` **D50** — panel hangi aracın öne çıkarıldığını gösterir. Anahtar iki
+    /// değerli (**D16**) ama kolon `int`; karşılaştırma TEK yerde yaşar ki sorgu, yansıtma
+    /// ve ekran aynı eşiği kullansın.
+    /// </summary>
+    internal bool IsFeatured => ShowcaseSortWeight > NormalWeight;
 }

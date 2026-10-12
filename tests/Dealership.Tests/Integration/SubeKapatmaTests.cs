@@ -130,7 +130,7 @@ public sealed class SubeKapatmaTests : IAsyncLifetime
         return new BranchCommands(
             context,
             new DealershipUnitOfWork(context, new OutboxWriter<DealershipDbContext>(context, saat), saat),
-            InvariantGuardOptions.Default);
+            InvariantGuardOptions<DealershipDbContext>.Default);
     }
 
     /// <summary>

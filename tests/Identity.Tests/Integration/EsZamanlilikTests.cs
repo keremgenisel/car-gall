@@ -234,7 +234,7 @@ public sealed class EsZamanlilikTests(IdentityDatabase database)
 
         Result kayip = await harness.KomutAsync(
             k => k.DeactivateAsync(ikinci, CancellationToken.None),
-            new InvariantGuardOptions(TimeSpan.FromMilliseconds(200)));
+            new InvariantGuardOptions<IdentityDbContext>(TimeSpan.FromMilliseconds(200)));
 
         await kilit.RollbackAsync();
 
@@ -264,7 +264,7 @@ public sealed class EsZamanlilikTests(IdentityDatabase database)
         // Kilit süresi cömert: ölçülen şey zaman aşımı değil, BEKLEME.
         Task<Result> bekleyen = harness.KomutAsync(
             k => k.DeactivateAsync(birinci, CancellationToken.None),
-            new InvariantGuardOptions(TimeSpan.FromSeconds(30)));
+            new InvariantGuardOptions<IdentityDbContext>(TimeSpan.FromSeconds(30)));
 
         await Task.Delay(TimeSpan.FromMilliseconds(500));
 

@@ -47,7 +47,7 @@ public static class DealershipModule
 
         // 0007 — invariant koruması ortak desenden gelir; süre yapılandırmadan değil
         // varsayılandan, çünkü kilit süresi bir iş kuralı değil bir güvenlik marjıdır.
-        services.AddSingleton(InvariantGuardOptions.Default);
+        services.AddSingleton(InvariantGuardOptions<DealershipDbContext>.Default);
         services.AddScoped<BranchCommands>();
         services.AddScoped(provider => new OutboxDispatcher<DealershipDbContext>(
             provider.GetRequiredService<DealershipDbContext>(),

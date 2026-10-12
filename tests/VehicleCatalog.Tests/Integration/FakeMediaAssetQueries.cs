@@ -44,13 +44,24 @@ internal sealed class FakeMediaAssetQueries : IMediaAssetQueries
             varliklar.TryGetValue(kimlik, out MediaAssetDto? dto)
             && dto.Status == MediaProcessingStatus.Ready));
 
+    /// <summary>
+    /// `0012c` **AC-35** — medya hazırlığı **kayıt başına** okunuyor. Bu sayaç o kriteri
+    /// ölçüyor: okuma bağlamına (**D46**) alınsaydı sayı 1'de kalırdı ve bayat bir
+    /// "hazır" cevabı yayına alma kararını zehirlerdi.
+    /// </summary>
+    internal int HazirlikOkumaSayisi { get; private set; }
+
     public Task<IReadOnlySet<Guid>> ReadyAmongAsync(
         IReadOnlyCollection<Guid> mediaAssetIds,
-        CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlySet<Guid>>(mediaAssetIds
+        CancellationToken cancellationToken)
+    {
+        HazirlikOkumaSayisi++;
+
+        return Task.FromResult<IReadOnlySet<Guid>>(mediaAssetIds
             .Where(kimlik => varliklar.TryGetValue(kimlik, out MediaAssetDto? dto)
                 && dto.Status == MediaProcessingStatus.Ready)
             .ToHashSet());
+    }
 
     public Task<IReadOnlyList<MediaAssetDto>> FindManyAsync(
         IReadOnlyCollection<Guid> mediaAssetIds,

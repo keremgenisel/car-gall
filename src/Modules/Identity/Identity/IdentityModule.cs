@@ -80,7 +80,7 @@ public static class IdentityModule
         services.AddScoped<Logout>();
         // 0007 — invariant koruması ortak desenden gelir; kilit süresi bir iş kuralı
         // değil bir güvenlik marjıdır, bu yüzden yapılandırmadan değil varsayılandan.
-        services.AddSingleton(InvariantGuardOptions.Default);
+        services.AddSingleton(InvariantGuardOptions<IdentityDbContext>.Default);
         services.AddScoped<StaffCommands>();
 
         // Dağıtıcı modülün kendi kaydıdır: outbox tablosu bu modülün şemasındadır.

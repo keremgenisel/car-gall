@@ -35,7 +35,7 @@ internal sealed class StaffCommands(
     IBranchValidator branches,
     IdentityLocaleOptions locales,
     IdentityOptions options,
-    InvariantGuardOptions guardOptions,
+    InvariantGuardOptions<IdentityDbContext> guardOptions,
     IClock clock)
 {
     internal async Task<Result<Guid>> AddAsync(AddStaffCommand command, CancellationToken cancellationToken)

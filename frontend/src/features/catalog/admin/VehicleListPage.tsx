@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useLocale } from '../../../app/localeContext'
-import { fetchVehicleSummary, fetchVehicles } from '../../../shared/api/catalogAdmin'
+import { ApiError } from '../../../shared/api/client'
+import type { AppLocale } from '../../../shared/lib/locale'
+import {
+  applyListingFeature,
+  fetchVehicleSummary,
+  fetchVehicles,
+} from '../../../shared/api/catalogAdmin'
 import type {
   PagedResult,
   VehicleAdminListItem,
@@ -11,6 +17,9 @@ import { formatDateTime, formatMoney, formatYear } from '../../../shared/i18n/fo
 import { adminPath, vehicleEditPath } from '../../../shared/lib/route'
 import { Badge, EmptyState, ErrorState, Skeleton } from '../../../shared/ui'
 import { codeKey } from './vehicleFormState'
+import { BulkActionBar } from './BulkActionBar'
+import { retainVisible, selectionOf } from './bulkActionState'
+import { canFeature, messageKey } from './listingActionState'
 
 type LoadState =
   | { readonly kind: 'loading' }
@@ -44,6 +53,31 @@ export function VehicleListPage() {
    * sıralama gibi o da ekranın değil personelin durumu, sekme yenilendiğinde kaybolmamalı.
    */
   const [archived, setArchived] = useState(() => readArchived())
+  /**
+   * `0012c` **D43** — seçim **sayfaya aittir** ve bu, seçimin kendi EVRENİYLE birlikte
+   * saklanmasıyla sağlanıyor: evren değişince eski seçim okunmaz hâle gelir.
+   *
+   * <p>Temizleme neden bir `useEffect` DEĞİL: efekt içinde `setState` çağırmak basamaklı
+   * render üretiyor (lint kuralı) ve bir kare boyunca eski seçim ekranda kalıyordu.
+   * Anahtarla karşılaştırmak aynı sonucu render sırasında, fazladan tur olmadan veriyor —
+   * bu dosyanın `result` için zaten kullandığı desen.</p>
+   *
+   * <p>Adreste YAŞAMIYOR: sayfa, sıralama ve arşiv filtresi personelin paylaşılabilir
+   * durumu; seçim ise o anki ekranın durumu ve bir bağlantıda taşınmaz.</p>
+   */
+  const [selected, setSelected] = useState<{
+    readonly key: string
+    readonly ids: ReadonlySet<string>
+  }>(() => ({ key: '', ids: new Set() }))
+  /**
+   * `0012c` **AC-44** — satır başına öne çıkarmanın reddi. Araç KİMLİĞİYLE saklanıyor,
+   * çünkü gerekçe eylemin yaşadığı satırda görünmeli: listenin başındaki ortak bir kutu,
+   * yirmi satırlık bir sayfada hangi aracın reddedildiğini söylemezdi.
+   */
+  const [oneCikarmaHatasi, setOneCikarmaHatasi] = useState<{
+    readonly vehicleId: string
+    readonly messageKey: string
+  } | null>(null)
 
   const requestKey = `${locale}|${page}|${sort}|${archived}|${reloadToken}`
   const state: LoadState =
@@ -69,6 +103,82 @@ export function VehicleListPage() {
 
     return () => controller.abort()
   }, [locale, page, sort, archived, reloadToken, requestKey])
+
+  /**
+   * Seçimin evreni: sayfa · sıralama · arşiv filtresi · dil. `reloadToken` BİLEREK dışarıda
+   * — satır başına öne çıkarma listeyi tazeliyor ve o tazeleme seçimi düşürmemeli.
+   */
+  const evrenKey = `${locale}|${page}|${sort}|${archived}`
+
+  const seciliKimlikler: ReadonlySet<string> =
+    selected.key === evrenKey ? selected.ids : new Set<string>()
+
+  /**
+   * SON başarıyla yüklenen sayfa. Tazeleme sırasında `state` yükleniyor hâline dönüyor;
+   * kısmi başarı listesi araç ADLARINI o anda da gösterebilmeli — kimlik personele bir
+   * şey söylemez.
+   */
+  const sonYuklenen: readonly VehicleAdminListItem[] =
+    result?.value.kind === 'ready' ? result.value.page.items : []
+
+  const gorunenler: readonly string[] =
+    state.kind === 'ready' ? state.page.items.map((item) => item.vehicleId) : []
+
+  // Sayfada olmayan bir kimlik seçimde kalamaz: tazeleme sonrası kaybolan bir araç
+  // seçimde asılı kalırsa toplu eylem personelin görmediği bir kayda uygulanır.
+  const secim = selectionOf(gorunenler, retainVisible(seciliKimlikler, gorunenler))
+
+  /**
+   * Başlıktaki kutunun üçüncü hâli: bazıları seçili. Karşılaştırmanın iki yanı da `>`
+   * ile yazılı — `A > 0 && A < B` biçimi gömülü metin kapısını (`check:text`) yanlış
+   * tetikliyor, çünkü `>` ile `<` arasındaki her şey ona bir etiket içeriği gibi görünüyor.
+   */
+  const yarimSecim = secim.length > 0 && gorunenler.length > secim.length
+
+  function yazSecim(ids: ReadonlySet<string>) {
+    setSelected({ key: evrenKey, ids })
+  }
+
+  function degistirSecim(vehicleId: string, secili: boolean) {
+    const sonraki = new Set(seciliKimlikler)
+
+    if (secili) {
+      sonraki.add(vehicleId)
+    } else {
+      sonraki.delete(vehicleId)
+    }
+
+    yazSecim(sonraki)
+  }
+
+  /**
+   * `0012c` **R5** — satır başına öne çıkarma anahtarı; eylem YALNIZ burada (**D51**).
+   *
+   * <p><b>Her başarısızlık yolu personele söyleniyor</b> (**AC-44**, `docs/frontend.md`
+   * § 3). İlk yazımda `catch` yoktu ve çağrı `void` ile yapılıyordu: red yutuluyor,
+   * ekranda hiçbir şey olmuyordu — ne mesaj, ne rozet değişimi, ne tazeleme. Sessizce
+   * hiçbir şey yapmayan bir düğme, personele ürünün bozuk olduğunu söyler.</p>
+   *
+   * <p>Arşivlenmiş satırda düğme HİÇ basılmıyor (**AC-43** · `canFeature`); bu `catch` ağ
+   * hatasını, `404`'ü ve `concurrency.lost`'u karşılıyor. Hata KODU asla ekrana yazılmıyor:
+   * `messageKey` onu çeviri anahtarına çeviriyor ve bilinmeyen kod genel mesaja düşüyor
+   * (**AC-39**).</p>
+   */
+  async function oneCikar(vehicleId: string, featured: boolean) {
+    setOneCikarmaHatasi(null)
+
+    try {
+      await applyListingFeature(vehicleId, featured, locale)
+      setReloadToken((token) => token + 1)
+    } catch (cause) {
+      const hata = cause instanceof ApiError ? cause : null
+
+      setOneCikarmaHatasi({
+        vehicleId,
+        messageKey: messageKey(hata?.errorCode ?? 'api.unavailable', locale),
+      })
+    }
+  }
 
   /** Adres ekranla birlikte değişir; tam gezinme YOK, yalnız adres çubuğu güncellenir. */
   function navigate(nextPage: number, nextSort: VehicleSort, nextArchived = archived) {
@@ -176,6 +286,25 @@ export function VehicleListPage() {
         />
       ) : null}
 
+      {/*
+        Toplu eylem çubuğu tablonun ÜSTÜNDE ve "hazır" dalının DIŞINDA.
+
+        Dışında olması bir kusurun bedeli: içindeyken her tazeleme onu UNMOUNT ediyordu ve
+        eylemin sonucu — başarı bildirimi ya da kısmi başarı listesi — ekrandan siliniyordu.
+        Eylem listeyi tazeliyor, yani kutu tam olarak gösterilmesi gereken anda kayboluyordu.
+        `0012b`'de aynı sınıftan bir kusur düzenleme ekranında yakalanmıştı ve e2e yakaladı.
+      */}
+      {sonYuklenen.length > 0 ? (
+        <BulkActionBar
+          selection={secim}
+          labelOf={(vehicleId) => AracAdi(sonYuklenen, vehicleId, locale, t)}
+          onApplied={() => {
+            yazSecim(new Set())
+            setReloadToken((token) => token + 1)
+          }}
+        />
+      ) : null}
+
       {state.kind === 'ready' && state.page.items.length > 0 ? (
         <>
           {/*
@@ -188,12 +317,40 @@ export function VehicleListPage() {
             <table className="admin-table" data-testid="vehicle-table">
               <thead>
                 <tr>
+                  {/*
+                    "Hepsini seç" SAYFADAKİLERİ seçer (**D43**): seçim sayfaya aittir ve
+                    sayfa değişince temizlenir. Başlıktaki kutu üç hâl taşımıyor; yarım
+                    seçimde `indeterminate` görünüyor ama değeri `false`.
+                  */}
+                  <th scope="col" className="admin-table__select">
+                    <label className="admin-form__check">
+                      <input
+                        type="checkbox"
+                        checked={secim.length > 0 && secim.length === gorunenler.length}
+                        ref={(element) => {
+                          if (element !== null) {
+                            element.indeterminate = yarimSecim
+                          }
+                        }}
+                        onChange={(event) =>
+                          yazSecim(
+                            event.target.checked
+                              ? new Set(state.page.items.map((item) => item.vehicleId))
+                              : new Set(),
+                          )
+                        }
+                        data-testid="vehicle-select-all"
+                      />
+                      <span className="visually-hidden">{t('vehicle.bulk.selectAll')}</span>
+                    </label>
+                  </th>
                   <th scope="col">{t('vehicle.column.vehicle')}</th>
                   <th scope="col">{t('vehicle.column.price')}</th>
                   <th scope="col">{t('vehicle.column.mileage')}</th>
                   <th scope="col">{t('vehicle.column.status')}</th>
                   <th scope="col">{t('vehicle.column.completeness')}</th>
                   <th scope="col">{t('vehicle.column.updatedAt')}</th>
+                  <th scope="col">{t('vehicle.column.featured')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,6 +361,24 @@ export function VehicleListPage() {
 
                   return (
                     <tr key={vehicle.vehicleId}>
+                      <td className="admin-table__select">
+                        <label className="admin-form__check">
+                          <input
+                            type="checkbox"
+                            checked={secim.includes(vehicle.vehicleId)}
+                            onChange={(event) =>
+                              degistirSecim(vehicle.vehicleId, event.target.checked)
+                            }
+                            data-testid={`vehicle-select-${vehicle.vehicleId}`}
+                          />
+                          <span className="visually-hidden">
+                            {t('vehicle.bulk.select', {
+                              model: vehicle.modelName,
+                              year: formatYear(vehicle.modelYear, locale),
+                            })}
+                          </span>
+                        </label>
+                      </td>
                       <td dir="auto" data-testid="vehicle-row">
                         <a href={vehicleEditPath(vehicle.vehicleId)}>
                           {t('vehicle.list.definition', {
@@ -259,6 +434,46 @@ export function VehicleListPage() {
                           : null}
                       </td>
                       <td>{formatDateTime(vehicle.updatedAt, locale)}</td>
+                      {/*
+                        0012c D50 — eylemin değiştirdiği durum, eylemin yaşadığı yüzeyde
+                        görünüyor. Rozet olmadan öne çıkarma yalnızca YAZAN bir düğme
+                        olurdu: personel hangi satırın öne çıkarıldığını göremezdi.
+                      */}
+                      <td>
+                        {vehicle.isFeatured ? (
+                          <span data-testid="vehicle-featured">
+                            <Badge>{t('vehicle.badge.featured')}</Badge>
+                          </span>
+                        ) : null}
+                        {/*
+                          AC-43 — arşivlenmiş satırda düğme YOK: sunucu onu
+                          `listing.cannot_feature.archived` ile reddediyor (**D36**) ve
+                          `availableActions`'ın gerekçesi birebir burada da geçerli —
+                          personele olmayan bir düğme gösterilmez.
+                        */}
+                        {canFeature(vehicle.listingStatus) ? (
+                          <button
+                            type="button"
+                            className="ui-button ui-button--secondary vehicle-list__feature"
+                            onClick={() => void oneCikar(vehicle.vehicleId, !vehicle.isFeatured)}
+                            data-testid={`vehicle-feature-${vehicle.vehicleId}`}
+                          >
+                            {vehicle.isFeatured
+                              ? t('vehicle.action.unfeature')
+                              : t('vehicle.action.feature')}
+                          </button>
+                        ) : null}
+
+                        {oneCikarmaHatasi?.vehicleId === vehicle.vehicleId ? (
+                          <p
+                            className="admin-form__field-error"
+                            role="alert"
+                            data-testid={`vehicle-feature-error-${vehicle.vehicleId}`}
+                          >
+                            {t(oneCikarmaHatasi.messageKey, { limit: '' })}
+                          </p>
+                        ) : null}
+                      </td>
                     </tr>
                   )
                 })}
@@ -317,4 +532,27 @@ function readSort(): VehicleSort {
 /** Tanınmayan değer KAPALI'ya düşer; adres çubuğundan gelen bir ipucu hata ekranı üretmez. */
 function readArchived(): boolean {
   return new URLSearchParams(window.location.search).get('archived') === 'true'
+}
+
+/**
+ * Kısmi başarı listesindeki araç adı. Seçim sayfaya ait olduğu için (**D43**) adlar
+ * zaten elimizde ve ikinci bir okuma gerekmiyor — kararın ölçülmüş yan faydası.
+ *
+ * <p>Araç listeden düşmüşse kimlik gösterilmiyor: personele bir `Guid` göstermek hiçbir
+ * şey söylemez. Yerine genel bir ad basılıyor.</p>
+ */
+function AracAdi(
+  items: readonly VehicleAdminListItem[],
+  vehicleId: string,
+  locale: AppLocale,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): string {
+  const arac = items.find((item) => item.vehicleId === vehicleId)
+
+  return arac === undefined
+    ? t('vehicle.bulk.unknown')
+    : t('vehicle.list.definition', {
+        model: arac.modelName,
+        year: formatYear(arac.modelYear, locale),
+      })
 }

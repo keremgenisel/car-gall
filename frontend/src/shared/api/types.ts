@@ -174,6 +174,12 @@ export interface VehicleAdminListItem {
   readonly awaitingBranchAssignment: boolean
   /** Zorunlu işaretli bir opsiyonel alanı boş olan araç. Sunucuda hesaplanır (C21). */
   readonly hasMissingRequiredInfo: boolean
+  /**
+   * 0012c **D50** — ilan öne çıkarılmış mı. Eylemin değiştirdiği durum, eylemin yaşadığı
+   * yüzeyde görünür olmalı: bu alan olmadan öne çıkarma yalnızca **yazan** bir düğme
+   * olurdu ve "zaten öne çıkarılmış" cevabı ekranda gösterilemezdi.
+   */
+  readonly isFeatured: boolean
 }
 
 /** R15/AC-23 — çeviri eksik ilan sayısı TÜM araçlar üzerinden; sayfaya bağlı değil. */
@@ -202,6 +208,52 @@ export const LISTING_ACTIONS = [
 ] as const
 
 export type ListingAction = (typeof LISTING_ACTIONS)[number]
+
+/**
+ * 0012c — öne çıkarmanın iki yönü. `ListingAction`'dan **AYRI** tutuldu ve bu kararın
+ * kendisi: öne çıkarma bir durum geçişi değil, bir **sıralama** eylemidir. Aynı listeye
+ * konsaydı `listingActionState`'in A3 tablosu onu bir geçiş gibi göstermeye çalışırdı.
+ */
+export const LISTING_FEATURE_ACTIONS = ['feature', 'unfeature'] as const
+
+export type ListingFeatureAction = (typeof LISTING_FEATURE_ACTIONS)[number]
+
+/**
+ * 0012c **D18** — toplu yüzeyin **altı** eylemi. Rezerve etme ve rezervasyonu kaldırma
+ * burada **yok**: rezervasyon bir müşteriye aittir.
+ */
+export const BULK_LISTING_OPERATIONS = [
+  'publish',
+  'unpublish',
+  'sold',
+  'archive',
+  'feature',
+  'unfeature',
+] as const
+
+export type BulkListingOperation = (typeof BULK_LISTING_OPERATIONS)[number]
+
+/**
+ * 0012c **D45** — araç başına sonuç satırı. Şekil **tek**; doluluk değişir.
+ *
+ * <p>`listingStatus` başarılı satırda da geliyor: panel listeyi yeniden çekmeden satırı
+ * boyayabiliyor. `null` yalnız bulunamayan araçta — onun durumu yok.</p>
+ *
+ * <p>`parameters` tekil ucun gerekçesinin **aynısı**: yayın reddinde `reasons` ve eksik
+ * alan anahtarları burada duruyor ve panel onları mevcut çeviricilerle okuyor.</p>
+ */
+export interface BulkListingRow {
+  readonly vehicleId: string
+  readonly applied: boolean
+  readonly errorCode: string | null
+  readonly parameters: Record<string, string> | null
+  readonly listingStatus: string | null
+}
+
+/** Sonuç **zarf** içinde: çıplak dizi, yanıta bir gün alan eklemeyi kırıcı yapardı. */
+export interface BulkListingResult {
+  readonly results: readonly BulkListingRow[]
+}
 
 /**
  * Opsiyonel alan tanımı. Tip KODDAN gelir (D21), zorunluluk ayardan. Kapalı alanlar bu
