@@ -143,6 +143,39 @@ ve yeşil.** Kanıtlamadığı şey **zamanlı tetikleyicinin kendisi** — o an
 bilinen bir davranış; ikinci pencere de boş çıkarsa K6'nın dayandığı mekanizma bu depoda
 çalışmıyor demektir ve kararın yeniden açılması gerekir.
 
+**Ölçüm — ikinci pencere de KAÇTI, ama tetikleyici bir kez ÇALIŞTI (2026-10-12).**
+Yukarıdaki paragrafın koşulu gerçekleşti, bu yüzden K6'nın mekanizması **yeniden
+açılıyor**. Üç sayı 2026-10-12 09:54 UTC'de okundu:
+
+- `gh api .../workflows/ci.yml/runs?event=schedule` → `total_count` **1**.
+- O tek koşu `2026-10-11T09:35:20Z`, `18e4adf` üzerinde, `success`. Yani zamanlı
+  tetikleyici **ölü değil** — bir kez ateşledi.
+- Ama cron `0 3 * * *` diyor ve koşu **06:35 geç** geldi; 2026-10-12 03:00 penceresinden
+  ise 09:54'e kadar hiç koşu çıkmadı.
+
+İki pencerede bir koşu ve o da altı buçuk saat gecikmeli: tetikleyici **çalışıyor ama
+zamanında ve her gün değil**. Bu, ilk ölçümün "mekanizma çalışmıyor" hipotezini de
+yanlışlıyor — sorun varlık değil **güvenilirlik**. GitHub ücretsiz koşucularda zamanlı
+koşuları yoğunlukta geciktiriyor ve saat başlarını (`:00`) en yoğun dilim olarak
+belgeliyor.
+
+**Kararı yeniden açan soru:** K6 "gece koşusu" diye sabit bir şeye dayanıyordu; artık
+dayanmadığı ölçüldü. Üç seçenek ve bedelleri — **Takım Yöneticisi'nin kararı**:
+
+| Seçenek | Ne yapar | Bedeli |
+|---|---|---|
+| **A — tolerans** | Yokluk ölçümü 24 saat yerine **36 saat** penceresinde yapılır; koşu varsa gecikmesi de raporlanır | Kırmızı bir gece en kötü durumda ~1,5 gün sonra görülür. Bu turda **yapıldı** (aşağıdaki `AGENTS.md` maddesi). |
+| **B — cron'u saat başından kaydır** | `0 3 * * *` → örneğin `37 4 * * *`; en yoğun dilimden çıkar | Hipotez bu depoda **ölçülmedi**; doğrulamak için yeni pencereleri beklemek gerekir. Tek satırlık değişiklik ama bir karar. |
+| **C — zamanlı koşuya hiç dayanmamak** | Oturum açılış maddesi "`main`'in SON koşusu, olayı ne olursa olsun" diye okunur | Push'suz geçen bir gün ölçümsüz kalır — K6 tam o boşluk için yazılmıştı. Kuralı kendi gerekçesine aykırı hâle getirir. |
+
+Bu turda yalnız **A** uygulandı: ölçümü doğru yapan tarafı. **B** ve **C** karar bekliyor
+ve ikisi de `ci.yml`'a dokunuyor, yani ölçüm değil karardır (AP-10).
+
+**`perf.yml` hakkındaki sayı yanlış okunmamalı.** `event=schedule` için `total_count`
+**0** ve bu bir kaçan pencere DEĞİL: dosyada `schedule` tetikleyicisi hiç yok
+(`on: pull_request, workflow_dispatch`) — yukarıdaki "Kapsam" paragrafının bilinçli
+kararı. `main`'in performans durumu hâlâ "bilinmiyor" ve kapatılması ayrı bir karar.
+
 **Kuralın kör noktası bu ölçümle görünür oldu: K6 KIRMIZI bir koşu için yazılmıştı.**
 "Koşu hiç yok" hâli sessizce "sorun yok" gibi görünür — oturum `gh run list` okur, son
 koşuların hepsi yeşil `push` koşusudur ve raporlanacak bir şey bulmaz. Hiç havlamayan bir
