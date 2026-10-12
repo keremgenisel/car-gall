@@ -2,17 +2,17 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
-| **Sahip** | — |
+| **Durum** | Onaylandı |
+| **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (toplu komut yüzeyi) · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | **`0012b` ÖNKOŞUL — tamamlandı** (2026-10-11, `e67a61d`; tekil geçiş komutları, duyurular, yansıtma) · `0010b` (panel listesi) |
 | **Dayanak** | `0012b` **D39** — `0012`'nin üçüncü dilimi |
-| **Kararlar** | Taşınanlar `0012b`'de verildi (**D3–D7**, **D16**, **D18**, **D27–D29**, **D36**); **D43–D55** bu spec'in kendi CLARIFY turunda (2026-10-11, `2255370` üzerinde) **ölçülerek** eklendi. **Açık soru yok.** Kriterler yazılmadı. |
+| **Kararlar** | Taşınanlar `0012b`'de verildi (**D3–D7**, **D16**, **D18**, **D27–D29**, **D36**); **D43–D55** bu spec'in kendi CLARIFY turunda (2026-10-11, `2255370` üzerinde) **ölçülerek** eklendi; **D56–D57** kriter PR'ı hâlâ açıkken dış triyajın ölçümünden (2026-10-12) doğdu. **Açık soru yok.** |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı; sıradaki tur **kriter turudur**
-> (`0012a`/`0012b`'nin deseni: kararlar bu PR'da donar, kriterler kendi PR'ında girer —
-> ADR `0008` / K2).
+> **R/C/AC bu PR'da `main`'e giriyor ve orada donuyor** (ADR `0008` / K2 ve K3'ün donma
+> anı cümlesi — `0012b` **D38**). Bu commit'ten sonra Requirements, Constraints veya
+> Acceptance Criteria'da yapılan her değişiklik **sayılan bir revizyondur**.
 >
 > **CLARIFY turu, 2026-10-11.** Bu dosya `0012b` **bitmeden** yazılmıştı ve Context'i
 > *"`0012b` bittiğinde"* diye konuşuyordu; `0012b` bittikten sonra (#59→#61) hepsi bugünkü
@@ -317,6 +317,29 @@ onayıyla verildi. Taşınan kararlar yukarıda; bunlar **bu spec'in kendi** kar
   kimin neyi kaydettiği sessizce yanlış olabiliyor. *Bedel:* kapanmış bir kartın SCORECARD
   hücresi güncellenir; ADR `0008`/K3 kapanmış kartları düzeltmiyor ama `Kaçan hata` hücresi
   tam bu amaçla `izleniyor` bırakılıyor.
+- **D56 — Kapak görselinin adresi de ÖN OKUMA BAĞLAMINA girer; D46'nın bütçesi beş
+  okumadır.** *Gerekçe:* ölçüldü (dış triyaj, 2026-10-12) — yansıtma kapak adresini **kayıt
+  başına** okuyor (`ShowcaseProjectionWriter.cs:66`) ve D46 onu hiç saymamıştı: 25 satırlık
+  bir toplu yayın 25 hazırlık + 25 kapak = **50** modüller arası çağrı yapıyor, yani Tuzak
+  3'ün adını koyduğu sayı. Kapak hazırlıktan **farklıdır** ve öne alınabilir: tazelik
+  gerektirmiyor, kopyalanmış bir kolonu besliyor ve `MediaAssetReadyHandler` onu kendi
+  yolundan tazeliyor (`0011`/AC-36, **D34**) — bayat bir kapak bir sonraki
+  `MediaAssetReady`'de düzelir, oysa bayat bir "hazır" cevabı **yanlış bir yayın kararı**
+  üretir. `FindManyAsync` zaten küme imzalı. *Bedel:* bağlam beşinci bir alan kazanır ve
+  `Media` okuması artık iki ayrı gerekçeyle iki ayrı yerde yaşar (hazırlık kilidin altında,
+  kapak kilidin dışında); ikisinin farkı AC-34 ile AC-35'te adıyla yazılı.
+- **D57 — `InvariantGuardOptions` MODÜL BAŞINA tiplenir: `InvariantGuardOptions<TContext>`.**
+  *Gerekçe:* D55 kaydı ekledi ama tuzak sınıfını kapatmadı — ölçüldü (dış triyaj,
+  2026-10-12): üç modül aynı non-generic tipi singleton kaydediyor, kap tek ve **son kayıt
+  kazanıyor**. Bugün zararsız (üçü de `.Default`), ama bağımlılık **yön değiştirdi, kalkmadı**:
+  bir modül kendi kilit süresini ayarladığı gün — ki D47'nin bedel satırı bunu adıyla
+  öneriyor — diğer ikisinin süresi sessizce onunla değişir. Bu, #52'de bedeli ödenen
+  `IOutboxWriter` tuzağının birebir şekli ve çözümü de aynı: `OutboxWriter<TDbContext>`
+  emsali. Tip parametresi `ExecuteAsync`'in imzasında da yaşıyor, yani **başka modülün
+  seçeneğini geçirmek derleme hatası** olur. *Bedel:* `BuildingBlocks`'un tipi ve onu isteyen
+  dört komut sınıfı imza değiştirir; ayrıca bir mimari kapı (`InvariantGuardSecenekleriTests`)
+  paylaşılan non-generic seçenek kaydını yasaklar ve guard'ı çağıran her modülün **kendi**
+  seçeneğini kaydettiğini ölçer.
 
 ---
 
@@ -325,33 +348,89 @@ onayıyla verildi. Taşınan kararlar yukarıda; bunlar **bu spec'in kendi** kar
 **Yok.** Son açık soru (**S1** — "hepsini seç" sayfa değiştiğinde ne olur) 2026-10-11'de
 **D43** ile kapandı: seçim sayfaya aittir ve sayfa değişince temizlenir.
 
-Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**.
+Kabul kriterlerini bekleten bir karar kalmadı; kriterler bu PR'da yazıldı.
 
 ---
 
 ## Acceptance Criteria
 
-> **Kriter turunda yazılacak** — bekleyen karar kalmadı (**D43**). En az şu kümeleri
-> kapsayacak:
->
-> **Toplu eylem:** kısmi başarı · boş seçim · yinelenen kimlik (tekilleştirme sınırdan
-> **önce**) · üst sınır aşımı ve sınırın **dâhil** olması — **API düzeyinde** (**D52**) ·
-> hepsi başarısız olsa da `200` · **altı** toplu eylemin her biri (öne çıkarmayı kaldırma
-> dâhil) · satırların **gönderildiği sırada** işlenmesi ve bir satırın eşzamanlılık kaybının
-> diğerlerini düşürmemesi (**D47**).
-> **Sonuç satırı:** her satırın aynı şekli taşıması · başarısız satırın hata kodu **ve
-> yapısal parametrelerini** taşıması — tekil uçla aynı gerekçe (**D45**) · başarılı satırın
-> **güncel durum kodunu** taşıması · bulunamayan aracın **satırı** düşürmesi (**D27**) ·
-> zaten hedef **durumda** olan kaydın başarısız sayılması (**D28**).
-> **Öne çıkarma:** vitrin sıralamasına yansıması · duyuru **üretmemesi** (**D16**) ·
-> **idempotent** olması — zaten o hâlde olan kaydın **başarılı** dönmesi (**D48**) ·
-> arşivlenmiş ilanın `listing.cannot_feature.archived` ile **`409`** alması (**D49**) ·
-> durumun panel listesinde **görünmesi** (**D50**) · eylemin **yalnız liste ekranında**
-> olması (**D51**) · zaman damgasını ilerletmesi (**D36**).
-> **Okuma bütçesi:** istek başına bir kez okunan dört okumanın gerçekten **bir kez**
-> okunduğu ve medya hazırlığının **kayıt başına ve kilit altında** kaldığı (**D46**).
-> **Yüzey:** seçimin **sayfaya** ait olması ve sayfa değişince temizlenmesi (**D43**) ·
-> eylem sonucunun **başarılı** ve **kısmi başarı** durumları (**D54**) · çok dil ve RTL.
+Kırk dört kriter, yedi grupta. Bekleyen karar yoktu (**D43**); kapsamı **D52** (sınır
+kriterleri API düzeyinde), **D53** (filtreye uygulama kapsam dışı) ve **D54** (R6 ikiye
+ayrıldı) belirledi. Yapılandırmadan gelen her değer için kriter **yapılandırılan değeri**
+doğrular, spec'e kopyalanmış bir sabiti değil.
+
+**AC-43 ve AC-44 bu PR hâlâ açıkken eklendi, AC-34'ün ölçüsü de bu turda büyüdü** (dış
+triyaj, 2026-10-12): satır başına öne çıkarmanın **hata yolunu** hiçbir kriter istemiyordu
+ve okuma bütçesi kapak adresini saymıyordu. Donma anı AC'yi taşıyan PR'dır (K3 · `0012b`
+**D38**), yani ikisi de **revizyon değil**. **Numaralar APPEND edilir:** AC-43 F grubunun
+sonuna 40'tan sonra giriyor, araya değil — var olan bir numarayı kaydırmak testlerdeki
+`0012c/AC-n` etiketlerini sessizce başka kriterlere bağlardı ve `0012b`'nin kaçan hatası
+tam olarak buydu (yedi etiketin permütasyonu, hepsi "ölçüldü" görünüyordu).
+
+### A. Seçim ve istek düzeyi reddi
+
+- **AC-1.** Oturum açmış personel birden çok aracı seçip aynı eylemi hepsine uygular; yanıt `200` ve gövdesi araç başına sonuç listesidir.
+- **AC-2.** Boş seçim istek düzeyinde reddedilir: yanıt `422` ve `listing.selection_empty` taşır.
+- **AC-3.** Yinelenen araç kimlikleri teklenir: aynı araç iki kez gönderildiğinde sonuç listesi o aracı **bir kez** taşır.
+- **AC-4.** Tekilleştirme sınır kontrolünden **önce** gelir: yalnız yinelemeler yüzünden sınırı aşan bir seçim kabul edilir.
+- **AC-5.** Üst sınırı aşan seçim **kırpılmaz, reddedilir**: yanıt `422` ve `listing.selection_limit_exceeded` taşır.
+- **AC-6.** Üst sınır **dâhildir**: tam sınır kadar araç taşıyan seçim kabul edilir.
+- **AC-7.** Üst sınır **yapılandırmadan** okunur; kodda sabit değildir.
+- **AC-8.** Oturumu olmayan biri hiçbir toplu eylemi çağıramaz.
+- **AC-9.** Toplu **rezerve** ve toplu **rezervasyon kaldırma** uçları yoktur.
+
+### B. Sonuç satırının şekli
+
+- **AC-10.** Her sonuç satırı aynı şekli taşır: araç kimliği · başarılı mı · hata kodu ve yapısal parametreleri · kaydın güncel durum kodu.
+- **AC-11.** **Başarılı** satır da kaydın **güncel durum kodunu** taşır.
+- **AC-12.** Başarısız satır tekil ucun **aynı** gerekçesini taşır: kod **ve** yapısal parametreleri; toplu yayın reddinde eksiklerin listesi satırda durur.
+- **AC-13.** Araçların **hepsi** başarısız olsa bile yanıt `200` döner.
+- **AC-14.** Bulunamayan araç isteği değil **o satırı** düşürür: satır `vehicle.not_found` taşır ve istek `200` kalır.
+- **AC-15.** Zaten hedef **durumda** olan kayıt **başarısız** sayılır ve satır kaydın güncel durumunu taşır.
+- **AC-16.** Geçerli satırlar uygulanır; bir satırın reddi uygulanmış satırları **geri almaz**.
+
+### C. Altı eylem, sıra ve dayanıklılık
+
+- **AC-17.** Altı toplu eylemin her biri toplu yüzeyden uygulanır: yayına al · yayından kaldır · satıldı işaretle · arşivle · öne çıkar · öne çıkarmayı kaldır.
+- **AC-18.** Satırlar **gönderildiği sırada** işlenir ve sonuç listesi aynı sırayı taşır.
+- **AC-19.** Bir satırın eşzamanlılık kaybı **satır düzeyinde** kalır: `concurrency.lost` o satıra yazılır, diğer satırlar uygulanır.
+- **AC-20.** Toplu eylem durum geçişi mantığını **tekrarlamaz**; karar agregatta kalır.
+- **AC-21.** Toplu eylem aracın **son güncellenme** zamanını ilerletir.
+- **AC-22.** Toplu eylem vitrin okuma modelini **aynı işlemde** günceller.
+- **AC-23.** Toplu geçişler **duyurulur**: başarılı her geçiş kendi entegrasyon olayını yazar.
+
+### D. Öne çıkarma
+
+- **AC-24.** Öne çıkarılan ilan vitrin sıralamasının **başında** görünür.
+- **AC-25.** Öne çıkarma **duyuru üretmez**: outbox'a satır yazılmaz.
+- **AC-26.** Öne çıkarma **idempotenttir**: zaten öne çıkarılmış kayıt **başarılı** döner.
+- **AC-27.** Öne çıkarmayı kaldırma da **idempotenttir**: zaten öne çıkarılmamış kayıt **başarılı** döner.
+- **AC-28.** Arşivlenmiş ilan öne çıkarılamaz: yanıt `listing.cannot_feature.archived` ve `409` taşır.
+- **AC-29.** Öne çıkarma **arşiv dışındaki her durumda** çalışır: taslak, yayında, rezerve ve satıldı.
+- **AC-30.** Öne çıkarma aracın **son güncellenme** zamanını ilerletir.
+- **AC-31.** Öne çıkarma anahtarı **iki değerlidir** ve geliştirme seed'i o iki değere hizalıdır.
+- **AC-32.** Panel listesi **hangi aracın öne çıkarıldığını** gösterir.
+- **AC-33.** Öne çıkarma **yalnız liste ekranında** yaşar; düzenleme ekranının eylem çubuğunda yoktur.
+
+### E. Okuma bütçesi
+
+- **AC-34.** Beş okuma istek başına **bir kez** yapılır: zorunlu alan kümesi · public alan anahtarları · şube başına ad haritası · kanonik model adları · seçimdeki araçların kapak görseli adresleri.
+- **AC-35.** Medya hazırlığı **kayıt başına** ve **kilidin altında** okunur.
+
+### F. Panel yüzeyi
+
+- **AC-36.** Seçim **sayfaya aittir**: sayfa değişince temizlenir.
+- **AC-37.** Eylem sonucunun **başarılı** durumu basılır ve kaç kaydın uygulandığı **ICU** ile söylenir.
+- **AC-38.** **Kısmi başarı** dördüncü ekran durumu olarak basılır: uygulanmayanlar **tek tek gerekçesiyle** listelenir ve sonuç "başarılı" ya da "hata" olarak yuvarlanmaz.
+- **AC-39.** Panel hiçbir teknik detay göstermez: hata kodu, HTTP durumu ve rota yolu ekranda görünmez.
+- **AC-40.** Panel personelin tercih ettiği dilde çalışır; Arapça'da yüzey RTL ve metinler Arapçadır.
+- **AC-43.** Arşivlenmiş satırda öne çıkarma düğmesi **yoktur**: panel, sunucunun reddedeceği bir eylemi göstermez.
+- **AC-44.** Satır başına öne çıkarmanın reddi **o satırda** gerekçesiyle görünür; sessizce hiçbir şey yapmayan bir düğme yoktur.
+
+### G. Sınır ve kayıt
+
+- **AC-41.** Şube kapanışı yolu seçim üst sınırına **tabi değildir**.
+- **AC-42.** `VehicleCatalog` `InvariantGuardOptions`'ı **kendi** kaydeder; başka modülün kaydına bağımlı değildir.
 
 ---
 
@@ -360,8 +439,9 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
 <!-- MADDE ÇIKARILAMAZ. Şablondaki her maddenin bir `<!-- DoD:Tn -->` işaretleyicisi vardır
      ve mimari test (ADR 0008 / K8) sayıyı şablondan okuyarak denetler. -->
 
-- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi
-      (**D43–D55**; taşınan kararlar `0012b`'de donmuş hâlde).
+- [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi
+      (**D43–D55**; taşınan kararlar `0012b`'de donmuş hâlde). *Son açık soru S1,
+      `d969dfb` turunda **D43** ile kapandı; kriter turuna giren bekleyen karar yok.*
 - [x] `0012b` tamamlandı (tekil komutlar ve duyurular hazır).
       *2026-10-11, `e67a61d` (#60) ve kapanışı `2255370` (#61); kart `specs/done/` altında,
       58 kriter, 29 DoD kutusu. Ölçüldü: altı eylem ucu
@@ -389,7 +469,7 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
       görsel kanıtı yok; gerekçesi **D52**.
 - [ ] Başarısız satırın tekil uçla **aynı gerekçeyi** (kod + yapısal parametreler) taşıdığı
       testle gösterildi; toplu yayın reddinde `reasons` parametresi satırda duruyor (**D45**).
-- [ ] İstek başına bir kez okunan dört okumanın gerçekten **bir kez** okunduğu ve medya
+- [ ] İstek başına bir kez okunan beş okumanın gerçekten **bir kez** okunduğu ve medya
       hazırlığının **kayıt başına, kilidin altında** kaldığı testle gösterildi (**D46**).
 - [ ] Bir satırın eşzamanlılık kaybının diğer satırları **düşürmediği** ve satırların
       gönderildiği **sırada** işlendiği testle gösterildi (**D47**).
@@ -404,6 +484,11 @@ Kabul kriterlerini bekleten bir karar kalmadı; sıradaki tur **kriter turudur**
 - [ ] `VehicleCatalog`'un `InvariantGuardOptions`'ı **kendi** kaydettiği testle gösterildi;
       `0012b`'nin kartındaki `Kaçan hata` hücresi **1**'e çekildi ve düzeltme PR'da adıyla
       yazıldı (**D55**, **C9**).
+- [ ] Satır başına öne çıkarmanın **hata yolu** gösterildi: arşivlenmiş satırda düğme
+      **yok** ve sunucunun reddi **o satırda** gerekçesiyle görünüyor (**AC-43**, **AC-44**);
+      ikisinin görsel kanıtı var.
+- [ ] Modül başına tiplenen kilit seçeneği (**D57**) kuruldu ve paylaşılan non-generic bir
+      seçenek kaydının geri gelmesini **bir mimari kapı** yasaklıyor.
 
 ---
 
