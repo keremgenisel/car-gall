@@ -229,8 +229,8 @@ taşımayabilir.
 
 *Bu tablo **kararın verildiği andaki** durumu kaydediyor ve yeniden yazılmıyor. Bugünkü
 karşılıkları: dilim 1 → `0010a` + `0010b` (ikisi de tamamlandı); dilim 2 → `0011`;
-dilim 3 → `0012a` + `0012b` + `0012c` (2026-10-11'de **üçe** bölündü; ilk ikisi
-tamamlandı).
+dilim 3 → `0012a` + `0012b` + `0012c` (2026-10-11'de **üçe** bölündü; **üçü de
+tamamlandı**).
 Güncel hâl aşağıdaki "Güncellenen sıra" tablosundadır.*
 
 **Bu, unsur 7'yi reddetmez; 2. maddesini ikiye böler ve `Media`'yı (#3) yayın işinin
@@ -262,7 +262,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 2 | **Görsel dil ve marka teması** | `frontend-002` ✅ tamamlandı |
 | 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
-| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · **`0012c`** (Taslak — **karar bekleyen soru yok**) |
+| 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · `0012c` ✅ tamamlandı |
 | 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
 | 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
@@ -285,6 +285,15 @@ iş artık #5'in **ikinci dilimi** (`0012b`).
 `0012c`'ye ayrıldı. Bölme bu kez kriter yazılmadan yapıldı — kararlar `0012b`'den taşındı
 (D3–D7, D16, D18, D27–D29, D36) — yani bedeli neredeyse sıfırdı. Sıra yine DEĞİŞMEDİ;
 başlanmamış ilk iş artık #5'in **üçüncü dilimi** (`0012c`).
+
+**Üçüncü dilim de kapandı** (`0012c`, 2026-10-12, `004c44c`) ve `5`. satır üçe
+bölündükten sonra **ilk kez tamamen bitti**: altı toplu eylem ucu canlı (ölçüldü:
+`bulk/publish|unpublish|sold|archive|feature|unfeature` → `401`; `bulk/reserve` ve
+`bulk/unreserve` → `404`, **D18** gereği hiç tanımlanmadı). Üç dilimin toplamı 33 + 58 +
+44 = **135 kriter** ve hiçbirinde karşılanmayan kriter kalmadı. Sıra bu kez **ilerledi**:
+başlanmamış ilk iş artık **#6** (`0013` — iki adımlı doğrulama). Üç bölmenin ortak
+ölçümü şu: ilk bölme kriterler yazıldıktan sonra yapıldı ve pahalıydı, sonraki ikisi
+kriter yazılmadan yapıldı ve bedeli neredeyse sıfır oldu.
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca
@@ -320,10 +329,12 @@ Yani vitrindeki araçlar bu commit'ten sonra geliştirme seed'inden değil **gal
 kararından** geliyor ve `docs/testing.md` § 3'ün üçüncü kritik akışı ilk kez uçtan uca
 koşuyor. `0012a`'nın D18 ve D19 borçları böylece kapandı.
 
-**Sekiz taslağın toplam 33 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-11'de
+**Yedi taslağın toplam 33 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-12'de
 yeniden ölçüldü ve sayım tek tek yapıldı: `0013` 5 · `0014` 4 · `0015` 5 · `0016` 4 ·
-`0017` 5 · `0018` 5 · `frontend-003` 5 · `0012c` **0**; `0004` **Beklemede** ve sorusu yok,
-bu yüzden taslak sayımına girmiyor. Gün içindeki hareket: `0012a` ve `0012b` kapandı,
+`0017` 5 · `0018` 5 · `frontend-003` 5; `0004` **Beklemede** ve sorusu yok, bu yüzden
+taslak sayımına girmiyor. Taslak sayısı sekizden **yediye** indi — `0012c` kapandı — ama
+**toplam değişmedi**: onun açık sorusu zaten `0`'dı, tek sorusu kendi CLARIFY turunda
+**D43** ile kapanmıştı. Gün içindeki hareket: `0012a` ve `0012b` kapandı,
 yerine `0012c` açıldı ve onun tek sorusu (**S1** — "hepsini seç" sayfa değiştiğinde ne olur)
 aynı gün kendi CLARIFY turunda **D43** ile kapandı. Bir ara sürüm bu paragrafta taslak
 sayısını dokuz yazıyordu; sayım `0004`'ü de katıyordu ve düzeltildi). `0012`'nin beş sorusundan dördü ilk

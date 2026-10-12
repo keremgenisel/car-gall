@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı |
+| **Durum** | **Tamamlandı** (2026-10-12) |
 | **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (toplu komut yüzeyi) · `frontend/` yönetim paneli |
@@ -481,13 +481,38 @@ tam olarak buydu (yedi etiketin permütasyonu, hepsi "ölçüldü" görünüyord
       BİRİNCİ satırına tıklıyordu ve paralel koşan AC-32 en yeni aracı öne çıkardığı için
       sahtelenen yol eşleşmiyordu — yerelde geçmişti, CI'da iki projede birden düştü.
       `ae8135f` ile ikisi de yeşil.*
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
+      *İki tur oldu ve ikisi de merge'den önce. **Birinci tur** (2026-10-12) altı bulgu
+      verdi; beşi düzeltildi, biri gürültü sayıldı ve bulgular PR #64'te tek tek yazılı
+      (satır başına öne çıkarmanın olmayan hata yolu · Arapçada yalnız `other` taşıyan
+      altı mesaj · hiçbir kriterde sayılmayan kapak okuması · üç modülün aynı
+      non-generic seçeneği kaydetmesi · kaymış doc comment · spec başlığının bayat
+      durumu). Düzeltmeler `fbd323e`, `0b7d977`, `ae8135f`, `6a08b41` ve — kriter PR'ı
+      hâlâ açıkken — `a04dd50`. **İkinci tur** merge'den hemen önce koştu ve bulgu
+      vermedi; ne yeni commit ne de kriter değişikliği doğurdu.
+      **Eksik — ve `0012b` ile aynı eksik:** iki turun hiçbiri PR'da inceleme ya da yorum
+      bırakmadı (ölçüldü: #62/#63/#64 → 0 inceleme, 0 yorum), yani turlar yalnız yazarın
+      aktardığı ve TM'nin sözlü doğruladığı hâliyle kayıtlı. Platformda izi olmayan bir
+      tur, iki kart sonra "yapıldı mı" sorusuna cevap veremez.*
 - [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
       *Karşılanmayan kriter yok.*
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
+      *2026-10-12, bağımlılık sırasıyla üç PR: #62 → `0e05cf3` (07:33Z) · #63 → `149d7c3`
+      (07:49Z) · #64 → `004c44c` (08:02Z). Her adımda CI doğrulaması merge'den **ayrı**
+      bir adım olarak koştu (`docs/git.md` § 4) ve `main` üçünde de yeşil: `38218414176`,
+      `38219884433`, `38221202182`. Her squash'ta `tree(main) == tree(CI'ın test ettiği
+      head)`, yani doğrulanan içerik `main`'e birebir girdi. İki alt PR squash sonrası
+      `DIRTY` oldu ve `-s ours` ile çözüldü; kanıtlar birleşme commit'lerinde
+      (`7efd1ab`, `8165709`) — ikincisinde çakışma gerçekti (`merge-tree` tek dosyada
+      1/2/3 aşaması bildirdi) ve `a04dd50`'nin `6a08b41`'in atası olduğu ölçülerek
+      `-s ours`'un içerik kaybetmediği gösterildi.*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      *Sekiz satırın hepsi ölçümle dolu; `Kaçan hata` K3 gereği `izleniyor`. Kart
+      `specs/done/` altına taşındıktan sonra **tüm** `Architecture.Tests` koşturuldu
+      (yalnız arşiv kapısı değil — `0012b`'nin kapanışında tam bu adım bir kapıyı
+      kırmıştı) ve arşiv kapısı iki yönden sondalandı.*
 - [x] Kısmi başarının **dördüncü ekran durumu** olarak basıldığı görsel kanıtla gösterildi.
       *`0012c-ac38.png` — gerçekten reddedilen bir satırla.*
 - [x] Öne çıkarmanın duyuru **üretmediği** testle gösterildi (`0012b` **D16**).
@@ -537,13 +562,48 @@ Dürüst doldurulmayan scorecard işe yaramaz — abartılmış iyi sayılar en 
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3). Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? **`0` ile `—` aynı şey değildir.** **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı. Dış bulguyla aynı sütunda toplanmaz. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır.** Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak (ADR 0008 / K3). |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e 004c44c^:specs/0012c-toplu-eylem-ve-one-cikarma.md` → var. `004c44c^` = `149d7c3`, yani kriterleri taşıyan PR #63; uygulama PR'ı (#64) onun **üzerine** kuruldu ve `main`'e ondan sonra girdi. |
+| **Kriter sayısı: önce → bugün** | **44 → 44** | `git show 004c44c^:… \| grep -c '^- \*\*AC-'` → 44; bugün de 44. Kriterler dala **42** olarak girdi (`73d1d9f`) ve PR hâlâ açıkken **44**'e çıktı (`a04dd50`: dış triyajın birinci bulgusu AC-43 ve AC-44'ü doğurdu). Donma anı #63'ün merge'i olduğu için "önce" değeri 44 (ADR 0008 / K3 + **D38**). Testlerdeki etiket sayımı da 44/44, eksik yok. |
+| **Spec revizyon sayısı** | **0** | Bölüm özetleriyle ölçüldü: **R** 2826 bayt / `1722722a09d2` ve **C** 2352 bayt / `357e8211e6d3` — CLARIFY turundan (`0e05cf3`) `004c44c`'ye kadar **hiç değişmedi**. **AC** yalnız kendi PR'ının içinde değişti (`0b6f4c92abe7` → `4f1dc5eae5c0`) ve `149d7c3` ile `004c44c`'de **birebir aynı**. #64 spec dosyasına dokundu (+65/−29) ama tek bir hunk'ta ve yalnız **DoD** bölümünde. Bu, revizyon sayısının üç okuması olmayan **ilk** kart — sebebi `0012b`'nin kriter turunda yazılan **D38**. |
+| **Düzeltme turu sayısı** | **1** | PR bir kez geri döndü: dış triyajın altı bulgusu (2026-10-12) → `fbd323e`, `0b7d977`, `ae8135f`, `6a08b41` ve kriter PR'ı açıkken `a04dd50`. Merge'den hemen önceki **ikinci** dış tur bulgu vermedi ve hiçbir commit doğurmadı, bu yüzden "geri dönüş" sayılmadı. `0` yazılmadı çünkü PR gerçekten geri döndü; `—` de yazılmadı çünkü dış gözden geçirme kutusu `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **5 / 1** | Beşi düzeltildi. Gürültü sayılan **bir** tane var ve kapanış turunda **ölçüldü: gerçek.** `CatalogProblems`'ın `<summary>`'si `BulkListingBody`'nin üstünde kaldı (`VehicleAdminEndpoints.cs:388-400`), yani o record **iki** `<summary>` taşıyor ve `CatalogProblems` (`:417`) **hiç** yorum taşımıyor; `2255370`'te aynı yorum doğrudan onun üstündeydi. Gürültü sınıflandırması bir **karardı**, ölçüm değil — ve bu, aynı dosyada aynı kusurun **dördüncü** tekrarı. Onu durduracak kapı (bir üyenin üstünde birden fazla `<summary>` olamaz) hâlâ yazılmadı. |
+| **Uygulama içi bulgu** | **6** | (1) Toplu eylem çubuğu listenin "hazır" dalının içindeydi ve her tazelemede unmount oluyordu — sonuç kutusu tam gösterilmesi gereken anda siliniyordu. (2) Seed'in iki değerli öne çıkarma anahtarı vitrinin ilk sayfasını ele geçirdi (200 ilanda 29 öne çıkarılmış, 24 kartlık ilk sayfa tamamen onlardan) ve rezerve rozetinin kanıtını görünmez kıldı. (3) Kanıt spec'i dördüncü kez "48.500 km" yazıyordu ve `0010a`/AC-11 panel satırını o metinle buluyor. (4–5) Yeni biçim kapısı **iki eski** anahtarı görünür kıldı (`password.hint`, `vehicle.list.summary.translation`) — ikisi de bu PR'dan önce de eksikti ve bu turda düzeltildi. (6) Kapak okumasını düzeltirken bir pencere çıktı: `MediaAssetReady` yalnız var olan vitrin satırlarını tazeliyor, dolayısıyla istekte doğan bir satırın o anda hazır olmayan kapağı hiçbir olayla tazelenmezdi; yansıtma kayıt başına okumaya düşüyor ve geri düşme sondalandı. |
+| **Regresyon sayısı** | **0** | Ürün davranışında bozulan bir şey ölçülmedi. Kapanmış **iki** spec'in testine dokunuldu ve ikisi de iddiayı zayıflatmadı: `0010b`/AC-24'ün sütun locator'ı `exact` kazandı (altı başlık aynen yerinde — dosyada doğrulandı) ve `frontend-002`/AC-8 **tipografiye** daraltılıp tanınmış üç sağlayıcıya mutlak yasakla **güçlendirildi** (iki iddia: yabancı host'tan `font`/`stylesheet` yok **ve** sağlayıcılara hiç istek yok). İkinci okumayı da yazıyorum: AC-8 bu turda CI'da **kırmızıya döndü**, yani yeşil bir kapı bu iş yüzünden düştü. `0` yazdım çünkü düşen şey kriterin kendisi değil, kriterin **dışını** ölçen geniş bir iddiaydı — medya adresi `Media__PublicBaseUrl` ile zaten ayrı bir host; pencereyi açan şey seed düzeltmesiydi. |
+| **Kaçan hata** | **izleniyor** | Merge `004c44c`, 2026-10-12T08:02Z. `0012b`'nin aynı hücresi bir sonraki kartın CLARIFY turunda `izleniyor` → **1** olmuştu; bu kart da aynı yolla izlenecek. |
 
 **Bu spec'ten çıkarılan ders:**
+
+**Bir kuralı yazmak, bir sonraki kartta ölçüme dönüşüyor.** `0012a` ve `0012b`'de
+`Spec revizyon sayısı` üç farklı okumaya açıktı ve ikisinde de karar vermek zorunda
+kaldım. `0012b`'nin kriter turunda **D38** yazıldı: R/C ile AC ayrı PR'larda giriyorsa
+donma anı **AC'yi taşıyan PR**'dır. Bu kart o kuralın ilk uygulandığı kart ve sayı
+tartışmasız çıktı — R ve C'nin özeti CLARIFY turundan merge'e kadar bayt bayt aynı, AC
+yalnız kendi PR'ının içinde değişti. Yargıyı ölçüme çeviren tek cümle, iki kart boyunca
+süren tartışmayı bitirdi.
+
+**Yeşil bir kapı "kural sağlanıyor" demek değil; "benim saydığım şey sağlanıyor"
+demek.** `check:locales` anahtar sayıyordu ve üç katalog eşit olduğu için yeşildi;
+Arapçadaki sekiz çoğullu mesajın **altısı** yalnız `other` taşıyordu ve kapı bunu
+göremiyordu. Kapı çoğul **biçimlerini** de denetlemeye başladığı an, bu PR'la hiç ilgisi
+olmayan **iki eski** anahtar da ortaya çıktı. Kapının kapsamını genişletmek, yeni bir
+kapı kurmaktan daha çok kusur buldu.
+
+**Tuzağı yasaklamaktan iyisi, onu ifade edilemez kılmaktır.** `InvariantGuardOptions`'ı
+üç modül kaydediyordu; kap tek ve son kayıt kazanıyordu. Üçü de `.Default` olduğu için
+fark görünmüyordu — bağımlılık yok olmamıştı, **yön değiştirmişti**. Seçenek modül başına
+tiplendi (`InvariantGuardOptions<TContext>`) ve tip parametresi `InvariantGuard`'ın
+imzasına girdi: başka modülün seçeneğini geçirmek artık **derleme hatası**. Mimari kapı
+ikinci savunma hattı olarak duruyor, birinci hat değil.
+
+**Aynı sınıftan bir kusurun iki kart üst üste tekrarı, eksik bir kapının adıdır.** `0012b`
+düzenleme ekranında, `0012c` toplu eylem çubuğunda: bileşen, sonucu göstermesi gereken anda
+unmount oluyordu. İkisini de e2e yakaladı, birim testi ikisini de kaçırdı — sahte `fetch`
+anında çözülüyor ve ara hâl hiç basılmıyor. Kaymış doc comment ise **dördüncü** kez geldi ve
+bu kez gürültü sayıldı. İki tekrar tesadüf olabilir, dört tekrar bir süreç ölçümüdür: kusuru
+düzeltmek dönüşünü engellemiyor, yalnızca kapı engelliyor.
+
+**Seed'in veri dağılımı bir kriterin kanıtını görünmez kılabilir.** Her yedinci ilanı öne
+çıkaran seed, 200 ilanda 24 kartlık ilk sayfayı tamamen öne çıkarılmışlarla doldurdu ve
+rezerve rozetinin kanıtı kayboldu. Kanıt spec'leri seed'in **şekline** bağlı; o şekli
+değiştiren bir düzeltme, hiç dokunmadığı kriterlerin kanıtını bozabiliyor — ve bu turda
+tam bunu yaptı (`frontend-002`/AC-8).
