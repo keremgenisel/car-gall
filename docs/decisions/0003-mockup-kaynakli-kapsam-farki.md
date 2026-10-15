@@ -263,7 +263,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
 | 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · `0012c` ✅ tamamlandı |
-| 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — S1–S5) |
+| 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — **S1, S3, S4, S5**; CLARIFY turu D1–D12) |
 | 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
 | 9 | Liste: sıralama + filtre eksenleri | **`0015`** (Taslak — S1–S5) |
@@ -329,9 +329,9 @@ Yani vitrindeki araçlar bu commit'ten sonra geliştirme seed'inden değil **gal
 kararından** geliyor ve `docs/testing.md` § 3'ün üçüncü kritik akışı ilk kez uçtan uca
 koşuyor. `0012a`'nın D18 ve D19 borçları böylece kapandı.
 
-**Yedi taslağın toplam 33 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-12'de
-yeniden ölçüldü ve sayım tek tek yapıldı: `0013` 5 · `0014` 4 · `0015` 5 · `0016` 4 ·
-`0017` 5 · `0018` 5 · `frontend-003` 5; `0004` **Beklemede** ve sorusu yok, bu yüzden
+**Yedi taslağın toplam 32 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-15'te
+yeniden ölçüldü: `0013` **4** — CLARIFY turu S2'yi **D8** ile kapattı, eşik ölçümle
+belirlendi · `0014` 4 · `0015` 5 · `0016` 4 · `0017` 5 · `0018` 5 · `frontend-003` 5; `0004` **Beklemede** ve sorusu yok, bu yüzden
 taslak sayımına girmiyor. Taslak sayısı sekizden **yediye** indi — `0012c` kapandı — ama
 **toplam değişmedi**: onun açık sorusu zaten `0`'dı, tek sorusu kendi CLARIFY turunda
 **D43** ile kapanmıştı. Gün içindeki hareket: `0012a` ve `0012b` kapandı,

@@ -8,10 +8,12 @@
 | **Modül(ler)** | `Identity` · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | `0006` (oturum ve roller — tamamlandı) · `0009` (bildirim — tamamlandı) |
 | **Dayanak** | ADR 0003 unsur 2; Ek 1 sıra #6 |
-| **Karar bekliyor** | **S1–S5** — § Açık sorular (5 soru, **5 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
+| **Karar bekliyor** | **S1, S3, S4, S5** — § Açık sorular (**4** soru, dördünde de öneri yazılı). **S2 kapandı** (CLARIFY turu, **D8** — ölçümle). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
+| **Kararlar** | **D1–D12**, 2026-10-15 CLARIFY turunda bugünkü `main` (`c5143b6`) üzerinde **ölçülerek** verildi. Üçü spec'i yazılı hâliyle **uygulanamaz** kılıyordu. |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — beş açık sorunun cevabı
-> onları belirliyor.
+> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — dört açık sorunun cevabı
+> onları belirliyor. CLARIFY turu (2026-10-15) on iki karar ekledi ve R8, C2, R12'yi
+> ölçümle **düzeltti**; kriter turu bu kararların üzerine kurulacak.
 
 ---
 
@@ -53,7 +55,8 @@ kurtarma koduyla girer, ikisi de yoksa bir Yönetici onun ikinci adımını sıf
 - **R7.** İkinci adımın hangi roller için **zorunlu** olduğu bellidir ve zorunlu bir rolde
   kurulumu olmayan personel panele **giremez**; önce kurar. → Açık soru **S1**.
 - **R8.** Yanlış girilen ikinci adım kodu, parola denemesiyle **aynı kilitlenme sayacına**
-  tabidir. → Açık soru **S2**.
+  ve **aynı hız sınırına** tabidir. Eşik **5**'tir (**D8**); hız sınırı giriş ucunun
+  politikasıdır (**D5**).
 - **R9.** Kodun hangisinin yanlış olduğu — parola mı ikinci adım mı — giriş ekranında
   **söylenmez** ötesinde: ikinci adım ekranına geçilmiş olması, parolanın doğru olduğunu
   zaten ifşa eder. → Açık soru **S5**.
@@ -61,7 +64,8 @@ kurtarma koduyla girer, ikisi de yoksa bir Yönetici onun ikinci adımını sıf
   hesap** durumlarını ele alır. → `docs/frontend.md` § 3.
 - **R11.** Ekran personelin tercih ettiği dilde çalışır; Arapça'da RTL. → `0006` R15.
 - **R12.** İkinci adımın kurulması, sıfırlanması ve kurtarma kodunun kullanılması
-  **kaydedilir**.
+  **kaydedilir** — ve kaydın nerede yaşadığı **D12**'de tanımlıdır: bu depoda bugün
+  denetim kaydı altyapısı YOK (ölçüldü).
 
 ---
 
@@ -70,8 +74,14 @@ kurtarma koduyla girer, ikisi de yoksa bir Yönetici onun ikinci adımını sıf
 ### Uyulması zorunlu
 
 - **C1.** `Identity`, personel kimlik verisinin tek yazma sahibidir. → `docs/architecture.md` § 1.
-- **C2.** Doğrulama sırrı ve kurtarma kodları **geri döndürülebilir biçimde saklanmaz**,
-  loglanmaz ve API yanıtında bulunmaz. Kurulum anında bir kez gösterilir. → `0006` C6 deseni.
+- **C2.** **İKİYE AYRILDI (D1)** — bu madde yazıldığı hâliyle R2'yi ve R3'ü
+  **uygulanamaz** kılıyordu:
+  - **C2a — doğrulama sırrı** geri döndürülebilir biçimde saklanmak **ZORUNDADIR**: zamana
+    bağlı kodu doğrulamanın tek yolu aynı sırrı kullanarak kodu yeniden üretmektir. Sır
+    **loglanmaz**, API yanıtında **yalnız kurulum anında bir kez** görünür ve veritabanında
+    **açık metin durmaz** (**D3**).
+  - **C2b — kurtarma kodları** tek yönlü özetlenerek saklanır (`0006` C6 deseni, mevcut
+    `IPasswordHasher`), loglanmaz ve kurulum anında bir kez gösterilir (**D2**).
 - **C3.** **Roller üç tanedir**; "Sahip" diye dördüncü bir rol eklenmez. → ADR 0003 unsur 3.
 - **C4.** Dışarıya giden mesaj yalnızca `Notifications` üzerinden gider. → Yasak Listesi 17.
 - **C5.** Zaman hesapları UTC ve saat soyutlaması üzerinden; `DateTime.Now` kullanılmaz.
@@ -122,6 +132,143 @@ kurtarma koduyla girer, ikisi de yoksa bir Yönetici onun ikinci adımını sıf
 - **İki çelişki:** mockup'ın **8 denemesi** `0006` D4'ün **5**'iyle çelişiyor (S2);
   mockup'ın **"Sahip" rolü** ADR 0003 unsur 3 ile çelişiyor (C3, S1).
 
+**2026-10-15'te yeniden ölçülenler** (CLARIFY turu, `main` = `c5143b6`):
+
+| Ne ölçüldü | Sonuç |
+|---|---|
+| İkinci adıma ait mevcut kod | **YOK** — `totp\|twofactor\|2fa\|authenticator` taraması sıfır dosya |
+| Roller | **üç**: `Manager`, `SalesAdvisor`, `ContentEditor` (`StaffRole.cs:12`); "Sahip" yok → S1'in çelişkisi doğrulandı |
+| Kilitlenme eşiği | **5**, yapılandırmadan (`IdentityOptions.cs:15`) → S2 kapandı (**D8**) |
+| Kilitlenme durumu | `LockoutState` + `RegisterFailure(now, eşik, süre)`, `Login.cs:73`'ten çağrılıyor → R8 aynı sayacı kullanabilir |
+| Hız sınırı | giriş ucunda `RequireRateLimiting`, `LoginRequestLimit` 20 / 10 dk → **D5** |
+| Oturum token'ı | **yalnız çerez**, gövdeye hiç girmiyor (`SessionEndpoints.cs:80`) → **D4**'ün dayanağı |
+| Yarım-oturum deseni | `MustChangePasswordClaim` + `PasswordChangeGate` **var** → **D4**'te elenen alternatif |
+| Özetleme / şifreleme | `Pbkdf2PasswordHasher` var; **geri döndürülebilir şifreleme YOK** (`DataProtection`/`Aes` sıfır sonuç) → **D1**, **D3** |
+| Parola iterasyonu | **210.000** (üretim, `appsettings.json`) → **D2**'nin maliyet notu |
+| Saat soyutlaması | `IClock` var, `clock.UtcNow` kullanılıyor → C5 karşılanabilir, **D10** |
+| `Notifications` kanalları | **tek**: `Email = 1` (`NotificationStatus.cs:20`) → S3'ün tek alternatifi |
+| Son aktif Yönetici koruması | **var** ve yeniden kullanılabilir (`Staff.cs:119`, `StaffCommands.cs:104`, `:143`) → S4, C10 |
+| Denetim kaydı altyapısı | **YOK**; `StaffDeactivated`ın alıcısı yok (kendi yorumu söylüyor) → **D12** |
+| Yönetim uçlarının biçimi | `staff/{id}/role`, `/deactivate`, `/password-reset` → **D7** |
+| Personel listesi sözleşmesi | **yedi alan**, ikinci adım durumu yok (`StaffCommands.cs:17`) → eklemeli alan gerekiyor |
+| `0008`'in kapanmış kriteri | `evidence-0008.spec.ts:56` *"her satırda üç eylem"* diyor (`0008`/AC-1, AC-15) → dördüncü eylem onu kıracak |
+
+### Verilen kararlar — CLARIFY turu, 2026-10-15
+
+Her madde bugünkü `main` (`c5143b6`) üzerinde **ölçülerek** verildi. Üçü (**D1**, **D4**,
+**D12**) spec'i yazılı hâliyle uygulanamaz ya da tanımsız kılıyordu.
+
+**D1 — C2 ikiye ayrıldı: doğrulama sırrı tek yönlü saklanamaz.** C2 *"doğrulama sırrı ve
+kurtarma kodları geri döndürülebilir biçimde saklanmaz"* diyordu. Zamana bağlı kodu
+doğrulamanın tek yolu **aynı sırla kodu yeniden üretmek**; tek yönlü özetlenmiş bir sırla
+bu yapılamaz. Yani C2, R2 ve R3'ü imkânsız kılıyordu. Ölçüldü: depoda tek yönlü özetleme
+var (`Pbkdf2PasswordHasher`, `IPasswordHasher`), **geri döndürülebilir şifreleme altyapısı
+YOK** — `DataProtection`, `IDataProtector`, `Aes` taraması sıfır sonuç. Madde C2a (sır) ve
+C2b (kurtarma kodları) olarak ayrıldı.
+
+**D2 — Kurtarma kodları mevcut özetleyiciyle saklanır; doğrulama maliyeti yazılı.** C2b
+`IPasswordHasher`'ı kullanır. **Bedel ölçüldü ve küçük değil:** iterasyon sayısı
+yapılandırmadan geliyor ve üretim değeri **210.000** (`appsettings.json`). Girilen bir
+kurtarma kodunu saklanan on özetin hepsiyle karşılaştırmak **on özetleme** demek — tek
+girişte saniyeler. Bu yüzden kurtarma kodu doğrulaması **kendi iterasyon sayısını** alır
+ve sayı yapılandırmadan okunur; kriter turu değeri belirler. *Elenen alternatif:* kodu
+açık saklamak — yazılı bir yedek parolayı veritabanına koymak olurdu (§ Bilinen tuzaklar 1).
+
+**D3 — Sır veritabanında açık metin durmaz; şifreleme anahtarı dağıtım
+yapılandırmasından gelir.** Üç seçenek ölçüldü: (a) açık kolon — veritabanı erişimi
+ikinci adımın tamamını atlatır, (b) uygulama düzeyinde şifreleme + anahtar
+yapılandırmadan, (c) ASP.NET `DataProtection` anahtar halkası. Bugün hiçbiri kurulu değil;
+yani **hangi yol seçilirse yeni altyapı** demek. Karar **(b)**: `Media` ve `Notifications`
+zaten sırlarını (`Media__Storage__SecretKey`, SMTP parolası) dağıtım yapılandırmasından
+alıyor ve `docs/conventions.md` § 11 bunu kural yapıyor; (c) ayrıca anahtar halkasının
+nerede saklanacağı sorusunu açar. *Bedel:* anahtar döndürme (rotation) tanımsız kalıyor ve
+bu **ayrı bir karardır** — kriter turunda ya kapsama girer ya § KAPSAM DIŞI'na yazılır.
+
+**D4 — Ara durum (parola doğru, ikinci adım bekleniyor) nasıl taşınır.** Spec bu durumdan
+hiç söz etmiyordu, oysa iki adımlı bir girişin **tamamı** bu duruma dayanıyor. Ölçüldü:
+giriş ucu oturum token'ını **yalnız çereze** yazıyor ve gövdeye hiç koymuyor (`0006` C17 /
+AC-29, `SessionEndpoints.cs:80`). Ayrıca yarım-oturum deseni zaten var:
+`MustChangePasswordClaim` + `PasswordChangeGate` — gerçek bir oturum veriliyor ve bir kapı
+yüzeyi kısıtlıyor. Karar: **ikinci adım geçilmeden oturum çerezi YAZILMAZ**; ara durum
+kısa ömürlü, `HttpOnly`, kendi adı olan **ayrı bir çerezle** taşınır ve yalnız doğrulama
+ucu onu okur. *Elenen alternatif:* `PasswordChangeGate` desenini kopyalamak — ucuz olurdu
+(kapı, claim ve çerez mekanizması hazır) ama o yolda parola **tek başına** geçerli bir
+oturum üretir ve kapıdaki tek kusur özelliğin tamamını geçersiz kılar. İki adımlı
+doğrulamanın varlık nedeni tam olarak "parola tek başına yetmez"dir; o cümleyi bir kapının
+doğruluğuna emanet etmiyoruz. *Bedel:* yeni bir çerez ve kısa ömürlü bir durum kaydı.
+
+**D5 — Doğrulama ucu giriş ucunun hız sınırını paylaşır.** R8 yalnız kilitlenme
+sayacından söz ediyordu. Ölçüldü: giriş ucu `RequireRateLimiting(RateLimitPolicy)` taşıyor
+ve sınır yapılandırmadan geliyor (`LoginRequestLimit` 20 / 10 dk). Doğrulama ucuna ayrı
+(ya da hiç) sınır koymak, parolayı ele geçirmiş saldırgana **kod denemek için ikinci bir
+bütçe** verirdi. R8 bu kararla genişletildi.
+
+**D6 — İlk girişte sıra: parola değişimi, sonra kurulum.** `0006` R10 ilk girişte parola
+değişimini zorunlu kılıyor; zorunlu rolde ikinci adım kurulumu da gerekiyor (R7). Karar:
+**önce parola değişimi, sonra kurulum.** *Gerekçe:* kurulum ekranı sırrı gösterir ve o
+sırrın, parolayı sistem dışından alan kişinin elinde olması gerekir.
+
+*Ve bu kararın kapatmadığı bir açık yazılı kalıyor:* ilk parola `0006` D1 gereği **sistem
+dışından** (telefon/WhatsApp) iletiliyor. O parolayı ele geçiren biri, personelden önce
+giriş yapıp **kendi doğrulama uygulamasını kaydedebilir**. İlk kurulum, tanımı gereği ilk
+parola kanalından güçlü olamaz. Azaltıcı tek şey kayıt tutmadır (R12/**D12**):
+beklenmeyen bir kurulum **görünür** olur. Bunu kapatmak `0006` D1'i değiştirmeyi
+gerektirir ve bu **ayrı bir karardır** — kriter turunda ya kapsama girer ya kapsam dışına
+gerekçesiyle yazılır.
+
+**D7 — Kurulum ve sıfırlama uçları mevcut yüzeyin biçimini izler.** Ölçüldü: yönetim
+uçları `POST {admin}/staff/{staffId}/role`, `.../deactivate`, `.../password-reset`
+kalıbında. İkinci adımın sıfırlanması `.../two-factor-reset` olur; personelin kendi
+kurulumu `{admin}/me/...` altına girer (`me/password` emsali).
+
+**D8 — S2 KAPANDI: eşik 5 (ölçümle).** Mockup 8 diyor, `0006` D4 **5** diyor. Ölçüldü:
+`IdentityOptions.DefaultFailedAttemptThreshold = 5` ve değer yapılandırmadan okunuyor;
+mockup'ın 8'i **hiçbir yerde uygulanmadı**. İki metinden biri değişecekse maliyeti olmayan
+taraf değişir — mockup metni. Karar bir ölçümdür, bu yüzden açık soru olarak bırakılmadı.
+
+**D9 — Kurtarma kodu sayısı yapılandırmadan gelir.** Spec sayı vermiyordu. `0006` D4'ün
+emsali: eşikler koda gömülmez, dağıtım yapılandırmasından gelir ve kriter **yapılandırılan
+değeri** doğrular. Varsayılan **10**; kriter turu doğrulayacak.
+
+**D10 — Saat kayması toleransı: ±1 adım.** C5 "dayanıklı olmalı" diyordu, sayı yoktu.
+Karar: 30 saniyelik adımda **önceki, içinde bulunulan ve sonraki** adım kabul edilir
+(±30 sn). Ölçüldü: saat soyutlaması var (`IClock`, `clock.UtcNow` — `Login.cs:73`), yani
+C5'in "DateTime.Now kullanılmaz" kuralı zaten karşılanabilir. *Bedel:* kabul penceresi
+90 saniyeye çıkar; D11 bunu tek kullanımla sınırlar.
+
+**D11 — Aynı kod iki kez kabul edilmez (yeniden oynatma).** Spec'te yoktu: zamana bağlı
+kod 30 saniye geçerli olduğu için aynı kod pencere içinde **tekrar** kullanılabilirdi.
+Karar: kabul edilen son adım sayacı personel başına saklanır ve ona **eşit veya daha
+küçük** bir adım reddedilir. Bu, kurtarma kodunun tek kullanımlığının (R5) zamana bağlı
+koddaki karşılığıdır.
+
+**D12 — Kayıt nereye yazılır: `identity` şemasında bir tablo.** R12 "kaydedilir" diyordu,
+yer tanımsızdı. Ölçüldü: bu depoda **denetim kaydı altyapısı yok**.
+`docs/architecture.md` § 1'in olay haritası `StaffDeactivated → … , Audit` diyor ama
+`StaffEvents.cs` kendi yorumunda *"bugün hiçbir alıcısı yok"* yazıyor. Üç seçenek: (a)
+entegrasyon olayı yayınlamak — **tüketicisi olmayan dördüncü olay** demek olurdu
+(`0012b` D11 iki tanesini zaten borç olarak taşıyor), (b) yapılandırılmış log — kalıcı ve
+sorgulanabilir değil, ayrıca kişisel veri log parametresine giremez (mimari kapı bunu
+denetliyor), (c) `identity` şemasında bir kayıt tablosu. Karar **(c)**: C9 yeni
+migration'ı `identity` şemasına sınırlıyor ve kayıt zaten `Identity`'nin verisidir (C1).
+*Bedel:* tablo büyür ve saklama süresi tanımsız kalır — kriter turunda ya kapsama girer ya
+kapsam dışına yazılır.
+
+### CLARIFY turunda ölçülen bedel: kapanmış bir spec'in kriteri etkilenecek
+
+**`0008`'in yüzeyi iki yerden değişiyor ve ikisi de adıyla yazılı:**
+
+1. **Personel listesi sözleşmesi eklemeli bir alan kazanır.** Ölçüldü: `StaffListItem`
+   yedi alan taşıyor (`StaffCommands.cs:17`) ve ikinci adım durumu **yok**. Mockup üç
+   panelde "2FA açık" rozeti çiziyor; rozet veri olmadan basılamaz. (`0012c` D50'nin
+   emsali: kapanmış sözleşmeye eklemeli alan.)
+2. **`0008`'in kapanmış bir kriteri KIRILACAK.** Ölçüldü: `evidence-0008.spec.ts:56`
+   satırındaki test `0008/AC-1` ve `0008/AC-15` için *"her satırda **üç eylem**"*
+   iddiasında bulunuyor. İkinci adım sıfırlama dördüncü eylemdir. Bu, `0012c`'de
+   `0010b`/AC-24'ün başına gelenin aynısı — orada locator gevşek eşleşmeden `exact`'e
+   çekilmişti. Uygulama PR'ı bu testi **adıyla** güncellemek ve kriterin iddiasının
+   zayıflamadığını göstermek zorundadır.
+
 ### Bilinen tuzaklar
 
 1. **Kurtarma kodunu tek kullanımlık yapmamak.** Yeniden kullanılabilir kod, yazılı bir
@@ -149,12 +296,18 @@ ele geçmesi sistemin tamamını verir. Danışmanı zorunlu tutmak, `0006`'nın
 sürtünme" gerekçesini tümden yok sayar.
 *Bedel:* danışman hesabı tek parolayla korunmuş kalır — ve o hesap da talep kişisel
 verilerini görür. Daha sıkı istiyorsanız "tüm roller zorunlu" demek tek satırlık bir değişiklik.
+*CLARIFY turunun ölçümü (2026-10-15):* roller gerçekten **üç** ve "Sahip" yok —
+`StaffRole` enum'u `Manager`, `SalesAdvisor`, `ContentEditor` (`StaffRole.cs:12`). Yani
+mockup'ın "Sahip ve yönetici" metni uygulanabilir bir role karşılık gelmiyor ve C3 ile
+çelişkisi **doğrulandı**. Ayrıca ölçüldü: depoda ikinci adıma ait **hiçbir kod yok**
+(`totp|twofactor|2fa|authenticator` taraması → sıfır dosya), yani bu soru mevcut bir
+davranışı değiştirmiyor; temiz sayfada bir kapsam kararı.
 
-**S2. 5 deneme mi 8 deneme mi?**
-*Öneri:* **5** — `0006` D4 kazanır, mockup metni değişir.
-*Gerekçe:* D4 onaylanmış ve **uygulanmış** bir karardır; mockup metni henüz hiçbir yerde
-uygulanmadı. İkisinden birinin değişmesi gerekiyorsa, maliyeti olmayan taraf değişir.
-*Bedel:* yok.
+**S2. ~~5 deneme mi 8 deneme mi?~~ → KAPANDI (CLARIFY turu, D8)**
+Karar: **5**. Bu bir ölçüm olduğu için açık soru olarak bırakılmadı —
+`IdentityOptions.DefaultFailedAttemptThreshold = 5` ve değer yapılandırmadan okunuyor;
+mockup'ın 8'i hiçbir yerde uygulanmadı. Değişen taraf, maliyeti olmayan taraf: mockup
+metni. DoD'un ilgili maddesi bunu şart koşuyor.
 
 **S3. Kurtarma kodları personele nasıl verilir?**
 `0006` D1 e-posta yolunu kapatmıştı ama `Notifications` artık var.
@@ -163,6 +316,11 @@ uygulanmadı. İkisinden birinin değişmesi gerekiyorsa, maliyeti olmayan taraf
 indirger — ki o hesap bizim kontrolümüzde değil. Ekranda bir kez gösterme, kodun yalnızca
 personelin kendi aldığı yere gitmesini sağlar.
 *Bedel:* personel kodları kaydetmezse kaybeder ve R6'nın sıfırlama yoluna düşer.
+*CLARIFY turunun ölçümü:* `Notifications`'ın **tek** kanalı var — `NotificationChannel`
+enum'unda yalnız `Email = 1` (`NotificationStatus.cs:20`). Yani "gönderelim" denirse tek
+seçenek e-postadır ve önerinin gerekçesi (ikinci adımı e-posta hesabının güvenliğine
+indirgemek) tam olarak o seçeneğe karşı. Kararın teknik maliyeti düşük, güvenlik maliyeti
+yüksek — ikisi bu soruda ters yönde.
 
 **S4. Bir Yönetici başka bir Yöneticinin ikinci adımını sıfırlayabilir mi? Tek Yönetici
 kendi telefonunu kaybederse ne olur?**
@@ -175,6 +333,14 @@ gerekçesini delerdi.
 *Bedel:* tek Yöneticili bir galeride telefon kaybı, dağıtım yapılandırmasına erişim
 gerektirir — yani bize. Bunu kabul etmiyorsanız R7 "en az iki Yönetici zorunlu" hâline
 gelmelidir ve bu ayrı bir karardır.
+*CLARIFY turunun ölçümü:* önerinin dayandığı iki mekanizma **gerçekten var**:
+(1) son aktif Yönetici koruması kurulu ve yeniden kullanılabilir —
+`IdentityErrors.LastActiveManager`, `Staff.cs:119`, `StaffCommands.cs:104` ve `:143`
+(rol düşürme ve pasifleştirme için); (2) kurulum hesabı yolu (`0006` D2) duruyor ve
+uygulama parola yapılandırılmadan **hiç başlamıyor** (`IdentityModule.cs:36`).
+**Ama bedeli 2026-10-15'te arttı:** ADR `0011` artık depoda yayınlanmış üç geliştirme
+parolasını da koşulsuz reddediyor, yani "son çıkış kapısı" gerçek bir yapılandırma
+sırrı gerektiriyor — unutulmuş bir varsayılanla açılamaz.
 
 **S5. İkinci adım ekranına geçmek parolanın doğru olduğunu ifşa eder; kabul mü?**
 `0006` AC-4 parolayla kullanıcı adını ayırt edilemez kılmıştı.
@@ -184,6 +350,11 @@ kendi hatasını anlamasını engeller ve destek yükü üretir. Parolanın doğ
 ikinci adım olmadan saldırgana bir şey kazandırmaz — ikinci adımın varlık nedeni tam budur.
 *Bedel:* geçerli kullanıcı adı + parola çiftinin doğruluğu saldırgan tarafından
 öğrenilebilir; R8'in paylaşılan kilitlenme sayacı bunu sınırlar.
+*CLARIFY turunun ölçümü:* R8 artık yalnız kilitlenme sayacını değil **hız sınırını** da
+paylaşıyor (**D5**) — giriş ucu `RequireRateLimiting` taşıyor ve sınır
+yapılandırmadan (`LoginRequestLimit` 20 / 10 dk). Yani bu sorunun bedelini sınırlayan şey
+iki mekanizma oldu, bir değil. Ayrıca **D4** gereği ikinci adım geçilmeden oturum çerezi
+hiç yazılmıyor: "parola doğru" bilgisi saldırgana oturum vermiyor.
 
 ---
 
@@ -210,6 +381,23 @@ ikinci adım olmadan saldırgana bir şey kazandırmaz — ikinci adımın varl�
 - [ ] <!-- DoD:T5 --> Yeni migration yalnızca `identity` şemasına dokunuyor.
 - [ ] Mockup'taki iki çelişkili metin (S1 "Sahip", S2 "8 deneme") tasarım tarafında
       güncellendi veya PR'da **açıkça** uyumsuz olarak not edildi.
+- [ ] **`0008`'in kapanmış kriteri adıyla yazıldı ve zayıflatılmadı:**
+      `evidence-0008.spec.ts`in *"her satırda üç eylem"* iddiası (`0008`/AC-1, AC-15)
+      dördüncü eylemle birlikte güncellendi ve iddianın ne kaybettiği — ya da
+      kaybetmediği — PR'da gösterildi (**CLARIFY turunun ölçümü**).
+- [ ] **`0008`'in personel listesi sözleşmesine eklenen alan PR'da adıyla yazıldı**
+      (`StaffListItem` + yönetim listesi yanıtı); rozet veri olmadan basılamaz.
+- [ ] **Doğrulama sırrının veritabanında açık metin DURMADIĞI** testle gösterildi ve
+      şifreleme anahtarının dağıtım yapılandırmasından geldiği doğrulandı (**D3**).
+      Anahtar döndürme kapsamda değilse § KAPSAM DIŞI'na gerekçesiyle yazıldı.
+- [ ] **Aynı zamana bağlı kodun iki kez kabul edilmediği** testle gösterildi (**D11**),
+      saat kayması toleransı ±1 adım olarak ölçüldü (**D10**).
+- [ ] **Kurtarma kodu doğrulamasının maliyeti ölçüldü** ve iterasyon sayısının
+      yapılandırmadan geldiği gösterildi (**D2**) — on özetlemenin üretim değeriyle
+      saniyeler sürdüğü hesabı PR'da yazılı.
+- [ ] **Kayıt tablosunun yalnız `identity` şemasına dokunduğu** ve kaydın kurulum,
+      sıfırlama ve kurtarma kodu kullanımını kapsadığı gösterildi (**D12**/R12);
+      saklama süresi kapsamda değilse gerekçesiyle kapsam dışına yazıldı.
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi.
 - [ ] <!-- DoD:T7 --> Yeni domain terimi yok.
 - [ ] <!-- DoD:T8 --> `docs/architecture.md` § Karar Defteri güncellendi (2FA kapsamda).
