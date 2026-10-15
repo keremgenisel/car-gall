@@ -95,13 +95,32 @@ spec'i değişince E2E koşmaya devam ediyor.
 PR'da `paths:` filtresi kullanılıyor; metin-PR'ında iş **hiç kuyruğa girmez** (sıfır
 dakika, `changes` işi bile koşmaz) ve `C3 eşikleri` adlı kapı o PR'da **hiç görünmez**.
 
-*Bunun kabul edilebilir olmasının ölçülmüş sebebi:* `main` dalında **dal koruması yok**
-(`gh api .../branches/main/protection` → `403`, private depoda Pro gerekiyor), yani zorunlu
-durum kapısı diye bir şey yok ve atlanan iş hiçbir PR'ı kilitlemez.
+*Bunun kabul edilebilir olmasının 2026-10-12'de ölçülmüş sebebi:* `main` dalında **dal
+koruması yoktu** (`gh api .../branches/main/protection` → `403`, private depoda Pro
+gerekiyor), yani zorunlu durum kapısı diye bir şey yoktu ve atlanan iş hiçbir PR'ı
+kilitlemiyordu.
 
 **Tripwire:** Pro'ya geçilip dal koruması açılırsa, zorunlu kapı listesine **yalnız
 Backend** konur. Frontend/E2E/Performans zorunlu işaretlenirse metin-PR'ları sonsuza kadar
 "bekliyor" durumunda kalır.
+
+**TRIPWIRE UYGULANDI (2026-10-15).** Depo public yapıldı, dal koruması kuruldu ve zorunlu
+kapı listesine **yalnız Backend** kondu. Yani yukarıdaki paragrafın gerekçesi artık
+geçersiz — ama sonucu aynı: atlanan iş hiçbir PR'ı kilitlemiyor, çünkü zorunlu olan tek
+kapı her koşuda koşuyor. Ölçüm (`gh api .../branches/main/protection`):
+
+| Ayar | Değer | Neden |
+|---|---|---|
+| `required_status_checks.contexts` | **1**: `Backend — build, xUnit, mimari testler, migration şema kontrolü` | K1 gereği her koşuda koşan tek iş |
+| `strict` (main ile güncel olma) | **kapalı** | açık olsaydı yığın PR'lar her merge'den sonra yeniden taban alırdı; bu depoda o maliyet iki kez ödendi |
+| `required_pull_request_reviews` | **yok** | QA turları GitHub dışında yapılıyor; zorunlu olsaydı hiçbir PR merge edilemezdi (beş PR'ın beşinde 0 inceleme). `docs/git.md` § 4.6 insanda kalıyor |
+| `enforce_admins` | **kapalı** | TM istisnası gerektiğinde yol kapanmasın (#69/#70 tam öyle merge edildi) |
+| `allow_force_pushes` · `allow_deletions` | **kapalı** | `docs/git.md` § 7'nin makine karşılığı |
+| `required_linear_history` | **açık** | squash-merge-istisnasız kuralıyla aynı şey |
+
+*Bu paragraf bir bayatlama düzeltmesidir:* yukarıdaki "koruma yok" cümlesi yazıldığı gün
+doğruydu ve **silinmedi**; yanına bugünün ölçümü eklendi. Aynı dosyada biri doğru biri
+bayat iki cümle bırakmak, ikisini de güvenilmez yapardı.
 
 ### K4.1 — Koşul **atlamaya değil koşmaya** meyleder (fail-safe)
 
