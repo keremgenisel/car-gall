@@ -201,6 +201,32 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Assert.True((await harness.OturumCozAsync(IdentityHarness.OturumTokeni(giris)))!.MustChangePassword);
     }
 
+    /// <summary>
+    /// `0013` D25/AC-52 — kapanmış sözleşmeye **eklemeli** alan (`0012c` D50 emsali).
+    /// Üç durumlu değil tek boolean: zorunluluğu ROL söylüyor ve satır rolü zaten
+    /// taşıyor. Ekran *"zorunlu ama kurmamış"* rozetini elindeki iki alandan kurar.
+    /// </summary>
+    [Fact(DisplayName = "0013/AC-52: Personel listesi yanıtı her satırda ikinci adım durumunu taşır")]
+    public async Task Tasir_IkinciAdimDurumunu()
+    {
+        await database.ResetAsync();
+        IdentityHarness harness = new(database);
+
+        Guid kuranId = (await harness.PersonelEkleAsync(IdentityHarness.EkleKomutu(
+            kimlik: "kuran@ornek.com", rol: "manager"))).Value;
+
+        await harness.PersonelEkleAsync(IdentityHarness.EkleKomutu(
+            ad: "Kurulumsuz Kişi", kimlik: "kurulumsuz@ornek.com", rol: "sales_advisor"));
+
+        await harness.IkinciAdimKurAsync(kuranId);
+
+        IReadOnlyList<StaffListItem> liste =
+            await harness.KomutAsync(komutlar => komutlar.ListAsync(CancellationToken.None));
+
+        Assert.True(liste.Single(satir => satir.LoginId == "kuran@ornek.com").TwoFactorEnrolled);
+        Assert.False(liste.Single(satir => satir.LoginId == "kurulumsuz@ornek.com").TwoFactorEnrolled);
+    }
+
     [Fact(DisplayName = "0006/AC-50: Personel kaydının döndüğü hiçbir yanıt parolayı veya parola özetini içermez")]
     public async Task IcermezParola_PersonelListesi()
     {

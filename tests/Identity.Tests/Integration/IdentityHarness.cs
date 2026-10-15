@@ -2,6 +2,7 @@ using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Application;
 using CarGallery.Modules.Identity.Contracts.Sessions;
+using CarGallery.Modules.Identity.Domain;
 using CarGallery.Modules.Identity.Infrastructure;
 
 namespace CarGallery.Modules.Identity.Tests.Integration;
@@ -34,6 +35,19 @@ internal sealed class IdentityHarness(IdentityDatabase database)
 
     internal const string VarsayilanIstemci = "203.0.113.7";
 
+    /// <summary>
+    /// `0013` D9/D18/D19 — ikinci adımın sayıları da YAPILANDIRMADAN gelir; testler
+    /// yapılandırılan değeri doğrular, koda gömülü bir sabiti değil (C20). Parametre
+    /// kümesi (hane, pencere, algoritma) bunun TERSİ: o bir sözleşmedir ve `TimeBasedCode`
+    /// içinde sabittir (C12/D16).
+    /// </summary>
+    internal const int KurtarmaKoduSayisi = 10;
+
+    internal const string Kurulus = "Test Galeri";
+
+    internal static readonly TimeSpan BekleyenKurulumSuresi = TimeSpan.FromMinutes(10);
+    internal static readonly TimeSpan AraDurumSuresi = TimeSpan.FromMinutes(5);
+
     internal FixedClock Saat { get; } = new(StaffBuilder.VarsayilanAn);
 
     internal IdentityOptions Secenekler { get; } = new()
@@ -44,6 +58,11 @@ internal sealed class IdentityHarness(IdentityDatabase database)
         LockoutDuration = KilitSuresi,
         MinimumPasswordLength = AsgariParolaUzunlugu,
         PasswordIterations = StaffBuilder.TestIterasyon,
+        RecoveryCodeCount = KurtarmaKoduSayisi,
+        RecoveryCodeIterations = StaffBuilder.TestIterasyon,
+        PendingEnrollmentLifetime = BekleyenKurulumSuresi,
+        PendingLoginLifetime = AraDurumSuresi,
+        TwoFactorIssuer = Kurulus,
     };
 
     internal IdentityLocaleOptions Localeler { get; } = new(
@@ -121,6 +140,73 @@ internal sealed class IdentityHarness(IdentityDatabase database)
         string? locale = "tr",
         Guid? subeId = null) =>
         new(ad, kimlik, parola, rol, locale, subeId);
+
+    /// <summary>
+    /// `0013` — ikinci adımın komut yüzeyi. Şifreleyici testlerde de **yapılandırmadan**
+    /// gelen bir anahtarla kuruluyor (D3); `IkinciAdimTestAnahtari` onu üretiyor.
+    /// </summary>
+    internal async Task<TSonuc> IkinciAdimAsync<TSonuc>(Func<TwoFactorCommands, Task<TSonuc>> islem)
+    {
+        await using IdentityDbContext context = database.CreateContext();
+
+        return await islem(new TwoFactorCommands(
+            context,
+            IdentityDatabase.CreateUnitOfWork(context, Saat),
+            Ozetleyici(),
+            Koruyucu,
+            Secenekler,
+            Saat));
+    }
+
+    /// <summary>
+    /// Kurulumu baştan sona yapar ve sırrı döndürür. Testlerin saati SABİT olduğu için
+    /// adım çakışması yok: D11'in tek kullanım kuralı burada ölçülebilir kalıyor
+    /// (gerçek saatle koşan testlerde aynı pencerede ikinci kod reddedilir — D45).
+    /// </summary>
+    internal async Task<string> IkinciAdimKurAsync(Guid personelId) =>
+        (await IkinciAdimKurVeKodlariAlAsync(personelId)).Sir;
+
+    /// <summary>Kurtarma kodları da gereken testler için: küme yalnız onayda döner (D31).</summary>
+    internal async Task<(string Sir, RecoveryCodeSet Kodlar)> IkinciAdimKurVeKodlariAlAsync(Guid personelId)
+    {
+        TwoFactorEnrollmentStarted baslangic = (await IkinciAdimAsync(
+            komutlar => komutlar.StartEnrollmentAsync(personelId, CancellationToken.None))).Value;
+
+        Result<RecoveryCodeSet> onay = await IkinciAdimAsync(komutlar =>
+            komutlar.ConfirmEnrollmentAsync(personelId, Kod(baslangic.Secret), CancellationToken.None));
+
+        Assert.True(onay.IsSuccess);
+
+        return (baslangic.Secret, onay.Value);
+    }
+
+    /// <summary>Sabit saatten o anın kodu; `adim` verilirse o adımın kodu.</summary>
+    internal string Kod(string sirBase32, long? adim = null) => TimeBasedCode.Compute(
+        TwoFactorSecret.FromBase32(sirBase32).Value.ToBytes(),
+        adim ?? TimeBasedCode.StepAt(Saat.UtcNow));
+
+    /// <summary>Girişin ikinci adımı; ara durum çerezinin taşıdığı opak değerle.</summary>
+    internal async Task<Result<LoginResult>> IkinciAdimGecAsync(
+        string? araDurumTokeni,
+        string? kod,
+        string istemci = VarsayilanIstemci)
+    {
+        await using IdentityDbContext context = database.CreateContext();
+        TwoFactorLogin handler = new(context, Koruyucu, Secenekler, Saat);
+
+        return await handler.HandleAsync(
+            new TwoFactorVerifyCommand(araDurumTokeni, kod, istemci), CancellationToken.None);
+    }
+
+    internal async Task AraDurumSilAsync(string? araDurumTokeni)
+    {
+        await using IdentityDbContext context = database.CreateContext();
+
+        await new TwoFactorLogin(context, Koruyucu, Secenekler, Saat)
+            .DiscardAsync(araDurumTokeni, CancellationToken.None);
+    }
+
+    internal ISecretProtector Koruyucu { get; } = new AesGcmSecretProtector(IkinciAdimTestAnahtari.Base64);
 
     private Pbkdf2PasswordHasher Ozetleyici() => new(Secenekler);
 

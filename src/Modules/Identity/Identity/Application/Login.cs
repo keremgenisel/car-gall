@@ -111,8 +111,6 @@ internal sealed class Login(
             return Failure();
         }
 
-        lockout.Clear();
-
         // D4/AC-11 — kurulumu OLAN hesapta oturum çerezi yazılmaz: parola tek başına
         // geçerli bir oturum üretmez. Doğrulanmamış kurulum kurulumsuz sayılır (AC-3);
         // onaylanmamış bir satırla ikinci adım istemek, personeli geçemeyeceği bir
@@ -120,6 +118,16 @@ internal sealed class Login(
         bool enrolled = await context.TwoFactorEnrollments.AnyAsync(
             enrollment => enrollment.Id == staff!.Id && enrollment.ConfirmedAt != null,
             cancellationToken);
+
+        // R8 — **sayaç DOĞRU PAROLADA sıfırlanmaz; giriş TAMAMLANDIĞINDA sıfırlanır.**
+        // Kurulumu olan hesapta bu an henüz gelmedi: burada sıfırlamak, parolayı ele
+        // geçirmiş saldırgana sınırsız kod denemesi verirdi — her denemeden önce bir
+        // başarılı parola fazı sayacı sıfırlardı ve eşik hiç dolmazdı. Sıfırlama
+        // `TwoFactorLogin`'in tamamlanma yolundadır (§ Bilinen tuzaklar 5).
+        if (!enrolled)
+        {
+            lockout.Clear();
+        }
 
         if (enrolled)
         {

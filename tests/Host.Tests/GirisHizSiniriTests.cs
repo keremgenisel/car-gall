@@ -103,6 +103,35 @@ public sealed class GirisHizSiniriTests : IAsyncLifetime
         Assert.DoesNotContain("::1", govde, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// `0013` D5/AC-26 — **doğrulama ucu giriş ucunun sınırını PAYLAŞIR.** Ayrı (ya da
+    /// hiç) sınır, parolayı ele geçirmiş saldırgana kod denemek için ikinci bir bütçe
+    /// verirdi. Test bütçenin TEK olduğunu ölçüyor: iki uç arasında bölünen istekler
+    /// aynı eşiği dolduruyor.
+    /// </summary>
+    [Fact(DisplayName = "0013/AC-26: İkinci adım ucu giriş ucunun **hız sınırını paylaşır**: sınır aşıldığında `429` döner")]
+    public async Task Paylasir_HizSinirini_IkinciAdimUcu()
+    {
+        HttpClient client = factory!.CreateClient();
+
+        // İki istek GİRİŞ ucuna, biri DOĞRULAMA ucuna: toplam eşik kadar.
+        for (int istek = 0; istek < Esik - 1; istek++)
+        {
+            Assert.NotEqual(HttpStatusCode.TooManyRequests, (await GonderAsync(client)).StatusCode);
+        }
+
+        Assert.NotEqual(
+            HttpStatusCode.TooManyRequests,
+            (await IkinciAdimGonderAsync(client)).StatusCode);
+
+        // Bütçe doldu: sıradaki istek hangi uca giderse gitsin reddedilir.
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await IkinciAdimGonderAsync(client)).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await GonderAsync(client)).StatusCode);
+    }
+
+    private static Task<HttpResponseMessage> IkinciAdimGonderAsync(HttpClient client) =>
+        client.PostAsJsonAsync("/api/identity/sessions/two-factor", new { code = "000000" });
+
     private static Task<HttpResponseMessage> GonderAsync(HttpClient client) =>
         client.PostAsJsonAsync("/api/identity/sessions", new
         {
