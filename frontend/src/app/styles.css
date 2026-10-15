@@ -42,10 +42,17 @@ body {
   background: var(--color-surface);
   padding: var(--space-6);
   margin-block-end: var(--space-6);
-}
 
-.filter-bar--skeleton {
-  /* Çubuğun gerçek yüksekliği: legend + seçenek satırı + özet satırı. */
+  /* Ayrılan yükseklik GERÇEK çubukta da duruyor ve kusur tam buradaydı: eskiden yalnız
+     iskelet tutuyordu, gerçek çubuk kendi doğal yüksekliğine açılıyordu. Ölçüldü
+     (2026-10-15, Lighthouse mobil profili): iskelet 132px yer ayırıyordu, gerçek çubuk
+     238px geliyordu ve altındaki ızgara 57. milisaniyede +111px aşağı düşüyordu — tek
+     başına CLS 0,08 (eşik 0,1).
+
+     İskeletin çip SAYISINI tahmin etmesi çözüm DEĞİL: kasa tipleri alan verisidir ve
+     `/api/reference/body-types`ten gelir, yani istemci yanıt gelmeden kaç çip olacağını
+     bilemez. Bu yüzden iki kutu aynı ayrılan yüksekliği paylaşıyor; gerçek içerik daha
+     kısaysa kutu küçülmüyor (boşluk kalır, düzen KAYMAZ). */
   min-block-size: var(--filter-bar-min-block-size);
 }
 
