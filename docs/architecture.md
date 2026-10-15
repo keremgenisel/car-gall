@@ -493,6 +493,7 @@ altındaki ADR'lerdedir.
 | Vitrin okuma modeline yazma | **Görünürlük kararı** yalnız yansıtmada; kopyalanmış kolonları (kapak URL'i, şube adları) besleyen işleyiciler bunun dışında |
 | Sistem tepkisiyle gelen toplu geçiş | Şube kapanması (A8) personelin seçim üst sınırına tabi değil; şube olayı başına tek işlem, geçişleri duyurulur |
 | Çok kayıtlı eylemde çapraz modül okuması | **Aynı yanıtı veren** okumalar istek başına bir kez (yapılandırma, ad haritaları); **tazeliği gereken** okuma kayıt başına ve kilidin altında |
+| Oturum öncesi ara durum | "Parola doğru, ikinci adım bekleniyor" hâli **oturum DEĞİLDİR**: kendi adı olan kısa ömürlü bir çerez + `identity` satırı taşır ve hiçbir yönetim isteği onunla çalışmaz. Kurulumu **olmayan** hesapta ise gerçek oturum verilir ve ikinci bir **kapı** yüzeyi üç yola daraltır — orada parola zaten tek faktördür |
 | Proje sayısı | Modül başına 2 (`X`, `X.Contracts`) |
 | Syndication | V1 dışı, V1.1'de ayrı modül |
 | SSR | Yok; sunucu tarafı meta + JSON-LD enjeksiyonu |
