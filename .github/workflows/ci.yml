@@ -32,6 +32,11 @@ jobs:
   changes:
     name: Değişen yollar
     runs-on: ubuntu-latest
+    # BULGU-5 — gece koşusunda ve elle tetiklemede bu işin ölçeceği bir diff YOK; eskiden
+    # koşup "hepsi true" diyerek çıkıyordu. Artık hiç kuyruğa girmiyor. Ağır işler yine
+    # koşuyor, çünkü koşulları `!cancelled()` ile yazılı: ATLANAN bir bağımlılık onları
+    # durdurmuyor ve boş çıktı "bilmiyorum" demek (aşağıdaki not).
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     outputs:
       frontend: ${{ steps.tespit.outputs.frontend }}
       kod: ${{ steps.tespit.outputs.kod }}
@@ -81,7 +86,7 @@ jobs:
             [ -z "$d" ] && continue
             case "$d" in
               frontend/*|.github/workflows/*) frontend=true; kod=true ;;
-              src/*|scripts/*|*.slnx)        kod=true ;;
+              src/*|scripts/*|*.slnx|*.props) kod=true ;;
             esac
           done <<< "$DOSYALAR"
 
@@ -154,11 +159,18 @@ jobs:
     # ADR 0010 / K2 — altı `check:*` betiğinin hiçbiri `frontend/` dışını okumuyor
     # (ölçüldü), bu yüzden `docs/` ya da `specs/` değişikliği bu işi kıramaz.
     needs: changes
-    # `always()` + `!= 'false'`: tespit işi DÜŞERSE çıktı boş kalır ve iş KOŞAR.
-    # Ölçüldü (#68'in ilk koşusu): koşul `== 'true'` yazıldığında, dakika bittiği için
-    # düşen `changes` işi bu kapıyı SKIPPED yapıyordu — yani tespitin kendi arızası
-    # kapıyı sessizce atlatıyordu. Şüphe hâlinde koşmak, şüphe hâlinde atlamaktan iyidir.
-    if: always() && needs.changes.outputs.frontend != 'false'
+    # `!cancelled()` + `!= 'false'`: tespit işi DÜŞER ya da ATLANIRSA çıktı boş kalır ve
+    # iş KOŞAR. Boş çıktı "bilmiyorum" demektir; bilmediğimizde koşarız.
+    #
+    # İki yazım elendi, ikisi de ölçümle:
+    #   `== 'true'`  → #68'in ilk koşusunda düşen `changes` bu kapıyı SKIPPED yaptı;
+    #                  tespitin kendi arızası kapıyı sessizce atlatıyordu.
+    #   `always()`   → GitHub'ın belgelediği davranışa göre iptal sırasında da `true`
+    #                  verir, yani iş iptal EDİLMEZ. `cancel-in-progress: true` kurulu
+    #                  olduğu için üst üste iki push'ta eski koşunun E2E'si (11,5 dk)
+    #                  sonuna kadar koşardı. `!cancelled()` fail-safe'i aynen korur —
+    #                  DÜŞEN ya da ATLANAN bir iş, iptal edilmiş bir iş değildir.
+    if: ${{ !cancelled() && needs.changes.outputs.frontend != 'false' }}
     defaults:
       run:
         working-directory: frontend
@@ -223,8 +235,9 @@ jobs:
     runs-on: ubuntu-latest
     # ADR 0010 / K3 — yığında yer almayan bir dosya E2E sonucunu değiştirmiyor.
     needs: changes
-    # Aynı fail-safe: tespit düşerse E2E koşar (yukarıdaki not).
-    if: always() && needs.changes.outputs.kod != 'false'
+    # Aynı fail-safe ve aynı gerekçe (yukarıdaki not): tespit düşerse ya da atlanırsa
+    # E2E koşar, iptal sırasında koşmaz.
+    if: ${{ !cancelled() && needs.changes.outputs.kod != 'false' }}
 
     env:
       # TEK KAYNAK. Host'un kurulum hesabı ile E2E'nin globalSetup'ı aynı parolayı

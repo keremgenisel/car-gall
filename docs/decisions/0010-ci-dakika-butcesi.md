@@ -47,6 +47,15 @@ onları gerçekten kırabiliyor.
 - `tests/Host.Tests/Theme/VarsayilanPaletTests.cs` `frontend/src/shared/design/tokens.css`'i,
   `tests/VehicleCatalog.Tests/Domain/AlanEtiketiKapisiTests.cs` `frontend/src/...` altını
   okuyor — yani **frontend'i değiştiren bir diff de Backend'i ilgilendirir.**
+- `tests/VehicleCatalog.Tests/Integration/DuyuruTests.cs` `docs/architecture.md`'nin olay
+  akışı bloğunu **canlı** okuyor. Bu, dış denetimin bulduğu beşinci okuyucu ve ilk dördü
+  gibi `Architecture.Tests` içinde DEĞİL, bir **modül** test projesinde — yani "kapılar
+  Architecture'da toplanmıştır" varsayımı da yanlış.
+
+  *Ayrıca kayda değer:* o test depo kökünü **denetlediği dosyanın varlığıyla** arıyor
+  (`while (… !File.Exists(…/docs/architecture.md))`). Aynı kalıp `#61`'de `YayinSiniriTests`'i
+  kırmıştı. `docs/architecture.md` taşınacak bir dosya değil, ama kalıp aynı ve ayrı bir
+  iş olarak düzeltilmeli — bu PR'ın kapsamı değil.
 
 Backend'i koşullamak, bu üç kapıyı sessizce atlanabilir kılardı. 8 dakika, bu riskin
 alınmayacağı kadar ucuz.
@@ -65,7 +74,12 @@ koşuyla yakalanmıyordu — kapı dokümanı okumuyor.
 
 ### K3 — E2E yalnız **çalışan yığını** değiştiren bir yol değiştiğinde koşar
 
-`src/**`, `frontend/**`, `scripts/**`, `*.slnx`, `.github/workflows/**`.
+`src/**`, `frontend/**`, `scripts/**`, `*.slnx`, **`*.props`**, `.github/workflows/**`.
+
+`*.props` dış denetimin bulgusu: `Directory.Build.props` hiçbir yol kümesinde yoktu, oysa
+`TreatWarningsAsErrors` dâhil **bütün** projelerin derleme ayarını o dosya veriyor. Backend
+her koşuda koştuğu için derleme kapısı yine denetlenirdi, ama E2E — Host'u derleyip ayağa
+kaldıran iş — atlanırdı.
 
 *Gerekçe:* E2E tüm yığını ayağa kaldırıyor (Postgres + Host + Vite + Playwright) ve
 yığında yer almayan bir dosya sonucu değiştirmiyor.
@@ -91,20 +105,38 @@ Backend** konur. Frontend/E2E/Performans zorunlu işaretlenirse metin-PR'ları s
 
 ### K4.1 — Koşul **atlamaya değil koşmaya** meyleder (fail-safe)
 
-Ağır işlerin koşulu `if: always() && needs.changes.outputs.<ad> != 'false'` biçiminde
-yazılır; `== 'true'` DEĞİL.
+Ağır işlerin koşulu şu biçimde yazılır:
 
-*Gerekçe ölçümle:* ilk yazımda koşul `== 'true'`'ydu ve #68'in ilk koşusu kusuru gösterdi
-— dakika bittiği için `changes` işi düştü, çıktıları boş kaldı ve Frontend ile E2E
-**SKIPPED** oldu. Yani **tespitin kendi arızası ağır kapıları sessizce atlatıyordu.**
-`always()` olmadan düşen bir `needs` bağımlılığı bağlı işi hiç çalıştırmaz; `!= 'false'`
-ile boş çıktı "bilmiyorum" demek olur ve bilmediğimizde koşarız. Bu, `changes` işinin
-içindeki "taban okunamadı → hepsini koş" dalının dış kardeşi: aynı ilke, iki yerde.
+```yaml
+if: ${{ !cancelled() && needs.changes.outputs.<ad> != 'false' }}
+```
+
+Üç yazım denendi ve ikisi ölçümle elendi:
+
+| Yazım | Neden olmaz |
+|---|---|
+| `== 'true'` | #68'in ilk koşusunda `changes` düştü (dakika bitmişti), çıktı boş kaldı ve Frontend ile E2E **SKIPPED** oldu — **tespitin kendi arızası kapıları sessizce atlatıyordu** |
+| `always() && …` | GitHub'ın belgelediği davranışa göre `always()` **iptal sırasında da** `true` verir, yani iş iptal EDİLMEZ. `cancel-in-progress: true` kurulu olduğundan üst üste iki push'ta eski koşunun E2E'si (11,5 dk) sonuna kadar koşardı — dakika bedava olsa bile boşa akan zaman. *(Dış denetimin BULGU-1'i.)* |
+| **`!cancelled() && …`** | Fail-safe'i korur: **düşen ya da atlanan** bir iş, iptal edilmiş bir iş değildir. İptalde durur. |
+
+`!= 'false'` kısmı kasıtlı: boş çıktı "bilmiyorum" demektir ve bilmediğimizde koşarız. Bu,
+`changes` işinin içindeki "taban okunamadı → hepsini koş" dalının dış kardeşi — aynı ilke,
+iki yerde.
+
+**YAML tuzağı, yazarken ölçüldü:** `if: !cancelled() && …` ayrıştırılamaz. Düz bir skalar
+`!` ile başlayamaz, YAML onu **etiket** sayar ve iş akışının tamamı geçersiz olur. Koşul
+bu yüzden `${{ }}` içinde; `ruby -ryaml` ile doğrulandı.
 
 ### K5 — `schedule` ve `workflow_dispatch` her şeyi koşar
 
 Gece koşusu bütünü ölçer; orada diff yok ve olmamalı. K6'nın (ADR 0008) ölçtüğü şey tam
 olarak bu koşu.
+
+**`changes` işi o olaylarda hiç kuyruğa girmez** (dış denetimin BULGU-5'i: eskiden koşup
+"hepsi true" diyerek çıkıyordu, yani boşa 15 saniye). İş artık
+`if: github.event_name == 'pull_request' || github.event_name == 'push'` taşıyor. Ağır
+işler yine koşuyor ve sebebi K4.1: **atlanan** bir bağımlılık `!cancelled()` koşulunu
+engellemiyor, boş çıktı da "bilmiyorum" demek.
 
 ### K6 — Depo **private** kalıyor
 
@@ -117,6 +149,37 @@ satılacak olan şey kodun ve süreç külliyatının kendisi, `LICENSE` dosyas�
 şartları herkese **görme ve fork** hakkı verir), güvenlik yüzeyi (kilitlenme eşiği, istek
 limiti, iterasyon sayısı, hata kodları) okunur hâle gelir ve public dönemde alınan
 fork'lar private'a dönünce yaşamaya devam eder.
+
+### K6.1 — **K6 TERSİNE DÖNDÜ: depo public olacak** (2026-10-15)
+
+K6'nın yukarıdaki gerekçesi **olduğu gibi duruyor ve silinmiyor** — o gün ölçülen şey
+doğruydu. Değişen şey karar: Takım Yöneticisi 2026-10-15'te depoyu **public** yapmaya
+karar verdi. Lisans: **tescilli, tüm hakları saklı** (`LICENSE`, ADR `0011` ile geldi).
+
+*Kararı değiştiren ölçüm, güvenlik değil **duruş süresi** oldu.* K6 yazıldığında
+"israfı kaldır, dakikalar 1 Kasım'da döner" dengesi makul görünüyordu. Sonra ölçüldü:
+bu depo iki günde üç dilim kapattı (`0012a`, `0012b`, `0012c`) ve `0013`'ün uygulaması
+bir-iki gün içinde hazır olur. Yani blok 20 gün değil, **~18 günlük tam duruş** demekti.
+Public depoda GitHub-hosted standart koşucular ücretsiz; blok anında kalkıyor.
+
+**K6'nın ürün gerekçeleri yanlışlanmadı, kabul edildi:** satılacak olan kodun ve süreç
+külliyatının kendisi, fork'lar geri alınamıyor, güvenlik yüzeyi okunur hâle geliyor.
+Bunların karşılığında alınan şey, 18 günlük duruşun kalkması.
+
+**Bu kararın değiştirdiği ikinci şey bu ADR'ın kendi gerekçesi.** Yol filtreleri artık
+bir **bütçe** önlemi değil — dakika bedava. Kaldılar, çünkü ikinci bir gerekçeleri var ve
+o gerekçe ölçülü: metin-PR'ında E2E'yi koşturmak **11,5 dakika** geri bildirim gecikmesi
+demek ve ölçtüğü hiçbir şey yok. *Bu ADR'ın adı "dakika bütçesi" olarak kalıyor; adını
+değiştirmek, kararın hangi baskı altında alındığını silerdi.*
+
+**Ön koşullar ADR `0011`'de** ve bu PR'dan ayrı bir PR'da teslim edildi: `LICENSE`,
+depoda sabit kurulum parolasının kaldırılması, geçmişte yayınlanmış üç dizenin koşulsuz
+reddi ve kapısı. Depo o iş merge edilmeden public yapılmamalı.
+
+**K4'ün tripwire'ı artık canlı:** public depoda dal koruması ücretsiz geliyor. Açıldığı
+gün zorunlu kapı listesine **yalnız Backend** konur; Frontend/E2E/`C3 eşikleri` zorunlu
+işaretlenirse metin-PR'ları sonsuza kadar "bekliyor" kalır — çünkü ikisi `skipped`, C3 ise
+hiç görünmüyor.
 
 ## Elenen alternatifler
 
