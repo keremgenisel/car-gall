@@ -176,6 +176,20 @@ Bir PR şu şartların **hepsini** sağlamadan merge edilmez:
 2. **PR şablonu doldurulmuştur** (§ 5). Boş bırakılan alan yoktur.
 3. **Pipeline yeşildir.** Kırmızı pipeline ile merge yoktur — "sonra düzeltiriz" yoktur.
 
+   **Hangi kapı koştu, değişikliğe bağlıdır (ADR `0010`).** Backend **her zaman** koşar;
+   Frontend yalnız `frontend/**` değiştiyse, E2E yalnız çalışan yığın (`src/**`,
+   `frontend/**`, `scripts/**`, `*.props`, `*.slnx`) değiştiyse.
+
+   Metin-PR'ında iki ayrı hâl görülür ve **karıştırılmamalı**:
+
+   - **Frontend ve E2E `skipped` görünür.** İş tanımlı, koşulu sağlanmadı.
+   - **`C3 eşikleri` HİÇ GÖRÜNMEZ.** `Performans` iş akışı `paths:` ile workflow
+     düzeyinde filtreli, yani kuyruğa hiç girmiyor — atlanmış bir iş değil, var olmayan
+     bir koşu. "Kapı nerede?" diye arayan biri `skipped` bulmayı bekler ve bulamaz.
+
+   *İkisi de karşılanmamış şart sayılmaz* — atlama koşulu yalnız o kapının ölçemeyeceği
+   bir diff için geçerlidir ve ADR `0010`'da ölçümüyle yazılıdır.
+
    **CI doğrulaması merge'den AYRI bir adımdır; aynı komuta zincirlenmez.** Önce sonuç
    okunur, sonra merge kararı verilir. Bu kural bir hatadan doğdu: CI kontrolü ile
    `gh pr merge` tek satırda zincirlenmişti ve dört kapı da kırmızıyken merge gerçekleşti;
