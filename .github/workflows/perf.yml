@@ -44,6 +44,13 @@ jobs:
         ports: ['1025:1025', '8025:8025']
 
     steps:
+      # ADR 0011 — kurulum parolası koşu başına üretilir ve kayıtlarda maskelenir.
+      - name: Kurulum parolası üret
+        run: |
+          PAROLA=$(openssl rand -hex 16)
+          echo "::add-mask::$PAROLA"
+          echo "SEED_ADMIN_PASSWORD=$PAROLA" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-dotnet@v4
@@ -68,9 +75,9 @@ jobs:
           Development__SeedShowcase: 'true'
           Development__SeedListingCount: '500'
           # D2/AC-53 — uygulama bu parola olmadan HİÇ başlamaz. Ölçüm işi giriş
-          # yapmaz ama Host'u ayağa kaldırmak zorunda; bu değer yalnız CI'ın tek
-          # kullanımlık veritabanı içindir.
-          Identity__SeedAdmin__Password: perf-kurulum-parolasi
+          # yapmaz ama Host'u ayağa kaldırmak zorunda. ADR 0011 — değer SABİT DEĞİL:
+          # önceki adımda üretilip `$GITHUB_ENV`'e yazılıyor ve kayıtlarda maskeli.
+          Identity__SeedAdmin__Password: ${{ env.SEED_ADMIN_PASSWORD }}
           # Kurulum hesabı bir kez özetleniyor; ölçüm başlangıcını 210.000 iterasyon
           # beklememeli.
           Identity__PasswordIterations: '1000'

@@ -239,11 +239,12 @@ jobs:
     # E2E koşar, iptal sırasında koşmaz.
     if: ${{ !cancelled() && needs.changes.outputs.kod != 'false' }}
 
-    env:
-      # TEK KAYNAK. Host'un kurulum hesabı ile E2E'nin globalSetup'ı aynı parolayı
-      # kullanmak ZORUNDA: ikisi ayrı ayrı yazıldığında globalSetup 401 alıyor ve
-      # bütün E2E paketi düşüyor. İkisi de buradan okur.
-      SEED_ADMIN_PASSWORD: ci-kurulum-parolasi
+    # TEK KAYNAK, ama SABİT DEĞİL (ADR 0011). Host'un kurulum hesabı ile E2E'nin
+    # globalSetup'ı aynı parolayı kullanmak ZORUNDA — ikisi ayrı yazıldığında globalSetup
+    # 401 alıyor ve bütün paket düşüyor. Değer aşağıdaki ilk adımda koşu başına üretilip
+    # `$GITHUB_ENV`'e yazılıyor; sonraki adımlar `env.SEED_ADMIN_PASSWORD` ile okuyor.
+    # Depo herkese açık olduğundan sabit bir dize, parolası kamuya açık bir Yönetici
+    # hesabı demek olurdu ve uygulama o eski dizeleri artık reddediyor.
 
     # 8 kriterin (AC-10, 14, 18, 19, 26, 27, 28, 30) CI'da koşan tek testi buradadır;
     # bu iş olmadan o kriterler kapısız kalır.
@@ -279,6 +280,13 @@ jobs:
         ports: ['4566:4566']
 
     steps:
+      # ADR 0011 — kurulum parolası koşu başına üretilir ve kayıtlarda maskelenir.
+      - name: Kurulum parolası üret
+        run: |
+          PAROLA=$(openssl rand -hex 16)
+          echo "::add-mask::$PAROLA"
+          echo "SEED_ADMIN_PASSWORD=$PAROLA" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-dotnet@v4
