@@ -83,6 +83,18 @@ Tek bir araç galerisi için satış vitrini ve yönetim paneli.
   `0006`'yı dört gün görünmez kılan şey koşunun **yokluğu**ydu. İlk zamanlı pencere
   2026-10-11'de kaçtı ve bu ölçüm ADR `0008` / K6'ya yazıldı.
   (Takım Yöneticisi kararı 2026-10-11.)
+- **Pencere 24 değil 36 saattir, koşunun GECİKMESİ de raporlanır ve yokluk 12:00
+  UTC'den önce ölçülmez.** Ölçüldü (2026-10-12): zamanlı koşu **her iki pencerede de**
+  geldi ama cron'dan **+06:35** ve **+07:06** sonra — yani `0 3 * * *` yazan bir cron'un
+  koşusu pratikte **10:00 UTC civarında** düşüyor. "Son 24 saatte koşu yok" cümlesi hem
+  gecikmiş ama çalışan bir tetikleyiciyi "yok" sayıyordu, hem de sabah erken okunduğunda
+  yanlış alarm üretiyordu. Bundan sonra: **36 saatte hiç koşu yoksa** yokluk raporlanır ·
+  koşu varsa `created_at` ile cron saatinin farkı yazılır · **beklenen varış penceresi
+  geçmeden (12:00 UTC) yokluk sonucuna varılmaz** — periyodik bir olayın yokluğu, varışı
+  beklenmeden ölçülemez.
+  `perf.yml`'da `schedule` tetikleyicisi **yoktur**; oradaki `total_count: 0` bir kaçan
+  pencere değil, ADR `0008`'in bilinçli kapsam kararıdır ve raporlanmaz.
+  (ADR `0008` / K6, 2026-10-12 ölçümü.)
 
 **Bir işe başlamadan önce**
 1. İlgili spec'i **tam** oku. Spec yoksa dur ve spec iste (Altın Kural 1).

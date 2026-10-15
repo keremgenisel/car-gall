@@ -143,6 +143,52 @@ ve yeşil.** Kanıtlamadığı şey **zamanlı tetikleyicinin kendisi** — o an
 bilinen bir davranış; ikinci pencere de boş çıkarsa K6'nın dayandığı mekanizma bu depoda
 çalışmıyor demektir ve kararın yeniden açılması gerekir.
 
+**Ölçüm — tetikleyici HER GÜN çalışıyor, ama yedi saat gecikmeli (2026-10-12).**
+`gh api .../workflows/ci.yml/runs?event=schedule` → `total_count` **2**, yani iki
+pencereye iki koşu:
+
+| Pencere (cron `0 3 * * *`) | Koşu | Gecikme | Sonuç |
+|---|---|---|---|
+| 2026-10-11 03:00 UTC | `2026-10-11T09:35:20Z` · `18e4adf` | **+06:35** | `success` |
+| 2026-10-12 03:00 UTC | `2026-10-12T10:06:18Z` · `c5143b6` | **+07:06** | `success` |
+
+**Bu, bir önceki paragrafın "ikinci pencere de boş çıkarsa mekanizma çalışmıyor"
+beklentisini KARŞILAMIYOR:** pencere boş çıkmadı. Zamanlı tetikleyici bu depoda çalışıyor
+ve her iki pencerede de ateşledi; sapma **zamanlamada** ve tutarlı — iki ölçümde de
+altı buçuk ile yedi saat arası. GitHub ücretsiz koşucularda zamanlı koşuları yoğunlukta
+geciktiriyor ve saat başlarını (`:00`) en yoğun dilim olarak belgeliyor; ölçüm o davranışla
+uyumlu. **K6'nın mekanizması ayakta, yalnız adı yanlış:** bu bir "gece koşusu" değil, geç
+sabah koşusu.
+
+**Bu paragraf bir ölçüm hatasının düzeltmesidir ve hatayı yazmak kuralın parçası.**
+Önceki hâli *"ikinci pencere de kaçtı, `total_count` 1"* diyordu. Sayaç **09:54 UTC**'de
+okundu; o günün koşusu **10:06**'da geldi, yani ölçüm beklenen varıştan **12 dakika önce**
+alındı ve bir yokluk üretti. Oysa aynı paragraf dünkü koşunun 09:35'te geldiğini zaten
+yazıyordu — veri elimizdeydi, çıkarım yanlıştı. Ders: **periyodik bir olayın yokluğu,
+beklenen varış penceresi geçmeden ölçülemez.** Bu, "kapı anahtarı sayar, biçimi saymaz"
+sınıfından bir hata: sayaç doğru okundu, yanlış ANDA okundu.
+
+**Kararı yeniden açan soru daraldı.** "Mekanizma çalışmıyor" ihtimali ölçümle elendi;
+geriye tek soru kaldı: koşunun ~7 saat gecikmesi kabul edilebilir mi? Üç seçenek ve
+bedelleri — **Takım Yöneticisi'nin kararı**:
+
+| Seçenek | Ne yapar | Bedeli |
+|---|---|---|
+| **A — tolerans** | Yokluk ölçümü 24 saat yerine **36 saat** penceresinde yapılır; koşu varsa gecikmesi de raporlanır | Kırmızı bir gece en kötü durumda ~1,5 gün sonra görülür. Bu turda **yapıldı** (aşağıdaki `AGENTS.md` maddesi). |
+| **B — cron'u saat başından kaydır** | `0 3 * * *` → örneğin `37 4 * * *`; en yoğun dilimden çıkar | Hipotez bu depoda **ölçülmedi**; doğrulamak için yeni pencereleri beklemek gerekir. Tek satırlık değişiklik ama bir karar. |
+| **C — zamanlı koşuya hiç dayanmamak** | Oturum açılış maddesi "`main`'in SON koşusu, olayı ne olursa olsun" diye okunur | Push'suz geçen bir gün ölçümsüz kalır — K6 tam o boşluk için yazılmıştı. **Gerekçesi de kalmadı:** koşu her gün geliyor. |
+
+Bu turda yalnız **A** uygulandı: ölçümü doğru yapan tarafı — ve ikinci ölçüm onu
+doğruladı. 24 saatlik bir pencere, 09:00 UTC'de okunduğunda "koşu yok" derdi; oysa koşu
+10:06'da geliyor. **A yanlış alarmı da keser, yokluğu da yakalar.** **B** `ci.yml`'a
+dokunuyor ve gecikmeyi azaltıp azaltmayacağı bu depoda ölçülmedi; **C**'nin gerekçesi
+ölçümle düştü. İkisi de karardır, ölçüm değil (AP-10).
+
+**`perf.yml` hakkındaki sayı yanlış okunmamalı.** `event=schedule` için `total_count`
+**0** ve bu bir kaçan pencere DEĞİL: dosyada `schedule` tetikleyicisi hiç yok
+(`on: pull_request, workflow_dispatch`) — yukarıdaki "Kapsam" paragrafının bilinçli
+kararı. `main`'in performans durumu hâlâ "bilinmiyor" ve kapatılması ayrı bir karar.
+
 **Kuralın kör noktası bu ölçümle görünür oldu: K6 KIRMIZI bir koşu için yazılmıştı.**
 "Koşu hiç yok" hâli sessizce "sorun yok" gibi görünür — oturum `gh run list` okur, son
 koşuların hepsi yeşil `push` koşusudur ve raporlanacak bir şey bulmaz. Hiç havlamayan bir

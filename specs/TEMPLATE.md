@@ -180,6 +180,11 @@ Her kriter bir testle karşılanır ve test DisplayName'i "AC-<n>: <metin>" taş
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
+      <!-- Taşıdıktan SONRA `tests/Architecture.Tests`in TAMAMI koşturulur, yalnız arşiv
+      kapısı değil: `0012b`'nin kapanışında kartın yolu değişince BAŞKA bir kapı kırıldı
+      (etiket kapısı depo kökünü denetlediği dosyanın varlığıyla arıyordu) ve yalnız
+      `--filter ArsivKapisi` koşan kapanış turu bunu kaçırdı. `specs/` yolunu okuyan her
+      kapı bu taşımadan etkilenebilir. -->
 
 ---
 
