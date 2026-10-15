@@ -14,6 +14,17 @@ S3_PORT=54566
 S3_BUCKET="cargallery-media"
 S3_WATERMARK_KEY="private/brand/watermark.png"
 
+# ADR 0011 — depoda SABİT kurulum parolası YOK. Depo herkese açık; sabit bir varsayılan,
+# parolası kamuya açık bir Yönetici hesabı demekti ve uygulama artık o üç eski dizeyi
+# reddediyor (IdentityModule). Burada koşu başına üretiliyor ve ekrana yazılıyor:
+# geliştirici panele girebilmek için ona ihtiyaç duyuyor.
+# `openssl rand` BİLEREK: ilk yazımda `tr -dc … | head -c 24` kullandım ve `head`
+# boruyu erken kapatınca `tr` SIGPIPE alıyor; `set -o pipefail` ile betik ÇIKIŞ 141
+# ile anında ölüyordu. Ölçüldü (arka plan koşusu, exit 141). Boru yok, sorun yok —
+# ayrıca iş akışları da aynı komutu kullanıyor.
+SEED_ADMIN_PASSWORD="${SEED_ADMIN_PASSWORD:-$(openssl rand -hex 16)}"
+export SEED_ADMIN_PASSWORD
+
 echo "==> PostgreSQL ($CONTAINER, port $PORT)"
 docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 docker run -d --name "$CONTAINER" \
@@ -93,7 +104,7 @@ echo "==> Frontend build (çıktı: src/Host/wwwroot)"
 # olmadan DI kaydı hata verir ve kurulum adımı hiç koşamaz (D2/AC-53).
 echo "==> Kurulum adımı (şema)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
-Identity__SeedAdmin__Password="${SEED_ADMIN_PASSWORD:-gelistirme-parolasi}" \
+Identity__SeedAdmin__Password="$SEED_ADMIN_PASSWORD" \
 Identity__PasswordIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
 Notifications__Smtp__Host=localhost \
 Notifications__Smtp__Port="$MAIL_SMTP_PORT" \
@@ -115,11 +126,16 @@ Media__AllowedImageFormats__2=webp \
 # (docs/conventions.md § 11). Yoksa uygulama hiç başlamaz.
 # Parola özetleme maliyeti geliştirmede düşük tutulur: her giriş için 210.000
 # iterasyon beklemek kanıt üretimini yavaşlatır. Üretim değeri appsettings.json'dadır.
+echo "==> Kurulum hesabı"
+echo "    kimlik : yonetici@cargallery.local"
+echo "    parola : $SEED_ADMIN_PASSWORD"
+echo "    e2e için: export E2E_SEED_ADMIN_PASSWORD='$SEED_ADMIN_PASSWORD'"
+
 echo "==> Host ($SEED_COUNT ilanla seed edilerek)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
 Development__SeedShowcase=true \
 Development__SeedListingCount="$SEED_COUNT" \
-Identity__SeedAdmin__Password="${SEED_ADMIN_PASSWORD:-gelistirme-parolasi}" \
+Identity__SeedAdmin__Password="$SEED_ADMIN_PASSWORD" \
 Identity__PasswordIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
 Identity__LoginRequestLimit="${LOGIN_REQUEST_LIMIT:-500}" \
 Leads__RateLimit__CapturedLeadLimit="${LEAD_CAPTURED_LIMIT:-500}" \
