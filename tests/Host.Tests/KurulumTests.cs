@@ -36,6 +36,33 @@ public sealed class KurulumTests
         Assert.Contains("SeedAdmin", hata.Message, StringComparison.Ordinal);
     }
 
+    [Theory(DisplayName = "ADR 0011: Depoda yayınlanmış bir geliştirme parolasıyla uygulama başlamaz")]
+    [InlineData("gelistirme-parolasi")]
+    [InlineData("ci-kurulum-parolasi")]
+    [InlineData("perf-kurulum-parolasi")]
+    public void Baslamaz_YayinlanmisGelistirmeParolasiyla(string yayinlanmisParola)
+    {
+        // Depo herkese açık (ADR 0011). Bu üç dize bir süre `scripts/dev-up.sh` ve iş
+        // akışlarında SABİT olarak durdu ve git geçmişinde kalıcı. Birinin bir sunucuda
+        // o betiği çalıştırması, parolası KAMUYA AÇIK bir Yönetici hesabı kurması demek
+        // olurdu; bu yüzden uygulama o parolalarla hiç başlamıyor.
+        using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
+
+                NotificationsTestSettings.Apply(builder);
+                MediaTestSettings.Apply(builder);
+                builder.UseSetting("Identity:SeedAdmin:Password", yayinlanmisParola);
+            });
+
+        InvalidOperationException hata = Assert.Throws<InvalidOperationException>(
+            () => factory.CreateClient());
+
+        // Boş parolanın hatasıyla KARIŞMAMALI: ikisi ayrı sebep, ayrı mesaj.
+        Assert.Contains("yayınlanmış", hata.Message, StringComparison.Ordinal);
+    }
+
     [Fact(DisplayName = "0006/AC-53: Başlangıç Yönetici parolası dağıtım yapılandırmasında yokken uygulama başlamaz; üretilmiş bir varsayılan parolayla açılmaz")]
     public void IcermezVarsayilanParola_Yapilandirma()
     {
