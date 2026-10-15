@@ -26,6 +26,77 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ADR 0010 — hangi kapı hangi değişiklikte koşar. Bu iş SADECE diff'i okur (~15 s) ve
+  # ağır işlere koşul üretir. Backend bilerek koşulsuz: mimari kapılar `specs/`, `docs/`
+  # ve `frontend/src` altını okuyor; metin değişikliği onları gerçekten kırdı (#61).
+  changes:
+    name: Değişen yollar
+    runs-on: ubuntu-latest
+    # BULGU-5 — gece koşusunda ve elle tetiklemede bu işin ölçeceği bir diff YOK; eskiden
+    # koşup "hepsi true" diyerek çıkıyordu. Artık hiç kuyruğa girmiyor. Ağır işler yine
+    # koşuyor, çünkü koşulları `!cancelled()` ile yazılı: ATLANAN bir bağımlılık onları
+    # durdurmuyor ve boş çıktı "bilmiyorum" demek (aşağıdaki not).
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    outputs:
+      frontend: ${{ steps.tespit.outputs.frontend }}
+      kod: ${{ steps.tespit.outputs.kod }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Diff için geçmiş gerekiyor; sığ klon taban commit'i bulamaz.
+          fetch-depth: 0
+
+      - name: Diff'i oku ve koşulları üret
+        id: tespit
+        env:
+          OLAY: ${{ github.event_name }}
+          TABAN_REF: ${{ github.base_ref }}
+          ONCE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          # Gece koşusu ve elle tetikleme BÜTÜNÜ ölçer — orada diff yok (ADR 0010 / K5).
+          if [ "$OLAY" = "schedule" ] || [ "$OLAY" = "workflow_dispatch" ]; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            echo "kod=true" >> "$GITHUB_OUTPUT"
+            echo "Olay '$OLAY' — bütün işler koşar."
+            exit 0
+          fi
+
+          if [ "$OLAY" = "pull_request" ]; then
+            git fetch --quiet origin "$TABAN_REF"
+            DOSYALAR=$(git diff --name-only "origin/$TABAN_REF...HEAD")
+          elif [ -n "${ONCE:-}" ] &&
+               [ "$ONCE" != "0000000000000000000000000000000000000000" ] &&
+               git cat-file -e "$ONCE^{commit}" 2>/dev/null
+          then
+            DOSYALAR=$(git diff --name-only "$ONCE" "$SHA")
+          else
+            # Yeni dal ya da ulaşılamayan taban: ölçemediğimiz şeyi atlamıyoruz.
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            echo "kod=true" >> "$GITHUB_OUTPUT"
+            echo "Taban okunamadı — bütün işler koşar."
+            exit 0
+          fi
+
+          frontend=false
+          kod=false
+          while IFS= read -r d; do
+            [ -z "$d" ] && continue
+            case "$d" in
+              frontend/*|.github/workflows/*) frontend=true; kod=true ;;
+              src/*|scripts/*|*.slnx|*.props) kod=true ;;
+            esac
+          done <<< "$DOSYALAR"
+
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+          echo "kod=$kod" >> "$GITHUB_OUTPUT"
+
+          echo "Değişen dosya: $(echo "$DOSYALAR" | grep -c . || true)"
+          echo "frontend=$frontend  kod=$kod"
+          echo "$DOSYALAR"
+
   backend:
     name: Backend — build, xUnit, mimari testler, migration şema kontrolü
     runs-on: ubuntu-latest
@@ -85,6 +156,21 @@ jobs:
   frontend:
     name: Frontend — lint, tip kontrolü, testler, build, çeviri anahtarları
     runs-on: ubuntu-latest
+    # ADR 0010 / K2 — altı `check:*` betiğinin hiçbiri `frontend/` dışını okumuyor
+    # (ölçüldü), bu yüzden `docs/` ya da `specs/` değişikliği bu işi kıramaz.
+    needs: changes
+    # `!cancelled()` + `!= 'false'`: tespit işi DÜŞER ya da ATLANIRSA çıktı boş kalır ve
+    # iş KOŞAR. Boş çıktı "bilmiyorum" demektir; bilmediğimizde koşarız.
+    #
+    # İki yazım elendi, ikisi de ölçümle:
+    #   `== 'true'`  → #68'in ilk koşusunda düşen `changes` bu kapıyı SKIPPED yaptı;
+    #                  tespitin kendi arızası kapıyı sessizce atlatıyordu.
+    #   `always()`   → GitHub'ın belgelediği davranışa göre iptal sırasında da `true`
+    #                  verir, yani iş iptal EDİLMEZ. `cancel-in-progress: true` kurulu
+    #                  olduğu için üst üste iki push'ta eski koşunun E2E'si (11,5 dk)
+    #                  sonuna kadar koşardı. `!cancelled()` fail-safe'i aynen korur —
+    #                  DÜŞEN ya da ATLANAN bir iş, iptal edilmiş bir iş değildir.
+    if: ${{ !cancelled() && needs.changes.outputs.frontend != 'false' }}
     defaults:
       run:
         working-directory: frontend
@@ -147,6 +233,11 @@ jobs:
   e2e:
     name: E2E — kritik akışlar, üç durum ve RTL
     runs-on: ubuntu-latest
+    # ADR 0010 / K3 — yığında yer almayan bir dosya E2E sonucunu değiştirmiyor.
+    needs: changes
+    # Aynı fail-safe ve aynı gerekçe (yukarıdaki not): tespit düşerse ya da atlanırsa
+    # E2E koşar, iptal sırasında koşmaz.
+    if: ${{ !cancelled() && needs.changes.outputs.kod != 'false' }}
 
     # TEK KAYNAK, ama SABİT DEĞİL (ADR 0011). Host'un kurulum hesabı ile E2E'nin
     # globalSetup'ı aynı parolayı kullanmak ZORUNDA — ikisi ayrı yazıldığında globalSetup
