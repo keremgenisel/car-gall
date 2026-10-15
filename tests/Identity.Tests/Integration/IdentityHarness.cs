@@ -61,6 +61,22 @@ internal sealed class IdentityHarness(IdentityDatabase database)
         return await handler.HandleAsync(new LoginCommand(kimlik, parola, istemci), CancellationToken.None);
     }
 
+    /// <summary>
+    /// `0013` D15 — giriş artık **iki dallı** ve `Token` bekleyen dalda `null`. Oturum
+    /// bekleyen testler tokeni buradan alır: dalın gerçekten bir oturum ürettiği tek bir
+    /// yerde doğrulanır, çağıran yerlerde `!` ile varsayılmaz.
+    ///
+    /// Kurulumu olmayan Yönetici `TwoFactorSetupRequired` dalını alır ve o dal da gerçek
+    /// bir oturum verir (D13) — `0006`'nın oturum kriterleri bu yüzden aynen geçerli.
+    /// </summary>
+    internal static string OturumTokeni(Result<LoginResult> sonuc)
+    {
+        Assert.True(sonuc.IsSuccess);
+        Assert.NotNull(sonuc.Value.Session);
+
+        return sonuc.Value.Token!;
+    }
+
     internal async Task<Result<Guid>> PersonelEkleAsync(AddStaffCommand komut)
     {
         await using IdentityDbContext context = database.CreateContext();

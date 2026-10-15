@@ -190,6 +190,15 @@ internal sealed class Staff : AggregateRoot<StaffId>
         return Result.Success();
     }
 
+    /// <summary>
+    /// D22 — ikinci adımın sıfırlanması bir **güvenlik işlemidir**: damga döner ve
+    /// personelin açık oturumları bir sonraki istekte düşer. Sıfırlamanın normal sebebi
+    /// kaybolan telefondur; o telefonun açık oturumunu yaşatmak `SecurityStamp`'in var
+    /// olma sebebinin tam tersidir. `ResetPassword` ile aynı iki katman: satırlar da
+    /// iptal edilir (Application).
+    /// </summary>
+    internal void RegisterTwoFactorReset() => SecurityStamp = SecurityStamp.New();
+
     internal void ChangePreferredLocale(Locale locale) => PreferredLocale = locale;
 
     internal void AssignBranch(Guid? branchId) => BranchId = branchId;

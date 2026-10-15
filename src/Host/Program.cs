@@ -98,7 +98,17 @@ builder.Services.AddIdentity(new IdentitySetup(
     builder.Configuration.GetValue<int?>("Identity:MinimumPasswordLength") ?? 12,
     builder.Configuration.GetValue<int?>("Identity:PasswordIterations") ?? 210_000,
     builder.Configuration.GetValue<int?>("Identity:LoginRequestLimit") ?? 20,
-    builder.Configuration.GetValue<int?>("Identity:LoginRequestWindowMinutes") ?? 10));
+    builder.Configuration.GetValue<int?>("Identity:LoginRequestWindowMinutes") ?? 10,
+    builder.Configuration["Identity:TwoFactor:Issuer"] ?? "CarGallery",
+
+    // 0013 D3 — SIRDIR: `appsettings.json`'da durmaz, ortam değişkeninden gelir
+    // (docs/conventions.md § 11). Boş geçmek bilinçli: doğrulamayı modül yapıyor ve
+    // eksik anahtarla uygulama ayağa kalkmıyor (AC-49).
+    builder.Configuration["Identity:TwoFactor:EncryptionKey"] ?? string.Empty,
+    builder.Configuration.GetValue<int?>("Identity:TwoFactor:RecoveryCodeCount") ?? 10,
+    builder.Configuration.GetValue<int?>("Identity:TwoFactor:RecoveryCodeIterations") ?? 10_000,
+    builder.Configuration.GetValue<int?>("Identity:TwoFactor:PendingEnrollmentMinutes") ?? 10,
+    builder.Configuration.GetValue<int?>("Identity:TwoFactor:PendingLoginMinutes") ?? 5));
 
 // 0005 — talep modülü. İKİ eşik var: `CapturedLeadLimit` C17'nin sayısıdır (10 dakikada
 // 5) ve yalnız KAYIT OLUŞAN isteği sayar; `RequestLimit` kaba tekrarı kesen daha gevşek

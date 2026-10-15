@@ -23,8 +23,11 @@ public sealed class GirisTests(IdentityDatabase database)
         Result<LoginResult> sonuc = await harness.GirisAsync(Kimlik, Parola);
 
         Assert.True(sonuc.IsSuccess);
-        Assert.NotEmpty(sonuc.Value.Token);
-        Assert.NotNull(await harness.OturumCozAsync(sonuc.Value.Token));
+
+        string token = IdentityHarness.OturumTokeni(sonuc);
+
+        Assert.NotEmpty(token);
+        Assert.NotNull(await harness.OturumCozAsync(token));
     }
 
     [Fact(DisplayName = "0006/AC-2: Kayıtlı olmayan bir kimlikle giriş denendiğinde giriş reddedilir")]

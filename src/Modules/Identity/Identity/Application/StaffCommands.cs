@@ -14,6 +14,12 @@ internal sealed record AddStaffCommand(
     string? PreferredLocale,
     Guid? BranchId);
 
+/// <param name="TwoFactorEnrolled">
+/// D25 — kapanmış sözleşmeye **eklemeli** alan (`0012c` D50 emsali). Üç durumlu değil
+/// **tek boolean**: zorunluluğu ROL söylüyor ve satır rolü zaten taşıyor; ikinci bir alan
+/// S1'in cevabını API sözleşmesine dondurur ve politika değiştiğinde sözleşme de değişmek
+/// zorunda kalırdı. *"Zorunlu ama kurmamış"* rozetini ekran elindeki iki alandan kurar.
+/// </param>
 internal sealed record StaffListItem(
     Guid StaffId,
     string DisplayName,
@@ -21,7 +27,8 @@ internal sealed record StaffListItem(
     string Role,
     string Status,
     string PreferredLocale,
-    Guid? BranchId);
+    Guid? BranchId,
+    bool TwoFactorEnrolled);
 
 /// <summary>
 /// R9 — personel ekleme, rol değiştirme, pasifleştirme ve parola sıfırlama. Hepsi
@@ -268,6 +275,11 @@ internal sealed class StaffCommands(
                 item.Status,
                 item.PreferredLocale,
                 item.BranchId,
+
+                // D25 — kurulum durumu da PROJEKSİYONDA: satır başına ikinci bir sorgu
+                // açmak, listeyi personel sayısı kadar isteğe bölerdi.
+                TwoFactorEnrolled = context.TwoFactorEnrollments
+                    .Any(enrollment => enrollment.Id == item.Id && enrollment.ConfirmedAt != null),
             })
             .ToListAsync(cancellationToken);
 
@@ -280,7 +292,8 @@ internal sealed class StaffCommands(
                 StaffRoleCode.ToCode(row.Role),
                 StaffStatusCode.ToCode(row.Status),
                 row.PreferredLocale.Code,
-                row.BranchId))
+                row.BranchId,
+                row.TwoFactorEnrolled))
         ];
     }
 

@@ -29,6 +29,18 @@ internal static class IdentityProblems
             IdentityErrors.NoSession => StatusCodes.Status401Unauthorized,
             IdentityErrors.InvalidCredentials => StatusCodes.Status401Unauthorized,
             IdentityErrors.PasswordChangeRequired => StatusCodes.Status403Forbidden,
+
+            // D20 — ikinci adımın reddi bir KİMLİK reddidir: oturum henüz yok.
+            IdentityErrors.TwoFactorInvalid => StatusCodes.Status401Unauthorized,
+            IdentityErrors.TwoFactorPendingExpired => StatusCodes.Status401Unauthorized,
+
+            // Oturum VAR, istenen geçiş o hâlde mümkün değil → durum çakışması.
+            IdentityErrors.TwoFactorAlreadyEnrolled => StatusCodes.Status409Conflict,
+            IdentityErrors.TwoFactorNotEnrolled => StatusCodes.Status409Conflict,
+
+            // D13/D23 — kimlik var, bu hâlde yetki yok.
+            IdentityErrors.TwoFactorSetupRequired => StatusCodes.Status403Forbidden,
+            IdentityErrors.TwoFactorDisableNotAllowed => StatusCodes.Status403Forbidden,
             IdentityErrors.LastActiveManager => StatusCodes.Status409Conflict,
 
             // 0007/AC-13 — eşzamanlılık kaybı da bir DURUM ÇAKIŞMASIDIR ve `409` döner.

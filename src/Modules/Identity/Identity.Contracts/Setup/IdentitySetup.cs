@@ -22,4 +22,20 @@ public sealed record IdentitySetup(
     int MinimumPasswordLength,
     int PasswordIterations,
     int LoginRequestLimit,
-    int LoginRequestWindowMinutes);
+    int LoginRequestWindowMinutes,
+    /// <param name="TwoFactorIssuer">
+    /// `otpauth://` adresinde görünen kurulum adı (**D16**). Doğrulama uygulamaları hesabı
+    /// bu adla listeler; kurulum başına tek galeri olduğu için değer dağıtım
+    /// yapılandırmasındadır (`docs/conventions.md` § 11).
+    /// </param>
+    string TwoFactorIssuer,
+    /// <param name="TwoFactorEncryptionKey">
+    /// Doğrulama sırrını şifreleyen anahtarın Base64 hâli (**D3**). **Sırdır**: repoda
+    /// durmaz, koşuyu başlatandan gelir — kurulum parolasıyla aynı disiplin (ADR `0011`).
+    /// Eksik ya da 32 bayt değilse uygulama ayağa KALKMAZ (AC-49).
+    /// </param>
+    string TwoFactorEncryptionKey,
+    int RecoveryCodeCount,
+    int RecoveryCodeIterations,
+    int PendingEnrollmentMinutes,
+    int PendingLoginMinutes);

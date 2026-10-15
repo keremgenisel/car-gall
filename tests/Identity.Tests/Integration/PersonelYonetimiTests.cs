@@ -198,7 +198,7 @@ public sealed class PersonelYonetimiTests(IdentityDatabase database)
         Result<LoginResult> giris = await harness.GirisAsync("danisman@ornek.com", "yonetici-verdi-12");
 
         Assert.True(giris.IsSuccess);
-        Assert.True((await harness.OturumCozAsync(giris.Value.Token))!.MustChangePassword);
+        Assert.True((await harness.OturumCozAsync(IdentityHarness.OturumTokeni(giris)))!.MustChangePassword);
     }
 
     [Fact(DisplayName = "0006/AC-50: Personel kaydının döndüğü hiçbir yanıt parolayı veya parola özetini içermez")]

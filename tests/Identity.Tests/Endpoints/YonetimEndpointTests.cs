@@ -94,10 +94,21 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
         Assert.Equal(HttpStatusCode.NoContent,
             (await ParolaDegistirAsync(api, ModuleApi.SeedYoneticiParolasi, Parola)).StatusCode);
 
-        // Değişiklik tüm oturumları düşürdü (R11); yeniden giriş sonrası diğer istekler
-        // de çalışır ve kapı artık kapalı değildir.
+        // Değişiklik tüm oturumları düşürdü (R11); yeniden giriş gerekiyor.
         Assert.Equal(HttpStatusCode.OK,
             (await GirisAsync(api, ModuleApi.SeedYoneticiKimligi, Parola)).StatusCode);
+
+        // `0013` D6 — SIRA: parola kapısı açıldı ama şimdi KURULUM kapısı kapalı. Bu
+        // satır eskiden `200` bekliyordu; `0013` öncesinde parola kapısı yönetim
+        // yüzeyinin önündeki TEK kapıydı. AC-33'ün iddiası dokunulmadan duruyor —
+        // yukarıdaki üç satır onu aynen ölçüyor — ve buradan sonrası artık ikinci
+        // kapının sırası olduğunu gösteriyor (`0013`/AC-32).
+        HttpResponseMessage kurulumKapisi = await api.Client.GetAsync($"{AdminSurface.RoutePrefix}/staff");
+
+        Assert.Equal(HttpStatusCode.Forbidden, kurulumKapisi.StatusCode);
+        Assert.Equal("identity.two_factor_setup_required", await HataKoduAsync(kurulumKapisi));
+
+        await IkinciAdimAkisi.KurAsync(api.Client);
 
         Assert.Equal(HttpStatusCode.OK,
             (await api.Client.GetAsync($"{AdminSurface.RoutePrefix}/staff")).StatusCode);
@@ -319,14 +330,36 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
     /// ayrıcalıklı tutmak, sızan parolayla açılmış bir oturumun hayatta kalmasına da
     /// kapı açardı.
     /// </summary>
+    /// <summary>
+    /// `0013` D30 — Yöneticide ikinci adım ZORUNLU ve kurulumsuz hesap kapılı bir oturum
+    /// alıyor (D13). Bu yüzden ilk giriş + parola değişiminden sonra kurulum da yapılır;
+    /// aksi hâlde bu dosyadaki yönetim istekleri `403 two_factor_setup_required` alır ve
+    /// testler ikinci adımla ilgisi olmayan bir sebeple kırmızı verirdi (**D34**).
+    ///
+    /// Yöneticiden başka roller için kurulum yapılmaz: onlarda ikinci adım opsiyoneldir
+    /// (D30) ve kapı hiç çalışmaz.
+    /// </summary>
     private static async Task ParolaDegistirVeYenidenGirAsync(
         ModuleApi api,
         string kimlik,
         string mevcut,
-        string yeni)
+        string yeni,
+        bool ikinciAdimKur = true)
     {
         Assert.Equal(HttpStatusCode.NoContent, (await ParolaDegistirAsync(api, mevcut, yeni)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await GirisAsync(api, kimlik, yeni)).StatusCode);
+
+        if (!ikinciAdimKur)
+        {
+            return;
+        }
+
+        // Kurulumdan sonra YENİDEN GİRİŞ GEREKMİYOR ve bu bir tasarım sonucudur: kapı
+        // durumu her istekte kaynaktan okunan claim'den okuyor (D35), yani kurulum biten
+        // anda eldeki kapılı oturum açılıyor. Yeniden giriş denemek ayrıca D11'e
+        // çarpardı — onay kodunun adımı tüketilmiş olduğu için aynı pencerede ikinci kez
+        // kabul edilmez (D45).
+        await IkinciAdimAkisi.KurAsync(api.Client);
     }
 
     private static Task<HttpResponseMessage> EkleAsync(ModuleApi api, string kimlik, string rol) =>

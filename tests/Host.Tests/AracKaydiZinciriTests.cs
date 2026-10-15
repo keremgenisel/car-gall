@@ -34,6 +34,13 @@ public sealed class AracKaydiZinciriTests : IAsyncLifetime
 
     private WebApplicationFactory<Program>? factory;
 
+    /// <summary>
+    /// `0013` D30/D34 — kurulum Yöneticisinin ikinci adım sırrı. Kurulum **bir kez**,
+    /// `InitializeAsync`'te yapılıyor; testlerin her girişi kodu bundan hesaplıyor
+    /// (`IkinciAdim`). D28'in e2e için verdiği kararın backend karşılığı.
+    /// </summary>
+    private string ikinciAdimSirri = string.Empty;
+
     public async Task InitializeAsync()
     {
         await container.StartAsync();
@@ -63,6 +70,21 @@ public sealed class AracKaydiZinciriTests : IAsyncLifetime
             $"{AdminSurface.RoutePrefix}/me/password",
             new { currentPassword = IdentityTestSettings.SeedAdminPassword, newPassword = CalisanParola }))
             .StatusCode);
+
+        // 0013 D30/D13 — Yöneticide ikinci adım ZORUNLU ve kurulumsuz hesap kapılı bir
+        // oturum alıyor. Kurulum bir kez burada yapılır; aksi hâlde bu dosyadaki her
+        // yönetim isteği `403 two_factor_setup_required` alır ve testler ikinci adımla
+        // ilgisi olmayan bir sebeple kırmızı verirdi (D34).
+        // Parola değişimi o personelin TÜM oturumlarını düşürdü (`0006` R11/AC-22), yani
+        // eldeki çerez ölü. Yeniden giriş `two_factor_setup_required` döndürüyor ve
+        // KAPILI bir oturum veriyor (D13) — kurulumun yapılabildiği tek hâl tam bu.
+        Assert.Equal(HttpStatusCode.OK, (await kurulum.PostAsJsonAsync("/api/identity/sessions", new
+        {
+            loginId = IdentityTestSettings.SeedAdminLoginId,
+            password = CalisanParola,
+        })).StatusCode);
+
+        ikinciAdimSirri = await IkinciAdim.KurAsync(kurulum);
     }
 
     /// <summary>
@@ -391,11 +413,8 @@ public sealed class AracKaydiZinciriTests : IAsyncLifetime
     {
         HttpClient client = Istemci();
 
-        HttpResponseMessage giris = await client.PostAsJsonAsync(
-            "/api/identity/sessions",
-            new { loginId = IdentityTestSettings.SeedAdminLoginId, password = CalisanParola });
-
-        Assert.Equal(HttpStatusCode.OK, giris.StatusCode);
+        await IkinciAdim.GirAsync(
+            client, IdentityTestSettings.SeedAdminLoginId, CalisanParola, ikinciAdimSirri);
 
         return client;
     }
