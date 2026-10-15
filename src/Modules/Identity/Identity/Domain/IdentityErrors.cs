@@ -29,4 +29,41 @@ internal static class IdentityErrors
     internal const string StaffNotFound = "identity.staff_not_found";
     internal const string AlreadyDeactivated = "identity.already_deactivated";
     internal const string EmptyDisplayName = "identity.empty_display_name";
+
+    /// <summary>
+    /// D20 — **reddin iki kodu var, bir değil.** Bu kod yanlış, penceresi dolmuş ve
+    /// yeniden oynatılmış kodun **ortak** karşılığıdır; ayırmak saldırgana yakaladığı
+    /// kodun bir zamanlar geçerli olduğunu söylerdi. Kilitlenmiş hesabın ikinci adımı da
+    /// bunu döner — `0006`'nın suskunluk kuralı (R3/AC-5) aynen sürer.
+    /// </summary>
+    internal const string TwoFactorInvalid = "identity.two_factor_invalid";
+
+    /// <summary>
+    /// D20 — ara durum düştü. `TwoFactorInvalid`'dan AYRI bir koddur, çünkü personelin
+    /// yapacağı şey farklıdır: orada *"taze kod yaz"*, burada *"parolanı yeniden gir"*
+    /// (docs/conventions.md § 5'in kendi mantığı, R10).
+    /// </summary>
+    internal const string TwoFactorPendingExpired = "identity.two_factor_pending_expired";
+
+    internal const string TwoFactorNotEnrolled = "identity.two_factor_not_enrolled";
+    internal const string TwoFactorAlreadyEnrolled = "identity.two_factor_already_enrolled";
+
+    /// <summary>
+    /// D13 — kurulumu olmayan hesabın KAPISI. `403`'tür, `401` değil: kimlik vardır,
+    /// yalnız bu hâlde yetkisi yoktur. `401` dönseydi uç giriş ekranına yönlendirir ve
+    /// personel giriş–yönlendirme döngüsüne girerdi (C19, AC-27) —
+    /// <see cref="PasswordChangeRequired"/> ile birebir aynı gerekçe. Kabuk kurulum
+    /// borcunu bu koddan öğrenir (D36).
+    /// </summary>
+    internal const string TwoFactorSetupRequired = "identity.two_factor_setup_required";
+
+    /// <summary>D23 — zorunlu rolde kapatma yoktur; tek yol Yöneticinin sıfırlamasıdır.</summary>
+    internal const string TwoFactorDisableNotAllowed = "identity.two_factor_disable_not_allowed";
+
+    /// <summary>
+    /// Şifreden çözülen değer Base32 değilse: bu bir kullanıcı hatası değil, veri
+    /// bozulmasıdır (yanlış şifreleme anahtarı en olası sebep). Koda sahip tek yer
+    /// `TwoFactorSecret.FromBase32`.
+    /// </summary>
+    internal const string CorruptTwoFactorSecret = "identity.corrupt_two_factor_secret";
 }
