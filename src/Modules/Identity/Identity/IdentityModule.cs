@@ -41,6 +41,20 @@ public static class IdentityModule
                 "Identity:SeedAdmin:Password yapılandırılmamış; başlangıç Yönetici parolası olmadan uygulama başlayamaz.");
         }
 
+        if (YayinlanmisParolalar.Contains(setup.SeedAdminPassword))
+        {
+            // ADR 0011 — depo herkese açık; bu üç dize geçmişte depoda SABİT olarak
+            // durdu ve git geçmişinde sonsuza kadar kalacak. Birinin bir sunucuda
+            // `scripts/dev-up.sh`'ı çalıştırması, parolası KAMUYA AÇIK bir Yönetici
+            // hesabı kurması demek olurdu. Koşul ortama bağlı DEĞİL: bu kod tabanında
+            // ortam kavramı yok (ölçüldü) ve güvenliği ortam değişkenine bağlamak,
+            // yanlış ortamda sessizce açılan bir kapı üretir.
+            throw new InvalidOperationException(
+                "Identity:SeedAdmin:Password depoda yayınlanmış bir geliştirme varsayılanı; "
+                    + "bu parolayla uygulama başlayamaz. Kendi parolanızı yapılandırın "
+                    + "(ADR 0011).");
+        }
+
         services.AddDbContext<IdentityDbContext>(options =>
             options.UseNpgsql(
                 setup.ConnectionString,
@@ -219,4 +233,18 @@ public static class IdentityModule
 
         return new IdentityLocaleOptions(parsedDefault.Value, locales);
     }
+
+    /// <summary>
+    /// Depoda SABİT olarak yayınlanmış geliştirme/CI parolaları (ADR 0011). Bu dizeler
+    /// git geçmişinde kalıcıdır, bu yüzden reddi de kalıcıdır — liste kısalmaz, yalnızca
+    /// uzar. `tests/Architecture.Tests/YayinlanmisParolaTests.cs` depoda YENİ bir sabit
+    /// parolanın doğmadığını denetliyor.
+    /// </summary>
+    private static readonly HashSet<string> YayinlanmisParolalar =
+        new(StringComparer.Ordinal)
+        {
+            "gelistirme-parolasi",
+            "ci-kurulum-parolasi",
+            "perf-kurulum-parolasi",
+        };
 }

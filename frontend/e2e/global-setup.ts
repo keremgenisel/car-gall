@@ -18,7 +18,18 @@ import { request } from '@playwright/test'
  * parolayla giriş yapar ve hiç başarısız deneme üretmez.
  */
 const SEED_KIMLIK = process.env.E2E_SEED_ADMIN_LOGIN ?? 'yonetici@cargallery.local'
-const SEED_PAROLA = process.env.E2E_SEED_ADMIN_PASSWORD ?? 'gelistirme-parolasi'
+// ADR 0011 — varsayılan YOK. Depoda sabit bir kurulum parolası bırakmak, depo herkese
+// açık olduğu için parolası kamuya açık bir Yönetici hesabı demekti. Değer koşuyu
+// başlatandan gelir: CI'da üretilip `$GITHUB_ENV`'e yazılır, geliştirmede
+// `scripts/dev-up.sh` üretir ve ekrana yazar. Yoksa SESSİZCE 401 almak yerine burada
+// yüksek sesle düşüyoruz.
+const SEED_PAROLA = process.env.E2E_SEED_ADMIN_PASSWORD
+if (!SEED_PAROLA) {
+  throw new Error(
+    'E2E_SEED_ADMIN_PASSWORD tanımlı değil. Host hangi kurulum parolasıyla başlatıldıysa ' +
+      'aynısını ver (scripts/dev-up.sh onu ekrana yazıyor).',
+  )
+}
 
 export const YONETICI_PAROLA = 'e2e-yonetici-parolasi'
 

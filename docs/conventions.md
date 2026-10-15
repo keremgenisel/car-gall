@@ -230,6 +230,12 @@ Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod ek
   Eksik yapılandırmayla uygulama **ayağa kalkmaz**, çalışma anında patlamaz.
 - Sır (connection string, API anahtarı) repoda durmaz. Geliştirmede user-secrets,
   üretimde ortam değişkeni.
+- **Kurulum parolası repoda SABİT olarak durmaz** — geliştirme ve CI dâhil. Değer koşuyu
+  başlatandan gelir: `scripts/dev-up.sh` üretip ekrana yazar, iş akışları üretip
+  maskeler. Depo herkese açık olduğundan sabit bir dize, parolası kamuya açık bir
+  Yönetici hesabı demektir; geçmişte yayınlanmış üç dizeyi uygulama **koşulsuz**
+  reddeder ve yenisinin doğmasını `YayinlanmisParolaTests` engeller
+  (ADR `0011`).
 - Kurulum bazlı değerler (para birimi, varsayılan locale, etkin locale listesi, ülke kodu)
   **dağıtım yapılandırmasıdır** — veritabanı kaydı değildir.
 

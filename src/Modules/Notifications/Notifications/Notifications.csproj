@@ -26,6 +26,14 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <!-- 0009 D6 — backend'in ilk üçüncü parti çalışma zamanı bağımlılığı. -->
     <PackageReference Include="MailKit" Version="4.18.1" />
+    <!-- GEÇİŞLİ SABİTLEME, kendi başına kullanılmıyor: MailKit 4.18.1 (bugünkü en yeni
+         sürüm) `System.Security.Cryptography.Pkcs` 10.0.0'ı getiriyor ve o sürüm
+         CVE-2026-84008 (yüksek, DoS) ile CVE-2026-70162 (orta, DoS) kapsamında.
+         Ölçüldü: iki duyurunun ikisi de 10.x dalında **10.0.13** ile kapanıyor.
+         `TreatWarningsAsErrors` açık olduğu için NU1903 restore'u düşürüyordu — yani
+         bu satır olmadan depo DERLENMİYOR. MailKit kendi referansını yükselttiğinde bu
+         sabitleme kaldırılabilir. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
