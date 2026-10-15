@@ -5,7 +5,18 @@
 name: Performans
 
 on:
+  # ADR 0010 / K4 — C3 ölçümü yalnız KOD değiştiğinde anlamlı. Metin-PR'ında bu iş hiç
+  # kuyruğa girmez (sıfır dakika) ve `C3 eşikleri` kapısı o PR'da görünmez. Bunun
+  # PR'ı kilitlememesinin sebebi ölçüldü: `main`'de dal koruması yok, yani zorunlu
+  # durum kapısı yok. Pro'ya geçilip koruma açılırsa zorunlu listeye YALNIZ Backend konur.
   pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'frontend/**'
+      - 'scripts/**'
+      - '*.slnx'
+      - '.github/workflows/perf.yml'
   workflow_dispatch:
 
 jobs:

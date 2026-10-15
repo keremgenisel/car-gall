@@ -134,14 +134,38 @@
   --media-aspect-ratio: 4 / 3;
 
   /* Daraltma çubuğunun ölçülmüş yüksekliği: legend + seçenek satırı + özet satırı.
-     İskelet bu yüksekliği baştan tutar, yoksa çubuk belirince düzen kayar (CLS). */
-  --filter-bar-min-block-size: 132px;
+     Hem İSKELET hem GERÇEK çubuk bu yüksekliği tutar (styles.css `.filter-bar`), yoksa
+     çubuk belirdiğinde altındaki her şey kayar (CLS).
+
+     Sayı genişliğe göre değişir, çünkü altı kasa tipi çipi satır sarıyor. Üçü de
+     2026-10-15'te ÖLÇÜLDÜ (tr/en/ar, canlı vitrin; değer en yüksek locale'den alındı):
+       < 30rem → 3 satır → 238px
+       ≥ 30rem → 2 satır → 195px
+       ≥ 54rem → 1 satır → 152px
+     Kırılımlar ölçülen geçişten biraz GENİŞ tutuldu (2→1 geçişi 768–860px arasında):
+     fazla ayırmak boşluk üretir, eksik ayırmak kayma — ikisi aynı şey değil. */
+  --filter-bar-min-block-size: 238px;
   --form-control-min-block-size: 44px;
 
   /* 0008 — onay kutusu. Genişlik okunabilir satır uzunluğunu aşmaz; katman sırası
      tek yerde tanımlı olsun diye token. */
   --size-dialog: 420px;
   --z-dialog: 100;
+}
+
+/* Daraltma çubuğunun ayrılan yüksekliği — ölçülmüş kırılımlar (yukarıdaki nota bakın).
+   Token'ın kendisi yeniden tanımlanıyor, kuralı kullanan seçici değil: ayrılan yükseklik
+   tek yerde yaşar ve `.filter-bar` ile iskeleti aynı sayıyı okur. */
+@media (width >= 30rem) {
+  :root {
+    --filter-bar-min-block-size: 195px;
+  }
+}
+
+@media (width >= 54rem) {
+  :root {
+    --filter-bar-min-block-size: 152px;
+  }
 }
 
 /*
