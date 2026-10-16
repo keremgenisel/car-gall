@@ -73,7 +73,14 @@ public sealed class IkinciAdimSifirlamaTests(IdentityDatabase database)
         Assert.Equal(IdentityHarness.KurtarmaKoduSayisi, durum.Value.RemainingRecoveryCodes);
     }
 
-    [Fact(DisplayName = "0013/AC-41: Opsiyonel roldeki personel ikinci adımı **mevcut parolası ve geçerli bir kodla** kapatır; ikisinden biri eksik veya yanlışsa kapatma reddedilir")]
+    /// <summary>
+    /// **AC-34 de burada ölçülüyor** ve etiketi bu yüzden eklendi (bir dış bulgu): test
+    /// opsiyonel rolde (`sales_advisor`) bir personel kurup ikinci adımı onun kendi
+    /// komutuyla kuruyor — AC-34'ün iddiası birebir bu. Etiket yokken *"bu kriterin testi
+    /// var mı"* sorusu tek bir `grep` ile **hayır** cevabı veriyordu; kuralın yazılı
+    /// gerekçesi tam olarak o sorunun cevaplanabilir olması (`docs/testing.md` § 1).
+    /// </summary>
+    [Fact(DisplayName = "0013/AC-34, 0013/AC-41: Opsiyonel roldeki personel ikinci adımı **kendi isteğiyle** kurar ve **mevcut parolası ve geçerli bir kodla** kapatır; ikisinden biri eksik veya yanlışsa kapatma reddedilir")]
     public async Task Kapatir_ParolaVeKodla_OpsiyonelRolde()
     {
         (IdentityHarness harness, _, _, _) = await KurAsync();

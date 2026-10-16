@@ -329,15 +329,13 @@ public sealed class YonetimEndpointTests(IdentityDatabase database)
     /// YENİDEN GİRİŞ yapılır. Kriterin "tüm" sözcüğü bunu gerektiriyor; mevcut oturumu
     /// ayrıcalıklı tutmak, sızan parolayla açılmış bir oturumun hayatta kalmasına da
     /// kapı açardı.
-    /// </summary>
-    /// <summary>
-    /// `0013` D30 — Yöneticide ikinci adım ZORUNLU ve kurulumsuz hesap kapılı bir oturum
-    /// alıyor (D13). Bu yüzden ilk giriş + parola değişiminden sonra kurulum da yapılır;
-    /// aksi hâlde bu dosyadaki yönetim istekleri `403 two_factor_setup_required` alır ve
-    /// testler ikinci adımla ilgisi olmayan bir sebeple kırmızı verirdi (**D34**).
     ///
-    /// Yöneticiden başka roller için kurulum yapılmaz: onlarda ikinci adım opsiyoneldir
-    /// (D30) ve kapı hiç çalışmaz.
+    /// <para>`0013` D30 — Yöneticide ikinci adım ZORUNLU ve kurulumsuz hesap kapılı bir
+    /// oturum alıyor (D13). Bu yüzden ilk giriş + parola değişiminden sonra kurulum da
+    /// yapılır; aksi hâlde bu dosyadaki yönetim istekleri `403 two_factor_setup_required`
+    /// alır ve testler ikinci adımla ilgisi olmayan bir sebeple kırmızı verirdi
+    /// (**D34**). Yöneticiden başka roller için kurulum yapılmaz: onlarda ikinci adım
+    /// opsiyoneldir (D30) ve kapı hiç çalışmaz.</para>
     /// </summary>
     private static async Task ParolaDegistirVeYenidenGirAsync(
         ModuleApi api,

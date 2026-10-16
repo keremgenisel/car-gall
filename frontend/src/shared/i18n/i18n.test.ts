@@ -75,7 +75,7 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
   })
 })
 
-describe('0012c/AC-37: toplu eylemin sayısı Arapçada da doğru çoğul biçimini kullanır', () => {
+describe('0012c/AC-37, 0013/AC-57: sayı taşıyan mesajlar Arapçada da doğru çoğul biçimini kullanır', () => {
   /**
    * Bu test bir dış bulgunun bedeli. Altı başarı mesajının **beşi** ve kısmi başarı
    * paneli yalnız `other` biçimini taşıyordu: aynı ekranda "yayına al" doğru cümle
