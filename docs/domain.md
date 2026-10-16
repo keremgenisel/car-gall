@@ -24,6 +24,9 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Personel** | `Staff` | Galeride çalışan kullanıcı. Rolü vardır, opsiyonel olarak bir şubeye bağlıdır. |
 | **Danışman** | `SalesAdvisor` | Talepleri yürüten personel rolü. |
 | **Takım Yöneticisi** | — | Karar mercii. Kod içinde bir rol değildir; süreç rolüdür (`AGENTS.md` Altın Kural 2). |
+| **İkinci Adım** | `TwoFactorEnrollment` | Personelin girişte paroladan sonra geçtiği, kendi cihazında üretilen zamana bağlı kod. Kaydın kendisi: sır + kurtarma kodları + kurulum anı. Yönetici rolünde **zorunlu**, diğer rollerde opsiyonel. *(spec `0013`, 2026-10-15.)* |
+| **Kurtarma Kodu** | `RecoveryCode` | İkinci adımı üretemeyen personelin bir kez kullanabildiği yedek kod. Tek kullanımlıktır, özetlenerek saklanır ve yalnız kurulum anında bir kez gösterilir. *(spec `0013`, 2026-10-15.)* |
+| **Doğrulama Sırrı** | `TwoFactorSecret` | İkinci adımın kodunu üreten paylaşılan sır. Geri döndürülebilir biçimde saklanmak **zorundadır** (kod ancak aynı sırla yeniden üretilerek doğrulanır); veritabanında açık metin durmaz. *(spec `0013`, 2026-10-15.)* |
 
 ### Araç ve vitrin
 

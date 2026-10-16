@@ -159,6 +159,14 @@ Domain → (hiçbir şey; yalnızca BuildingBlocks primitive'leri)
     kırpmak "17 kayıt uygulanmadı"yı sessizce üretir.
   *(Üç madde: spec `0012b` / D27, D28, D29; Takım Yöneticisi onayı 2026-10-11.)*
 
+- **Çok adımlı bir akışın ADIMI hata değildir.** Parola doğru ama ikinci adım bekleniyor
+  gibi bir ara hâl `4xx` ile değil **`200` + ayrıştırıcılı gövde** ile döner ve gövde
+  **hangi adımın geldiğini** söyler. *Neden:* uç 2xx dışını hata olarak işliyor ve normal
+  bir adımı hata metni olarak basardı; `401` ayrıca kabuğu giriş ekranına yollar (`0006`
+  C19/AC-27) ve personel adım atamaz. **Bekleyen gövde kimlik taşımaz:** adım geçilmeden
+  kullanıcının adı, rolü ve dili dönmez — aksi hâlde yarım geçilmiş bir kimlik doğrulama,
+  tam bir kimlik ifşası olurdu. *(Spec `0013` / D15, Takım Yöneticisi onayı 2026-10-15.)*
+
 **`errorCode` adlandırması:** `<alan>.<durum>[.<ayrıntı>]`, hepsi snake_case, nokta ayraçlı.
 Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod eklenir.
 
