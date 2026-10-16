@@ -49,6 +49,16 @@ public sealed class IkinciAdimSizintiTests(IdentityDatabase database)
             CancellationToken.None);
 
         Assert.NotEmpty(logger.Kayitlar);
+
+        // Önce KOŞULUN kurulduğu ölçülüyor: en az bir parametreli komut loglandı ve
+        // parametre değerleri maskelenmedi. Bu iddia olmadan `EnableSensitiveDataLogging`
+        // sessizce kaldırılabilir ve test, aradığı şeyi arayamadığı hâlde yeşil kalır —
+        // kartın kapanış turunda ölçülen dış bulgu #6 tam buydu.
+        Assert.Contains(
+            logger.Kayitlar,
+            kayit => kayit.Contains("Parameters=[@", StringComparison.Ordinal)
+                && !kayit.Contains("='?'", StringComparison.Ordinal));
+
         Assert.DoesNotContain(logger.Kayitlar, kayit => kayit.Contains(sir, StringComparison.Ordinal));
         Assert.DoesNotContain(
             logger.Kayitlar,
@@ -166,6 +176,12 @@ public sealed class IkinciAdimSizintiTests(IdentityDatabase database)
                 npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", IdentityDbContext.Schema))
             .UseLoggerFactory(LoggerFactory.Create(logging =>
                 logging.AddProvider(logger).SetMinimumLevel(LogLevel.Debug)))
+            // Hassas veri loglaması AÇIK: bu testin ölçtüğü senaryo tam olarak "biri bir
+            // gün tanılama için bunu açarsa sır loga düşer mi" sorusudur ve kapalıyken EF
+            // parametreleri `'?'` olarak maskeler, yani test sızıntıyı ARAYAMAZ. Alttaki
+            // `ConfigureWarnings` yalnız bu satır yüzünden doğan uyarıyı bastırır —
+            // ikisi birlikte anlamlıdır, biri olmadan diğeri ölü satırdır.
+            .EnableSensitiveDataLogging()
             .ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.SensitiveDataLoggingEnabledWarning));
 
         return new IdentityDbContext(builder.Options);
