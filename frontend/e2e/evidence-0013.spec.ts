@@ -1,7 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 import { kanit, kanitSayfa } from './kanit'
 import { YONETICI_PAROLA } from './global-setup'
-import { girisYap, ikinciAdimKurAsync, yoneticiOlarakGirAsync } from './giris'
+import {
+  girisYap,
+  ikinciAdimKurAsync,
+  oturumuBirakAsync,
+  yeniKurulmusYoneticiAsync,
+  yoneticiOlarakGirAsync,
+} from './giris'
 
 /**
  * `0013`'ün görsel kanıtı. Yazma AÇIKÇA istenir (`npm run evidence`,
@@ -17,16 +23,44 @@ import { girisYap, ikinciAdimKurAsync, yoneticiOlarakGirAsync } from './giris'
  */
 
 const SEED_KIMLIK = 'yonetici@cargallery.local'
+/*
+ * `0013` — bu dosyanın testleri KENDİ hesabını kuruyor: personel ekleme, ilk parola
+ * değişimi, kurulum ve iki fazlı giriş. Varsayılan 30 saniyelik test zaman aşımı bu
+ * zincire yetmiyor (ölçüldü: mobil profilde 30 sn aşıldı) ve süreyi uzatmak kriteri
+ * değiştirmiyor — kendi hesabı kullanmanın sebebi D45'in ölçülmüş tavanı.
+ */
+test.describe.configure({ timeout: 90_000 })
 
 function benzersizKimlik(onek: string) {
   return `${onek}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@ornek.com`
 }
 
-test('0013/AC-19: İkinci adım giriş ekranının bir fazıdır (kanıt)', async ({ page }) => {
+/**
+ * Giriş AKIŞINI gösteren kanıtlar **kendi** hesabıyla üretiliyor: kurulum hesabıyla
+ * yapılan her gerçek giriş D11'in otuz saniyelik penceresine ve R8'in paylaşılan
+ * kilitlenme sayacına yazıyor (D45/D46'nın uygulama turundaki ölçümü).
+ */
+async function akisHesabiAsync(page: Page) {
+  await yoneticiOlarakGirAsync(page, SEED_KIMLIK, YONETICI_PAROLA)
+
+  const kimlik = benzersizKimlik('kanit-akis')
+  const parola = 'kanit-akis-parola1'
+  const sir = await yeniKurulmusYoneticiAsync(page, kimlik, 'ilk-parola-1234', parola)
+
+  return { kimlik, parola, sir }
+}
+
+async function parolaFaziniGecAsync(page: Page, kimlik: string, parola: string) {
   await page.goto('/admin')
-  await page.getByLabel('E-posta').fill(SEED_KIMLIK)
-  await page.getByLabel('Parola', { exact: true }).fill(YONETICI_PAROLA)
+  await page.getByLabel('E-posta').fill(kimlik)
+  await page.getByLabel('Parola', { exact: true }).fill(parola)
   await page.getByRole('button', { name: 'Giriş yap' }).click()
+}
+
+test('0013/AC-19: İkinci adım giriş ekranının bir fazıdır (kanıt)', async ({ page }) => {
+  const hesap = await akisHesabiAsync(page)
+
+  await parolaFaziniGecAsync(page, hesap.kimlik, hesap.parola)
 
   await expect(page.getByLabel('Doğrulama kodu')).toBeVisible()
   await expect(page.getByTestId('two-factor-switch-user')).toBeVisible()
@@ -35,13 +69,12 @@ test('0013/AC-19: İkinci adım giriş ekranının bir fazıdır (kanıt)', asyn
 })
 
 test('0013/AC-21: Yanlış kod reddedilir; faz korunur (kanıt)', async ({ page }) => {
-  await page.goto('/admin')
-  await page.getByLabel('E-posta').fill(SEED_KIMLIK)
-  await page.getByLabel('Parola', { exact: true }).fill(YONETICI_PAROLA)
-  await page.getByRole('button', { name: 'Giriş yap' }).click()
+  const hesap = await akisHesabiAsync(page)
+
+  await parolaFaziniGecAsync(page, hesap.kimlik, hesap.parola)
 
   await page.getByLabel('Doğrulama kodu').fill('000000')
-  await page.getByRole('button', { name: 'Doğrula' }).click()
+  await page.getByRole('button', { name: 'Doğrula', exact: true }).click()
 
   await expect(page.getByTestId('login-error')).toBeVisible()
 
@@ -49,10 +82,9 @@ test('0013/AC-21: Yanlış kod reddedilir; faz korunur (kanıt)', async ({ page 
 })
 
 test('0013/AC-55: Ara durum düşünce parola fazına dönülür (kanıt)', async ({ page }) => {
-  await page.goto('/admin')
-  await page.getByLabel('E-posta').fill(SEED_KIMLIK)
-  await page.getByLabel('Parola', { exact: true }).fill(YONETICI_PAROLA)
-  await page.getByRole('button', { name: 'Giriş yap' }).click()
+  const hesap = await akisHesabiAsync(page)
+
+  await parolaFaziniGecAsync(page, hesap.kimlik, hesap.parola)
 
   await expect(page.getByLabel('Doğrulama kodu')).toBeVisible()
 
@@ -67,7 +99,7 @@ test('0013/AC-55: Ara durum düşünce parola fazına dönülür (kanıt)', asyn
   )
 
   await page.getByLabel('Doğrulama kodu').fill('123456')
-  await page.getByRole('button', { name: 'Doğrula' }).click()
+  await page.getByRole('button', { name: 'Doğrula', exact: true }).click()
 
   // Parola fazı geri geldi ve sebebi orada yazılı.
   await expect(page.getByLabel('Parola', { exact: true })).toBeVisible()
@@ -112,7 +144,7 @@ test('0013/AC-10, 0013/AC-38: Kurulum ekranı ve kalan kurtarma kodu sayısı (k
   const yeniParola = 'kanit-parolasi-12'
 
   await personelEkleAsync(page, kimlik, ilkParola, 'sales_advisor')
-  await cikisAsync(page)
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, ilkParola)
   await page.getByLabel('Mevcut parolanız').fill(ilkParola)
@@ -180,7 +212,7 @@ test('0013/AC-56: Arapça tercih eden personelin kurulum ekranı RTL (kanıt)', 
   const yeniParola = 'arapca-parola-12'
 
   await personelEkleAsync(page, kimlik, ilkParola, 'sales_advisor', 'ar')
-  await cikisAsync(page)
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, ilkParola)
   await page.getByLabel('كلمة مرورك الحالية').fill(ilkParola)
@@ -216,9 +248,4 @@ async function personelEkleAsync(
   await page.getByRole('button', { name: 'Personeli ekle' }).click()
 
   await expect(page.getByText(kimlik)).toBeVisible()
-}
-
-async function cikisAsync(page: Page) {
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
 }

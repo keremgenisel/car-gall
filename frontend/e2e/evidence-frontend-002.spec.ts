@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { kanit, kanitSayfa } from './kanit'
 import { YONETICI_PAROLA } from './global-setup'
-import { girisYap as ortakGirisYap } from './giris'
+import { girisYap as ortakGirisYap, oturumuBirakAsync } from './giris'
 
 const SEED_KIMLIK = 'yonetici@cargallery.local'
 
@@ -250,8 +250,7 @@ test('frontend-002/AC-25: onay anında sayılan her ekran yeni token değerleriy
   await page.getByRole('button', { name: 'Personeli ekle' }).press('Enter')
   await expect(page.getByText(kimlik)).toBeVisible()
 
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
+  await oturumuBirakAsync(page)
 
   await page.getByLabel('E-posta').fill(kimlik)
   await page.getByLabel('Parola').fill(ilkParola)

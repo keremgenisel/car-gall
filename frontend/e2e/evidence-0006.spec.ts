@@ -1,7 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 import { kanit } from './kanit'
 import { YONETICI_PAROLA } from './global-setup'
-import { girisYap } from './giris'
+import {
+  girisYap,
+  yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync,
+  oturumuBirakAsync,
+} from './giris'
 
 /**
  * `0013` D28/D46 — giriş yolu ORTAK yardımcıya taşındı (`e2e/giris.ts`): D30 Yönetici'de
@@ -28,9 +32,14 @@ async function dugmeyeBasAsync(page: Page, ad: string) {
   await page.getByRole('button', { name: ad }).press('Enter')
 }
 
+/**
+ * `0013` D45'in ölçümü — panele girmesi yeterli olan testler **paylaşılan oturum
+ * çerezini** kullanıyor. Her biri gerçek bir ikinci adım geçseydi hesap başına otuz
+ * saniyelik pencere süiti yarım saat bekletirdi; dahası her kod denemesi R8'in
+ * paylaşılan sayacını artırıyor. Giriş AKIŞINI ölçen testler gerçek girişi kullanıyor.
+ */
 async function yoneticiOlarakGirAsync(page: Page) {
-  await girisYap(page, SEED_KIMLIK, YONETICI_PAROLA)
-  await expect(page.getByTestId('admin-shell')).toBeVisible()
+  await ortakYoneticiOlarakGirAsync(page, SEED_KIMLIK, YONETICI_PAROLA)
 }
 
 test('0006/AC-24, 0006/AC-61: oturumsuz yönetim ekranı giriş ekranına düşer (TR)', async ({
@@ -103,8 +112,7 @@ test('0006/AC-32: zorunlu parola değişimi ekranı', async ({ page }) => {
   await dugmeyeBasAsync(page, 'Personeli ekle')
   await expect(page.getByText(kimlik)).toBeVisible()
 
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, 'ilk-parola-1234')
 
@@ -141,8 +149,7 @@ test('0006/AC-55, 0006/AC-61: Arapça tercih eden personel için panel RTL (AR)'
   await dugmeyeBasAsync(page, 'Personeli ekle')
   await expect(page.getByText(kimlik)).toBeVisible()
 
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, ilkParola)
   await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
@@ -179,8 +186,7 @@ test('0006/AC-61: giriş ekranı İngilizce', async ({ page }) => {
   await dugmeyeBasAsync(page, 'Personeli ekle')
   await expect(page.getByText(kimlik)).toBeVisible()
 
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, ilkParola)
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')

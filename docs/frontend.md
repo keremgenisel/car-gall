@@ -222,7 +222,7 @@ komutu olmayan kapı, kapı değildir.
 
 | Kapı | Komut | Ne kırar |
 |---|---|---|
-| Tip kontrolü | `npm run typecheck` | `tsc --noEmit`, hatasız |
+| Tip kontrolü | `npm run typecheck` | `tsc --noEmit`, hatasız — **`src/` ve `e2e/` birlikte**. `e2e/` 2026-10-16'ya kadar kapsam dışındaydı ve bu ölçülmüş bir boşluktu: `0013`'ün e2e yardımcısında eksik bir import ve `isVisible`'ın beklemediği bir çağrı, ancak üç e2e koşusu sonra göründü. Playwright spec'leri kendi derleyicisiyle (esbuild) çalıştırıyor ve **tip hatası bildirmiyor** |
 | Lint (JS/TS) | `npm run lint` | ESLint — hatasız, **uyarı da kabul edilmez** |
 | Biçim | `npm run format:check` | Prettier — biçim farkı yok |
 | Lint (CSS) | `npm run lint:css` | Fiziksel yön özellikleri (§ 6) ve gömülü hex/px (§ 4.1) |

@@ -2,9 +2,10 @@ import { expect, test, type Page } from '@playwright/test'
 import { YONETICI_PAROLA } from './global-setup'
 import {
   girisYap,
-  ikinciAdimKodu,
   ikinciAdimKurAsync,
-  ikinciAdimSirriniOku,
+  oturumuBirakAsync,
+  tazeKodAsync,
+  yeniKurulmusYoneticiAsync,
   yoneticiOlarakGirAsync,
 } from './giris'
 
@@ -15,17 +16,41 @@ import {
  */
 
 const SEED_KIMLIK = 'yonetici@cargallery.local'
+/*
+ * `0013` — bu dosyanın testleri KENDİ hesabını kuruyor: personel ekleme, ilk parola
+ * değişimi, kurulum ve iki fazlı giriş. Varsayılan 30 saniyelik test zaman aşımı bu
+ * zincire yetmiyor (ölçüldü: mobil profilde 30 sn aşıldı) ve süreyi uzatmak kriteri
+ * değiştirmiyor — kendi hesabı kullanmanın sebebi D45'in ölçülmüş tavanı.
+ */
+test.describe.configure({ timeout: 90_000 })
 
 function benzersizKimlik(onek: string) {
   return `${onek}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@ornek.com`
 }
 
+/**
+ * Giriş AKIŞINI ölçen testler **kendi** hesabıyla koşuyor: kurulum hesabıyla yapılan her
+ * gerçek giriş D11'in otuz saniyelik penceresine ve R8'in paylaşılan kilitlenme sayacına
+ * yazıyor (D45'in uygulama turundaki ölçümü). Taze hesap ikisini de kendi üzerinde taşır.
+ */
+async function akisHesabiAsync(page: Page) {
+  await yoneticiOlarakGirAsync(page, SEED_KIMLIK, YONETICI_PAROLA)
+
+  const kimlik = benzersizKimlik('akis')
+  const parola = 'akis-parolasi-12'
+  const sir = await yeniKurulmusYoneticiAsync(page, kimlik, 'ilk-parola-1234', parola)
+
+  return { kimlik, parola, sir }
+}
+
 test('0013/AC-19: İkinci adım giriş ekranının bir fazıdır: adım geçilmeden panele gezinme olmaz', async ({
   page,
 }) => {
+  const hesap = await akisHesabiAsync(page)
+
   await page.goto('/admin')
-  await page.getByLabel('E-posta').fill(SEED_KIMLIK)
-  await page.getByLabel('Parola', { exact: true }).fill(YONETICI_PAROLA)
+  await page.getByLabel('E-posta').fill(hesap.kimlik)
+  await page.getByLabel('Parola', { exact: true }).fill(hesap.parola)
   await page.getByRole('button', { name: 'Giriş yap' }).click()
 
   // Faz değişti ama EKRAN aynı: kart hâlâ `login-form` ve panel kabuğu yok.
@@ -42,17 +67,17 @@ test('0013/AC-19: İkinci adım giriş ekranının bir fazıdır: adım geçilme
 test('0013/AC-21, 0013/AC-20: Yanlış kod reddedilir ve taze kod istenir; doğru kodla oturum açılır', async ({
   page,
 }) => {
-  const sir = ikinciAdimSirriniOku()!
+  const hesap = await akisHesabiAsync(page)
 
   await page.goto('/admin')
-  await page.getByLabel('E-posta').fill(SEED_KIMLIK)
-  await page.getByLabel('Parola', { exact: true }).fill(YONETICI_PAROLA)
+  await page.getByLabel('E-posta').fill(hesap.kimlik)
+  await page.getByLabel('Parola', { exact: true }).fill(hesap.parola)
   await page.getByRole('button', { name: 'Giriş yap' }).click()
 
   const kod = page.getByLabel('Doğrulama kodu')
 
   await kod.fill('000000')
-  await page.getByRole('button', { name: 'Doğrula' }).click()
+  await page.getByRole('button', { name: 'Doğrula', exact: true }).click()
 
   // Red FAZI KORUYOR: personel taze kodu aynı ekranda yazıyor.
   await expect(page.getByTestId('login-error')).toBeVisible()
@@ -64,16 +89,18 @@ test('0013/AC-21, 0013/AC-20: Yanlış kod reddedilir ve taze kod istenir; doğr
   expect(govde).not.toContain('identity.')
   expect(govde).not.toContain('401')
 
-  await kod.fill(ikinciAdimKodu(sir))
-  await page.getByRole('button', { name: 'Doğrula' }).click()
+  await kod.fill(await tazeKodAsync(page, hesap.sir))
+  await page.getByRole('button', { name: 'Doğrula', exact: true }).click()
 
   await expect(page.getByTestId('admin-shell')).toBeVisible()
 })
 
 test('0013/AC-17: Kullanıcı değiştir ara durumu siler ve parola fazına döner', async ({ page }) => {
+  const hesap = await akisHesabiAsync(page)
+
   await page.goto('/admin')
-  await page.getByLabel('E-posta').fill(SEED_KIMLIK)
-  await page.getByLabel('Parola', { exact: true }).fill(YONETICI_PAROLA)
+  await page.getByLabel('E-posta').fill(hesap.kimlik)
+  await page.getByLabel('Parola', { exact: true }).fill(hesap.parola)
   await page.getByRole('button', { name: 'Giriş yap' }).click()
 
   await page.getByTestId('two-factor-switch-user').click()
@@ -93,7 +120,7 @@ test('0013/AC-29, 0013/AC-30: Zorunlu rolde kurulumsuz personel kapılı oturum 
   const yeniParola = 'kapili-parola-12'
 
   await personelEkleAsync(page, kimlik, ilkParola, 'manager')
-  await cikisAsync(page)
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, ilkParola)
 
@@ -117,7 +144,7 @@ test('0013/AC-29, 0013/AC-30: Zorunlu rolde kurulumsuz personel kapılı oturum 
   await expect(page.getByTestId('admin-shell')).toBeVisible()
 
   // Ve sıradaki giriş artık ikinci adım istiyor.
-  await cikisAsync(page)
+  await oturumuBirakAsync(page)
   await girisYap(page, kimlik, yeniParola, sir)
   await expect(page.getByTestId('admin-shell')).toBeVisible()
 })
@@ -131,7 +158,7 @@ test('0013/AC-36: Kodunu üretemeyen personel kurtarma koduyla giriş yapar', as
 
   // Opsiyonel rol: kurulum ZORUNLU değil, personel kendi isteğiyle açıyor (D30).
   await personelEkleAsync(page, kimlik, ilkParola, 'sales_advisor')
-  await cikisAsync(page)
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, ilkParola)
   await page.getByLabel('Mevcut parolanız').fill(ilkParola)
@@ -150,7 +177,7 @@ test('0013/AC-36: Kodunu üretemeyen personel kurtarma koduyla giriş yapar', as
 
   expect(kodlar.length).toBeGreaterThan(1)
 
-  await cikisAsync(page)
+  await oturumuBirakAsync(page)
 
   await page.goto('/admin')
   await page.getByLabel('E-posta').fill(kimlik)
@@ -159,7 +186,7 @@ test('0013/AC-36: Kodunu üretemeyen personel kurtarma koduyla giriş yapar', as
 
   await page.getByTestId('two-factor-toggle-input').click()
   await page.getByLabel('Kurtarma kodu').fill(kodlar[0]!.trim())
-  await page.getByRole('button', { name: 'Doğrula' }).click()
+  await page.getByRole('button', { name: 'Doğrula', exact: true }).click()
 
   await expect(page.getByTestId('admin-shell')).toBeVisible()
 
@@ -178,9 +205,4 @@ async function personelEkleAsync(page: Page, kimlik: string, parola: string, rol
   await page.getByRole('button', { name: 'Personeli ekle' }).click()
 
   await expect(page.getByText(kimlik)).toBeVisible()
-}
-
-async function cikisAsync(page: Page) {
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
 }

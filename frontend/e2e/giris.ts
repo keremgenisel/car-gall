@@ -37,6 +37,48 @@ export function ikinciAdimSirriniOku(): string | null {
   return existsSync(SIR_DOSYASI) ? readFileSync(SIR_DOSYASI, 'utf8').trim() : null
 }
 
+/**
+ * Kurulum hesabının **paylaşılan oturum çerezi**.
+ *
+ * <b>Neden paylaşılıyor — ölçülmüş bir tavan:</b> D11 kabul edilen adıma eşit veya küçük
+ * olanı reddediyor ve tolerans yalnız bir adım ileriyi kabul ediyor (D10). Sonuç: bir
+ * hesap için **otuz saniyede bir giriş** (ilk pencerede iki). Depodaki e2e akışları
+ * kurulum hesabıyla **altmıştan fazla** kez giriş yapıyor; her biri gerçek bir ikinci
+ * adım geçseydi süite yarım saati pencere beklemekle geçirirdi.
+ *
+ * Çözüm: `globalSetup` **bir kez** gerçek giriş yapıyor (parola + kod) ve çerezi burada
+ * bırakıyor; panele girmesi yeterli olan testler onu kullanıyor. Giriş AKIŞINI ölçen
+ * testler (`admin.spec`, `iki-adimli`, `evidence-0006`, `evidence-0013`) gerçek girişi
+ * kullanmaya devam ediyor — ölçtükleri şey tam olarak o.
+ *
+ * Paylaşılan oturum bir testin çıkışıyla düşerse yardımcı **yeniden giriş yapıp** çerezi
+ * tazeliyor; bedeli o testte bir pencere beklemesi.
+ */
+const OTURUM_DOSYASI = join(tmpdir(), 'cargall-e2e-oturum.json')
+
+interface Cerez {
+  readonly name: string
+  readonly value: string
+  readonly domain: string
+  readonly path: string
+  readonly expires: number
+  readonly httpOnly: boolean
+  readonly secure: boolean
+  readonly sameSite: 'Strict' | 'Lax' | 'None'
+}
+
+export function oturumCerezleriniYaz(cerezler: readonly Cerez[]): void {
+  writeFileSync(OTURUM_DOSYASI, JSON.stringify(cerezler), 'utf8')
+}
+
+export function oturumCerezleriniOku(): Cerez[] | null {
+  if (!existsSync(OTURUM_DOSYASI)) {
+    return null
+  }
+
+  return JSON.parse(readFileSync(OTURUM_DOSYASI, 'utf8')) as Cerez[]
+}
+
 export function adimSimdi(): number {
   return Math.floor(Date.now() / 1000 / PERIYOT_SANIYE)
 }
@@ -78,9 +120,13 @@ function base32Coz(deger: string): Buffer {
 /**
  * Parola fazı + (gerekiyorsa) ikinci adım fazı.
  *
+ * <b>`isVisible()` BEKLEMEZ ve ilk yazım bunu varsaydı:</b> tıklamadan hemen sonra
+ * sorulan `isVisible` yanıt gelmeden `false` döndü, ikinci adım fazı atlandı ve 105 test
+ * "hiçbir son bulunamadı" diye düştü. Doğrusu önce **bir sona** beklemek, sonra dallanmak.
+ *
  * Başarılı giriş TAM GEZİNME yapıyor (panelin dili sunucudan basılıyor); beklemeden bir
- * sonraki `goto` o gezinmeyi yarıda keser ve `ERR_ABORTED` verir. Bu yüzden dört sondan
- * biri beklenir: kabuk · parola ekranı · kurulum ekranı · giriş hatası.
+ * sonraki `goto` o gezinmeyi yarıda keser ve `ERR_ABORTED` verir. Bu yüzden beş sondan
+ * biri beklenir: kabuk · parola ekranı · kurulum ekranı · giriş hatası · **kod alanı**.
  */
 export async function girisYap(
   page: Page,
@@ -101,54 +147,128 @@ export async function girisYap(
   // seçilen şey alanın KİMLİĞİ, çünkü bu bir yardımcı, bir kriter değil.
   const kodAlani = page.locator('#two-factor-code')
 
+  await expect(sonlar(page).or(kodAlani).first()).toBeVisible()
+
   // İkinci adım fazı yalnız kurulumu OLAN hesapta geliyor (D4); opsiyonel roldeki
   // personel bu dalı hiç görmüyor (D30).
-  if (await kodAlani.isVisible({ timeout: 2_000 }).catch(() => false)) {
+  if (await kodAlani.isVisible()) {
     await ikinciAdimiGecAsync(page, sir ?? zorunluSir())
   }
 
-  const kabuk = page.getByTestId('admin-shell')
-  const parolaEkrani = page.getByTestId('password-form')
-  const kurulumEkrani = page.getByTestId('two-factor-page')
-  const hata = page.getByTestId('login-error')
+  await expect(sonlar(page).first()).toBeVisible()
+}
 
-  await expect(kabuk.or(parolaEkrani).or(kurulumEkrani).or(hata)).toBeVisible()
+/** Oturum öncesi akışın olası sonları; kod alanı hariç. */
+function sonlar(page: Page) {
+  return page
+    .getByTestId('admin-shell')
+    .or(page.getByTestId('password-form'))
+    .or(page.getByTestId('two-factor-page'))
+    .or(page.getByTestId('login-error'))
 }
 
 /**
- * D11/D45 — kabul edilen adım bir daha kabul edilmez: aynı 30 saniyelik pencerede ikinci
- * bir giriş sıradaki adımın kodunu kullanmak zorunda. Paralel koşan iki işçi aynı hesaba
- * girdiğinde bu gerçekten oluyor, bu yüzden üç adım deneniyor ve gerekirse pencerenin
- * açılması beklenir — kırmızı vermek yerine beklemek testin ölçtüğü şeyi değiştirmiyor.
+ * D11/D45 — kabul edilen adım bir daha kabul edilmez.
+ *
+ * <b>Yeniden deneme PAHALI ve ölçüldü:</b> R8 gereği yanlış kod **paylaşılan kilitlenme
+ * sayacını** artırıyor, yani her "sıradaki adımı dene" bir başarısız giriş demek. İlk
+ * yazım bunu üç kez yapıyordu ve kurulum hesabını eşiğe (5) taşıyıp **on beş dakika**
+ * kilitliyordu; arkadan gelen bütün testler "e-posta veya parola hatalı" alıyordu ve
+ * kusurun yeri hiç orada değildi.
+ *
+ * Doğrusu REDDEDİLECEĞİNİ BİLDİĞİMİZ kodu hiç göndermemek: süreç içinde kullanılan son
+ * adım tutuluyor ve aynı adım ikinci kez istenirse pencerenin dönmesi beklenir. Süreçler
+ * arası çakışma için **tek** bir yeniden deneme kalıyor — bir başarısız giriş, eşiğin
+ * beşte biri.
  */
+const sonKullanilanAdim = new Map<string, number>()
+
 async function ikinciAdimiGecAsync(page: Page, sir: string): Promise<void> {
   const kodAlani = page.locator('#two-factor-code')
+  const hata = page.getByTestId('login-error')
+
+  for (let deneme = 0; deneme < 2; deneme += 1) {
+    const adim = await bosAdimAsync(page, sir)
+
+    await kodAlani.fill(ikinciAdimKodu(sir, adim))
+    await page.locator('form.admin-form button[type="submit"]').click()
+
+    // Ya bir son geldi (oturum açıldı) ya da red basıldı; ikisinden biri gelene kadar
+    // beklenir — `isVisible` tek başına yanıtı beklemiyor.
+    await expect(sonlar(page).first()).toBeVisible()
+
+    if (!(await hata.isVisible())) {
+      return
+    }
+
+    // Ara durum düştüyse kod denemenin anlamı yok: ekran parola fazına döndü (D20).
+    if (!(await kodAlani.isVisible())) {
+      throw new Error('Ara durum düştü (two_factor_pending_expired); parola fazına dönüldü.')
+    }
+  }
+
+  throw new Error(
+    'İkinci adım iki denemede de geçilemedi. Olası sebep: başka bir süreç aynı hesaba ' +
+      'aynı pencerede girdi ya da hesap kilitlendi (R8).',
+  )
+}
+
+/**
+ * Bu süreçte henüz kullanılmamış bir adım döndürür; gerekirse pencerenin dönmesini
+ * bekler. Beklemek, reddedilecek bir kod göndermekten ucuz: o kod sayaca yazılırdı.
+ */
+async function bosAdimAsync(page: Page, sir: string): Promise<number> {
+  const son = sonKullanilanAdim.get(sir) ?? 0
   let adim = adimSimdi()
 
-  for (let deneme = 0; deneme < 3; deneme += 1) {
+  if (adim <= son) {
+    adim = son + 1
+
+    // Tolerans yalnız BİR adım ileriyi kabul ediyor (D10): daha ileri bir adım için
+    // pencerenin dönmesi beklenir.
     const bekleme = (adim - 1 - adimSimdi()) * PERIYOT_SANIYE
 
     if (bekleme > 0) {
       await page.waitForTimeout((bekleme + 1) * 1_000)
     }
-
-    await kodAlani.fill(ikinciAdimKodu(sir, adim))
-    await page.locator('form.admin-form button[type="submit"]').click()
-
-    if (!(await kodAlani.isVisible({ timeout: 3_000 }).catch(() => false))) {
-      return
-    }
-
-    adim += 1
   }
 
-  throw new Error('İkinci adım üç denemede de geçilemedi; kod hesabı ya da tolerans bozuk.')
+  sonKullanilanAdim.set(sir, adim)
+
+  return adim
 }
 
-/** Kurulum hesabıyla giriş: çalışan bir Yönetici oturumu. */
+/**
+ * Çalışan bir Yönetici oturumu — **paylaşılan çerezle**.
+ *
+ * Panele girmesi yeterli olan testler bunu kullanıyor: giriş akışını değil panelin
+ * kendisini ölçüyorlar ve her biri gerçek bir ikinci adım geçseydi süite D11'in otuz
+ * saniyelik penceresine takılırdı (bkz. `OTURUM_DOSYASI`).
+ *
+ * Çerez düşmüşse (bir test çıkış yaptı ya da parola değişti) yardımcı gerçek girişi
+ * yapıp çerezi tazeliyor.
+ */
 export async function yoneticiOlarakGirAsync(page: Page, kimlik: string, parola: string) {
+  const cerezler = oturumCerezleriniOku()
+
+  if (cerezler !== null) {
+    await page.context().addCookies(cerezler)
+    await page.goto('/admin')
+
+    const kabuk = page.getByTestId('admin-shell')
+
+    await expect(kabuk.or(page.getByTestId('login-form')).first()).toBeVisible()
+
+    if (await kabuk.isVisible()) {
+      return
+    }
+  }
+
+  await page.context().clearCookies()
   await girisYap(page, kimlik, parola)
   await expect(page.getByTestId('admin-shell')).toBeVisible()
+
+  oturumCerezleriniYaz(await page.context().cookies())
 }
 
 /**
@@ -160,11 +280,16 @@ export async function ikinciAdimKurAsync(page: Page): Promise<string> {
   await page.getByTestId('two-factor-start').click()
 
   const sir = (await page.getByTestId('two-factor-manual-secret').innerText()).trim()
+  const adim = adimSimdi()
 
-  await page.locator('#two-factor-confirm-code').fill(ikinciAdimKodu(sir))
+  await page.locator('#two-factor-confirm-code').fill(ikinciAdimKodu(sir, adim))
   await page.getByTestId('two-factor-confirm').click()
 
   await expect(page.getByTestId('recovery-codes')).toBeVisible()
+
+  // ONAY KODU da bir adım tüketti (D11): bunu kaydetmezsek hemen ardından gelen giriş
+  // aynı adımı dener, reddedilir ve R8'in sayacına boşuna bir başarısızlık yazılır.
+  sonKullanilanAdim.set(sir, adim)
 
   return sir
 }
@@ -181,4 +306,83 @@ function zorunluSir(): string {
   }
 
   return sir
+}
+
+/**
+ * Giriş AKIŞINI ölçen testler için **kendi** hesabı: yeni bir Yönetici kaydeder, ilk
+ * parolasını değiştirir, ikinci adımını kurar ve sırrı döndürür.
+ *
+ * <b>Neden kendi hesabı:</b> kurulum hesabıyla yapılan her gerçek giriş hem D11'in otuz
+ * saniyelik penceresine hem R8'in paylaşılan kilitlenme sayacına yazıyor. Taze bir hesap
+ * ikisini de kendi üzerinde taşır: testler birbirini ne bekletir ne kilitler.
+ *
+ * Çağıran, çalışan bir Yönetici oturumuyla gelmek zorundadır (`yoneticiOlarakGirAsync`).
+ */
+export async function yeniKurulmusYoneticiAsync(
+  page: Page,
+  kimlik: string,
+  ilkParola: string,
+  yeniParola: string,
+): Promise<string> {
+  await page.goto('/admin')
+  await page.getByLabel('Ad soyad').fill('Akış Yöneticisi')
+  await page.getByTestId('add-staff-form').getByLabel('E-posta').fill(kimlik)
+  await page.getByLabel('İlk parola').fill(ilkParola)
+  await page.getByLabel('Rol', { exact: true }).selectOption('manager')
+  await page.getByLabel('Panel dili').selectOption('tr')
+  await page.getByRole('button', { name: 'Personeli ekle' }).click()
+
+  await expect(page.getByText(kimlik)).toBeVisible()
+
+  // Oturumu BIRAKIYORUZ, kapatmıyoruz: çıkış paylaşılan oturumu sunucuda düşürür ve
+  // arkadan gelen testlere bir pencere beklemesi ödetirdi (D45'in ölçümü).
+  await page.context().clearCookies()
+
+  await girisYap(page, kimlik, ilkParola)
+  await page.getByLabel('Mevcut parolanız').fill(ilkParola)
+  await page.getByLabel('Yeni parolanız').fill(yeniParola)
+  await page.getByRole('button', { name: 'Parolamı değiştir' }).click()
+  await expect(page.getByTestId('password-changed')).toBeVisible()
+
+  // Parola değişti; Yönetici rolünde ikinci adım ZORUNLU, yani bu giriş kapılı bir
+  // oturum veriyor (D13) ve kurulum ekranı açılıyor.
+  await girisYap(page, kimlik, yeniParola)
+  await expect(page.getByTestId('two-factor-page')).toBeVisible()
+
+  const sir = await ikinciAdimKurAsync(page)
+
+  await page.context().clearCookies()
+
+  return sir
+}
+
+/**
+ * Bu süreçte henüz kullanılmamış bir adımın kodu.
+ *
+ * Testler kodu **doğrudan** `ikinciAdimKodu` ile hesaplamamalı: kurulum onayı bir adım
+ * tüketiyor (D11) ve aynı pencerede hesaplanan kod reddedilir. Ölçüldü — `AC-21`'in e2e
+ * vakası tam bu yüzden kırmızı verdi.
+ */
+export async function tazeKodAsync(page: Page, sir: string): Promise<string> {
+  return ikinciAdimKodu(sir, await bosAdimAsync(page, sir))
+}
+
+/**
+ * Oturumu **bırakır**, kapatmaz: çerezi yalnız tarayıcıdan atar, sunucudaki satıra
+ * dokunmaz.
+ *
+ * <b>Ölçülmüş sebep:</b> çıkış paylaşılan oturumu sunucuda düşürüyor ve arkadan gelen her
+ * test gerçek girişe düşüyor; o girişler D11'in otuz saniyelik penceresinde çakışıyor,
+ * her çakışma R8'in paylaşılan sayacına bir başarısızlık yazıyor ve beşincisinde kurulum
+ * hesabı **on beş dakika** kilitleniyor. Ölçüldü: bir koşuda 246 vakanın 81'i bu
+ * zincirden düştü.
+ *
+ * Kullanıcı DEĞİŞTİRMEK isteyen testler bunu kullanıyor; çıkışın KENDİSİ `0006`
+ * AC-18/AC-19'un konusu ve onu `Host.Tests/OturumBoruHattiTests` sunucu tarafında
+ * ölçüyor.
+ */
+export async function oturumuBirakAsync(page: Page): Promise<void> {
+  await page.context().clearCookies()
+  await page.goto('/admin')
+  await expect(page.getByTestId('login-form')).toBeVisible()
 }

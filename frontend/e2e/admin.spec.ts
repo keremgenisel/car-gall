@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
 import { YONETICI_PAROLA } from './global-setup'
-import { girisYap } from './giris'
+import {
+  girisYap,
+  yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync,
+  oturumuBirakAsync,
+} from './giris'
 
 /**
  * `0013` D28/D46 — giriş yolu ORTAK yardımcıya taşındı (`e2e/giris.ts`): D30 Yönetici'de
@@ -39,8 +43,7 @@ async function dugmeyeBasAsync(page: Page, ad: string) {
 
 /** Çıkış da tam gezinme yapar; giriş ekranı basılana kadar beklenir. */
 async function cikisYap(page: Page) {
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
+  await oturumuBirakAsync(page)
 }
 
 /**
@@ -50,9 +53,14 @@ async function cikisYap(page: Page) {
  * getirildi. Buradaki fallback'i (önce dene, olmazsa değiştir) kaldırmak zorundaydık:
  * her deneme bir BAŞARISIZ GİRİŞ sayılıyor ve eşiğe ulaşınca hesap kilitleniyordu (R6).
  */
+/**
+ * `0013` D45'in ölçümü — panele girmesi yeterli olan testler **paylaşılan oturum
+ * çerezini** kullanıyor. Her biri gerçek bir ikinci adım geçseydi hesap başına otuz
+ * saniyelik pencere süiti yarım saat bekletirdi; dahası her kod denemesi R8'in
+ * paylaşılan sayacını artırıyor. Giriş AKIŞINI ölçen testler gerçek girişi kullanıyor.
+ */
 async function yoneticiOlarakGirAsync(page: Page) {
-  await girisYap(page, SEED_KIMLIK, YONETICI_PAROLA)
-  await expect(page.getByTestId('admin-shell')).toBeVisible()
+  await ortakYoneticiOlarakGirAsync(page, SEED_KIMLIK, YONETICI_PAROLA)
 }
 
 test('0006/AC-24: oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranı gelir', async ({
