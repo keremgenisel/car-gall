@@ -641,7 +641,15 @@ Yöneticisi'nindir; ama yazılı olmayan bir "son kapı", okuyana kutuya güvenm
 (**D27**'nin aynı dersi). *Bedel, açıkça:* bu kart "tek Yönetici kilitlenmez" sözünü
 VERMİYOR; R7'nin *"en az iki Yönetici zorunlu"* hâli hâlâ ayrı bir karardır.
 
-**D38 — Kurtarma kodu doğrulamasının iterasyon sayısı: 10.000 (yapılandırmadan).** D2
+**D38 — Kurtarma kodu doğrulamasının iterasyon sayısı: 10.000 (yapılandırmadan).**
+
+*Uygulama turunda ÖLÇÜLDÜ ve D2'nin tahmini yüksekti* (2026-10-16, bu makine, gerçek kod
+yolu — `PasswordHash.Matches`, PBKDF2-SHA256, .NET 10): on kodu **210.000** iterasyonla
+karşılaştırmak **295 ms**, **10.000** ile **13 ms**, **1.000** ile **1 ms** sürüyor. D2
+*"tek girişte saniyeler"* diyordu; doğrusu **çeyrek saniye** — kararı değiştirmiyor ama
+gerekçeyi doğru yere oturtuyor: 295 ms **başarısız her denemenin** sunucuya yüklediği CPU
+maliyetidir ve paylaşılan hız sınırı (D5) o maliyeti sınırlayan tek şeydir. Sayı burada
+düzeltiliyor, çünkü ölçülmeyen bir sayı spec'ten spec'e farklı şey ölçer. D2
 sayıyı kriter turuna bırakmıştı. Karar: varsayılan **10.000** ve değer yapılandırmadan
 okunur (**AC-37**). *Gerekçe:* kurtarma kodu **sistem üretimi, yüksek entropili** bir
 dizedir, insan parolası değil — ve deponun kendi emsali bunu zaten yazıyor:
@@ -709,6 +717,16 @@ bu durumda **taze kod** isteyen metni gösterir (**D20**'nin zaten ayırdığı 
 *Gerekçe:* pencere içinde aynı kodu ikinci kez kabul etmek D11'in var olma nedenini
 siler. *Bedel, açıkça:* nadir ama gerçek bir sürtünme; ekranın metni onu anlaşılır kılar.
 
+*Uygulama turunda ÖLÇÜLDÜ — bedel bir TAVAN:* D11 ile D10 birlikte hesap başına
+**otuz saniyede bir giriş** veriyor (ilk pencerede iki: `N` ve `N+1`; üçüncüsü pencerenin
+dönmesini bekler). İnsan kullanımında görünmez — personel günde birkaç kez giriyor — ama
+**e2e süiti** kurulum hesabıyla altmıştan fazla kez giriş yapıyor ve her biri gerçek bir
+ikinci adım geçerse süite yarım saati pencere beklemekle geçirir. Ölçüm bu yüzden e2e
+tarafında bir karara dönüştü (**D46**'nın ikinci yarısı): gerçek giriş `globalSetup`'ta
+**bir kez** yapılıp oturum çerezi paylaşılıyor; giriş AKIŞINI ölçen testler gerçek girişi
+kullanmaya devam ediyor. *Tavanın kendisi bir kusur değil* — tek kullanım kuralının
+kaçınılmaz sonucu — ama yazılı olmadığı sürece "testler yavaş" diye görünür.
+
 **D46 — e2e'nin giriş yolu ortak bir yardımcıya çıkar (`e2e/giris.ts`).** Ölçüldü: giriş
 yapan 14 dosyanın **dokuzu** `girisYap`'ı kendi içinde **yeniden tanımlıyor**, beşi
 doldurmayı satır içinde yapıyor. İkinci adımı on dört yerde ayrı ayrı yazmak aynı
@@ -718,6 +736,19 @@ dört dosya ona geçer. *Gerekçe:* D28'in kendi gerekçesi — on dört dosyay�
 kırmızıya çeviren karar, aynı anda düzeltilebilir olmalı. *Bedel, açıkça:* kapanmış
 spec'lerin test dosyalarına dokunuluyor; **iddiaları değişmez**, yalnız giriş adımı
 ortaklaşır ve PR her dosyayı adıyla yazar.
+
+*Uygulama turunda ÖLÇÜLDÜ — ortak yardımcı tek başına yetmedi.* İlk hâli her girişte
+gerçek bir ikinci adım geçiyordu ve iki duvara çarptı: (1) D11'in tavanı — hesap başına
+otuz saniyede bir giriş (**D45**'in ölçümü) ve Playwright'ın test zaman aşımı **30
+saniye**, yani pencereyi beklemek testi düşürüyor; (2) R8 — yanlış kod **paylaşılan
+kilitlenme sayacını** artırıyor, yani "sıradaki adımı dene" bir başarısız giriş demek ve
+üç deneme kurulum hesabını eşiğe taşıyıp **on beş dakika** kilitliyordu. Ölçüm: 246
+e2e vakasının **105'i** bu yüzden düştü ve kusurun yeri hiç ikinci adımda değildi.
+Karar üçe ayrıldı: **(a)** gerçek giriş `globalSetup`'ta bir kez yapılır ve oturum çerezi
+paylaşılır — panele girmesi yeterli olan testler onu kullanır; **(b)** giriş AKIŞINI
+ölçen testler **kendi** hesabını kurar (kendi sayacı, kendi adım geçmişi); **(c)**
+yardımcı reddedileceğini bildiği kodu hiç göndermez — kullanılan adımı hatırlar ve
+süreçler arası çakışma için **tek** bir yeniden deneme bırakır.
 
 **D47 — Ara durum satırındaki deneme sayısı İKİNCİ BİR EŞİK DEĞİLDİR.** D19 satırın
 "deneme sayısı" taşıdığını söylüyor; R8 ve § Bilinen tuzaklar 5 ise sayacı ayırmayı
@@ -903,47 +934,47 @@ yazıldı: **63 kriter**, § Acceptance Criteria.
 - [x] **Kabul kriterleri yazıldı ve `main`'e implementasyondan ÖNCE girdi** (ADR `0008` /
       K2): **63** kriter, kendi `docs/` PR'ında. Kriter turunun on dört kararı
       (**D34–D47**) Context'e işlendi.
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0013-ac<n>.png`), hata ve
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0013-ac<n>.png`), hata ve
       kilitlenme durumları dâhil, RTL için Arapça görüntü de var.
-- [ ] Sırrın ve kurtarma kodlarının yanıtta, logda ve hata metninde görünmediği testle
+- [x] Sırrın ve kurtarma kodlarının yanıtta, logda ve hata metninde görünmediği testle
       gösterildi (C2).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — `Identity` sınırları korundu.
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `identity` şemasına dokunuyor.
-- [ ] Mockup'taki iki çelişkili metin — *"Sahip hesabı"* (**D30**: rol yok, zorunluluk
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — `Identity` sınırları korundu.
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `identity` şemasına dokunuyor.
+- [x] Mockup'taki iki çelişkili metin — *"Sahip hesabı"* (**D30**: rol yok, zorunluluk
       **Yönetici**'de) ve *"8 hatalı deneme"* (**D8**: eşik **5**) — tasarım tarafında
       güncellendi veya PR'da **açıkça** uyumsuz olarak not edildi.
-- [ ] **`0008`'in görsel kanıtı yenilendi ve kriterinin iddiası dokunulmadan kaldı**
+- [x] **`0008`'in görsel kanıtı yenilendi ve kriterinin iddiası dokunulmadan kaldı**
       (**D27**, birinci turun ölçümünü düzeltir): `0008-ac1.png` dördüncü eylemle
       yeniden üretildi · `evidence-0008.spec.ts:56` ve `StaffRowActions.test.tsx:71`'in
       *"üç eylem"* diyen **başlıkları** güncellendi · PR'da **hiçbir testin kırılmadığı**
       ve `0008`/AC-1'in hâlâ doğru olduğu gösterildi. Kırmızı test **beklenmiyor**;
       beklenirse ölçüm yine yanlış demektir.
-- [ ] **`0008`'in personel listesi sözleşmesine eklenen alan PR'da adıyla yazıldı**
+- [x] **`0008`'in personel listesi sözleşmesine eklenen alan PR'da adıyla yazıldı**
       (`StaffListItem` + yönetim listesi yanıtı); rozet veri olmadan basılamaz.
-- [ ] **Doğrulama sırrının veritabanında açık metin DURMADIĞI** testle gösterildi ve
+- [x] **Doğrulama sırrının veritabanında açık metin DURMADIĞI** testle gösterildi ve
       şifreleme anahtarının dağıtım yapılandırmasından geldiği doğrulandı (**D3**).
       Anahtar döndürme **§ X7**'de gerekçesiyle kapsam dışı (**D39**).
-- [ ] **Aynı zamana bağlı kodun iki kez kabul edilmediği** testle gösterildi (**D11**),
+- [x] **Aynı zamana bağlı kodun iki kez kabul edilmediği** testle gösterildi (**D11**),
       saat kayması toleransı ±1 adım olarak ölçüldü (**D10**).
-- [ ] **Kurtarma kodu doğrulamasının maliyeti ölçüldü** ve iterasyon sayısının
+- [x] **Kurtarma kodu doğrulamasının maliyeti ölçüldü** ve iterasyon sayısının
       yapılandırmadan geldiği gösterildi (**D2**) — on özetlemenin üretim değeriyle
       saniyeler sürdüğü hesabı PR'da yazılı.
-- [ ] **Kayıt tablosunun yalnız `identity` şemasına dokunduğu** ve kaydın kurulum,
+- [x] **Kayıt tablosunun yalnız `identity` şemasına dokunduğu** ve kaydın kurulum,
       **kapatma**, sıfırlama ve kurtarma kodu kullanımını kapsadığı gösterildi
       (**D12**/R12); başarısız denemelerin kayda **girmediği** gösterildi. Saklama süresi
       **§ X8**'de gerekçesiyle kapsam dışı (**D39**).
-- [ ] **Kurulumsuz hesabın kapısı tek tek sınandı** (**D13**): izin verilen üç yol
+- [x] **Kurulumsuz hesabın kapısı tek tek sınandı** (**D13**): izin verilen üç yol
       (kendi parolası, kendi kurulumu, çıkış) çalışıyor ve **dördüncü bir yönetim isteği
       reddediliyor**; `0006` C18/AC-23'ün rota taraması hâlâ yeşil, yani oturumsuz köke
       yönetim ucu **eklenmedi**.
-- [ ] **Bekleyen giriş yanıtının kimlik taşımadığı** testle gösterildi (**D15**/C13):
+- [x] **Bekleyen giriş yanıtının kimlik taşımadığı** testle gösterildi (**D15**/C13):
       gövdede ad, rol, dil ve kimlik **yok**. `CurrentSession` tipinin ve `login()`
       imzasının değiştiği PR'da adıyla yazıldı.
-- [ ] **İkinci adımın giriş ekranının bir fazı olduğu** görsel kanıtla gösterildi
+- [x] **İkinci adımın giriş ekranının bir fazı olduğu** görsel kanıtla gösterildi
       (**D14**): adım geçilmeden gezinme olmuyor, *"Kullanıcı değiştir"* ara durumu
       siliyor ve **F5'in adımı kaybettirdiği** bedel PR'da açıkça yazılı.
-- [ ] **Parametre kümesi bağımsız bir gerçeğe karşı ölçüldü** (**D16**/**D41**, otomatik
+- [x] **Parametre kümesi bağımsız bir gerçeğe karşı ölçüldü** (**D16**/**D41**, otomatik
       yarı): RFC 6238 Ek B'nin **yayınlanmış test vektörleri** teste girdi ve geçti
       (**AC-2**). *Neden:* kendi uygulamasını kendi ürettiği kodla sınayan test hiçbir
       şey kanıtlamaz.
@@ -952,50 +983,50 @@ yazıldı: **63 kriter**, § Acceptance Criteria.
       onun ürettiği kod kabul edildi ve bunu PR'a **yazdı**. *Neden:* hane/pencere/
       algoritma kümesinin yanlışlığı yalnız "doğru kod reddediliyor" olarak görünür ve
       hiçbir birim testi bunu yakalamaz; **bu kutuyu uygulamayı yazan ajan kapatamaz.**
-- [ ] **Sırrın sunucuda görsele gömülmediği** (C15/**D17**) ve **elle giriş metninin her
+- [x] **Sırrın sunucuda görsele gömülmediği** (C15/**D17**) ve **elle giriş metninin her
       zaman görünür** olduğu gösterildi — kare kod uçta çizildi, görsel kanıt RTL'de de
       var.
-- [ ] **Ara durumun ömrü, tek kullanımlığı ve silinmesi** testle gösterildi (**D19**);
+- [x] **Ara durumun ömrü, tek kullanımlığı ve silinmesi** testle gösterildi (**D19**);
       çerezin `HttpOnly` olduğu ve satırda tokenin **özetinin** durduğu doğrulandı.
       Saklama/temizlik **§ X8**'de gerekçesiyle kapsam dışı (**D39**).
-- [ ] **İki ayrı hata kodu ve karşılıkları** testle gösterildi (**D20**); **kilitlenmiş
+- [x] **İki ayrı hata kodu ve karşılıkları** testle gösterildi (**D20**); **kilitlenmiş
       ikinci adımın ayırt edilemez** kaldığı (`0006` R3/AC-5 suskunluğu) sınandı.
-- [ ] **Sıfırlamanın açık oturumları düşürdüğü ve kalan kurtarma kodlarını
+- [x] **Sıfırlamanın açık oturumları düşürdüğü ve kalan kurtarma kodlarını
       geçersizleştirdiği** testle gösterildi (**D22**).
-- [ ] **Kapatma ve yenileme sınandı** (**D23**, **D24**): kapatma mevcut parola **ve**
+- [x] **Kapatma ve yenileme sınandı** (**D23**, **D24**): kapatma mevcut parola **ve**
       geçerli kod istiyor, zorunlu rolde kapatma yok; yenileme kalan kodların **hepsini**
       düşürüyor ve kalan sayı ekranda görünüyor.
-- [ ] **`twoFactorEnrolled` iki yüzeyde de doğru** (**D25**, **D26**): personel
+- [x] **`twoFactorEnrolled` iki yüzeyde de doğru** (**D25**, **D26**): personel
       listesinde eklemeli alan olarak var ve `/me` onu **kaynaktan** okuyor — kurulumu
       biten personelin aynı oturumda doğru durumu gördüğü testle gösterildi.
-- [ ] **e2e kurulumu ikinci adımı bir kez kuruyor** (**D28**, **AC-62**): `global-setup`
+- [x] **e2e kurulumu ikinci adımı bir kez kuruyor** (**D28**, **AC-62**): `global-setup`
       kurulum hesabını kaydediyor, ortak `e2e/giris.ts` yardımcısı kodu `node:crypto` ile
       üretiyor ve **giriş yapan on dört spec dosyasının hepsi yeşil**. Yeni e2e bağımlılığı
       eklenmedi; dokunulan dosyalar PR'da **adıyla** yazıldı ve **hiçbirinin iddiası
       değişmedi** (**D46**).
-- [ ] **`Host.Tests`'in dokuz zinciri ortak yardımcıya geçti ve yeşil** (**D34**,
+- [x] **`Host.Tests`'in dokuz zinciri ortak yardımcıya geçti ve yeşil** (**D34**,
       **AC-63**): dosyalar PR'da adıyla yazıldı. *Neden:* D28 yalnız e2e'yi saymıştı;
       ölçüm dokuz backend zincirinin de aynı kararla kırıldığını gösterdi.
-- [ ] **Tek Yöneticinin kilitlenmesi bedeli PR'da AÇIKÇA yazıldı** (**D37**): `0006` D2'nin
+- [x] **Tek Yöneticinin kilitlenmesi bedeli PR'da AÇIKÇA yazıldı** (**D37**): `0006` D2'nin
       kurulum hesabı yolu ikinci adım için **çalışmıyor** (`SeedAdministrator` idempotent);
       çıkış yolu yapılandırma değil veritabanı müdahalesidir ve kurulum bayrağı bu kartın
       kapsamında **değildir**.
-- [ ] **Oturumsuz çalışan uçlar adıyla sayan bir kapıya bağlandı** (**D42**, **AC-31**):
+- [x] **Oturumsuz çalışan uçlar adıyla sayan bir kapıya bağlandı** (**D42**, **AC-31**):
       iki yeni oturum öncesi uç listeye girdi ve listede olmayan her oturumsuz uç kırmızı
       veriyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi.
-- [ ] <!-- DoD:T7 --> **Üç yeni domain terimi `docs/domain.md`'ye eklendi** (**D29**):
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi.
+- [x] <!-- DoD:T7 --> **Üç yeni domain terimi `docs/domain.md`'ye eklendi** (**D29**):
       İkinci Adım (`TwoFactorEnrollment`) · Kurtarma Kodu (`RecoveryCode`) · Doğrulama
       Sırrı (`TwoFactorSecret`). Kod adları sözlükteki karşılıklarıyla birebir aynı.
-- [ ] <!-- DoD:T8 --> `docs/architecture.md` § Karar Defteri güncellendi (**2FA
+- [x] <!-- DoD:T8 --> `docs/architecture.md` § Karar Defteri güncellendi (**2FA
       kapsamda** satırı). *"Oturum öncesi ara durum"* satırı ikinci CLARIFY turunda
       zaten eklendi (**D13**/**D19**); kalan borç kapsam satırıdır.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
