@@ -2,17 +2,27 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
-| **Sahip** | — |
+| **Durum** | **Onaylandı** (2026-10-15) |
+| **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Identity` · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | `0006` (oturum ve roller — tamamlandı) · `0009` (bildirim — tamamlandı) |
 | **Dayanak** | ADR 0003 unsur 2; Ek 1 sıra #6 |
 | **Karar bekliyor** | **Yok.** Beş sorunun hepsi kapandı: **S2** birinci CLARIFY turunda (**D8**, ölçümle), **S1 · S3 · S4 · S5** ikinci turda (**D30–D33**, Takım Yöneticisi onayı 2026-10-15). |
-| **Kararlar** | **D1–D33**, iki CLARIFY turunda bugünkü `main` üzerinde **ölçülerek** verildi (**D1–D12** → `c5143b6`, **D13–D33** → `1e7c8d2`). Beşi spec'i yazılı hâliyle **uygulanamaz** kılıyordu. |
+| **Kararlar** | **D1–D47**: iki CLARIFY turu bugünkü `main` üzerinde **ölçülerek** verdi (**D1–D12** → `c5143b6`, **D13–D33** → `1e7c8d2`), **D34–D47** bu kriter turunda (uygulama planının ölçümleri, Takım Yöneticisi onayı 2026-10-15). Yedisi spec'i yazılı hâliyle **uygulanamaz** kılıyordu. |
+| **Kriter sayısı** | **63** |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı; **sıradaki tur kriter
-> turudur** ve bu kararların üzerine kurulacak.
+> **R/C/AC bu PR'da `main`'e giriyor ve orada donuyor** (ADR `0008` / K2, `0012b`
+> **D38**'in donma anı cümlesi). Bu commit'ten sonra Requirements, Constraints veya
+> Acceptance Criteria'da yapılan her değişiklik **sayılan bir revizyondur** ve kendi
+> commit'ine girer.
+>
+> **Kriter turu, 2026-10-15.** Altmış üç kriter yazıldı ve uygulama planının ölçümleri
+> on dört karar daha ekledi (**D34–D47**). Dördü spec'i yazılı hâliyle uygulanamaz ya
+> da eksik ölçülmüş kılıyordu: **D34** (D28 yalnız e2e'yi saymıştı, `Host.Tests`'in
+> dokuz zinciri de kırılıyor), **D36** (D13'ün beyaz listesi kabuğun ilk isteğini
+> kapatıyordu), **D37** (D32'nin *"son çıkış kapısı"* bugün uygulanamaz) ve **D47**
+> (D19'un deneme sayısı, R8'in yasakladığı ikinci eşiğe dönüşmek üzereydi).
 >
 > İki CLARIFY turu geçti. **Birincisi** (2026-10-15, `c5143b6`) on iki karar ekledi ve
 > R8, C2, R12'yi ölçümle düzeltti — sırrın saklanmasını, eşiği, toleransı ve kaydın
@@ -165,6 +175,16 @@ kurtarma koduyla girer, ikisi de yoksa bir Yönetici onun ikinci adımını sıf
 - **X5.** **Ziyaretçi tarafı** — *neden:* public üyelik yok (§ 6); sistemde kullanıcı =
   personeldir.
 - **X6.** **Parola politikasının genişletilmesi** — *neden:* `0006` § X9'da kapsam dışı.
+- **X7.** **Şifreleme anahtarının döndürülmesi (rotation)** — *neden:* döndürme, kurulmuş
+  **her** kaydın yeniden şifrelenmesini ve iki anahtarın bir süre bir arada yaşamasını
+  ister; yani bir anahtar sürümü alanı, bir geçiş yolu ve bir geri alma planı. Bu bir
+  bakım işi kartıdır, ikinci adımın kurulumu değil (**D3**'ün bıraktığı borç, **D39**).
+- **X8.** **Kayıt tablosunun ve ara durum satırlarının saklama/temizlik politikası** —
+  *neden:* ölçüldü, süresi dolmuş `Session` satırlarını temizleyen bir yol **bugün de
+  yok**; yani borç bu kartın yarattığı bir soru değil ve temizlik üç tabloyu birden
+  kapsayan ayrı bir karardır. Ara durum satırı başarıda ve *"kullanıcı değiştir"*de
+  **silindiği** için yalnız terk edilmiş satırlar birikir (**D12** ve **D19**'un
+  bıraktığı borç, **D39**).
 
 ---
 
@@ -564,6 +584,150 @@ Bedeli **üç** mekanizma sınırlıyor: paylaşılan kilitlenme sayacı (R8), p
 sınırı (**D5**) ve **D15** — bekleyen yanıt kimlik taşımadığı için saldırgan "parola
 doğru"dan personelin kim olduğunu bile öğrenmiyor.
 
+### Verilen kararlar — kriter turu, 2026-10-15
+
+*Her madde uygulama planının bugünkü `main` + #74 ağacı üzerindeki ölçümünden geldi
+(Takım Yöneticisi onayı 2026-10-15). Dördü (**D34**, **D36**, **D37**, **D47**) spec'i
+yazılı hâliyle uygulanamaz ya da eksik ölçülmüş kılıyordu.*
+
+**D34 — D28'in ölçümü eksikti: `Host.Tests`'in dokuz zinciri de kırılıyor.** D28 giriş
+yapan **14 e2e** dosyasını saydı ve yalnız onları. Ölçüldü: `Host.Tests`'te **dokuz**
+dosya `/api/identity/sessions`'a kurulum **Yöneticisi** ile giriyor ve ardından yönetim
+uçlarını çağırıyor — `AracKaydiZinciri`, `AracMedyasiZinciri`, `DuyuruYazimiZinciri`,
+`MedyaYuklemeZinciri`, `OturumBoruHatti`, `SubeliPersonelBoruHatti`, `TopluEylemZinciri`,
+`YayinZinciri`, `GirisHizSiniri`. D30 Yönetici'yi zorunlu kıldığı ve D13 kurulumsuz
+hesabı kapıladığı için dokuzu da `403` alır. Karar: D28'in kardeşi olarak
+`tests/Host.Tests` içinde **ortak bir kurulum yardımcısı** (ikinci adımı kur + kod üret)
+yazılır ve dokuz dosya onu kullanır; kriteri **AC-63**. *Gerekçe:* "sonra bakarız" aynı
+bedeli ikinci kez ödetir ve dokuz dosyanın aynı anda kırmızıya düşmesi, kusuru değil
+kararı gösterir. *Bedel:* dokuz test dosyası bu kartta değişir.
+
+**D35 — Kurulum durumu istek başına KAYNAKTAN çözülür ve claim'e yazılır.** D26 *"`/me`
+bir indeksli okuma kazanır"* diyordu. Ölçüldü: aynı bilgiye **kapı** da muhtaç (D13) ve
+kapı **her** yönetim isteğinde çalışıyor; `/me`'ye ayrı bir okuma koymak aynı gerçeği bir
+istekte iki kez sormak olurdu. Ayrıca personel satırı **zaten** her istekte okunuyor
+(`StaffSessionQueries.cs:49`, C16). Karar: durum o okumaya eklenir, `StaffSessionDto` ile
+taşınır ve istek başına üretilen bir claim'e yazılır; `/me` ve kapı o claim'i okur.
+*Gerekçe:* D26'nın yasakladığı şey **girişte pişirilmiş** claim'dir — oturumun kalan
+otuz dakikası boyunca bayat kalan. İstek başına tazelenen claim, rol ve hesap durumuyla
+**aynı** mekanizmadır ve davranış birebir aynıdır; **AC-53** bunu "kurulumu biten
+personel aynı oturumda doğru durumu görür" diye ölçüyor. *Bedel:* D26'nın harfi değil
+gerekçesi uygulanıyor ve bu satır o farkı yazılı tutuyor.
+
+**D36 — Kapının beyaz listesi D13'ün üç yolu kalır; kabuk durumu `403`'ün KODUNDAN
+öğrenir.** Ölçüldü: panel kabuğu ilk iş olarak `GET /api/admin/me` çağırıyor
+(`AdminApp.tsx:46`) — kapı onu reddederse kabuk `signedOut`'a düşer ve personel
+**giriş–yönlendirme döngüsüne** girer; yani D13'ün üç yollu listesi yazıldığı hâliyle
+akışı kilitliyordu. Karar: liste **tam olarak** D13'ün saydığı üç yol kalır
+(`me/password`, `me/two-factor*`, çıkış) ve kabuk kurulum borcunu
+`403 identity.two_factor_setup_required` kodundan öğrenip kurulum ekranını basar.
+*Gerekçe:* desen zaten depoda ve bu kart onu kopyalıyor —
+`identity.password_change_required` kodu `AdminApp.tsx:59`'da tam olarak böyle ele
+alınıyor. Beyaz listeyi büyütmek, D13'ün *"izin verilenler açıkça sayılır"* gerekçesini
+her yeni ekranda yeniden pazarlık konusu yapardı. *Bedel:* kabuk bir hata kodunu akış
+sinyali olarak okuyor; bu, `PasswordChangeGate`'in `403`'ü için verilmiş kararın aynısı.
+
+**D37 — D32'nin "son çıkış kapısı" BUGÜN YOK; bedel yazılı, bayrak kapsam dışı.**
+D32 telefonunu kaybeden tek Yönetici için çıkış yolunu *"`0006` D2'nin kurulum hesabı"*
+diye yazdı. Ölçüldü: `SeedAdministrator.EnsureAsync` **idempotent** ve kendi yorumu
+söylüyor — *"hesap varsa hiç dokunulmaz, parolası da sıfırlanmaz"*
+(`SeedAdministrator.cs:22`, `:44-51`). Kurulum hesabı pratikte **tek Yöneticinin kendi
+hesabıdır**; yapılandırmadaki parolayı değiştirmek hiçbir şeyi açmaz, çünkü engel parola
+değil **ikinci adımdır**. Karar: bedel dürüstçe yazılır — *tek Yönetici ikinci adımını
+kaybederse çıkış yolu yapılandırma değil, **veritabanı müdahalesidir*** — ve bunu
+kapatacak bir kurulum bayrağı (`Identity:SeedAdmin:ResetTwoFactor`) **bu kartın kapsamına
+girmez**. *Gerekçe:* o bayrak yeni bir güvenlik kapısıdır ve kapsam kararı Takım
+Yöneticisi'nindir; ama yazılı olmayan bir "son kapı", okuyana kutuya güvenmemeyi öğretir
+(**D27**'nin aynı dersi). *Bedel, açıkça:* bu kart "tek Yönetici kilitlenmez" sözünü
+VERMİYOR; R7'nin *"en az iki Yönetici zorunlu"* hâli hâlâ ayrı bir karardır.
+
+**D38 — Kurtarma kodu doğrulamasının iterasyon sayısı: 10.000 (yapılandırmadan).** D2
+sayıyı kriter turuna bırakmıştı. Karar: varsayılan **10.000** ve değer yapılandırmadan
+okunur (**AC-37**). *Gerekçe:* kurtarma kodu **sistem üretimi, yüksek entropili** bir
+dizedir, insan parolası değil — ve deponun kendi emsali bunu zaten yazıyor:
+`Session.HashToken` SHA-256 kullanıyor ve yorumu *"burada yavaş bir özet gerekmez; token
+yüksek entropili rastgele bir değerdir, parola gibi tahmin edilebilir değildir"* diyor
+(`Session.cs:30-33`). On kodu 210.000 iterasyonla karşılaştırmak tek girişte **saniyeler**
+sürerdi (D2'nin ölçümü); 10.000 ile aynı iş onlarca milisaniyedir. *Bedel:* sızan bir
+yedekte çevrimdışı deneme maliyeti düşer — o maliyeti kodun **entropisi** taşıyor.
+
+**D39 — İki açık borç kapsam dışına yazıldı: X7 ve X8.** D3 anahtar döndürmeyi, D12 ve
+D19 saklama/temizliği kriter turuna bırakmıştı. Karar: ikisi de § KAPSAM DIŞI'na
+gerekçesiyle yazıldı (**X7**, **X8**). *Gerekçe:* ikisi de bu kartın **yarattığı** değil
+**devraldığı** sorular — temizlik yolu bugün `Session` için de yok — ve her ikisi de
+kendi geçiş planını isteyen bakım kartlarıdır.
+
+**D40 — Tek yeni frontend bağımlılığı: `qrcode.react@4.2.0`.** D17 kare kodun **uçta**
+çizilmesini kararlaştırmış ve bedelini *"bir frontend bağımlılığı"* diye yazmıştı.
+Ölçüldü: paketin peer aralığı React 19'u kapsıyor (`^16 || ^17 || ^18 || ^19`), yayın
+tarihi 2024-12-11 ve çıktısı **SVG** — canvas yok, jsdom'da test edilebilir, çalışma
+anında dışarıdan varlık indirmiyor. *Gerekçe:* kendimiz yazmak hata düzeltme matematiği
+demek ve depoda emsali yok (D17). *Bedel:* `package.json` bir satır büyüyor; backend
+tarafında **yeni paket yok** (D16, HMAC BCL'de).
+
+**D41 — DoD'un "gerçek doğrulama uygulaması" maddesi İKİYE ayrıldı.** Madde
+*"üretilen adres en az bir yaygın uygulamada okundu ve ürettiği kod kabul edildi"*
+diyor; bunu yazan ajan bir telefon uygulaması çalıştıramaz (ölçüldü: makinede `oathtool`
+ve `pyotp` da yok). Karar: (a) **otomatik yarı** — RFC 6238 Ek B'nin **yayınlanmış test
+vektörleri** teste girer ve uygulamanın standarda uyduğu bağımsız bir gerçeğe karşı
+ölçülür (**AC-2**); (b) **insana kalan yarı** — kare kodu gerçek bir uygulamaya okutmak
+QA ya da Takım Yöneticisi'nin adımıdır ve kutu o satır PR'a yazılmadan `[x]` olmaz.
+*Gerekçe:* kutunun kendi gerekçesi *"hiçbir birim testi bunu yakalamaz"*; yapılmamış bir
+ölçümü yapılmış göstermek tam olarak o kutunun uyardığı şeydir.
+
+**D42 — Oturum öncesi köke iki uç geliyor; rota taraması KAPI hâline getirilir.**
+Ölçüldü: `Host.Tests/YonetimYuzeyiKorumasiTests` yönetim kökünün altındaki her ucun
+`401` döndüğünü **tarayarak** denetliyor ve kardeş testi *"giriş ucu kökün dışındadır"*
+diyor. Bu kart o köke iki uç daha ekliyor: `POST /api/identity/sessions/two-factor` ve
+`DELETE /api/identity/sessions/pending` (C14 gereği `/api/admin` dışında). Karar: kardeş
+test, oturumsuz çalışması **meşru** uçları **adıyla sayan** bir kapıya çevrilir; sayılmayan
+her oturumsuz uç kırmızı verir (**AC-31**). *Gerekçe:* beyaz listeyi büyütmek yerine
+listeyi kapı yapmak, bir sonraki spec'in sessizce üçüncü bir uç açmasını engeller.
+
+**D43 — `login()` ayrıştırıcılı bir birleşim döndürür; `CurrentSession` yalnız `/me`'nin
+tipi kalır.** D15 gövdenin iki dallı olduğunu söylemişti; uçtaki tipin ne olacağı
+yazılmamıştı. Karar: `login()` üç dallı ayrıştırıcılı bir sonuç döndürür
+(`completed` · `two_factor_required` · `two_factor_setup_required`) ve kabuk **yalnız
+tamamlanmış dalda** gezinir; `/me` bugünkü gövdeyi döndürmeye devam eder, üstüne yeni
+alanı ekler. *Gerekçe:* `docs/frontend.md` § 2 — tip ile sözleşmenin ayrıştığı yer sessiz
+hata üreten yerdir; bekleyen dalı bugünkü tipe sığdırmak, taşımadığı alanları taşıyormuş
+gibi gösterirdi. *Bedel:* `0006`'nın giriş kriterleri 2FA'sız personel için aynen doğru
+kalıyor ama tip ve imza değişiyor; PR bunu adıyla yazar.
+
+**D44 — İkinci adımın kendi panel rotası var: `/admin/two-factor`, her role bağlantılı.**
+R15, R16 ve D24 personele kendi ekranını borçlu kılıyor; ekranın nereye asılacağı yazılı
+değildi. Karar: `AdminView`'e `two-factor` eklenir, adres `/admin/two-factor` olur ve
+kabuktaki gezinmeye **her rol** için bir bağlantı basılır. *Gerekçe:* kurulum ekranını
+yalnız **kapılı** durumda basmak, opsiyonel rolün R15'ini (kendi isteğiyle açma) ve
+D24'ün yenilemesini ulaşılamaz kılardı. *Bedel:* panel gezinmesi bir bağlantı büyüyor.
+
+**D45 — Yeniden oynatma reddi ile tolerans birlikte bir sürtünme üretiyor; kabul
+edilir.** D11 kabul edilen adıma **eşit veya küçük** olanı reddediyor, D10 ise ±1 adım
+kabul ediyor. Sonuç: aynı pencerede ikinci kez giriş yapan personel (örneğin iki sekme)
+*"geçersiz kod"* görür ve otuz saniye bekler. Karar: davranış **aynen D11** kalır, ekran
+bu durumda **taze kod** isteyen metni gösterir (**D20**'nin zaten ayırdığı kod).
+*Gerekçe:* pencere içinde aynı kodu ikinci kez kabul etmek D11'in var olma nedenini
+siler. *Bedel, açıkça:* nadir ama gerçek bir sürtünme; ekranın metni onu anlaşılır kılar.
+
+**D46 — e2e'nin giriş yolu ortak bir yardımcıya çıkar (`e2e/giris.ts`).** Ölçüldü: giriş
+yapan 14 dosyanın **dokuzu** `girisYap`'ı kendi içinde **yeniden tanımlıyor**, beşi
+doldurmayı satır içinde yapıyor. İkinci adımı on dört yerde ayrı ayrı yazmak aynı
+mantığın on dört kopyası demek. Karar: ortak yardımcı çıkarılır (`girisYap`,
+`yoneticiOlarakGirAsync`, `ikinciAdimKodu` — `node:crypto`, **yeni bağımlılık yok**) ve on
+dört dosya ona geçer. *Gerekçe:* D28'in kendi gerekçesi — on dört dosyayı aynı anda
+kırmızıya çeviren karar, aynı anda düzeltilebilir olmalı. *Bedel, açıkça:* kapanmış
+spec'lerin test dosyalarına dokunuluyor; **iddiaları değişmez**, yalnız giriş adımı
+ortaklaşır ve PR her dosyayı adıyla yazar.
+
+**D47 — Ara durum satırındaki deneme sayısı İKİNCİ BİR EŞİK DEĞİLDİR.** D19 satırın
+"deneme sayısı" taşıdığını söylüyor; R8 ve § Bilinen tuzaklar 5 ise sayacı ayırmayı
+yasaklıyor — yani iki madde birlikte okunduğunda ikinci bir eşik doğuyordu. Karar: eşik
+**tek** ve paylaşılan `login_attempts` sayacıdır; ara durum satırındaki sayı yalnız
+**ara durumun silinmesini** tetikler ve personel parola fazına döner (**AC-35**).
+*Gerekçe:* iki eşik Tuzak 5'in tam olarak uyardığı şeydir; sıfır sayaç ise D19'un yazdığı
+alanı ölü bırakırdı. *Bedel:* kilit anında personel parolasını yeniden girer — ipucu
+metnini zaten görüyor (**D21**).
+
 ### CLARIFY turlarında ölçülen bedel: kapanmış bir spec'in yüzeyi etkilenecek
 
 **`0008`'in yüzeyi iki yerden değişiyor, `0006`'nın yüzeyi bir yerden — üçü de adıyla
@@ -628,49 +792,107 @@ yazılı. İkinci maddenin ilk ölçümü YANLIŞTI ve düzeltilmiş hâli burad
 | ~~**S5.** İkinci adım ekranı parolayı ifşa ediyor; kabul mü?~~ | **Kabul** — bedeli üç mekanizma sınırlıyor (R8 · D5 · D15) | **D33** |
 
 S2 birinci CLARIFY turunda, diğer dördü ikinci turda kapandı (Takım Yöneticisi onayı
-2026-10-15). **Kabul kriterlerini bekleten bir karar kalmadı;** kriterler sıradaki turda
-yazılacak.
+2026-10-15). **Kabul kriterlerini bekleten bir karar kalmadı** ve kriterler bu turda
+yazıldı: **63 kriter**, § Acceptance Criteria.
 
 ---
 
 ## Acceptance Criteria
 
-> **Sıradaki tur kriter turudur** — açık soru kalmadı, kararlar donmuş (D1–D33) ve kriter
-> sayısı bu kartta bilerek **0**. Kümeler iki turun kararlarıyla büyüdü; en az şunları
-> kapsayacak:
->
-> **Kurulum.** Sır üretimi · doğrulanmamış kurulumun etkinleşmemesi · bekleyen kurulumun
-> süresi ve yeniden başlatmanın **yeni sır** üretmesi (D18) · kare kod **ve** elle giriş
-> metninin birlikte sunulması (D17) · `otpauth://` adresinin parametreleri (D16).
->
-> **Giriş akışı.** Parola doğru + kurulumu olan hesap → **oturum çerezi yazılmaz** (D4) ·
-> bekleyen yanıtın **kimlik taşımaması** (D15/C13) · ara durumun ömrü, tek kullanımlığı ve
-> *"kullanıcı değiştir"*le silinmesi (D14/D19) · ikinci adım geçilmeden hiçbir yönetim
-> isteğinin çalışmaması (R13).
->
-> **Kod doğrulama.** Geçerli · geçersiz · penceresi dolmuş · **yeniden oynatılmış** kod
-> (D11) · saat kayması toleransının ±1 adım olması (D10) · iki ayrı hata kodu ve
-> karşılıkları (D20) · paylaşılan kilitlenme sayacı ve **paylaşılan hız sınırı** (R8/D5).
->
-> **Zorunluluk ve kapı.** Zorunlu roldeki kurulumsuz personelin kapılı oturumu ve izin
-> verilen üç yol (D13) · ilk girişte sıranın **parola → kurulum** olması (D6) · opsiyonel
-> rolde kurulumun kendi isteğiyle açılması (D30).
->
-> **Kurtarma ve sıfırlama.** Kurtarma kodunun tek kullanımlığı · kümenin yenilenmesi ve
-> kalanların düşmesi (D24) · kalan sayının görünmesi · sıfırlamanın **oturumları
-> düşürmesi** ve kalan kodları geçersizleştirmesi (D22) · opsiyonel rolde kapatmanın
-> parola + kod istemesi (D23) · son aktif Yönetici koruması ve kurulum hesabı yolu (D32).
->
-> **Sızıntı.** Sırrın ve kurtarma kodunun yanıtta, logda ve hata metninde bulunmaması
-> (C2) · sırrın veritabanında **açık metin durmaması** (D3) · sırrın sunucuda **görsele
-> gömülmemesi** (C15).
->
-> **Yüzey ve ekran.** `twoFactorEnrolled` alanının listede (D25) ve `/me`'de **kaynaktan**
-> okunması (D26) · üç durum + *süresi doldu* + *kilitlenmiş hesap* (R10) · ipucu
-> sayacının iki fazda **tek** olması (D21) · çok dil ve RTL (R11).
->
-> **Kayıt.** Kurulum · kapatma · sıfırlama · kurtarma kodu kullanımı (R12/D12) ve
-> başarısız denemelerin **tutulmaması**.
+> **Altmış üç kriter.** Kümeler iki CLARIFY turunun ve kriter turunun kararlarıyla
+> (**D1–D47**) kuruldu. Numaralar **ekleme yoluyla** büyür: araya kriter eklemek,
+> testlerdeki `0013/AC-n` etiketlerini yanlış kriterlere bağlar — `0012b`'nin kaçan
+> hatası birebir buydu.
+
+### Kurulum
+
+- **AC-1.** Kurulum başlatıldığında sunucu bir doğrulama sırrı üretir ve yanıt `otpauth://` adresini **ve** Base32 sırrı **metin olarak** döner; yanıtta görsel bulunmaz.
+- **AC-2.** `otpauth://` adresi dondurulmuş parametre kümesini taşır: `algorithm=SHA1`, `digits=6`, `period=30` ve yapılandırmadan gelen `issuer`.
+- **AC-3.** Doğrulanmamış kurulum etkinleşmez: kurulumu başlatmış ama kodla onaylamamış personel kurulumsuz sayılır ve girişinde ikinci adım istenmez.
+- **AC-4.** Kurulum onayı geçerli bir kod ister; yanlış kodla gönderilen onay kurulumu etkinleştirmez.
+- **AC-5.** Bekleyen kurulumun ömrü yapılandırmadan gelir; süresi dolmuş bekleyen kurulumun onayı reddedilir.
+- **AC-6.** Kurulum yeniden başlatıldığında yeni bir sır üretilir ve önceki sırrın ürettiği kod artık kabul edilmez.
+- **AC-7.** Kurtarma kodları kurulum onayında **bir kez** döner; aynı kümeyi yeniden okutan bir yol yoktur.
+- **AC-8.** Kurtarma kodu sayısı yapılandırmadan gelir ve üretilen küme yapılandırılan sayıda kod taşır.
+- **AC-9.** Kurulumu zaten olan personelin yeni kurulum isteği `409` ve `identity.two_factor_already_enrolled` ile reddedilir.
+- **AC-10.** Kurulum ekranı kare kodu **uçta** çizer ve elle giriş metnini **her zaman görünür** tutar; sır sunucuda görsele gömülmez.
+
+### Giriş akışı
+
+- **AC-11.** Kurulumu olan personel doğru parolayı girdiğinde **oturum çerezi yazılmaz**; yalnız ara durum çerezi yazılır.
+- **AC-12.** Bekleyen giriş yanıtı `200` döner, yalnız hangi adımın geldiğini söyler ve personelin adını, rolünü, dilini ve kimliğini **taşımaz**.
+- **AC-13.** Ara durum çerezi `HttpOnly`'dir ve satırda tokenin kendisi değil **SHA-256 özeti** durur.
+- **AC-14.** Ara durum yapılandırılan süre sonunda düşer; düşmüş ara durumla yapılan doğrulama `identity.two_factor_pending_expired` döner.
+- **AC-15.** Ara durum **tek kullanımlıktır**: başarılı doğrulamadan sonra aynı çerezle yapılan ikinci doğrulama reddedilir.
+- **AC-16.** Ara durum oturum değildir: ara durum çerezini taşıyan hiçbir yönetim isteği çalışmaz, `401` döner.
+- **AC-17.** *"Kullanıcı değiştir"* ara durumu **siler**; silinmiş ara durumla yapılan doğrulama reddedilir.
+- **AC-18.** Başarılı doğrulamada oturum çerezi yazılır ve yanıt tamamlanmış dalı — bugünkü oturum gövdesini — döner.
+- **AC-19.** İkinci adım giriş ekranının bir **fazıdır**: adım geçilmeden panele gezinme olmaz.
+
+### Kod doğrulama
+
+- **AC-20.** İçinde bulunulan adımın kodu kabul edilir ve oturum açılır.
+- **AC-21.** Yanlış kod `401` ve `identity.two_factor_invalid` ile reddedilir.
+- **AC-22.** Penceresi dolmuş kod reddedilir.
+- **AC-23.** Kabul edilen bir kod **ikinci kez** kabul edilmez.
+- **AC-24.** Saat kayması toleransı **±1 adımdır**: önceki ve sonraki adımın kodu kabul edilir, iki adım önceki kod reddedilir.
+- **AC-25.** Yanlış ikinci adım kodu parola denemesiyle **aynı** kilitlenme sayacını artırır; eşiğe ulaşıldığında hesap kilitlenir ve kilitliyken doğru kod da reddedilir.
+- **AC-26.** İkinci adım ucu giriş ucunun **hız sınırını paylaşır**: sınır aşıldığında `429` döner.
+- **AC-27.** Kilitlenmiş hesapta ikinci adım reddi **ayırt edilemez**: kilit için ayrı bir hata kodu dönmez.
+- **AC-28.** Kilitlenme ipucunun deneme sayacı iki fazda **tektir**: parola fazındaki ve kod fazındaki başarısız denemeler aynı sayaca eklenir.
+
+### Zorunluluk ve kapı
+
+- **AC-29.** Zorunlu rolde kurulumu olmayan personel giriş yaptığında yanıt kurulum gerektiğini söyler ve ona **kapılı** bir oturum verilir.
+- **AC-30.** Kapılı oturumda izin verilen **üç yol** çalışır: kendi parolasını değiştirme, kendi ikinci adım kurulumu ve çıkış.
+- **AC-31.** Kapılı oturumda izin verilenler dışındaki her yönetim isteği `403` ve `identity.two_factor_setup_required` ile reddedilir; oturumsuz çalışan uçların **adıyla sayıldığı** rota kapısı yeşil kalır.
+- **AC-32.** İlk girişte sıra **parola değişimi, sonra kurulumdur**: ikisini birden bekleyen personel önce parola kapısını görür.
+- **AC-33.** Opsiyonel rolde kurulumu olmayan personel yönetim yüzeyinde **kısıtsız** çalışır.
+- **AC-34.** Opsiyonel roldeki personel ikinci adımı **kendi isteğiyle** kurar.
+- **AC-35.** İkinci adım denemeleri kilitlenme eşiğine ulaştığında ara durum **silinir** ve personel parola fazına döner.
+
+### Kurtarma ve sıfırlama
+
+- **AC-36.** Kodunu üretemeyen personel bir kurtarma koduyla giriş yapar; kullanılan kod bir daha kabul edilmez.
+- **AC-37.** Kurtarma kodu doğrulaması **kendi** iterasyon sayısını yapılandırmadan okur.
+- **AC-38.** Personel kalan kurtarma kodu sayısını kendi ekranında görür.
+- **AC-39.** Kurtarma kodu kümesinin yenilenmesi oturum **ve** taze bir kod ister; ikisinden biri eksikse yenileme reddedilir.
+- **AC-40.** Yenileme kalan kodların **hepsini** düşürür ve yeni kümeyi **bir kez** gösterir.
+- **AC-41.** Opsiyonel roldeki personel ikinci adımı **mevcut parolası ve geçerli bir kodla** kapatır; ikisinden biri eksik veya yanlışsa kapatma reddedilir.
+- **AC-42.** Zorunlu rolde kapatma **yoktur**: istek reddedilir ve tek yol Yöneticinin sıfırlamasıdır.
+- **AC-43.** Yönetici başka bir personelin ikinci adımını sıfırlar; sıfırlanan personel bir sonraki girişinde yeniden kurar.
+- **AC-44.** Sıfırlama bir **güvenlik işlemidir**: personelin açık oturumları düşer ve kalan kurtarma kodları geçersizleşir.
+- **AC-45.** Yönetici **kendi** ikinci adımını da sıfırlayabilir.
+- **AC-46.** Yönetici olmayan rolün sıfırlama isteği `403` ile reddedilir.
+
+### Sızıntı
+
+- **AC-47.** Doğrulama sırrı ve kurtarma kodları **hiçbir log kaydında** görünmez.
+- **AC-48.** Doğrulama sırrı veritabanında **açık metin durmaz**.
+- **AC-49.** Şifreleme anahtarı dağıtım yapılandırmasından gelir: anahtar yoksa uygulama **ayağa kalkmaz** ve anahtar yapılandırma dosyasında bulunmaz.
+- **AC-50.** Kurtarma kodları veritabanında **tek yönlü özetlenmiş** durur.
+- **AC-51.** Doğrulama sırrı ve kurtarma kodu hiçbir hata yanıtında bulunmaz.
+
+### Yüzey ve ekran
+
+- **AC-52.** Personel listesi yanıtı her satırda ikinci adım durumunu taşır.
+- **AC-53.** İkinci adım durumu her istekte **kaynaktan** okunur: kurulumu biten personel **aynı oturumda** doğru durumu görür.
+- **AC-54.** Yönetici personel listesinde her satırın ikinci adım durumunu **rozetle** görür.
+- **AC-55.** İkinci adım ekranı **yükleniyor**, **hata**, **ara durumun süresi doldu** ve **kilitlenmiş hesap** durumlarını ele alır.
+- **AC-56.** İkinci adım ekranı personelin tercih ettiği dilde çalışır ve Arapça'da **RTL**'dir.
+- **AC-57.** Kalan kurtarma kodu sayısı **ICU çoğul biçimiyle** söylenir ve Arapça mesaj **altı biçimi** tanımlar.
+
+### Kayıt
+
+- **AC-58.** Kurulum, **kapatma**, sıfırlama ve kurtarma kodu kullanımı kayda yazılır.
+- **AC-59.** Başarısız denemeler kayda **girmez**.
+- **AC-60.** Kayıt tablosu yalnız `identity` şemasına dokunur.
+- **AC-61.** Kayıt satırı çevrilmiş metin değil **kod** saklar.
+
+### Regresyon altyapısı
+
+- **AC-62.** e2e kurulumu kurulum hesabının ikinci adımını **bir kez** kurar; giriş yapan **on dört** spec dosyasının hepsi yeşil kalır ve yeni e2e bağımlılığı eklenmez.
+- **AC-63.** `Host.Tests`'in giriş yapan **dokuz** zinciri ortak bir kurulum yardımcısıyla yeşil kalır.
 
 ---
 
@@ -678,6 +900,9 @@ yazılacak.
 
 - [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
       (Beş sorunun hepsi: **S2** → D8; **S1 · S3 · S4 · S5** → **D30–D33**, 2026-10-15.)
+- [x] **Kabul kriterleri yazıldı ve `main`'e implementasyondan ÖNCE girdi** (ADR `0008` /
+      K2): **63** kriter, kendi `docs/` PR'ında. Kriter turunun on dört kararı
+      (**D34–D47**) Context'e işlendi.
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin görsel kanıtı eklendi (`docs/evidence/0013-ac<n>.png`), hata ve
       kilitlenme durumları dâhil, RTL için Arapça görüntü de var.
@@ -698,7 +923,7 @@ yazılacak.
       (`StaffListItem` + yönetim listesi yanıtı); rozet veri olmadan basılamaz.
 - [ ] **Doğrulama sırrının veritabanında açık metin DURMADIĞI** testle gösterildi ve
       şifreleme anahtarının dağıtım yapılandırmasından geldiği doğrulandı (**D3**).
-      Anahtar döndürme kapsamda değilse § KAPSAM DIŞI'na gerekçesiyle yazıldı.
+      Anahtar döndürme **§ X7**'de gerekçesiyle kapsam dışı (**D39**).
 - [ ] **Aynı zamana bağlı kodun iki kez kabul edilmediği** testle gösterildi (**D11**),
       saat kayması toleransı ±1 adım olarak ölçüldü (**D10**).
 - [ ] **Kurtarma kodu doğrulamasının maliyeti ölçüldü** ve iterasyon sayısının
@@ -706,8 +931,8 @@ yazılacak.
       saniyeler sürdüğü hesabı PR'da yazılı.
 - [ ] **Kayıt tablosunun yalnız `identity` şemasına dokunduğu** ve kaydın kurulum,
       **kapatma**, sıfırlama ve kurtarma kodu kullanımını kapsadığı gösterildi
-      (**D12**/R12); başarısız denemelerin kayda **girmediği** ve saklama süresi kapsamda
-      değilse gerekçesiyle kapsam dışına yazıldığı gösterildi.
+      (**D12**/R12); başarısız denemelerin kayda **girmediği** gösterildi. Saklama süresi
+      **§ X8**'de gerekçesiyle kapsam dışı (**D39**).
 - [ ] **Kurulumsuz hesabın kapısı tek tek sınandı** (**D13**): izin verilen üç yol
       (kendi parolası, kendi kurulumu, çıkış) çalışıyor ve **dördüncü bir yönetim isteği
       reddediliyor**; `0006` C18/AC-23'ün rota taraması hâlâ yeşil, yani oturumsuz köke
@@ -718,16 +943,21 @@ yazılacak.
 - [ ] **İkinci adımın giriş ekranının bir fazı olduğu** görsel kanıtla gösterildi
       (**D14**): adım geçilmeden gezinme olmuyor, *"Kullanıcı değiştir"* ara durumu
       siliyor ve **F5'in adımı kaybettirdiği** bedel PR'da açıkça yazılı.
-- [ ] **Parametre kümesi gerçek bir doğrulama uygulamasıyla denendi** (**D16**):
-      üretilen `otpauth://` adresi en az bir yaygın uygulamada okundu, onun ürettiği kod
-      kabul edildi ve kanıt PR'da. *Neden:* hane/pencere/algoritma kümesinin yanlışlığı
-      yalnız "doğru kod reddediliyor" olarak görünür ve hiçbir birim testi bunu yakalamaz.
+- [ ] **Parametre kümesi bağımsız bir gerçeğe karşı ölçüldü** (**D16**/**D41**, otomatik
+      yarı): RFC 6238 Ek B'nin **yayınlanmış test vektörleri** teste girdi ve geçti
+      (**AC-2**). *Neden:* kendi uygulamasını kendi ürettiği kodla sınayan test hiçbir
+      şey kanıtlamaz.
+- [ ] **Kare kod gerçek bir doğrulama uygulamasında okundu** (**D16**/**D41**, insana
+      kalan yarı): QA ya da Takım Yöneticisi adresi en az bir yaygın uygulamaya okuttu,
+      onun ürettiği kod kabul edildi ve bunu PR'a **yazdı**. *Neden:* hane/pencere/
+      algoritma kümesinin yanlışlığı yalnız "doğru kod reddediliyor" olarak görünür ve
+      hiçbir birim testi bunu yakalamaz; **bu kutuyu uygulamayı yazan ajan kapatamaz.**
 - [ ] **Sırrın sunucuda görsele gömülmediği** (C15/**D17**) ve **elle giriş metninin her
       zaman görünür** olduğu gösterildi — kare kod uçta çizildi, görsel kanıt RTL'de de
       var.
 - [ ] **Ara durumun ömrü, tek kullanımlığı ve silinmesi** testle gösterildi (**D19**);
       çerezin `HttpOnly` olduğu ve satırda tokenin **özetinin** durduğu doğrulandı.
-      Saklama/temizlik kapsamda değilse gerekçesiyle kapsam dışına yazıldı.
+      Saklama/temizlik **§ X8**'de gerekçesiyle kapsam dışı (**D39**).
 - [ ] **İki ayrı hata kodu ve karşılıkları** testle gösterildi (**D20**); **kilitlenmiş
       ikinci adımın ayırt edilemez** kaldığı (`0006` R3/AC-5 suskunluğu) sınandı.
 - [ ] **Sıfırlamanın açık oturumları düşürdüğü ve kalan kurtarma kodlarını
@@ -738,9 +968,21 @@ yazılacak.
 - [ ] **`twoFactorEnrolled` iki yüzeyde de doğru** (**D25**, **D26**): personel
       listesinde eklemeli alan olarak var ve `/me` onu **kaynaktan** okuyor — kurulumu
       biten personelin aynı oturumda doğru durumu gördüğü testle gösterildi.
-- [ ] **e2e kurulumu ikinci adımı bir kez kuruyor** (**D28**): `global-setup` kurulum
-      hesabını kaydediyor, giriş yardımcıları kodu `node:crypto` ile üretiyor ve **giriş
-      yapan on dört spec dosyasının hepsi yeşil**. Yeni e2e bağımlılığı eklenmedi.
+- [ ] **e2e kurulumu ikinci adımı bir kez kuruyor** (**D28**, **AC-62**): `global-setup`
+      kurulum hesabını kaydediyor, ortak `e2e/giris.ts` yardımcısı kodu `node:crypto` ile
+      üretiyor ve **giriş yapan on dört spec dosyasının hepsi yeşil**. Yeni e2e bağımlılığı
+      eklenmedi; dokunulan dosyalar PR'da **adıyla** yazıldı ve **hiçbirinin iddiası
+      değişmedi** (**D46**).
+- [ ] **`Host.Tests`'in dokuz zinciri ortak yardımcıya geçti ve yeşil** (**D34**,
+      **AC-63**): dosyalar PR'da adıyla yazıldı. *Neden:* D28 yalnız e2e'yi saymıştı;
+      ölçüm dokuz backend zincirinin de aynı kararla kırıldığını gösterdi.
+- [ ] **Tek Yöneticinin kilitlenmesi bedeli PR'da AÇIKÇA yazıldı** (**D37**): `0006` D2'nin
+      kurulum hesabı yolu ikinci adım için **çalışmıyor** (`SeedAdministrator` idempotent);
+      çıkış yolu yapılandırma değil veritabanı müdahalesidir ve kurulum bayrağı bu kartın
+      kapsamında **değildir**.
+- [ ] **Oturumsuz çalışan uçlar adıyla sayan bir kapıya bağlandı** (**D42**, **AC-31**):
+      iki yeni oturum öncesi uç listeye girdi ve listede olmayan her oturumsuz uç kırmızı
+      veriyor.
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi.
 - [ ] <!-- DoD:T7 --> **Üç yeni domain terimi `docs/domain.md`'ye eklendi** (**D29**):
       İkinci Adım (`TwoFactorEnrollment`) · Kurtarma Kodu (`RecoveryCode`) · Doğrulama
