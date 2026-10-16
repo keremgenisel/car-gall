@@ -263,7 +263,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 3 | **Panel: araç kaydı ve taslak ilan** | `0010a` ✅ tamamlandı · `0010b` ✅ tamamlandı |
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
 | 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · `0012c` ✅ tamamlandı |
-| 6 | İki adımlı doğrulama (unsur 2) | **`0013`** (Taslak — **karar bekleyen soru yok**; iki CLARIFY turu, D1–D33) |
+| 6 | İki adımlı doğrulama (unsur 2) | `0013` ✅ tamamlandı |
 | 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
 | 9 | Liste: sıralama + filtre eksenleri | **`0015`** (Taslak — S1–S5) |
@@ -294,6 +294,28 @@ bölündükten sonra **ilk kez tamamen bitti**: altı toplu eylem ucu canlı (ö
 başlanmamış ilk iş artık **#6** (`0013` — iki adımlı doğrulama). Üç bölmenin ortak
 ölçümü şu: ilk bölme kriterler yazıldıktan sonra yapıldı ve pahalıydı, sonraki ikisi
 kriter yazılmadan yapıldı ve bedeli neredeyse sıfır oldu.
+
+**`6`. satır kapandı ve bununla mockup farkının EN BÜYÜK kalemi kapsama girdi** (`0013`,
+2026-10-16, `56c7c7d`). Yukarıdaki *"Mockup'ta olan / Hangi karara aykırı"* tablosunun
+*"İki adımlı doğrulama (TOTP + kurtarma kodu) → `0006` **X2**"* satırı artık bir fark
+değil: `0006`'nın kapsam dışı kararı **ADR 0003 unsur 2** ile zaten yeniden açılmıştı ve
+bu kart onu bitirdi — **61 kriter**, **D1–D52** karar, iki CLARIFY turu + bir kriter turu.
+Tablo satırı **yeniden yazılmıyor** (kararın verildiği anı kaydediyor); kapanışı bu
+paragraf kaydediyor.
+
+**Bu kart, yukarıdaki § Bedel'in iki maddesini ÖLÇÜLÜ hâle getirdi.** (1) *"`0006` iki kez
+açılır"* gerçekleşti ve bedeli sayılabilir: giriş yanıtı ayrıştırıcılı oldu
+(**D15**/**D43**), `CurrentSession` tipi ile `login()` imzası değişti, `0006`/AC-33'ün
+modül testi uzatıldı, AC-22'ye üç yollu bir `Theory` eklendi, **on dört** e2e dosyası ve
+**dokuz** `Host.Tests` zinciri ortak giriş yardımcısına geçti — hiçbirinin iddiası
+değişmeden. (2) *"Mockup'ın üç metni değişir"* listesine bu kart iki metin daha ekledi ve
+ikisi de **ölçümle** düştü: *"Sahip hesabı"* (rol yok — **D30**) ve *"8 hatalı deneme"*
+(eşik **5** — **D8**, `IdentityOptions.DefaultFailedAttemptThreshold`).
+
+Sıra yine **ilerledi**: başlanmamış ilk iş artık **#7** (`0014` — ana sayfa). `0013`'ün
+kendi kapanış turunda ölçülen bir borç var ve kart onu yazılı bırakıyor: telefonunu
+kaybeden **tek** Yöneticinin çıkış yolu yapılandırma değil veritabanı müdahalesidir
+(**D37**), çünkü `0006` D2'nin kurulum hesabı yolu ikinci adım için çalışmıyor.
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca
@@ -329,13 +351,17 @@ Yani vitrindeki araçlar bu commit'ten sonra geliştirme seed'inden değil **gal
 kararından** geliyor ve `docs/testing.md` § 3'ün üçüncü kritik akışı ilk kez uçtan uca
 koşuyor. `0012a`'nın D18 ve D19 borçları böylece kapandı.
 
-**Yedi taslağın toplam 28 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-15'te
+**Altı taslağın toplam 28 açık sorusu var ve hepsinin önerisi yazılı** (2026-10-16'da
 yeniden ölçüldü: `0013` **0** — birinci CLARIFY turu S2'yi **D8** ile kapattı,
 **ikincisi kalan dördünü** (**S1 · S3 · S4 · S5** → **D30–D33**) kapattı ve karar
 bekleyen sorusu kalmadı · `0014` 4 · `0015` 5 · `0016` 4 · `0017` 5 · `0018` 5 · `frontend-003` 5; `0004` **Beklemede** ve sorusu yok, bu yüzden
 taslak sayımına girmiyor. Taslak sayısı sekizden **yediye** indi — `0012c` kapandı — ama
 **toplam değişmedi**: onun açık sorusu zaten `0`'dı, tek sorusu kendi CLARIFY turunda
-**D43** ile kapanmıştı. Gün içindeki hareket: `0012a` ve `0012b` kapandı,
+**D43** ile kapanmıştı. Aynı şey bir kez daha oldu: taslak sayısı
+yediden **altıya** indi — `0013` kapandı — ve **toplam yine değişmedi**, çünkü onun da
+açık sorusu `0`'dı (S2 → **D8** ölçümle, S1 · S3 · S4 · S5 → **D30–D33**). İki kart üst
+üste **sıfır açık soruyla** kapandı; sayımı düşüren şey soru cevaplamak değil, kartı
+bitirmek oldu. Gün içindeki hareket: `0012a` ve `0012b` kapandı,
 yerine `0012c` açıldı ve onun tek sorusu (**S1** — "hepsini seç" sayfa değiştiğinde ne olur)
 aynı gün kendi CLARIFY turunda **D43** ile kapandı. Bir ara sürüm bu paragrafta taslak
 sayısını dokuz yazıyordu; sayım `0004`'ü de katıyordu ve düzeltildi). `0012`'nin beş sorusundan dördü ilk
