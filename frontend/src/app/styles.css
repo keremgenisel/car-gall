@@ -997,3 +997,17 @@ body {
   padding-block-start: var(--space-6);
   border-block-start: var(--border-width) solid var(--color-border);
 }
+
+/*
+ * 0013 — personel tablosu altıncı kolonu kazandı (ikinci adım rozeti) ve telefon
+ * genişliğinde taşarak altındaki "Personeli ekle" düğmesini kapattı: mobil e2e'de
+ * tıklama doksan saniye boyunca hücre tarafından engellendi (ölçüldü). Tablo artık
+ * KENDİ kabında yatay kayıyor — sayfanın kendisi yatay kaymıyor (docs/frontend.md § 6).
+ */
+.staff-table__scroll {
+  overflow-x: auto;
+}
+
+.staff-table__scroll .staff-table {
+  min-inline-size: 44rem;
+}

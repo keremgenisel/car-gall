@@ -137,65 +137,80 @@ export function StaffListPage({ session }: { readonly session: CurrentSession })
       {load.kind === 'ready' && load.staff.length === 0 ? <StaffListEmpty /> : null}
 
       {load.kind === 'ready' && load.staff.length > 0 ? (
-        <table className="staff-table" data-testid="staff-table">
-          <thead>
-            <tr>
-              <th scope="col">{t('staff.column.name')}</th>
-              <th scope="col">{t('staff.column.loginId')}</th>
-              <th scope="col">{t('staff.column.role')}</th>
-              <th scope="col">{t('staff.column.status')}</th>
-              {/* 0013 R17/D25 — mockup üç panelde "2FA açık" rozeti çiziyor. */}
-              <th scope="col">{t('staff.column.twoFactor')}</th>
-              <th scope="col">{t('staff.column.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {load.staff.map((member) => {
-              // AC-15 — kendi satırı KİMLİKTEN tanınır; ad tekil değil (D1).
-              const isSelf = member.staffId === session.staffId
+        /*
+          0013 — tablo ALTINCI kolonu kazandı (ikinci adım rozeti) ve telefon
+          genişliğinde taşıp altındaki "Personeli ekle" düğmesini kapatıyordu: mobil
+          e2e'de tıklama 90 saniye boyunca hücre tarafından engellendi (ölçüldü).
+          Tablo artık kendi kabında yatay kayıyor; SAYFA yatay kaymıyor
+          (docs/frontend.md § 6). Kaydırılabilir bölge klavyeyle de gezilebilir:
+          `tabIndex` olmadan kaydırma yalnız işaretçiyle yapılabilirdi (§ 7).
+        */
+        <div
+          className="staff-table__scroll"
+          role="region"
+          aria-label={t('staff.title')}
+          tabIndex={0}
+        >
+          <table className="staff-table" data-testid="staff-table">
+            <thead>
+              <tr>
+                <th scope="col">{t('staff.column.name')}</th>
+                <th scope="col">{t('staff.column.loginId')}</th>
+                <th scope="col">{t('staff.column.role')}</th>
+                <th scope="col">{t('staff.column.status')}</th>
+                {/* 0013 R17/D25 — mockup üç panelde "2FA açık" rozeti çiziyor. */}
+                <th scope="col">{t('staff.column.twoFactor')}</th>
+                <th scope="col">{t('staff.column.actions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {load.staff.map((member) => {
+                // AC-15 — kendi satırı KİMLİKTEN tanınır; ad tekil değil (D1).
+                const isSelf = member.staffId === session.staffId
 
-              return (
-                <tr
-                  key={member.staffId}
-                  className={
-                    isSelf ? 'staff-table__row staff-table__row--self' : 'staff-table__row'
-                  }
-                  data-testid={isSelf ? 'staff-row-self' : undefined}
-                >
-                  <td dir="auto">
-                    {member.displayName}
-                    {isSelf ? (
-                      <span className="staff-table__self-badge">{t('staff.action.self')}</span>
-                    ) : null}
-                  </td>
-                  <td dir="ltr">{member.loginId}</td>
-                  {/* Rol ve durum KOD olarak gelir; görünen ad uçta çevrilir (0006 C7). */}
-                  <td>{t(`staff.role.${member.role}`)}</td>
-                  <td>{t(`staff.status.${member.status}`)}</td>
+                return (
+                  <tr
+                    key={member.staffId}
+                    className={
+                      isSelf ? 'staff-table__row staff-table__row--self' : 'staff-table__row'
+                    }
+                    data-testid={isSelf ? 'staff-row-self' : undefined}
+                  >
+                    <td dir="auto">
+                      {member.displayName}
+                      {isSelf ? (
+                        <span className="staff-table__self-badge">{t('staff.action.self')}</span>
+                      ) : null}
+                    </td>
+                    <td dir="ltr">{member.loginId}</td>
+                    {/* Rol ve durum KOD olarak gelir; görünen ad uçta çevrilir (0006 C7). */}
+                    <td>{t(`staff.role.${member.role}`)}</td>
+                    <td>{t(`staff.status.${member.status}`)}</td>
 
-                  {/*
+                    {/*
                     Rozet İKİ alandan kuruluyor: kurulum durumu satırda, zorunluluk ise
                     ROLDE (D25). Sözleşmeye üçüncü bir alan eklemek, zorunluluk politikasını
                     API'ye dondururdu.
                   */}
-                  <td data-testid={`staff-two-factor-${member.staffId}`}>
-                    <Badge>
-                      {t(statusBadgeKey(member.twoFactorEnrolled, member.role === 'manager'))}
-                    </Badge>
-                  </td>
+                    <td data-testid={`staff-two-factor-${member.staffId}`}>
+                      <Badge>
+                        {t(statusBadgeKey(member.twoFactorEnrolled, member.role === 'manager'))}
+                      </Badge>
+                    </td>
 
-                  <td>
-                    <StaffRowActions
-                      member={member}
-                      isSelf={isSelf}
-                      onOutcome={(outcome) => onOutcome(member.staffId, outcome)}
-                    />
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                    <td>
+                      <StaffRowActions
+                        member={member}
+                        isSelf={isSelf}
+                        onOutcome={(outcome) => onOutcome(member.staffId, outcome)}
+                      />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : null}
 
       <AddStaffForm onAdded={() => setReloadToken((token) => token + 1)} />
