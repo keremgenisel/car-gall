@@ -89,6 +89,40 @@ export interface CurrentSession {
   readonly role: StaffRole
   readonly preferredLocale: string
   readonly mustChangePassword: boolean
+  /** 0013 D26 — ikinci adım durumu; her istekte kaynaktan okunuyor. */
+  readonly twoFactorEnrolled: boolean
+}
+
+/**
+ * 0013 D15 · D43 — girişin **ayrıştırıcılı** sonucu. Bekleyen dallar kimlik TAŞIMAZ
+ * (C13): elinde yalnız parola olan kişi personelin adını, rolünü ve dilini öğrenmez.
+ *
+ * Dal bir HATA DEĞİLDİR ve `4xx` ile gelmez: uç 2xx dışını `ApiError`'a çeviriyor ve
+ * ekran normal bir adımı hata olarak basardı.
+ */
+export type LoginOutcome =
+  | { readonly status: 'completed'; readonly session: CurrentSession }
+  /** Kurulumu olan hesap: ikinci adım bekleniyor, oturum çerezi YAZILMADI (D4). */
+  | { readonly status: 'two_factor_required' }
+  /** Zorunlu rolde kurulumsuz hesap: kapılı bir oturum verildi (D13). */
+  | { readonly status: 'two_factor_setup_required' }
+
+/** Kurulum başlangıcı: kare kodu UÇ çizer, sunucu yalnız metin döner (D17/C15). */
+export interface TwoFactorEnrollmentStart {
+  readonly secretUri: string
+  readonly secret: string
+}
+
+/** Kurtarma kodu kümesi; **bir kez** gösterilir (D31). */
+export interface RecoveryCodes {
+  readonly codes: readonly string[]
+}
+
+export interface TwoFactorStatus {
+  readonly enrolled: boolean
+  /** Zorunluluk ROLDEN türetiliyor (D25); sözleşme politikayı dondurmuyor. */
+  readonly required: boolean
+  readonly remainingRecoveryCodes: number
 }
 
 export interface StaffListItem {
@@ -99,6 +133,8 @@ export interface StaffListItem {
   readonly status: 'active' | 'deactivated'
   readonly preferredLocale: string
   readonly branchId: string | null
+  /** 0013 D25 — kapanmış sözleşmeye eklemeli alan; rozet veri olmadan basılamaz. */
+  readonly twoFactorEnrolled: boolean
 }
 
 export interface AddStaffRequest {

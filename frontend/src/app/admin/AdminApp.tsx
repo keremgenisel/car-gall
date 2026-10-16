@@ -11,12 +11,19 @@ import { VehicleMediaPage } from '../../features/catalog/admin/VehicleMediaPage'
 import { ForcePasswordChangePage } from '../../features/identity/ForcePasswordChangePage'
 import { LoginPage } from '../../features/identity/LoginPage'
 import { StaffListPage } from '../../features/identity/StaffListPage'
+import { TwoFactorPage } from '../../features/identity/TwoFactorPage'
 import { EmptyState } from '../../shared/ui'
 
 type Gate =
   | { readonly kind: 'checking' }
   | { readonly kind: 'signedOut' }
   | { readonly kind: 'mustChangePassword' }
+  /**
+   * 0013 D13/D36 — kurulumu olmayan zorunlu rol. Kabuk bunu `/me`'nin `403`'ünden
+   * öğreniyor: kapının beyaz listesi D13'ün üç yolu olarak kaldı ve `/me` orada yok.
+   * Desen `mustChangePassword`'ün aynısı.
+   */
+  | { readonly kind: 'mustEnrollTwoFactor' }
   | { readonly kind: 'signedIn'; readonly session: CurrentSession }
 
 /**
@@ -61,6 +68,11 @@ export function AdminApp({
           return
         }
 
+        if (cause instanceof ApiError && cause.errorCode === 'identity.two_factor_setup_required') {
+          setGate({ kind: 'mustEnrollTwoFactor' })
+          return
+        }
+
         setGate({ kind: 'signedOut' })
       })
 
@@ -79,6 +91,8 @@ export function AdminApp({
     return (
       <LoginPage
         onSignedIn={() => {
+          // 0013 D14 — ikinci adım giriş ekranının bir FAZI; buraya ancak adım geçildikten
+          // (ya da kurulumsuz hesapta kapılı oturum verildikten) sonra geliniyor.
           // TAM GEZİNME, istemci tarafı geçiş değil: panelin dili `<html lang dir>` ile
           // SUNUCUDAN basılır (R16, AC-54, AC-55) ve o ancak oturum varken personelin
           // tercihine göre çözülebilir. İstemci tarafında geçilseydi panel, giriş
@@ -92,6 +106,12 @@ export function AdminApp({
 
   if (gate.kind === 'mustChangePassword') {
     return <ForcePasswordChangePage />
+  }
+
+  // D6/D13 — SIRA: parola kapısı yukarıda, kurulum kapısı burada. İkisi birden bekleyen
+  // personel önce parolasını değiştirir; sunucudaki iki ara katman da bu sırada çalışıyor.
+  if (gate.kind === 'mustEnrollTwoFactor') {
+    return <TwoFactorPage />
   }
 
   return (
@@ -134,6 +154,14 @@ export function AdminApp({
             {t('admin.nav.staff')}
           </a>
         ) : null}
+        {/* 0013 D44 — her role basılıyor: ikinci adım opsiyonel rolde de kurulabilir. */}
+        <a
+          className="admin-shell__nav-link"
+          href={adminPath('two-factor')}
+          aria-current={view === 'two-factor' ? 'page' : undefined}
+        >
+          {t('admin.nav.twoFactor')}
+        </a>
         <a
           className="admin-shell__nav-link"
           href={adminPath('vehicles')}
@@ -161,6 +189,7 @@ export function AdminApp({
           <VehicleMediaPage vehicleId={vehicleId} />
         ) : null}
         {view === 'password' ? <ForcePasswordChangePage /> : null}
+        {view === 'two-factor' ? <TwoFactorPage /> : null}
 
         {/*
           R8 — erişilebilen işlemler ROLE göre belirlenir. Personel yönetimi yalnız

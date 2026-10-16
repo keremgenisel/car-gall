@@ -12,9 +12,10 @@ vi.mock('../../shared/api/identity', () => ({
   deactivateStaff: vi.fn(),
   changeStaffRole: vi.fn(),
   resetStaffPassword: vi.fn(),
+  resetStaffTwoFactor: vi.fn(),
 }))
 
-const { fetchStaff, deactivateStaff, changeStaffRole, resetStaffPassword } =
+const { fetchStaff, deactivateStaff, changeStaffRole, resetStaffPassword, resetStaffTwoFactor } =
   await import('../../shared/api/identity')
 
 const BEN = '0192c000-0000-7000-8000-00000000a001'
@@ -26,9 +27,10 @@ const oturum: CurrentSession = {
   role: 'manager',
   preferredLocale: 'tr',
   mustChangePassword: false,
+  twoFactorEnrolled: true,
 }
 
-function personel(staffId: string, displayName: string): StaffListItem {
+function personel(staffId: string, displayName: string, twoFactorEnrolled = true): StaffListItem {
   return {
     staffId,
     displayName,
@@ -37,6 +39,7 @@ function personel(staffId: string, displayName: string): StaffListItem {
     status: 'active',
     preferredLocale: 'tr',
     branchId: null,
+    twoFactorEnrolled,
   }
 }
 
@@ -46,8 +49,8 @@ const LISTE = [personel(BEN, 'Ayse'), personel(BASKASI, 'Mehmet')]
  * Ekran gerçek API client'ı SAHTELENMİŞ hâlde monte ediliyor (docs/frontend.md § 8.1);
  * sorgular kullanıcının gördüğü şeye göre yapılıyor — rol, erişilebilir ad, metin.
  */
-async function ekran(locale: AppLocale = 'tr') {
-  vi.mocked(fetchStaff).mockResolvedValue(LISTE)
+async function ekran(liste: readonly StaffListItem[] = LISTE, locale: AppLocale = 'tr') {
+  vi.mocked(fetchStaff).mockResolvedValue(liste)
 
   render(
     <LocaleProvider locale={locale}>
@@ -68,7 +71,13 @@ afterEach(() => {
 })
 
 describe('0008/AC-1: Yönetici, personel listesinde her satır için pasifleştirme, rol değiştirme ve parola sıfırlama eylemlerini görür', () => {
-  it('her satırda üç eylem bulunur', async () => {
+  /**
+   * `0013` D27 — başlık GÜNCELLENDİ, iddia DEĞİŞMEDİ. Test üç `data-testid`'in
+   * VARLIĞINI denetliyor, sayı eşitliğini değil; `0013`'ün dördüncü eylemi bu yüzden onu
+   * kırmıyor ve `0008`/AC-1 hâlâ doğru (ekleme iddiayı zayıflatmıyor). Birinci CLARIFY
+   * turu bu testin kırılacağını yazmıştı; ölçüm öyle olmadığını gösterdi.
+   */
+  it('her satırda 0008in üç eylemi bulunur', async () => {
     await ekran()
 
     for (const staffId of [BEN, BASKASI]) {
@@ -76,6 +85,49 @@ describe('0008/AC-1: Yönetici, personel listesinde her satır için pasifleşti
       expect(screen.getByTestId(`role-${staffId}`)).not.toBeNull()
       expect(screen.getByTestId(`password-${staffId}`)).not.toBeNull()
     }
+  })
+})
+
+describe('0013/AC-43: Yönetici başka bir personelin ikinci adımını sıfırlar; sıfırlanan personel bir sonraki girişinde yeniden kurar', () => {
+  it('kurulumu olan satırda dördüncü eylem basılır ve onay ister', async () => {
+    vi.mocked(resetStaffTwoFactor).mockResolvedValue(undefined)
+
+    await ekran()
+
+    ac(`two-factor-reset-${BASKASI}`)
+
+    const kutu = await screen.findByTestId('confirm-two-factor-reset')
+
+    // Onay metni personeli ADIYLA yazıyor ve işlemin bedelini söylüyor (D22).
+    expect(kutu.textContent).toContain('Mehmet')
+    expect(kutu.textContent).toContain('açık oturumları kapanır')
+
+    ac('confirm-two-factor-reset-submit')
+
+    await waitFor(() => expect(vi.mocked(resetStaffTwoFactor)).toHaveBeenCalledTimes(1))
+    expect(vi.mocked(resetStaffTwoFactor).mock.calls[0]?.[0]).toBe(BASKASI)
+  })
+
+  /**
+   * R17 — kurulumu OLMAYAN satırda dördüncü eylem hiç basılmaz: yapılamaz bir işleme
+   * davet etmek `docs/frontend.md` § 3'ün dürüstlük kuralına aykırı (`0012c` AC-43'ün
+   * aynı deseni) ve sunucu onu `two_factor_not_enrolled` ile reddediyor.
+   */
+  it('kurulumu olmayan satırda dördüncü eylem BASILMAZ', async () => {
+    await ekran([personel(BEN, 'Ayse'), personel(BASKASI, 'Mehmet', false)])
+
+    expect(screen.getByTestId(`two-factor-reset-${BEN}`)).not.toBeNull()
+    expect(screen.queryByTestId(`two-factor-reset-${BASKASI}`)).toBeNull()
+  })
+
+  it('kendi satırında bedeli açıkça yazılır', async () => {
+    await ekran()
+
+    ac(`two-factor-reset-${BEN}`)
+
+    expect((await screen.findByTestId('confirm-self-warning')).textContent).toContain(
+      'yeniden kurana kadar',
+    )
   })
 })
 

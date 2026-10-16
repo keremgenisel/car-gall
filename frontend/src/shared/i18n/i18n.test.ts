@@ -91,6 +91,11 @@ describe('0012c/AC-37: toplu eylemin sayısı Arapçada da doğru çoğul biçim
     'vehicle.bulk.success.archive',
     'vehicle.bulk.success.feature',
     'vehicle.bulk.success.unfeature',
+
+    // 0013/AC-57 — kalan kurtarma kodu sayısı. Sayı gerçekçi olarak 1, 2 ve 3–10
+    // aralığında dolaşıyor (varsayılan küme on kod): Arapçanın üç ayrı biçimi tam o
+    // aralıkta gerekiyor.
+    'twoFactor.codes.remaining',
   ] as const
 
   it.each(anahtarlar)('%s — 1, 2 ve 3 ayrı cümleler', (key) => {

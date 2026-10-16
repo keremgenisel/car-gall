@@ -27,6 +27,12 @@ export type AdminView =
   | 'vehicle-edit'
   /** 0012a **D17** — aracın medya yüzeyi: `/admin/vehicles/{id}/media`. */
   | 'vehicle-media'
+  /**
+   * 0013 **D44** — personelin kendi ikinci adım ekranı: `/admin/two-factor`. Gezinmede
+   * her role basılıyor; yalnız kapılı durumda basılsaydı opsiyonel rolün kendi isteğiyle
+   * açması (R15) ve kurtarma kodu yenilemesi (D24) ulaşılamaz kalırdı.
+   */
+  | 'two-factor'
 
 export type Route =
   | { readonly kind: 'list' }
@@ -53,6 +59,8 @@ function adminViewOf(segment: string | undefined): AdminView {
       return 'vehicles'
     case 'vehicle-new':
       return 'vehicle-new'
+    case 'two-factor':
+      return 'two-factor'
     default:
       return 'staff'
   }

@@ -4,8 +4,10 @@ import { fetchStaff } from '../../shared/api/identity'
 import type { CurrentSession, StaffListItem } from '../../shared/api/types'
 import type { AppLocale } from '../../shared/lib/locale'
 import { adminPath } from '../../shared/lib/route'
+import { Badge } from '../../shared/ui'
 import { AddStaffForm } from './AddStaffForm'
 import { StaffRowActions, type ActionOutcome } from './StaffRowActions'
+import { statusBadgeKey } from './twoFactorState'
 import { StaffListEmpty, StaffListError, StaffListSkeleton } from './states/StaffListStates'
 
 type LoadState =
@@ -142,6 +144,8 @@ export function StaffListPage({ session }: { readonly session: CurrentSession })
               <th scope="col">{t('staff.column.loginId')}</th>
               <th scope="col">{t('staff.column.role')}</th>
               <th scope="col">{t('staff.column.status')}</th>
+              {/* 0013 R17/D25 — mockup üç panelde "2FA açık" rozeti çiziyor. */}
+              <th scope="col">{t('staff.column.twoFactor')}</th>
               <th scope="col">{t('staff.column.actions')}</th>
             </tr>
           </thead>
@@ -168,6 +172,18 @@ export function StaffListPage({ session }: { readonly session: CurrentSession })
                   {/* Rol ve durum KOD olarak gelir; görünen ad uçta çevrilir (0006 C7). */}
                   <td>{t(`staff.role.${member.role}`)}</td>
                   <td>{t(`staff.status.${member.status}`)}</td>
+
+                  {/*
+                    Rozet İKİ alandan kuruluyor: kurulum durumu satırda, zorunluluk ise
+                    ROLDE (D25). Sözleşmeye üçüncü bir alan eklemek, zorunluluk politikasını
+                    API'ye dondururdu.
+                  */}
+                  <td data-testid={`staff-two-factor-${member.staffId}`}>
+                    <Badge>
+                      {t(statusBadgeKey(member.twoFactorEnrolled, member.role === 'manager'))}
+                    </Badge>
+                  </td>
+
                   <td>
                     <StaffRowActions
                       member={member}

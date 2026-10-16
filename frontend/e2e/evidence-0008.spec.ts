@@ -1,6 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 import { kanit, kanitSayfa } from './kanit'
 import { YONETICI_PAROLA } from './global-setup'
+import { girisYap, ikinciAdimKurAsync } from './giris'
+
+/**
+ * `0013` D28/D46 — giriş yolu ORTAK yardımcıya taşındı (`e2e/giris.ts`): D30 Yönetici'de
+ * ikinci adımı zorunlu kıldığı için her giriş artık iki fazlı ve aynı mantığı on dört
+ * dosyada ayrı ayrı yazmak on dört kopya demekti. Bu dosyanın iddiaları DEĞİŞMEDİ.
+ */
 
 const SEED_KIMLIK = 'yonetici@cargallery.local'
 
@@ -10,21 +17,6 @@ const SEED_KIMLIK = 'yonetici@cargallery.local'
  * Yazma AÇIKÇA istenir (`npm run evidence`, docs/testing.md § 3); normal e2e koşusunda
  * buradaki `expect`'ler çalışır ama dosya yazılmaz.
  */
-
-async function girisYap(page: Page, kimlik: string, parola: string) {
-  await page.goto('/admin')
-  await expect(page.getByTestId('login-form')).toBeVisible()
-
-  await page.getByLabel('E-posta').fill(kimlik)
-  await page.getByLabel('Parola').fill(parola)
-  await page.getByRole('button', { name: 'Giriş yap' }).click()
-
-  const shell = page.getByTestId('admin-shell')
-  const password = page.getByTestId('password-form')
-  const error = page.getByTestId('login-error')
-
-  await expect(shell.or(password).or(error)).toBeVisible()
-}
 
 async function yoneticiOlarakGirAsync(page: Page) {
   await girisYap(page, SEED_KIMLIK, YONETICI_PAROLA)
@@ -53,7 +45,15 @@ async function baskaSatirAsync(page: Page) {
   return satir
 }
 
-test('0008/AC-1, 0008/AC-15: her satırda üç eylem ve kendi satırı işaretli', async ({ page }) => {
+/**
+ * `0013` D27 — başlık GÜNCELLENDİ, iddia değişmedi. Bu testin gövdesi eylem SAYMIYOR:
+ * tablonun görünürlüğüne ve `staff-row-self` sayısının bir olduğuna bakıyor. Birinci
+ * CLARIFY turu burada kırmızı bekliyordu; ölçüm öyle olmadığını gösterdi ve borç yalnız
+ * görsel kanıtın yenilenmesiydi (dördüncü düğme tabloyu değiştiriyor).
+ */
+test('0008/AC-1, 0008/AC-15: 0008in üç eylemi satırda ve kendi satırı işaretli', async ({
+  page,
+}) => {
   await yoneticiOlarakGirAsync(page)
 
   const tablo = page.getByTestId('staff-table')
@@ -299,6 +299,16 @@ test('0008/AC-31: Arapça tercih eden Yönetici için ekran ve onay kutusu RTL',
   await expect(page.getByTestId('password-changed')).toBeVisible()
 
   await girisYap(page, kimlik, yeniParola)
+
+  /*
+   * `0013` D30/D13 — bu hesap YÖNETİCİ: ikinci adım zorunlu ve kurulumsuz hesap kapılı
+   * bir oturum alıyor. Kurulum burada yapılıyor, çünkü testin ölçtüğü şey RTL ve onay
+   * kutusu; kurulum olmadan ekran hiç açılmazdı. Ekran Arapça basılıyor, bu yüzden
+   * yardımcı etiket değil alan kimliği kullanıyor.
+   */
+  await expect(page.getByTestId('two-factor-page')).toBeVisible()
+  await ikinciAdimKurAsync(page)
+  await page.goto('/admin')
 
   // Yön locale'in özelliğidir ve SUNUCUDAN basılır (docs/frontend.md § 6).
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')

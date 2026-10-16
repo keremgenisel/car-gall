@@ -15,6 +15,8 @@ export const ACTION_PREFIX = {
   deactivate: 'staff.deactivate.error',
   role: 'staff.role.error',
   password: 'staff.password.error',
+  /** 0013 R6/D22 — satırın DÖRDÜNCÜ eylemi: ikinci adımı sıfırlama. */
+  twoFactorReset: 'staff.twoFactorReset.error',
 } as const
 
 export type StaffAction = keyof typeof ACTION_PREFIX
@@ -33,6 +35,11 @@ export const ACTION_ERROR_CODES: Readonly<Record<StaffAction, readonly string[]>
   deactivate: ['last_active_manager', 'already_deactivated', 'concurrency_lost', 'generic'],
   role: ['last_active_manager', 'concurrency_lost', 'generic'],
   password: ['password_too_short', 'generic'],
+
+  // Sıfırlama `InvariantGuard`'dan geçmiyor (faktörü kaldırmak hiçbir invariant'ı
+  // bozmaz, C10/D32) ve `concurrency.lost` üretemez. `two_factor_not_enrolled` ise
+  // gerçekten dönebilir: liste bayatsa satırda rozet varken kurulum çoktan kalkmış olur.
+  twoFactorReset: ['two_factor_not_enrolled', 'staff_not_found', 'generic'],
 }
 
 /**

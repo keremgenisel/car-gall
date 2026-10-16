@@ -24,6 +24,7 @@ const personel: StaffListItem = {
   status: 'active',
   preferredLocale: 'tr',
   branchId: null,
+  twoFactorEnrolled: true,
 }
 
 /** 0008 D1 — ekran kendi satırını oturumdaki kimlikten tanır. */
@@ -33,6 +34,7 @@ const oturum: CurrentSession = {
   role: 'manager',
   preferredLocale: 'tr',
   mustChangePassword: false,
+  twoFactorEnrolled: true,
 }
 
 function ekran(locale: AppLocale = 'tr', session: CurrentSession = oturum) {
@@ -152,5 +154,34 @@ describe('0008/AC-15: Ekran, listedeki kendi satırını ayırt eder', () => {
 
     // Renk tek başına anlam taşımaz: satır ayrıca METİNLE de işaretli.
     expect(within(kendi).getByText('Siz')).not.toBeNull()
+  })
+})
+
+describe('0013/AC-54: Yönetici personel listesinde her satırın ikinci adım durumunu **rozetle** görür', () => {
+  it('kurulumu olan ve olmayan satır farklı rozet taşır', async () => {
+    vi.mocked(fetchStaff).mockResolvedValue([
+      personel,
+      {
+        ...personel,
+        staffId: '0192c000-0000-7000-8000-000000000002',
+        displayName: 'Mehmet Demir',
+        loginId: 'mehmet@ornek.com',
+        twoFactorEnrolled: false,
+      },
+    ])
+
+    ekran()
+
+    await screen.findByTestId('staff-table')
+
+    expect(screen.getByTestId(`staff-two-factor-${personel.staffId}`).textContent).toBe(
+      'İki adım açık',
+    )
+
+    // Zorunlu rolde kurulumu olmayan satır ÜÇÜNCÜ hâli gösteriyor; rozet iki alandan
+    // kuruluyor (D25) ve sözleşmede üçüncü bir alan yok.
+    expect(
+      screen.getByTestId('staff-two-factor-0192c000-0000-7000-8000-000000000002').textContent,
+    ).toBe('İki adım gerekli')
   })
 })
