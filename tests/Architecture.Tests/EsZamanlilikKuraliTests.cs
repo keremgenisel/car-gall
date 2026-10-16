@@ -32,7 +32,12 @@ public sealed partial class EsZamanlilikKuraliTests
                 continue;
             }
 
-            if (File.ReadAllText(file).Contains("FOR UPDATE", StringComparison.OrdinalIgnoreCase))
+            // Yorumlar ATLANIR: `TwoFactorLogin` satır kilidi yazmıyor ama *neden
+            // yazmadığını* yazıyor ve ham metin taraması onu ihlal sanmıştı (D48).
+            // Gerekçesini anlatan bir dosyayı cezalandıran kural, gerekçenin hiç
+            // yazılmamasını öğretir.
+            if (SolutionLayout.CodeLines(file).Any(line =>
+                line.Contains("FOR UPDATE", StringComparison.OrdinalIgnoreCase)))
             {
                 violations.Add(relative);
             }

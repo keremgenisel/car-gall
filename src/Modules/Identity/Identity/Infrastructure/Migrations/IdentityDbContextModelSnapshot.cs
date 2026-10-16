@@ -99,6 +99,86 @@ namespace CarGallery.Modules.Identity.Infrastructure.Migrations
                     b.ToTable("login_attempts", "identity");
                 });
 
+            modelBuilder.Entity("CarGallery.Modules.Identity.Domain.PendingLogin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<DateTimeOffset?>("ConsumedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("staff_id");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ux_pending_logins_token_hash");
+
+                    b.ToTable("pending_logins", "identity");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.Identity.Domain.RecoveryCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("staff_id");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_at");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "CodeHash", "CarGallery.Modules.Identity.Domain.RecoveryCode.CodeHash#PasswordHash", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("code_hash");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffId")
+                        .HasDatabaseName("ix_recovery_codes_staff_id");
+
+                    b.ToTable("recovery_codes", "identity");
+                });
+
             modelBuilder.Entity("CarGallery.Modules.Identity.Domain.Session", b =>
                 {
                     b.Property<Guid>("Id")
@@ -219,6 +299,70 @@ namespace CarGallery.Modules.Identity.Infrastructure.Migrations
                         .HasDatabaseName("ux_staff_normalized_login_id");
 
                     b.ToTable("staff", "identity");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.Identity.Domain.TwoFactorAuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ActorStaffId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_staff_id");
+
+                    b.Property<int>("Event")
+                        .HasColumnType("integer")
+                        .HasColumnName("event");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("staff_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffId")
+                        .HasDatabaseName("ix_two_factor_audit_staff_id");
+
+                    b.ToTable("two_factor_audit", "identity");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.Identity.Domain.TwoFactorEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("staff_id");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("LastAcceptedStep")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("last_accepted_step");
+
+                    b.Property<DateTimeOffset>("PendingExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("pending_expires_at");
+
+                    b.Property<string>("SecretCipher")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("secret_cipher");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("two_factor_enrollments", "identity");
                 });
 #pragma warning restore 612, 618
         }

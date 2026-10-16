@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import { useLocale } from '../../app/localeContext'
 import { ApiError } from '../../shared/api/client'
-import { changeStaffRole, deactivateStaff, resetStaffPassword } from '../../shared/api/identity'
+import {
+  changeStaffRole,
+  deactivateStaff,
+  resetStaffPassword,
+  resetStaffTwoFactor,
+} from '../../shared/api/identity'
 import { STAFF_ROLES, type StaffListItem, type StaffRole } from '../../shared/api/types'
 import { Button, Field } from '../../shared/ui'
 import { ConfirmDialog } from './ConfirmDialog'
 import { passwordFormError, rejectionFor, type StaffAction } from './staffActionState'
 
 /**
- * Bir satırın üç eylemi (0008 R1–R3).
+ * Bir satırın DÖRT eylemi: 0008 R1–R3'ün üçü ve 0013 R6'nın ikinci adım sıfırlaması.
  *
  * Eylem sonucu YUKARI bildiriliyor; liste tazeleme kararını bu bileşen vermiyor. Sebep
  * R6–R8: "tazele mi" sorusunun cevabı reddin TÜRÜNE bağlı ve o karar `staffActionState`'te
@@ -136,6 +141,24 @@ export function StaffRowActions({
         >
           {busy('password') ? t('staff.action.working') : t('staff.action.password')}
         </Button>
+
+        {/*
+          0013 R6/R17 — dördüncü eylem YALNIZ kurulumu olan satırda basılır: kurulumu
+          olmayan birini "sıfırlamak" sunucuda `two_factor_not_enrolled` ile düşer ve
+          ekranı yapılamaz bir işleme davet etmek `docs/frontend.md` § 3'ün dürüstlük
+          kuralına aykırı olurdu (`0012c` AC-43'ün aynı deseni).
+        */}
+        {member.twoFactorEnrolled ? (
+          <Button
+            variant="secondary"
+            loading={busy('twoFactorReset')}
+            disabled={pending !== null}
+            onClick={() => setOpen('twoFactorReset')}
+            data-testid={`two-factor-reset-${member.staffId}`}
+          >
+            {busy('twoFactorReset') ? t('staff.action.working') : t('staff.action.twoFactorReset')}
+          </Button>
+        ) : null}
       </div>
 
       {open === 'deactivate' ? (
@@ -202,6 +225,38 @@ export function StaffRowActions({
           {isSelf && role !== 'manager' ? (
             <p className="admin-dialog__warning" data-testid="confirm-self-warning">
               {t('staff.confirm.role.self')}
+            </p>
+          ) : null}
+        </ConfirmDialog>
+      ) : null}
+
+      {open === 'twoFactorReset' ? (
+        <ConfirmDialog
+          titleKey="staff.confirm.twoFactorReset.title"
+          onCancel={close}
+          testId="confirm-two-factor-reset"
+          footer={
+            <Button
+              loading={busy('twoFactorReset')}
+              onClick={() =>
+                void run('twoFactorReset', () => resetStaffTwoFactor(member.staffId, locale))
+              }
+              data-testid="confirm-two-factor-reset-submit"
+            >
+              {t('staff.confirm.twoFactorReset.submit')}
+            </Button>
+          }
+        >
+          <p dir="auto">{t('staff.confirm.twoFactorReset.body', { name: member.displayName })}</p>
+
+          {/* D22 — sıfırlama bir güvenlik işlemi: personelin açık oturumları düşer. */}
+          <p className="admin-dialog__warning">{t('staff.confirm.twoFactorReset.warning')}</p>
+
+          {/* D32 — kendi adımını sıfırlamak meşru ve bedeli AÇIK: yeniden kurana kadar
+              kapılı bir oturumla çalışır. */}
+          {isSelf ? (
+            <p className="admin-dialog__warning" data-testid="confirm-self-warning">
+              {t('staff.confirm.twoFactorReset.self')}
             </p>
           ) : null}
         </ConfirmDialog>

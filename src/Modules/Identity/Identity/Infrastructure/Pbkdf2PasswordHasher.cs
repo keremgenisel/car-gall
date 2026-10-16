@@ -19,5 +19,8 @@ internal sealed class Pbkdf2PasswordHasher(IdentityOptions options) : IPasswordH
     public PasswordHash Hash(string password) =>
         PasswordHash.Create(password, options.PasswordIterations);
 
+    public PasswordHash HashRecoveryCode(string code) =>
+        PasswordHash.Create(code, options.RecoveryCodeIterations);
+
     public void BurnEquivalentWork(string password) => burnHash.Matches(password);
 }

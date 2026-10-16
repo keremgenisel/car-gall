@@ -143,17 +143,12 @@ public sealed class InvariantGuardSecenekleriTests
     /// Yorum satırları atlanır. Bu dosyanın ölçtüğü tuzağı `InvariantGuard.cs` ve üç modül
     /// YORUMDA anlatıyor; tarama yorumları okursa kapı, kendisini doğuran gerekçeyi ihlal
     /// sanar (`OutboxYazicisiTests`'in aynı gerekçesi).
+    ///
+    /// <para>Desen artık `SolutionLayout`'ta yaşıyor: aynı tuzak `0007`/AC-9'u da ısırdı
+    /// (**D50**) ve ikinci bir kopya yazmak, iki kopyanın ayrı ayrı zayıflaması
+    /// demekti — bu deponun iki kez ödediği ders.</para>
     /// </summary>
-    private static IReadOnlyList<string> KodSatirlari(string yol) =>
-    [
-        .. File.ReadAllLines(yol).Where(satir =>
-        {
-            string kirpilmis = satir.TrimStart();
-
-            return !kirpilmis.StartsWith("//", StringComparison.Ordinal)
-                && !kirpilmis.StartsWith("*", StringComparison.Ordinal);
-        })
-    ];
+    private static IReadOnlyList<string> KodSatirlari(string yol) => SolutionLayout.CodeLines(yol);
 
     private static IReadOnlyList<string> ModulDosyalari() =>
     [

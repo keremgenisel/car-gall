@@ -8,6 +8,12 @@ namespace CarGallery.Architecture.Tests;
 /// ve her seferinde elle düzeltildi. Sonucu sessiz: yorum yanlış üyeyi anlatır, asıl üye
 /// yorumsuz kalır ve derleyici hiçbir şey söylemez. Kusuru düzeltmek dönüşünü
 /// engellemiyor; yalnızca kapı engelliyor.</para>
+///
+/// <para><b>Kapı `tests/` altını da tarıyor ve bu da ölçülmüş bir bedel:</b> ilk hâli
+/// yalnız `SolutionLayout.SourceFiles()` çağırıyordu, yani yalnız `src/`. Kusur beşinci
+/// kez `0013`'te döndü ve tam o klasörde — `tests/Identity.Tests` — oldu; kapı yeşil
+/// kaldı, derleyici de söylemedi (`GenerateDocumentationFile=false`). Kural metin
+/// kuralıdır: nerede yazıldığından bağımsız.</para>
 /// </summary>
 public sealed class YorumKapisiTests
 {
@@ -16,7 +22,15 @@ public sealed class YorumKapisiTests
     {
         List<string> violations = [];
 
-        foreach (string file in SolutionLayout.SourceFiles())
+        // Kapının kendi kapsamı da ölçülür: iki listeden biri boşalırsa kural yarısını
+        // sessizce bırakır ve bunu hiç söylemezdi.
+        IReadOnlyList<string> kaynak = SolutionLayout.SourceFiles();
+        IReadOnlyList<string> testler = SolutionLayout.TestFiles();
+
+        Assert.NotEmpty(kaynak);
+        Assert.NotEmpty(testler);
+
+        foreach (string file in kaynak.Concat(testler))
         {
             string[] lines = File.ReadAllLines(file);
 

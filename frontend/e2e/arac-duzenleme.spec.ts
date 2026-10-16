@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { YONETICI_PAROLA } from './global-setup'
+import { yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync } from './giris'
 
 /**
  * 0010b'nin kritik akışı: personel kaydettiği araca döner, düzenler ve değişiklik
@@ -17,15 +18,12 @@ function benzersizSase(onek: string) {
   return `${onek}${Date.now()}${Math.random().toString(36).slice(2, 6)}`.slice(0, 32)
 }
 
+/**
+ * `0013` D28/D46 — giriş yolu ortak yardımcıya taşındı (`e2e/giris.ts`): Yönetici'de
+ * ikinci adım zorunlu (D30) ve giriş artık iki fazlı. Bu dosyanın iddiaları DEĞİŞMEDİ.
+ */
 async function yoneticiOlarakGirAsync(page: Page) {
-  await page.goto('/admin')
-  await expect(page.getByTestId('login-form')).toBeVisible()
-
-  await page.getByLabel('E-posta', { exact: true }).fill(SEED_KIMLIK)
-  await page.getByLabel('Parola', { exact: true }).fill(YONETICI_PAROLA)
-  await page.getByRole('button', { name: 'Giriş yap' }).click()
-
-  await expect(page.getByTestId('admin-shell')).toBeVisible()
+  await ortakYoneticiOlarakGirAsync(page, SEED_KIMLIK, YONETICI_PAROLA)
 }
 
 /** Seçenekler SIRAYLA seçiliyor; etiketleri seed'e bağlamak kırılgan test üretirdi. */

@@ -20,6 +20,16 @@ internal sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> opti
 
     internal DbSet<LockoutState> LoginAttempts => Set<LockoutState>();
 
+    internal DbSet<TwoFactorEnrollment> TwoFactorEnrollments => Set<TwoFactorEnrollment>();
+
+    internal DbSet<RecoveryCode> RecoveryCodes => Set<RecoveryCode>();
+
+    /// <summary>D19 — ara durum; oturum DEĞİL, kendi kısa ömürlü tablosu.</summary>
+    internal DbSet<PendingLogin> PendingLogins => Set<PendingLogin>();
+
+    /// <summary>R12/D12 — ikinci adımın kaydı; bu depodaki ilk kayıt tablosu.</summary>
+    internal DbSet<TwoFactorAuditEntry> TwoFactorAudit => Set<TwoFactorAuditEntry>();
+
     /// <summary>Outbox YAYINCININ kendi şemasındadır (architecture.md § 2.C).</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 

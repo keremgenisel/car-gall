@@ -48,13 +48,27 @@ public sealed class IdentityDatabase : IAsyncLifetime
     {
         await using IdentityDbContext context = CreateContext();
 
+        // Tablo listesi MODELDEN türetiliyor, elle sayılmıyor. `0013` dört tablo ekledi ve
+        // elle yazılmış listede eksik kalanlar testleri sessizce birbirine bağladı: üç
+        // test, kendinden önce koşan testin ara durum satırlarını gördü ve kırmızı
+        // verdiği yer kusurun yeri değildi. Yeni bir tablo artık kendiliğinden kapsanıyor.
+        string[] tablolar =
+        [
+            .. context.Model.GetEntityTypes()
+                .Select(tip => tip.GetTableName())
+                .Where(ad => ad is not null)
+                .Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.Ordinal)
+                .Select(ad => $"{IdentityDbContext.Schema}.{ad}")
+        ];
+
+        // Tablo adları MODELDEN geliyor, dışarıdan değil: enterpolasyonun tek kaynağı
+        // kendi şemamız. `ExecuteSqlAsync` parametreli çalışıyor ve tablo adı parametre
+        // olarak geçirilemez, bu yüzden uyarı burada bastırılıyor.
+#pragma warning disable EF1002
         await context.Database.ExecuteSqlRawAsync(
-            $"""
-            TRUNCATE TABLE {IdentityDbContext.Schema}.staff,
-                           {IdentityDbContext.Schema}.sessions,
-                           {IdentityDbContext.Schema}.login_attempts,
-                           {IdentityDbContext.Schema}.outbox_messages
-            """);
+            $"TRUNCATE TABLE {string.Join(", ", tablolar)}");
+#pragma warning restore EF1002
     }
 }
 

@@ -11,9 +11,16 @@ vi.mock('../../shared/api/identity', () => ({
   fetchStaff: vi.fn(),
   addStaff: vi.fn(),
   logout: vi.fn(),
+  fetchTwoFactorStatus: vi.fn(),
+  startTwoFactorEnrollment: vi.fn(),
+  confirmTwoFactorEnrollment: vi.fn(),
+  disableTwoFactor: vi.fn(),
+  regenerateRecoveryCodes: vi.fn(),
+  resetStaffTwoFactor: vi.fn(),
 }))
 
-const { fetchCurrentSession, fetchStaff } = await import('../../shared/api/identity')
+const { fetchCurrentSession, fetchStaff, fetchTwoFactorStatus } =
+  await import('../../shared/api/identity')
 
 function oturum(overrides: Partial<CurrentSession> = {}): CurrentSession {
   return {
@@ -22,6 +29,7 @@ function oturum(overrides: Partial<CurrentSession> = {}): CurrentSession {
     role: 'manager',
     preferredLocale: 'tr',
     mustChangePassword: false,
+    twoFactorEnrolled: true,
     ...overrides,
   }
 }
@@ -174,6 +182,33 @@ describe('AC-32: İlk parolasıyla giriş yapan personelden parolasını değiş
     ekran()
 
     expect(await screen.findByTestId('password-form')).toBeTruthy()
+    expect(screen.queryByTestId('login-form')).toBeNull()
+  })
+})
+
+describe('0013/AC-29: Zorunlu rolde kurulumu olmayan personel giriş yaptığında yanıt kurulum gerektiğini söyler ve ona **kapılı** bir oturum verilir', () => {
+  /**
+   * D36 — kabuk kurulum borcunu kapının `403`'ünden öğreniyor; kapının beyaz listesinde
+   * `/me` YOK ve bu bilinçli. Desen `identity.password_change_required`'ın aynısı
+   * (`0006` AC-27/AC-32) ve sıra da onunla aynı: parola kapısı önce.
+   */
+  it('403 two_factor_setup_required kurulum ekranına götürür, giriş ekranına değil', async () => {
+    vi.mocked(fetchCurrentSession).mockRejectedValue(
+      new ApiError('identity.two_factor_setup_required', null, 403),
+    )
+    vi.mocked(fetchTwoFactorStatus).mockResolvedValue({
+      enrolled: false,
+      required: true,
+      remainingRecoveryCodes: 0,
+    })
+
+    render(
+      <LocaleProvider locale="tr">
+        <AdminApp />
+      </LocaleProvider>,
+    )
+
+    expect(await screen.findByTestId('two-factor-page')).not.toBeNull()
     expect(screen.queryByTestId('login-form')).toBeNull()
   })
 })

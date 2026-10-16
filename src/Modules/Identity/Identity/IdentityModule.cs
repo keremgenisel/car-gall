@@ -68,6 +68,11 @@ public static class IdentityModule
             LockoutDuration = TimeSpan.FromMinutes(setup.LockoutMinutes),
             MinimumPasswordLength = setup.MinimumPasswordLength,
             PasswordIterations = setup.PasswordIterations,
+            RecoveryCodeCount = setup.RecoveryCodeCount,
+            RecoveryCodeIterations = setup.RecoveryCodeIterations,
+            PendingEnrollmentLifetime = TimeSpan.FromMinutes(setup.PendingEnrollmentMinutes),
+            PendingLoginLifetime = TimeSpan.FromMinutes(setup.PendingLoginMinutes),
+            TwoFactorIssuer = setup.TwoFactorIssuer,
         };
 
         services.AddSingleton(identityOptions);
@@ -92,6 +97,15 @@ public static class IdentityModule
         services.AddScoped<IStaffSessionQueries, StaffSessionQueries>();
         services.AddScoped<Login>();
         services.AddScoped<Logout>();
+
+        // 0013 D3/AC-49 — şifreleme anahtarı KURULUŞTA doğrulanır: eksik ya da 32 bayt
+        // olmayan bir anahtarla uygulama hiç ayağa kalkmaz. Kurucu burada, veritabanına
+        // gidilmeden önce çalışıyor — kurulum parolasıyla (D2/AC-53) aynı disiplin.
+        services.AddSingleton<ISecretProtector>(
+            new AesGcmSecretProtector(setup.TwoFactorEncryptionKey));
+
+        services.AddScoped<TwoFactorCommands>();
+        services.AddScoped<TwoFactorLogin>();
         // 0007 — invariant koruması ortak desenden gelir; kilit süresi bir iş kuralı
         // değil bir güvenlik marjıdır, bu yüzden yapılandırmadan değil varsayılandan.
         services.AddSingleton(InvariantGuardOptions<IdentityDbContext>.Default);
@@ -124,14 +138,19 @@ public static class IdentityModule
     }
 
     /// <summary>
-    /// Yönetim isteklerinin önünde duran iki ara katman. Host bunları çağırmazsa R10'un
-    /// kapısı ve AC-30'un sunucu yarısı sessizce kaybolur — `Host.Tests` bu yüzden
-    /// gerçek boru hattını sınar.
+    /// Yönetim isteklerinin önünde duran ÜÇ ara katman. Host bunları çağırmazsa R10'un
+    /// kapısı, AC-30'un sunucu yarısı ve 0013'ün kurulum kapısı sessizce kaybolur —
+    /// `Host.Tests` bu yüzden gerçek boru hattını sınar.
     /// </summary>
     public static IApplicationBuilder UseIdentity(this IApplicationBuilder app)
     {
         app.UseMiddleware<CrossOriginGuard>();
         app.UseMiddleware<PasswordChangeGate>();
+
+        // D6/D13 — SIRA bir karardır: önce parola değişimi, sonra kurulum. Kurulum ekranı
+        // sırrı gösterir ve o sırrın, parolayı sistem dışından alan kişinin elinde olması
+        // gerekir. İki kapı sırayla çalışır ve ikisi de izin verdiklerini AÇIKÇA sayar.
+        app.UseMiddleware<TwoFactorSetupGate>();
 
         return app;
     }

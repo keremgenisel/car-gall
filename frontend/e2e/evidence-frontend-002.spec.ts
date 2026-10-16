@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { kanit, kanitSayfa } from './kanit'
 import { YONETICI_PAROLA } from './global-setup'
+import { girisYap as ortakGirisYap, oturumuBirakAsync } from './giris'
 
 const SEED_KIMLIK = 'yonetici@cargallery.local'
 
@@ -11,15 +12,11 @@ const SEED_KIMLIK = 'yonetici@cargallery.local'
  * yazılır (docs/testing.md § 3). Yani kapı her zaman açık, gürültü yalnız istendiğinde.
  */
 
+/**
+ * `0013` D28/D46 — giriş yolu ortak yardımcıya taşındı; bu dosyanın iddiaları değişmedi.
+ */
 async function girisYap(page: Page) {
-  await page.goto('/admin')
-  await expect(page.getByTestId('login-form')).toBeVisible()
-
-  await page.getByLabel('E-posta').fill(SEED_KIMLIK)
-  await page.getByLabel('Parola').fill(YONETICI_PAROLA)
-  await page.getByRole('button', { name: 'Giriş yap' }).click()
-
-  await expect(page.getByTestId('admin-shell').or(page.getByTestId('password-form'))).toBeVisible()
+  await ortakGirisYap(page, SEED_KIMLIK, YONETICI_PAROLA)
 }
 
 /** Tarayıcının GERÇEKTEN hesapladığı değer; `var()` zincirini biz çözmüyoruz. */
@@ -253,8 +250,7 @@ test('frontend-002/AC-25: onay anında sayılan her ekran yeni token değerleriy
   await page.getByRole('button', { name: 'Personeli ekle' }).press('Enter')
   await expect(page.getByText(kimlik)).toBeVisible()
 
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
+  await oturumuBirakAsync(page)
 
   await page.getByLabel('E-posta').fill(kimlik)
   await page.getByLabel('Parola').fill(ilkParola)

@@ -32,6 +32,14 @@ internal sealed class SessionAuthenticationHandler(
     internal const string SessionIdClaim = "cargallery:session_id";
     internal const string MustChangePasswordClaim = "cargallery:must_change_password";
 
+    /// <summary>
+    /// D26/D35 — istek başına KAYNAKTAN çözülen kurulum durumu. Girişte pişirilmiş
+    /// değil: `StaffSessionQueries` her istekte personel satırıyla aynı okumada getiriyor,
+    /// yani rol ve hesap durumuyla aynı tazelikte (C16). Hem `/me` hem
+    /// <see cref="TwoFactorSetupGate"/> bunu okur.
+    /// </summary>
+    internal const string TwoFactorEnrolledClaim = "cargallery:two_factor_enrolled";
+
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         string? token = SessionCookie.Read(Context);
@@ -57,6 +65,7 @@ internal sealed class SessionAuthenticationHandler(
             new Claim(SessionIdClaim, session.SessionId.ToString()),
             new Claim(PreferredLocaleClaim, session.PreferredLocale),
             new Claim(MustChangePasswordClaim, session.MustChangePassword ? "true" : "false"),
+            new Claim(TwoFactorEnrolledClaim, session.TwoFactorEnrolled ? "true" : "false"),
         ], AdminSurface.AuthenticationScheme);
 
         return AuthenticateResult.Success(

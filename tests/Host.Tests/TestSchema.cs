@@ -55,7 +55,13 @@ internal static class TestSchema
             MinimumPasswordLength: 12,
             PasswordIterations: 1000,
             LoginRequestLimit: 20,
-            LoginRequestWindowMinutes: 10));
+            LoginRequestWindowMinutes: 10,
+            TwoFactorIssuer: "Test Galeri",
+            TwoFactorEncryptionKey: IdentityTestSettings.TwoFactorEncryptionKey,
+            RecoveryCodeCount: 10,
+            RecoveryCodeIterations: 1_000,
+            PendingEnrollmentMinutes: 10,
+            PendingLoginMinutes: 5));
 
         // 0005 ile `leads` de bir modül şemasıdır.
         services.AddLeads(connectionString, ["tr", "ar", "en"], 5, 10);

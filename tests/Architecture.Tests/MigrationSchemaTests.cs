@@ -10,7 +10,14 @@ namespace CarGallery.Architecture.Tests;
 /// </summary>
 public sealed partial class MigrationSchemaTests
 {
-    [Fact]
+    /// <summary>
+    /// Kapı GENEL ve `0013`'ten eskidir; etiketi `0013`/AC-60 taşıyor çünkü o kriterin
+    /// iddiası ("kayıt tablosu yalnız `identity` şemasına dokunur") bu kapının ölçtüğü
+    /// şeyin ta kendisi ve dört yeni tablonun hepsi aynı şemada. Etiket, *"bu kriterin
+    /// testi var mı"* sorusunu tek bir `grep` ile cevaplanabilir kılıyor
+    /// (`docs/testing.md` § 1); kapının kapsamını daraltmıyor.
+    /// </summary>
+    [Fact(DisplayName = "0013/AC-60: Modül migration'ı yalnız kendi şemasına dokunur")]
     public void DokunurYalnizKendiSemasina_ModulMigrationlari()
     {
         List<string> violations = [];

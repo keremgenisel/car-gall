@@ -46,8 +46,20 @@ internal sealed class StaffSessionQueries(
             return null;
         }
 
-        Staff? staff = await context.Staff
-            .SingleOrDefaultAsync(item => item.Id == session.StaffId, cancellationToken);
+        // D35 — ikinci adım durumu personel satırıyla AYNI okumada çözülüyor. Ayrı bir
+        // sorgu, aynı gerçeği tek istekte iki kez sormak olurdu: hem `/me` hem de her
+        // yönetim isteğinin önündeki kapı bu bilgiye muhtaç (D13).
+        var row = await context.Staff
+            .Where(item => item.Id == session.StaffId)
+            .Select(item => new
+            {
+                Staff = item,
+                TwoFactorEnrolled = context.TwoFactorEnrollments
+                    .Any(enrollment => enrollment.Id == item.Id && enrollment.ConfirmedAt != null),
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        Staff? staff = row?.Staff;
 
         // AC-20 — pasifleştirilen personelin açık oturumu DERHAL geçersizdir.
         if (staff is null || !staff.IsActive)
@@ -80,6 +92,7 @@ internal sealed class StaffSessionQueries(
             StaffRoleCode.ToCode(staff.Role),
             staff.PreferredLocale.Code,
             staff.MustChangePassword,
-            staff.BranchId);
+            staff.BranchId,
+            row!.TwoFactorEnrolled);
     }
 }

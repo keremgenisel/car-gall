@@ -197,11 +197,10 @@ public sealed partial class BildirimSinirTests
     /// İngilizce şablon metninde geçen "reached the dealership." ise düpedüz düzyazı.
     /// Tablo adının küçük harfle başlaması bu üçünü de ayırıyor — gürültülü bir mimari
     /// test, kapattığından daha çok şey açar.</para>
-    /// </summary>
-    /// <summary>
-    /// Desen `SolutionLayout`'ta yaşıyor: aynı kuralı `0011`/AC-35 de koruyor ve ikinci
-    /// kopya yazıldığında daha zayıf çıktı (bir sonda yakaladı). Ortak desen tek bir yerde
-    /// yaşar; modüller onu çağırır (`0007`/AC-9'un aynı ilkesi).
+    ///
+    /// <para>Desen `SolutionLayout`'ta yaşıyor: aynı kuralı `0011`/AC-35 de koruyor ve
+    /// ikinci kopya yazıldığında daha zayıf çıktı (bir sonda yakaladı). Ortak desen tek
+    /// bir yerde yaşar; modüller onu çağırır (`0007`/AC-9'un aynı ilkesi).</para>
     /// </summary>
     private static Regex SchemaReference(string schema) => SolutionLayout.SchemaReference(schema);
 

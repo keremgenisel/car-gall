@@ -73,11 +73,20 @@ internal static class AdminEndpoints
             .WithName("ResetStaffPassword")
             .RequireAuthorization(AdminSurface.ManagerPolicy)
             .Produces(StatusCodes.Status204NoContent);
+
+        // 0013 D7 — ikinci adımın uçları da AYNI grubun altında: oturumsuz köke ikinci
+        // bir yönetim yüzeyi açılmaz (C14) ve grup politikası onları otomatik korur.
+        admin.MapTwoFactorEndpoints();
     }
 
     /// <summary>
     /// 0008 D1 — yanıt personelin kimliğini taşır. Değer claim'den okunuyor; oturum zaten
     /// doğrulanmış olduğu için ikinci bir sorgu gerekmiyor.
+    ///
+    /// <para>0013 D26/D35 — ikinci adım durumu da buradan geliyor ve bu bir "pişmiş
+    /// claim" DEĞİLDİR: `StaffSessionQueries` onu her istekte personel satırıyla aynı
+    /// okumada çözüyor (C16). Ayrı bir sorgu açmak, aynı gerçeği tek istekte iki kez
+    /// sormak olurdu — kapı (D13) da aynı claim'i okuyor.</para>
     /// </summary>
     private static Ok<CurrentSessionResponse> GetCurrent(HttpContext httpContext) =>
         TypedResults.Ok(new CurrentSessionResponse(
@@ -87,7 +96,8 @@ internal static class AdminEndpoints
             httpContext.User.FindFirstValue(ClaimTypes.Name) ?? string.Empty,
             httpContext.User.FindFirstValue(ClaimTypes.Role) ?? string.Empty,
             httpContext.User.FindFirstValue(SessionAuthenticationHandler.PreferredLocaleClaim) ?? string.Empty,
-            httpContext.User.FindFirstValue(SessionAuthenticationHandler.MustChangePasswordClaim) == "true"));
+            httpContext.User.FindFirstValue(SessionAuthenticationHandler.MustChangePasswordClaim) == "true",
+            httpContext.User.FindFirstValue(SessionAuthenticationHandler.TwoFactorEnrolledClaim) == "true"));
 
     private static async Task<Results<Ok<IReadOnlyList<StaffListItem>>, JsonHttpResult<Dictionary<string, object?>>>>
         ListStaffAsync(StaffCommands commands, CancellationToken cancellationToken) =>

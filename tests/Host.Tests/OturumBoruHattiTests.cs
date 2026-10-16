@@ -50,6 +50,13 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
 
     private WebApplicationFactory<Program>? factory;
 
+    /// <summary>
+    /// `0013` D30/D34 — kurulum Yöneticisinin ikinci adım sırrı. Kurulum **bir kez**,
+    /// `InitializeAsync`'te yapılıyor; testlerin her girişi kodu bundan hesaplıyor
+    /// (`IkinciAdim`). D28'in e2e için verdiği kararın backend karşılığı.
+    /// </summary>
+    private string ikinciAdimSirri = string.Empty;
+
     public async Task InitializeAsync()
     {
         await container.StartAsync();
@@ -86,6 +93,21 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
             $"{AdminSurface.RoutePrefix}/me/password",
             new { currentPassword = IdentityTestSettings.SeedAdminPassword, newPassword = CalisanParola }))
             .StatusCode);
+
+        // 0013 D30/D13 — Yöneticide ikinci adım ZORUNLU ve kurulumsuz hesap kapılı bir
+        // oturum alıyor. Kurulum bir kez burada yapılır; aksi hâlde bu dosyadaki her
+        // yönetim isteği `403 two_factor_setup_required` alır ve testler ikinci adımla
+        // ilgisi olmayan bir sebeple kırmızı verirdi (D34).
+        // Parola değişimi o personelin TÜM oturumlarını düşürdü (`0006` R11/AC-22), yani
+        // eldeki çerez ölü. Yeniden giriş `two_factor_setup_required` döndürüyor ve
+        // KAPILI bir oturum veriyor (D13) — kurulumun yapılabildiği tek hâl tam bu.
+        Assert.Equal(HttpStatusCode.OK, (await kurulum.PostAsJsonAsync("/api/identity/sessions", new
+        {
+            loginId = IdentityTestSettings.SeedAdminLoginId,
+            password = CalisanParola,
+        })).StatusCode);
+
+        ikinciAdimSirri = await IkinciAdim.KurAsync(kurulum, clock.UtcNow);
     }
 
     /// <summary>İlk değişimden sonraki kalıcı parola; testler bununla giriş yapar.</summary>
@@ -218,19 +240,38 @@ public sealed class OturumBoruHattiTests : IAsyncLifetime
         BaseAddress = new Uri("https://localhost"),
     });
 
-    private static async Task GirisAsync(HttpClient client)
+    /// <summary>
+    /// `0013` D15/D43 — giriş yanıtı artık **ayrıştırıcılı**: tamamlanmış dal bugünkü
+    /// gövdeyi `session` altında taşıyor. `0006`'nın kriteri aynen doğru — ölçtüğü alan
+    /// hâlâ orada ve hâlâ `false` — yalnız okunduğu yer değişti: oturum kurulduktan
+    /// sonra `/me`.
+    ///
+    /// Giriş iki fazlı, çünkü kurulum Yöneticisinin ikinci adımı `InitializeAsync`'te
+    /// kuruldu (D30/D34) ve kod ortak yardımcıdan hesaplanıyor.
+    /// </summary>
+    private async Task GirisAsync(HttpClient client)
     {
-        HttpResponseMessage yanit = await client.PostAsJsonAsync("/api/identity/sessions", new
-        {
-            loginId = IdentityTestSettings.SeedAdminLoginId,
-            password = CalisanParola,
-        });
+        // D11/D45 — kabul edilen adım bir daha kabul edilmez ve bu sınıfın saati
+        // DONMUŞTUR: aynı adımda ikinci bir giriş (`Surer_DigerCihaz` iki cihazla giriyor)
+        // hiçbir kodla geçemez. Saati bir periyot ileri alıyoruz; 31 saniye oturum
+        // ömürlerini (30 dk erişim, 14 gün yenileme) etkilemiyor ve testin ölçtüğü şey
+        // değişmiyor.
+        clock.Advance(TimeSpan.FromSeconds(31));
 
-        Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
+        // Kod SUNUCUNUN saatinden hesaplanıyor: bu sınıf `IClock`'u enjekte ediyor ve
+        // başka testler onu ileri sarıyor (30 dk, 14 gün). Gerçek saatten hesaplanan bir
+        // kod o noktadan sonra hiç eşleşmez ve kusur "tolerans bozuk" gibi görünürdü.
+        await IkinciAdim.GirAsync(
+            client, IdentityTestSettings.SeedAdminLoginId, CalisanParola, ikinciAdimSirri, clock.UtcNow);
 
-        JsonElement govde = JsonDocument.Parse(await yanit.Content.ReadAsStringAsync()).RootElement;
+        HttpResponseMessage ben = await client.GetAsync($"{AdminSurface.RoutePrefix}/me");
+
+        Assert.Equal(HttpStatusCode.OK, ben.StatusCode);
+
+        JsonElement govde = JsonDocument.Parse(await ben.Content.ReadAsStringAsync()).RootElement;
 
         Assert.False(govde.GetProperty("mustChangePassword").GetBoolean());
+        Assert.True(govde.GetProperty("twoFactorEnrolled").GetBoolean());
     }
 
     private sealed class TestClock(DateTimeOffset start) : IClock

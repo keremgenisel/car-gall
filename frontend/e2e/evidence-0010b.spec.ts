@@ -1,6 +1,17 @@
 import { expect, test, type Page } from '@playwright/test'
 import { kanit, kanitSayfa } from './kanit'
 import { YONETICI_PAROLA } from './global-setup'
+import {
+  girisYap,
+  yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync,
+  oturumuBirakAsync,
+} from './giris'
+
+/**
+ * `0013` D28/D46 — giriş yolu ORTAK yardımcıya taşındı (`e2e/giris.ts`): D30 Yönetici'de
+ * ikinci adımı zorunlu kıldığı için her giriş artık iki fazlı ve aynı mantığı on dört
+ * dosyada ayrı ayrı yazmak on dört kopya demekti. Bu dosyanın iddiaları DEĞİŞMEDİ.
+ */
 
 /**
  * 0010b'nin görsel kanıtı. Yazma AÇIKÇA istenir (`npm run evidence`,
@@ -18,24 +29,14 @@ function benzersizKimlik(onek: string) {
   return `${onek}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@ornek.com`
 }
 
-async function girisYap(page: Page, kimlik: string, parola: string) {
-  await page.goto('/admin')
-  await expect(page.getByTestId('login-form')).toBeVisible()
-
-  await page.getByLabel('E-posta', { exact: true }).fill(kimlik)
-  await page.getByLabel('Parola', { exact: true }).fill(parola)
-  await page.getByRole('button', { name: 'Giriş yap' }).click()
-
-  const shell = page.getByTestId('admin-shell')
-  const password = page.getByTestId('password-form')
-  const error = page.getByTestId('login-error')
-
-  await expect(shell.or(password).or(error)).toBeVisible()
-}
-
+/**
+ * `0013` D45'in ölçümü — panele girmesi yeterli olan testler **paylaşılan oturum
+ * çerezini** kullanıyor. Her biri gerçek bir ikinci adım geçseydi hesap başına otuz
+ * saniyelik pencere süiti yarım saat bekletirdi; dahası her kod denemesi R8'in
+ * paylaşılan sayacını artırıyor. Giriş AKIŞINI ölçen testler gerçek girişi kullanıyor.
+ */
 async function yoneticiOlarakGirAsync(page: Page) {
-  await girisYap(page, SEED_KIMLIK, YONETICI_PAROLA)
-  await expect(page.getByTestId('admin-shell')).toBeVisible()
+  await ortakYoneticiOlarakGirAsync(page, SEED_KIMLIK, YONETICI_PAROLA)
 }
 
 /** Listedeki ilk aracın düzenleme ekranı. */
@@ -234,8 +235,7 @@ test('0010b/AC-34, 0010b/AC-35: Arapça personel için düzenleme formu ve liste
   await page.getByRole('button', { name: 'Personeli ekle' }).press('Enter')
   await expect(page.getByText(kimlik)).toBeVisible()
 
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, ilkParola)
   await page.getByLabel('كلمة مرورك الحالية', { exact: true }).fill(ilkParola)
@@ -281,8 +281,7 @@ test('0010b/AC-35: liste başlıkları İngilizce tercih eden personelde İngili
   await page.getByRole('button', { name: 'Personeli ekle' }).press('Enter')
   await expect(page.getByText(kimlik)).toBeVisible()
 
-  await page.getByRole('button', { name: 'Çıkış yap' }).click()
-  await expect(page.getByTestId('login-form')).toBeVisible()
+  await oturumuBirakAsync(page)
 
   await girisYap(page, kimlik, ilkParola)
   await page.getByLabel('Your current password', { exact: true }).fill(ilkParola)

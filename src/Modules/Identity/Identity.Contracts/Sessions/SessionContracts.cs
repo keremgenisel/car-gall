@@ -15,7 +15,14 @@ public sealed record StaffSessionDto(
     string Role,
     string PreferredLocale,
     bool MustChangePassword,
-    Guid? BranchId);
+    Guid? BranchId,
+    /// <param name="TwoFactorEnrolled">
+    /// D26/D35 — ikinci adım durumu da **kaynaktan** okunur. Girişte pişirilmiş bir
+    /// claim, kurulumu biten personele oturumun kalan otuz dakikası boyunca
+    /// *"kurulmamış"* derdi; bu alan her istekte personel satırıyla aynı okumada çözülür
+    /// ve rol ile hesap durumuyla aynı mekanizmayı paylaşır (C16).
+    /// </param>
+    bool TwoFactorEnrolled);
 
 /// <summary>
 /// Oturum çözümleme yüzeyi. İki tüketicisi var ve ikisi de `Identity`'nin dışındadır:

@@ -509,6 +509,8 @@ altındaki ADR'lerdedir.
 | Coğrafi arama | PostGIS yok |
 | Şube bazlı yetki | Yok (V1) |
 | Personel oturumu | Sunucu tarafı opak oturum çerezi; JWT yok (rol ve durum her istekte kaynaktan) |
+| İki adımlı doğrulama | **Kapsamda** (`0013`): zamana bağlı kod (HMAC-SHA1 · 6 hane · 30 sn, parametre kümesi **dondurulmuş**), **Yönetici** rolünde zorunlu, diğer rollerde opsiyonel. Doğrulama sırrı geri döndürülebilir saklanmak **zorundadır** ve uygulama düzeyinde şifrelenir; anahtar dağıtım yapılandırmasından. SMS, donanım anahtarı ve "bu cihazı hatırla" kapsam dışı |
+| İkinci adımın kaydı | `identity` şemasında **kendi tablosu**; kurulum · kapatma · sıfırlama · kurtarma kodu kullanımı yazılır, **başarısız denemeler yazılmaz**. Bu depodaki ilk denetim kaydı — tüketicisi olmayan bir entegrasyon olayı değil |
 | Eşzamanlılık | Invariant koruması: satır kilidi + tek transaction (`InvariantGuard`); iyimser eşzamanlılık yok |
 | Şase tekilliği | `vehicles` üzerinde kısmi tekil indeks (`NOT is_archived`); araç kendi arşiv bayrağını taşır |
 | Opsiyonel alan tipleri | Kapalı tip kümesi; alan → tip eşlemesi KODDA, değer tipli kolonlarda (tutar `numeric(19,4)` + kod + üs) |

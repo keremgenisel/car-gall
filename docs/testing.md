@@ -157,6 +157,24 @@ Uçtan uca otomatik test yalnızca **kritik akışlar** için yazılır. V1 krit
 Bu dört akış kırıldığında ürün kullanılamaz hâle gelir; gerisi görsel kanıtla yürür.
 Smoke test sayısını artırma önerisi öneri kuralına tabidir.
 
+**Üçüncü akışın girişi 2026-10-16'dan beri iki fazlıdır** (spec `0013`): personel parolayı
+girer, kendi cihazının ürettiği kodu yazar, panel açılır.
+
+> **Oturum paylaşma kuralı — ölçülmüş bir tavanın sonucu.** Zamana bağlı kod **tek
+> kullanımlıktır** ve tolerans bir adımdır (`0013` D10/D11); bu ikisi birlikte hesap
+> başına **otuz saniyede bir giriş** veriyor. Ayrıca yanlış kod, parola denemesiyle
+> **aynı** kilitlenme sayacını artırıyor (`0013` R8), yani "sıradaki adımı dene" bir
+> başarısız giriş demek ve beşincisi hesabı on beş dakika kilitliyor. Ölçüldü: her testin
+> gerçek giriş yaptığı bir koşuda **246 vakanın 105'i** bu zincirden düştü.
+>
+> Kural: **panele girmesi yeterli olan test gerçek giriş yapmaz.** Gerçek giriş
+> `global-setup`'ta bir kez yapılır ve oturum çerezi paylaşılır (`e2e/giris.ts`). Giriş
+> **akışını** ölçen testler kendi hesabını kurar — kendi sayacı, kendi adım geçmişi.
+> Kullanıcı değiştirmek isteyen test **çıkış yapmaz**, oturumu bırakır
+> (`oturumuBirakAsync`): çıkış paylaşılan oturumu sunucuda düşürür ve zinciri yeniden
+> başlatır. Çıkışın kendisi `0006` AC-18/AC-19'un konusudur ve onu `Host.Tests` sunucu
+> tarafında ölçer.
+
 ### CI kapıları — frontend
 
 Pipeline'da frontend için **lint + build** zorunludur:

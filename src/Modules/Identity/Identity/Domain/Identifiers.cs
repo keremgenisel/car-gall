@@ -17,3 +17,24 @@ internal readonly record struct SessionId(Guid Value)
 
     public override string ToString() => Value.ToString();
 }
+
+internal readonly record struct RecoveryCodeId(Guid Value)
+{
+    internal static RecoveryCodeId New() => new(Guid.CreateVersion7());
+
+    public override string ToString() => Value.ToString();
+}
+
+internal readonly record struct PendingLoginId(Guid Value)
+{
+    internal static PendingLoginId New() => new(Guid.CreateVersion7());
+
+    public override string ToString() => Value.ToString();
+}
+
+internal readonly record struct TwoFactorAuditEntryId(Guid Value)
+{
+    internal static TwoFactorAuditEntryId New() => new(Guid.CreateVersion7());
+
+    public override string ToString() => Value.ToString();
+}

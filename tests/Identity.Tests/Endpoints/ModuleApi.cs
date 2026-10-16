@@ -63,7 +63,13 @@ internal sealed class ModuleApi : IAsyncDisposable
             MinimumPasswordLength: 12,
             PasswordIterations: StaffBuilder.TestIterasyon,
             LoginRequestLimit: 1_000,
-            LoginRequestWindowMinutes: 10));
+            LoginRequestWindowMinutes: 10,
+            TwoFactorIssuer: "Test Galeri",
+            TwoFactorEncryptionKey: IkinciAdimTestAnahtari.Base64,
+            RecoveryCodeCount: 10,
+            RecoveryCodeIterations: StaffBuilder.TestIterasyon,
+            PendingEnrollmentMinutes: 10,
+            PendingLoginMinutes: 5));
 
         builder.Services.Replace(ServiceDescriptor.Scoped<IBranchValidator, FakeBranchValidator>());
 

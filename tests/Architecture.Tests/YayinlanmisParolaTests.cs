@@ -3,7 +3,8 @@ using System.Text.RegularExpressions;
 namespace CarGallery.Architecture.Tests;
 
 /// <summary>
-/// ADR 0011 — depoda SABİT bir kurulum parolası bulunmaz.
+/// ADR 0011 — depoda SABİT bir kurulum parolası ya da ikinci adım şifreleme anahtarı
+/// bulunmaz.
 ///
 /// <para>Depo herkese açık. Sabit bir kurulum parolası, git geçmişinde sonsuza kadar
 /// kalan ve parolası kamuya açık bir Yönetici hesabı üretebilen bir dizedir; üç tanesi
@@ -82,10 +83,13 @@ public sealed partial class YayinlanmisParolaTests
         }
     }
 
+    // `0013` D3 — şifreleme anahtarı da aynı sınıfta ve aynı desende: depoda sabit bir
+    // anahtar, sızan bir yedekteki BÜTÜN ikinci adım sırlarını çözebilen bir dizedir ve
+    // git geçmişinde kalıcı olur.
     // `Identity__SeedAdmin__Password=...`, `Identity:SeedAdmin:Password": "..."`,
     // `SEED_ADMIN_PASSWORD: ...` ve `E2E_SEED_ADMIN_PASSWORD = ...` biçimlerini yakalar.
     [GeneratedRegex(
-        @"(?:Identity__SeedAdmin__Password|Identity:SeedAdmin:Password|(?:E2E_)?SEED_ADMIN_PASSWORD)""?\s*[:=]\s*(?<deger>[^\\\r\n,]*)",
+        @"(?:Identity__SeedAdmin__Password|Identity:SeedAdmin:Password|(?:E2E_)?SEED_ADMIN_PASSWORD|Identity__TwoFactor__EncryptionKey|Identity:TwoFactor:EncryptionKey|TWO_FACTOR_KEY)""?\s*[:=]\s*(?<deger>[^\\\r\n,]*)",
         RegexOptions.IgnoreCase)]
     private static partial Regex ParolaAtamasi();
 }

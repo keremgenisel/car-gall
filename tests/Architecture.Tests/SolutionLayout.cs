@@ -26,6 +26,28 @@ internal static class SolutionLayout
                 .Order()]
             : [];
 
+    internal static string TestRoot => Path.Combine(Root, "tests");
+
+    /// <summary>
+    /// Test ağacının kaynak dosyaları — `SourceFiles()`'tan BİLEREK ayrı.
+    ///
+    /// <para>Kuralların çoğu `src/` hakkındadır (katman sınırları, şema sahipliği, uç
+    /// yayınlama) ve test ağacını onlara dâhil etmek yanlış yerde kırmızı verirdi: bir
+    /// test dosyası başka modülün şemasını okumakta, sahte bir uç kurmakta serbesttir.
+    /// İki ağacı birlikte tarayan şey yalnız METİN kuralıdır — yorum biçimi gibi,
+    /// nerede yazıldığından bağımsız olanlar.</para>
+    ///
+    /// <para>Bu ayrımın bedeli bir kez ödendi: yorum/üye kusuru için kurulan kapı
+    /// yalnız `src/` altına bakıyordu ve kusur dördüncü kez <b>tests/</b> altında
+    /// döndü — kapı yeşil kaldı.</para>
+    /// </summary>
+    internal static IReadOnlyList<string> TestFiles() =>
+        Directory.Exists(TestRoot)
+            ? [.. Directory.EnumerateFiles(TestRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(path => !IsGenerated(path))
+                .Order()]
+            : [];
+
     internal static IReadOnlyList<string> ProjectReferences(string projectFile)
     {
         XDocument document = XDocument.Load(projectFile);
@@ -39,6 +61,29 @@ internal static class SolutionLayout
                 .Select(include => Path.GetFullPath(Path.Combine(projectDirectory, include!.Replace('\\', '/'))))
         ];
     }
+
+    /// <summary>
+    /// Bir dosyanın YORUM OLMAYAN satırları.
+    ///
+    /// <para>Metin tarayan kurallar bunu kullanır, çünkü bu deponun kuralları kendilerini
+    /// yorumda anlatıyor: yasakladığı ifadeyi gerekçesinde yazan bir dosya, ham metin
+    /// taramasında <b>ihlal gibi görünür</b>. `0007`/AC-9 tam bunu yaşadı — `FOR UPDATE`
+    /// yazmayan bir dosya, <i>"neden `FOR UPDATE` değil"</i> diye yazdığı için yakalandı.
+    /// `InvariantGuardSecenekleriTests` aynı tuzağı daha önce kendi kopyasıyla çözmüştü;
+    /// ortak desen tek bir yerde yaşar (`0007` R3'ün aynı ilkesi).</para>
+    ///
+    /// <para>Kural zayıflamıyor: yorumda ifadeyi anmak serbest, kodda yazmak değil.</para>
+    /// </summary>
+    internal static IReadOnlyList<string> CodeLines(string path) =>
+    [
+        .. File.ReadAllLines(path).Where(line =>
+        {
+            string trimmed = line.TrimStart();
+
+            return !trimmed.StartsWith("//", StringComparison.Ordinal)
+                && !trimmed.StartsWith("*", StringComparison.Ordinal);
+        })
+    ];
 
     internal static string Relative(string absolutePath) =>
         Path.GetRelativePath(Root, absolutePath).Replace('\\', '/');

@@ -57,7 +57,8 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
     {
         (IdentityHarness harness, string birinciToken, StaffSessionDto birinci) = await GirisAsync();
 
-        string ikinciToken = (await harness.GirisAsync("yonetici@ornek.com", Parola, "198.51.100.4")).Value.Token;
+        string ikinciToken = IdentityHarness.OturumTokeni(
+            await harness.GirisAsync("yonetici@ornek.com", Parola, "198.51.100.4"));
 
         await harness.CikisAsync(birinci.SessionId);
 
@@ -73,8 +74,8 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
         Guid danismanId = (await harness.PersonelEkleAsync(IdentityHarness.EkleKomutu(
             kimlik: "danisman@ornek.com", rol: "sales_advisor"))).Value;
 
-        string danismanToken = (await harness.GirisAsync(
-            "danisman@ornek.com", Parola, "198.51.100.5")).Value.Token;
+        string danismanToken = IdentityHarness.OturumTokeni(
+            await harness.GirisAsync("danisman@ornek.com", Parola, "198.51.100.5"));
 
         Assert.NotNull(await harness.OturumCozAsync(danismanToken));
 
@@ -93,7 +94,8 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
         Guid birinci = (await harness.KomutAsync(k => k.ListAsync(CancellationToken.None)))
             .Single(item => item.LoginId == "yonetici@ornek.com").StaffId;
 
-        string token = (await harness.GirisAsync("yonetici@ornek.com", Parola, "198.51.100.6")).Value.Token;
+        string token = IdentityHarness.OturumTokeni(
+            await harness.GirisAsync("yonetici@ornek.com", Parola, "198.51.100.6"));
         Assert.Equal("manager", (await harness.OturumCozAsync(token))!.Role);
 
         await harness.KomutAsync(k => k.ChangeRoleAsync(birinci, "content_editor", CancellationToken.None));
@@ -110,7 +112,8 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
     public async Task Gecersizlesir_TumOturumlar_ParolaDegisince()
     {
         (IdentityHarness harness, string birinciToken, _) = await GirisAsync();
-        string ikinciToken = (await harness.GirisAsync("yonetici@ornek.com", Parola, "198.51.100.7")).Value.Token;
+        string ikinciToken = IdentityHarness.OturumTokeni(
+            await harness.GirisAsync("yonetici@ornek.com", Parola, "198.51.100.7"));
 
         Guid yoneticiId = (await harness.KomutAsync(k => k.ListAsync(CancellationToken.None)))[0].StaffId;
 
@@ -138,9 +141,10 @@ public sealed class OturumYasamDonguTests(IdentityDatabase database)
 
         await harness.PersonelEkleAsync(IdentityHarness.EkleKomutu(kimlik: "yonetici@ornek.com", rol: "manager"));
 
-        Result<LoginResult> giris = await harness.GirisAsync("yonetici@ornek.com", Parola);
-        StaffSessionDto oturum = (await harness.OturumCozAsync(giris.Value.Token))!;
+        string token = IdentityHarness.OturumTokeni(
+            await harness.GirisAsync("yonetici@ornek.com", Parola));
+        StaffSessionDto oturum = (await harness.OturumCozAsync(token))!;
 
-        return (harness, giris.Value.Token, oturum);
+        return (harness, token, oturum);
     }
 }

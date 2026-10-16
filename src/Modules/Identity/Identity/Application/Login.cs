@@ -11,7 +11,42 @@ namespace CarGallery.Modules.Identity.Application;
 /// </param>
 internal sealed record LoginCommand(string? LoginId, string? Password, string ClientKey);
 
-internal sealed record LoginResult(string Token, Staff Staff, Session Session);
+/// <summary>
+/// D15 — girişin **iki dallı** sonucu: ya oturum açıldı ya bir adım daha var. Dal bir
+/// hata DEĞİLDİR; `4xx` dönülmez, çünkü uç 2xx dışını `ApiError`'a çevirir ve ekran
+/// **normal bir adımı hata olarak** basardı.
+/// </summary>
+internal enum LoginStep
+{
+    /// <summary>Oturum açıldı: ikinci adım ya geçildi ya hiç gerekmiyor.</summary>
+    Completed = 1,
+
+    /// <summary>Kurulumu olan hesap; ikinci adım bekleniyor ve oturum çerezi YAZILMAZ (D4).</summary>
+    TwoFactorRequired = 2,
+
+    /// <summary>
+    /// Zorunlu roldeki kurulumsuz hesap: **kapılı** bir oturum verilir (D13). Parola bu
+    /// hesapta bugün zaten tek faktör; kapılı oturum mevcut duruma göre hiçbir şeyi
+    /// zayıflatmıyor ve R7'nin *"önce kurar"*ı ancak böyle yapılabilir.
+    /// </summary>
+    TwoFactorSetupRequired = 3,
+}
+
+/// <param name="Token">Oturum çerezine yazılacak opak değer; bekleyen dalda <c>null</c>.</param>
+/// <param name="PendingToken">Ara durum çerezine yazılacak opak değer; yalnız bekleyen dalda.</param>
+/// <param name="PendingExpiresAt">
+/// Ara durum çerezinin son geçerlilik anı. Değer SATIRDAN geliyor, uçta yeniden
+/// hesaplanmıyor: çerez ile satırın ayrı ayrı hesaplanması ikisini ayrı anlarda
+/// bitirir ve saat de uçta değil `IClock`'ta yaşıyor (Yasak Listesi 30).
+/// </param>
+internal sealed record LoginResult(
+    LoginStep Step,
+    Staff Staff,
+    string? Token,
+    Session? Session,
+    string? PendingToken,
+    DateTimeOffset? PendingExpiresAt,
+    bool TwoFactorEnrolled);
 
 /// <summary>
 /// R3 — **başarısız her giriş denemesi ayırt edilemez bir karşılık üretir.** Bu sınıfta
@@ -76,7 +111,44 @@ internal sealed class Login(
             return Failure();
         }
 
-        lockout.Clear();
+        // D4/AC-11 — kurulumu OLAN hesapta oturum çerezi yazılmaz: parola tek başına
+        // geçerli bir oturum üretmez. Doğrulanmamış kurulum kurulumsuz sayılır (AC-3);
+        // onaylanmamış bir satırla ikinci adım istemek, personeli geçemeyeceği bir
+        // kapının arkasında bırakırdı.
+        bool enrolled = await context.TwoFactorEnrollments.AnyAsync(
+            enrollment => enrollment.Id == staff!.Id && enrollment.ConfirmedAt != null,
+            cancellationToken);
+
+        // R8 — **sayaç DOĞRU PAROLADA sıfırlanmaz; giriş TAMAMLANDIĞINDA sıfırlanır.**
+        // Kurulumu olan hesapta bu an henüz gelmedi: burada sıfırlamak, parolayı ele
+        // geçirmiş saldırgana sınırsız kod denemesi verirdi — her denemeden önce bir
+        // başarılı parola fazı sayacı sıfırlardı ve eşik hiç dolmazdı. Sıfırlama
+        // `TwoFactorLogin`'in tamamlanma yolundadır (§ Bilinen tuzaklar 5).
+        if (!enrolled)
+        {
+            lockout.Clear();
+        }
+
+        if (enrolled)
+        {
+            string pendingToken = PendingLogin.GenerateToken();
+
+            PendingLogin pending = PendingLogin.Issue(
+                staff!.Id, pendingToken, clock.UtcNow, options.PendingLoginLifetime);
+
+            context.PendingLogins.Add(pending);
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            return Result.Success(new LoginResult(
+                LoginStep.TwoFactorRequired,
+                staff,
+                Token: null,
+                Session: null,
+                pendingToken,
+                pending.ExpiresAt,
+                TwoFactorEnrolled: true));
+        }
 
         string token = Session.GenerateToken();
         Session session = Session.Issue(
@@ -90,7 +162,20 @@ internal sealed class Login(
         context.Sessions.Add(session);
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new LoginResult(token, staff, session));
+        // D13/D30 — zorunlu rolde kurulumu olmayan hesap kapılı oturum alır; kapı
+        // `TwoFactorSetupGate`'tedir ve izin verilen yollar orada AÇIKÇA sayılır.
+        LoginStep step = TwoFactorPolicy.IsRequiredFor(staff.Role)
+            ? LoginStep.TwoFactorSetupRequired
+            : LoginStep.Completed;
+
+        return Result.Success(new LoginResult(
+            step,
+            staff,
+            token,
+            session,
+            PendingToken: null,
+            PendingExpiresAt: null,
+            TwoFactorEnrolled: false));
     }
 
     /// <summary>
