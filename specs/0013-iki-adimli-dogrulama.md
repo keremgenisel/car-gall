@@ -1073,7 +1073,11 @@ yazıldı: **63 kriter**, § Acceptance Criteria.
 - [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). **#76**'nın ilk
       koşusunda dört işin dördü de **koştu** ve yeşil — atlanan iş yok: Backend `229s`,
       Frontend `54s`, E2E `427s`, Değişen yollar `4s`; ayrı `Performans` koşusunda C3
-      eşikleri `128s`.
+      eşikleri `128s`. Dış gözden geçirmenin düzeltmeleri aynı ölçümü **ikinci kez**
+      geçti (son kod değişikliği `48060af`): Backend `302s`, Frontend `50s`, E2E `434s`,
+      Değişen yollar `5s`, C3 eşikleri yeşil. Bundan sonraki commit'ler yalnız bu kutunun
+      metni; koşunun `success` demesi yetmediği için iş iş okundu (metin değişikliğinde
+      Frontend ve E2E bilerek atlanıyor — #68 — ve atlanan iş de koşuyu yeşil bırakır).
 - [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
