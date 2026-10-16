@@ -31,7 +31,44 @@ internal sealed class TwoFactorLogin(
     IdentityOptions options,
     IClock clock)
 {
+    /// <summary>
+    /// Yolun ÜÇ "tek kullanımlık" şeyi de eşzamanlılık belirteciyle korunuyor
+    /// (`TwoFactorConfiguration`): ara durumun tüketilmesi, kabul edilen adım ve kurtarma
+    /// kodunun harcanması. Üçü üç ayrı satırda yaşıyor ama hepsi aynı `SaveChanges`'te
+    /// yazıldığı için tek bir atomik birim.
+    ///
+    /// <para><b>Bu bir dış bulgunun bedeli.</b> Yol kilitsiz oku → kontrol et → işaretle
+    /// idi ve üçü de eşzamanlı iki istekte iki kez kullanılabiliyordu: tek ara durum + tek
+    /// kod iki geçerli oturum üretiyordu (AC-15/AC-23), tek kurtarma kodu iki ara durumla
+    /// iki oturum veriyordu (R4/AC-36). Domain'deki <c>??=</c> korumaları yalnız aynı
+    /// NESNE örneğini koruyor; iki istek iki ayrı bağlamda iki ayrı örnek okur. D11'in
+    /// kuralı — toleransın açtığı 90 saniyelik pencereyi kapatan şey — tam o pencerede,
+    /// yani kodu gözlemleyen birinin kullanacağı anda çalışmıyordu.</para>
+    ///
+    /// <para><b>Neden belirteç, neden `FOR UPDATE` değil?</b> Karamsar kilit bu yola
+    /// <c>concurrency.lost</c> kodunu ve onunla birlikte ikinci adım ekranına
+    /// yeni bir hata durumunu + üç dilde çeviriyi getirirdi. Belirteç çakışmayı <b>zaten
+    /// var olan iki koda</b> çeviriyor ve kaybeden isteğe doğru şeyi söylüyor: kodu ya ara
+    /// durumu gerçekten tükenmiştir.</para>
+    /// </summary>
     internal async Task<Result<LoginResult>> HandleAsync(
+        TwoFactorVerifyCommand command,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await VerifyAsync(command, cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // İstisna akış kontrolü DEĞİL: sağlayıcının sinyali burada, sınırda, kararlı
+            // bir koda çevriliyor (`InvariantGuard`'ın aynı gerekçesi,
+            // docs/conventions.md § 5). Yukarısı yalnız `Result` görür.
+            return Conflict(exception);
+        }
+    }
+
+    private async Task<Result<LoginResult>> VerifyAsync(
         TwoFactorVerifyCommand command,
         CancellationToken cancellationToken)
     {
@@ -205,6 +242,12 @@ internal sealed class TwoFactorLogin(
     /// Girilen kod saklanan özetlerin HEPSİYLE karşılaştırılır — tuz hesaba özel olduğu
     /// için başka yolu yok. Maliyetin neden parola iterasyonundan ayrı olduğu
     /// `IPasswordHasher.HashRecoveryCode`'da yazılı (D2/D38).
+    ///
+    /// <para>Biçimi tutmayan girdi arama hiç başlamadan eleniyor: altı haneli bir zamana
+    /// bağlı kod 16 simgelik bir kurtarma koduna <b>asla</b> eşit olamaz ve onu on özetle
+    /// karşılaştırmak ölçülen maliyetin (D2/D38) tamamını boşa ödemek olurdu — her
+    /// başarısız ikinci adım denemesinde. Eleme yeni bir bilgi istemiyor: biçim zaten
+    /// `RecoveryCodeText`'te tanımlı.</para>
     /// </summary>
     private async Task<RecoveryCode?> MatchRecoveryCodeAsync(
         StaffId staffId,
@@ -213,7 +256,7 @@ internal sealed class TwoFactorLogin(
     {
         string normalized = RecoveryCodeText.Normalize(code);
 
-        if (normalized.Length == 0)
+        if (!RecoveryCodeText.IsWellFormed(normalized))
         {
             return null;
         }
@@ -244,6 +287,17 @@ internal sealed class TwoFactorLogin(
 
         return created;
     }
+
+    /// <summary>
+    /// Kaybeden isteğin gördüğü red, elinden alınan satıra göre ayrılıyor (D20): ara durum
+    /// tükendiyse ekran parola fazına döner, yalnız kod/adım harcandıysa *"taze kod yaz"*
+    /// der. Tek bir kodla yanıtlamak, iki farklı şey yapması gereken personele aynı şeyi
+    /// söylerdi.
+    /// </summary>
+    private static Result<LoginResult> Conflict(DbUpdateConcurrencyException exception) =>
+        exception.Entries.Any(entry => entry.Entity is PendingLogin)
+            ? PendingExpired()
+            : Invalid();
 
     private static Result<LoginResult> Invalid() =>
         Result.Failure<LoginResult>(new Error(IdentityErrors.TwoFactorInvalid));

@@ -47,4 +47,16 @@ internal static class RecoveryCodeText
         .Replace(" ", string.Empty, StringComparison.Ordinal)
         .Trim()
         .ToUpperInvariant();
+
+    /// <summary>
+    /// Normalize edilmiş bir girdinin bu biçimde bir kurtarma kodu OLABİLECEĞİ.
+    ///
+    /// Soru "doğru mu" değil, "aramaya değer mi": doğrulama yolu bir kodu saklanan on
+    /// özetin hepsiyle karşılaştırmak zorunda (tuz hesaba özel) ve altı haneli bir zamana
+    /// bağlı kod bu biçime <b>asla</b> uymaz. Biçim bilgisi burada yaşıyor; elemeyi
+    /// çağıranın içine yazmak onu ikinci bir yerde yeniden tanımlamak olurdu.
+    /// </summary>
+    internal static bool IsWellFormed(string normalized) =>
+        normalized.Length == Symbols
+        && normalized.All(symbol => Alphabet.Contains(symbol, StringComparison.Ordinal));
 }

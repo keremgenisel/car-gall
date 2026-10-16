@@ -110,6 +110,7 @@ namespace CarGallery.Modules.Identity.Infrastructure.Migrations
                         .HasColumnName("attempts");
 
                     b.Property<DateTimeOffset?>("ConsumedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("consumed_at");
 
@@ -155,6 +156,7 @@ namespace CarGallery.Modules.Identity.Infrastructure.Migrations
                         .HasColumnName("staff_id");
 
                     b.Property<DateTimeOffset?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("used_at");
 
@@ -344,6 +346,7 @@ namespace CarGallery.Modules.Identity.Infrastructure.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<long>("LastAcceptedStep")
+                        .IsConcurrencyToken()
                         .HasColumnType("bigint")
                         .HasColumnName("last_accepted_step");
 

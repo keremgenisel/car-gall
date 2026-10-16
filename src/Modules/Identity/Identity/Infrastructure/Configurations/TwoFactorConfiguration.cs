@@ -30,7 +30,13 @@ internal sealed class TwoFactorEnrollmentConfiguration : IEntityTypeConfiguratio
         builder.Property(enrollment => enrollment.CreatedAt).HasColumnName("created_at");
         builder.Property(enrollment => enrollment.PendingExpiresAt).HasColumnName("pending_expires_at");
         builder.Property(enrollment => enrollment.ConfirmedAt).HasColumnName("confirmed_at");
-        builder.Property(enrollment => enrollment.LastAcceptedStep).HasColumnName("last_accepted_step");
+        // **Eşzamanlılık belirteci** — D11'in tek kullanım kuralı ancak böyle işler. İki
+        // istek aynı kodu AYNI ANDA gönderdiğinde ikisi de kabul edilmiş adımı aynı değerle
+        // okur; belirteç olmadan ikisi de yazar ve yeniden oynatma koruması tam olarak
+        // kodu gözlemleyen birinin kullanacağı anda devre dışı kalır (bir dış bulgu).
+        builder.Property(enrollment => enrollment.LastAcceptedStep)
+            .HasColumnName("last_accepted_step")
+            .IsConcurrencyToken();
     }
 }
 
@@ -55,7 +61,13 @@ internal sealed class RecoveryCodeConfiguration : IEntityTypeConfiguration<Recov
             hash.Property(item => item.Value).HasColumnName("code_hash").HasMaxLength(200));
 
         builder.Property(code => code.CreatedAt).HasColumnName("created_at");
-        builder.Property(code => code.UsedAt).HasColumnName("used_at");
+
+        // **Eşzamanlılık belirteci** — R4/R5'in "kullanılan kod bir daha kabul edilmez"
+        // kuralı. `MarkUsed`'ın `??=` koruması yalnız aynı NESNE örneğini koruyor; iki
+        // istek iki ayrı bağlamda iki ayrı örnek okur ve ikisi de aynı kodu harcayabilirdi.
+        builder.Property(code => code.UsedAt)
+            .HasColumnName("used_at")
+            .IsConcurrencyToken();
 
         // Giriş ve kalan sayı, personelin kodlarını birlikte arar.
         builder.HasIndex(code => code.StaffId).HasDatabaseName("ix_recovery_codes_staff_id");
@@ -86,7 +98,12 @@ internal sealed class PendingLoginConfiguration : IEntityTypeConfiguration<Pendi
 
         builder.Property(pending => pending.CreatedAt).HasColumnName("created_at");
         builder.Property(pending => pending.ExpiresAt).HasColumnName("expires_at");
-        builder.Property(pending => pending.ConsumedAt).HasColumnName("consumed_at");
+        // **Eşzamanlılık belirteci** — AC-15'in tek kullanımı. Belirteç "okuduğum değer
+        // hâlâ aynı mı" diye sorar, yani başarısız denemenin `attempts` güncellemesini
+        // engellemez (orada değer değişmiyor); yalnız ikinci bir TÜKETMEYİ düşürür.
+        builder.Property(pending => pending.ConsumedAt)
+            .HasColumnName("consumed_at")
+            .IsConcurrencyToken();
         builder.Property(pending => pending.Attempts).HasColumnName("attempts");
     }
 }

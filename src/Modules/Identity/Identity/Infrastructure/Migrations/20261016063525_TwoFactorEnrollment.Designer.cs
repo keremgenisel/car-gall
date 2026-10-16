@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarGallery.Modules.Identity.Infrastructure.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    [Migration("20261015210839_TwoFactorEnrollment")]
+    [Migration("20261016063525_TwoFactorEnrollment")]
     partial class TwoFactorEnrollment
     {
         /// <inheritdoc />
@@ -113,6 +113,7 @@ namespace CarGallery.Modules.Identity.Infrastructure.Migrations
                         .HasColumnName("attempts");
 
                     b.Property<DateTimeOffset?>("ConsumedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("consumed_at");
 
@@ -158,6 +159,7 @@ namespace CarGallery.Modules.Identity.Infrastructure.Migrations
                         .HasColumnName("staff_id");
 
                     b.Property<DateTimeOffset?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("used_at");
 
@@ -347,6 +349,7 @@ namespace CarGallery.Modules.Identity.Infrastructure.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<long>("LastAcceptedStep")
+                        .IsConcurrencyToken()
                         .HasColumnType("bigint")
                         .HasColumnName("last_accepted_step");
 
