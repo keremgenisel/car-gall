@@ -9,7 +9,7 @@
 | **Bağımlı spec'ler** | `0006` (oturum ve roller — tamamlandı) · `0009` (bildirim — tamamlandı) |
 | **Dayanak** | ADR 0003 unsur 2; Ek 1 sıra #6 |
 | **Karar bekliyor** | **Yok.** Beş sorunun hepsi kapandı: **S2** birinci CLARIFY turunda (**D8**, ölçümle), **S1 · S3 · S4 · S5** ikinci turda (**D30–D33**, Takım Yöneticisi onayı 2026-10-15). |
-| **Kararlar** | **D1–D47**: iki CLARIFY turu bugünkü `main` üzerinde **ölçülerek** verdi (**D1–D12** → `c5143b6`, **D13–D33** → `1e7c8d2`), **D34–D47** bu kriter turunda (uygulama planının ölçümleri, Takım Yöneticisi onayı 2026-10-15). Yedisi spec'i yazılı hâliyle **uygulanamaz** kılıyordu. |
+| **Kararlar** | **D1–D50**: iki CLARIFY turu bugünkü `main` üzerinde **ölçülerek** verdi (**D1–D12** → `c5143b6`, **D13–D33** → `1e7c8d2`), **D34–D47** bu kriter turunda (uygulama planının ölçümleri, Takım Yöneticisi onayı 2026-10-15), **D48–D50** dış gözden geçirmenin bulgularında (2026-10-16). Yedisi spec'i yazılı hâliyle **uygulanamaz** kılıyordu. |
 | **Kriter sayısı** | **63** |
 
 > **R/C/AC bu PR'da `main`'e giriyor ve orada donuyor** (ADR `0008` / K2, `0012b`
@@ -758,6 +758,55 @@ yasaklıyor — yani iki madde birlikte okunduğunda ikinci bir eşik doğuyordu
 *Gerekçe:* iki eşik Tuzak 5'in tam olarak uyardığı şeydir; sıfır sayaç ise D19'un yazdığı
 alanı ölü bırakırdı. *Bedel:* kilit anında personel parolasını yeniden girer — ipucu
 metnini zaten görüyor (**D21**).
+
+### Dış gözden geçirmenin üç kararı (D48–D50)
+
+**D48 — Üç "tek kullanımlık" alan EŞZAMANLILIK BELİRTECİDİR; doğrulama yolu karamsar
+kilitle serileştirilmez.** Dış gözden geçirme ölçtü ve kusur gerçekti: yol kilitsiz
+oku → kontrol et → işaretle idi ve üçü de eşzamanlı iki istekte iki kez kullanılıyordu —
+tek ara durum + tek kod **iki** geçerli oturum üretiyordu (**AC-15**/**AC-23**), tek
+kurtarma kodu iki ara durumla **iki** oturum veriyordu (**R4**/**AC-36**). Domain'deki
+`??=` korumaları yalnız aynı NESNE örneğini koruyor; iki istek iki ayrı bağlamda iki ayrı
+örnek okuyor. Karar: `pending_logins.consumed_at`, `recovery_codes.used_at` ve
+`two_factor_enrollments.last_accepted_step` **eşzamanlılık belirteci** olur; üçü de aynı
+`SaveChanges` biriminde yazıldığı için tek atomik karar. *Gerekçe:* D11'in kuralı
+toleransın açtığı 90 saniyelik pencereyi kapatmak için yazıldı ve tam o pencerede —
+kodu gözlemleyen birinin kullanacağı anda — çalışmıyordu. *Neden `FOR UPDATE` değil:*
+karamsar kilit bu yola `concurrency.lost` kodunu ve onunla birlikte ikinci adım ekranına
+yeni bir hata durumunu + üç dilde çeviriyi getirirdi; belirteç çakışmayı **zaten var olan
+iki koda** çeviriyor (**D20**) ve kaybeden isteğe doğru şeyi söylüyor. *Bedel:* şema
+değişmiyor — belirteç yalnız `UPDATE`'in `WHERE`'ine giriyor; migration'ın SQL'i birebir
+aynı kaldı, yalnız model anlık görüntüsü güncellendi.
+
+**D49 — Kurtarma kodu aramasının önünde BİÇİM elemesi var.** Eleme yalnız boş girdiyi
+düşürüyordu, yani altı haneli her yanlış zamana bağlı kod **on** PBKDF2 hesabı ödetiyordu:
+D2/D38'in ölçüp kabul ettiği maliyetin hiç gerekmediği yerde ödenmesi. Karar:
+`RecoveryCodeText.IsWellFormed` — 16 simge ve alfabe — aramanın önüne geçer.
+*Gerekçe:* altı haneli bir kod 16 simgelik bir koda asla eşit olamaz ve biçim bilgisi
+zaten tek bir yerde tanımlı; eleme yeni bir bilgi istemiyor. *Bedel:* yok — testin
+ağırlık merkezi "hiçbir geçerli kod elenmiyor" tarafında (200 üretilmiş kod + elle
+yazılmış dört biçim).
+
+**D50 — Yorum kapısı `tests/` ağacını da tarar ve betiklerin çalıştırma biti kapı
+altındadır.** İki kapı, iki ölçülmüş bedel. Yorum/üye kusuru (`docs/conventions.md` § 13)
+`0012a`–`0012c`'de dört kez tekrarladı ve #66 onun için bir kapı kurdu; kapı yalnız `src/`
+altına bakıyordu ve kusur **beşinci** kez tam o kapının görmediği klasörde döndü
+(`tests/Identity.Tests`). Kapı iki ağaca açıldığında **altıncı** bir vaka da çıktı —
+`0011`'den (#49) kalan, bu kartla ilgisi olmayan bir satır. İkincisi: `scripts/dev-up.sh`
+bir commit'te çalıştırma bitini kaybetti (`100755` → `100644`) ve `README.md`'nin yazdığı
+komut — bir sonraki kişinin depodaki ilk komutu — `permission denied` ile düştü.
+*Gerekçe:* bu deponun kendi dersi, kapının kendi yorumunda yazılı — *"kusuru düzeltmek
+dönüşünü engellemiyor; yalnızca kapı engelliyor."* Görmediği yerde yeşil kalan bir kapı,
+var olmayan bir kaliteyi ölçüyor.
+
+*Üçüncü bedel, D48'in kendisi yüzünden:* `0007`/AC-9 (*"satır kilidi yalnız
+`BuildingBlocks/Concurrency/` altında yazılır"*) ham metin tarıyordu ve `TwoFactorLogin`'i
+**ihlal sandı** — dosya satır kilidi yazmıyor, *neden yazmadığını* yazıyor. Kural kod
+satırlarına indirildi ve yorum atlama deseni `SolutionLayout.CodeLines`'a taşındı;
+`InvariantGuardSecenekleriTests` aynı tuzağı daha önce kendi özel kopyasıyla çözmüştü ve
+ikinci kopya tam olarak bu deponun iki kez ödediği şeydi. Sondayla doğrulandı: kapı kodda
+yazılan `FOR UPDATE`'i hâlâ yakalıyor, yani kural zayıflamadı — gerekçesini anlatan bir
+dosyayı cezalandıran kural ise gerekçenin hiç yazılmamasını öğretirdi.
 
 ### CLARIFY turlarında ölçülen bedel: kapanmış bir spec'in yüzeyi etkilenecek
 
