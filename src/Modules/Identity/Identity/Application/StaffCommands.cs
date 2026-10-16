@@ -174,10 +174,11 @@ internal sealed class StaffCommands(
                     return result;
                 }
 
-                // R14 — açık oturumlar DERHAL geçersizleşir. Damga zaten döndü; satırları
-                // da iptal ediyoruz. İki katman, çünkü pasifleştirme bir güvenlik
-                // işlemidir ve tek bir yolun unutulması onu sessizce etkisiz bırakır.
-                await RevokeSessionsAsync(staff.Id, ct);
+                // R14 — açık erişim DERHAL geçersizleşir. Damga zaten döndü; oturum
+                // satırları iptal ediliyor ve ara durumlar siliniyor (D52). İki katman,
+                // çünkü pasifleştirme bir güvenlik işlemidir ve tek bir yolun unutulması
+                // onu sessizce etkisiz bırakır.
+                await RevokeAccessAsync(staff.Id, ct);
 
                 await unitOfWork.SaveChangesAsync(ct);
 
@@ -206,7 +207,7 @@ internal sealed class StaffCommands(
         }
 
         staff.ResetPassword(passwordHasher.Hash(newPassword!));
-        await RevokeSessionsAsync(staff.Id, cancellationToken);
+        await RevokeAccessAsync(staff.Id, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
@@ -214,7 +215,8 @@ internal sealed class StaffCommands(
 
     /// <summary>
     /// R11/AC-22 — parola değiştiğinde o personelin TÜM yenileme hakları geçersizleşir.
-    /// Damganın dönmesi bunu sağlar; oturum satırları da iptal edilir.
+    /// Damganın dönmesi bunu sağlar; oturum satırları iptal edilir ve **ara durumlar da
+    /// silinir** (`0013` **D52**, bkz. `RevokeAccessAsync`).
     /// </summary>
     internal async Task<Result> ChangeOwnPasswordAsync(
         Guid staffId,
@@ -243,7 +245,7 @@ internal sealed class StaffCommands(
             return result;
         }
 
-        await RevokeSessionsAsync(staff.Id, cancellationToken);
+        await RevokeAccessAsync(staff.Id, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
@@ -305,7 +307,27 @@ internal sealed class StaffCommands(
     private Task<Staff?> FindAsync(Guid staffId, CancellationToken cancellationToken) =>
         context.Staff.SingleOrDefaultAsync(staff => staff.Id == new StaffId(staffId), cancellationToken);
 
-    private async Task RevokeSessionsAsync(StaffId staffId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Personelin açık ERİŞİMİNİN tamamını düşürür: oturum satırları iptal edilir **ve
+    /// ara durumlar silinir** (`0013` **D52**).
+    ///
+    /// <para>Adı eskiden `RevokeSessionsAsync`'ti ve o ad kusurun kendisiydi: `0013` ara
+    /// durumu getirdiğinde (oturum ÖNCESİ bir hâl, R13/D19) bu metot onu kapsamadı, çünkü
+    /// ara durum bir oturum değil. Senaryo: eski parolayı bilen biri girişi başlatır,
+    /// sahibi parolayı değiştirir ve o kişi ara durumun ömrü içinde ikinci adımı geçerse
+    /// **parola değişiminden sonra** oturum açar. R11/AC-22'nin *"tüm"* sözcüğü yenileme
+    /// haklarını sayıyor; ara durum o listede yoktu.</para>
+    ///
+    /// <para>Sömürü ikinci faktörü de gerektiriyor, yani R1'in sözü bozulmuyordu — ama
+    /// *"parolamı değiştirdim, artık güvendeyim"* beklentisi bozuluyordu ve düzeltme bir
+    /// satır. İkinci adımın kendi yolları (sıfırlama D22, kurulum kaldırma) ara durumu
+    /// zaten siliyordu; eksik olan yalnız parola yolu.</para>
+    ///
+    /// <para>Üç çağıranın üçü de aynı şeyi istiyor — pasifleştirme (R14), parola sıfırlama
+    /// ve kendi parolasını değiştirme: *"bu personelin elindeki her şey düşsün."* Ayrı bir
+    /// metot, üçünden birinin unutulması demekti.</para>
+    /// </summary>
+    private async Task RevokeAccessAsync(StaffId staffId, CancellationToken cancellationToken)
     {
         List<Session> sessions = await context.Sessions
             .Where(session => session.StaffId == staffId && session.RevokedAt == null)
@@ -315,5 +337,11 @@ internal sealed class StaffCommands(
         {
             session.Revoke(clock.UtcNow);
         }
+
+        List<PendingLogin> pending = await context.PendingLogins
+            .Where(login => login.StaffId == staffId)
+            .ToListAsync(cancellationToken);
+
+        context.PendingLogins.RemoveRange(pending);
     }
 }

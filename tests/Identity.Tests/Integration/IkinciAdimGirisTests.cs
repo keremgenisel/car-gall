@@ -328,6 +328,60 @@ public sealed class IkinciAdimGirisTests(IdentityDatabase database)
             ozet.Split('$')[1]));
     }
 
+    /// <summary>
+    /// `0013` **D52** — bir dış gözden geçirme sorusunun cevabı ve bu PR'ın kapsam
+    /// dışından aldığı tek değişiklik.
+    ///
+    /// <para>Senaryo: eski parolayı bilen biri girişi başlatır (ara durum doğar), sahibi
+    /// parolasını değiştirir ve o kişi ara durumun ömrü içinde ikinci adımı geçerse
+    /// **parola değişiminden sonra** oturum açar. R11/AC-22'nin *"tüm"* sözcüğü yenileme
+    /// haklarını sayıyor ve ara durum — oturum ÖNCESİ bir hâl (R13/D19) — o listede
+    /// yoktu. Sömürü ikinci faktörü de gerektirdiği için R1'in sözü bozulmuyordu, ama
+    /// *"parolamı değiştirdim, artık güvendeyim"* beklentisi bozuluyordu.</para>
+    ///
+    /// <para>Üç yol birlikte ölçülüyor çünkü üçü de aynı şeyi istiyor ve düzeltme üçünü
+    /// birden kapsayan tek bir metotta: ayrı ayrı yazılsaydı birinin unutulması sessiz
+    /// kalırdı.</para>
+    /// </summary>
+    [Theory(DisplayName = "0006/AC-22: Parola değişimi, parola sıfırlama ve pasifleştirme ARA DURUMU da düşürür; sonrasında ikinci adım geçilemez")]
+    [InlineData(YolParolaDegistir)]
+    [InlineData(YolParolaSifirla)]
+    [InlineData(YolPasiflestir)]
+    public async Task Dusurur_AraDurumu_ErisimIptalinde(string yol)
+    {
+        (IdentityHarness harness, Guid personelId, string sir, _) = await KurAsync();
+
+        // İkinci Yönetici: pasifleştirme yolu son aktif Yöneticiyi reddederdi (0007 R3).
+        Assert.True((await harness.PersonelEkleAsync(
+            IdentityHarness.EkleKomutu(kimlik: "ikinci@ornek.com", parola: Parola, rol: "manager"))).IsSuccess);
+
+        string araDurum = (await harness.GirisAsync(Kimlik, Parola)).Value.PendingToken!;
+
+        Result iptal = await harness.KomutAsync(komutlar => yol switch
+        {
+            YolParolaDegistir => komutlar.ChangeOwnPasswordAsync(
+                personelId, Parola, "yeni-cok-guclu-parola", CancellationToken.None),
+            YolParolaSifirla => komutlar.ResetPasswordAsync(
+                personelId, "yeni-cok-guclu-parola", CancellationToken.None),
+            _ => komutlar.DeactivateAsync(personelId, CancellationToken.None),
+        });
+
+        Assert.True(iptal.IsSuccess);
+
+        // Ara durum SATIRI gitti: "reddedildi" demek yetmez, çünkü reddin sebebi
+        // personelin pasifliği de olabilirdi ve satır yaşamaya devam ederdi.
+        await using IdentityDbContext context = database.CreateContext();
+        Assert.Empty(await context.PendingLogins.ToListAsync());
+
+        Assert.Equal(
+            IdentityErrors.TwoFactorPendingExpired,
+            (await harness.IkinciAdimGecAsync(araDurum, harness.Kod(sir))).Error.Code);
+    }
+
+    private const string YolParolaDegistir = "parola-degistir";
+    private const string YolParolaSifirla = "parola-sifirla";
+    private const string YolPasiflestir = "pasiflestir";
+
     private async Task<(IdentityHarness Harness, Guid PersonelId, string Sir, RecoveryCodeSet Kodlar)> KurAsync()
     {
         await database.ResetAsync();
