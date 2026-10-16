@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı** (2026-10-15) |
+| **Durum** | **Tamamlandı** (2026-10-16) |
 | **Sahip** | Developer |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Identity` · `frontend/` yönetim paneli |
@@ -1065,7 +1065,7 @@ of Done'da.
       yarı): RFC 6238 Ek B'nin **yayınlanmış test vektörleri** teste girdi ve geçti
       (**AC-2**). *Neden:* kendi uygulamasını kendi ürettiği kodla sınayan test hiçbir
       şey kanıtlamaz.
-- [ ] **Kare kod gerçek bir doğrulama uygulamasında okundu** (**D16**/**D41**, insana
+- [x] **Kare kod gerçek bir doğrulama uygulamasında okundu** (**D16**/**D41**, insana
       kalan yarı): QA ya da Takım Yöneticisi adresi en az bir yaygın uygulamaya okuttu,
       onun ürettiği kod kabul edildi ve bunu PR'a **yazdı**. *Neden:* hane/pencere/
       algoritma kümesinin yanlışlığı yalnız "doğru kod reddediliyor" olarak görünür ve
@@ -1078,8 +1078,11 @@ of Done'da.
       kez gönderince `two_factor_invalid` döndü (**D11**), kurtarma kodu bir kez çalıştı
       ve ikincisinde reddedildi, ve parola değişimi oturumu düşürdü (**D52**). Yani
       parametre kümesi (SHA1 · 6 · 30 · Base32) sunucunun gerçekten kullandığı kümedir.
-      **Kalan şey tam olarak şu:** kare kodun GÖRSELİNİ yaygın bir doğrulama
-      uygulamasının okuması — onu bir telefon yapar, bir ajan yapamaz.
+      **Kalan yarı 2026-10-16'da Takım Yöneticisi tarafından kapatıldı:** kare kodun
+      görseli bir telefondaki doğrulama uygulamasına okutuldu, uygulamanın ürettiği kod
+      ekrana girildi ve **kabul edildi**. Yani hane/pencere/algoritma kümesi yalnız
+      bağımsız bir uygulamada değil, gerçek bir istemcide de doğru — bu kutunun
+      kapanabileceği tek yol buydu.
 - [x] **Sırrın sunucuda görsele gömülmediği** (C15/**D17**) ve **elle giriş metninin her
       zaman görünür** olduğu gösterildi — kare kod uçta çizildi, görsel kanıt RTL'de de
       var.
@@ -1129,12 +1132,27 @@ of Done'da.
       metni; koşunun `success` demesi yetmediği için iş iş okundu (metin değişikliğinde
       Frontend ve E2E bilerek atlanıyor — #68 — ve atlanan iş de koşuyu yeşil bırakır).
 - [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
+      *Kanıt (Takım Yöneticisi doğruladı, 2026-10-16):* gözden geçiren bir **QA oturumuydu**
+      ve merge'den önce okudu — tur `58cc926` · `0ea289f` · `48060af` · `81c895c` ·
+      `e8ddc2e` commit'lerini doğurdu. **Altı bulgu** geldi; beşi aynı turda düzeltildi,
+      altıncısı *gürültü* etiketlendi ve **kapanış turunda ölçülünce gerçek çıktı**
+      (`4aea5dd`) — SCORECARD bu yüzden **6 / 0** yazıyor. Yazarın kendi triyajı bu
+      kutunun yerine geçmedi: D52'nin kendi kaydı yazarı gözden geçirenden ayırıyor
+      (*"dış gözden geçirme sırasında ben buldum"*) ve o bulgu **uygulama içi** sütununa
+      yazıldı. Kutu, bu kart `main`'e girdiği anda işaretsizdi ve o hâliyle merge edildi;
+      `56c7c7d`'nin gövdesindeki dürüstlük notu o anı kaydediyor.
 - [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. Yığın sırayla
+      girdi: **#74** → `90d60c9` · **#75** → `55c0c1d` · **#76** → `56c7c7d` (2026-10-16).
+      Her merge'den önce CI **ayrı bir adım olarak** doğrulandı (`docs/git.md` § 4.3) ve
+      `main`'in `56c7c7d` üzerindeki kendi koşusu dört işin dördünde yeşil.
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      Sekiz satırın sekizi ölçümle dolu. Taşımadan sonra **tüm** `Architecture.Tests`
+      takımı koşturuldu (`specs/TEMPLATE.md` T13'ün notu — kapı, denetlediği dosyayla
+      kök aramaz).
 
 ---
 
@@ -1155,7 +1173,7 @@ tanımın netleştirilmesini öner.
 | **Kriterler önce `main`'de miydi?** | **evet** | **Ölçüldü:** `git cat-file -e 56c7c7d^:specs/0013-iki-adimli-dogrulama.md` → var; ebeveyn `55c0c1d` (#75) **63** kriter taşıyor ve implementasyon `56c7c7d` (#76) ondan sonra geldi. R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
 | **Kriter sayısı: önce → bugün** | **63 → 61** | **Sayı AZALDI ve bu bir revizyon değil, bir yeniden sınıflandırmadır:** **D51** ile AC-62 ve AC-63 DoD maddesine çevrildi (bir dosya kümesinin hâli, tek bir testin iddiası değil). Kriter **eklenmedi**; numaralar append-only gereği üstü çizili yerinde duruyor. O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
 | **Spec revizyon sayısı** | **1** | **Bölüm özetleriyle ölçüldü:** **R** 5127 bayt / `7454a2e60515` ve **C** 4592 bayt / `8b1defc9d891` — `55c0c1d`'den `56c7c7d`'ye **bayt bayt aynı**. **AC** bir kez değişti (7971 → 8228 bayt) ve kendi commit'inde (`e8ddc2e`, **D51**, Takım Yöneticisi kararı). İlk okumam 2 baytlık bir fark göstermişti; sebebi kendi komutumun sondaki satır sonunu kırpmasıydı — `diff` ikisinin aynı olduğunu söyledi. İki CLARIFY turu kriterlerden ÖNCE geldiği için bu ölçüte girmiyor. Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | **1** | Dış gözden geçirme PR'ı bir kez geri döndürdü: `58cc926` · `0ea289f` · `48060af` · `81c895c` · `e8ddc2e`. **`0` yazılamazdı** — K3 `0`'ı T10 kutusunun `[x]` olmasına bağlıyor ve o kutu açık. PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
+| **Düzeltme turu sayısı** | **1** | Dış gözden geçirme PR'ı bir kez geri döndürdü: `58cc926` · `0ea289f` · `48060af` · `81c895c` · `e8ddc2e`. Değer `0` değil, çünkü tur gerçekten döndü; K3'ün `0`'ı T10 kutusuna bağlayan şartı da bu kartta sağlanıyor — kutu kapanış turunda, Takım Yöneticisi'nin doğrulamasıyla işaretlendi. PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
 | **Dış bulgu (gerçek/gürültü)** | **6 / 0** | PR'ın kaydı **5 gerçek + 1 gürültü** diyordu. Altıncıyı bu kapanış turunda ölçtüm ve **gerçek çıktı** — `0012c`'de aynı etiket aynı şekilde düşmüştü. İki parçası var: `IkinciAdimSizintiTests`'in `ConfigureWarnings(… SensitiveDataLoggingEnabledWarning)` satırı yalnız `EnableSensitiveDataLogging()` AÇIKKEN doğan bir uyarıyı bastırıyor ve o çağrı dosyada **hiç yoktu** (ölü satır); daha pahalısı sınıfın `<summary>`'siydi — *"testler loglama AÇIK ve YAKALANIYORken koşuyor"* diyordu, oysa parametreler `'?'` olarak maskeleniyordu, yani test yorumunun vaat ettiği senaryoyu ölçmüyordu. Bu turda loglama gerçekten açıldı ve ölü satır canlandı. **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
 | **Uygulama içi bulgu** | **6** | PR'ın saydığı **beş** (paylaşılan sayacın deliği · test veritabanı sıfırlamasının bilmediği dört tablo · `global-setup`'ın `409` sanıp `401` olan yolu · altıncı kolonun telefonda düğmeyi kapatması · `isVisible()`'ın beklememesi) **+ D52** — onu yazar dış tur sırasında buldu, kriterlerde olmadığı için bırakmıştı ve Takım Yöneticisi kapsama aldı. Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
 | **Regresyon sayısı** | **0** | **`main`'e ulaşan yok.** İkinci okuma yazılı: dalın İÇİNDE bir tane doğdu ve merge'den önce kapandı — `scripts/dev-up.sh`'nin çalıştırma biti `ab685b7`'de düştü (`100755` → `100644`), `58cc926`'da geri geldi ve tekrarı `BetikKapisiTests` altına girdi. Onu **ben bulmadım**, dış gözden geçirme buldu; dış bulgu #4 olarak sayılı. Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
