@@ -53,6 +53,11 @@ jobs:
           PAROLA=$(openssl rand -hex 16)
           echo "::add-mask::$PAROLA"
           echo "SEED_ADMIN_PASSWORD=$PAROLA" >> "$GITHUB_ENV"
+          # 0013 D3 — ölçüm işi giriş yapmıyor ama Host'u ayağa kaldırmak zorunda ve
+          # uygulama şifreleme anahtarı olmadan HİÇ başlamıyor (AC-49).
+          ANAHTAR=$(openssl rand -base64 32)
+          echo "::add-mask::$ANAHTAR"
+          echo "TWO_FACTOR_KEY=$ANAHTAR" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v4
 
@@ -84,6 +89,8 @@ jobs:
           # Kurulum hesabı bir kez özetleniyor; ölçüm başlangıcını 210.000 iterasyon
           # beklememeli.
           Identity__PasswordIterations: '1000'
+          # 0013 D3/AC-49 — anahtar olmadan uygulama hiç başlamaz.
+          Identity__TwoFactor__EncryptionKey: ${{ env.TWO_FACTOR_KEY }}
           # 0009 — uygulama sağlayıcı kimlik bilgileri olmadan HİÇ başlamaz (AC-28).
           # Bu değerler mailpit servisinin kabul ettiği tek kullanımlık değerlerdir.
           Notifications__Smtp__Host: localhost

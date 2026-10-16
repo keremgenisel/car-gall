@@ -286,6 +286,12 @@ jobs:
           PAROLA=$(openssl rand -hex 16)
           echo "::add-mask::$PAROLA"
           echo "SEED_ADMIN_PASSWORD=$PAROLA" >> "$GITHUB_ENV"
+          # 0013 D3 — doğrulama sırrının şifreleme anahtarı da SIRDIR ve aynı disiplinle
+          # üretilir: depoda sabit bir anahtar, sızan bir yedekteki bütün ikinci adım
+          # sırlarını çözebilen bir dize demekti. 32 bayt (AES-256), Base64.
+          ANAHTAR=$(openssl rand -base64 32)
+          echo "::add-mask::$ANAHTAR"
+          echo "TWO_FACTOR_KEY=$ANAHTAR" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v4
 
@@ -347,6 +353,10 @@ jobs:
           Identity__SeedAdmin__Password: ${{ env.SEED_ADMIN_PASSWORD }}
           # Kanıt üretimi her girişte 210.000 iterasyon beklemesin.
           Identity__PasswordIterations: '1000'
+          # 0013 D3/AC-49 — anahtar olmadan uygulama hiç başlamaz.
+          Identity__TwoFactor__EncryptionKey: ${{ env.TWO_FACTOR_KEY }}
+          # D2'nin ölçümü: on kodu üretim değeriyle özetlemek her kurulumda saniyeler ekler.
+          Identity__TwoFactor__RecoveryCodeIterations: '1000'
           # Kanıt üretimi ve E2E akışları çok sayıda giriş yapar; giriş ucunun
           # İSTEK sınırı (R6'nın ikinci yarısı) testleri birbirini zehirlemesin.
           # Hesap KİLİDİ varsayılan eşikte kalır ve AC-6/AC-7 onu sınar.

@@ -25,6 +25,12 @@ S3_WATERMARK_KEY="private/brand/watermark.png"
 SEED_ADMIN_PASSWORD="${SEED_ADMIN_PASSWORD:-$(openssl rand -hex 16)}"
 export SEED_ADMIN_PASSWORD
 
+# 0013 D3 — doğrulama sırrını şifreleyen anahtar da SIRDIR ve aynı disiplinle üretilir:
+# depoda sabit bir anahtar, sızan bir yedekteki bütün ikinci adım sırlarını çözebilen bir
+# dize demekti. 32 bayt (AES-256) Base64 olarak; anahtar yoksa uygulama hiç başlamaz.
+TWO_FACTOR_KEY="${TWO_FACTOR_KEY:-$(openssl rand -base64 32)}"
+export TWO_FACTOR_KEY
+
 echo "==> PostgreSQL ($CONTAINER, port $PORT)"
 docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 docker run -d --name "$CONTAINER" \
@@ -106,6 +112,8 @@ echo "==> Kurulum adımı (şema)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
 Identity__SeedAdmin__Password="$SEED_ADMIN_PASSWORD" \
 Identity__PasswordIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
+Identity__TwoFactor__EncryptionKey="$TWO_FACTOR_KEY" \
+Identity__TwoFactor__RecoveryCodeIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
 Notifications__Smtp__Host=localhost \
 Notifications__Smtp__Port="$MAIL_SMTP_PORT" \
 Notifications__Smtp__User=gelistirme \
@@ -138,6 +146,8 @@ Development__SeedListingCount="$SEED_COUNT" \
 Identity__SeedAdmin__Password="$SEED_ADMIN_PASSWORD" \
 Identity__PasswordIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
 Identity__LoginRequestLimit="${LOGIN_REQUEST_LIMIT:-500}" \
+Identity__TwoFactor__EncryptionKey="$TWO_FACTOR_KEY" \
+Identity__TwoFactor__RecoveryCodeIterations="${SEED_ADMIN_ITERATIONS:-1000}" \
 Leads__RateLimit__CapturedLeadLimit="${LEAD_CAPTURED_LIMIT:-500}" \
 Leads__RateLimit__RequestLimit="${LEAD_REQUEST_LIMIT:-500}" \
 Notifications__PublicBaseUrl="http://localhost:5080" \
