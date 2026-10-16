@@ -9,8 +9,8 @@
 | **Bağımlı spec'ler** | `0006` (oturum ve roller — tamamlandı) · `0009` (bildirim — tamamlandı) |
 | **Dayanak** | ADR 0003 unsur 2; Ek 1 sıra #6 |
 | **Karar bekliyor** | **Yok.** Beş sorunun hepsi kapandı: **S2** birinci CLARIFY turunda (**D8**, ölçümle), **S1 · S3 · S4 · S5** ikinci turda (**D30–D33**, Takım Yöneticisi onayı 2026-10-15). |
-| **Kararlar** | **D1–D50**: iki CLARIFY turu bugünkü `main` üzerinde **ölçülerek** verdi (**D1–D12** → `c5143b6`, **D13–D33** → `1e7c8d2`), **D34–D47** bu kriter turunda (uygulama planının ölçümleri, Takım Yöneticisi onayı 2026-10-15), **D48–D50** dış gözden geçirmenin bulgularında (2026-10-16). Yedisi spec'i yazılı hâliyle **uygulanamaz** kılıyordu. |
-| **Kriter sayısı** | **63** |
+| **Kararlar** | **D1–D52**: iki CLARIFY turu bugünkü `main` üzerinde **ölçülerek** verdi (**D1–D12** → `c5143b6`, **D13–D33** → `1e7c8d2`), **D34–D47** bu kriter turunda (uygulama planının ölçümleri, Takım Yöneticisi onayı 2026-10-15), **D48–D50** dış gözden geçirmenin bulgularında ve **D51–D52** Takım Yöneticisi'nin o bulgular üzerine verdiği kararlarda (2026-10-16). Yedisi spec'i yazılı hâliyle **uygulanamaz** kılıyordu. |
+| **Kriter sayısı** | **61** — yazılan 63'ün ikisi (**AC-62**, **AC-63**) **D51** ile DoD maddesine çevrildi; madde olarak duruyorlar, kabul kriteri olarak sayılmıyorlar. |
 
 > **R/C/AC bu PR'da `main`'e giriyor ve orada donuyor** (ADR `0008` / K2, `0012b`
 > **D38**'in donma anı cümlesi). Bu commit'ten sonra Requirements, Constraints veya
@@ -598,7 +598,8 @@ uçlarını çağırıyor — `AracKaydiZinciri`, `AracMedyasiZinciri`, `DuyuruY
 `YayinZinciri`, `GirisHizSiniri`. D30 Yönetici'yi zorunlu kıldığı ve D13 kurulumsuz
 hesabı kapıladığı için dokuzu da `403` alır. Karar: D28'in kardeşi olarak
 `tests/Host.Tests` içinde **ortak bir kurulum yardımcısı** (ikinci adımı kur + kod üret)
-yazılır ve dokuz dosya onu kullanır; kriteri **AC-63**. *Gerekçe:* "sonra bakarız" aynı
+yazılır ve dokuz dosya onu kullanır; karşılığı **AC-63** olarak yazıldı ve **D51** ile
+DoD maddesine çevrildi. *Gerekçe:* "sonra bakarız" aynı
 bedeli ikinci kez ödetir ve dokuz dosyanın aynı anda kırmızıya düşmesi, kusuru değil
 kararı gösterir. *Bedel:* dokuz test dosyası bu kartta değişir.
 
@@ -808,6 +809,39 @@ ikinci kopya tam olarak bu deponun iki kez ödediği şeydi. Sondayla doğruland
 yazılan `FOR UPDATE`'i hâlâ yakalıyor, yani kural zayıflamadı — gerekçesini anlatan bir
 dosyayı cezalandıran kural ise gerekçenin hiç yazılmamasını öğretirdi.
 
+### Takım Yöneticisi'nin iki kararı (D51–D52)
+
+**D51 — AC-62 ve AC-63 kabul kriteri DEĞİL, DoD maddesidir.** Dış gözden geçirme ölçtü:
+63 kriterin dördü hiçbir testin adında geçmiyordu; ikisi (AC-34, AC-60) eksik etiketti ve
+eklendi, ama AC-62/AC-63 **bir test adına sığmıyor** — *"giriş yapan on dört spec dosyası
+yeşil kalır"* ve *"dokuz zincir yeşil kalır"* tek bir testin iddiası değil, bir dosya
+kümesinin hâli. Karar: ikisi DoD maddesi olarak kalır (karşılıkları zaten § Definition of
+Done'da yazılıydı) ve kabul kriteri sayısı **61**'e düşer; numaralar append-only kuralı
+gereği yerinde, üstü çizili duruyor. *Gerekçe:* kabul kriteri **ürünün** bir davranışını
+söyler ve testiyle sayılabilir olmalı; *"on dört dosya"* bir **regresyon ölçüsüdür** ve
+yarın on beşinci dosya eklendiğinde kriter yanlış olur, ürün değişmeden. Alternatif —
+dosya sayısını ölçen bir kapı yazmak — sayıyı dondurur ve her yeni e2e dosyasında kapıyı
+güncellemeyi öğretirdi; güncellenen kapı ise ölçtüğü şeyi kaybeder. *Bedel:* SCORECARD'ın
+*"kriter sayısı"* ölçümü (`grep -c '^- \*\*AC-'`) artık **61** sayıyor ve iki madde o
+sayının dışında.
+
+**D52 — Erişim iptali ARA DURUMU da düşürür.** Dış gözden geçirme sırasında ben buldum ve
+kriterlerde olmadığı için uygulamadan bıraktım; Takım Yöneticisi kapsama aldı. Senaryo:
+eski parolayı bilen biri girişi başlatır (ara durum doğar), sahibi parolasını değiştirir
+ve o kişi ara durumun ömrü içinde ikinci adımı geçerse **parola değişiminden sonra**
+oturum açar. `0006` R11/AC-22'nin *"tüm"* sözcüğü **yenileme haklarını** sayıyor ve ara
+durum — oturum ÖNCESİ bir hâl (R13/**D19**) — o listede yoktu. Karar:
+`StaffCommands`'ın erişim iptali oturum satırlarını iptal eder **ve** o personelin ara
+durumlarını siler; üç çağıranın üçü de (pasifleştirme R14, parola sıfırlama, kendi
+parolasını değiştirme) aynı metottan geçtiği için üçü birden kapsandı. Metodun adı
+`RevokeSessionsAsync` → `RevokeAccessAsync` oldu: eski ad kusurun kendisiydi, çünkü *"ara
+durum bir oturum değil"* doğru cümlesi onu kapsam dışında bırakıyordu. *Gerekçe:* sömürü
+ikinci faktörü de gerektiriyor, yani **R1'in sözü bozulmuyordu** — ama *"parolamı
+değiştirdim, artık güvendeyim"* beklentisi bozuluyordu ve düzeltme bir satır. İkinci adımın
+kendi yolları (sıfırlama **D22**, kurulum kaldırma) ara durumu zaten siliyordu; eksik olan
+yalnız parola yoluydu. *Bedel:* ikinci adımı yarıda bırakıp parolasını değiştiren personel
+girişe baştan başlar — ekranı zaten parola fazına döndüren bir red (**D20**) var.
+
 ### CLARIFY turlarında ölçülen bedel: kapanmış bir spec'in yüzeyi etkilenecek
 
 **`0008`'in yüzeyi iki yerden değişiyor, `0006`'nın yüzeyi bir yerden — üçü de adıyla
@@ -873,7 +907,7 @@ yazılı. İkinci maddenin ilk ölçümü YANLIŞTI ve düzeltilmiş hâli burad
 
 S2 birinci CLARIFY turunda, diğer dördü ikinci turda kapandı (Takım Yöneticisi onayı
 2026-10-15). **Kabul kriterlerini bekleten bir karar kalmadı** ve kriterler bu turda
-yazıldı: **63 kriter**, § Acceptance Criteria.
+yazıldı: **63 madde**, § Acceptance Criteria — ikisi sonradan DoD maddesine çevrildi (**D51**), yani **61 kabul kriteri**.
 
 ---
 
@@ -971,8 +1005,12 @@ yazıldı: **63 kriter**, § Acceptance Criteria.
 
 ### Regresyon altyapısı
 
-- **AC-62.** e2e kurulumu kurulum hesabının ikinci adımını **bir kez** kurar; giriş yapan **on dört** spec dosyasının hepsi yeşil kalır ve yeni e2e bağımlılığı eklenmez.
-- **AC-63.** `Host.Tests`'in giriş yapan **dokuz** zinciri ortak bir kurulum yardımcısıyla yeşil kalır.
+Bu bölümün iki maddesi **D51** ile **DoD maddesine çevrildi** ve kabul kriteri olarak
+sayılmıyor; numaraları append-only kuralı gereği yerinde duruyor, karşılıkları § Definition
+of Done'da.
+
+- ~~**AC-62.** e2e kurulumu kurulum hesabının ikinci adımını **bir kez** kurar; giriş yapan **on dört** spec dosyasının hepsi yeşil kalır ve yeni e2e bağımlılığı eklenmez.~~ → **DoD** (**D51**)
+- ~~**AC-63.** `Host.Tests`'in giriş yapan **dokuz** zinciri ortak bir kurulum yardımcısıyla yeşil kalır.~~ → **DoD** (**D51**)
 
 ---
 
@@ -1037,7 +1075,9 @@ yazıldı: **63 kriter**, § Acceptance Criteria.
       var.
 - [x] **Ara durumun ömrü, tek kullanımlığı ve silinmesi** testle gösterildi (**D19**);
       çerezin `HttpOnly` olduğu ve satırda tokenin **özetinin** durduğu doğrulandı.
-      Saklama/temizlik **§ X8**'de gerekçesiyle kapsam dışı (**D39**).
+      Tek kullanımlık **eşzamanlı** iki istekte de ölçüldü (**D48**) ve erişim iptalinin
+      ara durumu düşürdüğü üç yolda birden sınandı (**D52**). Saklama/temizlik **§ X8**'de
+      gerekçesiyle kapsam dışı (**D39**).
 - [x] **İki ayrı hata kodu ve karşılıkları** testle gösterildi (**D20**); **kilitlenmiş
       ikinci adımın ayırt edilemez** kaldığı (`0006` R3/AC-5 suskunluğu) sınandı.
 - [x] **Sıfırlamanın açık oturumları düşürdüğü ve kalan kurtarma kodlarını
@@ -1048,13 +1088,13 @@ yazıldı: **63 kriter**, § Acceptance Criteria.
 - [x] **`twoFactorEnrolled` iki yüzeyde de doğru** (**D25**, **D26**): personel
       listesinde eklemeli alan olarak var ve `/me` onu **kaynaktan** okuyor — kurulumu
       biten personelin aynı oturumda doğru durumu gördüğü testle gösterildi.
-- [x] **e2e kurulumu ikinci adımı bir kez kuruyor** (**D28**, **AC-62**): `global-setup`
+- [x] **e2e kurulumu ikinci adımı bir kez kuruyor** (**D28**, **D51** — eski **AC-62**): `global-setup`
       kurulum hesabını kaydediyor, ortak `e2e/giris.ts` yardımcısı kodu `node:crypto` ile
       üretiyor ve **giriş yapan on dört spec dosyasının hepsi yeşil**. Yeni e2e bağımlılığı
       eklenmedi; dokunulan dosyalar PR'da **adıyla** yazıldı ve **hiçbirinin iddiası
       değişmedi** (**D46**).
 - [x] **`Host.Tests`'in dokuz zinciri ortak yardımcıya geçti ve yeşil** (**D34**,
-      **AC-63**): dosyalar PR'da adıyla yazıldı. *Neden:* D28 yalnız e2e'yi saymıştı;
+      **D51** — eski **AC-63**): dosyalar PR'da adıyla yazıldı. *Neden:* D28 yalnız e2e'yi saymıştı;
       ölçüm dokuz backend zincirinin de aynı kararla kırıldığını gösterdi.
 - [x] **Tek Yöneticinin kilitlenmesi bedeli PR'da AÇIKÇA yazıldı** (**D37**): `0006` D2'nin
       kurulum hesabı yolu ikinci adım için **çalışmıyor** (`SeedAdministrator` idempotent);
