@@ -3,6 +3,7 @@ import { useLocale } from '../../app/localeContext'
 import { fetchListingDetail } from '../../shared/api/catalog'
 import type { ShowcaseListingDetail } from '../../shared/api/types'
 import { formatMoney, formatYear } from '../../shared/i18n/format'
+import { listPath } from '../../shared/lib/route'
 import { Badge, Card } from '../../shared/ui'
 import { DetailError } from './states/DetailError'
 import { DetailNotFound } from './states/DetailNotFound'
@@ -73,7 +74,7 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
   if (load.kind === 'notFound') {
     return (
       <div className="page">
-        <DetailNotFound homeHref={`/${locale}/`} />
+        <DetailNotFound homeHref={listPath(locale)} />
       </div>
     )
   }

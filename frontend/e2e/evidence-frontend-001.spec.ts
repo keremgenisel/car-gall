@@ -2,36 +2,36 @@ import { expect, test } from '@playwright/test'
 import { kanit } from './kanit'
 
 test('frontend-001/AC-1: üst bar ve içerik alanı', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await expect(page.locator('main h1')).toBeVisible()
   await kanit(page, 'header.top-bar', 'frontend-001-ac1.png')
 })
 
 test('frontend-001/AC-2: dil değiştirici üç locale sunar', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await kanit(page, '.top-bar__locales', 'frontend-001-ac2.png')
 })
 
 test('frontend-001/AC-4: Arapça üst bar sağdan sola', async ({ page }) => {
-  await page.goto('/ar/')
+  await page.goto('/ar/cars')
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
   await kanit(page, 'header.top-bar', 'frontend-001-ac4-ar.png')
 })
 
 test('frontend-001/AC-6: kart alanları', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await kanit(page, '[data-testid="listing-card"]', 'frontend-001-ac6.png')
 })
 
 test('frontend-001/AC-7: rezerve rozeti', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   const kart = page.getByTestId('listing-card').filter({ hasText: 'Rezerve' }).first()
   await expect(kart).toBeVisible()
   await kanit(page, kart, 'frontend-001-ac7.png')
 })
 
 test('frontend-001/AC-8: sayfalama kontrolü', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   const sayfalama = page.locator('.pagination')
   await sayfalama.scrollIntoViewIfNeeded()
   await kanit(page, '.pagination', 'frontend-001-ac8.png')
@@ -42,7 +42,7 @@ test('frontend-001/AC-10: iskelet', async ({ page }) => {
     await new Promise((resolve) => setTimeout(resolve, 2000))
     await route.continue()
   })
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await expect(page.getByTestId('list-skeleton')).toBeVisible()
   await kanit(page, '[data-testid="list-skeleton"]', 'frontend-001-ac10.png')
 })
@@ -53,7 +53,7 @@ test('frontend-001/AC-11: boş katalog', async ({ page }) => {
       json: { items: [], page: 1, pageSize: 24, totalCount: 0, totalPages: 0 },
     })
   })
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await kanit(page, '[data-testid="empty-showcase"]', 'frontend-001-ac11.png')
 })
 
@@ -66,7 +66,7 @@ test('frontend-001/AC-12, frontend-001/AC-13: hata durumu — üç locale', asyn
   })
 
   for (const locale of ['tr', 'en', 'ar'] as const) {
-    await page.goto(`/${locale}/`)
+    await page.goto(`/${locale}/cars`)
     const hata = page.getByTestId('list-error')
     await expect(hata).toBeVisible()
 

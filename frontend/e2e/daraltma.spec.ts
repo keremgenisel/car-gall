@@ -37,7 +37,7 @@ test.describe('Kasa tipine göre daraltma', () => {
     ] as const
 
     for (const { locale, suv, sedan, clear, none, one, two } of locales) {
-      await page.goto(`/${locale}/`)
+      await page.goto(`/${locale}/cars`)
 
       await expect(page.getByTestId('selected-count')).toContainText(none)
 
@@ -58,7 +58,7 @@ test.describe('Kasa tipine göre daraltma', () => {
   })
 
   test('0001/AC-11: Daraltma çubuğu yalnızca kasa tipi eksenini sunar', async ({ page }) => {
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
 
     await expect(page.getByTestId('body-type-filter')).toBeVisible()
     // Tek eksen: sayfada başka bir filtre grubu yoktur (R8, X3).
@@ -68,7 +68,7 @@ test.describe('Kasa tipine göre daraltma', () => {
   test('0001/AC-7: İki kasa tipi seçildiğinde liste, herhangi birine uyan ilanları gösterir', async ({
     page,
   }) => {
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
 
     await page.getByRole('checkbox', { name: 'SUV' }).check()
     const suvSayisi = await okunanToplam(page)
@@ -81,7 +81,7 @@ test.describe('Kasa tipine göre daraltma', () => {
   })
 
   test('0001/AC-9: Seçim temizlendiğinde liste daraltma öncesi kümeye döner', async ({ page }) => {
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
     const tumu = await okunanToplam(page)
 
     await page.getByRole('checkbox', { name: 'SUV' }).check()
@@ -102,7 +102,7 @@ test.describe('Kasa tipine göre daraltma', () => {
       })
     })
 
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
 
     await expect(page.getByTestId('body-type-filter')).toHaveCount(0)
     await expect(page.getByTestId('listing-card').first()).toBeVisible()

@@ -431,3 +431,16 @@ export interface VehicleMedia {
   readonly coverMediaAssetId: string | null
   readonly items: readonly VehicleMediaItem[]
 }
+
+/** 0014 **D15** — izin listesi: sunucu yalnız bu alanları gönderir (AC-14). */
+export interface PublicBranch {
+  readonly name: string
+  readonly address: string
+  /** E.164 (`+902165550001`); `tel:` bağlantısının hedefi (AC-45). */
+  readonly phone: string
+}
+
+export interface PublicGallery {
+  readonly commercialName: string
+  readonly branches: readonly PublicBranch[]
+}

@@ -12,7 +12,7 @@ test.describe('Üç durum', () => {
       await route.continue()
     })
 
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
     await expect(page.getByTestId('list-skeleton')).toBeVisible()
   })
 
@@ -30,7 +30,7 @@ test.describe('Üç durum', () => {
       })
     })
 
-    await page.goto('/tr/?bodyType=suv')
+    await page.goto('/tr/cars?bodyType=suv')
 
     await expect(page.getByTestId('empty-by-filter')).toBeVisible()
     await expect(page.getByTestId('empty-showcase')).toHaveCount(0)
@@ -49,7 +49,7 @@ test.describe('Üç durum', () => {
       })
     })
 
-    await page.goto('/tr/?bodyType=suv')
+    await page.goto('/tr/cars?bodyType=suv')
 
     // İkisi aynı anda doğru: (b) kazanır (R12).
     await expect(page.getByTestId('empty-showcase')).toBeVisible()
@@ -66,7 +66,7 @@ test.describe('Üç durum', () => {
       })
     })
 
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
 
     const hata = page.getByTestId('list-error')
     await expect(hata).toBeVisible()

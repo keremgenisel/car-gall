@@ -8,7 +8,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 /** Listedeki ilk kartın detay adresi; slug seed'e göre değişir, sabitlenmez. */
 async function ilkIlaninAdresi(page: Page, locale = 'tr') {
-  await page.goto(`/${locale}/`)
+  await page.goto(`/${locale}/cars`)
   const href = await page.getByTestId('listing-card').first().getByRole('link').getAttribute('href')
   expect(href).not.toBeNull()
   return href as string
@@ -25,7 +25,7 @@ test.describe('İlan detayı', () => {
   test('0002/AC-1: Yayında durumundaki bir ilanın adresi istendiğinde o ilanın detayı döner', async ({
     page,
   }) => {
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
     const bag = page.getByTestId('listing-card').first().getByRole('link')
     const model = ((await bag.textContent()) ?? '').trim()
 

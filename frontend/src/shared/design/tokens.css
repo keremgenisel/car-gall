@@ -145,6 +145,14 @@
      Kırılımlar ölçülen geçişten biraz GENİŞ tutuldu (2→1 geçişi 768–860px arasında):
      fazla ayırmak boşluk üretir, eksik ayırmak kayma — ikisi aynı şey değil. */
   --filter-bar-min-block-size: 238px;
+
+  /* 0014 — ana sayfanın daraltma formu: başlık + kasa tipi ekseni + düğme. Ölçüldü
+     (2026-11-17, Lighthouse mobil genişliği dâhil): form her kırılımda filtre çubuğunun
+     ayrılan yüksekliğinden TAM 58px uzun (412px → 296, 640px → 253, 1280px → 210).
+     İskelet eskiden 126px ayırıyordu ve öne çıkan bölüm 184px'e kadar aşağı düşüyordu;
+     üç Lighthouse koşusunun birinde CLS 0,098 (eşik 0,1). Çubuğun token'ına bağlı:
+     kırılımlar orada değişirse bu da değişir. */
+  --narrowing-form-min-block-size: calc(var(--filter-bar-min-block-size) + 58px);
   --form-control-min-block-size: 44px;
 
   /* 0008 — onay kutusu. Genişlik okunabilir satır uzunluğunu aşmaz; katman sırası

@@ -14,6 +14,8 @@ internal sealed class LocalePrefixResolver
 {
     private readonly HashSet<string> enabled;
 
+    private readonly List<string> enabledInOrder = [];
+
     internal LocalePrefixResolver(string defaultLocale, IReadOnlyList<string> enabledLocales)
     {
         Result<Locale> parsedDefault = Locale.Create(defaultLocale);
@@ -33,7 +35,10 @@ internal sealed class LocalePrefixResolver
                 throw new InvalidOperationException($"Etkin locale listesinde geçersiz kod: '{code}'.");
             }
 
-            enabled.Add(parsed.Value.Code);
+            if (enabled.Add(parsed.Value.Code))
+            {
+                enabledInOrder.Add(parsed.Value.Code);
+            }
         }
 
         if (!enabled.Contains(Default.Code))
@@ -43,6 +48,9 @@ internal sealed class LocalePrefixResolver
     }
 
     internal Locale Default { get; }
+
+    /// <summary>`0014` **D22** — yapılandırmadaki sırayla; uç altlığın dil bağlantılarını buradan türetir.</summary>
+    internal IReadOnlyList<string> Enabled => enabledInOrder;
 
     internal bool IsEnabled(string code) => enabled.Contains(code);
 

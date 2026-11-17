@@ -35,46 +35,14 @@ internal sealed class ShowcaseListingQueries(
         int page = request.ResolvePage(totalCount);
 
         List<ShowcaseListing> rows = await query
-            .OrderByDescending(listing => listing.ShowcaseSortWeight)
-            .ThenByDescending(listing => listing.PublishedAt)
-            .ThenBy(listing => listing.ListingId)
+            .InShowcaseOrder()
             .Skip((page - 1) * request.ResolvedPageSize)
             .Take(request.ResolvedPageSize)
             .ToListAsync(cancellationToken);
 
-        IReadOnlyDictionary<Guid, string> modelNames = await modelNameResolver.ResolveAsync(
-            [.. rows.Select(row => row.VehicleModelId).Distinct()],
-            locale,
-            cancellationToken);
-
         List<ShowcaseListingDto> items =
-        [
-            .. rows.Select(row => new ShowcaseListingDto(
-                row.ListingId,
-                row.Slug,
-                row.IsReserved,
-                row.CoverMediaUrl,
-                modelNames.TryGetValue(row.VehicleModelId, out string? name) ? name : string.Empty,
-                row.ModelYear,
-                row.MileageKilometers,
-                ToPrice(row),
-                ResolveBranchName(row, locale)))
-        ];
+            await new ShowcaseCards(modelNameResolver, localeOptions).ToDtosAsync(rows, locale, cancellationToken);
 
         return new PagedResult<ShowcaseListingDto>(items, page, request.ResolvedPageSize, totalCount);
-    }
-
-    private static ShowcasePriceDto ToPrice(ShowcaseListing row) => row.PriceOnRequest
-        ? ShowcasePriceDto.OnRequestPrice()
-        : new ShowcasePriceDto(false, row.PriceAmount, row.PriceCurrencyCode, row.PriceMinorUnitExponent);
-
-    private string ResolveBranchName(ShowcaseListing row, Locale locale)
-    {
-        if (row.BranchNames.TryGetValue(locale.Code, out string? name))
-        {
-            return name;
-        }
-
-        return row.BranchNames.TryGetValue(localeOptions.Default.Code, out string? fallback) ? fallback : string.Empty;
     }
 }

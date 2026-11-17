@@ -71,12 +71,21 @@ public static class DealershipModule
             provider.GetRequiredService<DealershipDbContext>(),
             parsed.Value));
 
+        // 0014 D15 — ziyaretçiye dönük dar yüzey; panelin şube listesinden ayrı.
+        services.AddScoped<IPublicGalleryQueries>(provider => new PublicGalleryQueries(
+            provider.GetRequiredService<DealershipDbContext>(),
+            parsed.Value));
+
         return services;
     }
 
     /// <summary>
     /// 0010a — modülün İLK uç kaydı. `0003` bilinçli olarak hiç uç açmamıştı; araç kaydı
-    /// formu şube seçimi istediği için açıldı.
+    /// formu şube seçimi istediği için açıldı. `0014` ziyaretçinin galeri okumasını ekledi.
     /// </summary>
-    public static void MapDealership(this IEndpointRouteBuilder builder) => builder.MapBranchEndpoints();
+    public static void MapDealership(this IEndpointRouteBuilder builder)
+    {
+        builder.MapBranchEndpoints();
+        builder.MapPublicGalleryEndpoints();
+    }
 }

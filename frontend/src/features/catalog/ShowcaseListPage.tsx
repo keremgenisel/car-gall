@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocale } from '../../app/localeContext'
-import { fetchBodyTypes, fetchFieldSettings, fetchShowcaseListings } from '../../shared/api/catalog'
+import { fetchShowcaseListings } from '../../shared/api/catalog'
 import type { BodyType, PagedResult, ShowcaseListing } from '../../shared/api/types'
 import { ListingCard } from './ListingCard'
+import { loadBodyTypeOptions } from './bodyTypeOptions'
 import { BodyTypeFilterBar } from './BodyTypeFilterBar'
 import { Pagination } from './Pagination'
 import { EmptyByFilter } from './states/EmptyByFilter'
@@ -12,8 +13,6 @@ import { ListSkeleton } from './states/ListSkeleton'
 import { FilterBarSkeleton } from './states/FilterBarSkeleton'
 import { clearBodyTypes, toggleBodyType, withPage } from './listUrlState'
 import { replaceCanonicalPage, useListUrlState } from './useListUrlState'
-
-const BODY_TYPE_FIELD = 'body_type'
 
 type LoadState =
   | { readonly kind: 'loading' }
@@ -45,14 +44,10 @@ export function ShowcaseListPage() {
 
     // Filtre çubuğu alan ayarlarının kapısından geçer: kasa tipi alanı public değilse
     // çubuk HİÇ gösterilmez ve liste daraltmasız çalışmaya devam eder (R8, AC-12).
-    Promise.all([
-      fetchFieldSettings(locale, controller.signal),
-      fetchBodyTypes(locale, controller.signal),
-    ])
-      .then(([settings, types]) => {
-        const bodyTypeField = settings.fields.find((field) => field.fieldKey === BODY_TYPE_FIELD)
-        setFilterGate(bodyTypeField?.isFilterable === true ? 'visible' : 'hidden')
-        setBodyTypes(types)
+    loadBodyTypeOptions(locale, controller.signal)
+      .then((options) => {
+        setFilterGate(options.filterable ? 'visible' : 'hidden')
+        setBodyTypes(options.bodyTypes)
       })
       .catch(() => setFilterGate('hidden'))
 

@@ -39,7 +39,7 @@ async function hesaplanan(page: import('@playwright/test').Page, token: string):
 test('frontend-002/AC-1: Latin marka adları ve fiyatlar Arapça metin içinde doğru yönde görünür', async ({
   page,
 }) => {
-  await page.goto('/ar/')
+  await page.goto('/ar/cars')
 
   const kart = page.getByTestId('listing-card').first()
   await expect(kart.locator('.listing-card__model')).toHaveAttribute('dir', 'auto')
@@ -52,7 +52,7 @@ test('frontend-002/AC-1: Latin marka adları ve fiyatlar Arapça metin içinde d
 })
 
 test("frontend-002/AC-6: türetilmiş token'ların hesaplanan değeri", async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
 
   // Beyan ile hesaplanan arasındaki fark YALNIZ türetilmiş iki token'da; onları C# testi
   // değil tarayıcı doğrulamalı. Kendi `var()` çözücümle "hesaplanan" demek, tarayıcıyı
@@ -99,7 +99,7 @@ test('frontend-002/AC-8: yazı tipi istekleri üçüncü taraf alan adına gitme
     }
   })
 
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await expect(page.locator('main h1')).toBeVisible()
 
   // Yazı tipi ve stil istekleri aynı origin'den gelir.
@@ -117,7 +117,7 @@ test('frontend-002/AC-8: yazı tipi istekleri üçüncü taraf alan adına gitme
 test('frontend-002/AC-7: vitrin listesinde fiyat metni metin vurgusuyla basılır', async ({
   page,
 }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
 
   const fiyat = page.getByTestId('listing-card').first().locator('.listing-card__price')
   await expect(fiyat).toBeVisible()
@@ -132,7 +132,7 @@ test('frontend-002/AC-7: vitrin listesinde fiyat metni metin vurgusuyla basılı
 test('frontend-002/AC-28: odak halkası hem zeminde hem limon dolgu üzerinde görünür', async ({
   page,
 }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
 
   // Zemin üzerindeki odak: ilk odaklanabilir öğe.
   await page.keyboard.press('Tab')
@@ -168,7 +168,7 @@ test('frontend-002/AC-28: odak halkası hem zeminde hem limon dolgu üzerinde g�
 })
 
 test('frontend-002/AC-29: Arapça locale Arapça tipografi yığınıyla basılır', async ({ page }) => {
-  await page.goto('/ar/')
+  await page.goto('/ar/cars')
   await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
 
   const aile = await page.locator('body').evaluate((el) => getComputedStyle(el).fontFamily)
@@ -182,7 +182,7 @@ test('frontend-002/AC-29: Arapça locale Arapça tipografi yığınıyla basıl�
 })
 
 test('frontend-002/AC-30: Arapça düzen RTL kalır, tema yönü bozmaz', async ({ page }) => {
-  await page.goto('/ar/')
+  await page.goto('/ar/cars')
 
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
   await expect(page.locator('main h1')).toBeVisible()
@@ -191,7 +191,7 @@ test('frontend-002/AC-30: Arapça düzen RTL kalır, tema yönü bozmaz', async 
 })
 
 test('frontend-002/AC-27: seçili ve hatalı hâller renkten bağımsız da okunur', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
 
   // Seçili daraltma: pilin içinde gerçek bir onay kutusu var; işaretli hâl renkten
   // bağımsız okunur ve ekran okuyucuya da geçer. Koruma YOK — korumalı bir assert hiç
@@ -218,7 +218,7 @@ test('frontend-002/AC-25: onay anında sayılan her ekran yeni token değerleriy
   page,
 }) => {
   // 1 — vitrin listesi
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await expect(page.locator('main h1')).toBeVisible()
   await kanitSayfa(page, 'frontend-002-ac25-liste.png')
 
@@ -262,7 +262,7 @@ test('frontend-002/AC-25: onay anında sayılan her ekran yeni token değerleriy
 
 test('frontend-002/AC-26: boş durum yeni palette okunur', async ({ page }) => {
   // Hiçbir sonuç döndürmeyen bir daraltma: boş durum metniyle birlikte görünür.
-  await page.goto('/tr/?bodyType=olmayan-kasa-tipi')
+  await page.goto('/tr/cars?bodyType=olmayan-kasa-tipi')
 
   await expect(page.locator('main')).toBeVisible()
   await kanitSayfa(page, 'frontend-002-ac26-bos.png')

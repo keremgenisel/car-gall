@@ -3,13 +3,13 @@ import { kanit } from './kanit'
 
 /** Listedeki ilk ilanın slug'ı; seed'e göre değişir, sabitlenmez. */
 async function ilkSlug(page: Page, locale = 'tr') {
-  await page.goto(`/${locale}/`)
+  await page.goto(`/${locale}/cars`)
   const href = await page.getByTestId('listing-card').first().getByRole('link').getAttribute('href')
   return (href as string).split('/').pop() as string
 }
 
 test('0002/AC-2: karttan detaya giden bağlantı', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await kanit(page, '[data-testid="listing-card"]', '0002-ac2.png')
 })
 

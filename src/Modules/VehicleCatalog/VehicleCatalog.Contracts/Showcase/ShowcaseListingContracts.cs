@@ -51,3 +51,15 @@ public interface IShowcaseListingQueries
 {
     Task<PagedResult<ShowcaseListingDto>> GetAsync(ShowcaseListingFilter filter, CancellationToken cancellationToken);
 }
+
+/// <summary>`0014` **D3** — ana sayfanın öne çıkan bölümü en çok bu kadar kart gösterir.</summary>
+public static class FeaturedListingLimits
+{
+    public const int MaxCount = 6;
+}
+
+/// <summary>`0014` R3 — öne çıkarılmış ve görünür ilanlar, vitrin listesinin sırasıyla.</summary>
+public interface IFeaturedListingQueries
+{
+    Task<IReadOnlyList<ShowcaseListingDto>> GetAsync(string locale, CancellationToken cancellationToken);
+}

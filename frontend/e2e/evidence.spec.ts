@@ -4,7 +4,7 @@ import { kanit, kanitSayfa } from './kanit'
 // Yalnız `--project=masaustu` ile çağrılır; iki profilde koşmak aynı dosyaları üzerine yazardı.
 
 test('0001/AC-2: rezerve rozeti', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   const rezerveKart = page.getByTestId('listing-card').filter({ hasText: 'Rezerve' }).first()
   await expect(rezerveKart).toBeVisible()
   await kanit(page, rezerveKart, '0001-ac2.png')
@@ -16,7 +16,7 @@ test('0001/AC-10: seçili sayı ve seçimi temizle — üç locale', async ({ pa
     ['en', 'SUV'],
     ['ar', 'دفع رباعي'],
   ] as const) {
-    await page.goto(`/${locale}/`)
+    await page.goto(`/${locale}/cars`)
     await page.getByRole('checkbox', { name: suv }).check()
     await kanit(page, '[data-testid="body-type-filter"]', `0001-ac10-${locale}.png`)
   }
@@ -30,20 +30,20 @@ test('0001/AC-12: kasa tipi public değilken çubuk gösterilmez', async ({ page
       },
     })
   })
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await expect(page.getByTestId('listing-card').first()).toBeVisible()
   await kanit(page, '.page', '0001-ac12.png')
 })
 
 test('0001/AC-20: kart alanları ve sayı biçimlendirmesi — üç locale', async ({ page }) => {
   for (const locale of ['tr', 'en', 'ar'] as const) {
-    await page.goto(`/${locale}/`)
+    await page.goto(`/${locale}/cars`)
     await kanit(page, '[data-testid="listing-card"]', `0001-ac20-${locale}.png`)
   }
 })
 
 test('0001/AC-21: fiyat sorunuz', async ({ page }) => {
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   const kart = page.getByTestId('listing-card').filter({ hasText: 'Fiyat sorunuz' }).first()
   await expect(kart).toBeVisible()
   await kanit(page, kart, '0001-ac21.png')
@@ -62,7 +62,7 @@ test('0001/AC-22: KWD üç ondalık — üç locale', async ({ page }) => {
   })
 
   for (const locale of ['tr', 'en', 'ar'] as const) {
-    await page.goto(`/${locale}/`)
+    await page.goto(`/${locale}/cars`)
     const fiyat = page.locator('.listing-card__price').first()
     await expect(fiyat).toContainText('250')
     await kanit(page, '[data-testid="listing-card"]', `0001-ac22-${locale}.png`)
@@ -74,7 +74,7 @@ test('0001/AC-25: yükleniyor iskeleti', async ({ page }) => {
     await new Promise((resolve) => setTimeout(resolve, 2000))
     await route.continue()
   })
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await expect(page.getByTestId('list-skeleton')).toBeVisible()
   await kanit(page, '[data-testid="list-skeleton"]', '0001-ac25.png')
 })
@@ -88,7 +88,7 @@ test('0001/AC-26: daraltma sonucu boş', async ({ page }) => {
         : { items: [], page: 1, pageSize: 24, totalCount: 42, totalPages: 2 },
     })
   })
-  await page.goto('/tr/?bodyType=suv')
+  await page.goto('/tr/cars?bodyType=suv')
   await kanit(page, '[data-testid="empty-by-filter"]', '0001-ac26.png')
 })
 
@@ -98,7 +98,7 @@ test('0001/AC-27: vitrinde hiç ilan yok', async ({ page }) => {
       json: { items: [], page: 1, pageSize: 24, totalCount: 0, totalPages: 0 },
     })
   })
-  await page.goto('/tr/?bodyType=suv')
+  await page.goto('/tr/cars?bodyType=suv')
   await kanit(page, '[data-testid="empty-showcase"]', '0001-ac27.png')
 })
 
@@ -109,19 +109,19 @@ test('0001/AC-28: hata durumu', async ({ page }) => {
       json: { errorCode: 'catalog.unavailable', traceId: '00-abc-123-01' },
     })
   })
-  await page.goto('/tr/')
+  await page.goto('/tr/cars')
   await kanit(page, '[data-testid="list-error"]', '0001-ac28.png')
 })
 
 test('0001/AC-29: kasa tipi etiketleri — üç locale', async ({ page }) => {
   for (const locale of ['tr', 'en', 'ar'] as const) {
-    await page.goto(`/${locale}/`)
+    await page.goto(`/${locale}/cars`)
     await kanit(page, '[data-testid="body-type-filter"]', `0001-ac29-${locale}.png`)
   }
 })
 
 test('0001/AC-30: Arapça RTL — ızgara ve sayfalama', async ({ page }) => {
-  await page.goto('/ar/')
+  await page.goto('/ar/cars')
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
 
   // Kriter ızgarayı VE sayfalama denetimlerini kapsıyor; tek kadraj ikisini birden
@@ -136,12 +136,12 @@ test('0001/AC-30: Arapça RTL — ızgara ve sayfalama', async ({ page }) => {
 })
 
 test('0001/AC-31: sonuç sayısı ICU çoğul — Arapça', async ({ page }) => {
-  await page.goto('/ar/')
+  await page.goto('/ar/cars')
   await kanit(page, '[data-testid="result-count"]', '0001-ac31-ar.png')
 })
 
 test('0001/AC-32: görsel alt metni', async ({ page }) => {
-  await page.goto('/ar/')
+  await page.goto('/ar/cars')
   const alt = await page.locator('.listing-card__image').first().getAttribute('alt')
   expect(alt).toBeTruthy()
 

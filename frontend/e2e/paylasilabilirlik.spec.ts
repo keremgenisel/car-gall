@@ -19,7 +19,7 @@ test.describe('Paylaşılabilirlik ve geri tuşu', () => {
     const context = await browser.newContext()
     const page = await context.newPage()
 
-    await page.goto('/tr/?bodyType=suv&page=2')
+    await page.goto('/tr/cars?bodyType=suv&page=2')
     await expect(page.getByTestId('result-count')).toBeVisible()
 
     const seciliKutu = page.getByRole('checkbox', { name: 'SUV' })
@@ -32,7 +32,7 @@ test.describe('Paylaşılabilirlik ve geri tuşu', () => {
   test('0001/AC-19: İkinci sayfadayken bir kasa tipi seçildikten sonra geri tuşu TEK hareketle daraltmasız ikinci sayfa hâline döner', async ({
     page,
   }) => {
-    await page.goto('/tr/?page=2')
+    await page.goto('/tr/cars?page=2')
     await expect(page.getByTestId('page-indicator')).toContainText('2')
 
     await page.getByRole('checkbox', { name: 'SUV' }).check()
@@ -52,7 +52,7 @@ test.describe('Paylaşılabilirlik ve geri tuşu', () => {
   test('0001/AC-14: Son sayfanın ötesinde bir sayfa istendiğinde ilk sayfa gösterilir ve adres kanonik biçime düzeltilir', async ({
     page,
   }) => {
-    await page.goto('/tr/?page=999')
+    await page.goto('/tr/cars?page=999')
     await expect(page.getByTestId('result-count')).toBeVisible()
 
     // Düzeltme replaceState ile yapılır; geçmişe yeni kayıt EKLEMEZ.
@@ -61,7 +61,7 @@ test.describe('Paylaşılabilirlik ve geri tuşu', () => {
   })
 
   test('C13: page=1 ve boş bodyType kanonik adreste yazılmaz', async ({ page }) => {
-    await page.goto('/tr/?page=1&bodyType=')
+    await page.goto('/tr/cars?page=1&bodyType=')
     await expect(page.getByTestId('result-count')).toBeVisible()
     await expect.poll(() => new URL(page.url()).search).toBe('')
   })

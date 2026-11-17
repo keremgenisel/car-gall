@@ -125,7 +125,8 @@ describe('AC-17, AC-18, AC-19: İlan detayı ekranının smoke testi', () => {
     ekran()
 
     await waitFor(() => expect(screen.getByTestId('detail-not-found')).toBeTruthy())
-    expect(screen.getByRole('link', { name: 'Vitrine dön' }).getAttribute('href')).toBe('/tr/')
+    // 0014 D9 — liste `/{locale}/cars`'a taşındı; "Vitrine dön" listeyi vaat ediyor.
+    expect(screen.getByRole('link', { name: 'Vitrine dön' }).getAttribute('href')).toBe('/tr/cars')
     // Bulunamadı bir hata değildir: "tekrar dene" sunulmaz.
     expect(screen.queryByText('Tekrar dene')).toBeNull()
   })
@@ -162,5 +163,16 @@ describe('AC-17, AC-18, AC-19: İlan detayı ekranının smoke testi', () => {
       )
       cleanup()
     }
+  })
+})
+
+describe('0014 — "Vitrine dön" listeye gider (D9)', () => {
+  it('0014/AC-9: Bulunamayan ilan ekranının "Vitrine dön" bağlantısı /{locale}/cars\'a gider', async () => {
+    vi.mocked(fetchListingDetail).mockResolvedValue(null)
+
+    ekran()
+
+    await waitFor(() => expect(screen.getByTestId('detail-not-found')).toBeTruthy())
+    expect(screen.getByRole('link', { name: 'Vitrine dön' }).getAttribute('href')).toBe('/tr/cars')
   })
 })

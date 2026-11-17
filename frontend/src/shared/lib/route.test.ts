@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { listingPath, parseRoute, vehicleEditPath, vehicleMediaPath } from './route'
+import {
+  homePath,
+  listPath,
+  listingPath,
+  parseRoute,
+  vehicleEditPath,
+  vehicleMediaPath,
+} from './route'
 
 describe('parseRoute', () => {
   it('AC-1: /{locale}/cars/{slug} detay rotasıdır', () => {
@@ -18,17 +25,20 @@ describe('parseRoute', () => {
     }
   })
 
-  it('locale kökü liste rotasıdır', () => {
-    expect(parseRoute('/tr/')).toEqual({ kind: 'list' })
-    expect(parseRoute('/ar')).toEqual({ kind: 'list' })
+  // 0014 D9 — locale kökü artık ANA SAYFADIR; liste `/{locale}/cars`'ta. Bu test
+  // önceden "locale kökü liste rotasıdır" diyordu ve D9 o davranışı bilerek değiştirdi.
+  it('0014/AC-1: locale kökü ana sayfa rotasıdır', () => {
+    expect(parseRoute('/tr/')).toEqual({ kind: 'home' })
+    expect(parseRoute('/ar')).toEqual({ kind: 'home' })
+    expect(parseRoute('/en/')).toEqual({ kind: 'home' })
   })
 
-  it('slug eksikse liste rotasıdır', () => {
+  it('0014/AC-5: /{locale}/cars araç listesidir (slug eksikse liste rotası)', () => {
     expect(parseRoute('/tr/cars')).toEqual({ kind: 'list' })
     expect(parseRoute('/tr/cars/')).toEqual({ kind: 'list' })
   })
 
-  it('tanınmayan bölüm liste rotasıdır — 0001 davranışı korunur', () => {
+  it('tanınmayan bölüm liste rotasıdır — 0001 davranışı korunur (0014 D28)', () => {
     expect(parseRoute('/tr/baska-bir-sey/x')).toEqual({ kind: 'list' })
   })
 
@@ -82,5 +92,12 @@ describe('parseRoute — panel (0010b D29, 0012a D17)', () => {
       vehicleId: 'a b',
     })
     expect(vehicleMediaPath('abc')).toBe(`${vehicleEditPath('abc')}/media`)
+  })
+})
+
+describe('0014 — liste ve ana sayfa adresleri', () => {
+  it('listPath /{locale}/cars, homePath /{locale}/ üretir', () => {
+    expect(listPath('ar')).toBe('/ar/cars')
+    expect(homePath('en')).toBe('/en/')
   })
 })

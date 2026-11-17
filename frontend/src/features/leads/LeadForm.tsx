@@ -4,6 +4,7 @@ import { captureLead } from '../../shared/api/leads'
 import { ApiError } from '../../shared/api/client'
 import { LEAD_TYPES, type LeadType } from '../../shared/api/types'
 import { catalogKeys } from '../../shared/i18n/i18n'
+import { listPath } from '../../shared/lib/route'
 import { Button, Card } from '../../shared/ui'
 import { LeadFields } from './LeadFields'
 import {
@@ -57,7 +58,7 @@ export function LeadForm({ listingSlug, isReserved }: Props) {
   }
 
   if (phase.kind === 'submitted') {
-    return <LeadSuccess homeHref={`/${locale}/`} />
+    return <LeadSuccess homeHref={listPath(locale)} />
   }
 
   function onChange(next: LeadFormValues) {
@@ -107,7 +108,7 @@ export function LeadForm({ listingSlug, isReserved }: Props) {
         <LeadSubmitError
           messageKey={phase.messageKey}
           onRetry={() => setPhase({ kind: 'editing' })}
-          homeHref={phase.listingGone ? `/${locale}/` : undefined}
+          homeHref={phase.listingGone ? listPath(locale) : undefined}
         />
       ) : null}
 

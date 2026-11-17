@@ -75,6 +75,8 @@ public static class VehicleCatalogModule
             "VehicleCatalog"));
 
         services.AddScoped<IShowcaseListingQueries, ShowcaseListingQueries>();
+        // 0014 D3 — ana sayfanın öne çıkan bölümü.
+        services.AddScoped<IFeaturedListingQueries, FeaturedListingQueries>();
         services.AddScoped<IShowcaseListingDetailQueries, ShowcaseListingDetailQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
 
