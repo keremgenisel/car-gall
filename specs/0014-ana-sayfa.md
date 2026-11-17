@@ -8,9 +8,10 @@
 | **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) · `Dealership` (galeri profilinin public okuması — **D6**) |
 | **Bağımlı spec'ler** | `0001`, `0002`, `0003`, `0012c`, `frontend-001`, `frontend-002`. Sıra kararı: **D1**. |
 | **Dayanak** | ADR 0003 Ek 1, sıra #7 |
-| **Karar bekliyor** | **S6** — § Açık sorular (1 soru, **1 öneri yazılı**). S1–S5 karara bağlandı (**D1–D6**, 2026-11-17). S6 marka bölümünün kapsamını belirliyor; gelmeden kriterler yazılmaz. |
+| **Karar bekliyor** | Yok — S1–S6 karara bağlandı (**D1–D7**, 2026-11-17). Sıradaki adım: kabul kriterleri. |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — **S6**'nın cevabını bekliyor.
+> **Bu bir Analist taslağıdır.** Açık soru kalmadı; kabul kriterleri ayrı bir `docs` PR'ında
+> yazılacak.
 >
 > **Context yeniden doğrulandı (2026-11-17).** Taslak 2026-10-05'te yazılmıştı; arada
 > `0011`, `0012c` ve `0013` kapandı. Dört tespit işlendi (B1–B4, Takım Yöneticisi onayı
@@ -19,7 +20,8 @@
 >
 > **CLARIFY turu (2026-11-17).** S1–S5'in beş önerisi Takım Yöneticisi tarafından
 > onaylandı ve **D1–D6** olarak işlendi; R1, R2, R3, R5, R7 kararlara göre yazıldı, **X9** ve
-> **X10** eklendi. Kararlar işlenirken **R4** ile **D1** arasında bir çelişki çıktı → **S6**.
+> **X10** eklendi. Kararlar işlenirken **R4** ile **D1** arasında bir çelişki çıktı → **S6**;
+> önerisi onaylandı ve **D7** olarak işlendi (R4 yeniden yazıldı, X1 düzeltildi, **X11** eklendi).
 
 ---
 
@@ -53,8 +55,8 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   Öne çıkarılmış ilan altıdan azsa yalnız onlar gösterilir; boşluk öne çıkarılmamış
   ilanla **doldurulmaz**. Hiç yoksa bölüm **görünmez**. → **D3**, **D4**.
 - **R4.** Ana sayfa, stoktaki **markaları** ve her markadaki **araç sayısını** gösterir;
-  markaya tıklamak o markaya daraltılmış listeye gider. **Bu madde D1 ile çelişiyor →
-  Açık soru S6.**
+  bu sürümde markalar **tıklanamaz** — markaya daraltılmış listeye geçiş **X11**. Bölüm,
+  stokta görünür (C3) ilanı olan markaları gösterir. → **D7**.
 - **R5.** Ana sayfa bir **daraltma formu** taşır; form doldurulup gönderildiğinde ziyaretçi
   o daraltmanın uygulandığı listeye gider. Formun bu sürümdeki tek ekseni **kasa
   tipidir**; diğer eksenler **X10**. → **D1**.
@@ -100,8 +102,9 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
 ### KAPSAM DIŞI
 
 - **X1.** **Markalar sayfası** (mockup'taki "Markalar" menüsü ve marka detay sayfası) —
-  *neden:* ana sayfadaki marka listesi daraltılmış listeye gider (R4); ayrı bir marka
-  sayfası kendi SEO ve içerik kararlarını getirir.
+  *neden:* ayrı bir marka sayfası kendi SEO ve içerik kararlarını getirir. Ana sayfadaki
+  marka listesi bu sürümde yalnız gösterir (R4, D7). *(2026-11-17: gerekçe ilk yazıldığında
+  "marka listesi daraltılmış listeye gider" diyordu; D7 ile düzeltildi.)*
 - **X2.** **Bülten aboneliği formu** — *neden:* ADR 0003 Ek 1 sıra #13'ün işi; abonelik
   kaydı, çift onay ve abonelikten çıkma kendi spec'ini hak eder. Ana sayfanın ilk sürümünde
   bu bölüm **yoktur**.
@@ -122,6 +125,10 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   fiyat aralığı). *neden:* bu eksenler `0015`'in işi (sıra #9); `0001` X2/X3 onları kapsam
   dışı bırakmıştı. Eksenler `0015` ile geldiğinde formun genişlemesi o spec'in ya da ayrı
   bir kartın işidir. → **D1**.
+- **X11.** **Ana sayfadaki markadan o markaya daraltılmış listeye geçiş.** *neden:* vitrin
+  listesinde marka ekseni yok (`0001` X3); `0015` R1 onu getirecek. Eksen gelmeden bağlantının
+  gidecek bir hedefi yoktur ve süzülmemiş listeye gitmek tıklamanın anlamını bozar. Eksen
+  geldiğinde bağlantı `0015`'in ya da ayrı bir kartın işidir. → **D7**.
 
 ---
 
@@ -215,13 +222,20 @@ bağlantıları ve galeri iletişim bilgisi. Kurumsal sayfa bağlantısı yoktur
 şube adresleri ve çalışma bilgisi ziyaretçiye okunur hâle gelir; spec `Dealership`'e de
 dokunur. Logo ayrı bir kart olur ve ana sayfa adı metin olarak gösterir. → R1, R7, X9.
 
+**D7 — Marka bölümü kalır, bu sürümde yalnız gösterir (S6).** Takım Yöneticisi onayı,
+2026-11-17. Stokta görünür ilanı olan markalar ve her markadaki araç sayısı listelenir;
+markalar tıklanamaz. Stokta marka sayan okuma bu spec'e girer (§ Context, B3). *Bedel kabul
+edildi:* mockup'ta bağlantı gibi duran liste bu sürümde bağlantı değildir; marka bağlantısı
+`0015`'le birlikte ana sayfanın ikinci kez elden geçtiği üçüncü nokta olur (form, öne çıkan,
+marka). → R4, X1, X11.
+
 ---
 
 ## Açık sorular
 
-> **S1–S5 karara bağlandı** (2026-11-17, öneriler olduğu gibi onaylandı → **D1–D6**,
-> § Context). Metinleri gerekçe ve bedel kaydı olarak aşağıda duruyor. **Açık olan
-> yalnız S6.**
+> **Tüm sorular karara bağlandı** (2026-11-17, öneriler olduğu gibi onaylandı:
+> S1–S5 → **D1–D6**, S6 → **D7**; § Context). Metinleri gerekçe ve bedel kaydı olarak
+> aşağıda duruyor. **Açık soru yok.**
 
 **S6. Marka bölümü (R4) bu sürümde ne yapar? — D1 ile çelişki.**
 *(2026-11-17, kararlar işlenirken çıktı.)* R4 iki şey istiyor: stoktaki markaları sayılarıyla
@@ -340,9 +354,9 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 
 ## Acceptance Criteria
 
-> S6 cevaplandıktan sonra yazılacak. En az şu kümeleri kapsayacak:
+> Kriter turunda, ayrı bir `docs` PR'ında yazılacak. En az şu kümeleri kapsayacak:
 > galeri adı ve profil bilgisi (D6) · giriş bölümü (D2) · öne çıkan araçların seçimi, sırası,
-> altıdan az ve hiç olmama hâli (D3, D4) · marka listesi ve sayımı (S6'ya göre) · daraltma
+> altıdan az ve hiç olmama hâli (D3, D4) · marka listesi ve sayımı, tıklanamazlık (D7) · daraltma
 > formunun kasa tipiyle listeye geçişi (D1) · toplam araç sayısı · altlığın yalnız var olan
 > hedeflere bağlanması (D5) · boş vitrin · kısmi hata ·
 > locale önekleri ve geçersiz önekte 404 · RTL ve karışık yönlü marka adı · LCP ve CLS ·
@@ -352,8 +366,8 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 
 ## Definition of Done
 
-- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
-      *(S1–S5 → D1–D6 işlendi, 2026-11-17; S6 açık.)*
+- [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
+      *(S1–S6 → D1–D7, 2026-11-17.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0014-ac<n>.png`), boş ve hata durumları dâhil,
       Arapça görüntü de var.
