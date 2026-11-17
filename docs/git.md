@@ -213,7 +213,9 @@ Bir PR şu şartların **hepsini** sağlamadan merge edilmez:
 5. **Karşılanmayan kriter varsa açıkça yazılmıştır** — neden karşılanmadığı ve ne önerildiği
    ile birlikte. Sessizce atlanan kriter PR'ı reddeder.
 6. **En az bir onay.** Ajan üyenin açtığı PR'ı **Takım Yöneticisi onaylar**; ajan kendi
-   PR'ını merge edemez.
+   PR'ını merge edemez — **Takım Yöneticisi rolünü taşıyan ajan bunun tek istisnasıdır**
+   (`docs/roles/README.md` § Takım Yöneticisi). İstisna yalnız onayı kaldırır: 1–5 ve 7.
+   şartlar ile "CI merge'den ayrı adımdır" kuralı ona da aynen uygulanır.
 7. **Düzenlemelerin commit'e girdiği doğrulanmıştır.** Commit'ten sonra `git show --stat`
    okunur. **Paylaşılan çalışma ağacında zorunludur** ve `--stat`'ın `0 0` gösterdiği bir
    dosya, düzenlenmiş sayılmaz.
@@ -275,7 +277,8 @@ specs/<no>-<ad>.md
 
 Ajan üyeler bu dosyanın tamamına uyar. Ayrıca:
 
-- **Commit mesajını üye yazar, Takım Yöneticisi onaylar.** Ajan kendi işini kendi merge etmez.
+- **Commit mesajını üye yazar, Takım Yöneticisi onaylar.** Ajan kendi işini kendi merge etmez
+  — Takım Yöneticisi rolünü taşıyan ajan hariç (§ 4 madde 6).
 - Ajan, mesajda **ne yaptığını olduğu gibi** yazar. Yapılmayan iş "yapıldı" diye yazılmaz;
   atlanan test "geçti" denmez.
 - Ajan **spec'siz branch açamaz** ve spec kapsamını kendi başına genişletemez.
