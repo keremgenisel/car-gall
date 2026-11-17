@@ -24,7 +24,19 @@ internal static class ShowcaseEndpoints
             .WithName("GetShowcaseListingDetail")
             .Produces<ShowcaseListingDetailDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
+
+        // 0014 D27 — `/showcase-listings/featured` DEĞİL: o yol ilan detayının `{slug}`
+        // rotasıyla aynı yeri paylaşırdı.
+        builder.MapGet("/api/catalog/featured-listings", GetFeaturedListingsAsync)
+            .WithName("GetFeaturedListings")
+            .Produces<IReadOnlyList<ShowcaseListingDto>>(StatusCodes.Status200OK);
     }
+
+    private static async Task<Ok<IReadOnlyList<ShowcaseListingDto>>> GetFeaturedListingsAsync(
+        HttpContext httpContext,
+        IFeaturedListingQueries queries,
+        CancellationToken cancellationToken) =>
+        TypedResults.Ok(await queries.GetAsync(ResolveLocale(httpContext), cancellationToken));
 
     private static async Task<Ok<PagedResult<ShowcaseListingDto>>> GetShowcaseListingsAsync(
         HttpContext httpContext,
