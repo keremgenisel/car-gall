@@ -74,6 +74,12 @@ public sealed class AnaSayfaAdresTests(HostFactory factory) : IClassFixture<Host
     [Theory(DisplayName = "0014/AC-8: /tr/ liste parametresi (bodyType, page, pageSize) taşımıyorsa yönlendirme olmaz; ana sayfa görünür. /tr/?utm_source=x de ana sayfayı gösterir")]
     [InlineData("/tr/")]
     [InlineData("/tr/?utm_source=x")]
+    // QA BULGU-1 — anahtar eşleşmesi ORDİNAL: uç `bodyType`'ı harfe duyarlı okuyor; sunucu
+    // `BodyType`'ı liste parametresi sayarsa ziyaretçi ana sayfa yerine filtresiz listeye
+    // düşer ve 301 tarayıcıda kalıcı önbelleğe girer.
+    [InlineData("/tr/?BodyType=suv")]
+    [InlineData("/tr/?PAGE=2")]
+    [InlineData("/tr/?PageSize=12")]
     public async Task Yonlendirmez_ListeParametresiYoksa(string adres)
     {
         HttpResponseMessage yanit = await CreateClient().GetAsync(adres);

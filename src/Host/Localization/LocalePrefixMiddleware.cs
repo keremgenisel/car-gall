@@ -91,6 +91,12 @@ internal sealed class LocalePrefixMiddleware(RequestDelegate next, LocalePrefixR
     private static bool IsLocaleRoot(PathString path, string localeSegment) =>
         path.Value is { } value && (value == $"/{localeSegment}" || value == $"/{localeSegment}/");
 
+    /// <summary>
+    /// Anahtar eşleşmesi ORDİNAL. `IQueryCollection.ContainsKey` harfe duyarsızdır; uç ise
+    /// `bodyType`'ı harfe duyarlı okur (`listUrlState.ts`). Duyarsız eşleşme `?BodyType=suv`'u
+    /// liste parametresi sayıp ziyaretçiyi filtresiz listeye 301'liyordu — ve 301 tarayıcıda
+    /// kalıcı önbelleğe girer (QA BULGU-1). Karar, ucun okuduğu anahtarla aynı biçimde verilir.
+    /// </summary>
     private static bool CarriesListParameter(IQueryCollection query) =>
-        ListParameters.Any(query.ContainsKey);
+        query.Keys.Any(key => ListParameters.Contains(key, StringComparer.Ordinal));
 }
