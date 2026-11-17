@@ -1,5 +1,9 @@
 import { Suspense, lazy } from 'react'
 import { AppShell } from './AppShell'
+import { HomeFooter } from './HomeFooter'
+import { HomePage } from './HomePage'
+import { BranchList } from '../features/dealership/BranchList'
+import { useGallery } from '../features/dealership/useGallery'
 import { LocaleProvider } from './LocaleProvider'
 import { ListingDetailPage } from '../features/catalog/ListingDetailPage'
 import { ShowcaseListPage } from '../features/catalog/ShowcaseListPage'
@@ -36,6 +40,14 @@ export function App({ locale }: { readonly locale: AppLocale }) {
     )
   }
 
+  if (route.kind === 'home') {
+    return (
+      <LocaleProvider locale={locale}>
+        <HomeRoute />
+      </LocaleProvider>
+    )
+  }
+
   return (
     <LocaleProvider locale={locale}>
       <AppShell>
@@ -56,5 +68,19 @@ export function App({ locale }: { readonly locale: AppLocale }) {
         )}
       </AppShell>
     </LocaleProvider>
+  )
+}
+
+/**
+ * 0014 — galeri okuması BİR KEZ yapılır ve iki yere dağıtılır: adı giriş bölümüne, şubeleri
+ * altlığa. Okuma `LocaleProvider`'ın içinde olmalı; bu yüzden ayrı bir bileşen.
+ */
+function HomeRoute() {
+  const gallery = useGallery()
+
+  return (
+    <AppShell footer={<HomeFooter branches={<BranchList load={gallery} />} />}>
+      <HomePage gallery={gallery} />
+    </AppShell>
   )
 }

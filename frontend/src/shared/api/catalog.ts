@@ -40,6 +40,36 @@ export function fetchShowcaseListings(
 }
 
 /**
+ * 0014 **D3** — ana sayfanın öne çıkan bölümü: galerinin öne çıkardığı görünür ilanlar,
+ * listeyle aynı sırada, en çok altı tane. Boş dizi bir hata değildir (AC-21).
+ */
+export function fetchFeaturedListings(
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<readonly ShowcaseListing[]> {
+  return getJson<readonly ShowcaseListing[]>(
+    `/api/catalog/featured-listings?locale=${locale}`,
+    locale,
+    signal,
+  )
+}
+
+/**
+ * 0014 **D27** — görünür ilanların toplam sayısı (R6). Yeni bir uç açılmadı: liste ucu
+ * `totalCount`'u zaten döndürüyor ve tek kartlık sayfa istemek en ucuz okumadır. Boş
+ * vitrin kararı bu sayıdan verilir (D12).
+ */
+export async function fetchShowcaseTotal(locale: AppLocale, signal?: AbortSignal): Promise<number> {
+  const page = await getJson<PagedResult<ShowcaseListing>>(
+    `/api/catalog/showcase-listings?pageSize=1&locale=${locale}`,
+    locale,
+    signal,
+  )
+
+  return page.totalCount
+}
+
+/**
  * `null` = ilan vitrinde yok. "Gizli" ile "hiç yok" ayrımı burada da YAPILMAZ: sunucu
  * ikisine de aynı karşılığı verir (E7, C13, AC-8) ve uç ikisini ayıracak bir bilgi almaz.
  *

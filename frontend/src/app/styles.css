@@ -1011,3 +1011,124 @@ body {
 .staff-table__scroll .staff-table {
   min-inline-size: 44rem;
 }
+
+/* ── 0014 — ana sayfa ─────────────────────────────────────────────────────────
+   Yalnız mantıksal yön özellikleri (C6) ve token katmanı (C7). Giriş bölümünde görsel
+   yok (D18): LCP adayı başlık metnidir. */
+
+.home-hero {
+  padding-block: var(--space-6) var(--space-7);
+}
+
+/* Ad yüklenirken ve galeri okuması düşünce de YER ayrılır (AC-54): satır yüksekliği
+   kadar blok, düzen kaymaz. */
+.home-hero__gallery {
+  min-block-size: calc(var(--font-size-md) * var(--line-height-base));
+  margin-block: 0 var(--space-3);
+  color: var(--color-ink-muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-hero__title {
+  font-size: var(--font-size-lg);
+  margin-block: 0 var(--space-4);
+}
+
+.home-hero__body {
+  max-inline-size: var(--layout-max-inline-size);
+  margin-block: 0;
+  color: var(--color-ink-muted);
+}
+
+.home-section {
+  margin-block-end: var(--space-7);
+}
+
+.home-section__title,
+.narrowing-form__title {
+  font-size: var(--font-size-md);
+  margin-block: 0 var(--space-5);
+}
+
+.narrowing-form {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.narrowing-form__axis {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.home-footer {
+  border-block-start: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.home-footer__inner {
+  max-inline-size: var(--layout-max-inline-size);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+  padding-block: var(--space-7);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-min-inline-size), 1fr));
+  gap: var(--space-6);
+}
+
+.home-footer__heading {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  margin-block: 0 var(--space-4);
+}
+
+.home-footer__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.home-footer__link,
+.home-footer__phone {
+  color: var(--color-accent-text);
+}
+
+.home-footer__link[aria-current='page'] {
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-footer__branches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.home-footer__branch-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.home-footer__branch-name,
+.home-footer__branch-address {
+  margin-block: 0 var(--space-1);
+}
+
+.home-footer__branch-name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-footer__branch-address {
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+}
