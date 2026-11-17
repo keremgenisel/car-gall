@@ -8,7 +8,7 @@
 | **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) |
 | **Bağımlı spec'ler** | `0001`, `0002`, `frontend-001`, `frontend-002`. **Sıra çelişkisi için bkz. Açık soru S1.** |
 | **Dayanak** | ADR 0003 Ek 1, sıra #7 |
-| **Karar bekliyor** | **S1–S4** — § Açık sorular (4 soru, **4 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
+| **Karar bekliyor** | Yok — S1–S4 **D1–D4** ile kapandı (2026-11-17, Context § Verilen kararlar). Sıradaki adım: kabul kriterleri. |
 
 > **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — dört açık sorunun cevabı
 > onları belirliyor. **S1 bu spec'in sıradaki yerini sorguluyor.**
@@ -151,9 +151,45 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
 5. **Altlıkta olmayan sayfaya bağlantı koymak.** `Content` yok; "Hakkımızda" bağlantısı
    404'e gider (S4).
 
+### Verilen kararlar
+
+Dördü de 2026-11-17'de, `75a3f34` üzerinde verildi: **Takım Yöneticisi (ajan) kararı**
+(`docs/roles/README.md` § Takım Yöneticisi). Dördünde de Analist'in yazılı önerisi
+kabul edildi; aşağıdaki notlar önerinin yazıldığı günden bu yana değişeni ölçer.
+
+- **D1 — Ana sayfa sıra #7'de kalır, kırpılmış sürümüyle.** (eski **S1**, kapandı)
+  Daraltma formu yalnız **kasa tipi** ekseniyle gelir; öne çıkan araçlar D3'le seçilir;
+  bülten yok (X2). Eksenler #9'da (`0015`) genişlediğinde form o spec'in işi olarak büyür.
+  *Gerekçe:* vitrinin girişi olmaması, girişin eksik olmasından daha görünür bir eksik;
+  üç bağımlılığı beklemek ana sayfayı #13 sonrasına atar.
+  *Bedel, kabul edildi:* ana sayfa iki kez elden geçer ve ilk sürüm mockup'tan incedir.
+- **D2 — Giriş bölümünün metni çeviri kataloğundan gelir.** (eski **S2**, kapandı)
+  Üç dilde sabit anahtar; `Content`'ten değil. *Gerekçe:* `Content` yok (#11, `0017`
+  taslakta) ve metin kurulum başına bir kez yazılır. *Bedel, kabul edildi:* galeri metni
+  kendi değiştiremez; `Content` geldiğinde bölüm oraya taşınır ve bu `0017`'nin işidir.
+- **D3 — Öne çıkan araçlar: vitrin sıralama ağırlığına göre ilk altı yayındaki ilan,
+  eşitlikte en yeni yayınlanan önce.** (eski **S3**, kapandı)
+  *Öneriden bu yana değişen, ölçüldü:* `0012c` ağırlığı **iki değerli** yaptı
+  (**Öne Çıkarma**, `docs/domain.md` § 1). Ölçüt bu yüzden "öne çıkarılmışlar önce, sonra
+  en yeni yayınlananlar" demektir: altıdan az öne çıkarılmış ilan varsa kalan yerleri en
+  yeni ilanlar doldurur, hiç öne çıkarılmış yoksa bölüm "en yeni altı" olur. Yeni kavram
+  eklenmez; sıra `0001` AC-4'ün liste sıralamasıyla aynıdır (ağırlık → yayın tarihi →
+  ilan kimliği; ölçüldü: `ShowcaseListingQueries.cs:38-40`).
+  *Bedel, kabul edildi:* galeri altı aracı tek tek seçemez; `Content` slotu (#11)
+  geldiğinde ölçüt değişir.
+- **D4 — Altlık yalnız var olan hedeflere bağlantı verir.** (eski **S4**, kapandı)
+  Araç listesi, dil bağlantıları ve galeri profilinden iletişim bilgisi; olmayan sayfaya
+  bağlantı konmaz. *S4'ün uyarısı ölçüldü:* `0005`'in talep formunda KVKK'ya giden bir
+  **bağlantı yok** — rıza metni formun içinde düz paragraf (`lead.consent.text`,
+  `frontend/src/features/leads/LeadFields.tsx:155`). Kırık bağlantı yok; DoD'daki ilgili
+  kutu bu ölçümle karşılandı. *Bedel, kabul edildi:* altlık mockup'takinden ince olur.
+
 ---
 
 ## Açık sorular
+
+> **Dördü de kapandı** (D1–D4, yukarıda). Sorular ve önerileri, kararların neye cevap
+> verdiğini göstermek için olduğu gibi duruyor.
 
 **S1. Bu spec sıradaki yerinde kalabilir mi? Üç bağımlılığı kendisinden sonra.**
 ADR 0003 Ek 1 ana sayfayı **#7**'ye koydu. Ama mockup'ın ana sayfası:
@@ -213,7 +249,8 @@ gittiği **bu spec'te doğrulanmadı** ve kontrol edilmesi gerekir.
 
 ## Definition of Done
 
-- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
+- [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi
+      (**D1–D4**, 2026-11-17).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0014-ac<n>.png`), boş ve hata durumları dâhil,
       Arapça görüntü de var.
@@ -221,7 +258,8 @@ gittiği **bu spec'te doğrulanmadı** ve kontrol edilmesi gerekir.
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
 - [ ] <!-- DoD:T7 --> Yeni domain terimi yok.
 - [ ] Altlıktaki her bağlantının **var olan** bir hedefe gittiği doğrulandı (S4).
-- [ ] `0005`'in KVKK bağlantısının hedefi kontrol edildi ve PR'da raporlandı (S4 uyarısı).
+- [x] `0005`'in KVKK bağlantısının hedefi kontrol edildi ve PR'da raporlandı (S4 uyarısı).
+      *2026-11-17: bağlantı yok, rıza metni form içinde düz paragraf — D4.*
 - [ ] Ham piksel/hex eklenmedi; token katmanı kullanıldı (C7).
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
