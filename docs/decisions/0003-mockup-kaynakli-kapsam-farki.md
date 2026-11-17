@@ -264,7 +264,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 4 | `Media`: yükleme, türev, filigran | `0011` ✅ tamamlandı |
 | 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · `0012c` ✅ tamamlandı |
 | 6 | İki adımlı doğrulama (unsur 2) | `0013` ✅ tamamlandı |
-| 7 | Ana sayfa | **`0014`** (Taslak — S1–S4; **S1 bu sırayı sorguluyor**) |
+| 7 | Ana sayfa | `0014` ✅ tamamlandı |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
 | 9 | Liste: sıralama + filtre eksenleri | **`0015`** (Taslak — S1–S5) |
 | 10 | Medya galerisi + parça haritası şeması | **`0016`** (Taslak — S1–S4) |
@@ -316,6 +316,22 @@ Sıra yine **ilerledi**: başlanmamış ilk iş artık **#7** (`0014` — ana sa
 kendi kapanış turunda ölçülen bir borç var ve kart onu yazılı bırakıyor: telefonunu
 kaybeden **tek** Yöneticinin çıkış yolu yapılandırma değil veritabanı müdahalesidir
 (**D37**), çünkü `0006` D2'nin kurulum hesabı yolu ikinci adım için çalışmıyor.
+
+**`7`. satır kapandı** (`0014`, 2026-11-17, `90b4e98`). Kartın **S1**'i bu tablonun
+kendisini sorguluyordu — üç bağımlılığı (#9 eksenler, #11 `Content`, #13 bülten) kendisinden
+sonra sıralanmıştı. Cevap sırayı değiştirmek değil kartı **kırpmak** oldu (**D1**): form tek
+eksenle (kasa tipi), öne çıkanlar `0012c`'nin öne çıkarma eylemiyle, bülten yok. Kart
+**66 kriter** ve **D1–D28** karar taşıyor; dört turdan geçti (Context doğrulaması + CLARIFY,
+kriter turu, QA CLARIFY turu, plan turu). Mockup farkı bu kartla **büyüdü**: mockup'ın marka
+listesi kapsam dışına çıktı (**D11** → X13), çünkü veride marka kavramı yok — `0015` R1'in
+marka ekseni de aynı veriye dayanıyor ve marka taksonomisi ayrı bir kart olarak önerildi.
+Ana sayfanın ikinci kez elden geçeceği üç nokta yazılı: form eksenleri (`0015`), marka bölümü
+(X13), logo (X9). Liste `/{locale}/cars`'a taşındı (**D9**) — Karar Defteri'nde.
+
+Sıra yine **ilerledi**: başlanmamış ilk iş artık **#8** (`0004` — SEO; durumu **Beklemede**,
+gerekçesi "sırası 7'den sonra" idi ve o koşul bu kapanışla sağlandı). Taslak sayısı altıdan
+**beşe** indi; `0014`'ün dört sorusu **D1–D4** ile, ardından açılan S5–S6 **D6–D7** ile
+kapanmıştı, yani toplam açık soru 28'den **24**'e düştü.
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca
