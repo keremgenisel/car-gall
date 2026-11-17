@@ -5,13 +5,18 @@
 | **Durum** | Taslak |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) |
-| **Bağımlı spec'ler** | `0001`, `0002`, `frontend-001`, `frontend-002`. **Sıra çelişkisi için bkz. Açık soru S1.** |
+| **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) · `Dealership` (galeri profilinin public okuması — bkz. Açık soru **S5**) |
+| **Bağımlı spec'ler** | `0001`, `0002`, `0003`, `0012c`, `frontend-001`, `frontend-002`. **Sıra çelişkisi için bkz. Açık soru S1.** |
 | **Dayanak** | ADR 0003 Ek 1, sıra #7 |
-| **Karar bekliyor** | **S1–S4** — § Açık sorular (4 soru, **4 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
+| **Karar bekliyor** | **S1–S5** — § Açık sorular (5 soru, **5 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — dört açık sorunun cevabı
+> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — beş açık sorunun cevabı
 > onları belirliyor. **S1 bu spec'in sıradaki yerini sorguluyor.**
+>
+> **Context yeniden doğrulandı (2026-11-17).** Taslak 2026-10-05'te yazılmıştı; arada
+> `0011`, `0012c` ve `0013` kapandı. Dört tespit işlendi (B1–B4, Takım Yöneticisi onayı
+> 2026-11-17): **S3** yeniden yazıldı (B1), **S5** eklendi (B2), doğrulama uyarısı
+> kaldırıldı (B3), **S4**'ün KVKK uyarısı cevaplandı (B4). R/C bölümlerine dokunulmadı.
 
 ---
 
@@ -105,24 +110,32 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
 
 ## Context
 
-### Mevcut davranış — doğrulandı
+### Mevcut davranış — doğrulandı (2026-11-17, `main` @ `ab04cb5`)
 
 - **Ana sayfa yok.** `frontend-001` bir uygulama kabuğu (`AppShell`) ve dil değiştirici kurdu;
-  kabuk doğrudan vitrin listesini render ediyor.
+  `/{locale}/` adresi doğrudan vitrin listesini açıyor (`frontend/src/shared/lib/route.ts`:
+  liste ve detay dışında public bir rota türü yok).
 - **Vitrin listesi ve ilan detayı hazır** (`0001`, `0002` tamamlandı); liste okuma modeli ve
-  detay okuma yolu mevcut.
-- **Galeri profili hazır:** ad ve `Gallery.LogoMediaAssetId` `0003` ile geldi. Ancak logonun
-  **görseli** `Media` modülüne bağlı ve `Media` bugün tek bir olay dosyasından ibaret —
-  yani logo bir kimlik olarak var, **gösterilebilir bir dosya olarak yok**.
-
-> **Doğrulama uyarısı (2026-10-05):** bu taslak yazılırken `VehicleReference`'a
-> **marka/model okuma yüzeyi ekleniyordu** (`/api/reference/models` ve devamı, henüz
-> commit edilmemiş). Aşağıdaki "okuma yüzeyi yok" tespiti o iş tamamlandığında
-> geçersizleşir ve spec onaya sunulmadan önce **yeniden doğrulanmalıdır.**
-
-- **Marka sayımı için okuma yüzeyi yok.** `VehicleReference`'ın tek ucu
-  `GET /api/reference/body-types`; marka listesi ve marka başına araç sayısı hiçbir yerde
-  sunulmuyor.
+  detay okuma yolu mevcut. Liste, **öne çıkarılmış ilanları önce**, eşitlikte en yeni
+  yayınlananı önce sıralıyor (`ShowcaseListingQueries.cs`).
+- **Öne çıkarma bir panel eylemi (B1).** `0012c` ilanı tek tek veya toplu olarak **öne
+  çıkarma / öne çıkarmayı kaldırma** eylemini getirdi. Vitrin sıralama ağırlığı artık iki
+  değerli: öne çıkarılmış veya değil (`Listing.cs`: `Feature()` / `Unfeature()`). Yani
+  "öne çıkan araç" bugün **galerinin elle verdiği bir karar**, sıralamanın bir yan etkisi
+  değil. Bu tespit **S3**'ü yeniden yazdırdı.
+- **Galeri profilinin public okuması yok (B2).** `0003` galeri adını, şubeleri ve
+  `Gallery.LogoMediaAssetId` alanını getirdi. Ama `Dealership`'in tek ucu panele ait
+  (şube listesi); ziyaretçinin galeri adını, logosunu, adresini veya çalışma bilgisini
+  okuyabileceği bir yüzey **yok**. Logo için ayrıca: `Media` artık yükleme ve türev üretimi
+  yapıyor (`0011`), ama galeriye logo atayan **bir akış yok** — atama metodunun hiçbir
+  çağıranı yok. Yani logo bugün ne yüklenebiliyor ne de gösterilebiliyor. R1 ve R7'nin
+  profil kısmı bu yüzeye dayanıyor → **S5**.
+- **Stoktaki marka ve marka başına araç sayısı hiçbir yerde sunulmuyor (B3).** 2026-10-05
+  taslağının "eklenmekte olan okuma yüzeyi" uyarısı çözüldü: `VehicleReference` artık
+  body-types, models ve dört terim türü (yakıt, şanzıman, çekiş, donanım) sunuyor. Ama bunlar
+  **referans verisi** — kayıtlı bütün modeller, stoktan bağımsız; model kaydı da yalnız kimlik
+  ve etiket taşıyor. "Stokta hangi marka var, kaç araç" sorusunu cevaplayan bir okuma **yok**.
+  R4 bu okumaya dayanıyor.
 - **Mockup ne gösteriyor:** giriş bölümü + daraltma formu (**Marka · Kasa tipi · Yıl · Fiyat
   aralığı** ve "128 aracı gör"), "Vitrin" başlıklı **6 öne çıkan araç**, numaralı **marka
   listesi** (marka + "14 araç"), bülten bölümü, dört kolonlu altlık (Keşfet / Kurumsal /
@@ -163,8 +176,8 @@ ADR 0003 Ek 1 ana sayfayı **#7**'ye koydu. Ama mockup'ın ana sayfası:
 - **bülten** → **#13**'te.
 
 *Öneri:* ana sayfa **#7'de kalsın, ama kırpılmış sürümüyle**: daraltma formu yalnızca
-**kasa tipi** ekseniyle (tek var olan eksen, `0001`'den), öne çıkan araçlar **vitrin sıralama
-ağırlığıyla** (`VehicleCatalog`'da zaten var), bülten **yok** (X2).
+**kasa tipi** ekseniyle (tek var olan eksen, `0001`'den), öne çıkan araçlar **`0012c`'nin
+öne çıkarma eylemiyle** (panelde zaten var; bkz. S3), bülten **yok** (X2).
 *Gerekçe:* ziyaretçi tarafında bir giriş sayfasının olması, eksiksiz olmasından önce gelir;
 üç bağımlılığı beklemek ana sayfayı #13 sonrasına atar. Kırpılmış sürüm bugünkü veriyle
 çalışır ve eksenler #9'da genişlediğinde form kendiliğinden büyür.
@@ -180,13 +193,31 @@ Mockup'ta somut bir iddia var: *"Geçmişi gizlenmeyen araçlar."* ve altında b
 *Bedel:* galeri metnini kendi değiştiremez; değişiklik bir dağıtım ister. `Content` geldiğinde
 bu bölüm oraya taşınabilir — o zaman bir taşıma işi doğar.
 
-**S3. "Öne çıkan araçlar" nasıl seçilir?**
-*Öneri:* **vitrin sıralama ağırlığı** en yüksek olan ilk altı ilan; eşitlikte en yeni
-yayınlanan.
-*Gerekçe:* `VehicleCatalog`'da bu alan **zaten var** ve `0001` AC-4 onu liste sıralamasında
-kullanıyor. Yeni bir kavram ("öne çıkan slot") eklemek `Content`'in işini bu spec'e çeker.
-*Bedel:* galeri "ana sayfada şu altı araç dursun" diye **elle** seçemez; ağırlıkla dolaylı
-yönetir. `Content` slotu geldiğinde (#11) bu ölçüt değişir.
+**S3. "Öne çıkan araçlar" nasıl seçilir — ve yeterince öne çıkarılmış ilan yoksa ne olur?**
+*(2026-11-17'de yeniden yazıldı — B1.)* İlk sürümdeki öneri "sıralama ağırlığı en yüksek altı
+ilan"dı ve bedeli "galeri elle seçemez"di. `0012c`'den sonra bu bedel **geçersiz**: galeri
+panelde ilanı açıkça öne çıkarıyor. Soru artık iki parçalı.
+
+*S3a — seçim.*
+*Öneri:* ana sayfanın öne çıkan bölümü **öne çıkarılmış** ve vitrinde görünür (C3) ilanları
+gösterir; sıra vitrin listesininkiyle aynıdır (en yeni yayınlanan önce); **en çok altı** ilan.
+*Gerekçe:* `0012c` öne çıkarmayı galerinin bilinçli kararı olarak kurdu; ana sayfa o kararı
+olduğu gibi göstermeli. Yeni bir kavram ("öne çıkan slot") eklemek `Content`'in işini bu
+spec'e çeker. Listeyle aynı sıra, iki yüzeyin birbirini yalanlamamasını sağlar.
+*Bedel:* galeri altıdan fazla ilanı öne çıkarırsa hangilerinin ana sayfada duracağını
+**doğrudan** seçemez; en yeni altısı görünür. `Content` slotu geldiğinde (#11) bu ölçüt
+yeniden açılabilir.
+
+*S3b — öne çıkarılmış ilan altıdan az veya hiç yoksa.*
+*Öneri:* bölüm **yalnız öne çıkarılmış ilanları** gösterir — altıdan azsa o kadarını; **hiç
+yoksa bölüm görünmez.** Boşluk normal ilanlarla doldurulmaz.
+*Gerekçe:* "öne çıkan" etiketi altında öne çıkarılmamış bir ilan göstermek, galerinin
+vermediği bir kararı ona mal eder. Boş bölüm ise R8'in "anlamsız bölüm" tuzağıdır
+(§ Bilinen tuzaklar 3).
+*Bedel:* öne çıkarmayı hiç kullanmayan bir galerinin ana sayfasında bu bölüm hiç görünmez;
+mockup'taki altı kartlık "Vitrin" bandı o kurulumda yoktur.
+*Elenen alternatif:* eksik yerleri en yeni yayınlanan normal ilanlarla doldurmak — ana sayfa
+her zaman dolu görünür ama etiket yalan söyler.
 
 **S4. Altlıktaki kurumsal bağlantılar ne yapar?**
 `Content` yok; "Hakkımızda", "KVKK", "Çerez politikası" sayfaları mevcut değil.
@@ -195,15 +226,37 @@ dil bağlantıları, galeri iletişim bilgisi (profilden). Olmayan sayfaların b
 **konulmaz**.
 *Gerekçe:* 404'e giden bağlantı, olmayan bir bağlantıdan kötüdür — hem ziyaretçi hem arama
 motoru için.
-*Bedel:* altlık mockup'takinden ince olur. **Ayrıca bir uyarı:** `0005` zaten KVKK
-aydınlatma metnine bağlantı veren bir talep formu yayınladı; o bağlantının bugün nereye
-gittiği **bu spec'te doğrulanmadı** ve kontrol edilmesi gerekir.
+*Bedel:* altlık mockup'takinden ince olur.
+*KVKK uyarısının cevabı (2026-11-17 — B4):* taslak, `0005`'in talep formunun KVKK aydınlatma
+metnine bağlantı verdiğini ve hedefinin doğrulanması gerektiğini söylüyordu. Doğrulandı:
+formun onay alanı (`frontend/src/features/leads/LeadFields.tsx`) **bağlantı taşımıyor**,
+yalnız onay metni var. 404'e giden bir bağlantı **yok**; bu yüzden DoD'daki kontrol maddesi
+kaldırıldı. Aydınlatma metninin bir sayfası olmaması ayrı bir konudur ve bu spec'in kapsamında
+değildir (X6).
+
+**S5. Galeri profilinin public okuması bu spec'e mi girer? (B2)**
+R1 (ad ve logo) ve R7'nin profil kısmı (adres, çalışma bilgisi) ziyaretçinin galeri
+profilini okuyabilmesine dayanıyor. Bugün böyle bir okuma yok, logo da hiç atanamıyor
+(§ Context).
+*Öneri:* **ad, şube adresleri ve çalışma bilgisinin public okuması bu spec'e girer; logo
+girmez.** Logo yoksa ana sayfa galeri adını metin olarak gösterir. Logo yükleme ve
+gösterme ayrı bir kart olur.
+*Gerekçe:* adı söylemeyen bir giriş sayfası Intent'in ilk cümlesini ("galerinin kim
+olduğunu söyleyen bir sayfa") karşılamaz; ad ve adres `0003`'te zaten kayıtlı, eksik olan
+yalnız ziyaretçinin onu okuyabilmesi. Logo ise iki eksik taşıyor (atama akışı ve gösterim)
+ve bunlardan biri panel tarafında; onu çekmek spec'i iki yüzeye büyütür.
+*Bedel:* spec `Dealership`'e de dokunur (Modül(ler) satırı buna göre güncellendi). Mockup'ın
+logolu başlığı ilk sürümde yoktur; R1'in "logo" yarısı bu karar onaylanırsa kapsam dışına
+(yeni bir X) yazılır.
+*Elenen alternatifler:* (a) profili tamamen kapsam dışı bırakmak — spec küçülür ama ana
+sayfa galerinin adını gösteremez ve R1 boşa düşer; (b) logoyu da almak — mockup'a tam uyar
+ama bir panel akışını ana sayfa spec'ine çeker.
 
 ---
 
 ## Acceptance Criteria
 
-> Dört açık soru cevaplandıktan sonra yazılacak. En az şu kümeleri kapsayacak:
+> Beş açık soru cevaplandıktan sonra yazılacak. En az şu kümeleri kapsayacak:
 > galeri adı/logosu · giriş bölümü · öne çıkan araçların seçimi ve sırası · marka listesi ve
 > sayımı · daraltma formunun listeye geçişi · toplam araç sayısı · boş vitrin · kısmi hata ·
 > locale önekleri ve geçersiz önekte 404 · RTL ve karışık yönlü marka adı · LCP ve CLS ·
@@ -221,7 +274,6 @@ gittiği **bu spec'te doğrulanmadı** ve kontrol edilmesi gerekir.
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
 - [ ] <!-- DoD:T7 --> Yeni domain terimi yok.
 - [ ] Altlıktaki her bağlantının **var olan** bir hedefe gittiği doğrulandı (S4).
-- [ ] `0005`'in KVKK bağlantısının hedefi kontrol edildi ve PR'da raporlandı (S4 uyarısı).
 - [ ] Ham piksel/hex eklenmedi; token katmanı kullanıldı (C7).
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
