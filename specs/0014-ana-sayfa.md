@@ -2,16 +2,19 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
+| **Durum** | Onaylandı (2026-11-17 — Takım Yöneticisi (ajan) kararı) |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) · `Dealership` (galeri profilinin public okuması — **D6**) |
 | **Bağımlı spec'ler** | `0001`, `0002`, `0003`, `0012c`, `frontend-001`, `frontend-002`. Sıra kararı: **D1**. |
 | **Dayanak** | ADR 0003 Ek 1, sıra #7 |
-| **Karar bekliyor** | Yok — S1–S6 karara bağlandı (**D1–D7**, 2026-11-17). Sıradaki adım: kabul kriterleri. |
+| **Karar bekliyor** | yok — S1–S6 → **D1–D7** (CLARIFY turu); kriter turunun dört bulgusu → **D8–D10** (2026-11-17). |
 
-> **Bu bir Analist taslağıdır.** Açık soru kalmadı; kabul kriterleri ayrı bir `docs` PR'ında
-> yazılacak.
+> **Kriter turu (2026-11-17, `3cf58d8` üzerinde).** Kabul kriterleri yazılırken Context
+> yeniden ölçüldü ve dört bulgu çıktı (K1–K4, § Context). Üçü bir Requirement'ı ya
+> değiştirdi ya da ekledi: **R7** daraldı (çalışma bilgisinin verisi yok), **R11** ve
+> **R12** eklendi. Kararlar **D8–D10**, Takım Yöneticisi (ajan) kararı. Bu tur R'ye
+> dokunduğu için **sayılan bir revizyondur** (ADR 0008 / K3).
 >
 > **Context yeniden doğrulandı (2026-11-17).** Taslak 2026-10-05'te yazılmıştı; arada
 > `0011`, `0012c` ve `0013` kapandı. Dört tespit işlendi (B1–B4, Takım Yöneticisi onayı
@@ -61,9 +64,10 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   o daraltmanın uygulandığı listeye gider. Formun bu sürümdeki tek ekseni **kasa
   tipidir**; diğer eksenler **X10**. → **D1**.
 - **R6.** Form, yayındaki **toplam araç sayısını** gösterir.
-- **R7.** Ana sayfa bir **altlık** taşır: galeri adresi ve çalışma bilgisi (galeri
-  profilinden), araç listesi ve dil bağlantıları. Altlık **yalnız var olan hedeflere**
-  bağlantı verir; var olmayan kurumsal sayfaların bağlantısı konulmaz. → **D5**, **D6**.
+- **R7.** Ana sayfa bir **altlık** taşır: galerinin **aktif** şubelerinin adı, adresi ve
+  telefonu (galeri profilinden), araç listesi ve dil bağlantıları. Altlık **yalnız var
+  olan hedeflere** bağlantı verir; var olmayan kurumsal sayfaların bağlantısı konulmaz.
+  Çalışma bilgisi bu sürümde yoktur (**X12**). → **D5**, **D6**, **D8**.
 - **R8.** Ana sayfa **yükleniyor**, **boş** (vitrinde hiç yayında araç yok) ve **hata**
   durumlarını ele alır; bölümler **kısmen** yüklenemezse sayfanın tamamı düşmez.
   → `docs/frontend.md` § 3.
@@ -71,6 +75,11 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   yönlü metin olarak doğru görünür.
 - **R10.** Ana sayfa `/{locale}/` adresinde yaşar; öneksiz `/` varsayılan locale'e yönlenir,
   geçersiz önek **404** verir. → `docs/architecture.md` § 3.
+- **R11.** Araç listesi kendi adresine taşınır: `/{locale}/cars`. Listenin eski adresiyle
+  paylaşılmış bağlantılar — daraltma ve sayfa bilgisi dâhil — aynı listeyi açmaya devam
+  eder; ziyaretçiyi vitrine geri gönderen bağlantılar listeye gider. → **D9**.
+- **R12.** Ana sayfa ve liste performans eşiklerini (`0001` C3) **ayrı ayrı** karşılar; ana
+  sayfanın gelişi listenin ölçümünü ortadan kaldırmaz. → **D10**.
 
 ---
 
@@ -129,6 +138,10 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   listesinde marka ekseni yok (`0001` X3); `0015` R1 onu getirecek. Eksen gelmeden bağlantının
   gidecek bir hedefi yoktur ve süzülmemiş listeye gitmek tıklamanın anlamını bozar. Eksen
   geldiğinde bağlantı `0015`'in ya da ayrı bir kartın işidir. → **D7**.
+- **X12.** **Şubelerin çalışma saatleri ve "şu an açık mı"** — *neden:* çalışma programının
+  **verisi yok**: `0003` onu kapsam dışı bıraktı (X2) ve `Branch`'te alanı bulunmuyor
+  (K1). Okunacak bir şey olmadan okuma yüzeyi yazılamaz; programın kaydı ve paneli
+  `docs/domain.md` **B1–B4**'ü taşıyan ayrı bir kartın işidir. → **D8**.
 
 ---
 
@@ -169,6 +182,34 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   türetilebilir, "Takasa açık" opsiyonel alan). *(2026-11-17 notu: bu satır ilk yazıldığında
   "öne çıkan" bir `Content` slotu sayılıyordu; `0012c`'den sonra öne çıkarma bir panel
   eylemidir — B1, D3.)*
+
+### Kriter turu ölçümü (2026-11-17, `main` @ `3cf58d8`)
+
+Kriterler bu dört bulgunun üzerine yazıldı:
+
+- **K1 — Çalışma bilgisinin verisi yok.** `Branch` ad, adres, koordinat, telefon, WhatsApp,
+  e-posta, saat dilimi, durum ve slug taşıyor (`Branch.cs:36-53`); **çalışma programı
+  alanı yok.** `0003` X2 programı, istisnaları ve "şu an açık mı"yı kapsam dışı bırakmıştı.
+  R7'nin "çalışma bilgisi" kısmının okunacak bir verisi bulunmuyor → **D8**.
+  Şube durumları: `Active`, `TemporarilyClosed`, `Closed` (`BranchStatus.cs`).
+- **K2 — `/{locale}/` bugün LİSTENİN adresi.** `parseRoute`
+  (`frontend/src/shared/lib/route.ts:96-107`) slug'sız her public yolu listeye çözüyor;
+  `/{locale}/cars` de **zaten** listeyi açıyor. `0001`'den beri paylaşılan daraltılmış
+  liste bağlantıları `/{locale}/?bodyType=…` biçiminde → **D9**.
+- **K3 — Üç "Vitrine dön" bağlantısı `/{locale}/`'e gidiyor:** bulunamayan ilan
+  (`ListingDetailPage.tsx:76`), talep başarısı (`LeadForm.tsx:60`) ve ilanı yayından kalkmış
+  talep (`LeadForm.tsx:110`). Metinleri "Vitrine dön" (`detail.notFound.action`,
+  `lead.success.action`); ana sayfa geldiğinde üçü de vaat ettiği listeyi değil ana sayfayı
+  açar → **D9**.
+- **K4 — Performans kapısı `/tr/`'yi ölçüyor:** `frontend/scripts/lighthouse-run.mjs:9`
+  (`PERF_URL ?? 'http://localhost:5080/tr/'`). Ana sayfa o adrese yerleştiğinde `0001`
+  C3'ün LCP/CLS ölçümü **sessizce** listeyi değil ana sayfayı ölçmeye başlar → **D10**.
+
+Ayrıca ölçüldü, karar gerektirmedi: liste ucu `bodyType`, `page`, `pageSize` (üst sınır 24)
+okuyor ve `totalCount` döndürüyor (`ShowcaseEndpoints.cs:38-42`) — R6'nın toplamı ve R5'in
+hedefi bugünkü uçla karşılanıyor. Üst çubuktaki galeri adı çeviri kataloğundan geliyor
+(`app.brandName`, `TopBar.tsx:17`); bu spec onu **değiştirmez** — R1 ana sayfanın kendi
+gösterimidir.
 
 ### Geçerli kurallar
 
@@ -228,6 +269,36 @@ markalar tıklanamaz. Stokta marka sayan okuma bu spec'e girer (§ Context, B3).
 edildi:* mockup'ta bağlantı gibi duran liste bu sürümde bağlantı değildir; marka bağlantısı
 `0015`'le birlikte ana sayfanın ikinci kez elden geçtiği üçüncü nokta olur (form, öne çıkan,
 marka). → R4, X1, X11.
+
+### Verilen kararlar — kriter turu, 2026-11-17
+
+**Takım Yöneticisi (ajan) kararı** (`docs/roles/README.md` § Takım Yöneticisi), Analist
+bulgusu K1–K4 üzerine.
+
+**D8 — Altlık aktif şubelerin adını, adresini ve telefonunu gösterir; çalışma bilgisi
+yoktur (K1).** Yalnız `aktif` şubeler; geçici kapalı ve kapatılmış şube altlıkta yer almaz.
+Şubenin adı veya adresi ziyaretçinin dilinde yoksa kurulumun **varsayılan dilindeki**
+metin gösterilir (araç serbest metninin sessiz fallback'iyle aynı davranış,
+`docs/architecture.md` § 3). Telefon bir `tel:` bağlantısıdır. *Gerekçe:* D6 profil
+okumasını bu spec'e aldı, ama R7'nin istediği çalışma bilgisinin kaynağı hiç yazılmadı;
+olmayan veriye okuma yüzeyi açılamaz. Geçici kapalı şubeyi saatsiz göstermek ziyaretçiyi
+kapalı kapıya gönderir. *Elenen alternatif:* çalışma programını bu spec'e almak — `B1–B4`'ün
+tamamını (çift mesai, istisna, saat dilimi) ve bir panel akışını getirir; spec'i ikiye
+büyütür. *Bedel:* altlık "açık mı" sorusunu cevaplamaz. → R7, X12.
+
+**D9 — Liste `/{locale}/cars`'a taşınır; eski bağlantılar ve "Vitrine dön" listeye gider
+(K2, K3).** `/{locale}/` liste parametresi (`bodyType` veya `page`) taşıyorsa ziyaretçi
+**aynı parametrelerle** listeye geçer ve tarayıcı geçmişine ara bir kayıt eklenmez.
+Üç "Vitrine dön" bağlantısı `/{locale}/cars`'a gider. *Gerekçe:* paylaşılmış daraltılmış
+liste bağlantısını ana sayfaya düşürmek ziyaretçinin seçimini sessizce kaybeder; "Vitrine
+dön" metni listeyi vaat ediyor. *Bedel:* ana sayfa `bodyType` ve `page` parametrelerini
+kendi işine kullanamaz. → R11.
+
+**D10 — Performans kapısı iki adresi ölçer (K4).** Ana sayfa `0001` C3'ün LCP ve CLS
+eşiklerini aynı protokolle karşılar; listenin ölçümü `/{locale}/cars`'a taşınır.
+*Gerekçe:* yalnız adresi değiştirmek listeyi, yalnız bırakmak ana sayfayı ölçümsüz bırakır.
+*Bedel:* Lighthouse koşusu ikiye çıkar (ADR `0010` dakika bütçesi; iş yalnız kod
+değiştiğinde koşuyor). → R12.
 
 ---
 
@@ -354,13 +425,140 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 
 ## Acceptance Criteria
 
-> Kriter turunda, ayrı bir `docs` PR'ında yazılacak. En az şu kümeleri kapsayacak:
-> galeri adı ve profil bilgisi (D6) · giriş bölümü (D2) · öne çıkan araçların seçimi, sırası,
-> altıdan az ve hiç olmama hâli (D3, D4) · marka listesi ve sayımı, tıklanamazlık (D7) · daraltma
-> formunun kasa tipiyle listeye geçişi (D1) · toplam araç sayısı · altlığın yalnız var olan
-> hedeflere bağlanması (D5) · boş vitrin · kısmi hata ·
-> locale önekleri ve geçersiz önekte 404 · RTL ve karışık yönlü marka adı · LCP ve CLS ·
-> gizli alanların yanıtta bulunmaması.
+> Her kriterin testi `DisplayName`'inde `0014 AC-<n>` taşır (`docs/testing.md` § 1).
+> **Görünür ilan** = vitrinde görünen ilan: `Yayında` veya `Rezerve` (C3). Örnek veri
+> kümeleri kriterin içinde verilir; sayılar ayırt edici seçildi.
+
+### Adres (R10, R11 · D9)
+
+- **AC-1.** `/tr/`, `/ar/` ve `/en/` her biri o dilde **ana sayfayı** gösterir.
+- **AC-2.** `/` istenince varsayılan locale'in ana sayfasına **301** ile yönlenir.
+- **AC-3.** Etkin olmayan bir önek (`/xx/`) **404** verir.
+- **AC-4.** İstek `Accept-Language: ar` taşısa da `/` **varsayılan** locale'e yönlenir (C10).
+- **AC-5.** `/{locale}/cars` araç listesini gösterir; `bodyType` ve `page` parametreleri
+  `0001`'deki anlamıyla çalışır.
+- **AC-6.** `/tr/?bodyType=suv&page=2` açıldığında ziyaretçi `/tr/cars?bodyType=suv&page=2`
+  adresindeki listeyi görür.
+- **AC-7.** AC-6'daki geçişten sonra tarayıcıda **geri** demek ziyaretçiyi
+  `/tr/?bodyType=suv&page=2`'ye değil, ondan önceki sayfaya götürür.
+- **AC-8.** `/tr/` liste parametresi taşımıyorsa yönlendirme olmaz; ana sayfa görünür.
+- **AC-9.** Bulunamayan ilan ekranının "Vitrine dön" bağlantısı `/{locale}/cars`'a gider.
+- **AC-10.** Talep başarı ekranının "Vitrine dön" bağlantısı `/{locale}/cars`'a gider.
+- **AC-11.** İlanı yayından kalkmış talep hatasının "Vitrine dön" bağlantısı
+  `/{locale}/cars`'a gider.
+
+### Galeri adı (R1 · D6)
+
+- **AC-12.** Ana sayfa galeri profilindeki **ticari unvanı** gösterir: profil `"Örnek
+  Otomotiv"` iken sayfada bu ad görünür.
+- **AC-13.** Profilin ticari unvanı `"Başka Ad"` yapıldığında ana sayfa bir sonraki
+  yüklemede yeni adı gösterir — ad çeviri kataloğundan gelmez.
+- **AC-14.** Galerinin ziyaretçiye dönük okuma yanıtında vergi numarası ve ticaret sicil
+  numarası **bulunmaz** (null olarak da gelmez).
+- **AC-15.** Galeri okuması oturum çerezi olmadan **200** döner (C1).
+
+### Giriş bölümü (R2 · D2)
+
+- **AC-16.** Giriş başlığı ve açıklaması etkin locale'in kataloğundan gelir; `tr`, `ar`,
+  `en` kataloglarının üçünde de iki anahtar dolu.
+
+### Öne çıkan araçlar (R3 · D3, D4)
+
+- **AC-17.** 8 öne çıkarılmış görünür ilan varken bölüm **tam altı** kart gösterir.
+- **AC-18.** AC-17'deki altı kart, öne çıkarılmış ilanlar arasında **yayın tarihi en
+  yeni** altı ilandır ve yeniden eskiye sıralıdır.
+- **AC-19.** Yayın tarihi eşit iki öne çıkarılmış ilandan ilan kimliği küçük olan önce gelir
+  (vitrin listesiyle aynı sıra).
+- **AC-20.** 3 öne çıkarılmış ve 10 öne çıkarılmamış görünür ilan varken bölüm **yalnız
+  üç** kart gösterir; öne çıkarılmamış hiçbir ilan bölümde yer almaz.
+- **AC-21.** Hiç öne çıkarılmış görünür ilan yokken (10 öne çıkarılmamış görünür ilan var)
+  bölüm başlığıyla birlikte **hiç görünmez**; yerinde boş durum veya hata durumu da yoktur.
+- **AC-22.** Öne çıkarılmış bir `Rezerve` ilan bölümde **Rezerve rozetiyle** görünür.
+- **AC-23.** Öne çıkarılmış `Taslak`, `Satıldı` ve `Arşiv` ilanların hiçbiri bölümde
+  görünmez.
+- **AC-24.** "Fiyat sorunuz" ilanın kartı fiyat yerine "fiyat sorunuz" metnini gösterir;
+  `0` göstermez.
+- **AC-25.** Para birimi KWD olan kurulumda `12345.500` tutarlı ilanın kartı tutarı **üç
+  ondalıkla** gösterir.
+- **AC-26.** Karta tıklamak o ilanın detayına (`/{locale}/cars/{slug}`) gider.
+- **AC-27.** İlk kartın kapak görseli `loading="lazy"` **taşımaz**; diğer kartlarınki taşır.
+- **AC-28.** Her kartın kapak görseli açık `width` ve `height` taşır.
+
+### Markalar (R4 · D7)
+
+- **AC-29.** Vitrinde Toyota'dan 3, BMW'den 2 görünür ilan varken liste `Toyota 3` ve
+  `BMW 2` satırlarını gösterir.
+- **AC-30.** Yalnız `Taslak`, `Satıldı` veya `Arşiv` ilanı olan bir marka listede
+  **görünmez**.
+- **AC-31.** Görünür ilanı olan bir markanın `Taslak`, `Satıldı` ve `Arşiv` ilanları o
+  markanın sayısına **katılmaz**.
+- **AC-32.** Satırlar araç sayısına göre azalan sıradadır; sayısı eşit iki marka kanonik
+  adın **ordinal** (kültürden bağımsız) sırasıyla dizilir.
+- **AC-33.** Arapça sayfada marka adı çevrilmez; kanonik Latin adıyla, soldan sağa yönlü
+  yalıtılmış olarak görünür ve sayıyla yer değiştirmez.
+- **AC-34.** Sayı ICU çoğul biçimiyle yazılır: Arapça sayfada `0, 1, 2, 3, 11, 100`
+  sayılarının her biri kendi çoğul biçimini kullanır (altı biçim).
+- **AC-35.** Marka satırı bir bağlantı **değildir** ve tıklanınca hiçbir yere gitmez (X11).
+- **AC-36.** Marka okuma yanıtı yalnız marka adını ve sayıyı taşır; şase, plaka ve iç not
+  yanıtta bulunmaz (C2).
+
+### Daraltma formu (R5, R6 · D1)
+
+- **AC-37.** Form kasa tiplerini referans veriden **etkin locale'in adıyla** listeler.
+- **AC-38.** `sedan` ve `suv` seçilip gönderilince ziyaretçi
+  `/{locale}/cars?bodyType=sedan&bodyType=suv` adresine gider (`0001` C13'ün kanonik biçimi).
+- **AC-39.** Hiçbir şey seçilmeden gönderilince ziyaretçi parametresiz `/{locale}/cars`'a
+  gider.
+- **AC-40.** Gönderme düğmesi görünür ilanların **toplam** sayısını ICU ile gösterir: 128
+  görünür ilanla Türkçe sayfada "128 aracı gör".
+- **AC-41.** Düğmedeki sayı kasa tipi seçimiyle **değişmez**.
+
+### Altlık (R7 · D5, D6, D8)
+
+- **AC-42.** İki `aktif` şube varken altlık her ikisinin adını, adresini ve telefonunu
+  gösterir.
+- **AC-43.** `geçici kapalı` ve `kapatılmış` şubeler altlıkta **yer almaz**.
+- **AC-44.** Arapça adresi girilmemiş bir şube, Arapça sayfada adresini varsayılan dildeki
+  metniyle gösterir; satır boş kalmaz.
+- **AC-45.** Şube telefonu E.164 biçimindeki numaraya giden bir `tel:` bağlantısıdır.
+- **AC-46.** Altlığın bağlantıları **yalnız** şunlardır: `/{locale}/cars`, üç dilin ana
+  sayfası (`/tr/`, `/ar/`, `/en/`) ve şube telefonları. Başka bağlantı yoktur.
+- **AC-47.** Etkin dilin bağlantısı `aria-current` ile işaretlidir.
+- **AC-48.** Ziyaretçiye dönük okuma yanıtı `geçici kapalı` ve `kapatılmış` şubeleri
+  **hiç taşımaz**; süzme sunucuda yapılır, uçta değil (C2'nin "gizleme sorgu tarafında"
+  ilkesi).
+
+### Durumlar (R8)
+
+- **AC-49.** Veri gelene kadar öne çıkanlar, markalar, form ve altlığın şube bloğu kendi
+  iskeletini gösterir.
+- **AC-50.** Vitrinde hiç görünür ilan yokken öne çıkanlar, markalar ve form yerine **tek**
+  bir boş durum görünür ve "0 aracı gör" hiçbir yerde yazmaz.
+- **AC-51.** AC-50'nin durumunda giriş bölümü ve altlık görünmeye devam eder.
+- **AC-52.** Marka okuması başarısız, öne çıkan okuması başarılıyken öne çıkanlar görünür;
+  marka bölümü kendi hata durumunu ve **tekrar dene** eylemini gösterir.
+- **AC-53.** Öne çıkan okuması başarısız, marka okuması başarılıyken markalar görünür; öne
+  çıkanlar bölümü kendi hata durumunu ve tekrar dene eylemini gösterir.
+- **AC-54.** Galeri okuması başarısızken sayfanın geri kalanı görünür; adın ve şube
+  bloğunun yeri boş kalır ve hata metni basılmaz.
+- **AC-55.** Bir bölümün tekrar dene eylemi **yalnız o bölümün** verisini yeniden ister.
+- **AC-56.** Sunucu `500` döndüğünde hiçbir bölüm teknik ayrıntı (durum kodu, iz kimliği,
+  istisna metni) göstermez (`docs/frontend.md` § 3.1).
+
+### Dil ve yön (R9)
+
+- **AC-57.** `/ar/` sayfası `<html dir="rtl" lang="ar">` ile gelir ve bölümlerin sırası
+  ile hizası aynalanmış görünür (görsel kanıt, Arapça).
+- **AC-58.** Ana sayfanın stillerinde fiziksel yön özelliği (`left`, `right`,
+  `margin-left`, `text-align: left` …) yoktur; stil kapısı yeşildir (C6).
+
+### Performans (R12 · D10)
+
+- **AC-59.** `/tr/` (ana sayfa) `0001` C3 protokolüyle (Lighthouse mobil, 3 koşu, medyan)
+  **LCP < 2,5 s** ölçülür.
+- **AC-60.** `/tr/` aynı protokolle **CLS < 0,1** ölçülür.
+- **AC-61.** Liste ölçümü `/tr/cars` adresinde koşar ve `0001`'in LCP ve CLS eşiklerini
+  karşılamaya devam eder.
 
 ---
 
@@ -376,6 +574,8 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 - [ ] <!-- DoD:T7 --> Yeni domain terimi yok.
 - [ ] Altlıktaki her bağlantının **var olan** bir hedefe gittiği doğrulandı (S4).
 - [ ] Ham piksel/hex eklenmedi; token katmanı kullanıldı (C7).
+- [ ] Performans iş akışı iki adresi ölçüyor ve koşu raporu ikisini de yazıyor (D10).
+- [ ] `docs/architecture.md` § Karar Defteri: liste adresi `/{locale}/cars` (D9).
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
