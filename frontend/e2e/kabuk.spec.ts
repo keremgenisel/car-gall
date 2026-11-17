@@ -4,7 +4,7 @@ test.describe('Uygulama kabuğu', () => {
   test("frontend-001/AC-1: Vitrin sayfasında üst bar görünür ve marka adını taşır; içerik alanı <main> öğesidir ve sayfanın tek <h1>'i içerik alanındadır", async ({
     page,
   }) => {
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
 
     await expect(page.locator('header.top-bar')).toBeVisible()
     await expect(page.getByText('Oto Galeri')).toBeVisible()
@@ -17,7 +17,7 @@ test.describe('Uygulama kabuğu', () => {
   test("frontend-001/AC-2: Üst bardaki dil değiştirici üç etkin locale'i sunar; /tr/ sayfasında Arapça seçildiğinde adres /ar/ önekine döner ve içerik Arapça gelir", async ({
     page,
   }) => {
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
 
     const switcher = page.getByRole('navigation', { name: 'Dil seçimi' })
     await expect(switcher.getByRole('link')).toHaveCount(3)
@@ -33,7 +33,7 @@ test.describe('Uygulama kabuğu', () => {
   test('frontend-001/AC-3: Dil değiştiriciyle locale değiştirildiğinde daraltma ve sayfa korunur', async ({
     page,
   }) => {
-    await page.goto('/tr/?bodyType=suv&page=2')
+    await page.goto('/tr/cars?bodyType=suv&page=2')
     await expect(page.getByTestId('result-count')).toBeVisible()
 
     await page
@@ -42,7 +42,7 @@ test.describe('Uygulama kabuğu', () => {
       .click()
 
     const url = new URL(page.url())
-    expect(url.pathname).toBe('/ar/')
+    expect(url.pathname).toBe('/ar/cars')
     expect(url.searchParams.getAll('bodyType')).toEqual(['suv'])
     expect(url.searchParams.get('page')).toBe('2')
   })
@@ -50,7 +50,7 @@ test.describe('Uygulama kabuğu', () => {
   test("frontend-001/AC-4: Arapça locale'de üst bar sağdan sola akar: marka satırın başında (sağda), dil değiştirici sonunda (solda)", async ({
     page,
   }) => {
-    await page.goto('/ar/')
+    await page.goto('/ar/cars')
 
     const marka = await page.locator('.top-bar__brand').boundingBox()
     const secici = await page.locator('.top-bar__locales').boundingBox()
@@ -63,7 +63,7 @@ test.describe('Uygulama kabuğu', () => {
   test('frontend-001/AC-5: Dil değiştirici çerez veya localStorage yazmaz; seçim yalnız adrese yansır', async ({
     page,
   }) => {
-    await page.goto('/tr/')
+    await page.goto('/tr/cars')
     await page
       .getByRole('navigation', { name: 'Dil seçimi' })
       .getByRole('link', { name: 'العربية' })

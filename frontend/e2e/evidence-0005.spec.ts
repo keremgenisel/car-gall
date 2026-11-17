@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { kanit } from './kanit'
 
 async function ilkSlug(page: Page, locale = 'tr') {
-  await page.goto(`/${locale}/`)
+  await page.goto(`/${locale}/cars`)
   const href = await page.getByTestId('listing-card').first().getByRole('link').getAttribute('href')
   return (href as string).split('/').pop() as string
 }

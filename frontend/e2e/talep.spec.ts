@@ -8,7 +8,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 /** Listedeki ilk ilanın slug'ı; seed'e göre değişir, sabitlenmez. */
 async function ilkSlug(page: Page, locale = 'tr') {
-  await page.goto(`/${locale}/`)
+  await page.goto(`/${locale}/cars`)
   const href = await page.getByTestId('listing-card').first().getByRole('link').getAttribute('href')
   return (href as string).split('/').pop() as string
 }

@@ -4,7 +4,7 @@ test.describe('Çok dillilik ve RTL', () => {
   test('0001/AC-30: Arapça locale de sayfa dir="rtl" ve lang="ar" ile basılır; ızgara ve sayfalama sağdan sola akar', async ({
     page,
   }) => {
-    await page.goto('/ar/')
+    await page.goto('/ar/cars')
 
     // Yön SUNUCUDAN basılır, uçta hesaplanmaz (docs/frontend.md § 6).
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
@@ -39,7 +39,7 @@ test.describe('Çok dillilik ve RTL', () => {
     const beklenen: Record<string, string> = { tr: 'SUV', ar: 'دفع رباعي', en: 'SUV' }
 
     for (const locale of ['tr', 'ar', 'en']) {
-      await page.goto(`/${locale}/`)
+      await page.goto(`/${locale}/cars`)
       await expect(page.getByTestId('body-type-filter')).toContainText(beklenen[locale]!)
 
       const govde = await page.locator('body').innerText()
@@ -52,7 +52,7 @@ test.describe('Çok dillilik ve RTL', () => {
     page,
   }) => {
     for (const locale of ['tr', 'ar', 'en']) {
-      await page.goto(`/${locale}/`)
+      await page.goto(`/${locale}/cars`)
 
       const alt = await page.locator('.listing-card__image').first().getAttribute('alt')
       expect(alt).toBeTruthy()
@@ -64,7 +64,7 @@ test.describe('Çok dillilik ve RTL', () => {
   test('0001/AC-31: Sonuç sayısı metni toplam ilan sayısını bildirir ve Arapça da doğru çoğul biçimini kullanır', async ({
     page,
   }) => {
-    await page.goto('/ar/')
+    await page.goto('/ar/cars')
 
     // Sayı veri setinden gelir; test seed büyüklüğüne bağlanmaz.
     const yanit = await page.request.get('/api/catalog/showcase-listings?locale=ar')
@@ -79,7 +79,7 @@ test.describe('Çok dillilik ve RTL', () => {
   test('0001/AC-22: KWD dışı kurulumda da tutar locale biçiminde ve Latin rakamla gösterilir', async ({
     page,
   }) => {
-    await page.goto('/ar/')
+    await page.goto('/ar/cars')
 
     const fiyat = await page.locator('.listing-card__price').first().innerText()
     expect(fiyat).not.toMatch(/[٠-٩۰-۹]/)
