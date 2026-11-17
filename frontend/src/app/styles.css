@@ -1051,6 +1051,9 @@ body {
 }
 
 .narrowing-form {
+  /* İskelet ve gerçek form AYNI yüksekliği ayırır; veri gelince altındaki bölüm
+     kaymaz (tokens.css, 0014 ölçümü). */
+  min-block-size: var(--narrowing-form-min-block-size);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);

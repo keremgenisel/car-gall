@@ -10,25 +10,25 @@
     "met": true
   },
   "client": {
-    "url": "http://localhost:5080/tr/",
+    "url": "http://localhost:5080/tr/cars",
     "protocol": "Lighthouse mobil profili (4x CPU kısıtı, Slow 4G), 3 koşu, medyan (spec 0001 C3)",
     "runs": [
       {
-        "lcpMilliseconds": 1729,
-        "cumulativeLayoutShift": 0
+        "lcpMilliseconds": 2107,
+        "cumulativeLayoutShift": 0.012
       },
       {
-        "lcpMilliseconds": 1730,
-        "cumulativeLayoutShift": 0
+        "lcpMilliseconds": 2106,
+        "cumulativeLayoutShift": 0.012
       },
       {
-        "lcpMilliseconds": 1729,
+        "lcpMilliseconds": 2111,
         "cumulativeLayoutShift": 0
       }
     ],
     "median": {
-      "lcpMilliseconds": 1729,
-      "cumulativeLayoutShift": 0
+      "lcpMilliseconds": 2107,
+      "cumulativeLayoutShift": 0.012
     },
     "thresholds": {
       "lcpMilliseconds": 2500,
