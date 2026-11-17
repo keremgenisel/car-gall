@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-17 — Takım Yöneticisi (ajan) kararı) |
+| **Durum** | Tamamlandı (2026-11-17) — uygulama #85 → `90b4e98` |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) · `Dealership` (galeri profilinin public okuması — **D6**) |
@@ -780,26 +780,31 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 
 - [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
       *(S1–S6 → D1–D7, 2026-11-17.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0014-ac<n>.png`), boş ve hata durumları dâhil,
-      Arapça görüntü de var.
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — başka modülün tablosuna erişim yok (C11).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi yok.
-- [ ] Altlıktaki her bağlantının **var olan** bir hedefe gittiği doğrulandı (S4).
-- [ ] Ham piksel/hex eklenmedi; token katmanı kullanıldı (C7).
-- [ ] Performans iş akışı iki adresi ölçüyor ve koşu raporu ikisini de yazıyor (D10).
-- [ ] `docs/architecture.md` § Karar Defteri: liste adresi `/{locale}/cars` (D9).
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+      *(#85: 66 kriterin 66'sı; AC-29–AC-36 D11 ile kaldırıldı. Karşılanmayan kriter yok.)*
+- [x] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0014-ac<n>.png`), boş ve hata durumları dâhil,
+      Arapça görüntü de var. *(13 görsel: boş `ac50`, iskelet `ac49`, kısmi hata `ac52`/`ac53`/`ac54`,
+      Arapça `ac57`/`ac72`/`ac73`/`ac47`. Görseller tek tek açılıp okundu.)*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — başka modülün tablosuna erişim yok (C11). *(55/55; öne çıkan okuması `VehicleCatalog`'un kendi okuma modelinden, galeri okuması `Dealership`'in kendi tablolarından.)*
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil. *(20 `home.*` anahtarı; `check:locales` → 3 katalog, 468 anahtar, eşit.)*
+- [x] <!-- DoD:T7 --> Yeni domain terimi yok. *(`docs/domain.md` `0254da6..90b4e98` arasında değişmedi; "öne çıkarma" `0012c`'den.)*
+- [x] Altlıktaki her bağlantının **var olan** bir hedefe gittiği doğrulandı (S4). *(AC-46 testi altlığın bağlantı kümesini birebir ölçüyor: `tel:` × şube, `/{locale}/cars`, etkin dillerin ana sayfaları; AC-67 iki dilli kurulumda `/ar/`'ın yokluğunu. Boş vitrin eyleminin `#contact` hedefi altlığın kendisi.)*
+- [x] Ham piksel/hex eklenmedi; token katmanı kullanıldı (C7). *(Bileşen stillerinde ham px/hex yok; tek yeni sayı token katmanında: `--narrowing-form-min-block-size`, ölçümüyle.)*
+- [x] Performans iş akışı iki adresi ölçüyor ve koşu raporu ikisini de yazıyor (D10). *(CI koşusu 44141121819: `/tr/` LCP 2288 ms · CLS 0,026 · `/tr/cars` LCP 2117 ms · CLS 0,016; iki rapor `0014-performance.json` ve `0001-performance.json` olarak yükleniyor.)*
+- [x] `docs/architecture.md` § Karar Defteri: liste adresi `/{locale}/cars` (D9). *("Vitrin adresleri" ve "Etkin diller (uç)" satırları.)*
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *(#85'in son koşusu beş kapıda yeşil: Backend, Frontend, E2E, C3, Değişen yollar.)*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(Yerel tam koşu 1245 test, 0 kırmızı; QA turu dört satır ekledi ve CI'da yeşil.)*
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. *(Migration yok.)*
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi. *(D9 ve D22.)*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      bunun yerine geçmez. *(İki bulgu — BULGU-1 AC-8, BULGU-2 AC-66 — repro ve mutasyon
+      kanıtıyla Takım Yöneticisi tarafından iletildi; ikisi de merge'den önce kapandı
+      (`fix(host)` + `test(dealership)`). Gözden geçirenin bir QA oturumu olduğunu yazar
+      kendisi göremez; bu kayıt TM'nin aktarımına dayanıyor.)*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. *(#85: "Karşılanmayan kriterler: Yok".)*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(2026-11-17, `90b4e98`.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
@@ -817,13 +822,28 @@ tanımın netleştirilmesini öner.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | **evet** | **Ölçüldü:** `git cat-file -e 90b4e98^:specs/0014-ana-sayfa.md` → var; ebeveyn `0254da6` (#84) **66** kriter taşıyor ve uygulama `90b4e98` (#85) ondan sonra geldi. Kriterler `main`'e ilk kez #82'de (`14a04bd`, 61 kriter) girdi. R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
+| **Kriter sayısı: önce → bugün** | **61 → 66** | Kriterlerin `main`'e ilk girdiği `14a04bd`'de **61**, uygulamanın ebeveyni `0254da6`'da ve bugün **66**. Ara: #83 sekiz kriteri kaldırdı (AC-29–AC-36, D11), on biri ekledi (AC-62–AC-72) → 64; #84 ikisini ekledi (AC-73, AC-74) → 66. Uygulama commit'i spec'e **dokunmadı** (`git diff 0254da6 90b4e98 -- specs/` boş). O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
+| **Spec revizyon sayısı** | **2** | **Bölüm özetleriyle ölçüldü** (bayt / sha256 ilk 12): `14a04bd` R 2634/`cfcf0b44b98c` · C 4260/`a4013fc6dcc3` · AC 8191/`4c5a29e5df76` → `5ddeeb9` (#83, QA CLARIFY) **R, C ve AC değişti** → `0254da6` (#84, plan turu) R aynı, **C** (X14) **ve AC** (AC-72/73/74) değişti → `90b4e98` **üçü de bayt bayt aynı**. İki tur da kriterler `main`'e girdikten sonra ve uygulamadan önce geldi; ikisi de kendi `docs/` PR'ında. Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
+| **Düzeltme turu sayısı** | **1** | QA triyajı PR'ı bir kez geri döndürdü; tur iki commit doğurdu (`fix(host)` BULGU-1, `test(dealership)` BULGU-2). T10 kutusu `[x]` — K3'ün şartı sağlanıyor, kaydın dayanağı kutuda yazılı. PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
+| **Dış bulgu (gerçek/gürültü)** | **2 / 0** | İletilen iki bulgunun ikisi de **yeniden üretildi ve gerçek çıktı**: BULGU-1'in üç satırı önce kırmızı verdi; BULGU-2'nin `tr-TR` mutasyonu eski testte geçti, yeni testte kırmızı verdi. **Gürültü yarısı ölçülemedi:** triyajın gürültü işaretlediği bir bulgu varsa bana iletilmedi — `0012c` ve `0013`'te iki kez gürültü etiketi ölçülünce gerçek çıkmıştı. `0`, "gürültü yoktu" değil "gürültü etiketli bulgu bu karta ulaşmadı" demektir. **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
+| **Uygulama içi bulgu** | **5** | (1) **D22'nin ilk biçimi** (`<html data-locales>`) `<html>` etiketini birebir ölçen tema testlerini bozacaktı — #84 merge edilmeden meta etikete çevrildi. (2) **CLS**: ana sayfanın koşuları 0,007 · **0,098** · 0,023 — form iskeleti 126px, gerçek form 296px; düzeltildi, CI'da üç koşu da 0,026. (3) **AC-57 e2e testi** blok `h1`'in kutusunu ölçüyordu (16 = 16), metnin hizasını değil; Range ile düzeltildi. (4) **AC-67 sunucu testi** yapılandırma dizisinden eleman silemiyordu (`InvalidOperationException`); renderer'ın kendi bağımlılığıyla kuruldu. (5) **AC-11 birim testi** Arapça etiketleri tahmin ediyordu; doğrulanmış Türkçe yardımcılara çevrildi. (1) ve (2) ürün kusuru, (3)–(5) kendi testimin kusuru. Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
+| **Regresyon sayısı** | **0** | `main`'e ulaşan yok. Liste adresinin değişmesi (D9) bilinçli bir davranış değişikliği: eski adresler 301 ile çalışmaya devam ediyor (AC-6, AC-69, AC-70), 63 e2e ziyareti yeni adrese taşındı ve hiçbir iddia gevşetilmedi. Tam e2e takımı (iki profil) CI'da yeşil. Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-17 (`90b4e98`). Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
 
 **Bu spec'ten çıkarılan ders:**
+
+**Medyanı geçen bir ölçüm, kapının güvende olduğunu söylemez.** Ana sayfanın ilk
+Lighthouse ölçümü üç koşuda CLS 0,007 · 0,098 · 0,023 verdi: medyan 0,023, kapı yeşil.
+Ama tek bir koşu eşiğin 0,002 altındaydı — `0001`'in kaçan hatası (#67/#71 kırmızı, #68
+yeşil) tam bu desendi ve kapı aynı kodda rastgele davranıyordu. Ölçünce sebep basitti:
+iskelet gerçek formun yarısından azını ayırıyordu. Kural: bir perf koşusunu okurken
+yalnız medyana değil **en kötü koşuya** bak; iskeletlerin ayırdığı yüksekliği gerçek
+içerikle birkaç genişlikte ölç ve fontlar yüklendikten **sonra** ölç — yoksa font
+kaymasını veri kayması sanarsın (14px'lik kalıntı buydu).
+
+İkinci ders kanıtın kendisiyle ilgili: QA'nın BULGU-2'si üretim kodunda değil **testin
+örneğinde** bir zayıflık buldu — "Ataşehir/Bakırköy" çifti ordinal ve kültür sırasında
+aynı sonucu veriyordu. Örnek spec'ten geliyordu (AC-66). Bir kriter "ordinal" gibi bir
+**ayrım** iddia ediyorsa, örneği de o ayrımı yapan bir çift olmalı; aksi hâlde test
+sıranın **varlığını** ölçer, **türünü** ölçmez.
