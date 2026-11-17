@@ -8,8 +8,14 @@
 | **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) · `Dealership` (galeri profilinin public okuması — **D6**) |
 | **Bağımlı spec'ler** | `0001`, `0002`, `0003`, `0012c`, `frontend-001`, `frontend-002`. Sıra kararı: **D1**. |
 | **Dayanak** | ADR 0003 Ek 1, sıra #7 |
-| **Karar bekliyor** | yok — S1–S6 → **D1–D7** (CLARIFY turu); kriter turunun dört bulgusu → **D8–D10** (2026-11-17); QA CLARIFY turunun on bulgusu → **D11–D20** (2026-11-17). |
+| **Karar bekliyor** | yok — S1–S6 → **D1–D7** (CLARIFY turu); kriter turunun dört bulgusu → **D8–D10** (2026-11-17); QA CLARIFY turunun on bulgusu → **D11–D20** (2026-11-17); plan turunun sekiz sorusu → **D21–D28** (2026-11-17). |
 
+> **Plan turu (2026-11-17, `5ddeeb9` üzerinde).** Developer uygulama planını çıkarırken
+> sekiz açık nokta buldu (P2–P9, § Verilen kararlar — plan turu). Önerilerin sekizi de
+> Takım Yöneticisi (depo sahibi) tarafından **olduğu gibi** onaylandı ve **D21–D28** olarak
+> işlendi. **AC-72** yeniden yazıldı (D24), **AC-73** ve **AC-74** eklendi (D24, D25).
+> Kriterler `main`'de olduğu için bu tur **sayılan bir revizyondur** (ADR 0008 / K3).
+>
 > **QA CLARIFY turu (2026-11-17, `14a04bd` üzerinde).** Uygulama başlamadan önce bir QA
 > oturumu spec'i cevapsız sorular için okudu ve on boşluk buldu (B1–B10, § Verilen
 > kararlar — QA CLARIFY turu). Önerilerin onu da Takım Yöneticisi (depo sahibi) tarafından
@@ -165,6 +171,8 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   bıraktı. Sayılacak bir marka olmadan marka sayan okuma yazılamaz. Marka taksonomisi ayrı
   bir kart olarak önerilir; ana sayfanın marka bölümü ve `0015` R1'in marka ekseni ona
   bağlanır. → **D11**.
+- **X14.** **Üst çubuktaki dil değiştiricinin etkin locale'lere uyması** — *neden:* aynı
+  kusur (D22) ama ana sayfanın değil kabuğun; `frontend-001`'in yüzeyi. Ayrı kart. → D23.
 
 ---
 
@@ -408,6 +416,76 @@ gösterdiğinden farklı seçenekler göstermemeli. → AC-37.
 `CommercialName` tek dilli bir metin; Latin harfli bir ad RTL satırda eski marka kuralının
 (AC-33) önlediği bozulmayı üretir. → R9, AC-72.
 
+### Verilen kararlar — plan turu, 2026-11-17
+
+**Takım Yöneticisi (depo sahibi) kararı**, Developer'ın plan bulguları P2–P9 üzerine.
+Sekiz öneri **olduğu gibi** onaylandı. (P1, `#83`'ün merge'iydi ve `5ddeeb9` ile kapandı.)
+
+**D21 — Eski liste adresini sunucu yönlendirir: `301` (P2).** `LocalePrefixMiddleware`,
+`/{locale}/` sorgusunda `bodyType`, `page` veya `pageSize` görürse `/{locale}/cars`'a
+**301** ile yönlendirir; sorgu dizgesi bayt bayt taşınır (D17). *Gerekçe:* ana sayfa hiç
+yüklenmez — fazladan istek ve LCP etkisi yok; HTTP yönlendirmesi tarayıcı geçmişine kayıt
+eklemediği için AC-7 kendiliğinden sağlanır; arama motoru eski adresi yenisiyle birleştirir.
+*Bedel:* tarayıcılar 301'i kalıcı önbelleğe alır; D9 kalıcı bir karar olduğu için kabul
+edildi. *Elenen alternatif:* istemcide `history.replaceState` — ana sayfa bir an görünür ve
+gereksiz okuma yapar. → D9, AC-6, AC-7, AC-69, AC-70.
+
+**D22 — Uç etkin locale'leri sunucunun bastığı `<meta name="enabled-locales">`
+etiketinden okur (P3).** `IndexHtmlRenderer`, yapılandırmadaki etkin locale'leri
+`</head>`'den önce boşlukla ayrılmış liste olarak basar; *(ilk yazımda `<html
+data-locales>` özniteliğiydi; `<html>` etiketini birebir ölçen tema testlerini
+(`TemaEnjeksiyonuTests`) bozmamak için meta etikete taşındı — amaç aynı)*; uç altlığın dil bağlantılarını bu listeden türetir (D14). *Gerekçe:* uç bugün
+locale listesini koda sabit üç dil olarak taşıyor (`SUPPORTED_LOCALES`); tema özniteliği
+de sunucudan basılıyor ve fazladan bir istek gerekmiyor. *Not:* üst çubuktaki dil
+değiştiricinin (`LocaleSwitcher.tsx`) aynı kusuru taşıdığı ölçüldü — iki dilli kurulumda da
+`/ar/` bağlantısı basıyor. **Bu spec'in kapsamında değildir** ve ayrı bir kart olarak
+önerilir. → AC-67.
+
+**D23 — İzlenen yollar: üst çubuk dokunulmaz (P3'ün kapsam yarısı).** D22'deki kusur bu
+spec'te düzeltilmez; `LocaleSwitcher` olduğu gibi kalır. → X14.
+
+**D24 — Galeri adı `<bdi>` ile yalıtılır; yön içerikten çözülür (P4).** D20 "soldan sağa"
+diyordu; ama `CommercialName` Arapça harfli olabilir (KWD kurulumları) ve zorunlu `ltr`
+o adı ters dizer. `<bdi>` Latin adı soldan sağa, Arapça adı sağdan sola gösterir; ikisinde
+de yanındaki metinden yalıtılır. *Bedel:* yön içeriğin ilk güçlü karakterine bağlıdır;
+rakamla veya noktalamayla başlayan bir ad o karaktere göre çözülür. → R9, D20, AC-72, AC-73.
+
+**D25 — Kasa tipi alanı filtrelenemez ise form ekseni göstermez; düğme kalır (P5).** Liste
+ekranı kasa tipi alanı `isFilterable` değilken filtre çubuğunu hiç göstermiyor (`0001`
+AC-12); form aynı kapıdan geçer ve o durumda yalnız "N aracı gör" düğmesini taşır. Kasa
+tipi **okuması başarısızsa** form, listenin sessiz gizlemesinden farklı olarak kendi hata
+durumunu gösterir (AC-63); listenin davranışı değişmez. → D19, AC-74.
+
+**D26 — Ana sayfa `app/` katmanında birleşir (P6).** Öne çıkanlar ve form
+`features/catalog/`'da, galeri adı ve şube bloğu yeni `features/dealership/` klasöründe
+yaşar; `app/HomePage.tsx` onları birleştirir (talep formunun `renderLead` deseni). *Gerekçe:*
+bir feature başka feature'ın iç dosyasını import etmez (`docs/frontend.md` § 1); yeni ortak
+bileşen gerekmez (C8).
+
+**D27 — Yeni uçlar: `/api/catalog/featured-listings` ve `/api/dealership/gallery`; toplam
+sayı mevcut liste ucundan (P7, P8).** Öne çıkan okuma `/showcase-listings/featured` olarak
+açılmaz: ilan detayının `{slug}` rotasıyla aynı yolu paylaşırdı. Toplam sayı için yeni uç
+açılmaz; liste ucu `pageSize=1` ile çağrılır ve `totalCount` okunur (§ Context).
+
+**D28 — Tanınmayan alt yol (`/tr/foo`) listeyi göstermeye devam eder (P9).** `0001`'den
+gelen davranış; değiştirmek için kriter yok.
+
+### Uygulama planı (onaylı, 2026-11-17)
+
+Dal `feature/0014-ana-sayfa`; tek PR, adım başına commit (`[plan 0014/<n>]`). Migration yok.
+
+1. `Dealership` — galerinin public okuması (D15, D27): sözleşme, sorgu, uç. AC-12–15,
+   42–44, 48, 66, 68.
+2. `VehicleCatalog` — öne çıkan okuması; liste sıralaması tek yere çıkarılır
+   (`ShowcaseOrdering`) ki iki yüzey aynı sırayı paylaşsın (AC-19). AC-17–25.
+3. `Host` — eski adres yönlendirmesi (D21) ve `enabled-locales` meta etiketi (D22). AC-2–4, 6, 8, 69, 70.
+4. Uç rotaları — `home` rotası, `/{locale}/cars`, üç "Vitrine dön" (D9). AC-5, 9–11.
+5. Uç — API çağrıları, ana sayfa bölümleri, altlık, durumlar, çeviri anahtarları.
+   AC-1, 12, 13, 16–28, 37–47, 49–56, 62–68, 71–74.
+6. Performans kapısı iki adresi ölçer (D10). AC-59–61.
+7. e2e ve görsel kanıt; `docs/architecture.md` § Karar Defteri (D9). AC-1, 6, 7, 26, 38,
+   39, 57, 72, 73.
+
 ---
 
 ## Açık sorular
@@ -610,6 +688,9 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 
 ### Daraltma formu (R5, R6 · D1)
 
+- **AC-74.** Kasa tipi alanı filtrelenemez (`isFilterable: false`) iken form kasa tipi
+  seçeneği göstermez; "N aracı gör" düğmesi görünür ve parametresiz `/{locale}/cars`'a
+  gider (D25).
 - **AC-37.** Form, liste ekranının kasa tipi filtre çubuğuyla **aynı kasa tiplerini, aynı
   sırada**, etkin locale'in adıyla listeler. *(2026-11-17, D19: "referans veriden"
   yazıyordu; hangi alt kümenin listeleneceğini söylemiyordu.)*
@@ -676,8 +757,12 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 
 - **AC-57.** `/ar/` sayfası `<html dir="rtl" lang="ar">` ile gelir ve bölümlerin sırası
   ile hizası aynalanmış görünür (görsel kanıt, Arapça).
-- **AC-72.** Arapça sayfada galeri adı (`"Örnek Otomotiv"`) çevrilmez; soldan sağa yönlü
-  yalıtılmış olarak görünür ve yanındaki metinle yer değiştirmez (görsel kanıt, D20).
+- **AC-72.** Arapça sayfada galeri adı (`"Örnek Otomotiv"`) çevrilmez; `<bdi>` ile
+  yalıtılmış olarak soldan sağa görünür ve yanındaki metinle yer değiştirmez (görsel kanıt,
+  D20, D24). *(2026-11-17, D24: "soldan sağa yönlü yalıtılmış" yazıyordu; yön artık
+  içerikten çözülüyor.)*
+- **AC-73.** Galeri adı Arapça harfli (`"معرض المثال"`) iken ad `<bdi>` içinde sağdan sola
+  görünür; zorunlu `dir="ltr"` taşımaz (D24).
 - **AC-58.** Ana sayfanın stillerinde fiziksel yön özelliği (`left`, `right`,
   `margin-left`, `text-align: left` …) yoktur; stil kapısı yeşildir (C6).
 
