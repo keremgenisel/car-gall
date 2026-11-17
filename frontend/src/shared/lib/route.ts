@@ -35,6 +35,8 @@ export type AdminView =
   | 'two-factor'
 
 export type Route =
+  /** 0014 **D9** — `/{locale}/` artık ana sayfadır; liste `/{locale}/cars`'a taşındı. */
+  | { readonly kind: 'home' }
   | { readonly kind: 'list' }
   | { readonly kind: 'detail'; readonly slug: string }
   /**
@@ -100,11 +102,28 @@ export function parseRoute(pathname: string): Route {
     return { kind: 'list' }
   }
 
+  // 0014 D9 — `/{locale}/` ana sayfa. Eski liste adresinin parametreli hâli (`?bodyType=…`)
+  // buraya hiç gelmez: sunucu onu 301 ile `/{locale}/cars`'a yönlendirir (D21).
+  if (sectionSegment === undefined) {
+    return { kind: 'home' }
+  }
+
+  // D28 — tanınmayan alt yol (`/tr/foo`) listeye düşmeye devam eder (0001'den gelen davranış).
   if (sectionSegment !== LISTING_SEGMENT || slugSegment === undefined) {
     return { kind: 'list' }
   }
 
   return { kind: 'detail', slug: decodeURIComponent(slugSegment) }
+}
+
+/** 0014 **D9** — araç listesinin adresi. "Vitrine dön" bağlantıları buraya gider (AC-9–AC-11). */
+export function listPath(locale: AppLocale): string {
+  return `/${locale}/${LISTING_SEGMENT}`
+}
+
+/** 0014 — ana sayfanın adresi; altlığın dil bağlantıları (AC-46). */
+export function homePath(locale: AppLocale): string {
+  return `/${locale}/`
 }
 
 /** Karttan detaya giden adres (AC-2, AC-4). */

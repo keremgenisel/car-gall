@@ -244,3 +244,27 @@ describe('AC-41: Form etiketleri, talep tipi adları ve onay metni üç locale d
     }
   })
 })
+
+describe('0014 — talep ekranlarının "Vitrine dön" bağlantısı listeye gider (D9)', () => {
+  it('0014/AC-10: Talep başarı ekranının "Vitrine dön" bağlantısı /{locale}/cars\'a gider', async () => {
+    vi.mocked(captureLead).mockResolvedValue({ leadId: '0192c000-0000-7000-8000-00000000aaaa' })
+
+    ekran()
+    doldur()
+    gonder()
+
+    await screen.findByTestId('lead-success')
+    expect(screen.getByRole('link', { name: 'Vitrine dön' }).getAttribute('href')).toBe('/tr/cars')
+  })
+
+  it('0014/AC-11: İlanı yayından kalkmış talep hatasının "Vitrine dön" bağlantısı /{locale}/cars\'a gider', async () => {
+    vi.mocked(captureLead).mockRejectedValue(new ApiError('lead.listing_unavailable', null, 422))
+
+    ekran()
+    doldur()
+    gonder()
+
+    await screen.findByTestId('lead-error')
+    expect(screen.getByRole('link', { name: 'Vitrine dön' }).getAttribute('href')).toBe('/tr/cars')
+  })
+})
