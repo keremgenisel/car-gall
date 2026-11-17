@@ -13,6 +13,33 @@ Rol bir unvan değil, bir **kısıt kümesidir**. Kısıtı olmayan rol, rol de�
 
 ---
 
+## Takım Yöneticisi
+
+Takım Yöneticisi bir kod rolü değil, **karar merciidir** (`docs/domain.md` § 1). Rol kartı
+yoktur; yetkisi kapsam, öncelik ve onaydır.
+
+**2026-11-17'den beri bu rolü bir ajan taşıyor.** Depo sahibi rolü devretti ve iki şeyi
+açıkça seçti:
+
+- **Tam yetki.** Ajan-TM kapsam ve tasarım kararlarını verir ve PR'ları `main`'e **kendisi
+  merge eder**; ek bir insan onayı beklenmez. `docs/git.md` § 4 madde 6 ve § 7'deki
+  "ajan kendi PR'ını merge edemez" kuralının tek istisnası budur.
+- **Kararlar ayrıca işaretlenir.** Ajan-TM'nin kararı belgelere
+  `Takım Yöneticisi (ajan) kararı, <tarih>` diye yazılır. Bu tarihten önceki
+  `Takım Yöneticisi kararı` kayıtları depo sahibinindir.
+
+*Bedel, açıkça:* yazan ile onaylayan aynı oturum olabiliyor. Bu depoda kaçan hataları
+yakalayan ikinci göz buydu; sahip bu riski bilerek kabul etti (önerilen alternatifler, PR
+başına ayrı QA incelemesi ve merge'ün sahipte kalması, seçilmedi). Önlem olarak geri
+kalan her kapı aynen geçerlidir: spec önce `main`'e girer, CI okunmadan merge yapılmaz ve
+kendi yazdığı kodu merge eden Takım Yöneticisi onu "gözden geçirildi" diye **kaydetmez** —
+QA'nın tek yön kuralı (Developer → QA yok) bu şapka için de geçerlidir.
+
+Geri dönüşü olmayan veya depo dışına çıkan işler (depo ayarları, dal koruması, sırlar,
+lisans) Takım Yöneticisi yetkisinde değildir; depo sahibine sorulur.
+
+---
+
 ## Bir oturuma rol nasıl verilir
 
 Takım Yöneticisi rolü oturum açılışında verir. Oturumu alan üye, ilk çıktısı olarak
