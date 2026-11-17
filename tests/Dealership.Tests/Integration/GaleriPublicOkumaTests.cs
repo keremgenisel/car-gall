@@ -160,6 +160,21 @@ public sealed class GaleriPublicOkumaTests(DealershipDatabase database)
         Assert.Equal(["Z-Atasehir", "A-Bakirkoy"], (await OkuAsync(context, "en")).Branches.Select(branch => branch.Name));
     }
 
+    [Fact(DisplayName = "0014/AC-66: Şubeler varsayılan dildeki adın ordinal sırasıyla dizilir — kültür sırasından ayırt edilerek: \"Zeytinburnu\" \"Çamlıca\"dan önce gelir")]
+    public async Task Siralar_Ordinal_KulturSirasiDegil()
+    {
+        // QA BULGU-2 — "Ataşehir"/"Bakırköy" ordinal ve Türkçe kültür sırasında AYNI sonucu
+        // veriyordu; test sıranın varlığını ölçüyor, ordinal olduğunu ölçmüyordu. Bu çift
+        // ikisini ayırır: ordinal sırada 'Z' (U+005A) 'Ç'den (U+00C7) önce, tr-TR'de Ç önce.
+        await using DealershipDbContext context = database.CreateContext();
+        await using IDbContextTransaction islem = await context.Database.BeginTransactionAsync();
+        await SubeleriTemizleAsync(context);
+        await SubeEkleAsync(context, "Çamlıca", "Adres 1", "+902165550001");
+        await SubeEkleAsync(context, "Zeytinburnu", "Adres 2", "+902125550002");
+
+        Assert.Equal(["Zeytinburnu", "Çamlıca"], (await OkuAsync(context, "tr")).Branches.Select(branch => branch.Name));
+    }
+
     private static async Task<PublicGalleryDto> OkuAsync(DealershipDbContext context, string locale)
     {
         PublicGalleryDto? galeri = await new PublicGalleryQueries(context, Tr).GetAsync(locale, CancellationToken.None);
