@@ -5,18 +5,21 @@
 | **Durum** | Taslak |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) · `Dealership` (galeri profilinin public okuması — bkz. Açık soru **S5**) |
-| **Bağımlı spec'ler** | `0001`, `0002`, `0003`, `0012c`, `frontend-001`, `frontend-002`. **Sıra çelişkisi için bkz. Açık soru S1.** |
+| **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (okuma yüzeyi) · `VehicleReference` (okuma yüzeyi) · `Dealership` (galeri profilinin public okuması — **D6**) |
+| **Bağımlı spec'ler** | `0001`, `0002`, `0003`, `0012c`, `frontend-001`, `frontend-002`. Sıra kararı: **D1**. |
 | **Dayanak** | ADR 0003 Ek 1, sıra #7 |
-| **Karar bekliyor** | **S1–S5** — § Açık sorular (5 soru, **5 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
+| **Karar bekliyor** | **S6** — § Açık sorular (1 soru, **1 öneri yazılı**). S1–S5 karara bağlandı (**D1–D6**, 2026-11-17). S6 marka bölümünün kapsamını belirliyor; gelmeden kriterler yazılmaz. |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — beş açık sorunun cevabı
-> onları belirliyor. **S1 bu spec'in sıradaki yerini sorguluyor.**
+> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — **S6**'nın cevabını bekliyor.
 >
 > **Context yeniden doğrulandı (2026-11-17).** Taslak 2026-10-05'te yazılmıştı; arada
 > `0011`, `0012c` ve `0013` kapandı. Dört tespit işlendi (B1–B4, Takım Yöneticisi onayı
 > 2026-11-17): **S3** yeniden yazıldı (B1), **S5** eklendi (B2), doğrulama uyarısı
-> kaldırıldı (B3), **S4**'ün KVKK uyarısı cevaplandı (B4). R/C bölümlerine dokunulmadı.
+> kaldırıldı (B3), **S4**'ün KVKK uyarısı cevaplandı (B4).
+>
+> **CLARIFY turu (2026-11-17).** S1–S5'in beş önerisi Takım Yöneticisi tarafından
+> onaylandı ve **D1–D6** olarak işlendi; R1, R2, R3, R5, R7 kararlara göre yazıldı, **X9** ve
+> **X10** eklendi. Kararlar işlenirken **R4** ile **D1** arasında bir çelişki çıktı → **S6**.
 
 ---
 
@@ -41,18 +44,24 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
 
 ## Requirements
 
-- **R1.** Ana sayfa, galerinin **adını ve logosunu** gösterir; ikisi galeri profilinden gelir.
-  → `0003` R1.
-- **R2.** Ana sayfa bir **giriş bölümü** (başlık + açıklama) taşır. Metnin kaynağı için
-  bkz. Açık soru **S2**.
-- **R3.** Ana sayfa **öne çıkan araçları** gösterir. Seçim ölçütü için bkz. Açık soru **S3**.
+- **R1.** Ana sayfa, galerinin **adını** gösterir; ad galeri profilinden gelir. Logo bu
+  sürümde yoktur (**X9**). → `0003` R1, **D6**.
+- **R2.** Ana sayfa bir **giriş bölümü** (başlık + açıklama) taşır. Metin üç dilde
+  **çeviri kataloğundan** gelir; galeri onu panelden değiştiremez. → **D2**.
+- **R3.** Ana sayfa **öne çıkan araçları** gösterir: galerinin panelde **öne çıkardığı** ve
+  vitrinde görünür (C3) ilanlar, vitrin listesiyle **aynı sırada**, **en çok altı** tane.
+  Öne çıkarılmış ilan altıdan azsa yalnız onlar gösterilir; boşluk öne çıkarılmamış
+  ilanla **doldurulmaz**. Hiç yoksa bölüm **görünmez**. → **D3**, **D4**.
 - **R4.** Ana sayfa, stoktaki **markaları** ve her markadaki **araç sayısını** gösterir;
-  markaya tıklamak o markaya daraltılmış listeye gider.
+  markaya tıklamak o markaya daraltılmış listeye gider. **Bu madde D1 ile çelişiyor →
+  Açık soru S6.**
 - **R5.** Ana sayfa bir **daraltma formu** taşır; form doldurulup gönderildiğinde ziyaretçi
-  o daraltmanın uygulandığı listeye gider. Formun eksenleri için bkz. Açık soru **S1**.
+  o daraltmanın uygulandığı listeye gider. Formun bu sürümdeki tek ekseni **kasa
+  tipidir**; diğer eksenler **X10**. → **D1**.
 - **R6.** Form, yayındaki **toplam araç sayısını** gösterir.
-- **R7.** Ana sayfa bir **altlık** taşır: galeri adresi, çalışma bilgisi, dil bağlantıları ve
-  kurumsal sayfa bağlantıları. Kurumsal sayfaların varlığı için bkz. Açık soru **S4**.
+- **R7.** Ana sayfa bir **altlık** taşır: galeri adresi ve çalışma bilgisi (galeri
+  profilinden), araç listesi ve dil bağlantıları. Altlık **yalnız var olan hedeflere**
+  bağlantı verir; var olmayan kurumsal sayfaların bağlantısı konulmaz. → **D5**, **D6**.
 - **R8.** Ana sayfa **yükleniyor**, **boş** (vitrinde hiç yayında araç yok) ve **hata**
   durumlarını ele alır; bölümler **kısmen** yüklenemezse sayfanın tamamı düşmez.
   → `docs/frontend.md` § 3.
@@ -105,6 +114,14 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   (sıra #11). Altlıktaki bağlantılar için bkz. **S4**.
 - **X7.** **JSON-LD ve meta enjeksiyonu** — *neden:* `0004` (SEO) bu konunun sahibidir.
 - **X8.** **"En çok görüntülenen" veya popülerlik ölçütü** — *neden:* `Engagement` modülü yok.
+- **X9.** **Galeri logosu** — yüklenmesi, galeriye atanması ve ana sayfada gösterilmesi.
+  *neden:* logo bugün ne atanabiliyor ne gösterilebiliyor (§ Context, B2); bunu kapatmak bir
+  panel akışını bu spec'e çeker. Ayrı bir kart olarak önerilir. Ana sayfa galeri adını
+  metin olarak gösterir. → **D6**.
+- **X10.** **Daraltma formunun kasa tipi dışındaki eksenleri** (mockup'taki marka, yıl,
+  fiyat aralığı). *neden:* bu eksenler `0015`'in işi (sıra #9); `0001` X2/X3 onları kapsam
+  dışı bırakmıştı. Eksenler `0015` ile geldiğinde formun genişlemesi o spec'in ya da ayrı
+  bir kartın işidir. → **D1**.
 
 ---
 
@@ -142,7 +159,9 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   Diller). Kartlarda "Tramersiz", "Yeni geldi", "Takasa açık", "Hibrit" rozetleri var.
 - **Mockup'ın rozetleri `0001`'de yok.** `0001` R2 yalnızca **Rezerve** rozetini tanımladı;
   diğer dördü yeni kavramlar ve bu spec'te **kapsam dışıdır** (X3 ile ilişkili: "Yeni geldi"
-  türetilebilir, "Takasa açık" opsiyonel alan, "Öne çıkan" `Content` slotu).
+  türetilebilir, "Takasa açık" opsiyonel alan). *(2026-11-17 notu: bu satır ilk yazıldığında
+  "öne çıkan" bir `Content` slotu sayılıyordu; `0012c`'den sonra öne çıkarma bir panel
+  eylemidir — B1, D3.)*
 
 ### Geçerli kurallar
 
@@ -164,9 +183,74 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
 5. **Altlıkta olmayan sayfaya bağlantı koymak.** `Content` yok; "Hakkımızda" bağlantısı
    404'e gider (S4).
 
+### Verilen kararlar — CLARIFY turu, 2026-11-17
+
+S1–S5'in beş önerisi Takım Yöneticisi tarafından **olduğu gibi onaylandı** (2026-11-17).
+Önerilerin gerekçe ve bedelleri § Açık sorular'da duruyor; burada yalnız kararın kendisi ve
+dokunduğu madde yazılı.
+
+**D1 — Ana sayfa sıra #7'de, kırpılmış sürümüyle kalır (S1).** Daraltma formu yalnız
+**kasa tipi** ekseniyle gelir; diğer eksenler `0015`'e kalır (**X10**). Öne çıkan araçlar
+`0012c`'nin öne çıkarma eylemine dayanır (D3). Bülten yoktur (X2). *Bedel kabul edildi:*
+ana sayfa iki kez elden geçer, ilk sürümdeki form mockup'tan eksik görünür. → R5, X10.
+
+**D2 — Giriş metni çeviri kataloğundan gelir (S2).** Üç dilde sabit metindir. *Bedel kabul
+edildi:* galeri metni kendisi değiştiremez, değişiklik bir dağıtım ister. `Content` (#11)
+geldiğinde bir taşıma işi doğar. → R2.
+
+**D3 — Öne çıkan araçlar: öne çıkarılmış ilanlardan en çok altısı, liste sırasıyla (S3a).**
+Vitrinde görünen (C3) ve galerinin panelde öne çıkardığı ilanlar, vitrin listesiyle aynı
+sırada gösterilir. *Bedel kabul edildi:* galeri altıdan fazlasını öne çıkarırsa hangi altısının
+görüneceğini doğrudan seçemez. → R3.
+
+**D4 — Öne çıkarılmış ilan yoksa bölüm görünmez; boşluk doldurulmaz (S3b).** *Bedel kabul
+edildi:* öne çıkarmayı kullanmayan bir galerinin ana sayfasında "Vitrin" bandı yoktur.
+→ R3. R8'in "boş vitrin" durumu (hiç yayında araç yok) bundan **ayrıdır**: vitrinde araç
+olup öne çıkarılmış ilan olmaması bir hata ya da boş durum değil, bölümün yokluğudur.
+
+**D5 — Altlık yalnız var olan hedeflere bağlantı verir (S4).** Araç listesi, dil
+bağlantıları ve galeri iletişim bilgisi. Kurumsal sayfa bağlantısı yoktur. → R7.
+
+**D6 — Galeri profilinin public okuması bu spec'e girer; logo girmez (S5).** Galeri adı,
+şube adresleri ve çalışma bilgisi ziyaretçiye okunur hâle gelir; spec `Dealership`'e de
+dokunur. Logo ayrı bir kart olur ve ana sayfa adı metin olarak gösterir. → R1, R7, X9.
+
 ---
 
 ## Açık sorular
+
+> **S1–S5 karara bağlandı** (2026-11-17, öneriler olduğu gibi onaylandı → **D1–D6**,
+> § Context). Metinleri gerekçe ve bedel kaydı olarak aşağıda duruyor. **Açık olan
+> yalnız S6.**
+
+**S6. Marka bölümü (R4) bu sürümde ne yapar? — D1 ile çelişki.**
+*(2026-11-17, kararlar işlenirken çıktı.)* R4 iki şey istiyor: stoktaki markaları sayılarıyla
+**göstermek** ve markaya tıklayınca **o markaya daraltılmış listeye** gitmek. D1 ise marka
+eksenini `0015`'e bıraktı (X10). Vitrin listesi bugün yalnız kasa tipine göre daraltılabiliyor
+(`0001` X3); `0015` R1 marka eksenini getirecek ama taslak hâlinde. Yani R4'ün ikinci yarısı
+**bugün gidecek bir hedef bulamıyor.** Ayrıca birinci yarısı için de stokta marka sayan bir
+okuma yok (§ Context, B3), yani marka bölümü hangi seçenekte kalırsa kalsın bu spec'e bir okuma
+yüzeyi ekliyor.
+
+*Öneri:* marka bölümü **kalır, ama yalnız gösterir**: stoktaki markalar ve her markadaki
+araç sayısı listelenir; bu sürümde **tıklanamaz**. Marka ekseni `0015` ile geldiğinde
+bağlantı olma işi ya `0015`'in kapsamına ya da ayrı bir karta yazılır. X1'in "marka listesi
+daraltılmış listeye gider" gerekçesi buna göre düzeltilir.
+*Gerekçe:* Intent'in başarı ölçütü *"ziyaretçi ana sayfadan ayrılmadan stoğun ne içerdiğini
+anlar"* — bunu doğrudan karşılayan bölüm marka listesidir; listeyi çıkarmak ölçütü zayıflatır.
+Tıklanabilirlik ise gezinme kolaylığıdır, ölçütün kendisi değil. D1'in mantığıyla da aynı:
+form tek eksenle gelip sonra büyüyor, marka listesi de önce gösterip sonra bağlanıyor.
+*Bedel:* mockup'ta bağlantı gibi duran bir liste bu sürümde bağlantı değildir; ziyaretçi
+tıklamayı deneyebilir. Ana sayfa üçüncü bir noktada daha (form, öne çıkan, marka) ikinci kez
+elden geçer. Stokta marka sayan okuma bu spec'e girer.
+*Elenen alternatifler:* (a) **marka bölümünü bu sürümden çıkarmak** (X'e yazmak) — spec en çok
+bununla küçülür ve marka okuması `0015`'e kalır; ama Intent'in başarı ölçütü yalnız öne çıkan
+altı ilana ve toplam sayıya yaslanır. Takım Yöneticisi spec'i küçültmeyi öncelerse geçerli
+ikinci seçenek budur. (b) **Marka eksenini `0015`'ten bu spec'e çekmek** — mockup'a tam uyar
+ama D1'i deler ve `0015`'in R1'ini iki spec'e böler. (c) **Markaya tıklamak süzülmemiş listeye
+gider** — elendi: tıklamanın sonucu tıklanan şeyle ilgisiz olur.
+
+---
 
 **S1. Bu spec sıradaki yerinde kalabilir mi? Üç bağımlılığı kendisinden sonra.**
 ADR 0003 Ek 1 ana sayfayı **#7**'ye koydu. Ama mockup'ın ana sayfası:
@@ -256,9 +340,11 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 
 ## Acceptance Criteria
 
-> Beş açık soru cevaplandıktan sonra yazılacak. En az şu kümeleri kapsayacak:
-> galeri adı/logosu · giriş bölümü · öne çıkan araçların seçimi ve sırası · marka listesi ve
-> sayımı · daraltma formunun listeye geçişi · toplam araç sayısı · boş vitrin · kısmi hata ·
+> S6 cevaplandıktan sonra yazılacak. En az şu kümeleri kapsayacak:
+> galeri adı ve profil bilgisi (D6) · giriş bölümü (D2) · öne çıkan araçların seçimi, sırası,
+> altıdan az ve hiç olmama hâli (D3, D4) · marka listesi ve sayımı (S6'ya göre) · daraltma
+> formunun kasa tipiyle listeye geçişi (D1) · toplam araç sayısı · altlığın yalnız var olan
+> hedeflere bağlanması (D5) · boş vitrin · kısmi hata ·
 > locale önekleri ve geçersiz önekte 404 · RTL ve karışık yönlü marka adı · LCP ve CLS ·
 > gizli alanların yanıtta bulunmaması.
 
@@ -267,6 +353,7 @@ ama bir panel akışını ana sayfa spec'ine çeker.
 ## Definition of Done
 
 - [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
+      *(S1–S5 → D1–D6 işlendi, 2026-11-17; S6 açık.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0014-ac<n>.png`), boş ve hata durumları dâhil,
       Arapça görüntü de var.
