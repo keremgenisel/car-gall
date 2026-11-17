@@ -430,11 +430,13 @@ eklemediği için AC-7 kendiliğinden sağlanır; arama motoru eski adresi yenis
 edildi. *Elenen alternatif:* istemcide `history.replaceState` — ana sayfa bir an görünür ve
 gereksiz okuma yapar. → D9, AC-6, AC-7, AC-69, AC-70.
 
-**D22 — Uç etkin locale'leri sunucunun bastığı `<html data-locales>` özniteliğinden okur
-(P3).** `IndexHtmlRenderer`, yapılandırmadaki etkin locale'leri boşlukla ayrılmış liste
-olarak basar; uç altlığın dil bağlantılarını bu listeden türetir (D14). *Gerekçe:* uç bugün
+**D22 — Uç etkin locale'leri sunucunun bastığı `<meta name="enabled-locales">`
+etiketinden okur (P3).** `IndexHtmlRenderer`, yapılandırmadaki etkin locale'leri
+`</head>`'den önce boşlukla ayrılmış liste olarak basar; *(ilk yazımda `<html
+data-locales>` özniteliğiydi; `<html>` etiketini birebir ölçen tema testlerini
+(`TemaEnjeksiyonuTests`) bozmamak için meta etikete taşındı — amaç aynı)*; uç altlığın dil bağlantılarını bu listeden türetir (D14). *Gerekçe:* uç bugün
 locale listesini koda sabit üç dil olarak taşıyor (`SUPPORTED_LOCALES`); tema özniteliği
-aynı yolla basılıyor ve fazladan bir istek gerekmiyor. *Not:* üst çubuktaki dil
+de sunucudan basılıyor ve fazladan bir istek gerekmiyor. *Not:* üst çubuktaki dil
 değiştiricinin (`LocaleSwitcher.tsx`) aynı kusuru taşıdığı ölçüldü — iki dilli kurulumda da
 `/ar/` bağlantısı basıyor. **Bu spec'in kapsamında değildir** ve ayrı bir kart olarak
 önerilir. → AC-67.
@@ -476,7 +478,7 @@ Dal `feature/0014-ana-sayfa`; tek PR, adım başına commit (`[plan 0014/<n>]`).
    42–44, 48, 66, 68.
 2. `VehicleCatalog` — öne çıkan okuması; liste sıralaması tek yere çıkarılır
    (`ShowcaseOrdering`) ki iki yüzey aynı sırayı paylaşsın (AC-19). AC-17–25.
-3. `Host` — eski adres yönlendirmesi (D21) ve `data-locales` (D22). AC-2–4, 6, 8, 69, 70.
+3. `Host` — eski adres yönlendirmesi (D21) ve `enabled-locales` meta etiketi (D22). AC-2–4, 6, 8, 69, 70.
 4. Uç rotaları — `home` rotası, `/{locale}/cars`, üç "Vitrine dön" (D9). AC-5, 9–11.
 5. Uç — API çağrıları, ana sayfa bölümleri, altlık, durumlar, çeviri anahtarları.
    AC-1, 12, 13, 16–28, 37–47, 49–56, 62–68, 71–74.
