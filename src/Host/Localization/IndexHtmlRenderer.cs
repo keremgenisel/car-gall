@@ -19,9 +19,11 @@ namespace CarGallery.Host.Localization;
 /// sessizce olur. Inline `style` özniteliği `:root` kuralını her zaman yener ve sıraya hiç
 /// bakmaz.</para>
 /// </summary>
-internal sealed class IndexHtmlRenderer(IWebHostEnvironment environment, ThemeOptions theme)
+internal sealed class IndexHtmlRenderer(IWebHostEnvironment environment, ThemeOptions theme, LocalePrefixResolver locales)
 {
     private const string Placeholder = "<html lang=\"\" dir=\"\">";
+
+    private const string HeadEnd = "</head>";
 
     public async Task WriteAsync(HttpContext context, Locale locale)
     {
@@ -46,6 +48,15 @@ internal sealed class IndexHtmlRenderer(IWebHostEnvironment environment, ThemeOp
         html = html.Replace(
             Placeholder,
             $"<html lang=\"{locale.Code}\" dir=\"{direction}\"{themeAttribute}>",
+            StringComparison.Ordinal);
+
+        // 0014 D22 — uç etkin locale'leri bilmiyor (kodda sabit üç dil var); iki dilli bir
+        // kurulumda altlığın üçüncü dil bağlantısı 404'e giderdi. Liste yapılandırmadan
+        // basılır, ayrı bir istek gerekmez. `<html>` etiketine değil `<head>`'e yazılıyor:
+        // `<html>` etiketinin biçimini tema testleri birebir ölçüyor.
+        html = html.Replace(
+            HeadEnd,
+            $"<meta name=\"enabled-locales\" content=\"{string.Join(' ', locales.Enabled)}\" />{HeadEnd}",
             StringComparison.Ordinal);
 
         context.Response.ContentType = "text/html; charset=utf-8";

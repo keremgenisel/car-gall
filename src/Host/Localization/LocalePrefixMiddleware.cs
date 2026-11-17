@@ -12,6 +12,12 @@ internal sealed class LocalePrefixMiddleware(RequestDelegate next, LocalePrefixR
     /// </summary>
     internal const string AdminPathPrefix = "/admin";
 
+    /// <summary>`0014` **D9** — listenin adresi `/{locale}/cars`; ilan detayıyla aynı yol parçası.</summary>
+    internal const string ListSegment = "cars";
+
+    /// <summary>`0014` **D17** — listenin okuduğu üç parametre; başkası (`utm_source`) yönlendirmez.</summary>
+    private static readonly string[] ListParameters = ["bodyType", "page", "pageSize"];
+
     public async Task InvokeAsync(HttpContext context)
     {
         PathString path = context.Request.Path;
@@ -67,7 +73,24 @@ internal sealed class LocalePrefixMiddleware(RequestDelegate next, LocalePrefixR
             return;
         }
 
+        // 0014 D17, D21 — liste `/{locale}/cars`'a taşındı. Eski liste adresi (`/{locale}/`)
+        // listenin okuduğu bir parametre taşıyorsa ziyaretçi AYNI sorguyla listeye gider.
+        // HTTP yönlendirmesi tarayıcı geçmişine ara kayıt eklemez (AC-7) ve ana sayfa hiç
+        // yüklenmez. Sorgu bayt bayt taşınır: normalizasyon `0001` C14'ün işi (AC-70).
+        if (IsLocaleRoot(path, firstSegment) && CarriesListParameter(context.Request.Query))
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.MovedPermanently;
+            context.Response.Headers.Location = $"/{firstSegment}/{ListSegment}{context.Request.QueryString.Value}";
+            return;
+        }
+
         Locale locale = resolver.Resolve(firstSegment);
         await renderer.WriteAsync(context, locale);
     }
+
+    private static bool IsLocaleRoot(PathString path, string localeSegment) =>
+        path.Value is { } value && (value == $"/{localeSegment}" || value == $"/{localeSegment}/");
+
+    private static bool CarriesListParameter(IQueryCollection query) =>
+        ListParameters.Any(query.ContainsKey);
 }
