@@ -182,6 +182,32 @@ describe('0016b — büyütülmüş görünüm', () => {
     expect(lightboxSayac()).toBe('2 / 3')
   })
 
+  it.each(['tr', 'ar'] as const)(
+    "0016b/AC-47 (tek adım, %s): büyütülmüş görünümde ok tuşu ve kaydırma her seferinde TAM BİR görsel ilerler — 1 / 5'ten tek basışla 2 / 5",
+    async (locale) => {
+      // Uçtaki ölçüm çift adımı kırpıyordu (triyaj BULGU-1): ortadan, tek basışla ölçülür.
+      const bes = [gorsel(1), gorsel(2), gorsel(3), gorsel(4), gorsel(5)]
+      await ekran(bes, locale)
+      fireEvent.click(screen.getByTestId('gallery-enlarge'))
+      const kutu = within(screen.getByTestId('lightbox'))
+      const lightboxSayac = () => kutu.getByTestId('lightbox-counter').textContent
+      const ileri = locale === 'ar' ? 'ArrowLeft' : 'ArrowRight'
+      const geri = locale === 'ar' ? 'ArrowRight' : 'ArrowLeft'
+      const [ileriBas, ileriSon] = locale === 'ar' ? [100, 300] : [300, 100]
+
+      fireEvent.keyDown(kutu.getByTestId('lightbox-image'), { key: ileri })
+      expect(lightboxSayac()).toBe('2 / 5')
+      fireEvent.keyDown(kutu.getByTestId('lightbox-image'), { key: ileri })
+      expect(lightboxSayac()).toBe('3 / 5')
+      fireEvent.keyDown(kutu.getByTestId('lightbox-image'), { key: geri })
+      expect(lightboxSayac()).toBe('2 / 5')
+      kaydir(kutu.getByTestId('lightbox-image'), ileriBas, ileriSon)
+      expect(lightboxSayac()).toBe('3 / 5')
+      kaydir(kutu.getByTestId('lightbox-image'), ileriSon, ileriBas)
+      expect(lightboxSayac()).toBe('2 / 5')
+    },
+  )
+
   it('0016b/AC-49: Büyütülmüş görünüm kapatma düğmesiyle kapanır', async () => {
     await ekran(uc)
     fireEvent.click(screen.getByTestId('gallery-enlarge'))

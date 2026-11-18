@@ -330,14 +330,29 @@ test.describe('0016b — büyütülmüş görünüm', () => {
   test('0016b/AC-47: büyütülmüş görünümde ok tuşları R3 gibi çalışır ve uçta dönmez', async ({
     page,
   }) => {
+    const lightboxSayac = kutu(page).getByTestId('lightbox-counter')
+
+    // Tek basış TAM BİR adım: ortadan ölçülür. Uçta ölçmek çift adımı kırpıyor ve
+    // gizliyordu (triyaj BULGU-1).
+    await ac(page, await otuzGorselli(page))
+    await page.getByTestId('gallery-enlarge').click()
+    await page.keyboard.press('ArrowRight')
+    await expect(lightboxSayac).toHaveText('2 / 30')
+    await page.keyboard.press('ArrowRight')
+    await expect(lightboxSayac).toHaveText('3 / 30')
+    await page.keyboard.press('ArrowLeft')
+    await expect(lightboxSayac).toHaveText('2 / 30')
+    await expect(sayac(page)).toHaveText('2 / 30')
+
+    // Uçlarda dönmez.
     await ac(page, await ucGorselli(page))
     await page.getByTestId('gallery-enlarge').click()
     await page.keyboard.press('ArrowLeft')
-    await expect(kutu(page).getByTestId('lightbox-counter')).toHaveText('1 / 3')
-    await page.keyboard.press('ArrowRight')
-    await page.keyboard.press('ArrowRight')
-    await page.keyboard.press('ArrowRight')
-    await expect(kutu(page).getByTestId('lightbox-counter')).toHaveText('3 / 3')
+    await expect(lightboxSayac).toHaveText('1 / 3')
+    for (const beklenen of ['2 / 3', '3 / 3', '3 / 3']) {
+      await page.keyboard.press('ArrowRight')
+      await expect(lightboxSayac).toHaveText(beklenen)
+    }
   })
 
   test("0016b/AC-50: görünüm açıkken Tab'a art arda 15 kez basıldığında odak her seferinde görünümün içindedir", async ({

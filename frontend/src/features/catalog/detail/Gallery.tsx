@@ -52,49 +52,56 @@ export function Gallery({ images, modelName, modelYear, overlay }: Props) {
     total,
   })
 
-  const navigation = useNavigation(many, rtl, go)
+  // İki AYRI dinleyici kümesi: satır içi galeri ve büyütülmüş görünüm kaydırmanın başlangıç
+  // noktasını paylaşmaz. Görünüm `.gallery`'nin DIŞINDA basılır — içinde basıldığında
+  // görünümdeki her tuş `.gallery`'ye de kabarcıklanıyor ve iki adım ilerliyordu
+  // (triyaj BULGU-1; AC-47 uçta ölçüldüğü için kırpılan çift adım görünmüyordu).
+  const inlineNavigation = useNavigation(many, rtl, go)
+  const lightboxNavigation = useNavigation(many, rtl, go)
 
   return (
-    <div className="gallery" data-testid="gallery" {...navigation}>
-      <div className="gallery__frame">
-        <button
-          type="button"
-          className="gallery__enlarge"
-          aria-label={t('detail.gallery.enlarge')}
-          data-testid="gallery-enlarge"
-          onClick={() => setEnlarged(true)}
-        >
-          {broken.has(index) ? (
-            <Placeholder label={alt} text={t('detail.gallery.unavailable')} />
-          ) : (
-            <img
-              /* Görsel değişince öğe YENİDEN kurulur: eski görsel yeni adresin
+    <>
+      <div className="gallery" data-testid="gallery" {...inlineNavigation}>
+        <div className="gallery__frame">
+          <button
+            type="button"
+            className="gallery__enlarge"
+            aria-label={t('detail.gallery.enlarge')}
+            data-testid="gallery-enlarge"
+            onClick={() => setEnlarged(true)}
+          >
+            {broken.has(index) ? (
+              <Placeholder label={alt} text={t('detail.gallery.unavailable')} />
+            ) : (
+              <img
+                /* Görsel değişince öğe YENİDEN kurulur: eski görsel yeni adresin
                  yüklenmesini beklerken çerçevede kalmaz. */
-              key={index}
-              className="gallery__image"
-              src={image.display.url}
-              srcSet={srcSet(image)}
-              sizes="(min-width: 1232px) 1200px, 100vw"
-              width={image.display.width}
-              height={image.display.height}
-              alt={alt}
-              /* İlk görsel LCP adayıdır (Tuzak 4); diğerleri yalnız gezinilince istenir. */
-              loading={index === 0 ? undefined : 'lazy'}
-              fetchPriority={index === 0 ? 'high' : undefined}
-              data-testid="gallery-image"
-              onError={() => setBroken((current) => new Set(current).add(index))}
-            />
-          )}
-        </button>
+                key={index}
+                className="gallery__image"
+                src={image.display.url}
+                srcSet={srcSet(image)}
+                sizes="(min-width: 1232px) 1200px, 100vw"
+                width={image.display.width}
+                height={image.display.height}
+                alt={alt}
+                /* İlk görsel LCP adayıdır (Tuzak 4); diğerleri yalnız gezinilince istenir. */
+                loading={index === 0 ? undefined : 'lazy'}
+                fetchPriority={index === 0 ? 'high' : undefined}
+                data-testid="gallery-image"
+                onError={() => setBroken((current) => new Set(current).add(index))}
+              />
+            )}
+          </button>
 
-        {overlay}
+          {overlay}
 
-        {many ? (
-          <Controls index={index} total={total} onPrevious={() => go(-1)} onNext={() => go(1)} />
-        ) : null}
+          {many ? (
+            <Controls index={index} total={total} onPrevious={() => go(-1)} onNext={() => go(1)} />
+          ) : null}
+        </div>
+
+        {many ? <Counter index={index} total={total} testId="gallery-counter" /> : null}
       </div>
-
-      {many ? <Counter index={index} total={total} testId="gallery-counter" /> : null}
 
       <Dialog
         open={enlarged}
@@ -103,7 +110,7 @@ export function Gallery({ images, modelName, modelYear, overlay }: Props) {
         className="lightbox"
         testId="lightbox"
       >
-        <div className="lightbox__content" {...navigation}>
+        <div className="lightbox__content" {...lightboxNavigation}>
           <button
             type="button"
             className="lightbox__close"
@@ -142,7 +149,7 @@ export function Gallery({ images, modelName, modelYear, overlay }: Props) {
           {many ? <Counter index={index} total={total} testId="lightbox-counter" /> : null}
         </div>
       </Dialog>
-    </div>
+    </>
   )
 }
 
