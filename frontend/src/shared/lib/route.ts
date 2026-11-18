@@ -33,6 +33,10 @@ export type AdminView =
    * açması (R15) ve kurtarma kodu yenilemesi (D24) ulaşılamaz kalırdı.
    */
   | 'two-factor'
+  /** `0017` R24 — "İçerik" bölümü: sayfa listesi ve SSS (`/admin/content`). */
+  | 'content'
+  /** `0017` — bir içerik sayfasının düzenlemesi (`/admin/content/{id}`). */
+  | 'content-edit'
 
 export type Route =
   /** 0014 **D9** — `/{locale}/` artık ana sayfadır; liste `/{locale}/cars`'a taşındı. */
@@ -40,10 +44,21 @@ export type Route =
   | { readonly kind: 'list' }
   | { readonly kind: 'detail'; readonly slug: string }
   /**
+   * `0017` **D9** — tek parçalı tanınmayan yol (`/{locale}/{slug}`) bir içerik sayfası
+   * adayıdır; yayında bir sayfaya çözülmezse "bulunamadı" ekranı basılır, listeye düşmez.
+   */
+  | { readonly kind: 'content'; readonly slug: string }
+  /**
    * 0010b **D29** — düzenleme adresi `/admin/vehicles/{id}`: liste onun üstü, kayıt
    * onun altı. Panel rotası artık kimlik taşıyor.
    */
-  | { readonly kind: 'admin'; readonly view: AdminView; readonly vehicleId?: string }
+  | {
+      readonly kind: 'admin'
+      readonly view: AdminView
+      readonly vehicleId?: string
+      /** `0017` — `content-edit` görünümünün sayfa kimliği. */
+      readonly pageId?: string
+    }
 
 /**
  * Rota adresten okunur; router kütüphanesi yoktur (0001'den gelen yapı).
@@ -63,6 +78,9 @@ function adminViewOf(segment: string | undefined): AdminView {
       return 'vehicle-new'
     case 'two-factor':
       return 'two-factor'
+    // `0017` R24 — panelin "İçerik" bölümü.
+    case 'content':
+      return 'content'
     default:
       return 'staff'
   }
@@ -95,6 +113,10 @@ export function parseRoute(pathname: string): Route {
         : { kind: 'admin', view: 'vehicle-edit', vehicleId }
     }
 
+    if (sectionSegment === 'content' && slugSegment !== undefined) {
+      return { kind: 'admin', view: 'content-edit', pageId: decodeURIComponent(slugSegment) }
+    }
+
     return { kind: 'admin', view: adminViewOf(sectionSegment) }
   }
 
@@ -108,7 +130,13 @@ export function parseRoute(pathname: string): Route {
     return { kind: 'home' }
   }
 
-  // D28 — tanınmayan alt yol (`/tr/foo`) listeye düşmeye devam eder (0001'den gelen davranış).
+  // `0017` D9 — `0014` D28'in "tanınmayan alt yol listeye düşer" davranışı TEK parçalı yol
+  // için kalkar: `/tr/foo` bir içerik sayfası adayıdır (AC-37). İki parçalı tanınmayan yol
+  // (`/tr/foo/bar`) eskisi gibi listeye düşer (AC-38).
+  if (sectionSegment !== LISTING_SEGMENT && slugSegment === undefined) {
+    return { kind: 'content', slug: decodeURIComponent(sectionSegment) }
+  }
+
   if (sectionSegment !== LISTING_SEGMENT || slugSegment === undefined) {
     return { kind: 'list' }
   }
@@ -124,6 +152,16 @@ export function listPath(locale: AppLocale): string {
 /** 0014 — ana sayfanın adresi; altlığın dil bağlantıları (AC-46). */
 export function homePath(locale: AppLocale): string {
   return `/${locale}/`
+}
+
+/** `0017` R11 — içerik sayfasının adresi: `/{locale}/{slug}`. */
+export function contentPath(locale: AppLocale, slug: string): string {
+  return `/${locale}/${encodeURIComponent(slug)}`
+}
+
+/** `0017` — içerik sayfasının panel düzenleme adresi. */
+export function contentEditPath(pageId: string): string {
+  return `/${ADMIN_SEGMENT}/content/${encodeURIComponent(pageId)}`
 }
 
 /** Karttan detaya giden adres (AC-2, AC-4). */

@@ -12,6 +12,8 @@ import { ForcePasswordChangePage } from '../../features/identity/ForcePasswordCh
 import { LoginPage } from '../../features/identity/LoginPage'
 import { StaffListPage } from '../../features/identity/StaffListPage'
 import { TwoFactorPage } from '../../features/identity/TwoFactorPage'
+import { ContentAdminPage } from '../../features/content/admin/ContentAdminPage'
+import { ContentEditPage } from '../../features/content/admin/ContentEditPage'
 import { EmptyState } from '../../shared/ui'
 
 type Gate =
@@ -40,9 +42,11 @@ type Gate =
 export function AdminApp({
   view = 'staff',
   vehicleId,
+  pageId,
 }: {
   readonly view?: AdminView
   readonly vehicleId?: string
+  readonly pageId?: string
 }) {
   const { locale, t } = useLocale()
   const [gate, setGate] = useState<Gate>({ kind: 'checking' })
@@ -176,6 +180,19 @@ export function AdminApp({
         >
           {t('admin.nav.vehicles')}
         </a>
+        {/*
+          `0017` R24 — "İçerik" yalnız İçerik Editörü ve Yöneticiye basılır (D24). Diğer
+          bağlantılar bu spec'ten önceki hâlinde kalır (AC-111).
+        */}
+        {canEditContent(gate.session.role) ? (
+          <a
+            className="admin-shell__nav-link"
+            href={adminPath('content')}
+            aria-current={view === 'content' || view === 'content-edit' ? 'page' : undefined}
+          >
+            {t('admin.nav.content')}
+          </a>
+        ) : null}
       </nav>
 
       <main className="admin-shell__content">
@@ -189,6 +206,19 @@ export function AdminApp({
           <VehicleMediaPage vehicleId={vehicleId} />
         ) : null}
         {view === 'password' ? <ForcePasswordChangePage /> : null}
+        {view === 'content' && canEditContent(gate.session.role) ? <ContentAdminPage /> : null}
+        {view === 'content-edit' && pageId !== undefined && canEditContent(gate.session.role) ? (
+          <ContentEditPage pageId={pageId} />
+        ) : null}
+        {(view === 'content' || view === 'content-edit') && !canEditContent(gate.session.role) ? (
+          <div className="admin-page">
+            <EmptyState
+              title={t('admin.noAccess.title')}
+              description={t('admin.noAccess.body')}
+              testId="admin-no-access"
+            />
+          </div>
+        ) : null}
         {view === 'two-factor' ? <TwoFactorPage /> : null}
 
         {/*
@@ -219,4 +249,13 @@ export function AdminApp({
       </main>
     </div>
   )
+}
+
+/**
+ * `0017` D24/D25 — "İçerik" bölümünü görebilen roller. Bu bir güvenlik sınırı DEĞİL:
+ * sınır sunucudaki `admin.content` politikasıdır (AC-109). Burada yalnız, yetkisi olmayana
+ * `403`'e yürüyen bir bağlantı basılmaz.
+ */
+function canEditContent(role: string): boolean {
+  return role === 'manager' || role === 'content_editor'
 }

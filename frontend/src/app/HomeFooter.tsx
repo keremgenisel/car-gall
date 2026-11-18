@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { fetchContentNavigation, type ContentNavigationLink } from '../shared/api/content'
 import { enabledLocales } from '../shared/lib/locale'
-import { homePath, listPath } from '../shared/lib/route'
+import { contentPath, homePath, listPath } from '../shared/lib/route'
 import { useLocale } from './localeContext'
 
 /**
@@ -12,6 +13,7 @@ import { useLocale } from './localeContext'
  */
 export function HomeFooter({ branches }: { readonly branches: ReactNode }) {
   const { locale: current, t } = useLocale()
+  const corporate = useCorporateLinks()
 
   return (
     <footer className="home-footer" id="contact" data-testid="home-footer">
@@ -24,6 +26,33 @@ export function HomeFooter({ branches }: { readonly branches: ReactNode }) {
             {t('home.footer.cars')}
           </a>
         </nav>
+
+        {/*
+          `0017` R21 — "Kurumsal" kolonu: sistem sayfaları sabit sırada (about, faq, privacy,
+          cookies), yalnız bu dilde yayında olanlar; hiçbiri yoksa kolon HİÇ basılmaz
+          (AC-89). Bağlantı metni sayfanın bu dildeki başlığıdır (D35); adres güncel slug'a
+          gider, eski adrese ve 301'e uğramaz (AC-92). Okuma başarısız olursa kolon basılmaz:
+          altlık bir ikincil gezinmedir ve hata ekranı gerektirmez.
+        */}
+        {corporate.length === 0 ? null : (
+          <nav
+            className="home-footer__nav"
+            aria-label={t('home.footer.corporate')}
+            data-testid="footer-corporate"
+          >
+            <h2 className="home-footer__heading">{t('home.footer.corporate')}</h2>
+            {corporate.map((link) => (
+              <a
+                key={link.systemKey}
+                className="home-footer__link"
+                href={contentPath(current, link.slug)}
+                dir="auto"
+              >
+                {link.title}
+              </a>
+            ))}
+          </nav>
+        )}
 
         <nav className="home-footer__nav" aria-label={t('home.footer.languages')}>
           <h2 className="home-footer__heading">{t('home.footer.languages')}</h2>
@@ -42,4 +71,35 @@ export function HomeFooter({ branches }: { readonly branches: ReactNode }) {
       </div>
     </footer>
   )
+}
+
+/** `0017` R21 — o dilde yayında olan sistem sayfalarının bağlantıları. */
+function useCorporateLinks(): readonly ContentNavigationLink[] {
+  const { locale } = useLocale()
+  const [links, setLinks] = useState<{
+    readonly locale: string
+    readonly items: readonly ContentNavigationLink[]
+  }>({
+    locale,
+    items: [],
+  })
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    fetchContentNavigation(locale, controller.signal)
+      .then((items) => setLinks({ locale, items }))
+      .catch((cause: unknown) => {
+        // İptal edilen eski istek yeni dilin bağlantılarını ezmesin.
+        if (cause instanceof DOMException && cause.name === 'AbortError') {
+          return
+        }
+
+        setLinks({ locale, items: [] })
+      })
+
+    return () => controller.abort()
+  }, [locale])
+
+  return links.locale === locale ? links.items : []
 }

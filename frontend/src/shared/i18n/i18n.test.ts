@@ -54,6 +54,8 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           axes: 'Yakıt',
           axis: 'Yakıt',
           parts: 'Tavan',
+          // 0017 — panelin eksik dil göstergesi ve SSS sıralama düğmeleri.
+          question: 'Takas?',
           // 0016b — galeri sayacı ve alt şablonu; harita listesinin satırı.
           index: 1,
           part: 'Tavan',
