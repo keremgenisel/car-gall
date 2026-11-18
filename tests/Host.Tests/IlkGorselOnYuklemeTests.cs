@@ -101,7 +101,7 @@ public sealed class IlkGorselOnYuklemeTests
 
     private static async Task<string> RenderAsync(string adres, IShowcaseListingDetailQueries detay)
     {
-        IndexHtmlRenderer renderer = new(new SabitWebRoot(), ThemeOptions.Default, new LocalePrefixResolver("tr", ["tr", "ar", "en"]));
+        IndexHtmlRenderer renderer = new(new SabitWebRoot(), ThemeOptions.Default, new LocalePrefixResolver("tr", ["tr", "ar", "en"]), Microsoft.Extensions.Logging.Abstractions.NullLogger<IndexHtmlRenderer>.Instance);
 
         DefaultHttpContext context = new()
         {

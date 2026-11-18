@@ -19,8 +19,9 @@ public sealed class GaleriPublicUcTests(HostFactory factory) : IClassFixture<Hos
         using JsonDocument belge = JsonDocument.Parse(await client.GetStringAsync("/api/dealership/gallery?locale=tr"));
 
         // İzin listesi ANAHTAR KÜMESİYLE ölçülür, yasak alanların yokluğuyla değil: yarın
-        // eklenen bir alan da bu testi kırar (D15).
-        Assert.Equal(["branches", "commercialName"], AnahtarlarSirali(belge.RootElement));
+        // eklenen bir alan da bu testi kırar (D15). `0020` D15 — galerinin adı artık görünen
+        // addır (`commercialName` → `displayName`); beklenen değişiklik, gerileme değil.
+        Assert.Equal(["branches", "displayName"], AnahtarlarSirali(belge.RootElement));
 
         JsonElement subeler = belge.RootElement.GetProperty("branches");
         Assert.True(subeler.GetArrayLength() > 0, "seed en az bir aktif şube taşıyor");
