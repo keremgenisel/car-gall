@@ -2,16 +2,16 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
+| **Durum** | Kararlar verildi (2026-11-18 — Takım Yöneticisi (ajan) kararı); kabul kriterleri Analist turunu bekliyor (**D15**) |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Content` (yeni — bugün hiç yok) · `frontend/` public vitrin + panel |
 | **Bağımlı spec'ler** | `0006` (roller: İçerik Editörü — tamamlandı) · `0014` (ana sayfa) bu spec'i **bekler** (bkz. `0014` S2, S4) |
 | **Dayanak** | ADR 0003 Ek 1, sıra #11 |
-| **Karar bekliyor** | **S1–S5** — § Açık sorular (5 soru, **5 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
+| **Karar bekliyor** | yok — S1–S5 → **D1–D5**; Developer'ın plan bulguları P1–P10 → **D6–D15** (2026-11-18). |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — beş açık sorunun cevabı
-> onları belirliyor.
+> **Kararlar verildi (2026-11-18).** Kabul kriterlerini **Analist** yazar (**D15**) ve
+> kriterler uygulama dalı açılmadan `main`'e girer (ADR 0008 K2).
 
 ---
 
@@ -97,6 +97,10 @@ Başarı ölçütü: **bir hukuki metnin veya SSS girdisinin değişmesi bir da�
 - **X6.** **Makine çevirisi** — *neden:* § 6'da V1 dışı; `0010a` D5 ile aynı çizgi.
 - **X7.** **Menü yapısının panelden düzenlenmesi** — *neden:* menü sıralaması bir yapı
   kararıdır; V1'de sayfa kümesi küçük ve sabittir.
+- **X8.** **Slug değişince eski adresin yönlendirilmesi** — *neden:* yönlendirme politikası
+  `0004`'ün (SEO) işi; bu kart yalnız panelde uyarır (**D10**).
+- **X9.** **Ana sayfanın giriş metninin `Content`'e taşınması** (`0014` S2) — *neden:* bir
+  sayfa değil bir metin bloğudur; ayrı model ister (**D12**).
 
 ---
 
@@ -115,9 +119,21 @@ Başarı ölçütü: **bir hukuki metnin veya SSS girdisinin değişmesi bir da�
   (§ 3). Araç slug'ından farklı: araçta her dilde **aynı** slug, CMS'te locale başına.
 - **`0014` bu spec'i iki yerde bekliyor:** S2 (giriş metni çeviri kataloğundan geliyor,
   `Content` gelince taşınacak) ve S4 (altlık yalnızca var olan hedeflere bağlanıyor).
-- **`0005` bir KVKK bağlantısı yayınladı.** Talep formu KVKK aydınlatmasına atıf yapıyor;
-  o bağlantının bugün nereye gittiği `0014` S4'te de uyarı olarak işaretlendi ve
-  **bu taslakta da doğrulanmadı** — kontrol edilmesi gerekiyor.
+- **`0005`'te KVKK bağlantısı YOK — ölçüldü (2026-11-18, `main` @ `81e056c`).** Taslağın bu
+  maddesi "`0005` bir KVKK bağlantısı yayınladı" diyordu; yanlış. Talep formunun izin metni
+  (`lead.consent.text`) düz metindir; formda (`features/leads/`) ve ana sayfa altlığında
+  (`HomeFooter.tsx`) hiçbir KVKK bağlantısı yoktur. Kişisel veri toplanıyor, aydınlatma
+  metnine giden yol yok → **D13**.
+- **İçerik Editörü + Yönetici'ye açık bir yetki politikası YOK — ölçüldü.** `AdminSurface`'te
+  iki politika var: `admin.authenticated` (her rol) ve `admin.manager` (yalnız Yönetici).
+  C4 ikisiyle de karşılanmıyor → **D6**.
+- **Tanınmayan alt yol bugün listeye düşüyor — ölçüldü.** `/tr/foo` vitrin listesini açar
+  (`0014` D28; `frontend/src/shared/lib/route.test.ts`). R5 bu davranışı tersine çeviriyor
+  → **D7**.
+- **Kabuk her SPA yoluna `200` basıyor — ölçüldü** (`LocalePrefixMiddleware`,
+  `IndexHtmlRenderer`). R5'in "404"ü bugün yalnız ekran olabilir, durum kodu değil → **D8**.
+- **İki yığında da Markdown veya HTML arındırma kütüphanesi yok — ölçüldü**
+  (`frontend/package.json`, `Directory.Packages.props`) → **D9**.
 
 ### Bilinen tuzaklar
 
@@ -133,9 +149,89 @@ Başarı ölçütü: **bir hukuki metnin veya SSS girdisinin değişmesi bir da�
 5. **Hukuki metni "sonra ekleriz" diye bırakmak.** `0005` kişisel veri topluyor; KVKK
    metninin olmaması bir eksiklik değil, bir **uyum sorunudur.** → Açık soru **S5**.
 
+### Verilen kararlar — 2026-11-18
+
+**Takım Yöneticisi (ajan) kararı**, Analist'in S1–S5 önerileri ve Developer'ın plan bulguları
+P1–P10 üzerine. Önerilerin **hepsi olduğu gibi** onaylandı (depo sahibinin onayıyla, 2026-11-18).
+
+**D1 — Blog V1'de yok (S1).** İlk sürüm statik sayfalar ve SSS. → X1.
+
+**D2 — Kampanya ve öne çıkan araç slotu ayrı spec (S2).** → X2.
+
+**D3 — Gövde sınırlı bir işaretlemedir; ham HTML kabul edilmez (S3).** İzinli öğeler: başlık,
+paragraf, liste, bağlantı, kalın, italik. Uygulama biçimi **D9**. → X3.
+
+**D4 — Galeri yeni sayfa açabilir; menüdeki küme sabittir (S4).** Menüde görünecek sayfalar
+**D11**'in sistem sayfalarıdır; galerinin açtığı sayfa yalnız doğrudan bağlantıyla erişilir. → X7.
+
+**D5 — KVKK ve çerez metinleri `Content`'te (S5).** Kodda sabit değil; galeri panelden yazar.
+*Bedel:* metnin doğruluğu galerinin sorumluluğudur; kurulum kontrol listesi ayrı iş.
+
+**D6 — Yazma uçları için yeni bir yetki politikası: Yönetici + İçerik Editörü (P1).** Politika
+`Identity`'nin yayınladığı yüzeyde, diğer ikisinin yanında tanımlanır; `Content` kendi rol
+kontrolünü yazmaz. *Gerekçe:* politikaların tek kaynağı. *Bedel:* `Identity`'ye küçük bir
+dokunuş. *Yan bulgu (kapsam dışı, ayrı kart önerisi):* araç yönetim uçları "oturum açmış her
+rol" politikasında — İçerik Editörü bugün araç da düzenleyebiliyor; `0006` R8 ile çelişebilir.
+
+**D7 — Tanınmayan tek parçalı yol artık içerik sayfası adayıdır (P2).** `/{locale}/{slug}`
+yayında bir sayfaya çözülmezse "bulunamadı" verir; listeye **düşmez**. Bu, `0014` D28'in
+"tanınmayan alt yol listeye düşer" davranışının **bilinçli istisnası**dır ve D28'in testi
+bilerek değişir. Ayrılmış slug'lar (`cars`, `admin` ve etkin locale kodları) içerik slug'ı
+olarak kabul edilmez. *Gerekçe:* sessiz değişiklik `0001`/`0014` regresyonu gibi görünürdü.
+
+**D8 — Olmayan veya o dilde yayında olmayan sayfa için HTTP durumu `404`'tür (P3).** Yalnız
+ekran değil, durum kodu da. *Gerekçe:* sıradaki iş `0004` (SEO); `200` dönen hata sayfası
+(soft-404) orada kusur. *Bedel:* sayfa isteği başına bir okuma — `0016b` D37'nin ön yüklemesiyle
+aynı yerde.
+
+**D9 — Gövde, sınırlı bir Markdown alt kümesi olarak saklanır ve hiçbir aşamada HTML'e
+çevrilmez (P4).** Ziyaretçi tarafında doğrudan arayüz öğelerine çizilir; bağlantı hedefleri
+yalnız `https:`, `mailto:`, `tel:` ve göreli adresler. Kaydederken aynı kurallar sunucuda
+doğrulanır ve hata `errorCode` ile döner. *Gerekçe:* "HTML üret, sonra arındır" yerine "hiç
+HTML üretme" enjeksiyonu yapı gereği kapatır; yeni bağımlılık ve lisans kararı gerekmez.
+*Bedel:* ayrıştırıcının bakımı bizde. *Kanıt:* DoD'un enjeksiyon testi `<script>`,
+`javascript:` bağlantısı ve `<img onerror>` ile yapılır.
+
+**D10 — Slug değişince eski adresin yönlendirilmesi kapsam dışı (P5).** Panel, yayındaki bir
+sayfanın slug'ı değiştirilirken eski bağlantının kırılacağını söyler. 301 yönlendirme
+politikası `0004`'e devredilir. → X8.
+
+**D11 — Dört sistem sayfası ve SSS (P6).** Hakkımızda, İletişim, KVKK aydınlatma metni, Çerez
+politikası ve **SSS** sistem sayfasıdır: kodda sabit anahtarları ve altlıkta sabit sıraları
+vardır, **silinemezler**, yayından kaldırılabilirler. SSS sayfasının gövdesi SSS girdilerinden
+oluşur. Galerinin açtığı diğer sayfalar menüye girmez (D4).
+
+**D12 — `0014`'ün altlık bağlantıları bu kartta; giriş metni değil (P7).** Ana sayfanın giriş
+metni bir sayfa değil bir metin bloğudur ve ayrı bir model ister. → X9.
+
+**D13 — Talep formunun izin metni, o dilde yayındaysa KVKK sayfasına bağlanır (P8).** Yayında
+değilse bağlantı basılmaz (R4'ün kuralı). `0005`'in formu değişir; mevcut kriterleri regresyon
+olarak koşar.
+
+**D14 — SSS girdisinin kimliği ve sırası dillerden bağımsızdır (P9).** Soru, cevap ve yayın
+durumu dil başına tutulur — içerik sayfasıyla aynı desen (R3). *Gerekçe:* dil başına ayrı
+listeler sırayı ve eksik dil göstergesini (R8) anlamsızlaştırırdı.
+
+**D15 — Kabul kriterlerini Analist yazar (P10).** Kriterler uygulama dalı açılmadan `main`'e
+girer (`0016` D24'ün deseni; o kartın iki dilimi de revizyon 0 verdi).
+
+### Uygulama planı (onaylı, 2026-11-18)
+
+1. `Identity`: D6'nın politikası ve rol testleri.
+2. `Content` modülü: şema, migration (yalnız `content`), Host'a bağlanma; mimari kapılar.
+3. Domain: içerik sayfası, slug (Latin, ayrılmış adlar), gövde doğrulaması (D9), SSS girdisi.
+4. Application: komutlar ve sorgular; PostgreSQL üzerinde entegrasyon testleri.
+5. Uçlar ve Host: public ve yönetim uçları; kabukta `404` (D8); Host testleri.
+6. Ön yüz, public: rota (D7), içerik sayfası, gövde çizici (D9), altlık (D12), talep formu
+   bağlantısı (D13).
+7. Ön yüz, panel: sayfa ve SSS ekranları, eksik dil göstergesi.
+8. Tohum, e2e, görsel kanıt (Arapça dahil), belgeler.
+
 ---
 
 ## Açık sorular
+
+> **Çözüldü (2026-11-18).** S1–S5 → **D1–D5**. Soruların metni aşağıda kayıt için duruyor.
 
 **S1. Blog V1'de var mı?**
 *Öneri:* **yok.** İlk sürüm statik sayfalar + SSS.
@@ -178,7 +274,7 @@ bağlantısının nereye gittiği kontrol edilmeli (Tuzak 5).
 
 ## Acceptance Criteria
 
-> Beş açık soru cevaplandıktan sonra yazılacak. En az şu kümeleri kapsayacak:
+> **Analist** tarafından yazılacak (**D15**); kararlar D1–D15'te. En az şu kümeleri kapsayacak:
 > sayfa oluşturma/düzenleme/yayınlama · locale başına yayın durumu ve menüden düşme ·
 > slug tekilliği ve geçersiz slug'da 404 · SSS girdileri ve sıralama · eksik dil göstergesi ·
 > rol kısıtı (İçerik Editörü + Yönetici) · yayından kaldırma ve silmenin ayrılığı ·
