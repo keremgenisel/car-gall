@@ -85,6 +85,19 @@
   --color-accent-surface: #edf6d6;
   --color-backdrop: #0b0c0e8c;
 
+  /* `0016b` C2/C3/D13 — parça haritasının dört durumu. Dördü de TÜRETİLDİ: mockup şemayı
+     yer tutucu olarak gösteriyor ve renk vermiyor. Seçim ölçütü iki şart: şema zemini
+     (`--color-surface`) üzerinde her biri en az 3:1 (AC-25, arayüz öğesi eşiği; test
+     bu dosyadan hesaplıyor) ve dört ton birbirinden ayrı aileden. Renk tek başına anlam
+     TAŞIMAZ — durum desenle de ayrılır; renk ek ipucudur. `original` ink-muted'ın
+     tonudur: "dokunulmamış" nötrdür, vurgu taşımaz.
+     Dördü de tema kapısının kapalı listesinde ve yapılandırılabilir (`ThemeTokens`):
+     tema zemini değiştirirse (paint-*, surface) çiftleri başlangıçta 3:1 ile denetlenir. */
+  --color-paint-original: #5f656c;
+  --color-paint-local-painted: #8a5a00;
+  --color-paint-painted: #b8412a;
+  --color-paint-replaced: #1d4e89;
+
   /* --- Aralık --- (4px tabanlı ölçek) */
   --space-0: 0;
   --space-1: 2px;

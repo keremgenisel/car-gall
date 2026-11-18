@@ -63,6 +63,7 @@ public static class VehicleCatalogModule
         // KABLOLANMAMIŞ kalıyordu: dağıtıcı alıcıları DI'dan çözer ve kayıtsız bir alıcı
         // hiçbir zaman çağrılmaz. `0003`'ün kaçan hatası birebir buydu.
         services.AddScoped<IIntegrationEventDispatchTarget, MediaAssetReadyHandler>();
+        services.AddScoped<IIntegrationEventDispatchTarget, MediaAssetFailedHandler>();
         services.AddScoped<IIntegrationEventHandler<BranchDetailsChanged>, BranchDetailsChangedHandler>();
         services.AddScoped<IIntegrationEventHandler<BranchDeactivated>, BranchDeactivatedHandler>();
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();
@@ -163,6 +164,14 @@ public static class VehicleCatalogModule
             new CatalogCurrency(currency.Code, currency.MinorUnitExponent));
         await seeder.SeedAsync(listingCount, vehicleModelId, cancellationToken);
     }
+
+    /// <summary>
+    /// `0016b` (triyaj BULGU-3) — tohum varlıklarını `Media`'da "var" kılar: kayıtlı
+    /// <c>IMediaAssetQueries</c>'i, tohum kimliklerini kendisi cevaplayan bir sorguyla sarar.
+    /// YALNIZ <c>Development:SeedShowcase</c> açıkken ve <c>AddMedia</c>'dan SONRA çağrılır.
+    /// </summary>
+    public static IServiceCollection AddVehicleCatalogSeedMedia(this IServiceCollection services) =>
+        SeedAwareMediaAssetQueries.Register(services);
 
     public static void MapVehicleCatalog(this IEndpointRouteBuilder builder)
     {

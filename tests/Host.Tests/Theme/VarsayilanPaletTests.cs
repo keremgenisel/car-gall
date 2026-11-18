@@ -38,6 +38,12 @@ public sealed partial class VarsayilanPaletTests
         [ThemeTokens.Border] = "#e4e5e1",
         [ThemeTokens.Danger] = "#b8412a",
         [ThemeTokens.DangerSurface] = "#fbece9",
+
+        // `0016b` C2 — şemanın dört durumu (triyaj BULGU-2 ile kapalı listeye girdi).
+        [ThemeTokens.PaintOriginal] = "#5f656c",
+        [ThemeTokens.PaintLocalPainted] = "#8a5a00",
+        [ThemeTokens.PaintPainted] = "#b8412a",
+        [ThemeTokens.PaintReplaced] = "#1d4e89",
         [ThemeTokens.AccentSurface] = "#edf6d6",
         [ThemeTokens.Backdrop] = "#0b0c0e8c",
     };

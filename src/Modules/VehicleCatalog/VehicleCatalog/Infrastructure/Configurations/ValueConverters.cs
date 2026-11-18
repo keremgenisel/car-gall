@@ -40,6 +40,17 @@ internal static class CatalogConverters
         rows => rows == null ? 0 : rows.Count,
         rows => rows == null ? null : rows.ToList());
 
+    /// <summary>`0016b` D25 — galeri yuvasının türevleri; `jsonb` dizi.</summary>
+    internal static ValueConverter<List<ReadModel.ShowcaseMediaVariant>, string> MediaVariants { get; } = new(
+        variants => JsonSerializer.Serialize(variants, Json),
+        json => JsonSerializer.Deserialize<List<ReadModel.ShowcaseMediaVariant>>(json, Json) ?? new List<ReadModel.ShowcaseMediaVariant>());
+
+    /// <summary>Türev listelerinin değer karşılaştırması; EF değişikliği eleman eleman görür.</summary>
+    internal static ValueComparer<List<ReadModel.ShowcaseMediaVariant>> MediaVariantsComparer { get; } = new(
+        (left, right) => left!.SequenceEqual(right!),
+        variants => variants.Count,
+        variants => variants.ToList());
+
     private static List<PaintChangeRow> ToRows(IEnumerable<PaintChangeEntry> entries) =>
         [.. entries.Select(entry => new PaintChangeRow(entry.Part, entry.State))];
 

@@ -5,6 +5,8 @@ import type { ShowcaseListingDetail } from '../../shared/api/types'
 import { formatMoney, formatYear } from '../../shared/i18n/format'
 import { listPath } from '../../shared/lib/route'
 import { Badge, Card } from '../../shared/ui'
+import { Gallery } from './detail/Gallery'
+import { PaintChangeMapSection } from './detail/PaintChangeMapSection'
 import { DetailError } from './states/DetailError'
 import { DetailNotFound } from './states/DetailNotFound'
 import { DetailSkeleton } from './states/DetailSkeleton'
@@ -93,22 +95,23 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
   return (
     <div className="page">
       <Card as="article" testId="listing-detail">
-        <div className="listing-detail__media">
-          {detail.coverImageUrl === null ? null : (
-            <img
-              className="listing-detail__image"
-              src={detail.coverImageUrl}
-              /* `alt` ziyaretçinin locale'inden üretilir; sunucudan çevrilmiş metin
-                 gelmez (AC-25, Yasak Listesi 23). */
-              alt={t('detail.imageAlt', { model: detail.modelName, year: detail.modelYear })}
-              width={960}
-              height={720}
-              /* Detayın kapak görseli katlama üstündedir ve LCP adayıdır. */
-              fetchPriority="high"
-            />
-          )}
-          {detail.isReserved ? <Badge floating>{t('detail.reserved')}</Badge> : null}
-        </div>
+        {/*
+          `0016b` — galeri yalnız HAZIR görsellerle gelir (D14). Sıfır görselde görsel alanı,
+          sayaç ve düğmeler yoktur; rozet bugünkü yerinde kalır (D15, AC-65). `alt` metni
+          ziyaretçinin locale'inde şablondan üretilir (R5; `0002` AC-25).
+        */}
+        {detail.images.length === 0 ? (
+          <div className="listing-detail__media">
+            {detail.isReserved ? <Badge floating>{t('detail.reserved')}</Badge> : null}
+          </div>
+        ) : (
+          <Gallery
+            images={detail.images}
+            modelName={detail.modelName}
+            modelYear={detail.modelYear}
+            overlay={detail.isReserved ? <Badge floating>{t('detail.reserved')}</Badge> : null}
+          />
+        )}
 
         <div className="listing-detail__body">
           {/* Arapça gövde içinde Latin model adı karışık yönlüdür (AC-23). */}
@@ -141,6 +144,11 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
               <Attribute key={attribute.key} label={attribute.label} value={attribute.value} />
             ))}
           </dl>
+
+          {/* `0016b` R14 — harita yoksa (kapalı, gizli ya da değersiz) bölüm hiç basılmaz. */}
+          {detail.paintChangeMap === undefined ? null : (
+            <PaintChangeMapSection map={detail.paintChangeMap} />
+          )}
         </div>
       </Card>
 

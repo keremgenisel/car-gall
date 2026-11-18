@@ -34,6 +34,42 @@ internal sealed class FakeMediaAssetQueries : IMediaAssetQueries
         return kimlik;
     }
 
+    /// <summary>
+    /// `0016b` — `Media`'nın gerçek kümesi gibi ÜÇ türevli varlık: kaynak <paramref name="en"/>×
+    /// <paramref name="boy"/>, türevler en uzun kenarda 400 / 800 / min(kaynak, 1600).
+    /// Hazır değilse türevsiz.
+    /// </summary>
+    internal Guid EkleTurevli(MediaProcessingStatus status, int en = 1200, int boy = 900)
+    {
+        Guid kimlik = Guid.CreateVersion7();
+        varliklar[kimlik] = Turevli(kimlik, status, en, boy);
+        return kimlik;
+    }
+
+    /// <summary>Varlığın durumunu değiştirir (olay işlenmiş gibi); türevleri buna göre kurulur.</summary>
+    internal void Durumla(Guid kimlik, MediaProcessingStatus status, int en = 1200, int boy = 900) =>
+        varliklar[kimlik] = Turevli(kimlik, status, en, boy);
+
+    /// <summary>`EkleTurevli`'nin türev kümesi; olay testleri aynı kümeyi `MediaAssetReady` olarak yollar.</summary>
+    internal static List<MediaDerivativeDto> Turevler(Guid kimlik, int en, int boy)
+    {
+        MediaDerivativeDto Turev(string ad, int uzun)
+        {
+            int sinir = Math.Min(uzun, Math.Max(en, boy));
+            (int w, int h) = en >= boy ? (sinir, sinir * boy / en) : (sinir * en / boy, sinir);
+            return new MediaDerivativeDto(ad, w, h, $"https://cdn.test/{kimlik:D}/{ad}.webp");
+        }
+
+        return [Turev("thumbnail", 400), Turev("display", 800), Turev("large", 1600)];
+    }
+
+    private static MediaAssetDto Turevli(Guid kimlik, MediaProcessingStatus status, int en, int boy) => new(
+        kimlik,
+        status,
+        status == MediaProcessingStatus.Failed ? MediaFailureReason.Undecodable : null,
+        new Dictionary<string, string> { ["tr"] = "Ön görünüm" },
+        status == MediaProcessingStatus.Ready ? Turevler(kimlik, en, boy) : []);
+
     public Task<MediaAssetDto?> FindAsync(Guid mediaAssetId, CancellationToken cancellationToken) =>
         Task.FromResult(varliklar.TryGetValue(mediaAssetId, out MediaAssetDto? dto) ? dto : null);
 

@@ -28,6 +28,9 @@ internal sealed class VehicleCatalogDbContext(DbContextOptions<VehicleCatalogDbC
 
     internal DbSet<ShowcaseListing> ShowcaseListings => Set<ShowcaseListing>();
 
+    /// <summary>`0016b` D25 — vitrin galerisinin yuvaları.</summary>
+    internal DbSet<ShowcaseListingMedia> ShowcaseListingMedia => Set<ShowcaseListingMedia>();
+
     internal DbSet<VehicleFieldSetting> VehicleFieldSettings => Set<VehicleFieldSetting>();
 
     /// <summary>

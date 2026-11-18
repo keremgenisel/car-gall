@@ -507,6 +507,40 @@ soldan sağa kaydırma *sonraki* görsele geçer. → R3, AC-43, AC-44.
 LCP öğesinin galerinin ilk görseli olduğu da doğrulanır (S8).** *Gerekçe:* görselsiz ilan
 seçilirse ilk görselin LCP'si hiç ölçülmeden "geçti" yazılır. → C13, D30, AC-80, AC-83.
 
+### Verilen kararlar — uygulama turu, 2026-11-18 (ajan)
+
+Uygulama sırasında ölçümle ortaya çıkan dört karar. R/C/AC **değişmedi**.
+
+**D37 — Kabuk, detay adresinde galerinin ilk hazır görselini ön yükler.** Ölçüldü: görsel
+HTML → JS → detay isteği zincirinin sonunda keşfediliyordu. Detayın mobil LCP medyanı
+**2552 ms** ile C13'ün eşiğini aşıyordu. Tek optimizasyon (AP-12): `IndexHtmlRenderer`,
+`/{locale}/cars/{slug}` için `<link rel="preload" as="image">` basar. `imagesrcset` ve
+`imagesizes` uçtakiyle birebir aynıdır. Sonrası **2402 ms**: altı koşunun beşi 2402 ms,
+biri 2556 ms.
+- *Bedel:* HTML isteği başına bir okuma. Bunun için hafif bir `FindFirstImageAsync`
+  sözleşmesi eklendi; model adı, nitelik ve fiyat çözülmez.
+- *Bedel:* `srcset` ve `sizes` iki dilde yazılı. Sapma görseli iki kez indirtir. Bunu
+  `IlkGorselOnYuklemeTests` (`sizes`'ı kaynaktan okur) ve e2e AC-64 (etkileşimden önce
+  tek istek) tutar.
+- *Elenen alternatif:* daha küçük türev seçtirmek (`sizes`). Mobilde görseli bulanıklaştırır
+  ve gerçek fotoğrafta kazancı sınırlıdır.
+
+**D38 — Geliştirme tohumunun galeri kareleri JPEG'dir, SVG değil.** Chrome, bayt başına
+bilgisi düşük görselleri LCP adayı saymıyor. Düz SVG kareyle detayın LCP öğesi fiyat
+paragrafı çıkıyordu: AC-83 ölçülemezdi ve AC-81 görselsiz bir sayfayı ölçerdi. Kareler,
+tam sayı kısıtlı aynı uçtan SkiaSharp ile üretilir (`SeedFrames`).
+- *Not:* liste ve ana sayfanın kapakları hâlâ SVG. Onların LCP'si bugün görsel değil; bu
+  kartın kapsamı dışında.
+
+**D39 — Parça haritasının görünürlüğü yansıtmada VE okumada elenir (C1).** Alan ayarı
+değişip satır henüz yeniden yansıtılmamışken harita sızmasın diye detay sorgusu ayarı
+okuma anında da sorar (AC-16, AC-17'nin ilk yarısı).
+
+**D40 — `identity`'nin onay kutusu ortak `Dialog`'a taşınmadı.** D28'in bileşeni
+`shared/ui`'da. Ama `ConfirmDialog`'un odak testleri jsdom'da koşuyor ve jsdom
+`showModal`'ı taşımıyor. Taşımak `0008`'in regresyon riskini bu karta eklerdi.
+*Öneri:* ayrı kart.
+
 ### Uygulama planı (onaylı, 2026-11-18)
 
 1. **`0016a`** — `FieldValueKind.PartMap` ve doğrulama (13 parça, 4 durum, yarım harita

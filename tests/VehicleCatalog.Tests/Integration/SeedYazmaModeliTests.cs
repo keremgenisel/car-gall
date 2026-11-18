@@ -1,6 +1,8 @@
 using CarGallery.Modules.VehicleCatalog.Application.Development;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
+using CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel;
+using CarGallery.Modules.Media.Contracts.Assets;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarGallery.Modules.VehicleCatalog.Tests.Integration;
@@ -116,6 +118,67 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
             && new[] { "original", "local_painted", "painted", "replaced" }.All(durum => harita.Any(item => item.State == durum)));
         Assert.Contains(haritalar, harita => harita is { Count: 13 } && harita.All(item => item.State == "original"));
         Assert.Contains(haritalar, harita => harita is null);
+    }
+
+    /// <summary>
+    /// Triyaj BULGU-3 — tohum ilanı yeniden yansıtıldığında (panelde kayıt, toplu eylem)
+    /// galerisini KORUR: tohum varlıklarını `Media`'nın yerine tohum sorgusu cevaplar ve
+    /// yansıtıcı aynı yuvaları yeniden yazar. Karşı ölçüm: sarmalayıcı olmadan aynı yansıtma
+    /// galeriyi `işleniyor`a düşürür — bulgunun kendisi.
+    /// </summary>
+    [Fact]
+    public async Task Korur_TohumGalerisini_YenidenYansitildiginda()
+    {
+        await using (VehicleCatalogDbContext yazma = CreateContext())
+        {
+            await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 11, 18, 12, 0, 0, TimeSpan.Zero)), Para)
+                .SeedAsync(6, Guid.Parse("0192c000-0000-7000-8000-00000000000a"), CancellationToken.None);
+        }
+
+        Guid ilan;
+        List<(int, Guid, ShowcaseMediaStatus, string)> once;
+
+        await using (VehicleCatalogDbContext okuma = CreateContext())
+        {
+            ilan = await okuma.ShowcaseListingMedia.GroupBy(item => item.ListingId)
+                .Where(grup => grup.Count() == 30).Select(grup => grup.Key).SingleAsync();
+            once = await YuvalarAsync(okuma, ilan);
+        }
+
+        Assert.Equal(30, once.Count(item => item.Item3 == ShowcaseMediaStatus.Ready));
+
+        // Sarmalayıcıyla: galeri birebir korunur.
+        await YansitAsync(ilan, new SeedAwareMediaAssetQueries(new FakeMediaAssetQueries()));
+        await using (VehicleCatalogDbContext okuma = CreateContext())
+        {
+            Assert.Equal(once, await YuvalarAsync(okuma, ilan));
+        }
+
+        // Sarmalayıcı olmadan: `Media` tohum varlıklarını tanımaz ve galeri kaybolur.
+        await YansitAsync(ilan, new FakeMediaAssetQueries());
+        await using (VehicleCatalogDbContext okuma = CreateContext())
+        {
+            Assert.All(await YuvalarAsync(okuma, ilan), item => Assert.Equal(ShowcaseMediaStatus.Processing, item.Item3));
+        }
+    }
+
+    private static async Task<List<(int, Guid, ShowcaseMediaStatus, string)>> YuvalarAsync(VehicleCatalogDbContext context, Guid ilan) =>
+        [
+            .. (await context.ShowcaseListingMedia.AsNoTracking()
+                .Where(item => item.ListingId == ilan)
+                .OrderBy(item => item.Position)
+                .ToListAsync())
+                .Select(item => (item.Position, item.MediaAssetId, item.Status, string.Join('|', item.Variants.Select(v => $"{v.Variant}:{v.Url}:{v.Width}x{v.Height}")))),
+        ];
+
+    private async Task YansitAsync(Guid ilan, IMediaAssetQueries medya)
+    {
+        await using VehicleCatalogDbContext context = CreateContext();
+        Listing listing = await context.Listings.SingleAsync(item => item.Id == new ListingId(ilan));
+        Vehicle arac = await context.Vehicles.Include(item => item.OptionalFieldValues).SingleAsync(item => item.Id == listing.VehicleId);
+
+        await KatalogYazicilari.Yansitma(context, medya).ProjectAsync(arac, listing, read: null, CancellationToken.None);
+        await context.SaveChangesAsync();
     }
 
     /// <summary>

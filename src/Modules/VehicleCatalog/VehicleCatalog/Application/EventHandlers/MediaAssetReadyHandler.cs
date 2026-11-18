@@ -2,6 +2,7 @@ using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.Modules.Media.Contracts.Events;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
+using CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarGallery.Modules.VehicleCatalog.Application.EventHandlers;
@@ -40,6 +41,22 @@ internal sealed class MediaAssetReadyHandler(VehicleCatalogDbContext context, IC
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(integrationEvent);
+
+        // `0016b` D25 — galeri yuvaları: varlığın bulunduğu HER yuva hazır olur ve türevlerin
+        // gerçek boyutlarını alır (D18). Yuva yoksa (varlık hiçbir vitrin ilanında değil)
+        // güncelleme hiçbir satıra dokunmaz. İlan yeniden yayımlanmaz (AC-3).
+        List<ShowcaseMediaVariant> turevler =
+        [
+            .. integrationEvent.Derivatives.Select(turev => new ShowcaseMediaVariant(turev.Variant, turev.Url, turev.Width, turev.Height)),
+        ];
+
+        await Context.ShowcaseListingMedia
+            .Where(yuva => yuva.MediaAssetId == integrationEvent.MediaAssetId)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(yuva => yuva.Status, ShowcaseMediaStatus.Ready)
+                    .SetProperty(yuva => yuva.Variants, turevler),
+                cancellationToken);
 
         MediaDerivativePayload? gosterim = integrationEvent.Derivatives
             .FirstOrDefault(turev => turev.Variant == DisplayVariant);

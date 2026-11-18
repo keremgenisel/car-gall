@@ -54,6 +54,10 @@ internal static class ThemeTokens
     internal const string Danger = "color-danger";
     internal const string DangerSurface = "color-danger-surface";
     internal const string Backdrop = "color-backdrop";
+    internal const string PaintOriginal = "color-paint-original";
+    internal const string PaintLocalPainted = "color-paint-local-painted";
+    internal const string PaintPainted = "color-paint-painted";
+    internal const string PaintReplaced = "color-paint-replaced";
     internal const string FontFamilyBase = "font-family-base";
     internal const string FontFamilyArabic = "font-family-arabic";
 
@@ -78,6 +82,14 @@ internal static class ThemeTokens
         new(Border, ThemeTokenKind.Configurable),
         new(Danger, ThemeTokenKind.Configurable),
         new(DangerSurface, ThemeTokenKind.Configurable),
+
+        // `0016b` C2/D13 — parça haritasının dört durumu. Yapılandırılabilir, çünkü çiftlerinin
+        // öbür ucu (`color-surface`) yapılandırılabilir: biri sabit kalsaydı zemin değişince
+        // 3:1 sessizce denetimsiz kalırdı (triyaj BULGU-2; aşağıdaki `CiftTablosuTests` D13).
+        new(PaintOriginal, ThemeTokenKind.Configurable),
+        new(PaintLocalPainted, ThemeTokenKind.Configurable),
+        new(PaintPainted, ThemeTokenKind.Configurable),
+        new(PaintReplaced, ThemeTokenKind.Configurable),
 
         // Türetilmiş: dolgudan DEĞİL gövde metninden türetilir (Token tablosu). Dolgudan
         // türetmek, limon dolgunun üstüne limon metin yazmak demekti.
@@ -126,6 +138,12 @@ internal static class ThemeTokens
         new(Danger, Surface, 4.5m, "AC-33"),
         new(Danger, DangerSurface, 4.5m, "AC-33"),
         new(InkInverse, Ink, 4.5m, "AC-34"),
+
+        // `0016b` C2/AC-25 — şemanın dört durumu, şema zemini üzerinde arayüz öğesi eşiği.
+        new(PaintOriginal, Surface, 3m, "AC-25 (0016b)"),
+        new(PaintLocalPainted, Surface, 3m, "AC-25 (0016b)"),
+        new(PaintPainted, Surface, 3m, "AC-25 (0016b)"),
+        new(PaintReplaced, Surface, 3m, "AC-25 (0016b)"),
     ];
 
     /// <summary>Türetilmiş token'ı kaynağına indirger; kapı böylece değerini bilir.</summary>

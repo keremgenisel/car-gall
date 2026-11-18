@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Application.Projection;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
@@ -12,6 +13,12 @@ namespace CarGallery.Modules.VehicleCatalog.Application.Development;
 /// yazmaz — agregatları kurup ShowcaseListingProjector'dan geçirir, yani üretimdeki
 /// görünürlük kararının AYNI yolunu kullanır. Elle satır yazan bir seed, kanıt
 /// görüntülerini gerçek davranıştan kopartırdı.
+///
+/// <para><b>`0016b` — galeri yuvaları da aynı kuraldan geçer</b> (triyaj BULGU-3): yuva,
+/// yansıtıcının <c>Yuva</c> kuralıyla ve tohum varlığının `Media` karşılığıyla kurulur
+/// (<c>SeedMediaAssets</c>). Tohum bayrağı açıkken o karşılığı gerçek sorgunun önündeki
+/// <c>SeedAwareMediaAssetQueries</c> verir; bu yüzden tohum ilanı panelde ya da toplu
+/// eylemde yeniden yansıtıldığında galerisini KORUR. Bayrak kapalıyken tohum zaten yoktur.</para>
 ///
 /// <para><b>0010a/D12 — artık YAZMA modelini de yazıyor.</b> Bu spec'e kadar agregatlar
 /// bellekte kurulup atılıyordu ve saklanan tek şey okuma modeli satırlarıydı. Yazma modeli
@@ -79,6 +86,7 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
         ];
 
         List<ShowcaseListing> rows = [];
+        List<ShowcaseListingMedia> media = [];
 
         // 0010a/D12 — yazma modeli de saklanıyor; vitrin satırları artık arkalarında
         // gerçek birer araç kaydı olan ilanlardan türüyor.
@@ -126,7 +134,13 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 vin,
                 clock.UtcNow).Value;
 
-            vehicle.AttachMediaAsset(Guid.CreateVersion7());
+            // `0016b` — galerinin yuvaları. Kapak (liste kartı) bugünkü gibi `cover-n.svg`;
+            // detay galerisi türevleri `frame-…` adreslerinden alır (bkz. `SeedGallery`).
+            List<ShowcaseListingMedia> galeri = SeedGallery(index);
+            foreach (ShowcaseListingMedia yuva in galeri)
+            {
+                vehicle.AttachMediaAsset(yuva.MediaAssetId);
+            }
 
             // E10 — opsiyonel alan DEĞERLERİ yazma yolu gelene kadar buradan gelir.
             // 0010b/D17 — tramer bir TUTAR; artık `Money` olarak yazılıyor, metin olarak
@@ -190,14 +204,87 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             if (row is not null)
             {
                 rows.Add(row);
+                media.AddRange(galeri.Select(yuva => new ShowcaseListingMedia
+                {
+                    ListingId = row.ListingId,
+                    Position = yuva.Position,
+                    MediaAssetId = yuva.MediaAssetId,
+                    Status = yuva.Status,
+                    Variants = yuva.Variants,
+                }));
             }
         }
 
         context.Vehicles.AddRange(vehicles);
         context.Listings.AddRange(listings);
         context.ShowcaseListings.AddRange(rows);
+        context.ShowcaseListingMedia.AddRange(media);
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// `0016b` — galerinin geliştirme ve kanıt hâlleri, ilk beş ilanda:
+    /// <list type="bullet">
+    /// <item>0 — 30 hazır görsel; yatay 4:3, dikey 3:4 ve 16:9 sırayla (AC-61, AC-62, AC-64).</item>
+    /// <item>1 — 3 hazır görsel; ikincinin adresi 404 döner (AC-69).</item>
+    /// <item>2 — başarısız, hazır, başarısız: tek görsel (AC-67, AC-68).</item>
+    /// <item>3 — 18 hazır görsel; model yılı 2019 (AC-56).</item>
+    /// <item>4 — işleniyor, başarısız: hazır görsel yok (AC-65, AC-66).</item>
+    /// </list>
+    /// Diğer ilanlar tek hazır görsel taşır. Yuvanın durumu ve türevleri, yansıtıcının KENDİ
+    /// kuralından (<c>ShowcaseProjectionWriter.Yuva</c>) ve tohum varlığının `Media`
+    /// karşılığından (<see cref="SeedMediaAssets"/>) türetilir: tohum, ilan yeniden
+    /// yansıtıldığında oluşacak satırın AYNISINI yazar. <c>ListingId</c> çağıranda yazılır.
+    /// </summary>
+    private static List<ShowcaseListingMedia> SeedGallery(int index)
+    {
+        ShowcaseListingMedia Yuva(int konum, MediaProcessingStatus durum, int kare, int en, int boy)
+        {
+            Guid kimlik = SeedMediaAssets.Id(index, konum, durum, kare, en, boy);
+            (ShowcaseMediaStatus yuvaDurumu, List<ShowcaseMediaVariant> turevler) =
+                ShowcaseProjectionWriter.Yuva(SeedMediaAssets.Describe(kimlik));
+
+            return new ShowcaseListingMedia
+            {
+                ListingId = Guid.Empty,
+                Position = konum,
+                MediaAssetId = kimlik,
+                Status = yuvaDurumu,
+                Variants = turevler,
+            };
+        }
+
+        ShowcaseListingMedia Hazir(int konum, int kare, int en = 4, int boy = 3) =>
+            Yuva(konum, MediaProcessingStatus.Ready, kare, en, boy);
+
+        return index switch
+        {
+            0 => [.. Enumerable.Range(0, 30).Select(konum => (konum % 3) switch
+            {
+                1 => Hazir(konum, konum, 3, 4),
+                2 => Hazir(konum, konum, 16, 9),
+                _ => Hazir(konum, konum),
+            })],
+            // İkinci yuvanın karesi aralık dışında: uç 404 döner (AC-69'un kanıtı).
+            1 => [Hazir(0, 0), Hazir(1, SeedFrameMissing), Hazir(2, 2)],
+            2 =>
+            [
+                Yuva(0, MediaProcessingStatus.Failed, 0, 4, 3),
+                Hazir(1, 1),
+                Yuva(2, MediaProcessingStatus.Failed, 0, 4, 3),
+            ],
+            3 => [.. Enumerable.Range(0, 18).Select(konum => Hazir(konum, konum))],
+            4 =>
+            [
+                Yuva(0, MediaProcessingStatus.Processing, 0, 4, 3),
+                Yuva(1, MediaProcessingStatus.Failed, 0, 4, 3),
+            ],
+            _ => [Hazir(0, index % 30)],
+        };
+    }
+
+    /// <summary>`/seed-media/frame-…` ucunun TANIMADIĞI kare numarası: o adres 404 döner.</summary>
+    private const int SeedFrameMissing = 99;
 
     private static PaintChangeMap? SeedPaintChangeMap(int index)
     {

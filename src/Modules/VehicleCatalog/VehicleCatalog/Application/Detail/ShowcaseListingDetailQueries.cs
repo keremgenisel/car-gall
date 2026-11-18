@@ -45,16 +45,92 @@ internal sealed class ShowcaseListingDetailQueries(
         IReadOnlyDictionary<Guid, string> modelNames =
             await modelNameResolver.ResolveAsync([row.VehicleModelId], resolved, cancellationToken);
 
+        // `0016b` D14/D25 — galeri okuma modelinin kendi tablosundan; `Media`'ya gidilmez.
+        List<ShowcaseListingMedia> yuvalar = await context.ShowcaseListingMedia
+            .AsNoTracking()
+            .Where(item => item.ListingId == row.ListingId && item.Status == ShowcaseMediaStatus.Ready)
+            .OrderBy(item => item.Position)
+            .ToListAsync(cancellationToken);
+
         return new ShowcaseListingDetailDto(
             row.Slug,
             row.IsReserved,
-            row.CoverMediaUrl,
+            [.. yuvalar.Select(ToImage).OfType<ShowcaseImageDto>()],
             modelNames.TryGetValue(row.VehicleModelId, out string? name) ? name : string.Empty,
             row.ModelYear,
             row.MileageKilometers,
             ToPrice(row),
             ResolveLocalized(row.BranchNames, resolved),
-            await BuildAttributesAsync(row, resolved, cancellationToken));
+            await BuildAttributesAsync(row, resolved, cancellationToken),
+            await PaintChangeMapAsync(row, cancellationToken));
+    }
+
+    /// <inheritdoc />
+    public async Task<ShowcaseImageDto?> FindFirstImageAsync(string slug, CancellationToken cancellationToken)
+    {
+        if (!ListingSlug.TryParse(slug, out ListingSlug parsed))
+        {
+            return null;
+        }
+
+        // Galeriyle AYNI kural: yalnız hazır yuvalar, medya sırasıyla (D14); ilk görsel R7'nin
+        // "ilk hazır görseli"dir. Görünmeyen ilanın satırı yoktur, yani yuvası da yoktur.
+        List<ShowcaseListingMedia> yuvalar = await context.ShowcaseListingMedia
+            .AsNoTracking()
+            .Where(item => item.Status == ShowcaseMediaStatus.Ready)
+            .Where(item => context.ShowcaseListings.Any(row => row.ListingId == item.ListingId && row.Slug == parsed.Value))
+            .OrderBy(item => item.Position)
+            .ToListAsync(cancellationToken);
+
+        // `display`'i olmayan bozuk küme detayda da düşer; aynı eleme burada da.
+        return yuvalar.Select(ToImage).OfType<ShowcaseImageDto>().FirstOrDefault();
+    }
+
+    /// <summary>
+    /// `0016b` C1 — harita yalnız alan ŞU AN açık ve public iken döner. Yansıtma zaten
+    /// yalnız public alanı yazıyor; okuma tarafındaki ikinci eleme, alan ayarı değişip
+    /// satır henüz yeniden yansıtılmamışken haritanın sızmasını kapatır. Değersizse
+    /// <c>null</c> ve anahtar yazılmaz (D9).
+    /// </summary>
+    private async Task<IReadOnlyList<ShowcasePaintChangeDto>?> PaintChangeMapAsync(
+        ShowcaseListing row,
+        CancellationToken cancellationToken)
+    {
+        if (row.PaintChangeMap is not { Count: > 0 } harita)
+        {
+            return null;
+        }
+
+        bool acikVePublic = await context.VehicleFieldSettings
+            .AsNoTracking()
+            .AnyAsync(
+                setting => setting.FieldKey == VehicleFieldKeys.PaintChangeMap
+                    && setting.FormState != FieldFormState.Closed
+                    && setting.PublicVisibility == FieldPublicVisibility.Visible,
+                cancellationToken);
+
+        return acikVePublic
+            ? [.. harita.Select(item => new ShowcasePaintChangeDto(item.Part, item.State))]
+            : null;
+    }
+
+    /// <summary>
+    /// Hazır yuvanın üç türevi (D18). `display` yoksa görsel gösterilemez ve düşer; diğer
+    /// iki türevden biri eksikse yerine `display` geçer — küçük kaynakta `Media` üç türevi de
+    /// üretir, bu yalnız bozuk bir kümeye karşı korumadır.
+    /// </summary>
+    private static ShowcaseImageDto? ToImage(ShowcaseListingMedia yuva)
+    {
+        ShowcaseImageVariantDto? Turev(string ad) => yuva.Variants
+            .Where(item => item.Variant == ad)
+            .Select(item => new ShowcaseImageVariantDto(item.Url, item.Width, item.Height))
+            .FirstOrDefault();
+
+        ShowcaseImageVariantDto? display = Turev("display");
+
+        return display is null
+            ? null
+            : new ShowcaseImageDto(Turev("thumbnail") ?? display, display, Turev("large") ?? display);
     }
 
     private async Task<IReadOnlyList<ShowcaseAttributeDto>> BuildAttributesAsync(

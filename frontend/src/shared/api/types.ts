@@ -33,16 +33,42 @@ export interface ShowcaseAttribute {
  * bulunmaz (F3, AC-12, AC-13). Şase, plaka ve iç notlar hiç taşınmaz (F4, AC-14).
  * Gizleme sunucuda uygulanır; uç yalnız geleni gösterir.
  */
+/** `0016b` D18 — bir türevin adresi ve GERÇEK boyutu. */
+export interface ShowcaseImageVariant {
+  readonly url: string
+  readonly width: number
+  readonly height: number
+}
+
+/** `0016b` C12 — galerinin bir görseli: üç türev; orijinal dosya yok (C7). */
+export interface ShowcaseImage {
+  readonly thumbnail: ShowcaseImageVariant
+  readonly display: ShowcaseImageVariant
+  readonly large: ShowcaseImageVariant
+}
+
+/** `0016b` C12 — haritanın bir parçası; yalnız kod (`0016a` C10). */
+export interface ShowcasePaintChange {
+  readonly part: string
+  readonly state: string
+}
+
 export interface ShowcaseListingDetail {
   readonly slug: string
   readonly isReserved: boolean
-  readonly coverImageUrl: string | null
+  /** `0016b` D14 — yalnız hazır görseller, medya sırasıyla. Tek kapak adresi kaldırıldı (D22). */
+  readonly images: readonly ShowcaseImage[]
   readonly modelName: string
   readonly modelYear: number
   readonly mileageKilometers: number
   readonly price: ShowcasePrice
   readonly branchName: string
   readonly attributes: readonly ShowcaseAttribute[]
+  /**
+   * `0016b` D9 — alan açık, public ve değerliyken VAR; aksi hâlde anahtar hiç gelmez
+   * (`null` olarak da). Uç süzme yapmaz: yoksa bölüm basılmaz.
+   */
+  readonly paintChangeMap?: readonly ShowcasePaintChange[]
 }
 
 export interface PagedResult<TItem> {

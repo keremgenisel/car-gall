@@ -54,6 +54,11 @@ internal sealed class ShowcaseProjectionWriter(
             .Include(row => row.OptionalValues)
             .FirstOrDefaultAsync(row => row.ListingId == listing.Id.Value, cancellationToken);
 
+        // `0016b` D25 — kapak ve galeri AYNI varlık okumasından (aşağıdaki `VarliklarAsync`).
+        IReadOnlyDictionary<Guid, MediaAssetDto> varliklar = listing.Slug is null
+            ? new Dictionary<Guid, MediaAssetDto>()
+            : await VarliklarAsync(vehicle.MediaAssetIds, read, cancellationToken);
+
         ShowcaseListing? hedef = listing.Slug is null
             // Adresi olmayan ilan hiç yayınlanmamıştır; yansıtmanın sorusu bile doğmaz.
             ? null
@@ -64,8 +69,14 @@ internal sealed class ShowcaseProjectionWriter(
                 read is null
                     ? await SubeAdlariAsync(vehicle.BranchId, cancellationToken)
                     : read.BranchNamesOf(vehicle.BranchId),
-                await KapakAdresiAsync(vehicle.CoverAssetId, read, cancellationToken),
+                KapakAdresi(vehicle.CoverAssetId, varliklar),
                 read?.PublicFieldKeys ?? await PublicAlanlarAsync(cancellationToken));
+
+        await GaleriyiEsitleAsync(
+            listing.Id.Value,
+            hedef is null ? [] : vehicle.MediaAssetIds,
+            varliklar,
+            cancellationToken);
 
         if (hedef is null)
         {
@@ -168,12 +179,12 @@ internal sealed class ShowcaseProjectionWriter(
     /// <summary>
     /// Kapak görselinin GÖSTERİM türevi. Varlık yoksa ya da henüz hazır değilse
     /// <c>null</c> döner — `MediaAssetReady` geldiğinde kolon o yoldan tazelenir
-    /// (`0011` AC-36, **D34**).
+    /// (`0011` AC-36, **D34**). Varlıklar <c>VarliklarAsync</c>'ten gelir.
     ///
     /// <para><b>Bağlam varsa oradan</b> (**D56**): toplu yol kapak adreslerini istek başına
     /// bir kez, tek `FindManyAsync` ile okuyor.</para>
     ///
-    /// <para><b>Bağlamda YOKSA kayıt başına okumaya düşüyor</b> ve bu bir ölçümün sonucu:
+    /// <para><b>Bağlamda hazır DEĞİLSE kayıt başına okumaya düşüyor</b> ve bu bir ölçümün sonucu:
     /// `MediaAssetReady` yalnız VAR OLAN vitrin satırlarını tazeliyor
     /// (`MediaAssetReadyHandler`, `ExecuteUpdate`). Bağlam kurulurken henüz hazır olmayan
     /// bir kapak, satır doğduktan sonra hiçbir olayla tazelenmez — 25 satırlık bir toplu
@@ -182,28 +193,108 @@ internal sealed class ShowcaseProjectionWriter(
     /// yeni doğan satır için kapağı atlamak, aracı vitrine <b>görselsiz</b> koymak olurdu.
     /// Bedel yalnızca çözülemeyen kapak başına bir okuma.</para>
     /// </summary>
-    private async Task<string?> KapakAdresiAsync(
-        Guid? coverAssetId,
+    private static string? KapakAdresi(Guid? coverAssetId, IReadOnlyDictionary<Guid, MediaAssetDto> varliklar) =>
+        coverAssetId is Guid kimlik && varliklar.TryGetValue(kimlik, out MediaAssetDto? varlik)
+            ? varlik.Derivatives.FirstOrDefault(derivative => derivative.Variant == DisplayVariant)?.Url
+            : null;
+
+    /// <summary>
+    /// `0016b` D25 — aracın medya listesindeki varlıklar. Bağlam verildiyse oradan; bağlamda
+    /// <b>hazır olmayan</b> varlıklar kayıt başına yeniden okunur — kapağın yukarıdaki
+    /// gerekçesi galerinin her yuvası için de geçerli: bağlam kurulduktan sonra hazır olan
+    /// bir görsel, satır doğmadan gelen `MediaAssetReady` yüzünden hiç tazelenmezdi.
+    /// Bağlam yoksa liste için tek bir `FindManyAsync`.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, MediaAssetDto>> VarliklarAsync(
+        IReadOnlyList<Guid> kimlikler,
         ListingReadContext? read,
         CancellationToken cancellationToken)
     {
-        if (coverAssetId is null)
+        Dictionary<Guid, MediaAssetDto> sonuc = new();
+
+        foreach (Guid kimlik in kimlikler)
         {
-            return null;
+            if (read is not null
+                && read.MediaAssets.TryGetValue(kimlik, out MediaAssetDto? bilinen)
+                && bilinen.Status == MediaProcessingStatus.Ready)
+            {
+                sonuc[kimlik] = bilinen;
+            }
         }
 
-        if (read?.CoverUrlOf(coverAssetId) is string hazirAdres)
+        List<Guid> okunacak = [.. kimlikler.Where(kimlik => !sonuc.ContainsKey(kimlik)).Distinct()];
+
+        if (okunacak.Count > 0)
         {
-            return hazirAdres;
+            foreach (MediaAssetDto varlik in await mediaAssets.FindManyAsync(okunacak, cancellationToken))
+            {
+                sonuc[varlik.Id] = varlik;
+            }
         }
 
-        IReadOnlyList<MediaAssetDto> varliklar =
-            await mediaAssets.FindManyAsync([coverAssetId.Value], cancellationToken);
-
-        return varliklar
-            .FirstOrDefault()?.Derivatives
-            .FirstOrDefault(derivative => derivative.Variant == DisplayVariant)?.Url;
+        return sonuc;
     }
+
+    /// <summary>
+    /// `0016b` D25 — galeri yuvalarını aracın medya sırasına eşitler: konum başına bir satır,
+    /// varlığın o anki durumu ve hazırsa türevleri. Vitrinden çıkan ilanın yuvaları silinir.
+    ///
+    /// <para>Satırlar konumla anahtarlı ve YERİNDE güncelleniyor: aynı işlemde silip aynı
+    /// anahtarla yeniden eklemek EF'in izleyicisinde çakışma olurdu (yukarıdaki
+    /// <c>Guncelle</c>'nin gerekçesiyle aynı).</para>
+    /// </summary>
+    private async Task GaleriyiEsitleAsync(
+        Guid listingId,
+        IReadOnlyList<Guid> sira,
+        IReadOnlyDictionary<Guid, MediaAssetDto> varliklar,
+        CancellationToken cancellationToken)
+    {
+        List<ShowcaseListingMedia> mevcut = await context.ShowcaseListingMedia
+            .Where(item => item.ListingId == listingId)
+            .ToListAsync(cancellationToken);
+
+        for (int konum = 0; konum < sira.Count; konum += 1)
+        {
+            (ShowcaseMediaStatus durum, List<ShowcaseMediaVariant> turevler) =
+                Yuva(varliklar.TryGetValue(sira[konum], out MediaAssetDto? varlik) ? varlik : null);
+
+            ShowcaseListingMedia? satir = mevcut.Find(item => item.Position == konum);
+
+            if (satir is null)
+            {
+                context.ShowcaseListingMedia.Add(new ShowcaseListingMedia
+                {
+                    ListingId = listingId,
+                    Position = konum,
+                    MediaAssetId = sira[konum],
+                    Status = durum,
+                    Variants = turevler,
+                });
+            }
+            else
+            {
+                satir.MediaAssetId = sira[konum];
+                satir.Status = durum;
+                satir.Variants = turevler;
+            }
+        }
+
+        context.ShowcaseListingMedia.RemoveRange(mevcut.Where(item => item.Position >= sira.Count));
+    }
+
+    /// <summary>
+    /// Varlığın vitrin durumu. `Media`'da bulunmayan varlık `işleniyor` sayılır: galeride
+    /// görünmez ve varlık hazır olursa `MediaAssetReady` yuvayı günceller.
+    /// </summary>
+    internal static (ShowcaseMediaStatus Durum, List<ShowcaseMediaVariant> Turevler) Yuva(MediaAssetDto? varlik) =>
+        varlik?.Status switch
+        {
+            MediaProcessingStatus.Ready => (
+                ShowcaseMediaStatus.Ready,
+                [.. varlik.Derivatives.Select(turev => new ShowcaseMediaVariant(turev.Variant, turev.Url, turev.Width, turev.Height))]),
+            MediaProcessingStatus.Failed => (ShowcaseMediaStatus.Failed, []),
+            _ => (ShowcaseMediaStatus.Processing, []),
+        };
 
     private async Task<IReadOnlySet<string>> PublicAlanlarAsync(CancellationToken cancellationToken) =>
         new HashSet<string>(

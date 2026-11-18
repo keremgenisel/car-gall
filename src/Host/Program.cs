@@ -203,6 +203,14 @@ builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocal
 builder.Services.AddSingleton<IndexHtmlRenderer>();
 builder.Services.AddSingleton<AdminShellRenderer>();
 
+// `0016b` (triyaj BULGU-3) — tohumun medya varlıkları `Media`'da kayıtlı değil; tohum
+// bayrağı açıkken onları tohumun kendisi cevaplar ki tohum ilanı yeniden yansıtılınca
+// galerisini kaybetmesin. `AddMedia`'dan SONRA: sardığı kayıt onunki.
+if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
+{
+    builder.Services.AddVehicleCatalogSeedMedia();
+}
+
 WebApplication app = builder.Build();
 
 app.UseExceptionHandler();
@@ -284,6 +292,19 @@ if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
                 </svg>
                 """,
                 "image/svg+xml"));
+
+    // `0016b` — galeri türevlerinin geliştirme karşılığı. Yine YALNIZ tam sayı parametre
+    // (yukarıdaki XSS gerekçesi) ve aralık dışı her değer 404: tohumun 99 numaralı karesi
+    // bilerek o yoldan geçer ve kırık yuvanın yer tutucusunu kanıtlatır (AC-69).
+    //
+    // SVG DEĞİL, JPEG: Chrome bayt başına bilgisi düşük görselleri LCP adayı saymıyor ve
+    // düz renkli bir SVG kare hiçbir zaman LCP olmuyordu — ölçüldü, detayın LCP öğesi
+    // fiyat paragrafı çıktı. `0016b` AC-83 ilk görselin LCP'sini ölçmek istiyor; kare bu
+    // yüzden gerçek bir fotoğraf gibi sıkıştırılmış raster (degrade + ızgara).
+    app.MapGet("/seed-media/frame-{index:int}-{width:int}x{height:int}.jpg", (int index, int width, int height) =>
+        index is < 0 or > 29 || width is < 1 or > 1600 || height is < 1 or > 1600
+            ? Results.NotFound()
+            : Results.File(SeedFrames.Jpeg(index, width, height), "image/jpeg"));
 
     // Demo VERİSİ; şema değil. Şemayı kurulum adımı uygular ve yukarıdaki doğrulama
     // buraya gelinmeden önce eksikse zaten reddetmiştir.

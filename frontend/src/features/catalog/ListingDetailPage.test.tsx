@@ -23,7 +23,13 @@ const SLUG = 'toyota-corolla-2019-0192c0'
 const detay: ShowcaseListingDetail = {
   slug: SLUG,
   isReserved: false,
-  coverImageUrl: '/seed-media/cover-0.svg',
+  images: [
+    {
+      thumbnail: { url: '/seed-media/frame-0-400x300.svg', width: 400, height: 300 },
+      display: { url: '/seed-media/frame-0-800x600.svg', width: 800, height: 600 },
+      large: { url: '/seed-media/frame-0-1200x900.svg', width: 1200, height: 900 },
+    },
+  ],
   modelName: 'Toyota Corolla',
   modelYear: 2019,
   mileageKilometers: 125000,

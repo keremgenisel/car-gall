@@ -374,7 +374,8 @@ public sealed class TopluEylemTests(ShowcaseDatabase database)
             new HashSet<string>(StringComparer.Ordinal),
             new Dictionary<Guid, IReadOnlyDictionary<string, string>>(),
             new Dictionary<Guid, string>(),
-            new Dictionary<Guid, string>());
+            new Dictionary<Guid, string>(),
+            new Dictionary<Guid, MediaAssetDto>());
 
         await using VehicleCatalogDbContext context = database.CreateContext();
         Vehicle arac = await context.Vehicles.SingleAsync(item => item.Id == new VehicleId(aracId));

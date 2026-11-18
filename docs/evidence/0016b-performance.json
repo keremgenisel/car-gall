@@ -1,0 +1,35 @@
+{
+  "spec": "0016b",
+  "client": {
+    "url": "http://localhost:5181/tr/cars/toyota-corolla-2021-fc89d9",
+    "protocol": "Lighthouse mobil profili (4x CPU kısıtı, Slow 4G), 3 koşu, medyan (spec 0001 C3)",
+    "runs": [
+      {
+        "lcpMilliseconds": 2402,
+        "cumulativeLayoutShift": 0,
+        "lcpElement": "<img class=\"gallery__image\" sizes=\"(min-width: 1232px) 1200px, 100vw\" width=\"800\" height=\"600\" alt=\"Toyota Corolla 2021 — görsel 1/1\" fetchpriority=\"high\" data-testid=\"gallery-image\" srcset=\"/seed-media/frame-20-400x300.jpg 400w, /seed-media/frame-20-800x600.jpg 80…\" src=\"/seed-media/frame-20-800x600.jpg\">"
+      },
+      {
+        "lcpMilliseconds": 2402,
+        "cumulativeLayoutShift": 0,
+        "lcpElement": "<img class=\"gallery__image\" sizes=\"(min-width: 1232px) 1200px, 100vw\" width=\"800\" height=\"600\" alt=\"Toyota Corolla 2021 — görsel 1/1\" fetchpriority=\"high\" data-testid=\"gallery-image\" srcset=\"/seed-media/frame-20-400x300.jpg 400w, /seed-media/frame-20-800x600.jpg 80…\" src=\"/seed-media/frame-20-800x600.jpg\">"
+      },
+      {
+        "lcpMilliseconds": 2402,
+        "cumulativeLayoutShift": 0.007,
+        "lcpElement": "<img class=\"gallery__image\" sizes=\"(min-width: 1232px) 1200px, 100vw\" width=\"800\" height=\"600\" alt=\"Toyota Corolla 2021 — görsel 1/1\" fetchpriority=\"high\" data-testid=\"gallery-image\" srcset=\"/seed-media/frame-20-400x300.jpg 400w, /seed-media/frame-20-800x600.jpg 80…\" src=\"/seed-media/frame-20-800x600.jpg\">"
+      }
+    ],
+    "lcpElementExpected": "data-testid=\"gallery-image\"",
+    "lcpElementMet": true,
+    "median": {
+      "lcpMilliseconds": 2402,
+      "cumulativeLayoutShift": 0
+    },
+    "thresholds": {
+      "lcpMilliseconds": 2500,
+      "cumulativeLayoutShift": 0.1
+    },
+    "met": true
+  }
+}

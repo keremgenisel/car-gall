@@ -1,5 +1,7 @@
+using System.Net;
 using CarGallery.BuildingBlocks;
 using CarGallery.Host.Theme;
+using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 
 namespace CarGallery.Host.Localization;
 
@@ -59,7 +61,61 @@ internal sealed class IndexHtmlRenderer(IWebHostEnvironment environment, ThemeOp
             $"<meta name=\"enabled-locales\" content=\"{string.Join(' ', locales.Enabled)}\" />{HeadEnd}",
             StringComparison.Ordinal);
 
+        string onYukleme = await IlkGorselOnYuklemesiAsync(context);
+
+        if (onYukleme.Length > 0)
+        {
+            html = html.Replace(HeadEnd, onYukleme + HeadEnd, StringComparison.Ordinal);
+        }
+
         context.Response.ContentType = "text/html; charset=utf-8";
         await context.Response.WriteAsync(html, context.RequestAborted);
     }
+
+    /// <summary>
+    /// `0016b` C13 — ilan detayının adresiyse galerinin İLK hazır görseli için bir ön yükleme
+    /// bağlantısı; değilse boş metin. Ölçüldü: görsel JS paketi yüklenip detay isteği
+    /// döndükten SONRA keşfediliyordu (HTML → JS → API → görsel zinciri) ve detayın mobil
+    /// LCP medyanı 2552 ms ile eşiği aşıyordu. Ön yükleme görseli zincirin dışına alır.
+    ///
+    /// <para><b><c>imagesrcset</c> ve <c>imagesizes</c> uçtakiyle BİREBİR aynı</b>
+    /// (`frontend/src/features/catalog/detail/Gallery.tsx`, <c>srcSet</c> ve <c>sizes</c>):
+    /// farklı olursa tarayıcı iki ayrı aday seçer ve görsel İKİ KEZ indirilir. Bu sapmayı
+    /// `e2e/galeri.spec.ts`'in AC-64'ü yakalar — etkileşimden önce galeriden tek istek.</para>
+    ///
+    /// <para>Görünmeyen ilan ile hiç olmayan ilan aynı yoldan geçer ve ikisi de bağlantı
+    /// üretmez (`0002` C13'ün "ayırt edilemezlik" kuralı).</para>
+    /// </summary>
+    private static async Task<string> IlkGorselOnYuklemesiAsync(HttpContext context)
+    {
+        string[] parcalar = (context.Request.Path.Value ?? string.Empty)
+            .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parcalar.Length != 3 || parcalar[1] != LocalePrefixMiddleware.ListSegment)
+        {
+            return string.Empty;
+        }
+
+        ShowcaseImageDto? gorsel = await context.RequestServices
+            .GetRequiredService<IShowcaseListingDetailQueries>()
+            .FindFirstImageAsync(Uri.UnescapeDataString(parcalar[2]), context.RequestAborted);
+
+        if (gorsel is null)
+        {
+            return string.Empty;
+        }
+
+        HashSet<int> gorulen = [];
+        string srcset = string.Join(
+            ", ",
+            new[] { gorsel.Thumbnail, gorsel.Display, gorsel.Large }
+                .Where(turev => gorulen.Add(turev.Width))
+                .Select(turev => $"{turev.Url} {turev.Width.ToString(System.Globalization.CultureInfo.InvariantCulture)}w"));
+
+        return $"<link rel=\"preload\" as=\"image\" href=\"{WebUtility.HtmlEncode(gorsel.Display.Url)}\" "
+            + $"imagesrcset=\"{WebUtility.HtmlEncode(srcset)}\" imagesizes=\"{GallerySizes}\" fetchpriority=\"high\" />";
+    }
+
+    /// <summary>Galerinin `sizes` değeri; `Gallery.tsx` ile aynı (yukarıdaki not).</summary>
+    internal const string GallerySizes = "(min-width: 1232px) 1200px, 100vw";
 }
