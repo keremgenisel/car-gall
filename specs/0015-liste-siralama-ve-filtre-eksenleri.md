@@ -25,9 +25,11 @@
 > **D6**: veride marka kavramı yok, marka ekseni kapsam dışına çıktı (**X8**). Context
 > yeniden doğrulandı (§ Context, K1–K4).
 >
-> **Bu hâlâ bir taslaktır.** Kabul kriterleri yazılmadı; kararlar onları belirliyor ve
-> kriter turu Analist'in bir sonraki işidir. Kriterler `main`'de olmadığı için bu tur
-> SCORECARD'da revizyon **sayılmaz** (ADR 0008 / K3).
+> *(Bu turda spec hâlâ taslaktı ve kriterleri yoktu; kriterler `main`'de olmadığı için tur
+> SCORECARD'da revizyon **sayılmaz**, ADR 0008 / K3.)* **Kriter turu (2026-11-18, #88):**
+> 46 kabul kriteri D1–D21'den türetildi — Developer yazdı, Takım Yöneticisi onayına sunuldu
+> (§ Acceptance Criteria). *(QA BULGU-2, 2026-11-18: bu paragraf kriterler eklendikten sonra da
+> "kabul kriterleri yazılmadı" diyordu.)*
 
 ---
 
