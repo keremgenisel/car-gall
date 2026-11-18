@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.HttpOverrides;
 namespace CarGallery.Host;
 
 /// <summary>
-/// Ters proxy arkasında ziyaretçinin GERÇEK adresi. Bu, 0005'in hız sınırının doğru
+/// Ters proxy arkasında ziyaretçinin GERÇEK adresi ve isteğin GERÇEK şeması
+/// (ADR 0012 / K4). Adres, 0005'in hız sınırının doğru
 /// bölünmesi için gerekli: proxy arkasında <c>RemoteIpAddress</c> proxy'nin adresidir ve
 /// o zaman C17'nin "aynı IP'den 5 talep"i TÜM ziyaretçiler için toplam 5 talep olur —
 /// altıncı ziyaretçi, dünyanın öbür ucundan gelse bile reddedilir.
@@ -36,9 +37,15 @@ internal static class ForwardedHeadersSetup
             return null;
         }
 
+        // ADR 0012 / K4 — şema da iletilir. TLS ters proxy'de biter ve uygulama isteği
+        // `http` görür; yönetim yüzeyinin köken koruması (`CrossOriginGuard`) beklenen
+        // kökeni `Request.Scheme`'den kurduğu için tarayıcının `https://` Origin'i
+        // EŞLEŞMİYOR ve giriş dâhil her yazma isteği 403 alıyordu. Ölçüldü: konteyner
+        // imajında `X-Forwarded-Proto: https` ile bile 403. Güven sınırı değişmedi —
+        // başlık yalnız aşağıda AÇIKÇA listelenen proxy'den gelirse okunur.
         ForwardedHeadersOptions options = new()
         {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor,
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
         };
 
         // Varsayılan listeler loopback içerir; açıkça yazılmayan hiçbir kaynağa
