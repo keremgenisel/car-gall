@@ -239,6 +239,18 @@ bazlı bir `<head>` enjeksiyonu ekledi — ilan detayında ilk görselin ön yü
 meta enjeksiyonu aynı yerden geçecek; `0004` başlarken bu enjeksiyon ve detay adresi için
 eklenen hafif sorgu (`FindFirstImageAsync`) okunmalı. **`0004` hâlâ başlanmamış ilk iş.**
 
+### Sapma — `0017` (#11) #8'den önce yapıldı
+
+`0016` kapandığında başlanmamış ilk iş yine **#8** (`0004`, SEO) idi. Takım Yöneticisi aynı gün
+**#11**'i (`0017`) istedi ve kart 2026-11-18'de kapandı (#96 kararlar, #98 kriterler,
+#99 → `49a093f`).
+
+**Neden kayda geçiyor:** önceki üç sapmayla aynı sebep. **İki kesişme var:** (1) `0017` **D10**
+gerçek HTTP 404 kararını `0004`'e devretti — olmayan içerik sayfasının belgesi bugün `200`
+dönüyor; (2) kabuk, tek parçalı ayrılmamış yolda `Content`'e eski slug sorusu soruyor (**D27**)
+ve `0004`'ün meta enjeksiyonu aynı istekten geçecek. `0004` başlarken `LocalePrefixMiddleware`'in
+eski slug dalı ve `0016b` **D37**'nin enjeksiyonu birlikte okunmalı. **`0004` hâlâ başlanmamış ilk iş.**
+
 ### `0010`'un kendi dilimlemesi — unsur 7 #2 ikiye bölündü
 
 `0010`'un **D1** kararı, unsur 7'nin 2. maddesini üç dilime ayırıyor ve ilk dilimi kendisi
@@ -291,7 +303,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
 | 9 | Liste: sıralama + filtre eksenleri | `0015` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 10 | Medya galerisi + parça haritası şeması | `0016a` ✅ tamamlandı · `0016b` ✅ tamamlandı *(#8'den önce — § Sapma)* |
-| 11 | `Content` sayfaları | **`0017`** (Taslak — kararlar verildi D1–D24, kriterler yazılmadı) |
+| 11 | `Content` sayfaları | `0017` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
 | 13 | Bülten aboneliği | **`0018`** (Taslak — S1–S5) |
 
@@ -387,6 +399,28 @@ Ayrı kart olarak önerilenler:
 Başlanmamış ilk iş **#8** (`0004`). Taslak sayısı dörtten **üçe** indi; `0016`'nın dört sorusu
 D1–D4 ile kapanmıştı (kriter turunun S5–S8'i açıldı ve aynı gün D33–D36 ile kapandı), yani
 toplam açık soru 19'dan **15**'e düştü.
+
+**`11`. satır kapandı** (`0017`, 2026-11-18, `49a093f`) — sırasından önce, § Sapma. Yeni
+`Content` modülü: dört sistem sayfası (Hakkımızda, KVKK, Çerez, SSS), serbest sayfalar, dil
+başına yayın, eski slug'ın `301`'i ve SSS; panelde "İçerik" bölümü, vitrinde altlığın
+Kurumsal kolonu ve talep formunun KVKK bağlantısı. **134 kriter**, kararlar **D1–D36**;
+kriterleri Analist yazdı (**D28**) ve revizyonu 0 çıktı. Mockup farkı bu kartla **daraldı**
+ama kapanmadı — kapsam dışında kalanlar:
+- blog (**X1**);
+- "İletişim" sayfası (**X10**) — şube bilgisi zaten altlıkta, ikinci kaynak bayatlar;
+- menü ve altlığın panelden düzenlenmesi (**X7**);
+- ana sayfa giriş metninin `Content`'e taşınması (**X9**).
+
+Ayrı kart olarak açılan ve önerilenler:
+- izin anındaki aydınlatma metninin kaydı → **`0019`** açıldı (Taslak, S1–S3; `0017` X8);
+- araç yönetim uçları "oturum açmış her rol" politikasında, yani İçerik Editörü araç da
+  düzenleyebiliyor — ayrı kart **önerildi** (`0017` D25'in yan bulgusu);
+- gerçek HTTP 404 → `0004` (**D10**).
+
+Başlanmamış ilk iş **#8** (`0004`). Tablodaki taslak sayısı üçten **ikiye** indi (`frontend-003`,
+`0018`); tablo dışında `0019` taslağı açıldı. `0017`'nin beş sorusu D1–D5 ile kapanmıştı ve
+kriter turunun S6–S13'ü aynı gün D29–D36 ile kapandı; `0019`'un üç sorusu eklendi, yani toplam
+açık soru 15'ten **13**'e düştü.
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca

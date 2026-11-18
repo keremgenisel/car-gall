@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi (ajan)) — 134 kabul kriteri |
+| **Durum** | Tamamlandı (2026-11-18) — kararlar #96 → `658a6a7`, kriterler #98 → `a348944`, uygulama #99 → `49a093f` |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Content` (yeni — bugün hiç yok) · `frontend/` public vitrin + panel · `Host` (eski slug yönlendirmesi — **D13**) · `frontend/` talep formu (KVKK bağlantısı — **D5**) ve altlık (Kurumsal kolonu — **D6**, **D7**) |
@@ -981,29 +981,29 @@ S13. **SSS sırasının uçları ve yeni girdinin yeri.** R18 sıranın yukarı/
 ## Definition of Done
 
 - [x] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
-      *(S1–S5 → D1–D5, B1–B20 → D5–D24, 2026-11-18.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0017-ac<n>.png`), boş ve hata durumları dâhil,
-      Arapça görüntü de var.
-- [ ] Gövde arındırmasının enjeksiyon girişimini kırdığı testle gösterildi (R17 · **D19**):
-      ham HTML, `javascript:` bağlantısı ve dış bağlantının `rel`'i.
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — merkezi `translations` tablosu kurulmadı (C2).
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `content` şemasına dokunuyor.
-- [ ] Talep formunun izin satırındaki KVKK bağlantısı, `privacy` yayındayken ve değilken
+      *(S1–S5 → D1–D5, B1–B20 → D5–D24, plan turu D25–D28, S6–S13 → D29–D36, 2026-11-18.)*
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. *(#99 gövdesi, tablo: 132 kriterin etiketli testi var; AC-133 ve AC-134 regresyon kriterleri, kanıtları `0014` ve `0005`'in yeşil takımları.)*
+- [x] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0017-ac<n>.png`), boş ve hata durumları dâhil,
+      Arapça görüntü de var. *(`0017-ac34`, `-ac40` (bulunamadı), `-ac66`, `-ac75`, `-ac86`, `-ac93`, `-ac99` (hata), `-ac9`, `-ac26`, `-ac31`, `-ac76`; Arapça `-ac121-ar`, `-ac122-ar`, `-ac123-ar`.)*
+- [x] Gövde arındırmasının enjeksiyon girişimini kırdığı testle gösterildi (R17 · **D19**):
+      ham HTML, `javascript:` bağlantısı ve dış bağlantının `rel`'i. *(`ContentBody.test.ts` AC-63–74; e2e AC-66/67 gerçek tarayıcıda, `alert` çağrılmadı; sunucu tarafı `KuralTests` AC-68/70/71. Triyaj BULGU-2 ile `//` ve `\\` hedefleri de dış bağlantı.)*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — merkezi `translations` tablosu kurulmadı (C2). *(Architecture 60/60; `IcerikMimariTests` AC-113, AC-129, AC-130, AC-132. Kart taşındıktan sonra tam takım yeniden koşturuldu.)*
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `content` şemasına dokunuyor. *(`InitialContent`: bütün `schema:` değerleri `"content"`.)*
+- [x] Talep formunun izin satırındaki KVKK bağlantısı, `privacy` yayındayken ve değilken
       kanıtla gösterildi (R22 · **D5**). *(Eski "hedefi kontrol edildi" kutusu kaldırıldı:
-      ölçüldü, bağlantı yok — K1.)*
-- [ ] İzin anındaki metin sürümünün kaydı için ayrı kart açıldı (X8).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi (arayüz metinleri; içerik gövdesi veri).
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      ölçüldü, bağlantı yok — K1.)* *(`0017-ac93`; e2e AC-93, AC-94, AC-95, AC-97.)*
+- [x] İzin anındaki metin sürümünün kaydı için ayrı kart açıldı (X8). *(`specs/0019-izin-metni-surumu.md`, Taslak, S1–S3 önerili — bu kapanış.)*
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi (arayüz metinleri; içerik gövdesi veri). *(600 anahtar, üç katalog eşit; triyajda `content.edit.saveFirst` eklendi.)*
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi. *(§ İçerik: İçerik Sayfası, Sistem Sayfası, Serbest Sayfa, SSS Girdisi, Eski Slug.)*
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *(#99 son commit `607ebfc`: Backend, Frontend, E2E, C3 eşikleri, değişen yollar yeşil.)*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(`Content.Tests` 104 — `SayfaYasamTests`, `AdresVeSssTests`, `KuralTests`; `Host.Tests/IcerikZinciriTests` 12.)*
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi. *(Dört satır: içerik sayfası adresi, eski içerik slug'ı, içerik gövdesi, içerik yazma yetkisi.)*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      bunun yerine geçmez. *(Triyaj 2026-11-18, merge'den önce: BULGU-1, -2, -3 → `607ebfc`.)*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. *(#99; bilinçli kararlar ve yan bulgu gövdede.)*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(`49a093f`, 2026-11-18.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı. *(Bu kapanış; taşımadan sonra `Architecture.Tests` tam takımı koşturuldu.)*
 
 ---
 
@@ -1021,13 +1021,27 @@ tanımın netleştirilmesini öner.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | **evet** | **Fiilen de evet.** `git cat-file -e 49a093f^:specs/0017-…` → var. Kriterler (Analist, **D28**) #98 ile 20:06'da `main`'deydi (`a348944`); dalın ilk commit'i (`4842013`) 20:26'da, ondan sonra. R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
+| **Kriter sayısı: önce → bugün** | **134 → 134** | Uygulama ve triyaj kriter eklemedi ya da çıkarmadı. O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
+| **Spec revizyon sayısı** | **0** | R, C ve AC bölümleri `a348944` ile `main` arasında aynı; değişen tek bölüm Context (uygulama planı). **Not:** kararlar iki kez yazıldı — #96 ile çelişen #97 kapatıldı, `main`'e girmedi (bkz. ders). Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
+| **Düzeltme turu sayısı** | **1** | Triyaj bir tur döndürdü: BULGU-1, -2, -3. T10 `[x]`. PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
+| **Dış bulgu (gerçek/gürültü)** | **3 / 0** | Üçü de yeniden üretildi ve gerçek çıktı: BULGU-1'in testi düzeltmeden önce kırmızıydı (yayın düğmesi kirli formda etkindi); BULGU-2 ve -3'ün testleri düzeltme geri alınınca kırmızı verdi. **Gürültü yarısı ölçülemedi** — triyaj gürültü işaretlemedi. **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
+| **Uygulama içi bulgu** | **10** | **Ürün (5):** bağlantı ifadesi hedeften önceki boşluğu atlamıyordu (`( javascript:`) · açılı ayraçlı `<javascript:>` · sekmeli `java\tscript:` (üçü de kendi kural testimde) · altlıkta iptal edilen isteğin `catch`'i yeni dilin bağlantılarını ezebiliyordu · SSS satırı çakışmadan sonra bayat sürümle kalıyordu. **Kendi testlerim ve araçlarım (5):** AC-32 eşzamanlılığı zamanlamaya bırakıyordu (belirteç kaldırılınca yeşil kaldı → kayıt bariyeri) · bir bozma derleme uyarısıyla maskelenip hiç koşmadı · AC-113 kapısı ayrılmış slug `"admin"`i rol kodu sandı · `contentBody.ts` / `ContentBody.tsx` büyük-küçük harf çakışması · AC-126 e2e'si galeri adını ve dil adlarını arayüz metni saydı. Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
+| **Regresyon sayısı** | **0** | `main`'e ulaşan yok. **Bilinçli davranış değişikliği:** `/tr/foo` artık listeye değil "bulunamadı" ekranına gider (**D9**, `0014` D28'i değiştirdi); `/tr/%E0` triyajdan önce boş sayfa veriyordu (BULGU-3) — merge'den önce kapandı. Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-18 (`49a093f`). Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
 
 **Bu spec'ten çıkarılan ders:**
+
+**Aynı spec'e iki oturum aynı saatte karar yazdı.** QA CLARIFY oturumu #96'yı açtı; bu oturum
+açık PR'lara bakmadan plan turunun kararlarını #97 ile yazdı ve üç noktada çelişti (404, 301,
+"İletişim" sayfası). Sahip #96'yı seçti, #97 kapandı. Kural bellekte vardı ve ikinci kez
+uygulanmadı: "kararları spece işle" bir belge işi gibi değil, kendi planını yazmak gibi geldi.
+
+**"Eşzamanlı" adlı test eşzamanlılığı ölçmüyordu.** AC-32 iki kaydı aynı anda gönderiyordu
+ama işlemler o kadar kısaydı ki ikincisi birincinin sonucunu okuyup uygulama kontrolüne
+takılıyordu; veritabanı belirteci kaldırılınca test yeşil kaldı. Bozmayla ölçülmeseydi
+kriter karşılanmış görünecekti.
+
+**Ekrandaki durum ile sunucudaki durum ayrışınca ekran yalan söyler** (BULGU-1). Dil başına
+yayın eylemi sunucudaki metni yayına alıp formu eziyordu; birim testleri her eylemi temiz
+formda sınadığı için görmedi. Kirli form + ikinci eylem, panel testlerinin ayrı bir ekseni.
