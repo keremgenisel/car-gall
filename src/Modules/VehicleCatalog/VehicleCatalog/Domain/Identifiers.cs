@@ -18,3 +18,11 @@ internal readonly record struct ListingId(Guid Value)
 
     public override string ToString() => Value.ToString();
 }
+
+/// <summary>`0023` **D7** — satış geri alma kaydının kimliği.</summary>
+internal readonly record struct SaleReversalId(Guid Value)
+{
+    internal static SaleReversalId New() => new(Guid.CreateVersion7());
+
+    public override string ToString() => Value.ToString();
+}

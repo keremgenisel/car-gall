@@ -127,8 +127,8 @@ Olay akışı (outbox, tek yön):
 
 ```
 VehicleCatalog → VehiclePublished / VehicleUnpublished / VehicleReserved /
-                 VehicleReturnedToShowcase / VehicleSold / VehicleArchived /
-                 VehiclePriceChanged / VehicleRelocated
+                 VehicleReturnedToShowcase / VehicleSold / VehicleSaleReverted /
+                 VehicleArchived / VehiclePriceChanged / VehicleRelocated
                    → Engagement, Audit, Content(slot geçersizleme), sitemap(host)
 Dealership     → BranchOpened / BranchDetailsChanged / BranchDeactivated
                    → VehicleCatalog, Audit, sitemap(host)
@@ -147,6 +147,15 @@ kararsızdı ve "adlar buradakiyle birebir aynı" diyen bir DoD maddesi doğrula
 **zaten yayıyordu** ve ikisinin burada adı yoktu — listeye eklendi; (3) sekizinin de
 yayıncısı `0012b`'dir. `VehiclePriceChanged` ve `VehicleRelocated`'ın tetikleyicisi araç
 **düzenleme** komutudur: ikisi de bugün değişiyor ve **A7** duyuruyu istiyor.
+
+`VehicleSaleReverted` **2026-11-18'de eklendi** (spec `0023` / D8, D17, Takım Yöneticisi
+(ajan) kararı). Yanlışlıkla satıldı işaretlenen ilanın satışını Yönetici geri aldığında
+yayılır. Gövde diğerlerinin beş alanına ek olarak **dönülen durumu** (`Published` ·
+`Reserved` · `Draft`) taşır — D30'un "durumu tip söyler" kuralından bilinçli ayrılık, çünkü
+tek olayın üç sonucu var ve tip onları ayıramaz. Gerekçe ve geri alan personel gövdede
+**yoktur** (kişisel veri; `VehicleCatalog`'un kendi kaydında durur). *Neden:* bugün
+`VehicleSold`'u dinleyen yok, ama satışları sayacak bir tüketici geri almayı görmezse yanlış
+sayar.
 
 ---
 
@@ -521,6 +530,7 @@ altındaki ADR'lerdedir.
 | Personel oturumu | Sunucu tarafı opak oturum çerezi; JWT yok (rol ve durum her istekte kaynaktan) |
 | İki adımlı doğrulama | **Kapsamda** (`0013`): zamana bağlı kod (HMAC-SHA1 · 6 hane · 30 sn, parametre kümesi **dondurulmuş**), **Yönetici** rolünde zorunlu, diğer rollerde opsiyonel. Doğrulama sırrı geri döndürülebilir saklanmak **zorundadır** ve uygulama düzeyinde şifrelenir; anahtar dağıtım yapılandırmasından. SMS, donanım anahtarı ve "bu cihazı hatırla" kapsam dışı |
 | İkinci adımın kaydı | `identity` şemasında **kendi tablosu**; kurulum · kapatma · sıfırlama · kurtarma kodu kullanımı yazılır, **başarısız denemeler yazılmaz**. Bu depodaki ilk denetim kaydı — tüketicisi olmayan bir entegrasyon olayı değil |
+| Satış geri alma kaydı | `vehicle_catalog` şemasında **kendi tablosu** (`listing_sale_reversals`); yalnız ekleme alır, düzenleyen ya da silen uç yoktur. Personelin adı kayıt anındaki hâliyle kopyalanır. `0013`'ün denetim kaydı deseninin ikinci örneği (spec `0023` / D7) |
 | Eşzamanlılık | Invariant koruması: satır kilidi + tek transaction (`InvariantGuard`); iyimser eşzamanlılık yok |
 | Şase tekilliği | `vehicles` üzerinde kısmi tekil indeks (`NOT is_archived`); araç kendi arşiv bayrağını taşır |
 | Opsiyonel alan tipleri | Kapalı tip kümesi; alan → tip eşlemesi KODDA, değer tipli kolonlarda (tutar `numeric(19,4)` + kod + üs); parça haritası `PartMap` — yazma ve okuma modelinde `jsonb`, yalnız kod (ADR 0007 Ek 1, `0016a` D26) |

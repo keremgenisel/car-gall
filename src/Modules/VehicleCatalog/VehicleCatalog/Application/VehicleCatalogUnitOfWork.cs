@@ -93,7 +93,7 @@ internal sealed class VehicleCatalogUnitOfWork(
     }
 
     /// <summary>
-    /// Sekiz olay, sekiz dal. **Her duyuru BENZERSİZ bir kimlik taşır**: teslimat
+    /// Dokuz olay, dokuz dal (`0023` dokuzuncuyu ekledi). **Her duyuru BENZERSİZ bir kimlik taşır**: teslimat
     /// en-az-bir-kezdir ve alıcıların yinelenen işleme koruması bu kimliğe dayanır
     /// (`docs/architecture.md` § 2.C).
     ///
@@ -121,6 +121,8 @@ internal sealed class VehicleCatalogUnitOfWork(
             ListingReturnedToShowcase =>
                 new VehicleReturnedToShowcase(kimlik, an, aracId, ilanId, adres),
             ListingSold => new VehicleSold(kimlik, an, aracId, ilanId, adres),
+            ListingSaleReverted reverted =>
+                new VehicleSaleReverted(kimlik, an, aracId, ilanId, adres, reverted.RestoredStatus.ToString()),
             ListingArchived => new VehicleArchived(kimlik, an, aracId, ilanId, adres),
             VehiclePriceWasChanged => new VehiclePriceChanged(kimlik, an, aracId, ilanId, adres),
             VehicleWasRelocated => new VehicleRelocated(kimlik, an, aracId, ilanId, adres),

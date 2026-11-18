@@ -167,7 +167,8 @@ internal sealed class ListingTransitionCommands(
             ? new HashSet<Guid>()
             : await mediaAssets.ReadyAmongAsync(vehicle.MediaAssetIds, cancellationToken);
 
-        IReadOnlySet<string> zorunlu = read?.RequiredFieldKeys ?? await ZorunluAlanlarAsync(cancellationToken);
+        IReadOnlySet<string> zorunlu = read?.RequiredFieldKeys
+            ?? await PublishEligibility.RequiredFieldKeysAsync(context, cancellationToken);
 
         eksikler.AddRange(PublishEligibility.Evaluate(vehicle, hazir, zorunlu));
 
@@ -208,13 +209,4 @@ internal sealed class ListingTransitionCommands(
             ? ListingSlug.Create(ad, vehicle.ModelYear, listing.Id)
             : Result.Failure<ListingSlug>(new Error(ListingSlug.InvalidSource));
     }
-
-    private async Task<IReadOnlySet<string>> ZorunluAlanlarAsync(CancellationToken cancellationToken) =>
-        new HashSet<string>(
-            await context.VehicleFieldSettings
-                .AsNoTracking()
-                .Where(setting => !setting.IsCore && setting.FormState == FieldFormState.Required)
-                .Select(setting => setting.FieldKey)
-                .ToListAsync(cancellationToken),
-            StringComparer.Ordinal);
 }

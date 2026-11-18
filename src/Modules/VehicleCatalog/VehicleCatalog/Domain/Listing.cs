@@ -100,6 +100,16 @@ internal sealed class Listing : AggregateRoot<ListingId>
     /// </summary>
     internal ListingSlug? Slug { get; private set; }
 
+    /// <summary>
+    /// `0023` **D2**/**D18** — satıştan ÖNCEKİ durum (`Yayında` ya da `Rezerve`). Her satışta
+    /// yeniden yazılır, satışın geri alınmasında ve arşivde temizlenir.
+    ///
+    /// <para><c>null</c> = <b>bilinmiyor</b> (**D3**): bu kart gelmeden önce satılmış ilanın
+    /// önceki durumu hiç kaydedilmedi ve uydurulmaz. Geri alma o ilanı `Yayında`ya
+    /// döndürür.</para>
+    /// </summary>
+    internal ListingStatus? StatusBeforeSale { get; private set; }
+
     internal static Listing CreateDraft(VehicleId vehicleId, int showcaseSortWeight) =>
         new(ListingId.New(), vehicleId, showcaseSortWeight);
 
@@ -217,8 +227,55 @@ internal sealed class Listing : AggregateRoot<ListingId>
             return Result.Failure(new Error(InvalidTransition));
         }
 
+        // 0023 D18 — her satış kendi önceki durumunu yazar; ikinci satış birincinin
+        // değerini EZER. "Yayında satıldı → geri alındı → rezerve → yeniden satıldı"
+        // dizisinde ikinci geri alma Rezerve'ye dönmeli (AC-23).
+        StatusBeforeSale = Status;
         Status = ListingStatus.Sold;
         Raise(new ListingSold(Id));
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// `0023` **R10** — satış yalnız `Satıldı`dan geri alınır. Komut iki modül okumasına
+    /// girmeden önce bunu sorar; kararın kendisi yine <see cref="RevertSale"/>'dadır.
+    /// </summary>
+    internal bool CanRevertSale => Status is ListingStatus.Sold;
+
+    /// <summary>
+    /// `0023` — satışı geri almanın HEDEF durumu, geçişi yapmadan. Onay penceresinin
+    /// gösterdiği durum (**R9**) ile geçişin döndüğü durum <b>aynı kuraldan</b> çıkar; iki
+    /// yerde yazılsaydı pencere bir şey, sunucu başka bir şey yapabilirdi.
+    /// </summary>
+    /// <param name="canReturnToShowcase">
+    /// Araç bugün vitrine çıkabilir mi: şube ataması beklemiyor, şubesi kapatılmamış ve
+    /// **A2**'nin koşullarını sağlıyor (**D5**, **D12**, **D13**). Bu bilgi agregatın
+    /// elinde değil — şube `Dealership`'te, medya `Media`'da — ve çağırandan gelir.
+    /// </param>
+    internal ListingStatus SaleRevertTarget(bool canReturnToShowcase) =>
+        canReturnToShowcase ? StatusBeforeSale ?? ListingStatus.Published : ListingStatus.Draft;
+
+    /// <summary>
+    /// `0023` **D6** — satışı geri alma, KENDİ geçişi. Yayına alma yolu kullanılmaz:
+    /// `Publish` yalnız `Taslak`'tan çalışır, `Rezerve`'ye dönemez ve `ListingPublished`
+    /// duyurusunu üretir; geri alma ayrı bir olgudur ve kendi duyurusu vardır (**D8**).
+    ///
+    /// <para><b>Korunanlar</b> (**R5**, **D15**): adres, ilk yayın tarihi ve öne çıkarma
+    /// anahtarı bu metotta HİÇ yazılmıyor. Anahtar satılmışken değiştirildiyse değişmiş
+    /// hâliyle döner — "satıştan önceki" değeri ayrıca saklanmıyor.</para>
+    /// </summary>
+    internal Result RevertSale(bool canReturnToShowcase)
+    {
+        if (!CanRevertSale)
+        {
+            return Result.Failure(new Error(InvalidTransition));
+        }
+
+        ListingStatus hedef = SaleRevertTarget(canReturnToShowcase);
+
+        Status = hedef;
+        StatusBeforeSale = null;
+        Raise(new ListingSaleReverted(Id, hedef));
         return Result.Success();
     }
 
@@ -257,6 +314,8 @@ internal sealed class Listing : AggregateRoot<ListingId>
         }
 
         Status = ListingStatus.Archived;
+        // 0023 D18 — arşivde satış öncesi durumun anlamı yok: arşiv geri alınamaz (R10).
+        StatusBeforeSale = null;
         Raise(new ListingArchived(Id));
         return Result.Success();
     }

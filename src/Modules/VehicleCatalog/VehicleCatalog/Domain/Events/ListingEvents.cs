@@ -10,6 +10,9 @@ internal sealed record ListingReturnedToShowcase(ListingId ListingId) : IDomainE
 
 internal sealed record ListingSold(ListingId ListingId) : IDomainEvent;
 
+/// <summary>`0023` **D8** — satış geri alındı; ilan <paramref name="RestoredStatus"/>'a döndü.</summary>
+internal sealed record ListingSaleReverted(ListingId ListingId, ListingStatus RestoredStatus) : IDomainEvent;
+
 internal sealed record ListingUnpublished(ListingId ListingId) : IDomainEvent;
 
 internal sealed record ListingArchived(ListingId ListingId) : IDomainEvent;
