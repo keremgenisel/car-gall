@@ -31,6 +31,14 @@ export function useListUrlState(): [ListState, (next: ListState) => void] {
 
   const push = useCallback((next: ListState) => {
     const url = `${window.location.pathname}${toCanonicalSearch(next)}`
+
+    // Adresi DEĞİŞTİRMEYEN bir eylem geçmişe kayıt eklemez (`0015` QA BULGU-1): aynı aralığı
+    // ikinci kez "Uygula", boş eksene geçersiz değer. Aksi hâlde aynı adres geçmişe birden
+    // çok kez yazılır ve ziyaretçinin ilk "geri"leri hiçbir şey yapmıyor gibi görünür (AC-31).
+    if (url === `${window.location.pathname}${window.location.search}`) {
+      return
+    }
+
     window.history.pushState(null, '', url)
     setState(next)
   }, [])

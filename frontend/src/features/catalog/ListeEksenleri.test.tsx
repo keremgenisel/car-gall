@@ -142,6 +142,16 @@ describe('0015 — aralık uygulaması ve adres (R11, R12, D19)', () => {
 
     expect(window.location.search).toBe('?fuel=diesel&yearMin=2018&yearMax=2021&priceMax=500000')
     expect(pushState).toHaveBeenCalledTimes(2)
+
+    // QA BULGU-1 — adresi DEĞİŞTİRMEYEN gönderim geçmişe kayıt eklemez: aynı aralığı ikinci
+    // kez "Uygula" (Enter'dan sonra Uygula olağan bir akış) ve boş eksene geçersiz değer.
+    fireEvent.click(within(fiyat).getByRole('button', { name: 'Uygula' }))
+    const kilometre = screen.getByTestId('mileage-filter')
+    fireEvent.change(within(kilometre).getByLabelText('En az'), { target: { value: 'abc' } })
+    fireEvent.click(within(kilometre).getByRole('button', { name: 'Uygula' }))
+
+    expect(window.location.search).toBe('?fuel=diesel&yearMin=2018&yearMax=2021&priceMax=500000')
+    expect(pushState).toHaveBeenCalledTimes(2)
     pushState.mockRestore()
   })
 

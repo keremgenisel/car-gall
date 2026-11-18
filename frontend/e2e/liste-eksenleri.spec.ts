@@ -111,6 +111,14 @@ test.describe('Liste eksenleri', () => {
       .poll(() => new URL(page.url()).search)
       .toBe('?fuel=diesel&yearMin=2018&yearMax=2021')
     expect(await page.evaluate(() => window.history.length)).toBe(uzunluk + 1)
+
+    // QA BULGU-1 — adresi değiştirmeyen ikinci gönderim geçmişe kayıt EKLEMEZ.
+    await yil.getByRole('button', { name: 'Uygula' }).click()
+    expect(await page.evaluate(() => window.history.length)).toBe(uzunluk + 1)
+
+    // Tek "geri" önceki daraltma hâline döner (AC-31).
+    await page.goBack()
+    await expect.poll(() => new URL(page.url()).search).toBe('?fuel=diesel')
   })
 
   test('0015/AC-14, AC-15, AC-16: geçersiz aralık ve tanınmayan sort adresten kalkar; tanınmayan slug kalır', async ({
