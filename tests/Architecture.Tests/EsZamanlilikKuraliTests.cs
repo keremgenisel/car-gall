@@ -116,10 +116,20 @@ public sealed partial class EsZamanlilikKuraliTests
             $"Invariant kararı veren komut ortak deseni ({nameof(violations)}) atlıyor (0007 R5); sayı kilit altında üretilmeli:{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
     }
 
-    [Fact(DisplayName = "0007/AC-8: Şube kapatma komutunun HTTP ucu yoktur; komut yalnızca modül içinden çağrılabilir")]
-    public void YayinlanmazHttpUcu_SubeKapatmaKomutu()
+    /// <summary>
+    /// `0007`/AC-8 "şube kapatma komutunun HTTP ucu yoktur" diyordu ve gerekçesi `0003` D1'di:
+    /// `Identity` gelene kadar modülün KORUMASIZ yazma ucu olamazdı. `0003` X1 yazma yüzeyini
+    /// ayrı bir spec'e bırakmıştı; `0020` o spec'tir ve uçları yalnız Yönetici politikasının
+    /// arkasında açar (D2, plan turu P5). Kriterin koruduğu şey — korumasız yazma ucu yok —
+    /// bu kapıyla ölçülmeye devam ediyor: Dealership'te yazma fiili taşıyan her dosya
+    /// Yönetici politikalı bir grup kurar ve başka bir politika vermez. Davranışın kendisi
+    /// (`403`, `401`) `Host.Tests`'te ölçülür.
+    /// </summary>
+    [Fact(DisplayName = "Dealership yazma kapısı: yazma uçları yalnız Yönetici politikalı grupta açılır; komut Contracts'a sızmaz (0007/AC-8'in yerini alır — 0020 P5)")]
+    public void AcilirYalnizYoneticiGrubunda_DealershipYazmaUclari()
     {
         List<string> violations = [];
+        int yazmaDosyasi = 0;
 
         foreach (string file in SolutionLayout.SourceFiles())
         {
@@ -130,24 +140,41 @@ public sealed partial class EsZamanlilikKuraliTests
                 continue;
             }
 
-            if (EndpointMapping().IsMatch(File.ReadAllText(file)))
+            string text = File.ReadAllText(file);
+
+            if (!EndpointMapping().IsMatch(text))
+            {
+                continue;
+            }
+
+            yazmaDosyasi++;
+
+            bool yoneticiGrubu = text.Contains(".RequireAuthorization(AdminSurface.ManagerPolicy)", StringComparison.Ordinal)
+                && text.Contains("MapGroup(", StringComparison.Ordinal);
+            bool baskaPolitika = OtherPolicy().IsMatch(text);
+
+            if (!yoneticiGrubu || baskaPolitika)
             {
                 violations.Add(relative);
             }
         }
 
-        // Host da onu kendi başına yayınlayamaz: komut `internal`dır ve `Contracts`'ta yoktur.
+        // Kapının boşta yeşil kalmadığını ölç: yazma ucu bulunmazsa kapı hiçbir şey denetlemiyor.
+        Assert.True(yazmaDosyasi > 0, "Dealership'te yazma ucu bulunamadı; kapı boşta koşuyor.");
+
+        // Host da komutu kendi başına yayınlayamaz: komut `internal`dır ve `Contracts`'ta yoktur.
         string contracts = Path.Combine(SolutionLayout.SourceRoot, "Modules/Dealership/Dealership.Contracts");
         List<string> leaked =
         [
             .. Directory.EnumerateFiles(contracts, "*.cs", SearchOption.AllDirectories)
-                .Where(path => File.ReadAllText(path).Contains("Close", StringComparison.Ordinal))
+                .Where(path => File.ReadAllText(path).Contains("BranchCommands", StringComparison.Ordinal)
+                    || File.ReadAllText(path).Contains("CloseAsync", StringComparison.Ordinal))
                 .Select(SolutionLayout.Relative)
         ];
 
         Assert.True(
             violations.Count == 0 && leaked.Count == 0,
-            $"0003 § D1 — Dealership'in korumasız yazma ucu olamaz (0007 D2):{Environment.NewLine}{string.Join(Environment.NewLine, [.. violations, .. leaked])}");
+            $"Dealership'in yazma uçları yalnız Yönetici politikalı grupta açılır (0020 D2):{Environment.NewLine}{string.Join(Environment.NewLine, [.. violations, .. leaked])}");
     }
 
     /// <summary>
@@ -211,6 +238,9 @@ public sealed partial class EsZamanlilikKuraliTests
     /// </summary>
     [GeneratedRegex(@"\bMap(Post|Put|Patch|Delete)\s*\(")]
     private static partial Regex EndpointMapping();
+
+    [GeneratedRegex(@"RequireAuthorization\(AdminSurface\.(?!ManagerPolicy\))\w+\)")]
+    private static partial Regex OtherPolicy();
 
     [GeneratedRegex(@"new\s+InvariantLock\s*\([^;]*;", RegexOptions.Singleline)]
     private static partial Regex InvariantLockConstruction();
