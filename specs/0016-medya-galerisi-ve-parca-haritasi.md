@@ -1,25 +1,37 @@
-# 0016 — Medya Galerisi ve Parça Haritası Şeması
+# 0016 — Medya Galerisi ve Parça Haritası
 
 | | |
 |---|---|
-| **Durum** | Taslak |
+| **Durum** | Taslak — kararlar verildi, kabul kriterleri yazılmadı |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `frontend/` public vitrin · `VehicleCatalog` (detay okuma yüzeyi) |
-| **Bağımlı spec'ler** | `0002` (ilan detayı — tamamlandı; **X2** ve **X3**'ü geri açar) · **`0011` (Media) ÖNKOŞUL** |
+| **Modül(ler)** | `frontend/` public vitrin · `frontend/` panel (opsiyonel alan formu — **D5**) · `VehicleCatalog` (parça haritası alanı, vitrin okuma modeli, detay sözleşmesi) · `Media` **tüketilir**, değişmez (**D17**) |
+| **Bağımlı spec'ler** | `0002` (ilan detayı — tamamlandı; **X2** ve **X3**'ü geri açar) · `0011` (Media — tamamlandı) · `0012a` (aracın medya yüzeyi — tamamlandı) · `0010b` (opsiyonel alan tipleri — **X22**'nin bir kısmını geri açar, **D5**) · `0010a` (**X4**'ün veri yarısını üstlenir, **D5**) |
 | **Dayanak** | ADR 0003 unsur 1 ve Ek 1, sıra #10 |
-| **Karar bekliyor** | **S1–S4** — § Açık sorular (4 soru, **4 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
+| **Karar bekliyor** | yok — S1–S4 → **D1–D4**; QA CLARIFY turunun on dokuz bulgusu (B1–B19) → **D5–D23** (2026-11-18); plan turunun sekiz bulgusu (P1–P8) → **D24–D31** (2026-11-18). |
 
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — dört açık sorunun cevabı
-> onları belirliyor. **S1 sözlükle mockup arasında bir çelişkiyi açıyor.**
+> **Plan turu (2026-11-18, `8a22fb6` üzerinde).** Developer uygulama planını çıkarırken
+> sekiz bulgu getirdi (P1–P8); önerilerin **tamamı** Takım Yöneticisi (depo sahibi)
+> tarafından onaylandı ve **D24–D31** olarak işlendi. En büyüğü **D31**: kart iki dilime
+> bölünür — `0016a` (parça haritası: veri ve panel) ve `0016b` (vitrin: galeri ve şema).
+> Bölme ayrı bir `docs/` PR'ında yapılır; kriterler o dilimlerde ve **Analist** tarafından
+> yazılır (**D24**). Context'in K1, K5, K6, K7 ölçümleri plan turunda kodla yeniden
+> doğrulandı ve tutuyor.
+>
+> **QA CLARIFY turu (2026-11-18, `main` @ `aaf0cec`).** QA spec'i bugünkü koda karşı okudu
+> ve on dokuz bulgu getirdi (B1–B19); önerilerin **tamamı** Takım Yöneticisi (depo sahibi)
+> tarafından onaylandı ve **D5–D23** olarak işlendi. En büyüğü **B1**: parça haritası alanı
+> kodda **hiç yok** — ne değeri, ne tipi, ne giriş yolu. Taslağın Context'i ve S4'ü verinin
+> var olduğunu varsayıyordu; spec bu yüzden veri tarafını da üstlendi (**D5**). Kabul
+> kriterleri bir sonraki turda yazılacak.
 
 ---
 
 ## Intent
 
 İlan detayı bugün **tek bir kapak görseli** gösteriyor. `0002` galeriyi (§ X2) ve parça
-haritasının görsel şemasını (§ X3) bilinçli olarak dışarıda bıraktı; opsiyonel alanların
-**değerleri** gösteriliyor ama hasar bilgisi düz bir liste olarak duruyor.
+haritasının görsel şemasını (§ X3) bilinçli olarak dışarıda bıraktı. Parça haritasının
+**değeri** ise bugün hiçbir yerde tutulmuyor (**D5**): alan kodda tanımlı değil.
 
 İkinci el araç almak, insanın **fotoğrafa ve hasar geçmişine** baktığı bir iştir. Tek
 görselle verilen karar, galeriyi aramakla sonuçlanmıyor — ziyaretçi yeterince bilgilenmeden
@@ -31,37 +43,107 @@ eşdeğer değil.
 *"Geçmişi gizlenmeyen araçlar"* diyor. Saklanmayan hasar, ancak **görülebildiğinde**
 şeffaflık olur.
 
-Bu iş bittiğinde ziyaretçi aracın tüm fotoğraflarını gezebilir ve hasar durumunu araç
-üzerinde bir şema olarak görür. Başarı ölçütü: **ziyaretçi, aracın hangi parçasına ne olduğunu
-tek bakışta anlıyor.**
+Bu iş bittiğinde galeri bir aracın 13 parçasının durumunu panelde girebilir; ziyaretçi
+aracın tüm fotoğraflarını gezebilir ve hasar durumunu araç üzerinde bir şema olarak görür.
+Başarı ölçütü: **ziyaretçi, aracın hangi parçasına ne olduğunu tek bakışta anlıyor.**
 
 ---
 
 ## Requirements
 
-- **R1.** İlan detayında ziyaretçi, ilanın **tüm görsellerini** gezebilir.
-- **R2.** Kaçıncı görselde olduğu ve toplam görsel sayısı gösterilir.
-- **R3.** Ziyaretçi görseller arasında **klavyeyle** gezebilir; her etkileşimli öğe klavyeyle
-  erişilebilir ve odak halkası görünür. → `docs/frontend.md` § 7.
-- **R4.** Ziyaretçi bir görseli **büyütebilir** ve büyütülmüş görünümden çıkabilir.
-- **R5.** Her görselin, ziyaretçinin locale'ine karşılık gelen `alt` metni vardır.
-  → `0011` R9, `docs/frontend.md` § 7.
-- **R6.** Görseller türevlerden yüklenir; ilk görsel dışındakiler **gecikmeli** yüklenir ve
-  açık `width`/`height` ile basılır. → `docs/frontend.md` § 7 (CLS, LCP).
-- **R7.** İlan detayı, **parça haritası** alanı açık ve public ise aracın hasar durumunu
-  **araç üzerinde bir şema** olarak gösterir.
-- **R8.** Şema **13 parçayı** ayrı ayrı gösterir ve her parçanın durumunu belirtir.
-  Durum kümesi için bkz. Açık soru **S1**.
-- **R9.** Parça durumu **yalnızca renkle** anlatılmaz; her parçanın durumu metinle de
-  okunabilir. → `docs/frontend.md` § 7.
-- **R10.** Şemanın yanında, parça haritasının **okunabilir listesi** bulunur; şema
-  yüklenemese veya anlaşılmasa bile bilgi erişilebilir kalır.
-- **R11.** Şema, parça haritası alanı **kapalı veya gizliyse** hiç gösterilmez ve yanıtta
-  bulunmaz. → **F3**, Yasak Listesi 41.
-- **R12.** Galeri ve şema **yükleniyor**, **boş** (tek görsel veya hasar kaydı yok) ve
-  **hata** durumlarını ele alır. → `docs/frontend.md` § 3.
-- **R13.** Üç locale'de çalışır; Arapça'da RTL — şemanın yönü ve parça adlarının hizalaması
-  dâhil. → tasarımcı notu: *"araç silüeti"* de aynalanır.
+### Galeri
+
+- **R1.** İlan detayında ziyaretçi, ilanın **`hazır` durumdaki tüm görsellerini** aracın
+  medya sırasıyla gezebilir. `işleniyor` ve `başarısız` varlıklar galeride yer almaz
+  (**D14**).
+- **R2.** Kaçıncı görselde olduğu ve toplam görsel sayısı gösterilir; toplam yalnız R1'in
+  gösterdiği görselleri sayar. Tek görselde sayaç gösterilmez (**D15**).
+- **R3.** Ziyaretçi görseller arasında **düğmelerle, klavyeyle ve dokunarak kaydırmayla**
+  gezebilir (**D16**):
+  - İlk görselden geriye ve son görselden ileriye **dönülmez**; uçtaki düğme devre dışı
+    kalır ve odak kaybolmaz.
+  - Ok tuşları ve kaydırma **okuma yönünü** izler: Arapça'da ← ve sola kaydırma *sonraki*
+    görseldir.
+  - Her etkileşimli öğe klavyeyle erişilebilir ve odak halkası görünür.
+    → `docs/frontend.md` § 7.
+- **R4.** Ziyaretçi bir görseli **büyütebilir** (**D16**):
+  - Büyütülmüş görünüm `large` türevini kullanır ve içinde de R3'ün gezinmesi çalışır.
+  - Esc ve kapatma düğmesi görünümü kapatır.
+  - Görünüm açıkken odak içeride tutulur, arka plan etkileşimsizdir; kapanınca odak
+    görünümü açan öğeye döner.
+  - Seçili görsel **adrese yazılmaz** ve tarayıcı geçmişine giriş eklenmez; sayfa yeniden
+    yüklenince galeri ilk görselden başlar.
+- **R5.** Her görselin `alt` metni ziyaretçinin locale'inde **şablondan** üretilir: model,
+  yıl, görselin sırası ve toplam (ör. *"Toyota Corolla 2019 — görsel 3/18"*). Sunucudan
+  çevrilmiş metin gelmez (**D17**). → `0002` AC-25, `docs/frontend.md` § 7.
+- **R6.** Görseller türevlerden yüklenir (**D18**, **D19**):
+  - Satır içi görsel `srcset` ile `thumbnail` / `display` / `large` türevlerinden seçilir.
+  - Her görsel, türevin **gerçek** `width`/`height` değeriyle basılır.
+  - Galeri çerçevesi sabit **4:3** oranındadır; farklı en-boy oranlı görsel çerçeveye
+    sığdırılır, sayfa düzenini kaydırmaz.
+  - **İlk görsel** `eager` ve yüksek öncelikle yüklenir (LCP adayı); diğerleri `lazy`.
+    Etkileşimden önce yalnız ilk görsel indirilir.
+- **R7.** Detayın **ilk görseli, ilk `hazır` görseldir**. Sıranın ilk elemanı henüz hazır
+  değilse veya başarısızsa detay bir sonraki hazır görselle açılır (**D14**). Liste kartının
+  kapak davranışı **değişmez** (→ X10).
+
+### Parça haritası — veri ve panel
+
+- **R8.** Parça haritası, anahtarı **`paint_change_map`** olan **tek bir opsiyonel alandır**:
+  tek form durumu ve tek public görünürlük ekseni taşır. Varsayılan ayarı
+  **Opsiyonel + Görünür**dür (**D5**). → `docs/architecture.md` § 4, **F1**–**F5**.
+- **R9.** Harita **13 parçayı** C10'daki sabit kodlarla ve sabit sırayla tanır (**D6**).
+- **R10.** Her parçanın durumu dört koddan biridir: **orijinal**, **lokal boyalı**,
+  **boyalı**, **değişen** (**D1**). "Belirtilmedi" diye bir durum yoktur.
+- **R11.** Değer ya **13 parçanın tamamını** taşır ya da **hiç yoktur**; yarım harita
+  kaydedilemez ve reddedilir (**D7**).
+- **R12.** Panelde, aracın opsiyonel alan formunda alan açıksa **13 seçim kutusu** bulunur
+  (**D5**):
+  - Hiçbiri önceden seçili gelmez; "orijinal" varsayılan **değildir** (**D7**).
+  - Hiç seçim yapılmamışsa değer yazılmaz.
+  - Bazı kutular seçilip bazıları boş bırakılırsa kayıt reddedilir ve eksik parçalar
+    gösterilir.
+  - Kayıtlı bir değer bütünüyle **temizlenebilir**.
+
+### Parça haritası — vitrin
+
+- **R13.** İlan detayı, alan **açık, public ve değerli** ise aracın hasar durumunu **araç
+  üzerinde bir şema** olarak gösterir (**D2**, **D9**).
+- **R14.** Alan **kapalı veya gizliyse** ya da **değer girilmemişse** bölüm hiç basılmaz ve
+  yanıtta bulunmaz — boş değer olarak da bulunmaz (**D8**, **D9**). → **F3**, Yasak
+  Listesi 41.
+- **R15.** 13 parçanın tamamı **orijinal** ise şema basılır ve yanında *"13 parçanın tamamı
+  orijinal"* cümlesi bulunur (**D8**). Değerin olmaması ile tamamının orijinal olması
+  ziyaretçiye **aynı gösterilmez**.
+- **R16.** Şema **etkileşimsizdir** (**D11**):
+  - `role="img"` taşır; erişilebilir adı okunabilir listeye (R17) işaret eden bir özettir.
+  - Parçaların hiçbiri Tab durağı değildir.
+- **R17.** Şemanın yanında haritanın **okunabilir listesi** bulunur (**D12**):
+  - **Orijinal olmayan** parçaları C10'un sırasıyla, durumlarıyla yazar.
+  - Ardından *"diğer N parça orijinal"* cümlesi gelir.
+  - R15'in tamamı-orijinal durumunda listenin yerini R15'in cümlesi alır.
+  - Liste parça durumunun **metin karşılığıdır**; şema anlaşılmasa da bilgi erişilebilir
+    kalır. → `docs/frontend.md` § 7.
+- **R18.** Şemanın yanında iki not bulunur (**D12**):
+  - *"Galeri beyanı"*.
+  - *"Diyagramın üstü aracın ön kısmıdır"*.
+- **R19.** Şemada dört durum **renge ek olarak dolgu deseniyle** ayrılır ve bir **lejant**
+  her zaman görünür (**D13**). → C2.
+
+### Durumlar ve locale
+
+- **R20.** Galeri ve şemanın **ayrı bir yükleme adımı yoktur**; ikisi de detay yanıtıyla
+  gelir. Sayfa düzeyindeki yükleniyor, bulunamadı ve hata durumları `0002` R9'dan gelir
+  (**D20**). Ek olarak:
+  - **Sıfır görsel:** bugünkü davranış korunur — görsel alanı, sayaç ve gezinme düğmesi
+    yoktur (**D15**).
+  - **Tek görsel:** görsel ve büyütme vardır; sayaç ve gezinme düğmesi yoktur (**D15**).
+  - **Tek bir görsel yüklenemezse:** o yuvada yer tutucu gösterilir; sayaç ve gezinme
+    çalışmaya devam eder (**D20**).
+- **R21.** Üç locale'de çalışır; Arapça'da RTL (**D10**):
+  - Lejant, liste, notlar ve galeri denetimlerinin yerleşimi aynalanır.
+  - **Araç çizimi aynalanmaz**: şema fiziksel bir üstten görünümdür ve aracın sol tarafı
+    her locale'de çizimin sol tarafındadır.
 
 ---
 
@@ -69,149 +151,432 @@ tek bakışta anlıyor.**
 
 ### Uyulması zorunlu
 
-- **C1.** Gizli ve kapalı alanlar yanıtta **hiç bulunmaz**; eleme sorgu tarafında uygulanır.
-  → **F3**, Yasak Listesi 41.
-- **C2.** Renk **tek başına anlam taşımaz**; ayırt edilmesi gereken durumlar açıklıkta da
-  farklılaşır. → `docs/frontend.md` § 7.
+- **C1.** Gizli, kapalı veya değersiz alan yanıtta **hiç bulunmaz**; eleme yansıtma veya
+  sorgu tarafında uygulanır. Detay yanıtındaki parça haritası özelliğinin **JSON anahtarı**
+  bu durumda yazılmaz — `null` olarak da yazılmaz (**D9**). → **F3**, Yasak Listesi 41,
+  `0002` AC-12.
+- **C2.** Renk **tek başına anlam taşımaz**. Dört durum dolgu deseniyle de ayrılır: boş,
+  seyrek tarama, yoğun tarama, çapraz tarama (**D13**). Her durumun zemine karşı kontrastı
+  **en az 3:1**'dir (arayüz öğesi eşiği). → `docs/frontend.md` § 7.
 - **C3.** Şemanın renkleri `frontend-002`'nin **token katmanından** gelir; gömülü hex
   yoktur. → `docs/frontend.md` § 4.1.
-- **C4.** CSS'te fiziksel yön özellikleri kullanılmaz; şema RTL'de aynalanır.
-  → Yasak Listesi 25.
-- **C5.** Kullanıcıya görünen metin koda gömülmez; parça adları ve durum adları çeviri
-  kataloğundan gelir. → Altın Kural 6.
-- **C6.** Veritabanında çevrilmiş durum adı saklanmaz; kod saklanır. → Yasak Listesi 22.
+- **C4.** CSS'te fiziksel yön özellikleri kullanılmaz. Bu kural **metin akışı** içindir:
+  araç çiziminin kendisi aynalanmaz (R21, **D10**). → Yasak Listesi 25.
+- **C5.** Kullanıcıya görünen metin koda gömülmez. Bunlar çeviri kataloğundan gelir:
+  - 13 parça adı ve dört durum adı;
+  - R15, R17 ve R18'in cümleleri;
+  - lejant;
+  - R5'in `alt` şablonu.
+
+  → Altın Kural 6.
+- **C6.** Veritabanında ve yanıtta çevrilmiş parça ya da durum adı bulunmaz; **kod**
+  bulunur. → Yasak Listesi 22, 23.
 - **C7.** Görseller `Media`'nın türevlerinden gelir; orijinal vitrine servis edilmez.
   → `0011` R3.
-- **C8.** `0002`'nin mevcut kabul kriterleri **regresyon olarak** korunur.
-  → ADR 0003 unsur 1.
+- **C8.** `0002`'nin mevcut kabul kriterleri **regresyon olarak** korunur — C12'nin
+  değiştirdiği sözleşme alanı hariç. → ADR 0003 unsur 1.
 - **C9.** Her kabul kriteri en az bir testle karşılanır; görsel kriterler görsel kanıt taşır.
+- **C10.** 13 parçanın **kodları ve sırası** sabittir (**D6**). Sıra hem okunabilir listenin
+  sırası hem panel formunun sırasıdır:
+
+  | # | Kod | Parça |
+  |---|---|---|
+  | 1 | `front_bumper` | Ön tampon |
+  | 2 | `hood` | Motor kaputu |
+  | 3 | `roof` | Tavan |
+  | 4 | `trunk_lid` | Bagaj kapağı |
+  | 5 | `rear_bumper` | Arka tampon |
+  | 6 | `left_front_fender` | Sol ön çamurluk |
+  | 7 | `left_front_door` | Sol ön kapı |
+  | 8 | `left_rear_door` | Sol arka kapı |
+  | 9 | `left_rear_fender` | Sol arka çamurluk |
+  | 10 | `right_front_fender` | Sağ ön çamurluk |
+  | 11 | `right_front_door` | Sağ ön kapı |
+  | 12 | `right_rear_door` | Sağ arka kapı |
+  | 13 | `right_rear_fender` | Sağ arka çamurluk |
+
+  Durum kodları: `original`, `local_painted`, `painted`, `replaced`.
+- **C11.** Parça haritası **yeni bir değer tipi**dir. ADR 0007'nin kapalı tip kümesine
+  eklenir ve bu ekleme **ADR 0007'ye ek bir karar** olarak yazılır (**D5**). Tipin depolama
+  biçimi plan turunun kararıdır.
+- **C12.** Detay sözleşmesi değişir (**D9**, **D22**):
+  - `CoverImageUrl` **kaldırılır**; yerine **sıralı görsel listesi** gelir. Her eleman üç
+    türevin adresini ve gerçek boyutlarını taşır.
+  - Parça haritası **ayrı, yapılandırılmış bir özellik** olarak gelir: yalnız kod taşıyan
+    `[{part, state}]` listesi. Aynı veri `Attributes` içinde **tekrar edilmez**.
+  - Liste kartının sözleşmesi (`0001`) **değişmez**.
+- **C13.** Detay sayfası Lighthouse koşusuna eklenir ve `0001` **C3**'ün mobil eşikleriyle
+  ölçülür (**D19**). → ADR 0010 (CI dakika bütçesi).
 
 ### KAPSAM DIŞI
 
 - **X1.** **Video ve 360° tur** — *neden:* `0011` § X2 bunları üretmiyor; oynatıcı ayrı bir
   iştir.
-- **X2.** **Panelde parça haritası editörü** (tıkla-seç arayüzü) — *neden:* `0010a` § X4 bunu
-  bu spec'le birlikte ele alınmak üzere ertelemişti; **bu spec yalnızca ziyaretçi tarafını
-  kapsar.** Editör, panel tarafında ayrı bir dilimdir. → Açık soru **S4**.
+- **X2.** **Panelde tıkla-seç parça haritası editörü** (şema üzerinde parçaya tıklayarak
+  durum seçme) — *neden:* veri girişi R12'nin 13 seçim kutusuyla bu spec'te yapılıyor
+  (**D5**); şema üzerinde düzenleme ayrı bir etkileşim işidir (**D4**).
 - **X3.** **Ekspertiz raporu dosyasının görüntülenmesi** — *neden:* dosya opsiyonel bir
   alandır ve PDF görüntüleme ayrı bir karardır.
 - **X4.** **Görsel karşılaştırma / yan yana görünüm** — *neden:* karşılaştırma sıra #12'nin
   işi.
 - **X5.** **Tramer tutarının grafikle gösterimi** — *neden:* tutar bir sayıdır; `0002` onu
-  zaten gösteriyor.
+  R8 kapsamında, alan public ise zaten gösteriyor ve yeri değişmez (**D21**).
 - **X6.** **Görsellerin indirilmesi veya paylaşılması** — *neden:* filigran politikası
   (`0011` R4) kopyalamayı zorlaştırmak içindir; indirme düğmesi onunla çelişir.
+- **X7.** **`Media`'nın locale'li `alt` metninin vitrine taşınması** — *neden:* alt metin
+  vitrin okuma modelinde yok ve değiştiğinde bir olay yayımlanmıyor; taşımak modüller arası
+  yeni bir olay ister (**D17**).
+- **X8.** **Ağır hasar kaydı** ve **değişen parça sayısı** alanları — *neden:* ikisi de
+  kodda yok. Değişen parça sayısı ileride eklenirse ayrı bir alan **olmaz**, bu haritadan
+  **türetilir** — aksi hâlde aynı bilginin iki kaynağı olur (**D21**).
+- **X9.** **Galeri üst sınırı** — *neden:* bu spec görsel sayısına sınır koymaz; R6'nın
+  gecikmeli yüklemesi 30 görsellik ilanla ölçülür (**D23**).
+- **X10.** **Liste kartının kapak kuralı** ve **yayındaki aracın tüm görsellerini
+  kaybedebilmesi** — *neden:* ikisi de `0012a`'nın davranışıdır (D14, sırası boşaltılabilen
+  medya listesi), bu spec'in değil. Ayrı kart olarak önerildi (**D14**, **D15**).
+- **X11.** **Galeri küçük resim şeridi** — *neden:* mockup yalnız sayaç gösteriyor; şerit
+  ayrı bir yerleşim ve erişilebilirlik işidir.
 
 ---
 
 ## Context
 
-### Mevcut davranış — doğrulandı
+### Mevcut davranış — yeniden doğrulandı (2026-11-18, `main` @ `aaf0cec`)
 
-- **`0002` tamamlandı** ve iki şeyi açıkça dışarıda bıraktı: § X2 *"Medya galerisi, görsel
-  büyütme, video ve 360° tur"*, § X3 *"Boyalı–değişen parça haritasının görsel şeması
-  (13 parça)"* — ikincisinin gerekçesi *"alanın değeri R8 kapsamında gösterilir; şemanın
-  kendisi ayrı bir görselleştirme işidir"*.
+- **`0002` tamamlandı** ve iki şeyi açıkça dışarıda bıraktı:
+  - § X2: *"Medya galerisi, görsel büyütme, video ve 360° tur"*.
+  - § X3: *"Boyalı–değişen parça haritasının görsel şeması (13 parça)"*.
 - **Detay sözleşmesi bugün tek görsel taşıyor.** `ShowcaseListingDetailDto` alanları:
   `Slug`, `IsReserved`, `CoverImageUrl`, `ModelName`, `ModelYear`, `MileageKilometers`,
-  `Price`, `BranchName`, `Attributes`. **Görsel listesi yok** — R1 sözleşmenin büyümesini
-  gerektirir.
-- **`Attributes` etiketi çözülmüş nitelik satırları taşıyor** (`ShowcaseAttributeDto(Key,
-  Label, Value)`); parça haritası bugün büyük olasılıkla bu düz listede görünüyor. R10 bu
-  listeyi **korumayı** şart koşuyor.
-- **`Media` bugün yok** (tek olay dosyası) — bu yüzden `0011` **önkoşuldur**: galerinin
-  göstereceği türevler orada üretilir.
-- **Mockup ne gösteriyor:** detayda "1 / 18" sayacı ve `[ARAÇ FOTOĞRAFI]` yer tutucusu;
-  altında 13 parça adıyla bir şema (*"Galeri beyanı · diyagramın üstü aracın ön kısmıdır"*),
-  tramer tutarı ve ağır hasar bayrağı. Tasarımcı notu `s1`: *"üstten araç görünümü: 13
-  kaporta parçası kendi biçiminde, aralarında camlar, dışarıda tekerlek ve aynalar. **Dört
-  durum: orijinal, lokal boyalı, boyalı, değişen.**"*
-- **Çelişki:** `docs/domain.md` **Parça Haritası**'nı *"13 parçanın **orijinal / boyalı /
-  değişen** durumu"* diye tanımlıyor — **üç durum.** Mockup dört diyor. → Açık soru **S1**.
+  `Price`, `BranchName`, `Attributes`. Görsel listesi yok.
+- **Parça haritası alanı kodda YOK** (QA ölçümü K1). Taslağın *"parça haritası bugün büyük
+  olasılıkla bu düz listede görünüyor"* cümlesi yanlıştı. Kodda tanımlı tek opsiyonel alan
+  tramer (`damage_record_amount`).
+- **`Media` var** (`0011` tamamlandı) ve üç türev üretiyor: `large` 1600, `display` 800,
+  `thumbnail` 400. `MediaAssetReady` her türevin gerçek boyutunu taşıyor.
+  `0012a` aracın sıralı medya listesini kuruyor; kapak listenin ilk elemanı.
+- **Mockup ne gösteriyor:**
+  - Detayda "1 / 18" sayacı ve `[ARAÇ FOTOĞRAFI]` yer tutucusu.
+  - Altında 13 parça adıyla bir şema: *"Galeri beyanı · diyagramın üstü aracın ön
+    kısmıdır"*.
+  - Tramer tutarı ve ağır hasar bayrağı.
+  - Tasarımcı notu `s1`: *"üstten araç görünümü: 13 kaporta parçası kendi biçiminde,
+    aralarında camlar, dışarıda tekerlek ve aynalar. **Dört durum: orijinal, lokal boyalı,
+    boyalı, değişen.**"*
+- **Çelişki — çözüldü (D1):** `docs/domain.md` **Parça Haritası**'nı üç durumla tanımlıyordu,
+  mockup dört diyordu. Sözlük dört duruma güncellenecek.
+
+### QA CLARIFY turu ölçümü (2026-11-18)
+
+- **K1 — alan yok.**
+  - `VehicleFieldKeys` yalnız `body_type` ve `damage_record_amount` tanımlıyor.
+    `VehicleFieldDefinitions` yalnız tramer'i içeriyor.
+  - `FieldValueKind` kapalı bir küme (ADR 0007) ve harita tipi içermiyor.
+  - `0010a` X4 *"alanın değeri R9 kapsamında girilebilir"* diyordu; `0010b` X22 liste
+    tiplerini kapsam dışı bıraktı. Sonuç: **alanın hiçbir spec'te sahibi yoktu** → **D5**.
+- **K2 — kapak ve hazır olmayan varlık.**
+  - `0012a` D14 `işleniyor` ve `başarısız` varlıkların da bağlanmasına izin veriyor.
+  - `ShowcaseProjectionWriter.KapakAdresiAsync` sıranın ilk elemanı hazır değilse `null`
+    dönüyor.
+  - Bugün sıranın ilki başarısız, ikincisi hazır olan bir araç vitrine **görselsiz**
+    çıkıyor → **D14**.
+- **K3 — sıfır görselli yayında ilan mümkün.** `UpdateVehicleMediaCommand` yayındaki bir
+  aracın medya listesini boşaltmayı engellemiyor (yayına alma şartı yalnız yayın anında
+  bakılıyor) → **D15**, X10.
+- **K4 — `alt` metni.**
+  - Detay sayfası `alt` metnini şablondan üretiyor (`ListingDetailPage.tsx:103`).
+  - `Media`'nın locale'li alt metni vitrin okuma modeline taşınmıyor.
+  - `Media.Contracts/Events` yalnız `MediaAssetReady` ve `MediaAssetFailed` taşıyor; alt
+    metin değişikliği duyurulmuyor → **D17**.
+- **K5 — boyutlar.**
+  - Okuma modeli yalnız `CoverMediaUrl` tutuyor; türev boyutu yok.
+  - Detay sayfası boyutu `960×720` olarak sabit yazıyor, oysa `display` türevi 800 piksel
+    genişliğinde ve yüksekliği fotoğrafa göre değişiyor → **D18**.
+- **K6 — detayın LCP kapısı yok.**
+  - `frontend/scripts/lighthouse-run.mjs` yalnız `/tr/` ve `/tr/cars`'ı ölçüyor.
+  - `0002`'de LCP eşiği yok; taslağın Tuzak 4'ü var olmayan bir eşiğe atıf yapıyordu
+    → **D19**.
+- **K7 — `CoverImageUrl`'ün tüketicileri.**
+  - Liste kartı kendi liste DTO'sunu kullanıyor (`frontend/src/shared/api/types.ts:15`).
+  - Detaydaki alanın tek tüketicisi `ListingDetailPage`.
+  - Taslağın S3'teki *"`0001`'in kart yanıtı onu kullanıyor"* gerekçesi detay DTO'su için
+    geçerli değil → **D22**.
 
 ### Geçerli kurallar
 
-**Parça Haritası** (`PaintChangeMap`, opsiyonel alan) · **Tramer** (`DamageRecordAmount`,
-opsiyonel) · **F1** (kapatmak silmek değildir) · **F3/F4** (gizli alan yanıtta yok) ·
-`docs/architecture.md` § 4 (opsiyonel alan listesi; iki eksen: form durumu ve public
-görünürlük) · `docs/frontend.md` § 3, § 7.
+- **Parça Haritası** (`PaintChangeMap`, opsiyonel alan)
+- **Tramer** (`DamageRecordAmount`, opsiyonel)
+- **F1**: kapatmak silmek değildir.
+- **F3/F4**: gizli alan yanıtta yer almaz.
+- **F5**: alan listesi kodda tanımlıdır.
+- ADR 0007: kapalı tip kümesi; alan → tip eşlemesi kodda.
+- `docs/architecture.md` § 4: opsiyonel alan listesi; iki eksen, form durumu ve public
+  görünürlük.
+- `docs/frontend.md` § 3 ve § 7.
 
 ### Bilinen tuzaklar
 
-1. **Şemayı tek bilgi kaynağı yapmak.** Şema yüklenemezse veya ekran okuyucuyla gezilirse
-   hasar bilgisi kaybolur; R10'un listesi bu yüzden zorunlu.
-2. **Durumları yalnızca renkle ayırmak.** Dört (veya üç) durumu yalnızca renk tonuyla
-   göstermek, § 7'yi kırar ve renk körü ziyaretçi için şemayı anlamsız yapar (C2, R9).
-3. **Şemayı sabit yönlü çizmek.** RTL'de araç silüeti ve parça adları aynalanmalı; fiziksel
-   yön özellikleri kullanılırsa Arapça sayfada şema ters durur (C4).
-4. **Galeriyi kapak görselinin yerine koymak.** İlk görsel LCP adayıdır; galeriye geçerken
-   onu gecikmeli yüklemeye düşürmek `0001`/`0002`'nin LCP eşiğini bozar (R6).
-5. **Parça adlarını koda gömmek.** 13 parça adı üç dilde çevrilmeli; `docs/architecture.md`
-   § 4 kural 4 alan etiketlerinin sabit anahtar olduğunu ve çevirilerin hazır geldiğini
-   söylüyor — parça adları da aynı sınıfa girmeli (C5).
+1. **Şemayı tek bilgi kaynağı yapmak.** Ekran okuyucuyla gezilirse veya şema anlaşılmazsa
+   hasar bilgisi kaybolur; R17'nin listesi bu yüzden zorunlu.
+2. **Durumları yalnızca renkle ayırmak.** Dört durumu yalnızca renk tonuyla göstermek § 7'yi
+   kırar ve renk körü ziyaretçi için şemayı anlamsız yapar (C2, R19).
+3. **Araç çizimini aynalamak.** *(D10 ile tersine çevrildi.)* Taslak RTL'de silüetin
+   aynalanmasını istiyordu. Şema fiziksel bir üstten görünüm olduğu için aynalanırsa
+   "sol ön çamurluk" çizimin sağına düşer. Aynalanan, metin akışıdır (R21, C4).
+4. **İlk görseli gecikmeli yüklemeye düşürmek.** İlk görsel LCP adayıdır; galeriye geçerken
+   onu `lazy` yapmak LCP'yi bozar. *(Taslak bunu `0002`'nin eşiğine bağlıyordu; o eşik yok
+   — K6. Ölçüm C13 ile gelir.)*
+5. **Parça adlarını koda gömmek.** 13 parça adı üç dilde çevrilmeli; parça ve durum kodu
+   sabit anahtardır, çeviri katalogdadır (C5, C6).
+6. **Sessizliği beyana çevirmek.** Panelde "orijinal"i varsayılan seçmek ya da değersiz alanı
+   "hasarsız" göstermek, galerinin hiçbir şey söylemediği yerde bir iddia üretir (R11,
+   R12, R15 · **D7**, **D8**).
+7. **Haritayı iki yerde taşımak.** Yapılandırılmış özelliğin yanında `Attributes` içinde de
+   düz metin olarak yer alırsa ikisi ayrışır (C12 · **D9**).
+
+### Verilen kararlar — 2026-11-18
+
+Hepsi Takım Yöneticisi (depo sahibi) onayıyla verildi.
+
+**D1 — Dört durum; sözlük güncellenir (S1).** Durumlar: orijinal, lokal boyalı, boyalı,
+değişen. `docs/domain.md` **Parça Haritası** tanımı dört duruma güncellenir.
+*Gerekçe:* "lokal boyalı" Türkiye ikinci el pazarının fiyata etki eden gerçek bir
+ayrımıdır; üç duruma sıkıştırmak aracın değerini olduğundan düşük gösterir.
+*Bedel:* sözlük değişikliği; C2 gereği dört ayrı desen.
+
+**D2 — Şema kodun içinde, satır içi çizilir (S2).** 13 parça ayrı ayrı adreslenebilir
+öğelerdir.
+*Gerekçe:* renkler token katmanından gelmeli (C3); yüklenen görsel dosyası bunu yapamaz.
+`0011` SVG yüklemeyi de kapatıyor (D23).
+*Bedel:* tasarım değişikliği bir kod değişikliğidir.
+
+**D3 — Detay yanıtı sıralı görsel listesi taşır (S3).** Ayrıntısı **D22**.
+
+**D4 — Tıkla-seç editörü ayrı kalır (S4).** Bu spec ziyaretçi tarafını ve **D5**'in asgari
+veri girişini kapsar; şema üzerinde düzenleme X2.
+
+**D5 — Veri tarafı bu spec'e girer (B1).**
+- Kapsam:
+  - `paint_change_map` alanı (tek alan, tek eksen çifti).
+  - ADR 0007'ye ek kararla yeni değer tipi.
+  - Panelin opsiyonel alan formunda 13 seçim kutusu.
+  - Varsayılan ayar **Opsiyonel + Görünür**.
+  - Seed verisi.
+- `0010a` X4'ün veri yarısı ve `0010b` X22'nin bu alana düşen kısmı burada kapanır.
+- *Gerekçe:* alan kodda yok (K1); yalnız vitrin yapılırsa özellik canlıda boş çıkar ve
+  kriterler yalnız seed'le doğrulanır. 13 × 4 kod tablosu hem veri hem gösterimin ortak
+  hakemi; iki spec'e bölmek aynı tabloyu iki yerde tanımlamaktı.
+- *Bedel:* spec backend + panel + vitrin olarak büyür; ADR 0007'ye ek karar yazılır.
+- *Elenen alternatif:* önkoşul olarak ayrı bir `0016a` spec'i — sıraya bir iş daha
+  eklerdi.
+
+**D6 — 13 parçanın kodu ve sırası sabit (B2).** C10'daki tablo.
+- *Gerekçe:* listesi hiçbir belgede yazılı değildi (`docs/domain.md:44`,
+  `docs/architecture.md:312` yalnız "13 parça" diyor). Kod, çeviri anahtarı ve test aynı
+  listeye bağlanır.
+
+**D7 — Değer tam ya da yok; varsayılan seçim yok (B3).** "Belirtilmedi" durumu yok; yarım
+harita reddedilir; panelde hiçbir kutu önceden seçili gelmez (R10–R12).
+- *Gerekçe:* varsayılan "orijinal", galerinin sessizliğini "hasarsız" beyanına çevirir;
+  yarım harita beşinci bir görsel durum doğurur.
+
+**D8 — Değersiz alan ≠ tamamı orijinal (B4).** Değer yoksa bölüm yok; tamamı orijinalse
+şema ve *"13 parçanın tamamı orijinal"* cümlesi (R14, R15).
+- *Gerekçe:* ilki bilgi yokluğu, ikincisi bir beyandır.
+
+**D9 — Yapılandırılmış ayrı özellik; anahtar hiç yazılmaz (B5).** Yanıtta kod taşıyan
+`[{part, state}]` listesi. Alan kapalı, gizli veya değersizse JSON anahtarı yok; veri
+`Attributes`'ta tekrar edilmez (C1, C12).
+- *Gerekçe:* `ShowcaseAttributeDto` yalnız düz metin taşıyor; `0002` AC-12'nin "boş değer
+  olarak da bulunmaz" kuralı yeni özellik için de geçerli.
+
+**D10 — Araç çizimi RTL'de aynalanmaz (B6).** Lejant, liste, notlar ve denetimler aynalanır
+(R21, C4). Taslağın R13'ü, C4'ü ve tasarımcı notu bu yönde düzeltildi.
+- *Gerekçe:* çizim fiziksel bir üstten görünümdür; aracın sol tarafı locale'e göre yer
+  değiştirmez.
+
+**D11 — Şema etkileşimsiz (B7).** `role="img"`, erişilebilir adı listeye işaret eder; Tab
+durağı yok (R16).
+- *Gerekçe:* 13 sekme durağı bilgiyi listeden daha zor verir; R17'nin listesi metin
+  karşılığıdır.
+
+**D12 — Liste yalnız orijinal olmayanları yazar; iki not (B8).** C10 sırasıyla, ardından
+*"diğer N parça orijinal"*; yanında *"Galeri beyanı"* ve *"diyagramın üstü aracın ön
+kısmıdır"* (R17, R18).
+- *Gerekçe:* Intent'in "tek bakışta" hedefi; iki not mockup'ta var.
+
+**D13 — Desen + lejant + 3:1 (B9).** Boş, seyrek tarama, yoğun tarama, çapraz tarama; lejant
+her zaman görünür; her durum zemine karşı en az 3:1 (R19, C2). Kanıt gri tonlamalı ekran
+görüntüsüyle verilir.
+- *Gerekçe:* "renk tek başına anlam taşımaz" ancak böyle ölçülür.
+
+**D14 — Galeri yalnız hazır görseller; detayın ilki ilk hazır görsel (B10).** (R1, R2, R7)
+- *Gerekçe:* ziyaretçi bozuk türev görmez, sayaç gerçek sayıyı söyler (K2).
+- *Bedel:* liste kartı ile detayın ilk görseli, sıranın ilki hazır değilken farklılaşabilir.
+  Kartın kuralı `0012a`'nındır ve bu spec onu değiştirmez → X10, ayrı kart önerildi.
+
+**D15 — Sıfır ve tek görsel (B11).** (R2, R20) Sıfırda görsel alanı, sayaç ve düğme yok;
+tekte büyütme var, sayaç ve düğme yok.
+- *Not:* "yayındaki araç tüm görsellerini kaybedebiliyor" (K3) bu spec'in değil, `0012a`'nın
+  davranışı → X10, ayrı kart önerildi.
+
+**D16 — Gezinme ve büyütme davranışı (B12).** (R3, R4)
+- Başa dönme yok; uçtaki düğme devre dışı, odak kaybolmaz.
+- Ok tuşları ve kaydırma okuma yönünü izler.
+- Büyütülmüş görünüm: Esc kapatır, odak içeride tutulur, kapanınca açan öğeye döner, arka
+  plan etkileşimsiz.
+- Seçili görsel adrese ve tarayıcı geçmişine girmez.
+- *Gerekçe:* her biri ayrı bir kabul kriteri olabilir. Adres sözleşmesi `0004` (SEO)
+  gelmeden büyümemeli.
+
+**D17 — `alt` metni şablondan (B13).** *"{model} {yıl} — görsel {n}/{toplam}"* (R5).
+`Media`'nın alt metni vitrine taşınmaz → X7.
+- *Gerekçe:* modüller arası yeni olay gerekmez (K4); `0002` AC-25'in deseni sürer.
+
+**D18 — Okuma modeli türevleri ve gerçek boyutları taşır; çerçeve 4:3 (B14).** (R6)
+- Her görsel için üç türevin adresi ve gerçek boyutu tutulur.
+- `srcset` thumbnail / display / large türevlerinden oluşur; büyütülmüş görünüm `large`
+  kullanır.
+- Çerçeve 4:3, görsel çerçeveye sığdırılır.
+- *Gerekçe:* sabit `960×720` gerçek boyutla uyuşmuyor (K5); farklı oranlı fotoğraflar düzeni
+  kaydırmamalı (CLS).
+
+**D19 — Detay sayfası Lighthouse'a girer (B15).** `0001` C3'ün mobil eşikleriyle (C13).
+- *Gerekçe:* R6'nın LCP/CLS şartını ölçen bir kapı yoktu (K6).
+- *Bedel:* CI dakikası (ADR 0010).
+- *Elenen alternatif:* yalnız öznitelik düzeyinde kriter (`eager`/`lazy`) — davranışı değil
+  biçimi ölçerdi.
+
+**D20 — Ayrı hata durumu yok; görsel başına yer tutucu (B16).** (R20) Sayfa düzeyindeki
+durumlar `0002` R9'dan gelir.
+- *Gerekçe:* galeri ve şema detay yanıtıyla geliyor ve şema satır içi çiziliyor (D2);
+  ikisinin kendi yükleme adımı yok. Taslağın R12'si bu yönde yeniden yazıldı.
+
+**D21 — Ağır hasar ve değişen parça sayısı kapsam dışı; tramer yerinde (B17).** (X5, X8)
+Değişen parça sayısı ileride eklenirse haritadan türetilir.
+- *Gerekçe:* ikisi de kodda yok; `docs/architecture.md:313` değişen parça sayısını ayrı
+  alan sayıyor ve bu aynı bilginin iki kaynağı olurdu.
+
+**D22 — Detay DTO'sunda `CoverImageUrl` kaldırılır (B18).** Yerine sıralı görsel listesi;
+liste DTO'su değişmez (C12).
+- *Gerekçe:* detaydaki alanın tek tüketicisi detay sayfası (K7). `MediaAssetReady`'nin
+  kendi notu, listenin yanında duran ayrı bir URL'in "iki kaynağın ayrışmasına davet"
+  olduğunu söylüyor.
+- *Bedel:* `0002`'nin sözleşme testi bu alan için değişir (C8'in istisnası).
+
+**D23 — Üst sınır yok; 30 görselle ölçülür (B19).** (R6, X9) Etkileşimden önce yalnız ilk
+görsel indirilir.
+- *Gerekçe:* R6'nın gecikmeli yüklemesi ancak çok görselli bir ilanla ölçülür.
+
+### Verilen kararlar — plan turu, 2026-11-18
+
+**Takım Yöneticisi (depo sahibi) kararı**, Developer'ın plan bulguları P1–P8 üzerine.
+Sekiz öneri **olduğu gibi** onaylandı.
+
+**D24 — Kabul kriterlerini Analist yazar; kriterler uygulama dalı açılmadan `main`'e girer
+(P1).** *Gerekçe:* `0015`'te kriterleri uygulayan yazdı, kriter PR'ı açık bekledi ve C10
+uygulama sırasında değişti; "kriterler önce `main`'de" ölçütü bunu göremedi (`0015`'in
+SCORECARD dersi). Bu kart daha büyük; aynı risk daha pahalı.
+
+**D25 — Galerinin görsel verisi okuma modelinde ayrı bir tabloda tutulur (P2).** İlanın
+görselleri sırasıyla, her birinin durumu (`hazır` / `işleniyor` / `başarısız`) ve türevlerinin
+adresi ile gerçek boyutları; tabloyu yansıtıcı ve `MediaAssetReady` / `MediaAssetFailed`
+işleyicileri günceller. Migration yalnız `vehicle_catalog` şemasına. *Gerekçe:* okuma modeli
+zaten olaylarla doluyor (kapak öyle); detay sayfası her istekte `Media`'yı eşzamanlı çağırsaydı
+`Media` vitrinin kritik yoluna girerdi. *Elenen alternatif:* detay sorgusunda `Media`'ya
+eşzamanlı çağrı — migration'sız ama `Media` düşerse detay da düşer. → R1, R6, R7, C7.
+
+**D26 — Parça haritası yazma ve okuma modelinde ayrı birer `jsonb` kolonda, yalnız kod
+olarak saklanır (P3).** Biçim `[{part, state}]`; 13 parça sabit olduğu için ayrı bir tablo
+gerekmez. ADR 0007'nin "her tipin kendi kolonu" ilkesiyle tutarlı. C11'in açık bıraktığı
+depolama sorusunun cevabıdır. → C6, C11.
+
+**D27 — Yönetim sözleşmesi haritayı yapılandırılmış ayrı bir alanla taşır (P4).** Bugün her
+opsiyonel değer tek bir metin (`string? Value`); haritayı metne gömmek doğrulamayı
+ayrıştırıcıya iter ve hata kodlarını anlamsızlaştırır. Eksik parçalar hata yanıtında **kod**
+olarak döner (C6). → R11, R12.
+
+**D28 — Büyütülmüş görünüm tarayıcının yerel `<dialog>` öğesiyle kurulur; ortak bir
+`Dialog` bileşeni `shared/ui`'ya çıkarılır (P5).** Odak tutma, arka planın etkileşimsizliği
+ve Esc tarayıcıdan gelir. `identity`'nin onay penceresi aynı deseni kullanıyor; ikinci
+kullanıcı çıktığı için bileşen ortaktır (`docs/frontend.md` § 4.2, C8 gerekçesi). → R4.
+
+**D29 — Araç şeması 13 parçalı sade bir üstten görünüm SVG'sidir ve Developer çizer (P6).**
+Mockup'a görsel yakınlaştırma ayrı bir iştir. *Gerekçe:* şema etkileşimsiz (R16) ve bilgi
+okunabilir listede (R17); sade çizim kriterleri karşılar. → R13, R21.
+
+**D30 — Lighthouse detay sayfasının adresini ölçümden önce liste ucundan okur (P7).** Seed
+ilanlarının adresi her kurulumda farklı. → C13.
+
+**D31 — Kart ikiye bölünür (P8).** `0016a` — parça haritası: değer tipi, kalıcılık, alan
+ayarı, panel (R8–R12, C6, C10, C11; D5–D7, D26, D27). `0016b` — vitrin: galeri, büyütme,
+detay sözleşmesi, şema, performans (R1–R7, R13–R21, C1–C5, C7, C8, C12, C13; D25, D28–D30).
+`0016a` önce gelir; sözleşmesi `0016b`'nin önkoşuludur. *Gerekçe:* `0010` ve `0012`'deki
+gibi; her dilim kendi başına test edilir ve kriterlerin yazılmadan bölünmesi neredeyse
+bedelsizdir (ADR 0003 Ek 1'in ölçümü).
+
+### Uygulama planı (onaylı, 2026-11-18)
+
+1. **`0016a`** — `FieldValueKind.PartMap` ve doğrulama (13 parça, 4 durum, yarım harita
+   reddi) · `paint_change_map` alanı ve varsayılan ayarı · yazma modeli `jsonb` kolonu ve
+   migration · ADR 0007 eki · yönetim sözleşmesi ve panelde 13 seçim kutusu.
+2. **`0016b`** — okuma modelinin görsel tablosu ve harita kolonu (migration) · yansıtıcı ve
+   medya olay işleyicileri · detay sözleşmesi · `shared/ui` `Dialog` · galeri, büyütme,
+   şema, liste, lejant · Lighthouse detay ölçümü · e2e ve kanıt.
 
 ---
 
 ## Açık sorular
 
-**S1. Parça durumu üç mü dört mü? "Lokal boyalı" sözlüğe girecek mi?**
-`docs/domain.md` üç durum diyor; mockup dört diyor ve mockup'ın açıklama metni de
-*"sol arka kapı **lokal** boyalıdır"* diye kullanıyor.
-*Öneri:* **dördüncü durum eklensin** ve sözlükteki **Parça Haritası** tanımı güncellensin.
-*Gerekçe:* "lokal boyalı" Türkiye ikinci el pazarının gerçek bir ayrımıdır ve fiyata etki
-eder; ekspertiz modeli de *"Türkiye modelidir"* (`docs/architecture.md` § 4). Üç duruma
-sıkıştırmak, galeriyi "boyalı" demeye zorlar ve aracın değerini olduğundan düşük gösterir —
-yani sözlük burada pazarın gerisinde kalmış görünüyor.
-*Bedel:* bu bir **sözlük değişikliğidir** ve kararı sizindir (rol kuralı: Analist sözlüğe
-terim **önerir**). Ayrıca dört durum, C2 gereği dört ayrı açıklık/desen ayrımı demek —
-görsel tasarım yükü artar.
-*Elenen alternatif:* mockup'ı sözlüğe indirip üç durumla çizmek — daha az iş, ama galerinin
-elindeki gerçek bilgiyi kaybeder.
-
-**S2. Şema nasıl üretilir — kod içinde çizim mi, varlık olarak mı?**
-*Öneri:* **kod içinde satır içi çizim**; 13 parça ayrı ayrı adreslenebilir öğeler olarak.
-*Gerekçe:* durum renkleri token katmanından gelmek zorunda (C3) ve her parçanın kendi
-erişilebilir adı olmalı (R9); yüklenen bir görsel dosyası ikisini de yapamaz. `0011` § X1'de
-yüklenen SVG'lerin `<style>` ve animasyondan arındırıldığı not da bu yönü destekliyor.
-*Bedel:* şema kaynak kodda yaşar; tasarım değişikliği bir kod değişikliğidir.
-
-**S3. Galeri görsel listesi sözleşmeye nasıl eklenir?**
-Detay sözleşmesi bugün yalnızca `CoverImageUrl` taşıyor.
-*Öneri:* detay yanıtı **sıralı bir görsel listesi** taşır; kapak listenin ilk elemanıdır.
-*Gerekçe:* `docs/domain.md` **Kapak Görseli** tanımı zaten *"sıralı medya listesinin ilk
-elemanı"* diyor — yani model bunu öngörmüş; sözleşme onu yansıtmıyor.
-*Bedel:* `0002`'nin sözleşme testi değişir; `CoverImageUrl`'ün korunup korunmayacağı bir
-geri uyumluluk kararıdır (korunmasını öneririm — `0001`'in kart yanıtı onu kullanıyor).
-
-**S4. Panel editörü bu spec'te mi, ayrı mı?**
-`0010a` § X4 editörü *"görüntüleme şemasıyla birlikte ayrı bir spec"* diye ertelemişti; bu
-spec onu § X2 ile yine dışarıda bırakıyor.
-*Öneri:* **ayrı kalsın**; bu spec ziyaretçi tarafını bitirsin.
-*Gerekçe:* ziyaretçi tarafı tek başına değer üretir (veri `0010a`'da girilebiliyor);
-editör panel tarafının etkileşim yükünü (tıkla-seç, geri al, 13×4 durum) getirir ve iki
-ekranı tek spec'te doğrulamak kabul kriterlerini ortak hakemden koparır.
-*Bedel:* `0010a` § X4 ile bu spec § X2 birbirine işaret ediyor — **editörün hiçbir spec'te
-sahibi yok.** Sıraya eklenmesi gerekir; bunu ADR 0003 Ek 1'e yeni bir madde olarak
-öneriyorum ama **sıra kararı sizin**.
+> **Çözüldü (2026-11-18).** S1–S4 → **D1–D4**. Taslağın sorularının metni git geçmişinde
+> (`aaf0cec`).
 
 ---
 
 ## Acceptance Criteria
 
-> Dört açık soru cevaplandıktan sonra yazılacak. En az şu kümeleri kapsayacak:
-> görseller arası gezinme (fare, klavye, dokunma) · sayaç · büyütme ve çıkış · `alt` metni
-> ve locale · LCP/CLS davranışı · şemanın 13 parçasının her biri · her durum değeri ·
-> renk dışı ayırt edilebilirlik · okunabilir liste · alan kapalı/gizliyken şemanın hiç
-> bulunmaması · tek görsel ve hasar kaydı olmayan araç · hata durumu · RTL'de şema yönü ·
-> `0002`'nin kriterlerinin regresyon olarak korunması.
+> Bir sonraki turda yazılacak. En az şu kümeleri kapsayacak:
+>
+> **Parça haritası — veri ve panel**
+> - Alanın varsayılan ayarı (R8).
+> - Panelde 13 kutu, varsayılan seçimin olmaması, yarım haritanın reddi ve değerin
+>   temizlenmesi (R11, R12).
+> - Kapatıp açınca verinin korunması (F1).
+>
+> **Parça haritası — yanıt**
+> - Kapalı, gizli veya değersiz alanda JSON anahtarının olmaması.
+> - Haritanın `Attributes`'ta tekrar edilmemesi (C1, C12).
+>
+> **Parça haritası — şema ve liste**
+> - Şemanın 13 parçasının her biri ve her durum değeri.
+> - Tamamı orijinal durumu (R15).
+> - Desenle ayırt edilebilirlik ve 3:1 kontrast (R19, C2).
+> - Okunabilir listenin içeriği ve sırası; iki not (R17, R18).
+> - Şemanın Tab durağı olmaması (R16).
+> - RTL'de çizimin aynalanmaması, lejant ve listenin aynalanması (R21).
+>
+> **Galeri**
+> - Yalnız hazır görseller ve sayaç; ilk hazır görselin ilk olması (R1, R2, R7).
+> - Gezinme: düğme, klavye ve kaydırma; uçlar; RTL'de yön (R3).
+> - Büyütme, Esc, odak tutma ve geri dönüş; adresin değişmemesi (R4).
+> - `alt` şablonu ve locale (R5).
+> - `srcset`, gerçek boyutlar ve 4:3 çerçeve (R6).
+> - 30 görselde yalnız ilk görselin indirilmesi (D23).
+> - Sıfır görsel, tek görsel ve tek görselin yüklenememesi (R20).
+>
+> **Performans ve regresyon**
+> - Detay sayfasının Lighthouse ölçümü (C13).
+> - `0002`'nin kriterlerinin regresyon olarak korunması (C8).
 
 ---
 
 ## Definition of Done
 
-- [ ] Açık sorular karara bağlandı; **S1 bir sözlük kararı gerektiriyorsa**
-      `docs/domain.md` güncellendi ve ADR gerekip gerekmediği değerlendirildi.
-- [ ] `0011` tamamlandı.
+- [x] Açık sorular karara bağlandı. *(S1–S4 → D1–D4, B1–B19 → D5–D23, 2026-11-18.)*
+- [ ] `docs/domain.md` **Parça Haritası** tanımı dört duruma güncellendi (**D1**).
+- [ ] ADR 0007'ye parça haritası değer tipi için ek karar yazıldı (**C11**, **D5**).
+- [x] `0011` tamamlandı. *(`specs/done/0011-media-yukleme-turev-filigran.md`.)*
+- [ ] Panelde 13 seçim kutusuyla veri girişi kanıtla gösterildi (**R12**, **D5**).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0016-ac<n>.png`); şemanın her durumu, boş ve hata
       durumları, Arapça (RTL) görünüm dâhil.
