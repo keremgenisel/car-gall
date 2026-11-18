@@ -386,7 +386,9 @@ internal sealed record UpdateVehicleBody(
 
 /// <summary>
 /// `0016a` **D27** — <c>PartMap</c> parça haritasının YAPILANDIRILMIŞ alanıdır: metne gömülmez.
-/// <c>null</c> = bu istekte haritaya dokunulmaz (birleştirme semantiği); boş liste = temizle (**D32**).
+/// Harita öğesi <c>optionalValues</c>'ta HİÇ gönderilmezse kayıtlı haritaya dokunulmaz
+/// (birleştirme semantiği). Öğe gönderilip <c>partMap</c> taşımıyorsa (<c>null</c>) istek
+/// <c>vehicle.invalid_field_value</c> ile reddedilir (**AC-13**). Boş liste = temizle (**D32**).
 /// </summary>
 internal sealed record UpdateVehicleOptionalValue(
     string FieldKey,
