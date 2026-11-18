@@ -90,7 +90,9 @@
      (`--color-surface`) üzerinde her biri en az 3:1 (AC-25, arayüz öğesi eşiği; test
      bu dosyadan hesaplıyor) ve dört ton birbirinden ayrı aileden. Renk tek başına anlam
      TAŞIMAZ — durum desenle de ayrılır; renk ek ipucudur. `original` ink-muted'ın
-     tonudur: "dokunulmamış" nötrdür, vurgu taşımaz. */
+     tonudur: "dokunulmamış" nötrdür, vurgu taşımaz.
+     Dördü de tema kapısının kapalı listesinde ve yapılandırılabilir (`ThemeTokens`):
+     tema zemini değiştirirse (paint-*, surface) çiftleri başlangıçta 3:1 ile denetlenir. */
   --color-paint-original: #5f656c;
   --color-paint-local-painted: #8a5a00;
   --color-paint-painted: #b8412a;

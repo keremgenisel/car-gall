@@ -152,6 +152,25 @@ public sealed class TemaYapilandirmasiTests
         Assert.NotEqual("0.00", hata.Parameters["measured"]);
     }
 
+    /// <summary>
+    /// Triyaj BULGU-2 — şemanın durum rengi zemine karşı 3:1'in altına düşerse uygulama ayağa
+    /// kalkmaz ve hangi çiftin hangi eşiği karşılamadığını söyler (`0016b` C2).
+    /// </summary>
+    [Fact]
+    public void Reddeder_SemaDurumunu_ZemineKarsiUcBirAltinda()
+    {
+        Dictionary<string, string> tema = GecerliTema();
+        tema[ThemeTokens.PaintReplaced] = "#d0d8e0";
+
+        Error hata = Olustur(tema).Error;
+
+        Assert.Equal(ThemeErrors.ContrastBelowThreshold, hata.Code);
+        Assert.Equal(ThemeTokens.PaintReplaced, hata.Parameters!["foreground"]);
+        Assert.Equal(ThemeTokens.Surface, hata.Parameters["background"]);
+        Assert.Equal("3.0", hata.Parameters["threshold"]);
+        Assert.Equal("AC-25 (0016b)", hata.Parameters["criterion"]);
+    }
+
     [Fact]
     public void KabulEder_TumEsikleriKarsilayanTemayi()
     {
@@ -200,6 +219,12 @@ public sealed class TemaYapilandirmasiTests
         [ThemeTokens.Border] = "#e4e5e1",
         [ThemeTokens.Danger] = "#b8412a",
         [ThemeTokens.DangerSurface] = "#fbece9",
+
+        // `0016b` C2 — şemanın dört durumu (triyaj BULGU-2 ile kapalı listeye girdi).
+        [ThemeTokens.PaintOriginal] = "#5f656c",
+        [ThemeTokens.PaintLocalPainted] = "#8a5a00",
+        [ThemeTokens.PaintPainted] = "#b8412a",
+        [ThemeTokens.PaintReplaced] = "#1d4e89",
     };
 
     private static Result<ThemeOptions> Olustur(Dictionary<string, string> tema) =>
