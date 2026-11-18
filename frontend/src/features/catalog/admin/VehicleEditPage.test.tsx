@@ -64,7 +64,7 @@ const TRAMER: VehicleAdminField = {
 function ekran(locale: AppLocale = 'tr') {
   render(
     <LocaleProvider locale={locale}>
-      <VehicleEditPage vehicleId={KAYIT.vehicleId} />
+      <VehicleEditPage vehicleId={KAYIT.vehicleId} staffRole="sales_advisor" />
     </LocaleProvider>,
   )
 }

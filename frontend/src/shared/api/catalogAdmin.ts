@@ -14,6 +14,8 @@ import type {
   VehicleAdminSummary,
   ListingAction,
   ListingFeatureAction,
+  SaleReversalOverview,
+  SaleRevertTarget,
   VehicleMedia,
   VehicleSort,
 } from './types'
@@ -101,6 +103,41 @@ export async function applyListingAction(
     'POST',
     `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}/${action}`,
     undefined,
+    locale,
+  )
+}
+
+/**
+ * 0023 — satışı geri alma penceresinin önizlemesi ve ilanın geri alma kayıtları. Uç yalnız
+ * Yöneticiye açık; başka rol `403` alır ve ekran bu okumayı ona hiç yapmaz.
+ */
+export function fetchSaleReversals(
+  vehicleId: string,
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<SaleReversalOverview> {
+  return getJson<SaleReversalOverview>(
+    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}/sale-reversals`,
+    locale,
+    signal,
+  )
+}
+
+/**
+ * 0023 — satışı geri alır. İstek pencerenin GÖSTERDİĞİ hedefi taşır (**D16**): sunucu
+ * farklı hesaplarsa `409` + `listing.sale_reversal.target_changed` döner ve güncel hedef
+ * `targetStatus` parametresindedir. Yanıt `204`.
+ */
+export async function revertListingSale(
+  vehicleId: string,
+  reason: string,
+  expectedStatus: SaleRevertTarget,
+  locale: AppLocale,
+): Promise<void> {
+  await sendJson<null>(
+    'POST',
+    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}/revert-sale`,
+    { reason, expectedStatus },
     locale,
   )
 }

@@ -202,7 +202,7 @@ export function AdminApp({
         {view === 'vehicles' ? <VehicleListPage /> : null}
         {view === 'vehicle-new' ? <VehicleFormPage /> : null}
         {view === 'vehicle-edit' && vehicleId !== undefined ? (
-          <VehicleEditPage vehicleId={vehicleId} />
+          <VehicleEditPage vehicleId={vehicleId} staffRole={gate.session.role} />
         ) : null}
         {/* 0012a D17 — medya yüzeyi düzenlemenin alt yolu; kendi ekranı, kendi kaydetme akışı. */}
         {view === 'vehicle-media' && vehicleId !== undefined ? (

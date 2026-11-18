@@ -19,6 +19,7 @@ import { SUPPORTED_LOCALES } from '../../../shared/lib/locale'
 import { adminPath, vehicleMediaPath } from '../../../shared/lib/route'
 import { Button, Card, ErrorState, Field, Skeleton } from '../../../shared/ui'
 import { ListingActionBar } from './ListingActionBar'
+import { SaleReversalHistory } from './SaleReversalHistory'
 import { OptionalFieldInput } from './OptionalFieldInput'
 import { PaintChangeMapInput } from './PaintChangeMapInput'
 import { VehicleSelect } from './VehicleSelect'
@@ -69,7 +70,14 @@ type Submission =
  * başka araç" demek. Gövdede yine de taşınıyor ki sunucu bir değiştirme girişimini
  * reddedebilsin (D24).</p>
  */
-export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
+export function VehicleEditPage({
+  vehicleId,
+  staffRole,
+}: {
+  readonly vehicleId: string
+  /** `0023` — oturumdaki rol; "Satışı geri al" ve geri alma kayıtları yalnız Yöneticiye. */
+  readonly staffRole: string
+}) {
   const { locale, t } = useLocale()
   const [loaded, setLoaded] = useState<{ readonly key: string; readonly value: Sources } | null>(
     null,
@@ -282,8 +290,14 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
         vehicleId={vehicleId}
         listingStatus={sources.detail.listingStatus}
         awaitingBranchAssignment={sources.detail.awaitingBranchAssignment}
+        staffRole={staffRole}
         onApplied={() => setSourceToken((token) => token + 1)}
       />
+
+      {/* `0023` R7 — geri alma kayıtları yalnız Yöneticiye; uç başka role `403` döner. */}
+      {staffRole === 'manager' ? (
+        <SaleReversalHistory vehicleId={vehicleId} refreshToken={sourceToken} />
+      ) : null}
 
       <Card as="div" testId="vehicle-edit-form">
         <form
