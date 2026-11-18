@@ -216,6 +216,17 @@ ekleyemiyor.
 belgede duruyor ama hiçbir mekanizma onu dayatmıyor. Bir sonraki sapma aynı şansı
 taşımayabilir.
 
+### Sapma — `0015` (#9) #8'den önce yapıldı
+
+`0014` kapandığında başlanmamış ilk iş **#8** (`0004`, SEO) idi. Takım Yöneticisi 2026-11-18'de
+**#9**'u (`0015`) istedi ve kart aynı gün tamamlandı (#87, #88, #89 → `bd0cde8`).
+
+**Neden kayda geçiyor:** `0008`'in sapmasıyla aynı sebep — sıra verilmiş bir karardı. Bu kez
+sapma bir oturum kazası değil açık bir yönetici talebiydi ve zararsız olduğu ölçüldü: `0015`
+liste ekranına ve `VehicleCatalog` okuma tarafına dokundu; `0004`'ün konusu olan meta enjeksiyonu
+ve yapısal veriyle kesişmiyor. **`0004` hâlâ başlanmamış ilk iş** ve "Beklemede" gerekçesi
+("sırası 7'den sonra") `0014` ile ortadan kalkmıştı.
+
 ### `0010`'un kendi dilimlemesi — unsur 7 #2 ikiye bölündü
 
 `0010`'un **D1** kararı, unsur 7'nin 2. maddesini üç dilime ayırıyor ve ilk dilimi kendisi
@@ -266,7 +277,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 6 | İki adımlı doğrulama (unsur 2) | `0013` ✅ tamamlandı |
 | 7 | Ana sayfa | `0014` ✅ tamamlandı |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
-| 9 | Liste: sıralama + filtre eksenleri | **`0015`** (Taslak — S1–S5) |
+| 9 | Liste: sıralama + filtre eksenleri | `0015` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 10 | Medya galerisi + parça haritası şeması | **`0016`** (Taslak — S1–S4) |
 | 11 | `Content` sayfaları | **`0017`** (Taslak — S1–S5) |
 | 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
@@ -332,6 +343,17 @@ Sıra yine **ilerledi**: başlanmamış ilk iş artık **#8** (`0004` — SEO; d
 gerekçesi "sırası 7'den sonra" idi ve o koşul bu kapanışla sağlandı). Taslak sayısı altıdan
 **beşe** indi; `0014`'ün dört sorusu **D1–D4** ile, ardından açılan S5–S6 **D6–D7** ile
 kapanmıştı, yani toplam açık soru 28'den **24**'e düştü.
+
+**`9`. satır kapandı** (`0015`, 2026-11-18, `bd0cde8`) — sırasından önce, § Sapma. Vitrin
+listesi tek eksenden altıya çıktı (kasa tipi, yakıt, vites, yıl / kilometre / fiyat aralığı)
+ve ziyaretçi seçimli altı sıralama geldi; **46 kriter**, **D1–D21**. Mockup farkı bu kartla da
+büyüdü: marka ekseni ve marka arama kutusu kapsam dışına çıktı (**X8**), çünkü veride marka
+kavramı yok — `0014` X13 ile aynı ölçüm. **Marka taksonomisi artık üç işin önkoşulu** (`0014`
+X11 ve X13, `0015` X8) ve kartı yok. Ana sayfa formunun yeni eksenlere genişlemesi ayrı bir
+kart (`0015` X10).
+
+Başlanmamış ilk iş **#8** (`0004`). Taslak sayısı beşten **dörde** indi; `0015`'in beş sorusu
+D1–D5 ile kapanmıştı, yani toplam açık soru 24'ten **19**'a düştü.
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca
