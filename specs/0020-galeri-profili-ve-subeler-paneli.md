@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak — QA CLARIFY turu işlendi (B1–B11 → **D13–D23**) |
+| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B11 → **D13–D23**) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (yazma uçları, görünen ad ve sürüm kolonları — migration, B5 kuralının sıkılaşması — **D13**) · `VehicleCatalog` (kapatılmış şubeye araç bağlanamaz — **D14**) · `frontend/` panel (galeri ve şubeler ekranları, araç formunun şube seçicisi) ve vitrin (üst çubuk, ana sayfa giriş satırı) · `Host` (görünen adın `index.html`'e basılması seçilirse — plan turu, **D16**) |
@@ -440,7 +440,7 @@ ekranın adresini doğrudan açtığında "erişim yok" ekranını görür (`Adm
 
 ## Definition of Done
 
-- [ ] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı.
+- [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B11 → D13–D23, 2026-11-18.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0020-ac<n>.png`),
       boş ve hata durumları dâhil; Arapça görüntü de var (AC-12, AC-73).
