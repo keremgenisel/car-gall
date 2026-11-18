@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak — kararlar verildi, kabul kriterleri yazılmadı |
+| **Durum** | Onaya sunuldu (2026-11-18) — 46 kabul kriteri, kriter turu |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (vitrin okuma tarafı) · `frontend/` public vitrin. `VehicleReference`'ın mevcut public uçları **tüketilir**, değişmez (**D17**). |
@@ -425,15 +425,128 @@ parametre zorunlu olmaz.
 
 ## Acceptance Criteria
 
-> Kriter turunda yazılacak (D1–D16'nın üzerine). En az şu kümeleri kapsayacak:
-> her eksen tek tek ve birlikte · aralık eksenlerinin sınır davranışı (dahil sınır, tek
-> sınır, alt > üst, tam sayı olmayan ve negatif değer — R15) · **P4**/R4 (tek fiyat sınırı
-> dâhil) · altı sıralama seçeneği, fiyatsız araçların yeri ve eşitlik kırıcısı · seçimli
-> sıralamada öne çıkarmanın yok sayılması (D7) · varsayılan sıralamanın korunması ·
-> C12'nin adres sözleşmesi ve kanonik biçimi · tanınmayan `sort` ve slug'ın sessizce yok
-> sayılması · yakıt/vites değer listesi ucu (D11) · `0001`'in mevcut bağlantılarının
-> çalışmaya devam etmesi · ilk sayfaya dönüş · seçim özeti (R10) · boş sonuç ekranı ·
-> performans eşiğinin üç profili (C9) · üç locale ve RTL.
+> Her kriterin testi `DisplayName`'inde `0015/AC-<n>` taşır (`docs/testing.md` § 1).
+> **Görünür ilan** = `Yayında` veya `Rezerve` (C4). Adresler `/tr/cars` üzerinden yazıldı;
+> kural her locale'de aynıdır. Örnek veri kümeleri kriterin içinde verilir.
+>
+> *Kriter turu (2026-11-18) Developer tarafından yazıldı, Takım Yöneticisi onayına sunuldu:
+> Analist turunun yerine geçtiği için yazan = uygulayan riski taşıyor ve dış gözden geçirme
+> (DoD T10) bunu dengelemek için zorunlu.*
+
+### Eksenler (R1, R2, R3, R16)
+
+- **AC-1.** 3 `diesel` ve 2 `petrol` görünür ilan varken `?fuel=diesel` yalnız 3 dizel ilanı
+  listeler; toplam sayı 3'tür.
+- **AC-2.** Aynı veriyle `?fuel=diesel&fuel=petrol` 5 ilanı listeler (eksen içinde **veya**).
+- **AC-3.** 2 `manual` ve 4 `automatic` görünür ilan varken `?transmission=manual` yalnız 2
+  ilanı listeler.
+- **AC-4.** Model yılları 2017, 2018, 2019, 2020, 2021 olan beş ilan varken
+  `?yearMin=2018&yearMax=2020` 2018, 2019 ve 2020'yi listeler; sınırlar **dahildir** (R15).
+- **AC-5.** Kilometreleri 49.999, 50.000 ve 50.001 olan üç ilan varken `?mileageMax=50000`
+  ilk ikisini listeler.
+- **AC-6.** Fiyatları 499.999, 500.000, 1.000.000 ve 1.000.001 olan dört ilan varken
+  `?priceMin=500000&priceMax=1000000` ortadaki ikisini listeler.
+- **AC-7.** Tek sınır geçerlidir: `?yearMin=2020` yalnız 2020 ve sonrasını, `?priceMax=500000`
+  yalnız 500.000 ve altını listeler (açık uçlu aralık).
+- **AC-8.** Eksenler **ve** ile birleşir: `?bodyType=suv&fuel=diesel&yearMin=2019` yalnız
+  üç koşulun **hepsini** sağlayan ilanları listeler; bir koşulu sağlamayan ilan (dizel ama
+  sedan, ya da SUV ama 2018) listede yoktur.
+- **AC-9.** Ziyaretçiye açık `/api/reference/fuel-types` ve
+  `/api/reference/transmission-types` uçları oturumsuz `200` döner ve türün **tüm**
+  değerlerini (yakıt 4, vites 2) etkin locale'in adıyla verir (D17). Uç bu değerleri
+  vitrinde bir ilana sahip olup olmamalarından bağımsız listeler; değerin yanında sonuç
+  sayısı yazmaz (X11).
+
+### Fiyat sorunuz (R4 · P4, D10)
+
+- **AC-10.** "Fiyat sorunuz" bir ilan varken `?priceMax=1000000` ve ayrıca yalnız
+  `?priceMin=1` o ilanı **listelemez**.
+- **AC-11.** Fiyat sınırı verilmemişken (`?fuel=diesel`) "fiyat sorunuz" dizel ilan listede
+  **görünür**.
+
+### Geçersiz girdi (R15 · C12 · D10, D18)
+
+- **AC-12.** `?yearMin=2021&yearMax=2018` (alt > üst) yıl eksenini yok sayar, diğer eksenleri
+  uygular ve sunucu `200` döner.
+- **AC-13.** `?mileageMax=abc`, `?mileageMax=-5` ve `?priceMax=500000.5` ilgili ekseni yok
+  sayar; sunucu `200` döner.
+- **AC-14.** Uç, AC-12 ve AC-13'teki geçersiz aralık parametrelerini adresten
+  `replaceState` ile **kaldırır**; tarayıcı geçmişine kayıt eklenmez ve geçerli diğer
+  parametreler adreste kalır.
+- **AC-15.** `?sort=cheapest` (tanınmayan) varsayılan sıralamayı uygular; sunucu `200`
+  döner ve uç `sort` parametresini adresten `replaceState` ile kaldırır.
+- **AC-16.** `?fuel=kerosene` (tanınmayan slug) sunucu tarafında yok sayılır ve liste
+  filtresiz döner; parametre adreste **kalır** (D18, `0001` AC-17 deseni).
+- **AC-17.** Eşleştirme tam ve harfe duyarlıdır: `?fuel=Diesel` tanınmaz ve yok sayılır
+  (C1, `0001` C13).
+
+### Sıralama (R5, R6, R7 · D1, D7, D8)
+
+- **AC-18.** `?sort=newest` ilanları yayın tarihi yeniden eskiye sıralar.
+- **AC-19.** `?sort=price-asc` fiyatı artan sıralar; "fiyat sorunuz" ilanlar **sonda** durur.
+- **AC-20.** `?sort=price-desc` fiyatı azalan sıralar; "fiyat sorunuz" ilanlar yine **sonda**
+  durur (D1).
+- **AC-21.** `?sort=mileage-asc` kilometreyi artan sıralar.
+- **AC-22.** `?sort=year-desc` model yılını azalan, `?sort=year-asc` artan sıralar.
+- **AC-23.** Öne çıkarılmış ve **en pahalı** ilan, `?sort=price-asc` ile **sonda**,
+  `?sort=newest` ile yayın tarihine göre yerinde durur; öne çıkarma ağırlığı seçimli
+  sıralamada yok sayılır (D7).
+- **AC-24.** Eşitlik kırıcı: aynı fiyatlı iki ilandan yayın tarihi yeni olan önce gelir;
+  fiyat ve yayın tarihi de eşitse ilan kimliği küçük olan önce gelir (D8).
+- **AC-25.** Fiyatı ve yayın tarihi aynı 30 ilan varken `?sort=price-asc` ile birinci ve
+  ikinci sayfa birlikte 30 **farklı** ilan içerir; tekrar eden veya kaybolan yoktur.
+- **AC-26.** `sort` verilmediğinde sıralama `0001` AC-4'teki gibidir (öne çıkarma ağırlığı,
+  yayın tarihi, ilan kimliği) ve uç varsayılan sıralamayı adrese **yazmaz** (R7, D9).
+
+### Adres (R11, R12 · C12 · D5, D9, D19)
+
+- **AC-27.** Ekranda yakıt `diesel` ve `hybrid`, vites `automatic`, yıl 2018–2021,
+  kilometre ≤ 80.000, fiyat 500.000–1.500.000 ve "fiyat artan" seçildiğinde adres
+  `/tr/cars?fuel=diesel&fuel=hybrid&transmission=automatic&yearMin=2018&yearMax=2021&mileageMax=80000&priceMin=500000&priceMax=1500000&sort=price-asc`
+  biçimindedir: parametre adları C12'deki gibi, tekrarlı parametre, boş parametre ve
+  `page=1` yok.
+- **AC-28.** AC-27'nin adresi yeni bir sekmede açıldığında aynı seçimler ekranda işaretli
+  ve aynı liste görünür.
+- **AC-29.** `0001`'in biçimindeki `/tr/cars?bodyType=suv&page=2` aynı listeyi açmaya
+  devam eder (C10).
+- **AC-30.** 2. sayfadayken herhangi bir eksen veya sıralama değiştiğinde liste 1. sayfadan
+  başlar ve bu **tek** bir geçmiş kaydıdır (R11).
+- **AC-31.** Bir daraltmadan sonra tarayıcıda **geri** demek önceki daraltma hâlini ve
+  listesini geri getirir.
+- **AC-32.** Bir aralık alanına yazarken adres **değişmez**; aralık Enter'a basınca veya
+  "Uygula"ya tıklanınca uygulanır ve geçmişe **tek** kayıt ekler (D19).
+
+### Arayüz (R10, R13, R14, R16 · D15, D20)
+
+- **AC-33.** Filtre çubuğu yakıt ve vitesin tüm değerlerini (AC-9) etkin locale'in adıyla
+  ve uçtan gelen sırada çip olarak gösterir; çiplerin yanında sayı yoktur.
+- **AC-34.** Çok değerli bir eksende 2 değer seçiliyken eksenin özeti seçili değer sayısını
+  ICU ile söyler ("2 seçili").
+- **AC-35.** Aralık ekseninin özeti seçilen sınırlardır: yıl 2018–2021 için "2018–2021",
+  yalnız üst fiyat sınırı 500.000 için "≤ 500.000" (etkin locale'in sayı biçimiyle).
+- **AC-36.** Bir eksenin temizle eylemi yalnız **o eksenin** değerlerini kaldırır; diğer
+  eksenler ve sıralama korunur.
+- **AC-37.** Sıralama seçici varsayılanla birlikte yedi seçeneği etkin locale'in metniyle
+  sunar ve seçili olanı gösterir.
+- **AC-38.** Seçili eksenlerle hiç sonuç yokken ekran **etkin eksenlerin adlarını** söyler ve
+  tüm daraltmaları kaldıran bir temizle eylemi sunar; sıralama korunur.
+- **AC-39.** Vitrinde hiç görünür ilan yokken `0001`'in "hiç yayında araç yok" durumu
+  görünür, AC-38'in ekranı görünmez (`0001` AC-27 korunur).
+- **AC-40.** `/ar/cars` sayfasında eksen adları, değerleri, özetler ve sıralama seçenekleri
+  Arapça'dır ve çubuk sağdan sola akar (görsel kanıt).
+- **AC-41.** Gizli veya kapalı opsiyonel alanlar ve şase, plaka, iç not liste yanıtında hiç
+  bulunmaz; kart yanıtının şekli değişmez (`0001` AC-23/AC-24 korunur, C5).
+- **AC-42.** `Taslak`, `Satıldı` ve `Arşiv` ilanlar hiçbir eksen ve sıralama birleşiminde
+  listelenmez (C4).
+
+### Performans (C9 · D13, D20)
+
+- **AC-43.** 500 görünür ilanla filtresiz liste isteğinin p95'i < 400 ms'dir.
+- **AC-44.** 500 görünür ilanla R1'in bütün eksenleri dolu istek (kasa tipi, yakıt, vites,
+  yıl, kilometre, fiyat aralığı) p95 < 400 ms'dir.
+- **AC-45.** 500 görünür ilanla `?sort=price-asc` isteğinin p95'i < 400 ms'dir.
+- **AC-46.** `/tr/cars` Lighthouse mobil profilinde (3 koşu, medyan) LCP < 2,5 s ve
+  CLS < 0,1 ölçülür; filtre çubuğu yüklenince altındaki liste kaymaz (D20).
 
 ---
 
