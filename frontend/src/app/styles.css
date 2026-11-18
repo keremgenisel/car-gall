@@ -1229,12 +1229,12 @@ body {
 
 /* Çerçeve SABİT 4:3 (D18): farklı oranlı görsel çerçeveye sığdırılır ve gezinirken
    sayfa kaymaz (AC-62). Görselin kendi `width`/`height`'i gerçek boyuttur; çerçeveyi
-   belirleyen o değil, buradaki oran. */
+   belirleyen o değil, buradaki oran. `overflow` kesilmez: görsel `contain` ile zaten
+   çerçevede kalıyor ve kesmek kenardaki düğmenin odak halkasını kırpıyordu (AC-45). */
 .gallery__frame {
   position: relative;
   aspect-ratio: var(--media-aspect-ratio);
   background: var(--color-surface-muted);
-  overflow: hidden;
 }
 
 .gallery__enlarge {
