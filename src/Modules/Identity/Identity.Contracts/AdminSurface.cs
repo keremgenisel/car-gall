@@ -21,6 +21,12 @@ public static class AdminSurface
     /// <summary>Yalnız Yönetici rolünün yapabildiği işlemler (R9, AC-25, AC-26, AC-28).</summary>
     public const string ManagerPolicy = "admin.manager";
 
+    /// <summary>
+    /// `0017` **D25** — içerik yazma uçları: Yönetici ve İçerik Editörü. Rol kısıtı burada,
+    /// politikaların tek kaynağında yaşar; `Content` rol kodu karşılaştırmaz (AC-113).
+    /// </summary>
+    public const string ContentPolicy = "admin.content";
+
     /// <summary>Kimlik doğrulama şemasının adı.</summary>
     public const string AuthenticationScheme = "cargallery.session";
 

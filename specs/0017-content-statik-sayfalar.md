@@ -450,6 +450,24 @@ sayfa okuma maliyeti ödemez. *Bedel:* tanınmayan her tek parçalı yol bir oku
 - **D36 — SSS sırasının uçlarında düğme devre dışı, sıra dönmez; yeni girdi sona eklenir
   (S13).** → AC-78, AC-79.
 
+### Uygulama planı (onaylı, 2026-11-18)
+
+Uygulama dalı kriterler `main`'e girdikten (#98) sonra açıldı.
+
+1. `Identity`: D25'in politikası (`AdminSurface.ContentPolicy`: Yönetici + İçerik Editörü).
+2. `Content` modülü: `Content.Contracts` (public okuma, ayrılmış slug listesi), domain
+   (sayfa, dil başına metin ve durum, eski slug'lar, SSS girdisi), tek kural yeri (C12, R13,
+   R17), şema ve migration (yalnız `content`; dört sistem sayfası tohumu), Host'a bağlanma.
+3. Application: komutlar (iyimser eşzamanlılık, alan bazında çoklu hata), panel ve public
+   sorgular; PostgreSQL üzerinde entegrasyon testleri.
+4. Uçlar ve Host: public ve yönetim uçları; kabukta eski slug 301'i (D27); Host testleri
+   (roller, yönlendirme, belge durumları).
+5. Ön yüz, public: rota (D9), içerik sayfası ve üç durumu, gövde çizici (D26), SSS, dil
+   değiştiricinin hedefi (R15), altlığın Kurumsal kolonu (R21), talep formu bağlantısı (R22).
+6. Ön yüz, panel: "İçerik" bölümü (rol görünürlüğü), sayfa düzenleme (dil başına, eksik
+   dil, çakışma, onaylı silme), SSS düzenleyici (yukarı/aşağı).
+7. Çeviriler, e2e, görsel kanıt (Arapça dahil), belgeler.
+
 ---
 
 ## Açık sorular

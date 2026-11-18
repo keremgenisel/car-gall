@@ -204,7 +204,14 @@ public static class IdentityModule
             .AddPolicy(AdminSurface.ManagerPolicy, policy => policy
                 .AddAuthenticationSchemes(AdminSurface.AuthenticationScheme)
                 .RequireAuthenticatedUser()
-                .RequireRole(StaffRoleCode.ToCode(StaffRole.Manager)));
+                .RequireRole(StaffRoleCode.ToCode(StaffRole.Manager)))
+            // `0017` D25 — içerik: Yönetici + İçerik Editörü. Satış Danışmanı `403` alır (AC-109).
+            .AddPolicy(AdminSurface.ContentPolicy, policy => policy
+                .AddAuthenticationSchemes(AdminSurface.AuthenticationScheme)
+                .RequireAuthenticatedUser()
+                .RequireRole(
+                    StaffRoleCode.ToCode(StaffRole.Manager),
+                    StaffRoleCode.ToCode(StaffRole.ContentEditor)));
 
     /// <summary>
     /// R6'nın İKİNCİ yarısı: giriş ucu ayrıca kaynak IP bazlı hız sınırına tabidir.

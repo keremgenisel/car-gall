@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="../Modules/VehicleCatalog/VehicleCatalog/VehicleCatalog.csproj" />
     <ProjectReference Include="..\Modules\VehicleReference\VehicleReference\VehicleReference.csproj" />
+    <ProjectReference Include="..\Modules\Content\Content\Content.csproj" />
     <ProjectReference Include="..\Modules\Dealership\Dealership\Dealership.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity\Identity.csproj" />
     <ProjectReference Include="..\Modules\Leads\Leads\Leads.csproj" />
