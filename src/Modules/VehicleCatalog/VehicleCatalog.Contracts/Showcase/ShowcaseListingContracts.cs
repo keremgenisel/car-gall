@@ -45,7 +45,36 @@ public sealed record ShowcaseListingFilter(
     IReadOnlyList<string> BodyTypes,
     int Page,
     string Locale,
-    int? PageSize = null);
+    int? PageSize = null)
+{
+    /// <summary>`0015` R1 — yakıt ekseni (`fuel`, tekrarlı slug). Ham girdi; tanınmayan değer yok sayılır.</summary>
+    public IReadOnlyList<string> FuelTypes { get; init; } = [];
+
+    /// <summary>`0015` R1 — vites ekseni (`transmission`, tekrarlı slug).</summary>
+    public IReadOnlyList<string> TransmissionTypes { get; init; } = [];
+
+    /// <summary>`0015` R1 — model yılı aralığı (`yearMin` · `yearMax`).</summary>
+    public ShowcaseRange Year { get; init; } = ShowcaseRange.None;
+
+    /// <summary>`0015` R1 — kilometre aralığı (`mileageMin` · `mileageMax`).</summary>
+    public ShowcaseRange Mileage { get; init; } = ShowcaseRange.None;
+
+    /// <summary>`0015` R1 — fiyat aralığı, para biriminin ANA biriminde tam sayı (`priceMin` · `priceMax`, R15).</summary>
+    public ShowcaseRange Price { get; init; } = ShowcaseRange.None;
+
+    /// <summary>`0015` R5 — `sort` ham değeri; tanınmayan değer varsayılan sıralamaya düşer.</summary>
+    public string? Sort { get; init; }
+}
+
+/// <summary>
+/// `0015` R15 — aralığın iki sınırı HAM metin olarak taşınır. Sebep `page`'in sebebiyle aynı
+/// (`0001` C14): `int?` olarak bağlamak "abc"yi "yok" ile aynı yapar, oysa R15 tam sayı
+/// olmayan bir sınırda EKSENİN TAMAMININ yok sayılmasını istiyor; ayrımı normalizasyon yapar.
+/// </summary>
+public sealed record ShowcaseRange(string? Min, string? Max)
+{
+    public static ShowcaseRange None { get; } = new(null, null);
+}
 
 public interface IShowcaseListingQueries
 {

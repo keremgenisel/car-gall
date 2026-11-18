@@ -15,9 +15,10 @@ vi.mock('../../shared/api/catalog', () => ({
   fetchShowcaseListings: vi.fn(),
   fetchBodyTypes: vi.fn(),
   fetchFieldSettings: vi.fn(),
+  fetchReferenceTerms: vi.fn(),
 }))
 
-const { fetchShowcaseListings, fetchBodyTypes, fetchFieldSettings } =
+const { fetchShowcaseListings, fetchBodyTypes, fetchFieldSettings, fetchReferenceTerms } =
   await import('../../shared/api/catalog')
 
 const ilan: ShowcaseListing = {
@@ -50,6 +51,20 @@ beforeEach(() => {
     fields: [{ fieldKey: 'body_type', isOpen: true, isPublic: true, isFilterable: true }],
   })
   vi.mocked(fetchBodyTypes).mockResolvedValue([{ slug: 'suv', label: 'SUV' }])
+  // 0015 D17 — yakıt ve vites değerleri mevcut public uçlardan.
+  vi.mocked(fetchReferenceTerms).mockImplementation((segment) =>
+    Promise.resolve(
+      segment === 'fuel-types'
+        ? [
+            { kind: 'FuelType', slug: 'diesel', label: 'Dizel' },
+            { kind: 'FuelType', slug: 'petrol', label: 'Benzin' },
+          ]
+        : [
+            { kind: 'TransmissionType', slug: 'manual', label: 'Manuel' },
+            { kind: 'TransmissionType', slug: 'automatic', label: 'Otomatik' },
+          ],
+    ),
+  )
 })
 
 afterEach(() => {

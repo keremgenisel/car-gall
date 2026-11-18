@@ -4,15 +4,31 @@ import type {
   BodyType,
   FieldSettings,
   PagedResult,
+  ReferenceTerm,
   ShowcaseListing,
   ShowcaseListingDetail,
 } from './types'
 
 const NOT_FOUND = 404
 
+export interface ShowcaseRange {
+  readonly min: number | null
+  readonly max: number | null
+}
+
+/**
+ * Vitrin listesinin sorgusu. `0015` C12'nin parametre adlarıyla birebir; yeni alanlar
+ * opsiyonel — verilmeyen eksen sorguya yazılmaz.
+ */
 export interface ShowcaseQuery {
   readonly bodyTypes: readonly string[]
   readonly page: number
+  readonly fuels?: readonly string[]
+  readonly transmissions?: readonly string[]
+  readonly year?: ShowcaseRange
+  readonly mileage?: ShowcaseRange
+  readonly price?: ShowcaseRange
+  readonly sort?: string
 }
 
 export function fetchShowcaseListings(
@@ -26,6 +42,22 @@ export function fetchShowcaseListings(
     params.append('bodyType', bodyType)
   }
 
+  for (const fuel of query.fuels ?? []) {
+    params.append('fuel', fuel)
+  }
+
+  for (const transmission of query.transmissions ?? []) {
+    params.append('transmission', transmission)
+  }
+
+  appendRange(params, 'year', query.year)
+  appendRange(params, 'mileage', query.mileage)
+  appendRange(params, 'price', query.price)
+
+  if (query.sort !== undefined) {
+    params.set('sort', query.sort)
+  }
+
   if (query.page > 1) {
     params.set('page', String(query.page))
   }
@@ -34,6 +66,37 @@ export function fetchShowcaseListings(
 
   return getJson<PagedResult<ShowcaseListing>>(
     `/api/catalog/showcase-listings?${params.toString()}`,
+    locale,
+    signal,
+  )
+}
+
+function appendRange(
+  params: URLSearchParams,
+  name: string,
+  range: ShowcaseRange | undefined,
+): void {
+  if (range?.min !== null && range?.min !== undefined) {
+    params.set(`${name}Min`, String(range.min))
+  }
+
+  if (range?.max !== null && range?.max !== undefined) {
+    params.set(`${name}Max`, String(range.max))
+  }
+}
+
+/**
+ * `0015` D17 — yakıt ve vitesin değer listesi `0010a`'dan beri var olan public uçlardan gelir;
+ * türün TÜM değerleri, kanonik ada göre sıralı, etkin locale'in adıyla. Değer başına sayı
+ * yoktur (X11).
+ */
+export function fetchReferenceTerms(
+  segment: 'fuel-types' | 'transmission-types',
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<readonly ReferenceTerm[]> {
+  return getJson<readonly ReferenceTerm[]>(
+    `/api/reference/${segment}?locale=${locale}`,
     locale,
     signal,
   )

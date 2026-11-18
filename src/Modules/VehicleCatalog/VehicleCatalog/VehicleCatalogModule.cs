@@ -67,6 +67,8 @@ public static class VehicleCatalogModule
         services.AddScoped<IIntegrationEventHandler<BranchDeactivated>, BranchDeactivatedHandler>();
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();
         services.AddScoped<IBodyTypeCatalog, BodyTypeCatalog>();
+        // 0015 R16 — yakıt ve vitesin kanonik kümesi (D17: mevcut public uçların kaynağı).
+        services.AddScoped<IReferenceTermCatalog, ReferenceTermCatalog>();
         services.AddScoped<IReferenceLabelResolver, ReferenceLabelResolver>();
         // Şema Host'a ENJEKSİYONLA görünür; elle tutulan bir liste yok. Yeni bir
         // modül eklendiğinde kurulum ve doğrulama yollarına kendiliğinden katılır.

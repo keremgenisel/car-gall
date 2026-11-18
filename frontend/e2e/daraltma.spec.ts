@@ -57,12 +57,30 @@ test.describe('Kasa tipine göre daraltma', () => {
     }
   })
 
-  test('0001/AC-11: Daraltma çubuğu yalnızca kasa tipi eksenini sunar', async ({ page }) => {
+  /*
+   * `0015` D16 bu kriteri bilerek genişletti: `0001`'in X2–X4'ü (diğer eksenler) geri açıldı
+   * ve R1 altı eksen istiyor. Kriterin "yalnızca kasa tipi" iddiası `0015` C10'un istisnasıdır
+   * (C10 notu, Takım Yöneticisi onayına #88'de sunuldu). İddia GEVŞETİLMEDİ, sayılan küme
+   * değişti: panel tam olarak R1'in altı eksenini sunar ve başka filtre grubu yoktur.
+   */
+  test("0001/AC-11 (0015 D16 ile genişledi): Daraltma çubuğu kasa tipi eksenini ve 0015 R1'in eksenlerini sunar; başka filtre grubu yoktur", async ({
+    page,
+  }) => {
     await page.goto('/tr/cars')
 
     await expect(page.getByTestId('body-type-filter')).toBeVisible()
-    // Tek eksen: sayfada başka bir filtre grubu yoktur (R8, X3).
-    await expect(page.locator('fieldset')).toHaveCount(1)
+    const eksenler = page.getByTestId('list-filters').locator('fieldset')
+    await expect(eksenler).toHaveCount(6)
+    await expect(page.locator('fieldset')).toHaveCount(6)
+    await expect(eksenler.locator('legend')).toHaveText([
+      // Aralıklar önce, değer listesi bekleyen çipler sonra (LCP ölçümü, ListFilters.tsx).
+      'Yıl',
+      'Kilometre',
+      'Fiyat',
+      'Kasa tipi',
+      'Yakıt',
+      'Vites',
+    ])
   })
 
   test('0001/AC-7: İki kasa tipi seçildiğinde liste, herhangi birine uyan ilanları gösterir', async ({

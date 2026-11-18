@@ -57,6 +57,13 @@ export interface BodyType {
   readonly label: string
 }
 
+/** `0015` D17 — yakıt ve vites değerleri; şekli kasa tipiyle aynı, ek olarak tür. */
+export interface ReferenceTerm {
+  readonly kind: string
+  readonly slug: string
+  readonly label: string
+}
+
 export interface FieldSetting {
   readonly fieldKey: string
   readonly isOpen: boolean

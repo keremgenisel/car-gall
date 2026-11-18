@@ -48,6 +48,11 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           kilometers: 1000,
           page: 1,
           totalPages: 2,
+          // 0015 — aralık özeti ve boş sonuçtaki etkin eksen listesi.
+          min: '2018',
+          max: '2021',
+          axes: 'Yakıt',
+          axis: 'Yakıt',
           // 0008 — onay metinleri personelin adını taşıyor (AC-5).
           name: 'Ayşe Yılmaz',
           // 0010a — şube etiketi kapatılmış şubede durumu da taşıyor.

@@ -26,15 +26,23 @@ internal static class ShowcaseQueryHarness
         string locale = "tr",
         IVehicleModelNameResolver? modelNames = null)
     {
+        return await QueryAsync(database, new ShowcaseListingFilter(bodyTypes ?? [], page, locale), modelNames);
+    }
+
+    /// <summary>`0015` — bütün eksenler ve sıralama.</summary>
+    internal static async Task<PagedResult<ShowcaseListingDto>> QueryAsync(
+        ShowcaseDatabase database,
+        ShowcaseListingFilter filter,
+        IVehicleModelNameResolver? modelNames = null)
+    {
         await using VehicleCatalogDbContext context = database.CreateContext();
         ShowcaseListingQueries queries = new(
             context,
             modelNames ?? new FakeModelNameResolver(),
             new FakeBodyTypeCatalog(),
+            new FakeReferenceTermCatalog(),
             Locales);
 
-        return await queries.GetAsync(
-            new ShowcaseListingFilter(bodyTypes ?? [], page, locale),
-            CancellationToken.None);
+        return await queries.GetAsync(filter, CancellationToken.None);
     }
 }

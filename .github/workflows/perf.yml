@@ -134,11 +134,11 @@ jobs:
           echo "Host 120 saniyede ayağa kalkmadı." >&2
           exit 1
 
-      # AC-34
+      # 0001 AC-34 · 0015 AC-43, AC-44, AC-45 (üç profil, D13)
       - name: Sunucu p95 ölçümü
         run: dotnet run --project tests/Performance/ShowcaseListingBenchmark/ShowcaseListingBenchmark.csproj -c Release
 
-      # 0001 AC-35 ve AC-25 (liste, /tr/cars) · 0014 AC-59, AC-60 (ana sayfa, /tr/), AC-61
+      # 0001 AC-35 ve AC-25 (liste, /tr/cars) · 0014 AC-59, AC-60 (ana sayfa, /tr/), AC-61 · 0015 AC-46
       - name: Uç LCP ve CLS ölçümü
         working-directory: frontend
         run: npm run perf:lighthouse
@@ -152,4 +152,5 @@ jobs:
           path: |
             docs/evidence/0001-performance.json
             docs/evidence/0014-performance.json
+            docs/evidence/0015-performance.json
           if-no-files-found: warn
