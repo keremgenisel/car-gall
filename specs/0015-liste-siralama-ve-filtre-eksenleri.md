@@ -128,6 +128,10 @@ uyan araçları tek adımda görebiliyor.**
   (3) `sort=price-asc`. → **D13**.
 - **C10.** `0001`'in mevcut kabul kriterleri **regresyon olarak** korunur; bu spec onları
   geçersiz kılmaz, üzerine ekler. → ADR 0003 unsur 1.
+  **İstisna — `0001` AC-11** ("daraltma çubuğu yalnızca kasa tipi eksenini sunar"): R1 ve
+  **D16** onu bilerek genişletir; testi "çubuk tam olarak R1'in altı eksenini sunar, başka
+  filtre grubu yoktur" iddiasına taşınır. *(2026-11-18, uygulama sırasında ölçüldü — tam e2e
+  koşusunda kırmızı; Developer önerisi, Takım Yöneticisi onayına sunuldu.)*
 - **C11.** Her kabul kriteri en az bir testle karşılanır.
 - **C12.** **Adres sözleşmesi** — `0001` C13'ün genişlemesi; oradaki kurallar (locale'den
   bağımsız İngilizce ad, tekrarlı parametre, küçük harfli ASCII slug, tam ve harfe duyarlı
