@@ -120,6 +120,28 @@ public sealed class VitrinGaleriVeHaritaTests(ShowcaseDatabase database)
         Assert.Equal(2, detay.Images.Count);
     }
 
+    /// <summary>
+    /// C13 — kabuğun ön yüklemesi detayın İLK görselini aynı kuralla seçer: ilk HAZIR görsel
+    /// (R7). Vitrinde olmayan adres için cevap yoktur.
+    /// </summary>
+    [Fact]
+    public async Task IlkGorsel_KabukIcin_IlkHazirGorseldir()
+    {
+        FakeMediaAssetQueries medya = new();
+        Guid[] s = Ac6Sirasi(medya);
+        string slug = await YayindaIlanAsync(medya, s);
+
+        await using VehicleCatalogDbContext context = database.CreateContext();
+        ShowcaseListingDetailQueries sorgu = new(context, new FakeModelNameResolver(), new FakeReferenceLabelResolver(), ShowcaseQueryHarness.Locales);
+
+        ShowcaseImageDto? ilk = await sorgu.FindFirstImageAsync(slug, CancellationToken.None);
+        Assert.Equal(s[1], Kimlik(ilk!));
+        Assert.Equal((await DetayAsync(slug)).Images[0], ilk);
+
+        Assert.Null(await sorgu.FindFirstImageAsync("olmayan-ilan-0192c0", CancellationToken.None));
+        Assert.Null(await sorgu.FindFirstImageAsync("../gecersiz", CancellationToken.None));
+    }
+
     [Fact(DisplayName = "0016b/AC-7: AC-6'nın ilanının liste kartı yanıtındaki kapak değeri bu spec'ten önceki davranışla aynıdır (bugün: kapak yok)")]
     public async Task DegistirmezKartKapagini()
     {

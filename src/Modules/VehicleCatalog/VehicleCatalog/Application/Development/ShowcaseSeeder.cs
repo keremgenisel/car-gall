@@ -281,7 +281,7 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
         ShowcaseMediaVariant Turev(string ad, int uzun)
         {
             (int w, int h) = Boyut(uzun);
-            return new ShowcaseMediaVariant(ad, $"/seed-media/frame-{kare}-{w}x{h}.svg", w, h);
+            return new ShowcaseMediaVariant(ad, $"/seed-media/frame-{kare}-{w}x{h}.jpg", w, h);
         }
 
         return [Turev("thumbnail", 400), Turev("display", 800), Turev("large", 1200)];

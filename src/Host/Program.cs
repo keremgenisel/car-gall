@@ -288,19 +288,15 @@ if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
     // `0016b` — galeri türevlerinin geliştirme karşılığı. Yine YALNIZ tam sayı parametre
     // (yukarıdaki XSS gerekçesi) ve aralık dışı her değer 404: tohumun 99 numaralı karesi
     // bilerek o yoldan geçer ve kırık yuvanın yer tutucusunu kanıtlatır (AC-69).
-    app.MapGet("/seed-media/frame-{index:int}-{width:int}x{height:int}.svg", (int index, int width, int height) =>
+    //
+    // SVG DEĞİL, JPEG: Chrome bayt başına bilgisi düşük görselleri LCP adayı saymıyor ve
+    // düz renkli bir SVG kare hiçbir zaman LCP olmuyordu — ölçüldü, detayın LCP öğesi
+    // fiyat paragrafı çıktı. `0016b` AC-83 ilk görselin LCP'sini ölçmek istiyor; kare bu
+    // yüzden gerçek bir fotoğraf gibi sıkıştırılmış raster (degrade + ızgara).
+    app.MapGet("/seed-media/frame-{index:int}-{width:int}x{height:int}.jpg", (int index, int width, int height) =>
         index is < 0 or > 29 || width is < 1 or > 1600 || height is < 1 or > 1600
             ? Results.NotFound()
-            : Results.Content(
-                $"""
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">
-                  <rect width="{width}" height="{height}" fill="#3b4a63"/>
-                  <rect x="{width / 10}" y="{height / 10}" width="{width * 8 / 10}" height="{height * 8 / 10}" fill="none" stroke="#8fa3c4" stroke-width="{Math.Max(2, width / 100)}"/>
-                  <text x="{width / 2}" y="{height / 2}" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="{Math.Max(12, width / 8)}" fill="#cfd9ea">{index + 1}</text>
-                  <text x="{width / 2}" y="{height * 85 / 100}" text-anchor="middle" font-family="sans-serif" font-size="{Math.Max(10, width / 30)}" fill="#cfd9ea">{width}×{height}</text>
-                </svg>
-                """,
-                "image/svg+xml"));
+            : Results.File(SeedFrames.Jpeg(index, width, height), "image/jpeg"));
 
     // Demo VERİSİ; şema değil. Şemayı kurulum adımı uygular ve yukarıdaki doğrulama
     // buraya gelinmeden önce eksikse zaten reddetmiştir.

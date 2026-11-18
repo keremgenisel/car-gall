@@ -65,6 +65,27 @@ internal sealed class ShowcaseListingDetailQueries(
             await PaintChangeMapAsync(row, cancellationToken));
     }
 
+    /// <inheritdoc />
+    public async Task<ShowcaseImageDto?> FindFirstImageAsync(string slug, CancellationToken cancellationToken)
+    {
+        if (!ListingSlug.TryParse(slug, out ListingSlug parsed))
+        {
+            return null;
+        }
+
+        // Galeriyle AYNI kural: yalnız hazır yuvalar, medya sırasıyla (D14); ilk görsel R7'nin
+        // "ilk hazır görseli"dir. Görünmeyen ilanın satırı yoktur, yani yuvası da yoktur.
+        List<ShowcaseListingMedia> yuvalar = await context.ShowcaseListingMedia
+            .AsNoTracking()
+            .Where(item => item.Status == ShowcaseMediaStatus.Ready)
+            .Where(item => context.ShowcaseListings.Any(row => row.ListingId == item.ListingId && row.Slug == parsed.Value))
+            .OrderBy(item => item.Position)
+            .ToListAsync(cancellationToken);
+
+        // `display`'i olmayan bozuk küme detayda da düşer; aynı eleme burada da.
+        return yuvalar.Select(ToImage).OfType<ShowcaseImageDto>().FirstOrDefault();
+    }
+
     /// <summary>
     /// `0016b` C1 — harita yalnız alan ŞU AN açık ve public iken döner. Yansıtma zaten
     /// yalnız public alanı yazıyor; okuma tarafındaki ikinci eleme, alan ayarı değişip

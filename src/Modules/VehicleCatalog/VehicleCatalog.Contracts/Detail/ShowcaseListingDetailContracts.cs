@@ -49,4 +49,11 @@ public interface IShowcaseListingDetailQueries
     /// İkisi farklı kod yollarından geçmez (E7, C13, AC-8).
     /// </summary>
     Task<ShowcaseListingDetailDto?> FindAsync(string slug, string locale, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// `0016b` C13 — detayın galerisinin İLK hazır görseli; yoksa <c>null</c>. Host kabuğu onu
+    /// HTML'e ön yükleme olarak basar: görsel JS ve detay isteği beklenmeden keşfedilir
+    /// (LCP adayı). Detay sorgusunun hafif kardeşi — model adı, nitelik ve fiyat çözülmez.
+    /// </summary>
+    Task<ShowcaseImageDto?> FindFirstImageAsync(string slug, CancellationToken cancellationToken);
 }
