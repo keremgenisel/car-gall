@@ -227,6 +227,18 @@ liste ekranına ve `VehicleCatalog` okuma tarafına dokundu; `0004`'ün konusu o
 ve yapısal veriyle kesişmiyor. **`0004` hâlâ başlanmamış ilk iş** ve "Beklemede" gerekçesi
 ("sırası 7'den sonra") `0014` ile ortadan kalkmıştı.
 
+### Sapma — `0016` (#10) #8'den önce yapıldı
+
+`0015` kapandığında başlanmamış ilk iş yine **#8** (`0004`, SEO) idi. Takım Yöneticisi aynı gün
+**#10**'u (`0016`) istedi. Kart iki dilime bölündü (**D31**) ve ikisi de 2026-11-18'de kapandı
+(#92 kriterler; #93 → `10268d5`, #94 → `dec382e`).
+
+**Neden kayda geçiyor:** `0015`'in sapmasıyla aynı sebep: sıra verilmiş bir karardı. Bu da açık
+bir yönetici talebiydi. **Bir kesişme var:** `0016b` **D37** kabuğa (`IndexHtmlRenderer`) rota
+bazlı bir `<head>` enjeksiyonu ekledi — ilan detayında ilk görselin ön yüklemesi. `0004`'ün
+meta enjeksiyonu aynı yerden geçecek; `0004` başlarken bu enjeksiyon ve detay adresi için
+eklenen hafif sorgu (`FindFirstImageAsync`) okunmalı. **`0004` hâlâ başlanmamış ilk iş.**
+
 ### `0010`'un kendi dilimlemesi — unsur 7 #2 ikiye bölündü
 
 `0010`'un **D1** kararı, unsur 7'nin 2. maddesini üç dilime ayırıyor ve ilk dilimi kendisi
@@ -278,7 +290,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 7 | Ana sayfa | `0014` ✅ tamamlandı |
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
 | 9 | Liste: sıralama + filtre eksenleri | `0015` ✅ tamamlandı *(#8'den önce — § Sapma)* |
-| 10 | Medya galerisi + parça haritası şeması | **`0016a`** (veri ve panel) · **`0016b`** (vitrin) — `0016` D31 ile bölündü; ikisi de Taslak, kriter turu (Analist) bekliyor |
+| 10 | Medya galerisi + parça haritası şeması | `0016a` ✅ tamamlandı · `0016b` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 11 | `Content` sayfaları | **`0017`** (Taslak — S1–S5) |
 | 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
 | 13 | Bülten aboneliği | **`0018`** (Taslak — S1–S5) |
@@ -354,6 +366,27 @@ kart (`0015` X10).
 
 Başlanmamış ilk iş **#8** (`0004`). Taslak sayısı beşten **dörde** indi; `0015`'in beş sorusu
 D1–D5 ile kapanmıştı, yani toplam açık soru 24'ten **19**'a düştü.
+
+**`10`. satır kapandı** (`0016`, 2026-11-18) — sırasından önce, § Sapma. Kart **D31** ile iki
+dilime bölündü: `0016a` (parça haritasının değeri ve paneli, **34 kriter**, `10268d5`) ve
+`0016b` (galeri, büyütme, şema; **83 kriter**, `dec382e`). Kararlar **D1–D40**. Kriterleri bu
+kez Analist yazdı (**D24**) ve iki dilimin de revizyonu 0 çıktı. Mockup farkı bu kartla
+**kapandı**, çünkü parça haritası ve galeri mockup'ın gösterdiği şekle geldi. Yine de dört
+madde kapsam dışında kaldı:
+- video ve 360° tur (**X1**);
+- panelde tıkla-seç editörü (**X2**);
+- ağır hasar ve değişen parça sayısı alanları (**X8**) — değişen parça sayısı ileride
+  haritadan türetilir;
+- galeri küçük resim şeridi (**X11**).
+
+Ayrı kart olarak önerilenler:
+- liste kartının kapak kuralı (**X10**);
+- `identity` onay kutusunun ortak `Dialog`'a taşınması (**D40**);
+- canlı veri varsa mevcut ilanların galeri tablosunun tek seferlik yeniden yansıtılması.
+
+Başlanmamış ilk iş **#8** (`0004`). Taslak sayısı dörtten **üçe** indi; `0016`'nın dört sorusu
+D1–D4 ile kapanmıştı (kriter turunun S5–S8'i açıldı ve aynı gün D33–D36 ile kapandı), yani
+toplam açık soru 19'dan **15**'e düştü.
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca

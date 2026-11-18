@@ -493,7 +493,9 @@ altındaki ADR'lerdedir.
 | Modülün DI kaydı | Modül **kendi** bağımlılığını kendi kaydeder; başka modülün kaydına yaşayan bir bağımlılık bırakılmaz (iki kez ödendi: #52 ve `0012b`'nin kaçan hatası) |
 | Paylaşılan altyapı seçenekleri | Modül başına **tiplenir** (`InvariantGuardOptions<TContext>`, `OutboxWriter<TDbContext>`); non-generic paylaşılan bir kayıt yok — kap tek ve son kayıt kazanır |
 | `VehicleCatalog` olaylarının gövdesi | `(EventId, OccurredAt, VehicleId, ListingId, Slug)`; **durum alanı yok** — durumu olayın tipi söyler |
-| Vitrin okuma modeline yazma | **Görünürlük kararı** yalnız yansıtmada; kopyalanmış kolonları (kapak URL'i, şube adları) besleyen işleyiciler bunun dışında |
+| Vitrin okuma modeline yazma | **Görünürlük kararı** yalnız yansıtmada; kopyalanmış kolonları (kapak URL'i, şube adları, galeri yuvalarının durumu ve türevleri) besleyen işleyiciler bunun dışında |
+| Vitrin galerisi | Okuma modelinde ayrı tablo (`showcase_listing_media`): konum, durum, türevlerin gerçek boyutu; `MediaAssetReady`/`MediaAssetFailed` günceller, detay isteği `Media`'yı çağırmaz (`0016b` D25) |
+| İlan detayı ilk görseli | Kabuk, `/{locale}/cars/{slug}` için galerinin ilk hazır görselini `<link rel="preload">` olarak basar; `imagesrcset`/`imagesizes` uçla birebir aynı (`0016b` D37) |
 | Sistem tepkisiyle gelen toplu geçiş | Şube kapanması (A8) personelin seçim üst sınırına tabi değil; şube olayı başına tek işlem, geçişleri duyurulur |
 | Çok kayıtlı eylemde çapraz modül okuması | **Aynı yanıtı veren** okumalar istek başına bir kez (yapılandırma, ad haritaları); **tazeliği gereken** okuma kayıt başına ve kilidin altında |
 | Oturum öncesi ara durum | "Parola doğru, ikinci adım bekleniyor" hâli **oturum DEĞİLDİR**: kendi adı olan kısa ömürlü bir çerez + `identity` satırı taşır ve hiçbir yönetim isteği onunla çalışmaz. Kurulumu **olmayan** hesapta ise gerçek oturum verilir ve ikinci bir **kapı** yüzeyi üç yola daraltır — orada parola zaten tek faktördür |
@@ -516,7 +518,7 @@ altındaki ADR'lerdedir.
 | İkinci adımın kaydı | `identity` şemasında **kendi tablosu**; kurulum · kapatma · sıfırlama · kurtarma kodu kullanımı yazılır, **başarısız denemeler yazılmaz**. Bu depodaki ilk denetim kaydı — tüketicisi olmayan bir entegrasyon olayı değil |
 | Eşzamanlılık | Invariant koruması: satır kilidi + tek transaction (`InvariantGuard`); iyimser eşzamanlılık yok |
 | Şase tekilliği | `vehicles` üzerinde kısmi tekil indeks (`NOT is_archived`); araç kendi arşiv bayrağını taşır |
-| Opsiyonel alan tipleri | Kapalı tip kümesi; alan → tip eşlemesi KODDA, değer tipli kolonlarda (tutar `numeric(19,4)` + kod + üs) |
+| Opsiyonel alan tipleri | Kapalı tip kümesi; alan → tip eşlemesi KODDA, değer tipli kolonlarda (tutar `numeric(19,4)` + kod + üs); parça haritası `PartMap` — yazma ve okuma modelinde `jsonb`, yalnız kod (ADR 0007 Ek 1, `0016a` D26) |
 | Panel sayfa boyutu | Varsayılan 25, üst sınır 100; dağıtım yapılandırmasından, vitrinin 24'ünden ayrı eksen |
 | Bildirim gönderimi | Veritabanı kuyruğu + arka plan servisi; gönderici port arkasında (V1: SMTP/MailKit) |
 | Tema (renk) | Dağıtım yapılandırmasından, **ya tam ya hiç**; panelden düzenlenmez |
