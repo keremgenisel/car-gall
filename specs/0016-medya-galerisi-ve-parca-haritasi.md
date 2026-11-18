@@ -8,8 +8,16 @@
 | **Modül(ler)** | `frontend/` public vitrin · `frontend/` panel (opsiyonel alan formu — **D5**) · `VehicleCatalog` (parça haritası alanı, vitrin okuma modeli, detay sözleşmesi) · `Media` **tüketilir**, değişmez (**D17**) |
 | **Bağımlı spec'ler** | `0002` (ilan detayı — tamamlandı; **X2** ve **X3**'ü geri açar) · `0011` (Media — tamamlandı) · `0012a` (aracın medya yüzeyi — tamamlandı) · `0010b` (opsiyonel alan tipleri — **X22**'nin bir kısmını geri açar, **D5**) · `0010a` (**X4**'ün veri yarısını üstlenir, **D5**) |
 | **Dayanak** | ADR 0003 unsur 1 ve Ek 1, sıra #10 |
-| **Karar bekliyor** | yok — S1–S4 → **D1–D4**; QA CLARIFY turunun on dokuz bulgusu (B1–B19) → **D5–D23** (2026-11-18). |
+| **Karar bekliyor** | yok — S1–S4 → **D1–D4**; QA CLARIFY turunun on dokuz bulgusu (B1–B19) → **D5–D23** (2026-11-18); plan turunun sekiz bulgusu (P1–P8) → **D24–D31** (2026-11-18). |
 
+> **Plan turu (2026-11-18, `8a22fb6` üzerinde).** Developer uygulama planını çıkarırken
+> sekiz bulgu getirdi (P1–P8); önerilerin **tamamı** Takım Yöneticisi (depo sahibi)
+> tarafından onaylandı ve **D24–D31** olarak işlendi. En büyüğü **D31**: kart iki dilime
+> bölünür — `0016a` (parça haritası: veri ve panel) ve `0016b` (vitrin: galeri ve şema).
+> Bölme ayrı bir `docs/` PR'ında yapılır; kriterler o dilimlerde ve **Analist** tarafından
+> yazılır (**D24**). Context'in K1, K5, K6, K7 ölçümleri plan turunda kodla yeniden
+> doğrulandı ve tutuyor.
+>
 > **QA CLARIFY turu (2026-11-18, `main` @ `aaf0cec`).** QA spec'i bugünkü koda karşı okudu
 > ve on dokuz bulgu getirdi (B1–B19); önerilerin **tamamı** Takım Yöneticisi (depo sahibi)
 > tarafından onaylandı ve **D5–D23** olarak işlendi. En büyüğü **B1**: parça haritası alanı
@@ -459,6 +467,62 @@ liste DTO'su değişmez (C12).
 **D23 — Üst sınır yok; 30 görselle ölçülür (B19).** (R6, X9) Etkileşimden önce yalnız ilk
 görsel indirilir.
 - *Gerekçe:* R6'nın gecikmeli yüklemesi ancak çok görselli bir ilanla ölçülür.
+
+### Verilen kararlar — plan turu, 2026-11-18
+
+**Takım Yöneticisi (depo sahibi) kararı**, Developer'ın plan bulguları P1–P8 üzerine.
+Sekiz öneri **olduğu gibi** onaylandı.
+
+**D24 — Kabul kriterlerini Analist yazar; kriterler uygulama dalı açılmadan `main`'e girer
+(P1).** *Gerekçe:* `0015`'te kriterleri uygulayan yazdı, kriter PR'ı açık bekledi ve C10
+uygulama sırasında değişti; "kriterler önce `main`'de" ölçütü bunu göremedi (`0015`'in
+SCORECARD dersi). Bu kart daha büyük; aynı risk daha pahalı.
+
+**D25 — Galerinin görsel verisi okuma modelinde ayrı bir tabloda tutulur (P2).** İlanın
+görselleri sırasıyla, her birinin durumu (`hazır` / `işleniyor` / `başarısız`) ve türevlerinin
+adresi ile gerçek boyutları; tabloyu yansıtıcı ve `MediaAssetReady` / `MediaAssetFailed`
+işleyicileri günceller. Migration yalnız `vehicle_catalog` şemasına. *Gerekçe:* okuma modeli
+zaten olaylarla doluyor (kapak öyle); detay sayfası her istekte `Media`'yı eşzamanlı çağırsaydı
+`Media` vitrinin kritik yoluna girerdi. *Elenen alternatif:* detay sorgusunda `Media`'ya
+eşzamanlı çağrı — migration'sız ama `Media` düşerse detay da düşer. → R1, R6, R7, C7.
+
+**D26 — Parça haritası yazma ve okuma modelinde ayrı birer `jsonb` kolonda, yalnız kod
+olarak saklanır (P3).** Biçim `[{part, state}]`; 13 parça sabit olduğu için ayrı bir tablo
+gerekmez. ADR 0007'nin "her tipin kendi kolonu" ilkesiyle tutarlı. C11'in açık bıraktığı
+depolama sorusunun cevabıdır. → C6, C11.
+
+**D27 — Yönetim sözleşmesi haritayı yapılandırılmış ayrı bir alanla taşır (P4).** Bugün her
+opsiyonel değer tek bir metin (`string? Value`); haritayı metne gömmek doğrulamayı
+ayrıştırıcıya iter ve hata kodlarını anlamsızlaştırır. Eksik parçalar hata yanıtında **kod**
+olarak döner (C6). → R11, R12.
+
+**D28 — Büyütülmüş görünüm tarayıcının yerel `<dialog>` öğesiyle kurulur; ortak bir
+`Dialog` bileşeni `shared/ui`'ya çıkarılır (P5).** Odak tutma, arka planın etkileşimsizliği
+ve Esc tarayıcıdan gelir. `identity`'nin onay penceresi aynı deseni kullanıyor; ikinci
+kullanıcı çıktığı için bileşen ortaktır (`docs/frontend.md` § 4.2, C8 gerekçesi). → R4.
+
+**D29 — Araç şeması 13 parçalı sade bir üstten görünüm SVG'sidir ve Developer çizer (P6).**
+Mockup'a görsel yakınlaştırma ayrı bir iştir. *Gerekçe:* şema etkileşimsiz (R16) ve bilgi
+okunabilir listede (R17); sade çizim kriterleri karşılar. → R13, R21.
+
+**D30 — Lighthouse detay sayfasının adresini ölçümden önce liste ucundan okur (P7).** Seed
+ilanlarının adresi her kurulumda farklı. → C13.
+
+**D31 — Kart ikiye bölünür (P8).** `0016a` — parça haritası: değer tipi, kalıcılık, alan
+ayarı, panel (R8–R12, C6, C10, C11; D5–D7, D26, D27). `0016b` — vitrin: galeri, büyütme,
+detay sözleşmesi, şema, performans (R1–R7, R13–R21, C1–C5, C7, C8, C12, C13; D25, D28–D30).
+`0016a` önce gelir; sözleşmesi `0016b`'nin önkoşuludur. *Gerekçe:* `0010` ve `0012`'deki
+gibi; her dilim kendi başına test edilir ve kriterlerin yazılmadan bölünmesi neredeyse
+bedelsizdir (ADR 0003 Ek 1'in ölçümü).
+
+### Uygulama planı (onaylı, 2026-11-18)
+
+1. **`0016a`** — `FieldValueKind.PartMap` ve doğrulama (13 parça, 4 durum, yarım harita
+   reddi) · `paint_change_map` alanı ve varsayılan ayarı · yazma modeli `jsonb` kolonu ve
+   migration · ADR 0007 eki · yönetim sözleşmesi ve panelde 13 seçim kutusu.
+2. **`0016b`** — okuma modelinin görsel tablosu ve harita kolonu (migration) · yansıtıcı ve
+   medya olay işleyicileri · detay sözleşmesi · `shared/ui` `Dialog` · galeri, büyütme,
+   şema, liste, lejant · Lighthouse detay ölçümü · e2e ve kanıt.
 
 ---
 
