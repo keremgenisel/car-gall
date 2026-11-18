@@ -48,11 +48,21 @@ internal static class ShowcaseEndpoints
         // ve sunucu her zaman 200 + normalize edilmiş liste döner (AC-15, AC-16).
         IQueryCollection query = httpContext.Request.Query;
 
+        // 0015 C12 — yeni eksenler de HAM okunur; geçersiz girdinin yok sayılması
+        // normalizasyonun işidir ve sunucu her durumda 200 döner (R15, `0001` C14).
         ShowcaseListingFilter filter = new(
-            [.. query["bodyType"].Where(value => value is not null).Select(value => value!)],
+            Values(query, "bodyType"),
             ParsePositiveInteger(query["page"], fallback: 1),
             ResolveLocale(httpContext),
-            ParseOptionalPositiveInteger(query["pageSize"]));
+            ParseOptionalPositiveInteger(query["pageSize"]))
+        {
+            FuelTypes = Values(query, "fuel"),
+            TransmissionTypes = Values(query, "transmission"),
+            Year = Range(query, "yearMin", "yearMax"),
+            Mileage = Range(query, "mileageMin", "mileageMax"),
+            Price = Range(query, "priceMin", "priceMax"),
+            Sort = query["sort"].FirstOrDefault(),
+        };
 
         PagedResult<ShowcaseListingDto> page = await queries.GetAsync(filter, cancellationToken);
         return TypedResults.Ok(page);
@@ -72,6 +82,12 @@ internal static class ShowcaseEndpoints
         // (C13, AC-8).
         return detail is null ? TypedResults.NotFound() : TypedResults.Ok(detail);
     }
+
+    private static List<string> Values(IQueryCollection query, string key) =>
+        [.. query[key].Where(value => value is not null).Select(value => value!)];
+
+    private static ShowcaseRange Range(IQueryCollection query, string minKey, string maxKey) =>
+        new(query[minKey].FirstOrDefault(), query[maxKey].FirstOrDefault());
 
     private static int ParsePositiveInteger(string? raw, int fallback) =>
         int.TryParse(raw, out int parsed) && parsed >= 1 ? parsed : fallback;

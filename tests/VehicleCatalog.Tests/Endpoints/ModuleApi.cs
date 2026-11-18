@@ -38,6 +38,7 @@ database.ConnectionString, "tr", ["tr", "ar", "en"],
         // Model adı VehicleReference'a aittir; bu testlerde o sınırın ötesi sahtelenir.
         builder.Services.Replace(ServiceDescriptor.Singleton<IVehicleModelNameResolver>(new FakeModelNameResolver()));
         builder.Services.Replace(ServiceDescriptor.Singleton<IBodyTypeCatalog>(new FakeBodyTypeCatalog()));
+        builder.Services.Replace(ServiceDescriptor.Singleton<IReferenceTermCatalog>(new FakeReferenceTermCatalog()));
         builder.Services.Replace(ServiceDescriptor.Singleton<IReferenceLabelResolver>(new FakeReferenceLabelResolver()));
 
         WebApplication app = builder.Build();
