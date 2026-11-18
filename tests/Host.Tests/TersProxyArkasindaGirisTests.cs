@@ -19,8 +19,10 @@ namespace CarGallery.Host.Tests;
 /// çünkü test sunucusu da tarayıcı da aynı şemayı konuşuyor. Dağıtım imajı ilk kez
 /// proxy arkasına konunca ölçüldü.
 ///
-/// İkinci test güven sınırının KORUNDUĞUNU sınar: proxy listelenmemişse istemcinin
-/// gönderdiği `X-Forwarded-Proto` okunmaz.
+/// İkinci test güven sınırının KORUNDUĞUNU sınar ve bunu ara katman AÇIKKEN yapar: bir
+/// proxy listelidir ama istek başka bir adresten gelir. Ara katmanın hiç eklenmediği hâli
+/// (liste boş) sınamak yetmezdi — o yalnız "kapalı" anahtarını ölçer ve `KnownProxies`'in
+/// varsayılan loopback girdisini temizleyen satır silinse bile yeşil kalırdı (QA, PR #101).
 /// </summary>
 public sealed class TersProxyArkasindaGirisTests : IAsyncLifetime
 {
@@ -41,24 +43,24 @@ public sealed class TersProxyArkasindaGirisTests : IAsyncLifetime
     [Fact(DisplayName = "ADR 0012/K4: Listelenmiş proxy https iletirse tarayıcının https kökeninden gelen giriş isteği köken korumasına takılmaz")]
     public async Task Girilir_ListelenmisProxyHttpsIletince()
     {
-        await using WebApplicationFactory<Program> factory = Fabrika(proxyListelendi: true);
+        await using WebApplicationFactory<Program> factory = Fabrika(listelenenProxy: IstegiGonderen);
 
         HttpResponseMessage yanit = await factory.CreateClient().SendAsync(GirisIstegi());
 
         Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
     }
 
-    [Fact(DisplayName = "ADR 0012/K4: Proxy listelenmemişse istemcinin gönderdiği X-Forwarded-Proto okunmaz ve köken koruması isteği reddeder")]
-    public async Task Reddedilir_ProxyListelenmemisken()
+    [Fact(DisplayName = "ADR 0012/K4: Listede olmayan bir adresten gelen X-Forwarded-Proto okunmaz ve köken koruması isteği reddeder")]
+    public async Task Reddedilir_IstekListedeOlmayanAdrestenGelince()
     {
-        await using WebApplicationFactory<Program> factory = Fabrika(proxyListelendi: false);
+        await using WebApplicationFactory<Program> factory = Fabrika(listelenenProxy: BaskaProxy);
 
         HttpResponseMessage yanit = await factory.CreateClient().SendAsync(GirisIstegi());
 
         Assert.Equal(HttpStatusCode.Forbidden, yanit.StatusCode);
     }
 
-    private WebApplicationFactory<Program> Fabrika(bool proxyListelendi) =>
+    private WebApplicationFactory<Program> Fabrika(IPAddress listelenenProxy) =>
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseWebRoot(Path.Combine(AppContext.BaseDirectory, "TestWebRoot"));
@@ -67,10 +69,7 @@ public sealed class TersProxyArkasindaGirisTests : IAsyncLifetime
             NotificationsTestSettings.Apply(builder);
             MediaTestSettings.Apply(builder);
 
-            if (proxyListelendi)
-            {
-                builder.UseSetting("ForwardedHeaders:KnownProxies:0", ProxyAdresi.ToString());
-            }
+            builder.UseSetting("ForwardedHeaders:KnownProxies:0", listelenenProxy.ToString());
 
             // Test sunucusunda bağlantının uzak adresi YOK; proxy'nin adresi boru hattının
             // en başında verilir ki ileri başlık ara katmanı onu listedekiyle karşılaştırabilsin.
@@ -97,7 +96,10 @@ public sealed class TersProxyArkasindaGirisTests : IAsyncLifetime
         return istek;
     }
 
-    private static readonly IPAddress ProxyAdresi = IPAddress.Parse("10.0.0.7");
+    /// <summary>İsteğin geldiği bağlantı adresi — her iki testte de aynı.</summary>
+    private static readonly IPAddress IstegiGonderen = IPAddress.Parse("10.0.0.7");
+
+    private static readonly IPAddress BaskaProxy = IPAddress.Parse("10.0.0.8");
 
     private sealed class ProxyAdresiFiltresi : IStartupFilter
     {
@@ -105,7 +107,7 @@ public sealed class TersProxyArkasindaGirisTests : IAsyncLifetime
         {
             app.Use((HttpContext context, Func<Task> devam) =>
             {
-                context.Connection.RemoteIpAddress = ProxyAdresi;
+                context.Connection.RemoteIpAddress = IstegiGonderen;
                 return devam();
             });
 

@@ -58,13 +58,13 @@ Bütün değerler ortam değişkenidir. `__` iki nokta yerine geçer
 | `Notifications__PublicBaseUrl` | `https://galeri-alanadi.com` — e-postalardaki bağlantıların kökü |
 | `Notifications__SetupNotificationAddress` | Yeni taleplerin bildirileceği adres |
 | `Notifications__SenderAddress` | Gönderen adres; SMTP sağlayıcısında doğrulanmış olmalı |
-| `Notifications__Smtp__Host`, `Notifications__Smtp__Port` | Sağlayıcının değerleri |
-| `Notifications__Smtp__UseStartTls` | `true` — geliştirme varsayılanı `false` |
+| `Notifications__Smtp__Host`, `Notifications__Smtp__Port` | Sağlayıcının STARTTLS portu, genelde **587**. **Örtük TLS (465) desteklenmez** — uygulama yalnız STARTTLS ya da şifresiz bağlanır; 465 verilirse bağlantı kurulamaz ve bildirimler denemeleri tükenene kadar kuyrukta bekler |
+| `Notifications__Smtp__UseStartTls` | `true` — geliştirme varsayılanı `false`; `false` ile kimlik bilgileri düz metin gider |
 | `Media__Storage__ServiceUrl` | Deponun API adresi |
 | `Media__Storage__Bucket`, `Media__Storage__Region` | |
 | `Media__PublicBaseUrl` | Kovanın herkese açık okuma adresi, sonda `/` ile |
 | `Media__WatermarkObjectKey` | Filigranın kovadaki anahtarı, ör. `private/brand/watermark.png` — **dosya önceden yüklenir** (galerinin logosu, saydam PNG) |
-| `ForwardedHeaders__KnownProxies__0` ya da `ForwardedHeaders__KnownNetworks__0` | Ters proxy'nin adresi ya da ağı (`10.0.0.0/8`). Verilmezse panele girilemez ve talep hız sınırı bütün ziyaretçileri tek kişi sayar (ADR `0012` / K4) |
+| `ForwardedHeaders__KnownProxies__0` ya da `ForwardedHeaders__KnownNetworks__0` | Ters proxy'nin adresi ya da ağı (`10.0.0.0/8`). Verilmezse panele girilemez, ve iki hız sınırı herkesi tek kişi sayar: talep sınırı bütün ziyaretçileri, giriş sınırı (10 dakikada 20 istek) bütün personeli (ADR `0012` / K4) |
 
 ### Kuruluma özel — varsayılanı olan
 
@@ -74,6 +74,8 @@ Bütün değerler ortam değişkenidir. `__` iki nokta yerine geçer
 | `Localization__EnabledLocales__0..n` | `tr`, `ar`, `en` |
 | `Currency__Code`, `Currency__MinorUnitExponent` | `TRY`, `2` (KWD için `KWD`, `3`) |
 | `Theme__…` | Varsayılan palet (ADR `0005`; ya tam ya hiç) |
+| `Identity__TwoFactor__Issuer` | `CarGallery` — personelin kimlik doğrulayıcı uygulamasında görünen ad; galerinin adı verilir |
+| `Media__Storage__ForcePathStyle` | `true` (MinIO/R2 için doğru); sanal-host adresleme isteyen sağlayıcıda `false` |
 
 **Asla verilmeyecekler:** `Development__SeedShowcase`, `Development__SeedListingCount`.
 Bunlar demo ilan ve `/seed-media` uçlarını açar. `Identity__PasswordIterations`'ı da

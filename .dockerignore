@@ -12,7 +12,18 @@ docs/
 specs/
 tests/
 scripts/
-**/*.env
+# Sırlar — .gitignore'un sır bölümünün AYNISI. Git'e görünmeyen bir dosya `git status`'u
+# temiz bırakır ama derleme bağlamına girer, ve Web SDK proje altındaki her *.json'u
+# publish'e kopyalar. Ölçüldü (QA, PR #101): src/Host/secrets.json imajda /app'te
+# okunabiliyordu. İki liste ayrışırsa bu satırlar güncellenir.
 **/appsettings.Development.json
 **/appsettings.Local.json
 **/appsettings.*.Local.json
+**/*.env
+**/.env
+**/.env.*
+**/secrets.json
+**/*.pfx
+**/*.p12
+**/*.key
+**/*.pem
