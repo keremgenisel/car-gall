@@ -17,8 +17,13 @@ type LoadState =
  * rolün R15'i (kendi isteğiyle açma) ve D24'ün yenilemesi ulaşılamaz kalırdı.
  *
  * Veri çeken her ekran gibi üç durumu da ele alıyor (`docs/frontend.md` § 3).
+ *
+ * `onEnrolled` yalnız KAPILI oturumda verilir (R7): orada kurulum bittiğinde ekranı
+ * tazelemek yetmez, kabuğun kapısı yeniden sorulmalıdır — verilmezse personel menüsüz bir
+ * ekranda kalıyor ve panele ancak sayfayı elle yenileyerek dönebiliyordu (2026-11-18).
+ * Gezinmeden açılan ekranda (opsiyonel rol, R15) verilmez ve davranış tazelemedir.
  */
-export function TwoFactorPage() {
+export function TwoFactorPage({ onEnrolled }: { readonly onEnrolled?: () => void } = {}) {
   const { locale, t } = useLocale()
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [reloadToken, setReloadToken] = useState(0)
@@ -41,6 +46,17 @@ export function TwoFactorPage() {
 
     return () => controller.abort()
   }, [locale, reloadToken])
+
+  // Kapılı ekran kurulumu ZATEN yapılmış bulursa (ör. kurulum başka bir sekmede bitti ve bu
+  // sekme durumu yeniden çekti) yönetim paneli değil, aynı gezinme gösterilir: aksi hâlde
+  // personel yine menüsüz bir ekranda kalırdı (QA, PR #102).
+  const alreadyEnrolled = state.kind === 'ready' && state.status.enrolled
+
+  useEffect(() => {
+    if (onEnrolled !== undefined && alreadyEnrolled) {
+      onEnrolled()
+    }
+  }, [onEnrolled, alreadyEnrolled])
 
   return (
     <div className="admin-page admin-page--narrow">
@@ -73,7 +89,9 @@ export function TwoFactorPage() {
         ) : null}
 
         {state.kind === 'ready' && !state.status.enrolled ? (
-          <TwoFactorSetupPanel onEnrolled={() => setReloadToken((token) => token + 1)} />
+          <TwoFactorSetupPanel
+            onEnrolled={onEnrolled ?? (() => setReloadToken((token) => token + 1))}
+          />
         ) : null}
       </Card>
     </div>

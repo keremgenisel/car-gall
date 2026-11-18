@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../LocaleProvider'
 import { ApiError } from '../../shared/api/client'
@@ -19,8 +19,13 @@ vi.mock('../../shared/api/identity', () => ({
   resetStaffTwoFactor: vi.fn(),
 }))
 
-const { fetchCurrentSession, fetchStaff, fetchTwoFactorStatus } =
-  await import('../../shared/api/identity')
+const {
+  fetchCurrentSession,
+  fetchStaff,
+  fetchTwoFactorStatus,
+  startTwoFactorEnrollment,
+  confirmTwoFactorEnrollment,
+} = await import('../../shared/api/identity')
 
 function oturum(overrides: Partial<CurrentSession> = {}): CurrentSession {
   return {
@@ -45,6 +50,9 @@ function ekran() {
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  // `window.location` casusu geri alınır; yoksa sonra eklenen bir test sahte `assign`'ı
+  // görür ve gerçek gezinmeyi yutar (QA, PR #102).
+  vi.restoreAllMocks()
 })
 
 describe('AC-24: Oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranına yönlendirilir', () => {
@@ -210,5 +218,62 @@ describe('0013/AC-29: Zorunlu rolde kurulumu olmayan personel giriş yaptığın
 
     expect(await screen.findByTestId('two-factor-page')).not.toBeNull()
     expect(screen.queryByTestId('login-form')).toBeNull()
+  })
+})
+
+describe('0013/R7: Zorunlu rolde kurulumu biten personel panelde çalışabilir; kurulum ekranında kilitli kalmaz', () => {
+  /**
+   * Hata (depo sahibi, 2026-11-18): kapılı oturumda kurulum bitince "Devam et" yalnız
+   * ikinci adım ekranını tazeliyordu. Kabuğun kapısı `mustEnrollTwoFactor`'da kaldığı için
+   * personel menüsüz bir yönetim ekranında kalıyor ve panele ancak sayfayı elle yenileyerek
+   * dönebiliyordu (imajda yeniden üretildi). Doğrusu, giriş ekranının yaptığı gibi panelin
+   * köküne TAM GEZİNME: kapı yeniden sorulur ve panelin dili sunucudan basılır (D14).
+   */
+  it('kapılı oturumda kurulumdan sonra "Devam et" panelin köküne tam gezinme yapar', async () => {
+    const assign = vi.fn()
+    vi.spyOn(window, 'location', 'get').mockReturnValue({ ...window.location, assign } as Location)
+
+    vi.mocked(fetchCurrentSession).mockRejectedValue(
+      new ApiError('identity.two_factor_setup_required', null, 403),
+    )
+    vi.mocked(fetchTwoFactorStatus).mockResolvedValue({
+      enrolled: false,
+      required: true,
+      remainingRecoveryCodes: 0,
+    })
+    vi.mocked(startTwoFactorEnrollment).mockResolvedValue({
+      secretUri: 'otpauth://totp/Galeri:ayse?secret=JBSWY3DPEHPK3PXP&issuer=Galeri',
+      secret: 'JBSWY3DPEHPK3PXP',
+    })
+    vi.mocked(confirmTwoFactorEnrollment).mockResolvedValue({ codes: ['ABCD-EFGH-JKLM-NPQR'] })
+
+    ekran()
+
+    fireEvent.click(await screen.findByTestId('two-factor-start'))
+    fireEvent.change(await screen.findByLabelText('Uygulamadaki kod'), {
+      target: { value: '123456' },
+    })
+    fireEvent.click(screen.getByTestId('two-factor-confirm'))
+    fireEvent.click(await screen.findByTestId('two-factor-enrolled-continue'))
+
+    expect(assign).toHaveBeenCalledWith(adminPath())
+  })
+
+  it('kapılı ekran kurulumu zaten yapılmış bulursa yönetim paneli değil, panel köküne gezinme gösterilir', async () => {
+    const assign = vi.fn()
+    vi.spyOn(window, 'location', 'get').mockReturnValue({ ...window.location, assign } as Location)
+
+    vi.mocked(fetchCurrentSession).mockRejectedValue(
+      new ApiError('identity.two_factor_setup_required', null, 403),
+    )
+    vi.mocked(fetchTwoFactorStatus).mockResolvedValue({
+      enrolled: true,
+      required: true,
+      remainingRecoveryCodes: 10,
+    })
+
+    ekran()
+
+    await vi.waitFor(() => expect(assign).toHaveBeenCalledWith(adminPath()))
   })
 })

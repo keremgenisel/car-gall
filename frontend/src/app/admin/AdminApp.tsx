@@ -115,7 +115,10 @@ export function AdminApp({
   // D6/D13 — SIRA: parola kapısı yukarıda, kurulum kapısı burada. İkisi birden bekleyen
   // personel önce parolasını değiştirir; sunucudaki iki ara katman da bu sırada çalışıyor.
   if (gate.kind === 'mustEnrollTwoFactor') {
-    return <TwoFactorPage />
+    // Kurulum bitince TAM GEZİNME — girişteki gerekçeyle aynı: kapı yeniden sorulur ve
+    // panelin dili sunucudan basılır (D14). Yalnız ekranı tazelemek kapıyı bu hâlde
+    // bırakıyordu ve panele dönülemiyordu.
+    return <TwoFactorPage onEnrolled={() => window.location.assign(adminPath())} />
   }
 
   return (
