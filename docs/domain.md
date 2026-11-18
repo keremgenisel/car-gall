@@ -65,6 +65,16 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Rezervasyon** | `Reservation` | Bir aracın belirli bir müşteri için vitrinde tutulması. |
 | **Kampanya** | `Campaign` | Ana sayfada veya ilanda gösterilen tanıtım/indirim duyurusu. |
 
+### İçerik
+
+| Terim | Kod karşılığı | Tanım |
+|---|---|---|
+| **İçerik Sayfası** | `ContentPage` | Vitrinde `/{locale}/{slug}` adresinde görünen metin sayfası. Başlık, gövde ve Latin slug **dil başınadır**; yayın durumu (`taslak` / `yayında`) da dil başınadır. *(spec `0017`, 2026-11-18.)* |
+| **Sistem Sayfası** | `SystemPageKeys` | Kurulumla gelen dört içerik sayfası: Hakkımızda (`about`), KVKK aydınlatma metni (`privacy`), Çerez politikası (`cookies`), SSS (`faq`). Kimliği koddadır, slug'dan bağımsızdır; silinemez, yayından kaldırılabilir. Altlık ve talep formu onu kimlikle bulur. *(spec `0017`.)* |
+| **Serbest Sayfa** | `ContentPage` (`SystemKey` boş) | Galerinin açtığı içerik sayfası. Altlıkta görünmez; yalnız doğrudan bağlantıyla erişilir ve kalıcı olarak silinebilir. *(spec `0017`.)* |
+| **SSS Girdisi** | `FaqEntry` | Tek bir soru–cevap birimi. Metin ve yayın durumu dil başına, sırası tek ve globaldir; o dilde yayındaki girdiler `faq` sayfasının altında gösterilir. *(spec `0017`.)* |
+| **Eski Slug** | `PageOldSlug` | Yayındaki bir dilde değiştirilen slug'ın kaydı. O dilde başka sayfaya verilemez ve eski adres güncel adrese `301` ile yönlenir. *(spec `0017`.)* |
+
 ### Bildirim
 
 | Terim | Kod karşılığı | Tanım |
