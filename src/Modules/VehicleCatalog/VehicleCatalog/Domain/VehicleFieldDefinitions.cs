@@ -28,6 +28,11 @@ internal static class VehicleFieldDefinitions
             // ile saklanır (D17) ve bu spec'in var oluş nedenlerinden biri budur.
             [VehicleFieldKeys.DamageRecordAmount] =
                 new(VehicleFieldKeys.DamageRecordAmount, FieldValueKind.Amount),
+
+            // `0016a` R8 · C11 — parça haritası. Parça başına ayrı alan YOK (AC-3): 13 parça
+            // tek bir değerin içindedir ve tek bir ayar onu açar/kapatır.
+            [VehicleFieldKeys.PaintChangeMap] =
+                new(VehicleFieldKeys.PaintChangeMap, FieldValueKind.PartMap),
         };
 
     /// <summary>Çekirdek alanlar bu defterde YOKTUR: onlar agregatın kendi alanlarıdır.</summary>

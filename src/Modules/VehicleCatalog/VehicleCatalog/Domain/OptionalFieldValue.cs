@@ -16,6 +16,12 @@ internal enum FieldValueKind
     Boolean = 5,
     Date = 6,
     Option = 7,
+
+    /// <summary>
+    /// `0016a` C11 · **D26** — parça haritası: 13 parçanın her biri için bir durum kodu.
+    /// ADR 0007'nin kapalı kümesine ek kararla eklendi (ADR 0007 § Ek 1).
+    /// </summary>
+    PartMap = 8,
 }
 
 /// <summary>
@@ -75,6 +81,9 @@ internal sealed record OptionalFieldValue
 
     internal string? Option { get; private init; }
 
+    /// <summary>`0016a` **D26** — yalnız kod taşır; kendi `jsonb` kolonu vardır.</summary>
+    internal PaintChangeMap? PartMap { get; private init; }
+
     internal static OptionalFieldValue OfText(string value) =>
         new(FieldValueKind.Text) { Text = value };
 
@@ -100,6 +109,9 @@ internal sealed record OptionalFieldValue
 
     internal static OptionalFieldValue OfOption(string slug) =>
         new(FieldValueKind.Option) { Option = slug };
+
+    internal static OptionalFieldValue OfPartMap(PaintChangeMap map) =>
+        new(FieldValueKind.PartMap) { PartMap = map };
 
     /// <summary>
     /// Panelden gelen HAM METNİ beyan edilen tipe çevirir (AC-11, AC-12).

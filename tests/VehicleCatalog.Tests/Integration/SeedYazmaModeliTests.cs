@@ -96,6 +96,28 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
         Assert.All(vitrinAracIdleri, id => Assert.Contains(id, aracIdleri));
     }
 
+    [Fact(DisplayName = "0016a/AC-34: Geliştirme tohumu en az üç yayında ilan üretir: biri dört durumun hepsini içeren tam haritalı, biri 13 parçası original olan, biri haritasız")]
+    public async Task Uretir_HaritaninUcHalini_YayindaIlanlarda()
+    {
+        await using (VehicleCatalogDbContext yazma = CreateContext())
+        {
+            await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 11, 18, 12, 0, 0, TimeSpan.Zero)), Para)
+                .SeedAsync(12, Guid.Parse("0192c000-0000-7000-8000-00000000000a"), CancellationToken.None);
+        }
+
+        await using VehicleCatalogDbContext okuma = CreateContext();
+
+        // Vitrinde görünen (yayında/rezerve) ilanların okuma modeli satırları — haritanın
+        // vitrine giden TİPLİ kanalı (D26) üzerinden.
+        List<List<CarGallery.Modules.VehicleCatalog.Infrastructure.Configurations.PaintChangeRow>?> haritalar =
+            await okuma.ShowcaseListings.AsNoTracking().Select(row => row.PaintChangeMap).ToListAsync();
+
+        Assert.Contains(haritalar, harita => harita is { Count: 13 }
+            && new[] { "original", "local_painted", "painted", "replaced" }.All(durum => harita.Any(item => item.State == durum)));
+        Assert.Contains(haritalar, harita => harita is { Count: 13 } && harita.All(item => item.State == "original"));
+        Assert.Contains(haritalar, harita => harita is null);
+    }
+
     /// <summary>
     /// Seed'in ürettiği şaseler TEKİL olmak zorunda: aynı şase iki kez üretilse kısmi
     /// tekil indeks ilk koşuda patlar ve geliştirme ortamı hiç kalkmaz.

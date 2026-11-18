@@ -1,3 +1,4 @@
+using CarGallery.Modules.VehicleCatalog.Infrastructure.Configurations;
 namespace CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel;
 
 /// <summary>
@@ -68,6 +69,13 @@ internal sealed class ShowcaseListing
 
     /// <summary>Locale → şube adı. Şube adı çevrilebilir bir alandır (docs/architecture.md § 1).</summary>
     internal Dictionary<string, string> BranchNames { get; set; } = [];
+
+    /// <summary>
+    /// `0016a` **D26** — parça haritasının TİPLİ kanalı (`0010b` D28'in beklediği kanal).
+    /// Yalnız alan açık, public ve değerliyse dolu; aksi hâlde <c>null</c>. Detay sözleşmesine
+    /// çıkışı `0016b`'nin işi (C12).
+    /// </summary>
+    internal List<PaintChangeRow>? PaintChangeMap { get; set; }
 
     /// <summary>
     /// Kapak, sıralı medya listesinin İLK elemanıdır (docs/domain.md, Kapak Görseli).

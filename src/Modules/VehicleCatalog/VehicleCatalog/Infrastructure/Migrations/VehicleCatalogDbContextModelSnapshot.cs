@@ -310,6 +310,13 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                             FormState = 1,
                             IsCore = false,
                             PublicVisibility = 0
+                        },
+                        new
+                        {
+                            FieldKey = "paint_change_map",
+                            FormState = 1,
+                            IsCore = false,
+                            PublicVisibility = 1
                         });
                 });
 
@@ -371,6 +378,10 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                     b.Property<int>("ModelYear")
                         .HasColumnType("integer")
                         .HasColumnName("model_year");
+
+                    b.Property<string>("PaintChangeMap")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("paint_change_map");
 
                     b.Property<decimal?>("PriceAmount")
                         .HasPrecision(19, 4)
@@ -514,6 +525,10 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                                         .HasMaxLength(60)
                                         .HasColumnType("character varying(60)")
                                         .HasColumnName("value_slug");
+
+                                    b2.Property<string>("PartMap")
+                                        .HasColumnType("jsonb")
+                                        .HasColumnName("value_part_map");
 
                                     b2.Property<string>("Text")
                                         .HasMaxLength(500)

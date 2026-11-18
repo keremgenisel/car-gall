@@ -38,6 +38,15 @@ internal sealed class VehicleFieldSettingConfiguration : IEntityTypeConfiguratio
                 FormState = FieldFormState.Optional,
                 PublicVisibility = FieldPublicVisibility.Hidden,
                 IsCore = false,
+            },
+            // `0016a` R8 · D5 — parça haritası: Opsiyonel + Görünür. Galeri değeri girdiğinde
+            // vitrin onu şema olarak gösterir (`0016b`); değer yoksa bölüm hiç basılmaz.
+            new VehicleFieldSetting
+            {
+                FieldKey = VehicleFieldKeys.PaintChangeMap,
+                FormState = FieldFormState.Optional,
+                PublicVisibility = FieldPublicVisibility.Visible,
+                IsCore = false,
             });
     }
 }

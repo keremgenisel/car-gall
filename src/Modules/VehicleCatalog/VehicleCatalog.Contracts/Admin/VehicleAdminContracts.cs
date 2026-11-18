@@ -102,7 +102,11 @@ public sealed record VehicleAdminOptionalValueDto(
     string FieldKey,
     string Kind,
     string? Value,
-    IReadOnlyDictionary<string, string>? Values);
+    IReadOnlyDictionary<string, string>? Values,
+    IReadOnlyList<VehicleAdminPaintChangeDto>? PartMap = null);
+
+/// <summary>`0016a` C6 — parça ve durum KOD olarak; görünen ad uçta çeviri kataloğundan.</summary>
+public sealed record VehicleAdminPaintChangeDto(string Part, string State);
 
 /// <summary>
 /// Formun kurabilmesi için alan tanımı: anahtar, tip ve zorunluluk. Tip KODDAN gelir

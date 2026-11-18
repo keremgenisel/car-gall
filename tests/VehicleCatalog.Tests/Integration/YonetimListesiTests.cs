@@ -290,7 +290,13 @@ public sealed class YonetimListesiTests(ShowcaseDatabase database)
 
         try
         {
-            Assert.Empty(await Sorgu().GetFormFieldsAsync(CancellationToken.None));
+            // Kapanan alan listede YOK. `0016a` öncesinde iddia `Assert.Empty` idi: tramer tek
+            // opsiyonel alandı. Parça haritası (açık) geldikten sonra kriterin kendisi —
+            // "kapalı alan formda görünmez" — doğrudan ölçülüyor ve açık alanın listede
+            // KALDIĞI da ölçülüyor ki kapatma bütün listeyi silmekle karıştırılmasın.
+            IReadOnlyList<VehicleAdminFieldDto> kapaliyken = await Sorgu().GetFormFieldsAsync(CancellationToken.None);
+            Assert.DoesNotContain(kapaliyken, field => field.FieldKey == VehicleFieldKeys.DamageRecordAmount);
+            Assert.Contains(kapaliyken, field => field.FieldKey == VehicleFieldKeys.PaintChangeMap);
         }
         finally
         {

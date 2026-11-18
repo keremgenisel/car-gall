@@ -104,6 +104,12 @@ internal sealed class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
                 payload.Property(item => item.Date).HasColumnName("value_date");
                 payload.Property(item => item.Option).HasColumnName("value_slug").HasMaxLength(60);
 
+                // `0016a` D26 — parça haritasının kendi kolonu; yalnız kod taşır (C6).
+                payload.Property(item => item.PartMap)
+                    .HasColumnName("value_part_map")
+                    .HasColumnType("jsonb")
+                    .HasConversion(CatalogConverters.NullablePaintChangeMap, CatalogConverters.PaintChangeMapComparer);
+
                 payload.Property(item => item.Localized)
                     .HasColumnName("value_localized")
                     .HasColumnType("jsonb")
