@@ -134,14 +134,26 @@ export function parseRoute(pathname: string): Route {
   // için kalkar: `/tr/foo` bir içerik sayfası adayıdır (AC-37). İki parçalı tanınmayan yol
   // (`/tr/foo/bar`) eskisi gibi listeye düşer (AC-38).
   if (sectionSegment !== LISTING_SEGMENT && slugSegment === undefined) {
-    return { kind: 'content', slug: decodeURIComponent(sectionSegment) }
+    return { kind: 'content', slug: decodeSegment(sectionSegment) }
   }
 
   if (sectionSegment !== LISTING_SEGMENT || slugSegment === undefined) {
     return { kind: 'list' }
   }
 
-  return { kind: 'detail', slug: decodeURIComponent(slugSegment) }
+  return { kind: 'detail', slug: decodeSegment(slugSegment) }
+}
+
+/**
+ * Triyaj BULGU-3 — bozuk kodlanmış parça (`%`, `%E0`) `decodeURIComponent`'i fırlatır ve sayfa
+ * boş kalırdı. Çözülemeyen parça ham hâliyle döner: uç onu bulamaz, ekran "bulunamadı" olur.
+ */
+function decodeSegment(segment: string): string {
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return segment
+  }
 }
 
 /** 0014 **D9** — araç listesinin adresi. "Vitrine dön" bağlantıları buraya gider (AC-9–AC-11). */

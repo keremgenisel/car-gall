@@ -277,6 +277,41 @@ describe('0017 — sayfa düzenleme', () => {
     )
   })
 
+  it('triyaj BULGU-1 (R1, R6): kaydedilmemiş düzenleme varken dil başına yayın düğmeleri devre dışıdır ve eski metni yayına almaz; kayıttan sonra etkinleşir', async () => {
+    vi.mocked(api.savePage).mockResolvedValue(4)
+    await panel('content-edit', 'content_editor', 'id-g')
+
+    const enBaslik = await screen.findByLabelText('Başlık', { selector: '#content-en-title' })
+    fireEvent.change(enBaslik, { target: { value: 'Warranty Conditions' } })
+
+    const enYayinla = screen.getByTestId('content-en-publish')
+    expect(enYayinla).toHaveProperty('disabled', true)
+    expect(screen.getByTestId('content-tr-unpublish')).toHaveProperty('disabled', true)
+    expect(screen.getByTestId('content-save-first').textContent).toBe(
+      'Yayın durumunu değiştirmeden önce değişiklikleri kaydedin.',
+    )
+    fireEvent.click(enYayinla)
+    expect(vi.mocked(api.setPagePublication)).not.toHaveBeenCalled()
+    expect(
+      (screen.getByLabelText('Başlık', { selector: '#content-en-title' }) as HTMLInputElement)
+        .value,
+    ).toBe('Warranty Conditions')
+
+    // Kaydedilince sunucu hâli formla aynıdır ve düğmeler yeniden etkinleşir.
+    vi.mocked(api.fetchAdminPage).mockResolvedValueOnce({
+      ...G,
+      version: 4,
+      locales: G.locales.map((l) =>
+        l.locale === 'en' ? { ...l, title: 'Warranty Conditions' } : l,
+      ),
+    })
+    fireEvent.click(screen.getByTestId('content-save'))
+    await waitFor(() =>
+      expect(screen.getByTestId('content-en-publish')).toHaveProperty('disabled', false),
+    )
+    expect(screen.queryByTestId('content-save-first')).toBeNull()
+  })
+
   it('0017/AC-26: silme onay penceresinde vazgeçilirse silme isteği gönderilmez', async () => {
     await panel('content-edit', 'content_editor', 'id-g')
     fireEvent.click(await screen.findByTestId('content-delete'))

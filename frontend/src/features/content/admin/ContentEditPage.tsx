@@ -118,6 +118,20 @@ export function ContentEditPage({ pageId }: { readonly pageId: string }) {
 
   const { page } = load
 
+  // Triyaj BULGU-1 — dil başına yayın eylemi SUNUCUDAKİ metni yayına alır, formdakini değil;
+  // ardından gelen yeniden yükleme kaydedilmemiş düzenlemeyi ezerdi. Form kaydedilmiş hâlden
+  // farklıyken yayın düğmeleri devre dışıdır: önce kaydedilir (yayındaki dilde kayıt zaten
+  // hemen yayına girer — R7), sonra yayın durumu değişir.
+  const dirty = texts.some((text) => {
+    const saved = page.locales.find((item) => item.locale === text.locale)
+    return (
+      saved === undefined ||
+      saved.title !== text.title ||
+      saved.body !== text.body ||
+      saved.slug !== text.slug
+    )
+  })
+
   async function run(action: () => Promise<number>) {
     setBusy(true)
     setErrors({})
@@ -265,7 +279,8 @@ export function ContentEditPage({ pageId }: { readonly pageId: string }) {
 
               <Button
                 variant="secondary"
-                disabled={busy}
+                disabled={busy || dirty}
+                aria-describedby={dirty ? 'content-save-first' : undefined}
                 data-testid={`${prefix}-${published ? 'unpublish' : 'publish'}`}
                 onClick={() =>
                   void run(() =>
@@ -278,6 +293,12 @@ export function ContentEditPage({ pageId }: { readonly pageId: string }) {
             </fieldset>
           )
         })}
+
+        {dirty ? (
+          <p className="admin-form__hint" id="content-save-first" data-testid="content-save-first">
+            {t('content.edit.saveFirst')}
+          </p>
+        ) : null}
 
         <div className="admin-form__actions">
           <Button type="submit" loading={busy} data-testid="content-save">

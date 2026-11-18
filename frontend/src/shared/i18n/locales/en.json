@@ -597,5 +597,6 @@
   "content.fieldError.slug_reserved": "This address is reserved for a section of the site.",
   "content.fieldError.slug_taken": "This address is already used by another page in this language.",
   "content.fieldError.link_scheme_not_allowed": "Links can only be http, https, mailto, tel or an address on this site.",
-  "content.fieldError.locale_not_enabled": "This language is not enabled for this installation."
+  "content.fieldError.locale_not_enabled": "This language is not enabled for this installation.",
+  "content.edit.saveFirst": "Save your changes before changing the publication status."
 }

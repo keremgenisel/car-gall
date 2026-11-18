@@ -137,12 +137,19 @@ describe('0017 — gövde: enjeksiyon', () => {
     ])
   })
 
-  it('0017/AC-72: http ve https bağlantıları rel="noopener noreferrer" taşır', () => {
-    const kok = govde('[a](http://example.com) [b](https://example.com)')
+  it('0017/AC-72, triyaj BULGU-2: http, https ve şemasız başka köke giden (//, \\\\) bağlantılar rel="noopener noreferrer" taşır', () => {
+    const kok = govde(
+      '[a](http://example.com) [b](https://example.com) [c](//evil.example/x) [d](\\\\evil.example/x)',
+    )
+    expect(kok.querySelectorAll('a')).toHaveLength(4)
 
     for (const a of Array.from(kok.querySelectorAll('a'))) {
       expect(a.getAttribute('rel')).toBe('noopener noreferrer')
     }
+  })
+
+  it('triyaj BULGU-2 (sınır): tek / ile başlayan göreli bağlantı aynı köktedir ve rel taşımaz', () => {
+    expect(govde('[sss](/tr/sss)').querySelector('a')?.getAttribute('rel')).toBeNull()
   })
 
   it('0017/AC-73: gövdeyi basan ziyaretçi kodunda dangerouslySetInnerHTML ve innerHTML geçmez', () => {

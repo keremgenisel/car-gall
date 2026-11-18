@@ -597,5 +597,6 @@
   "content.fieldError.slug_reserved": "هذا العنوان محجوز لقسم من الموقع.",
   "content.fieldError.slug_taken": "هذا العنوان مستخدم لصفحة أخرى بهذه اللغة.",
   "content.fieldError.link_scheme_not_allowed": "يمكن أن تكون الروابط http أو https أو mailto أو tel أو عنواناً داخل الموقع فقط.",
-  "content.fieldError.locale_not_enabled": "هذه اللغة غير مفعّلة في هذا التثبيت."
+  "content.fieldError.locale_not_enabled": "هذه اللغة غير مفعّلة في هذا التثبيت.",
+  "content.edit.saveFirst": "احفظ التعديلات قبل تغيير حالة النشر."
 }

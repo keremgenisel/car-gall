@@ -597,5 +597,6 @@
   "content.fieldError.slug_reserved": "Bu adres sitenin bir bölümüne ayrılmış.",
   "content.fieldError.slug_taken": "Bu adres bu dilde başka bir sayfada kullanılıyor.",
   "content.fieldError.link_scheme_not_allowed": "Bağlantılar yalnız http, https, mailto, tel ya da site içi adres olabilir.",
-  "content.fieldError.locale_not_enabled": "Bu dil kurulumda etkin değil."
+  "content.fieldError.locale_not_enabled": "Bu dil kurulumda etkin değil.",
+  "content.edit.saveFirst": "Yayın durumunu değiştirmeden önce değişiklikleri kaydedin."
 }

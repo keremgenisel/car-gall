@@ -71,6 +71,13 @@ describe('0017 — rota', () => {
     expect(parseRoute('/tr/foo/bar')).toEqual({ kind: 'list' })
   })
 
+  it('triyaj BULGU-3 (R12, AC-35 rota yarısı): bozuk kodlanmış parça fırlatmaz, ham hâliyle içerik adayı olur; detay da aynı', () => {
+    expect(parseRoute('/tr/%')).toEqual({ kind: 'content', slug: '%' })
+    expect(parseRoute('/tr/%E0')).toEqual({ kind: 'content', slug: '%E0' })
+    expect(parseRoute('/tr/cars/%E0')).toEqual({ kind: 'detail', slug: '%E0' })
+    expect(parseRoute('/tr/hakk%C4%B1m%C4%B1zda')).toEqual({ kind: 'content', slug: 'hakkımızda' })
+  })
+
   it('0017/AC-39 (rota yarısı): /tr/, /tr/cars ve /tr/cars/{slug} eski rotalarını korur', () => {
     expect(parseRoute('/tr/')).toEqual({ kind: 'home' })
     expect(parseRoute('/tr/cars')).toEqual({ kind: 'list' })
@@ -99,6 +106,15 @@ describe('0017 — içerik sayfası', () => {
     expect(await screen.findByTestId('content-not-found')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Tekrar dene' })).toBeNull()
     expect(screen.queryByTestId('content-error')).toBeNull()
+  })
+
+  it('triyaj BULGU-3 (R12, AC-35): /tr/%E0 boş sayfa değil bulunamadı ekranı gösterir', async () => {
+    vi.mocked(fetchContentPage).mockResolvedValue(null)
+    const rota = parseRoute('/tr/%E0')
+    sayfa(rota.kind === 'content' ? rota.slug : '')
+
+    expect(await screen.findByTestId('content-not-found')).toBeTruthy()
+    expect(vi.mocked(fetchContentPage).mock.calls[0]?.[0]).toBe('%E0')
   })
 
   it("0017/AC-40 (bileşen yarısı): bulunamadı ekranı 0002 R5'in ekranıyla aynı bileşen ve desende basılır", async () => {

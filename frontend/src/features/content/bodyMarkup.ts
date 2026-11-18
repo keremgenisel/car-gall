@@ -135,7 +135,9 @@ export function parseInline(source: string): Inline[] {
         result.push({
           kind: 'link',
           href: target,
-          external: /^https?:/i.test(target),
+          // Triyaj BULGU-2 — `//kok` ve `\\kok` (tarayıcı http(s)'te `\` işaretini `/` sayar)
+          // şemasız ama BAŞKA köke gider: R17'nin dış bağlantısıdır.
+          external: /^https?:/i.test(target) || /^[/\\]{2}/.test(target),
           children: parseInline(match[1]!),
         })
       } else {
