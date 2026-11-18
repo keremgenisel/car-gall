@@ -5,11 +5,19 @@
 | **Durum** | Taslak — kararlar verildi, kabul kriterleri yazılmadı |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `VehicleCatalog` (vitrin okuma tarafı) · `VehicleReference` (okuma yüzeyi; yakıt ve vites değer listesi — **D11**) · `frontend/` public vitrin |
+| **Modül(ler)** | `VehicleCatalog` (vitrin okuma tarafı) · `frontend/` public vitrin. `VehicleReference`'ın mevcut public uçları **tüketilir**, değişmez (**D17**). |
 | **Bağımlı spec'ler** | `0001` (tamamlandı) — bu spec onun **X2, X3 (şube hariç) ve X4** maddelerini geri açar (**D16**). `0014` (tamamlandı) — liste adresi `/{locale}/cars` (`0014` D9). |
 | **Dayanak** | ADR 0003 unsur 1 ve Ek 1, sıra #9 |
-| **Karar bekliyor** | yok — S1–S5 → **D1–D5**; QA CLARIFY turunun on bir bulgusu (B1–B11) → **D6–D16** (2026-11-18). |
+| **Karar bekliyor** | yok — S1–S5 → **D1–D5**; QA CLARIFY turunun on bir bulgusu (B1–B11) → **D6–D16** (2026-11-18); plan turunun beş bulgusu (P1–P5) → **D17–D21** (2026-11-18). |
 
+> **Plan turu (2026-11-18, `e1a440e` üzerinde).** Developer uygulama planını çıkarırken
+> beş bulgu getirdi (P1–P5); önerilerin **tamamı** Takım Yöneticisi (depo sahibi) tarafından
+> onaylandı ve **D17–D21** olarak işlendi. İkisi bu turun kendi ölçümünü düzeltiyor: **K2
+> yanlıştı** — yakıt ve vitesin public değer listesi ucu `0010a`'dan beri var (**D17**) — ve
+> C12'nin "tanınmayan slug'ı uç düzeltir" cümlesi `0001` AC-17 ile çelişiyordu (**D18**).
+> R16, C2 ve C12 güncellendi; onaylı plan § Context'te. Kriterler hâlâ `main`'de olmadığı
+> için revizyon **sayılmaz**.
+>
 > **QA CLARIFY turu (2026-11-18, `main` @ `1349713`).** Bir QA oturumu taslağı
 > uygulamadan önce cevapsız sorular için okudu: S1–S5'in durumunu ölçtü ve on bir yeni boşluk
 > buldu (B1–B11). Önerilerin **tamamı** (S1 ve S5'in Analist önerileri dâhil) Takım
@@ -91,8 +99,9 @@ uyan araçları tek adımda görebiliyor.**
   negatifse **o eksen yok sayılır** ve adres düzeltilir; sunucu `200` döner. Fiyat sınırları
   para biriminin **ana biriminde tam sayıdır**. → **D10**, `0001` C14.
 - **R16.** Yakıt ve vites eksenleri, kasa tipinde olduğu gibi referans verinin **tüm**
-  değerlerini listeler; değerler ziyaretçiye açık bir okuma ucundan gelir. Değer başına
-  sonuç sayısı gösterilmez (**X11**). → **D11**.
+  değerlerini listeler; değerler ziyaretçiye açık **mevcut** okuma uçlarından gelir
+  (`/api/reference/fuel-types`, `/api/reference/transmission-types`). Değer başına sonuç
+  sayısı gösterilmez (**X11**). → **D11**, **D17**.
 
 ---
 
@@ -102,7 +111,7 @@ uyan araçları tek adımda görebiliyor.**
 
 - **C1.** Ham metin kolonu üzerinde `ILIKE`/`lower()` ile eşleştirme yapılmaz (Türkçe
   `i/İ/ı/I` tuzağı). → Yasak Listesi 27, `docs/architecture.md` § 3.
-- **C2.** Sıralama locale collation'ı ile yapılır. → `docs/architecture.md` § 3.
+- **C2.** Sıralama locale collation'ı ile yapılır. → `docs/architecture.md` § 3. *(2026-11-18, **D21**: bu spec'in altı sıralamasının hepsi sayısal veya tarihsel; metin sıralaması yoktur. Kural, metin sıralaması getiren ilk spec'te uygulanır.)*
 - **C3.** Para ve yüzde `decimal`; fiyat `Money` ile taşınır; üç ondalıklı para birimleri
   bozulmaz. → Altın Kural 4, **P1–P2**.
 - **C4.** Yalnızca `Yayında` ve `Rezerve` ilanlar listelenir. → `0001` C/AC-2, AC-3.
@@ -134,7 +143,7 @@ uyan araçları tek adımda görebiliyor.**
   | Fiyat aralığı | `priceMin` · `priceMax` — para biriminin ana biriminde tam sayı (R15) |
   | Sıralama | `sort` — `newest` · `price-asc` · `price-desc` · `mileage-asc` · `year-desc` · `year-asc` |
   | Kanonik biçim | Hiçbir parametre zorunlu değil. Varsayılan sıralama `sort` yazmaz; `page=1` ve boş parametre yazılmaz |
-  | Geçersiz girdi | Tanınmayan `sort` → varsayılan sıralama; tanınmayan slug ve geçersiz aralık → yok sayılır (R15). Sunucu `200` döner, uç adresi `replaceState` ile düzeltir (`0001` C14) |
+  | Geçersiz girdi | Sunucu her durumda `200` döner ve geçersiz girdiyi yok sayar (`0001` C14). **Tanınmayan `sort` ve geçersiz aralık** (R15) → uç adresi `replaceState` ile düzeltir: kural sözdizimseldir. **Tanınmayan slug** (`bodyType`, `fuel`, `transmission`) → adreste **kalır**, sunucu yok sayar (`0001` AC-17 deseni, **D18**) |
 
 ### KAPSAM DIŞI
 
@@ -197,10 +206,13 @@ uyan araçları tek adımda görebiliyor.**
   kimlik ve kanonik ad taşıyor ve marka adın içinde (`'Toyota Corolla'`,
   `SeedInitialVehicleModels.cs:17`). `0010a` X14 taksonomiyi `VehicleReference`'ın kendi
   spec'ine bıraktı; `0014` K5 aynı ölçümle marka bölümünü çıkardı. → **D6**.
-- **K2 — Yakıt ve vitesin değer listesi için public uç yok.** `VehicleReference`'ın HTTP
-  uçları yalnız `body-types` ve `models`; `IReferenceTermQueries` yalnız etiket çözüyor
-  (`ResolveLabelsAsync`), değer listesi döndürmüyor. 2026-10-05 taslağının "marka/model
-  okuma yüzeyi ekleniyor" doğrulama uyarısı bu ölçümle **kapandı**. → **D11**.
+- **K2 — ~~Yakıt ve vitesin değer listesi için public uç yok.~~** **Yanlış ölçüm, plan
+  turunda düzeltildi (2026-11-18, D17):** `ReferenceEndpoints.cs` `0010a`'dan beri
+  (`90af789`, 2026-10-05) `/api/reference/fuel-types` ve `/api/reference/transmission-types`
+  uçlarını eşliyor (`MapTerm`); `IReferenceTermQueries.GetByKindAsync` türün tüm değerlerini
+  kanonik ada göre sıralı döndürüyor ve kod yorumu "**Uçlar oturum GEREKTİRMEZ**" diyor.
+  Panel onları zaten tüketiyor (`catalogAdmin.ts`). İlk ölçüm yalnız `body-types` ve
+  `models`'in açık handler'larını saymış, `MapTerm` döngüsünü atlamıştı. → **D11**, **D17**.
 - **K3 — R1'in eksenleri çekirdek alan.** Çekirdek alanlar: marka, model, yıl, kasa,
   kilometre, yakıt, vites, renk, şube (`docs/domain.md:100`); kapatılamazlar (**F4**). Fiyat
   ayrı bir kavram (**P4**, yayın şartı: fiyat **veya** "fiyat sorunuz"). Alan ayarlarında
@@ -288,7 +300,7 @@ verilmişse "fiyat sorunuz" araç listelenmez. *Gerekçe:* yok saymak `0001` C14
 girdi davranışı; sınırları yer değiştirmek niyet tahmini olur. Tam sayı, `,`/`.` ondalık
 karmaşasını ve üç ondalıklı para birimlerinin ayrıştırma tuzağını yok eder. → R4, R15, C12.
 
-**D11 — Yakıt ve vites için public bir değer listesi ucu bu spec'e girer; eksenler
+**D11 — *("uç bu spec'e girer" yarısı **D17** ile düştü)* Yakıt ve vites için public bir değer listesi ucu bu spec'e girer; eksenler
 referans verinin tüm değerlerini listeler; değer başına sayı yoktur (B6).** *Gerekçe:*
 kasa tipiyle (`0014` D19) tutarlı; değer başına sayım her istekte bir facet sorgusu demek
 ve C9'u tehdit eder (K2). → R16, X11, Modül(ler).
@@ -310,6 +322,56 @@ değer sayısı" ziyaretçiye bir şey söylemez. → R10.
 **D16 — Başlık düzeltildi: bu spec `0001`'in X2, X3 (şube hariç) ve X4'ünü açar (B11).**
 *Gerekçe:* başlık X1–X4 diyordu; X1 (serbest metin) ve X3'ün şube kısmı bu spec'te de
 kapsam dışı. → Bağımlı spec'ler.
+
+### Verilen kararlar — plan turu, 2026-11-18
+
+**Takım Yöneticisi (depo sahibi) kararı**, Developer'ın plan bulguları P1–P5 üzerine.
+Beş öneri **olduğu gibi** onaylandı.
+
+**D17 — Yakıt ve vites değer listesi için mevcut public uçlar kullanılır; yeni uç açılmaz
+(P1).** D11'in "public bir değer listesi ucu bu spec'e girer" yarısı **düşer**; "tüm
+değerleri listeler, değer başına sayı yok" yarısı kalır. `VehicleReference` Modül(ler)
+satırından çıkar. *Gerekçe:* K2 yanlış ölçümdü; düzeltilmeseydi kriter turu zaten var olan
+bir davranışa "yeni" kriter yazar ve plan hayali bir iş içerirdi. → K2, R16, D11.
+
+**D18 — Tanınmayan slug adreste kalır; aralık ve `sort` adresini uç düzeltir (P2).**
+*Gerekçe:* uç bugün tanınmayan `bodyType`'ı bilerek silmiyor (`listUrlState.ts`: "kanonik
+kümeyi sunucu bilir") ve `0001` AC-17 bunu ölçüyor; C10 o kriterin korunmasını istiyor. Uç
+değer listesi yüklenmeden hangi slug'ın geçerli olduğunu bilemez. Aralık ve `sort`'un
+geçerliliği ise sözdizimseldir; uç sunucuyu beklemeden aynı kuralı uygular. *Bedel:*
+ziyaretçi tanınmayan slug'ın uygulanmadığını adresten anlayamaz — `0001`'den beri öyle.
+→ C12.
+
+**D19 — Aralık eksenleri Enter veya "Uygula" ile uygulanır; çoklu seçim eksenleri anında
+(P3).** Bir aralığın uygulanması geçmişe **tek** kayıt ekler. *Gerekçe:* her tuş vuruşunu
+adrese yazmak geçmişe kayıt yığar ve R12'nin "geri tuşu çalışır" şartını bozar. → R3, R12.
+
+**D20 — Çubuğun düzeni: çok değerli eksenler çip, her aralık iki sayı girişi; çubuğun
+ayrılan yüksekliği ölçülerek kurulur (P4).** Katlanır bir "Filtreler" paneli bu sürümde
+yoktur. *Gerekçe:* `0001` ve `0014` aynı CLS tuzağına düştü (iskelet gerçek içerikten
+kısaydı); ayrılan yükseklik genişlik kırılımlarında ölçülmeden yazılmaz. *Bedel:* mobilde
+çubuk uzun; liste katlamanın altına iner. → C8, C9.
+
+**D21 — C2 bu spec'te uygulanacak yer bulmaz (P5).** Altı sıralamanın hepsi sayısal veya
+tarihsel; kural metin sıralaması getiren ilk spec'e kalır. → C2.
+
+### Uygulama planı (onaylı, 2026-11-18)
+
+Dal `feature/0015-liste-eksenleri`; tek PR, adım başına commit (`[plan 0015/<n>]`).
+Migration yalnız C9 ölçümü bir indeks gerektirirse ve yalnız `catalog` şemasına.
+
+1. **Catalog — istek modeli** (R3, R15, C12): `ShowcaseListingFilter` yeni alanlar;
+   `ShowcaseListingRequest` aralık ve `sort` normalizasyonu; `ShowcaseSort`; yakıt ve vitesin
+   kanonik kümesi `BodyTypeCatalog` deseniyle (`IReferenceTermQueries.GetByKindAsync`).
+2. **Catalog — sorgu ve sıralama** (R1, R2, R4–R7): eksenler sorguda; `ShowcaseOrdering`
+   sort'a göre (D1, D7, D8); öne çıkan okuması varsayılanda kalır; uç yeni parametreleri
+   string okur.
+3. **Performans** (C9): benchmark üç profil (D13); indeks yalnız ölçüm gerektirirse.
+4. **Uç — durum ve API** (R11, R12, C12, D18): `listUrlState`, `useListUrlState`,
+   `shared/api/catalog.ts`.
+5. **Uç — filtre arayüzü** (R1, R10, R13, R14, R16, D19, D20): `features/catalog/filters/`,
+   `ShowcaseListPage`, `EmptyByFilter`; çeviriler; ayrılan yükseklik ölçümü.
+6. **e2e ve kanıt**: `daraltma`, `paylasilabilirlik`, `evidence-0015`, RTL.
 
 ---
 
