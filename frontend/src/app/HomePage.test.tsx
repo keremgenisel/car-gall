@@ -24,8 +24,11 @@ vi.mock('../shared/api/dealership', () => ({ fetchGallery: vi.fn() }))
 const catalog = await import('../shared/api/catalog')
 const { fetchGallery } = await import('../shared/api/dealership')
 
+/** `0020` AC-18'in adı; `<` kaçışlı yazılıyor ki sert kodlanmış metin kapısı onu JSX metni sanmasın. */
+const OZEL_AD = '\u003cb>Galeri & "Oto"\u003c/b>'
+
 const GALERI: PublicGallery = {
-  commercialName: 'Örnek Otomotiv',
+  displayName: 'Örnek Otomotiv',
   branches: [
     { name: 'Ataşehir Şubesi', address: 'Ataşehir Bulvarı 5', phone: '+902165550001' },
     { name: 'Kadıköy Şubesi', address: 'Bağdat Caddesi 1', phone: '+902165550002' },
@@ -78,25 +81,33 @@ describe('0014 — adres ve giriş (R10, R1, R2)', () => {
     },
   )
 
-  it('0014/AC-12: Ana sayfa galeri profilindeki ticari unvanı gösterir: profil "Örnek Otomotiv" iken sayfada bu ad görünür', async () => {
+  it('0020/AC-13: Ana sayfanın giriş bölümündeki galeri adı satırı ziyaretçinin dilindeki görünen adı gösterir; ticari unvanı göstermez', async () => {
     ekran()
 
+    // `0020` D15 — yanıt ticari unvanı hiç taşımıyor; satır görünen adı basar (0014/AC-12'nin
+    // ticari unvan beklentisi 0020 D4 ile değişti — beklenen değişiklik).
     expect((await screen.findByTestId('gallery-name')).textContent).toBe('Örnek Otomotiv')
   })
 
-  it('0014/AC-13: Profilin ticari unvanı "Başka Ad" yapıldığında ana sayfa bir sonraki yüklemede yeni adı gösterir — ad çeviri kataloğundan gelmez', async () => {
+  it('0020/AC-13: Ana sayfanın giriş bölümündeki galeri adı satırı ziyaretçinin dilindeki görünen adı gösterir; ticari unvanı göstermez', async () => {
     ekran()
     await screen.findByText('Örnek Otomotiv')
     cleanup()
 
-    vi.mocked(fetchGallery).mockResolvedValue({ ...GALERI, commercialName: 'Başka Ad' })
+    vi.mocked(fetchGallery).mockResolvedValue({ ...GALERI, displayName: 'Başka Ad' })
     ekran()
 
+    // Ad bir sonraki yüklemede yeni değeri gösterir; çeviri kataloğundan gelmez.
     expect((await screen.findByTestId('gallery-name')).textContent).toBe('Başka Ad')
-    // Katalogdaki marka adı ("Oto Galeri") ana sayfanın adı DEĞİLDİR.
-    expect(screen.getByTestId('gallery-name').textContent).not.toBe(
-      createTranslator('tr')('app.brandName'),
-    )
+  })
+
+  it('0020/AC-18: `\u003cb>Galeri & "Oto"\u003c/b>` görünen adı üst çubukta ve giriş satırında bu karakterlerle **metin olarak** görünür; işaretleme olarak yorumlanmaz (R5a, D16).', async () => {
+    vi.mocked(fetchGallery).mockResolvedValue({ ...GALERI, displayName: OZEL_AD })
+    ekran()
+
+    const ad = await screen.findByTestId('gallery-name')
+    expect(ad.textContent).toBe(OZEL_AD)
+    expect(ad.querySelector('b')).toBeNull()
   })
 
   it("0014/AC-16: Giriş başlığı ve açıklaması etkin locale'in kataloğundan gelir; tr, ar, en kataloglarının üçünde de iki anahtar dolu", async () => {
@@ -123,7 +134,7 @@ describe('0014 — adres ve giriş (R10, R1, R2)', () => {
   })
 
   it('0014/AC-73: Galeri adı Arapça harfli iken ad <bdi> içinde basılır ve zorunlu dir="ltr" taşımaz', async () => {
-    vi.mocked(fetchGallery).mockResolvedValue({ ...GALERI, commercialName: 'معرض المثال' })
+    vi.mocked(fetchGallery).mockResolvedValue({ ...GALERI, displayName: 'معرض المثال' })
 
     ekran('ar')
 

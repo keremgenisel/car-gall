@@ -1,8 +1,9 @@
 import type { GalleryLoad } from './useGallery'
 
 /**
- * 0014 R1 · D6, D20, D24 — galerinin ticari unvanı, profilden; çeviri kataloğundan DEĞİL
- * (AC-13). Ad tek dillidir ve çevrilmez. `<bdi>` onu yanındaki metinden yalıtır ve yönü
+ * 0014 R1 · D6, D20, D24 — galerinin adı, profilden; çeviri kataloğundan DEĞİL (AC-13).
+ * `0020` R6 · D4 — ticari unvan değil ziyaretçinin dilindeki GÖRÜNEN ad; o dilde yoksa
+ * sunucu varsayılan dildekini verir. Ad metin olarak basılır (`0020` AC-18). `<bdi>` onu yanındaki metinden yalıtır ve yönü
  * içerikten çözer: Latin ad soldan sağa, Arapça ad sağdan sola (AC-72, AC-73). Zorunlu
  * `dir="ltr"` Arapça harfli bir adı ters dizerdi.
  *
@@ -13,7 +14,7 @@ export function GalleryName({ load }: { readonly load: GalleryLoad }) {
   return (
     <p className="home-hero__gallery" data-testid="gallery-name-slot">
       {load.kind === 'ready' ? (
-        <bdi data-testid="gallery-name">{load.gallery.commercialName}</bdi>
+        <bdi data-testid="gallery-name">{load.gallery.displayName}</bdi>
       ) : null}
     </p>
   )

@@ -193,6 +193,18 @@ body {
 .top-bar__brand {
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-lg);
+
+  /* `0020` C6 — ad yokken de satırın yüksekliği aynı: ad gelip gitmesi üst çubuğu oynatmaz. */
+  min-block-size: calc(var(--font-size-lg) * var(--line-height-base));
+
+  /* `0020` R5 — ad bir bağlantıdır ama marka gibi görünür; uzun ad satırı taşırmaz (D22). */
+  color: var(--color-ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+a.top-bar__brand:hover {
+  text-decoration: underline;
 }
 
 .top-bar__locales {
@@ -1623,4 +1635,63 @@ body {
 
 .lead-form__privacy-link {
   color: var(--color-accent-text);
+}
+
+/* `0020` — galeri profili ve şubeler (panel). Yalnız mantıksal yön özellikleri: panel Arapçada
+   sağdan sola çalışır (AC-73). */
+.dealership-branches {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dealership-branches__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: start;
+}
+
+.dealership-branches__name {
+  color: var(--color-ink);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.dealership-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block-end: var(--space-5);
+}
+
+.dealership-fieldset {
+  display: grid;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.dealership-actions {
+  display: grid;
+  gap: var(--space-4);
+  margin-block-start: var(--space-7);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+.dealership-actions__title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }

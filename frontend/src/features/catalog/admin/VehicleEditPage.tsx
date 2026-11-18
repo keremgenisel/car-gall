@@ -24,6 +24,8 @@ import { PaintChangeMapInput } from './PaintChangeMapInput'
 import { VehicleSelect } from './VehicleSelect'
 import {
   codeKey,
+  isClosedBranch,
+  selectableBranches,
   missingLocalesOf,
   toEditValues,
   toUpdateRequest,
@@ -226,7 +228,14 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
   const banner =
     submission.kind === 'failed' && (submission.field === null || !markable.has(submission.field))
 
-  const branchOptions: readonly ReferenceOption[] = sources.branches.map((branch) => ({
+  // `0020` D14 · P7 — kapatılmış şube seçenek değildir (AC-58); aracın KAYITLI şubesi
+  // kapatılmışsa seçili ama seçilemez kalır ve alanın altında uyarı çıkar. Şubeye dokunmadan
+  // kaydetme sunucuda kabul edilir (AC-57).
+  const savedBranchId = sources.detail.branchId
+  const branchOptions: readonly ReferenceOption[] = selectableBranches(
+    sources.branches,
+    savedBranchId,
+  ).map((branch) => ({
     value: branch.branchId,
     label:
       branch.status === 'Active'
@@ -236,6 +245,10 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
             status: t(codeKey('branch.status', branch.status)),
           }),
   }))
+  const closedBranchValues = sources.branches
+    .filter((branch) => branch.status === 'Closed')
+    .map((branch) => branch.branchId)
+  const branchClosed = isClosedBranch(sources.branches, values.branchId)
 
   const missing = missingLocalesOf(values, SUPPORTED_LOCALES)
 
@@ -298,6 +311,8 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
             id="vehicle-branch"
             label={t('vehicle.form.field.branch')}
             options={branchOptions}
+            disabledValues={closedBranchValues}
+            hintKey={branchClosed ? 'vehicle.form.branch.closedHint' : undefined}
             value={values.branchId}
             errorKey={errorKeyFor('branchId')}
             onChange={(branchId) => setValues({ ...values, branchId })}

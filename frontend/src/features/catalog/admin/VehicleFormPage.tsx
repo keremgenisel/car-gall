@@ -13,6 +13,7 @@ import { Button, Card, ErrorState, Field, Skeleton } from '../../../shared/ui'
 import { VehicleSelect } from './VehicleSelect'
 import {
   codeKey,
+  selectableBranches,
   EMPTY_VEHICLE_FORM,
   firstMissingCoreField,
   vehicleMessageKey,
@@ -176,19 +177,20 @@ export function VehicleFormPage() {
   const errorKeyFor = (field: string) =>
     submission.kind === 'failed' && submission.field === field ? submission.messageKey : undefined
 
-  const branchOptions: readonly ReferenceOption[] = sources.branches.map((branch) => ({
-    value: branch.branchId,
-    // Kapatılmış şube listede KALIR (uç onu süzmüyor) ama durumu etiketinde görünür:
-    // personel kapalı bir şubeyi bilmeden seçmesin. Süzmek, olmayan bir kural uydurmak
-    // olurdu — sunucu kapalı şubeye kaydı reddetmiyor.
-    label:
-      branch.status === 'Active'
-        ? branch.name
-        : t('vehicle.form.branch.withStatus', {
-            name: branch.name,
-            status: t(codeKey('branch.status', branch.status)),
-          }),
-  }))
+  // `0020` D14 — kapatılmış şube SEÇENEK DEĞİLDİR (AC-58): sunucu ona bağlanan kaydı artık
+  // reddediyor (AC-55). Geçici kapalı şube kalır ve durumu etiketinde görünür.
+  const branchOptions: readonly ReferenceOption[] = selectableBranches(sources.branches).map(
+    (branch) => ({
+      value: branch.branchId,
+      label:
+        branch.status === 'Active'
+          ? branch.name
+          : t('vehicle.form.branch.withStatus', {
+              name: branch.name,
+              status: t(codeKey('branch.status', branch.status)),
+            }),
+    }),
+  )
 
   return (
     <div className="admin-page admin-page--narrow">
