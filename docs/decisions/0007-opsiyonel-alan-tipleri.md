@@ -92,3 +92,28 @@ taşıma adımı zorunludur.
 - Vitrin okuma modeline YALNIZ `locale'li metin` tipi taşınır; tutar, tarih, tam sayı,
   evet/hayır ve seçenek tipleri biçimlendirme gerektirdiği için `0002`'nin sözleşmesi
   genişleyene kadar yansıtılmaz (0010b **D28**) ve bunu bir tripwire testi tutar.
+
+---
+
+## Ek 1 — Parça haritası tipi (`0016a`, 2026-11-18)
+
+**Karar:** kapalı tip kümesine sekizinci tip eklenir: **`PartMap`** (parça haritası). İlk ve
+tek kullanıcısı `paint_change_map` alanıdır (`0016a` R8, C11).
+
+- **Değer:** 13 parçanın her biri için bir durum kodu (`original`, `local_painted`,
+  `painted`, `replaced`). Ya 13 parçanın tamamı ya da hiç (D7); kodlar ve sıra `specs/0016a`
+  C10'da sabittir.
+- **Depolama (D26):** bu ADR'nin "her taşıyıcının kendi kolonu" ilkesine uyar — yazma
+  modelinde `value_part_map jsonb`, okuma modelinde `showcase_listings.paint_change_map jsonb`.
+  İkisi de YALNIZ kod taşır (C6); geri okunan değer agregatın kuralından geçer ve bozuk bir
+  değer sessizce yarım harita olarak dönmez.
+- **Giriş (D27):** harita metin yolundan (`Value`) **geçmez**; yönetim sözleşmesinde
+  yapılandırılmış ayrı bir alanı (`PartMap`) vardır. Boş liste değeri temizler (D32).
+- **Vitrin:** `PartMap`, okuma modeline TİPLİ kanalıyla taşınan ilk tiptir; yukarıdaki
+  "yalnız locale'li metin" kuralının istisnası değil, o kuralın beklediği "tipli kanal"dır.
+  Tripwire (`VitrinTipKapisiTests`) onu bu yüzden tanır. Detay sözleşmesine çıkışı `0016b`'nin
+  işidir.
+
+*Elenen alternatif:* parça başına 13 ayrı opsiyonel alan — 13 form durumu ve 13 görünürlük
+ekseni üretirdi; F1–F5 bir haritayı tek bir bilgi olarak açıp kapatmayı ister (D5).
+
