@@ -2,13 +2,13 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak — kararlar verildi, kriter turu (Analist) bekliyor |
+| **Durum** | Onaya sunuldu (2026-11-18) — 34 kabul kriteri, kriter turu (Analist) |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (değer tipi, kalıcılık, alan ayarı, yönetim sözleşmesi) · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | `0010a`, `0010b` (opsiyonel alan formu — tamamlandı) · **`0016b`** bu dilimin sözleşmesine dayanır |
 | **Dayanak** | ADR 0003 Ek 1, sıra #10'un **birinci dilimi** (`0016` **D31**) · ADR 0007 (opsiyonel alan tipleri) |
-| **Karar bekliyor** | yok — kararlar `0016`'nın CLARIFY ve plan turlarından (D1–D31; bu dilime düşenler aşağıda birebir). |
+| **Karar bekliyor** | **S1** (temizlemenin biçimi — kriter turu, 2026-11-18), Takım Yöneticisi. Önceki kararlar `0016`'nın CLARIFY ve plan turlarından (D1–D31; bu dilime düşenler aşağıda birebir). |
 
 > **Bölünme (2026-11-18, `0016` D31).** `0016` iki dilime ayrıldı: bu dilim parça
 > haritasının **verisini ve panelini** taşır; vitrin (galeri, şema, detay sözleşmesi)
@@ -179,13 +179,139 @@ bedelsizdir (ADR 0003 Ek 1'in ölçümü).
 
 ## Açık sorular
 
-> Açık soru yok.
+> Kriter turunda (2026-11-18, Analist) çıktı. Requirements ve Constraints **değiştirilmedi**;
+> kriter önerilen okumayla yazıldı ve okuma kriterde adıyla belirtildi.
+
+S1. **"Temizleme" neyle ifade edilir?** R12 hem *"hiç seçim yapılmamışsa değer
+    yazılmaz"* hem *"kayıtlı bir değer bütünüyle temizlenebilir"* diyor. Kayıtlı değerli
+    bir araçta personel 13 kutunun tamamını boşaltıp kaydederse ne olacağı yazılı değil:
+    ilk cümle "değer yazılmaz" (eski değer kalır) diye de, "temizlenir" diye de okunabilir.
+    Bugünkü kod opsiyonel bir değeri silmenin hiçbir yolunu taşımıyor
+    (`UpdateVehicleCommand` değeri olmayan girdiyi `KindMismatch` ile reddediyor).
+    Öneri: **13 kutunun tamamı boş kaydedilmesi = değerin temizlenmesi.** Kayıtlı değer
+    yoksa sonuç "değer yazılmaz"la aynıdır (AC-22); varsa değer silinir (AC-20). Formda
+    13 kutuyu tek hareketle boşaltan bir eylem olup olmayacağı arayüz kolaylığıdır ve
+    kriter onu şart koşmaz.
+    Gerekçe: personel boşalttığı formu kaydedip değeri hâlâ dolu görürse form yalan
+    söylemiş olur — D7'nin önlemek istediği "sessizliğin beyana dönmesi"nin aynası. Tek
+    kural ("boş = yok") iki cümleyi çelişkisiz birleştirir.
+    Bedel: yanlışlıkla 13 kutuyu boşaltıp kaydetmek kayıtlı haritayı siler; geri alma yok.
+    Bunu bir onay adımıyla korumak bu spec'in kapsamında değildir.
 
 ---
 
 ## Acceptance Criteria
 
-> Kriter turunda **Analist** yazar (**D24**).
+> Her kriterin testi `DisplayName`'inde `0016a/AC-<n>` taşır (`docs/testing.md` § 1).
+> Parça ve durum kodları C10'daki gibidir. **Tam harita** = C10'un 13 parçasının her biri
+> tam bir kez, dört durum kodundan biriyle. Örnek veri kümeleri kriterin içinde verilir;
+> eksik parçalar C10'un ortasından ve sonundan seçildi ki "ilk N parça" varsayımı geçmesin.
+>
+> *Kriter turu (2026-11-18) **Analist** tarafından yazıldı (**D24**). AC-20, AC-22 ve
+> AC-31, `## Açık sorular` S1'in önerilen okumasıyla yazıldı.*
+>
+> **Kriter değil, DoD maddesi:** `docs/domain.md` sözlük güncellemesi (**D1**) ve ADR 0007
+> eki (**C11**) aşağıdaki DoD'da ayrı maddedir. *Gerekçe:* ikisi de belge değişikliğidir;
+> sistemin davranışını değil belgenin içeriğini iddia eder ve bir test onu ancak metin
+> arayarak ölçebilirdi — anahtarı sayan ama biçimi saymayan bir kapı. Davranış tarafı
+> (dört durum, yeni tip) AC-3 ve AC-5–AC-12 ile ölçülür.
+
+### Alan ve varsayılan ayar (R8 · C11 · D5)
+
+- **AC-1.** Migration'ları sıfırdan uygulanmış bir kurulumda `paint_change_map` alanının
+  ayarı form durumu **Opsiyonel**, public görünürlüğü **Görünür**dür.
+- **AC-2.** Tramer'in ayarı `Opsiyonel + Gizli` olan mevcut bir kurulumda migration
+  uygulandıktan sonra `paint_change_map` ayarı `Opsiyonel + Görünür` olarak eklenmiştir ve
+  tramer'in ayarı `Opsiyonel + Gizli` kalır.
+- **AC-3.** Yönetim formunun alan tanımı listesinde `paint_change_map` **tek bir** alan
+  olarak, parça haritası tipiyle döner; listede parça başına ayrı bir alan (ör.
+  `paint_change_map.hood`) yoktur ve tramer `Amount` tipiyle kalır.
+- **AC-4.** `paint_change_map` ayarı **Zorunlu** iken haritası olmayan bir aracın ilanı
+  yayına alınamaz; aynı araca tam harita girildikten sonra ilan yayına alınır (zorunlu
+  alanın mevcut yayın kuralı yeni alan için de işler).
+
+### Değer kuralları (R9, R10, R11 · C10 · D6, D7)
+
+- **AC-5.** Tam harita (ör. `front_bumper`=`painted`, `trunk_lid`=`replaced`,
+  `left_rear_door`=`local_painted`, diğer 10 parça `original`) kaydedilir ve yönetim detay
+  yanıtı aynı 13 parça–durum çiftini döner.
+- **AC-6.** AC-5'in haritası C10'un **ters** sırasıyla (`right_rear_fender` önce)
+  gönderildiğinde de yönetim detay yanıtı parçaları C10 sırasıyla (`front_bumper` önce,
+  `right_rear_fender` sonda) döner.
+- **AC-7.** `trunk_lid` (C10 #4) eksik, 12 parçalı bir harita **reddedilir** ve araçta
+  önceden kayıtlı tam harita **değişmeden** kalır.
+- **AC-8.** `roof` (#3) ve `right_rear_door` (#12) eksik, 11 parçalı bir haritanın hata
+  yanıtı eksik parçaları **kod** olarak ve C10 sırasıyla taşır: `roof`, `right_rear_door`.
+  Yanıtta çevrilmiş parça adı (ör. "Tavan") yoktur.
+- **AC-9.** 13 geçerli parçaya ek olarak tanınmayan bir parça kodu (`windshield`) taşıyan
+  harita reddedilir.
+- **AC-10.** Bir parçanın durumu dört koddan biri değilse harita reddedilir: `scratched` ve
+  `unspecified` ayrı ayrı denenir ve ikisi de reddedilir (R10 — "belirtilmedi" durumu yok).
+- **AC-11.** `hood` iki kez geçen 14 elemanlı harita ve `hood` iki kez geçip `roof` hiç
+  geçmeyen 13 elemanlı harita ayrı ayrı reddedilir; ikincisinin hata yanıtı eksik parça
+  olarak `roof`'u taşır.
+- **AC-12.** Kodlar tam ve harfe duyarlı eşleşir: durumu `Painted` olan veya parçası
+  `Front_Bumper` olan harita reddedilir.
+- **AC-13.** Parça haritası opsiyonel alanların **metin değeri** yoluyla (tek bir dize)
+  gönderildiğinde reddedilir; harita yalnız yapılandırılmış alanıyla kabul edilir (**D27**).
+- **AC-14.** Tramer (`damage_record_amount`) için yapılandırılmış harita gönderilmesi
+  reddedilir ve tramer'in kayıtlı tutarı değişmez.
+- **AC-15.** `paint_change_map` ayarı **Kapalı** iken tam harita gönderilmesi
+  `vehicle.field_closed` ile reddedilir.
+
+### Kalıcılık ve sözleşme (C6 · D26, D27 · F1)
+
+- **AC-16.** AC-5'in haritası kaydedildikten sonra veritabanında saklanan değer yalnız
+  parça ve durum **kodlarını** taşır; `"Ön tampon"`, `"boyalı"`, `"Front bumper"` ya da
+  herhangi bir Arapça parça/durum adı saklanan değerde geçmez.
+- **AC-17.** Yönetim detay yanıtı haritayı kod listesi olarak taşır ve `ar` ile `tr`
+  locale'li oturumlarda **aynıdır**.
+- **AC-18.** Alan **Kapalı**ya çekildiğinde yönetim detay yanıtında `paint_change_map`
+  değeri bulunmaz; alan yeniden **Opsiyonel** yapıldığında AC-5'in 13 çifti değişmeden geri
+  döner (F1).
+- **AC-19.** Alan `Opsiyonel + Gizli` iken tam harita kaydedilebilir ve yönetim detay
+  yanıtında döner — public görünürlük panel girişini etkilemez.
+- **AC-20.** Tam haritası kayıtlı bir araçta harita **temizlenip** (13 kutunun tamamı boş)
+  kaydedildiğinde araçta `paint_change_map` değeri kalmaz ve yönetim detay yanıtında alanın
+  değeri bulunmaz (R12 · S1).
+- **AC-21.** AC-20'deki temizleme, aynı aracın tramer değerini (ör. `12500.00`) değiştirmez.
+- **AC-22.** Haritası olmayan bir araç, harita için hiçbir seçim yapılmadan kaydedildiğinde
+  araçta `paint_change_map` değeri **oluşmaz**; "13 parçası orijinal" bir değer de
+  yazılmaz (D7).
+
+### Panel (R12 · C5)
+
+- **AC-23.** Alan açıkken düzenleme formu `paint_change_map` için **13 seçim kutusu**
+  gösterir; kutular C10 sırasındadır (ilk `Ön tampon`, son `Sağ arka çamurluk`) ve
+  etiketleri etkin locale'in kataloğundan gelir.
+- **AC-24.** Her seçim kutusu dört durum seçeneğini (orijinal, lokal boyalı, boyalı,
+  değişen) etkin locale'in kataloğundan gelen adlarla ve ayrıca **boş** bir seçeneği sunar.
+- **AC-25.** Haritası olmayan bir aracın düzenleme formunda 13 kutunun **hiçbiri** seçili
+  gelmez; hiçbir kutuda "orijinal" önceden seçili değildir (D7).
+- **AC-26.** AC-5'in haritası kayıtlı bir aracın düzenleme formu açıldığında 13 kutu
+  kayıtlı durumlarla gelir: `Ön tampon` = boyalı, `Bagaj kapağı` = değişen, `Sol arka kapı`
+  = lokal boyalı, diğer 10 kutu = orijinal.
+- **AC-27.** Alan **Kapalı** iken düzenleme formunda parça haritası kutularının hiçbiri
+  bulunmaz.
+- **AC-28.** Alan `Opsiyonel + Gizli` iken düzenleme formu 13 kutuyu gösterir.
+- **AC-29.** 11 kutu seçilip `Tavan` ve `Sağ arka kapı` boş bırakıldığında kayıt
+  reddedilir; form eksik parçaları etkin locale'in adıyla ve C10 sırasıyla söyler
+  ("Tavan", "Sağ arka kapı") ve yalnız bu iki kutu hatalı (`aria-invalid="true"`)
+  işaretlenir.
+- **AC-30.** AC-29'daki ret sonrasında formdaki diğer 11 seçim **korunur**; personel iki
+  kutuyu doldurup yeniden kaydettiğinde kayıt kabul edilir.
+- **AC-31.** AC-20'deki temizlemeden sonra düzenleme formu yeniden açıldığında 13 kutu boş
+  gelir.
+- **AC-32.** `/ar/` panelinde 13 parça adı, dört durum adı ve AC-29'un hata metni
+  Arapça'dır ve form sağdan sola akar (görsel kanıt).
+- **AC-33.** 13 parça adı, dört durum adı ve eksik parça hata metni için çeviri anahtarları
+  `tr`, `ar` ve `en` kataloglarının üçünde de doludur; eksik anahtar kontrolü yeşildir.
+
+### Tohum verisi (D5)
+
+- **AC-34.** Geliştirme tohumu en az üç **yayında** ilan üretir: biri dört durumun **hepsini**
+  içeren tam haritalı, biri 13 parçası `original` olan, biri haritasız. (`0016b`'nin şema,
+  tamamı-orijinal ve değersiz kriterlerinin kanıtı bu üç ilanla alınabilir.)
 
 ---
 
@@ -213,6 +339,9 @@ bedelsizdir (ADR 0003 Ek 1'in ölçümü).
      kartta yanlış pozitif veriyordu. Serbest metinde ifade aramak, maddeyi silmekle
      yeniden yazmayı ayırt edemez. -->
 
+- [ ] `docs/domain.md` **Parça Haritası** tanımı dört duruma güncellendi (**D1**).
+- [ ] ADR 0007'ye parça haritası değer tipi için ek karar yazıldı; depolama biçimi **D26**
+      (**C11**, **D5**).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/<no>-ac<n>.png`),
       boş ve hata durumları dâhil; RTL kriteri varsa Arapça görüntü de var.
