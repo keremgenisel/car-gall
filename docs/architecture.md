@@ -509,6 +509,7 @@ altındaki ADR'lerdedir.
 | Admin paneli | Tek Vite uygulaması, `/admin` rota ağacı, lazy-load |
 | Veritabanı | PostgreSQL, şema başına ayrı rol |
 | Migration uygulama | Tek seferlik kurulum adımı (`--migrate`); çalışan uygulama yalnız doğrular |
+| Dağıtım | Tek konteyner imajı (ön yüz içinde derlenir), iki komut, imajda sır yok; init süreci imajda; ters proxy `X-Forwarded-For` + `X-Forwarded-Proto` iletir, yalnız listelenmiş proxy'ye güvenilir (ADR `0012`) |
 | Medya | S3-uyumlu (R2/MinIO) + CDN, ilk günden |
 | Medya işleme | Türevler (1600/800/400 WebP) ve filigran **sunucuda**; asenkron hat + işleme durumu |
 | Filigran kaynağı | Yapılandırmadaki bir **nesne anahtarı** (`Media`'nın kendi kovasında); medya varlığı kimliği değil |
