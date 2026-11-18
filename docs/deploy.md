@@ -108,8 +108,17 @@ galeri-alanadi.com {
 
 1. **Galeri profili ve şubeler.** Kurulum adımı "Oto Galeri" adında, `1234567890` vergi
    numaralı bir demo galeri ve iki uydurma İstanbul şubesi yazar (ADR `0012` § Açık
-   engeller). Panelden değiştirilemiyor. Bu çözülmeden site açılırsa ana sayfanın
-   altlığında başkasının adresi ve telefonu görünür.
+   engeller 1). Spec `0020`'den beri bunlar **panelden** düzeltilir; site ziyaretçiye
+   açılmadan önce, aşağıdaki ilk Yönetici girişinin hemen ardından:
+   - **Panel → Galeri** (`/admin/gallery`): ticari unvan, vergi ve ticaret sicil numarası;
+     görünen ad (varsayılan dilde zorunlu, diğer diller opsiyonel). Görünen ad sitenin
+     üstünde ve ana sayfada görünür; ticari unvan görünmez.
+   - **Panel → Şubeler** (`/admin/branches`): galerinin gerçek şubelerini açın, sonra demo
+     şubeleri ("Kadıköy Şubesi", "Ataşehir Şubesi") **kalıcı olarak kapatın**. Başka aktif
+     şube yokken hiçbir şube kalıcı kapatılamaz (B5): önce gerçek şubeyi açın. Demo
+     şubenin adresini düzenleyip gerçek şube olarak kullanmak da mümkündür; adres
+     kısaltması (`kadikoy-subesi`) kapatılan şubede de kullanılmış sayılır.
+   - Bu adım atlanırsa ana sayfanın altlığında başkasının adresi ve telefonu görünür.
 2. **İlk Yönetici girişi.** `https://<alan-adı>/admin` → `Identity__SeedAdmin__LoginId`
    ve parola → parola değişikliği zorunlu → ikinci adım kurulumu zorunlu.
 3. **Duman testi:**

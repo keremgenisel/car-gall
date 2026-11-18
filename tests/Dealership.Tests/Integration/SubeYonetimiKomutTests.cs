@@ -88,6 +88,23 @@ public sealed class SubeYonetimiKomutTests : IAsyncLifetime
         Assert.Equal("Önce Yazan", (await context.Galleries.AsNoTracking().SingleAsync()).CommercialName);
     }
 
+    [Fact(DisplayName = "0020/AC-20: Listedeki şube adı yöneticinin panel dilindeki karşılığıdır; yoksa varsayılan dildekidir.")]
+    public async Task Doner_PanelDilindekiAd_YoksaVarsayilan()
+    {
+        await TemizleAsync();
+        await KomutAsync(komut => komut.OpenAsync(Form("iki-dilli"), CancellationToken.None));
+        await KomutAsync(komut => komut.OpenAsync(
+            Form("tek-dilli") with { Names = Adlar(("tr", "Yalnız Türkçe Şube")) },
+            CancellationToken.None));
+
+        await using DealershipDbContext context = database.CreateContext();
+        IReadOnlyList<CarGallery.Modules.Dealership.Contracts.Events.BranchSummaryDto> liste =
+            await new BranchQueries(context, Tr).ListAsync("ar", CancellationToken.None);
+
+        Assert.Contains(liste, satir => satir.Name == "فرع كاديكوي");
+        Assert.Contains(liste, satir => satir.Name == "Yalnız Türkçe Şube");
+    }
+
     [Fact(DisplayName = "0020/AC-21: Yönetici zorunlu alanları doldurup kaydettiğinde yeni şube listede **aktif** olarak görünür.")]
     public async Task AktifGorunur_YeniSube()
     {
