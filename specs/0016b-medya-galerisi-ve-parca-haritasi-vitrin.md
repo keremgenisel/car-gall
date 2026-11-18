@@ -2,14 +2,18 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak — kararlar verildi, kabul kriterleri yazılmadı |
+| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi, depo sahibi) — 83 kabul kriteri |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` public vitrin · `frontend/` panel (opsiyonel alan formu — **D5**) · `VehicleCatalog` (parça haritası alanı, vitrin okuma modeli, detay sözleşmesi) · `Media` **tüketilir**, değişmez (**D17**) |
 | **Bağımlı spec'ler** | `0002` (ilan detayı — tamamlandı; **X2** ve **X3**'ü geri açar) · `0011` (Media — tamamlandı) · `0012a` (aracın medya yüzeyi — tamamlandı) · `0010b` (opsiyonel alan tipleri — **X22**'nin bir kısmını geri açar, **D5**) · `0010a` (**X4**'ün veri yarısını üstlenir, **D5**) |
 | **Dayanak** | ADR 0003 unsur 1 ve Ek 1, sıra #10 |
-| **Karar bekliyor** | yok — S1–S4 → **D1–D4**; QA CLARIFY turunun on dokuz bulgusu (B1–B19) → **D5–D23** (2026-11-18); plan turunun sekiz bulgusu (P1–P8) → **D24–D31** (2026-11-18). |
+| **Karar bekliyor** | yok — S1–S4 → **D1–D4**; QA CLARIFY turunun on dokuz bulgusu (B1–B19) → **D5–D23**; plan turunun sekiz bulgusu (P1–P8) → **D24–D31**; kriter turunun dört sorusu S5–S8 → **D33–D36** (2026-11-18). |
 
+> **Bölünme (2026-11-18, D31).** Bu dosya `0016`'nın **vitrin** dilimidir; veri ve panel
+> **`0016a`**'ya ayrıldı (R8–R12, C11 ve C10'un kod tablosu). Numaralar korundu. `0016`'nın
+> tam Context'i ve D1–D31 burada kalır.
+>
 > **Plan turu (2026-11-18, `8a22fb6` üzerinde).** Developer uygulama planını çıkarırken
 > sekiz bulgu getirdi (P1–P8); önerilerin **tamamı** Takım Yöneticisi (depo sahibi)
 > tarafından onaylandı ve **D24–D31** olarak işlendi. En büyüğü **D31**: kart iki dilime
@@ -23,7 +27,7 @@
 > tarafından onaylandı ve **D5–D23** olarak işlendi. En büyüğü **B1**: parça haritası alanı
 > kodda **hiç yok** — ne değeri, ne tipi, ne giriş yolu. Taslağın Context'i ve S4'ü verinin
 > var olduğunu varsayıyordu; spec bu yüzden veri tarafını da üstlendi (**D5**). Kabul
-> kriterleri bir sonraki turda yazılacak.
+> kriterleri kriter turunda (2026-11-18, **Analist**, **D24**) yazıldı; o turun soruları S5–S8.
 
 ---
 
@@ -62,8 +66,10 @@ Başarı ölçütü: **ziyaretçi, aracın hangi parçasına ne olduğunu tek ba
   gezebilir (**D16**):
   - İlk görselden geriye ve son görselden ileriye **dönülmez**; uçtaki düğme devre dışı
     kalır ve odak kaybolmaz.
-  - Ok tuşları ve kaydırma **okuma yönünü** izler: Arapça'da ← ve sola kaydırma *sonraki*
-    görseldir.
+  - Ok tuşları ve kaydırma **okuma yönünü** izler: Arapça'da ← tuşu *sonraki* görseldir.
+    Kaydırma yönü **parmağın hareketiyle** tanımlanır: TR/EN'de sağdan sola, AR'da soldan
+    sağa kaydırma *sonraki* görsele geçer (**D33**). *(2026-11-18: "Arapça'da sola kaydırma
+    sonraki" yazıyordu; parmak hareketi olarak okununca okuma yönü ilkesiyle çelişiyordu.)*
   - Her etkileşimli öğe klavyeyle erişilebilir ve odak halkası görünür.
     → `docs/frontend.md` § 7.
 - **R4.** Ziyaretçi bir görseli **büyütebilir** (**D16**):
@@ -89,21 +95,7 @@ Başarı ölçütü: **ziyaretçi, aracın hangi parçasına ne olduğunu tek ba
 
 ### Parça haritası — veri ve panel
 
-- **R8.** Parça haritası, anahtarı **`paint_change_map`** olan **tek bir opsiyonel alandır**:
-  tek form durumu ve tek public görünürlük ekseni taşır. Varsayılan ayarı
-  **Opsiyonel + Görünür**dür (**D5**). → `docs/architecture.md` § 4, **F1**–**F5**.
-- **R9.** Harita **13 parçayı** C10'daki sabit kodlarla ve sabit sırayla tanır (**D6**).
-- **R10.** Her parçanın durumu dört koddan biridir: **orijinal**, **lokal boyalı**,
-  **boyalı**, **değişen** (**D1**). "Belirtilmedi" diye bir durum yoktur.
-- **R11.** Değer ya **13 parçanın tamamını** taşır ya da **hiç yoktur**; yarım harita
-  kaydedilemez ve reddedilir (**D7**).
-- **R12.** Panelde, aracın opsiyonel alan formunda alan açıksa **13 seçim kutusu** bulunur
-  (**D5**):
-  - Hiçbiri önceden seçili gelmez; "orijinal" varsayılan **değildir** (**D7**).
-  - Hiç seçim yapılmamışsa değer yazılmaz.
-  - Bazı kutular seçilip bazıları boş bırakılırsa kayıt reddedilir ve eksik parçalar
-    gösterilir.
-  - Kayıtlı bir değer bütünüyle **temizlenebilir**.
+- **R8–R12.** *(Bölündü, 2026-11-18 — **D31**.)* Parça haritasının değeri, değer tipi ve paneli **`0016a`**'dadır. Bu dilim `0016a`'nın sözleşmesine dayanır.
 
 ### Parça haritası — vitrin
 
@@ -176,29 +168,8 @@ Başarı ölçütü: **ziyaretçi, aracın hangi parçasına ne olduğunu tek ba
 - **C8.** `0002`'nin mevcut kabul kriterleri **regresyon olarak** korunur — C12'nin
   değiştirdiği sözleşme alanı hariç. → ADR 0003 unsur 1.
 - **C9.** Her kabul kriteri en az bir testle karşılanır; görsel kriterler görsel kanıt taşır.
-- **C10.** 13 parçanın **kodları ve sırası** sabittir (**D6**). Sıra hem okunabilir listenin
-  sırası hem panel formunun sırasıdır:
-
-  | # | Kod | Parça |
-  |---|---|---|
-  | 1 | `front_bumper` | Ön tampon |
-  | 2 | `hood` | Motor kaputu |
-  | 3 | `roof` | Tavan |
-  | 4 | `trunk_lid` | Bagaj kapağı |
-  | 5 | `rear_bumper` | Arka tampon |
-  | 6 | `left_front_fender` | Sol ön çamurluk |
-  | 7 | `left_front_door` | Sol ön kapı |
-  | 8 | `left_rear_door` | Sol arka kapı |
-  | 9 | `left_rear_fender` | Sol arka çamurluk |
-  | 10 | `right_front_fender` | Sağ ön çamurluk |
-  | 11 | `right_front_door` | Sağ ön kapı |
-  | 12 | `right_rear_door` | Sağ arka kapı |
-  | 13 | `right_rear_fender` | Sağ arka çamurluk |
-
-  Durum kodları: `original`, `local_painted`, `painted`, `replaced`.
-- **C11.** Parça haritası **yeni bir değer tipi**dir. ADR 0007'nin kapalı tip kümesine
-  eklenir ve bu ekleme **ADR 0007'ye ek bir karar** olarak yazılır (**D5**). Tipin depolama
-  biçimi plan turunun kararıdır.
+- **C10.** 13 parçanın **kodları ve sırası** sabittir (**D6**); tablonun **tek evi `0016a` C10**'dur (**D31**). Okunabilir listenin sırası o tablonun sırasıdır.
+- **C11.** *(Bölündü — **D31**.)* Yeni değer tipi ve ADR 0007 eki **`0016a`**'dadır.
 - **C12.** Detay sözleşmesi değişir (**D9**, **D22**):
   - `CoverImageUrl` **kaldırılır**; yerine **sıralı görsel listesi** gelir. Her eleman üç
     türevin adresini ve gerçek boyutlarını taşır.
@@ -514,6 +485,27 @@ detay sözleşmesi, şema, performans (R1–R7, R13–R21, C1–C5, C7, C8, C12,
 `0016a` önce gelir; sözleşmesi `0016b`'nin önkoşuludur. *Gerekçe:* `0010` ve `0012`'deki
 gibi; her dilim kendi başına test edilir ve kriterlerin yazılmadan bölünmesi neredeyse
 bedelsizdir (ADR 0003 Ek 1'in ölçümü).
+*Not (bölünmede eklendi):* D5 ayrı bir `0016a` spec'ini **elenen alternatif** olarak yazmıştı;
+gerekçesi 13 × 4 kod tablosunun iki yerde tanımlanmasıydı. D31 o alternatifi seçer ve
+endişeyi tablonun tek evini `0016a` C10 yaparak karşılar.
+
+### Verilen kararlar — kriter turu, 2026-11-18
+
+**Takım Yöneticisi (depo sahibi) kararı**, Analist'in kriter turu soruları S5–S8 üzerine;
+öneriler olduğu gibi onaylandı.
+
+**D33 — Kaydırma yönü parmağın hareketiyle tanımlanır (S5).** TR/EN'de sağdan sola, AR'da
+soldan sağa kaydırma *sonraki* görsele geçer. → R3, AC-43, AC-44.
+
+**D34 — Hiçbir parça orijinal değilken "diğer N parça orijinal" cümlesi basılmaz (S6).**
+*Gerekçe:* bilgi taşımaz ve bir beyan gibi okunur. → R17, AC-37.
+
+**D35 — Büyütülmüş görünüm kapanınca satır içi galeri büyütmede kalınan görseldedir (S7).**
+*Gerekçe:* R4 tek bir "seçili görsel"den söz ediyor. → R4, AC-54.
+
+**D36 — Lighthouse en az bir hazır görseli olan ilk ilanı ölçer; yoksa koşu başarısızdır;
+LCP öğesinin galerinin ilk görseli olduğu da doğrulanır (S8).** *Gerekçe:* görselsiz ilan
+seçilirse ilk görselin LCP'si hiç ölçülmeden "geçti" yazılır. → C13, D30, AC-80, AC-83.
 
 ### Uygulama planı (onaylı, 2026-11-18)
 
@@ -530,57 +522,292 @@ bedelsizdir (ADR 0003 Ek 1'in ölçümü).
 
 > **Çözüldü (2026-11-18).** S1–S4 → **D1–D4**. Taslağın sorularının metni git geçmişinde
 > (`aaf0cec`).
+>
+> **Kriter turu (2026-11-18, Analist).** S5–S8 → **D33–D36**; öneriler olduğu gibi
+> onaylandı (Takım Yöneticisi, depo sahibi). D33 R3'ün kaydırma cümlesini netleştirdi;
+> kriterler henüz `main`'de olmadığı için revizyon sayılmaz.
+
+S5. **"Sola kaydırma" parmağın yönü mü?** R3 *"Arapça'da ← ve sola kaydırma sonraki
+    görseldir"* diyor. Parmağın sola (sağdan sola) kaydırılması soldan sağa okunan
+    dillerde **zaten** "sonraki"dir; cümle bu okumayla Arapça'yı Türkçe'den ayırmaz ve
+    "okuma yönünü izler" ilkesiyle çelişir. Ok tuşu kısmı açık (← sonraki), kaydırma kısmı
+    iki türlü okunabilir.
+    Öneri: kaydırma **parmağın hareket yönüyle** tanımlansın: `tr`/`en`'de sağdan sola
+    kaydırma sonraki, `ar`'da soldan sağa kaydırma sonraki (AC-43, AC-44). Ok tuşlarıyla
+    simetrik: içerik okuma yönünde "ileri" akar.
+    Gerekçe: R3'ün ilkesi ("okuma yönünü izler") ancak bu okumayla iki dili ayırır; Arapça
+    yerel görsel gezginleri de böyle davranır.
+    Bedel: R3'teki "sola kaydırma" ifadesi bu okumada "içeriğin sola kayması" anlamına
+    gelir; metin onaylanırsa netleştirilmesi önerilir (revizyon sayılır).
+
+S6. **"Diğer N parça orijinal" N = 0 iken.** R17 cümlenin her zaman geldiğini söylüyor;
+    13 parçanın hiçbiri orijinal değilse "diğer 0 parça orijinal" basılır mı yazılı değil.
+    Öneri: N = 0 iken cümle **basılmaz** (AC-37).
+    Gerekçe: "diğer 0 parça orijinal" bilgi taşımaz ve bir beyan gibi okunur; R15'in
+    tersine (N = 13) zaten kendi cümlesi var, N = 0 için cümle gerekmez.
+    Bedel: yok; çeviri kataloğunda ICU'nun `=0` dalı gerekmez.
+
+S7. **Büyütmeden dönünce satır içi galeri hangi görselde?** R4 büyütülmüş görünümde
+    gezinmeye izin veriyor ama kapanınca satır içi galerinin konumunu söylemiyor; iki
+    makul okuma var (büyütmede kalınan görsel / büyütmenin açıldığı görsel).
+    Öneri: **büyütmede kalınan görsel** — tek bir "seçili görsel" durumu (AC-54).
+    Gerekçe: R4'ün kendisi "seçili görsel"den tekil söz ediyor; ziyaretçinin gördüğü son
+    görselden devam etmesi beklentisi karşılar. Odak yine açan öğeye döner (R4, AC-52).
+    Bedel: yok.
+
+S8. **Lighthouse hangi ilanı ölçer?** D30 adresin liste ucundan okunacağını söylüyor ama
+    hangi ilanın seçileceğini söylemiyor. Görselsiz bir ilan seçilirse LCP öğesi metin olur
+    ve C13'ün ölçmek istediği şey (ilk görselin LCP'si, Tuzak 4) hiç ölçülmeden "geçti"
+    yazılır.
+    Öneri: ölçülen ilan **en az bir `hazır` görseli olan** ilk ilandır; liste ucunda böyle
+    bir ilan yoksa koşu başarısız sayılır (AC-80) ve LCP öğesinin galerinin ilk görseli
+    olduğu ayrıca doğrulanır (AC-83).
+    Gerekçe: "kapı görmediği yerde yeşil kalır" — ölçmediği şeyi geçmiş saymayan kapı.
+    Bedel: CI'ın tohum verisinde görselli bir ilan bulunması gerekir; yoksa koşu kırmızı
+    olur (bu istenen davranıştır).
 
 ---
 
 ## Acceptance Criteria
 
-> Bir sonraki turda yazılacak. En az şu kümeleri kapsayacak:
+> Her kriterin testi `DisplayName`'inde `0016b/AC-<n>` taşır (`docs/testing.md` § 1).
+> Parça ve durum kodları **`0016a` C10**'daki gibidir. Bir varlığın durumu `hazır`,
+> `işleniyor` ya da `başarısız`'dır (D14). "Alan açık" = form durumu `Opsiyonel` veya
+> `Zorunlu`; "public" = görünürlük `Görünür`. Örnek veri kümeleri kriterin içinde verilir ve
+> ayırt edici seçildi: hazır olmayan varlıklar sıranın başına, ortasına ve sonuna konuldu.
+> `0016a` AC-34'ün tohum ilanları (dört durumlu, tamamı orijinal, haritasız) kanıt için
+> kullanılabilir.
 >
-> **Parça haritası — veri ve panel**
-> - Alanın varsayılan ayarı (R8).
-> - Panelde 13 kutu, varsayılan seçimin olmaması, yarım haritanın reddi ve değerin
->   temizlenmesi (R11, R12).
-> - Kapatıp açınca verinin korunması (F1).
->
-> **Parça haritası — yanıt**
-> - Kapalı, gizli veya değersiz alanda JSON anahtarının olmaması.
-> - Haritanın `Attributes`'ta tekrar edilmemesi (C1, C12).
->
-> **Parça haritası — şema ve liste**
-> - Şemanın 13 parçasının her biri ve her durum değeri.
-> - Tamamı orijinal durumu (R15).
-> - Desenle ayırt edilebilirlik ve 3:1 kontrast (R19, C2).
-> - Okunabilir listenin içeriği ve sırası; iki not (R17, R18).
-> - Şemanın Tab durağı olmaması (R16).
-> - RTL'de çizimin aynalanmaması, lejant ve listenin aynalanması (R21).
->
-> **Galeri**
-> - Yalnız hazır görseller ve sayaç; ilk hazır görselin ilk olması (R1, R2, R7).
-> - Gezinme: düğme, klavye ve kaydırma; uçlar; RTL'de yön (R3).
-> - Büyütme, Esc, odak tutma ve geri dönüş; adresin değişmemesi (R4).
-> - `alt` şablonu ve locale (R5).
-> - `srcset`, gerçek boyutlar ve 4:3 çerçeve (R6).
-> - 30 görselde yalnız ilk görselin indirilmesi (D23).
-> - Sıfır görsel, tek görsel ve tek görselin yüklenememesi (R20).
->
-> **Performans ve regresyon**
-> - Detay sayfasının Lighthouse ölçümü (C13).
-> - `0002`'nin kriterlerinin regresyon olarak korunması (C8).
+> *Kriter turu (2026-11-18) **Analist** tarafından yazıldı (**D24**). AC-43, AC-44, AC-37,
+> AC-54 ve AC-80/AC-83, `## Açık sorular` S5–S8'in önerilen okumasıyla yazıldı.*
+
+### Galeri — içerik ve sıra (R1, R2, R7 · C7 · D14, D25)
+
+- **AC-1.** Medya sırası A (`hazır`), B (`işleniyor`), C (`hazır`), D (`başarısız`),
+  E (`hazır`) olan ilanın detay galerisi yalnız A, C ve E'yi bu sırayla gösterir.
+- **AC-2.** AC-1'in ilanında sayaç ilk görselde **"1 / 3"** gösterir; toplam 5 değildir.
+- **AC-3.** AC-1'in B varlığı için `MediaAssetReady` işlendikten sonra, ilan yeniden
+  yayımlanmadan, detay galerisi A, B, C, E'yi gösterir ve sayaç "1 / 4" olur.
+- **AC-4.** AC-1'in B varlığı için `MediaAssetFailed` işlendiğinde detay galerisi A, C, E
+  olarak kalır ve sayaç "1 / 3" olarak kalır.
+- **AC-5.** Personel aracın medya sırasını E, C, A olarak değiştirdikten sonra detay
+  galerisi görselleri E, C, A sırasıyla gösterir.
+- **AC-6.** Medya sırası A (`başarısız`), B (`hazır`), C (`hazır`) olan ilanın detayı B ile
+  açılır ve sayaç "1 / 2" gösterir (R7).
+- **AC-7.** AC-6'nın ilanının liste kartı yanıtındaki kapak değeri bu spec'ten önceki
+  davranışla aynıdır (`0012a`'nın kuralı; bugün: kapak yok) — R7 kartın kapağını
+  değiştirmez (X10).
+- **AC-8.** Detay yanıtındaki her görsel adresi `thumbnail`, `display` veya `large`
+  türevlerinden birine aittir; varlığın orijinal dosyasının adresi yanıtta hiçbir yerde
+  geçmez (C7).
+
+### Detay sözleşmesi (C1, C12 · D9, D22 · F1, F3)
+
+- **AC-9.** Detay yanıtında `coverImageUrl` anahtarı **yoktur**; yerine sıralı bir görsel
+  listesi vardır.
+- **AC-10.** Görsel listesinin her elemanı üç türevin adresini ve her türevin **gerçek**
+  genişlik ve yüksekliğini taşır: 1200×900 kaynaktan üretilmiş varlık için `large`
+  1200×900 (1600 değil), `display` 800×600, `thumbnail` 400×300.
+- **AC-11.** Vitrin liste (kart) yanıtının şekli değişmez: kart kapak adresini taşımaya
+  devam eder ve görsel listesi taşımaz (`0001`'in sözleşme testi yeşil kalır).
+- **AC-12.** Alan `Opsiyonel + Görünür` ve araçta `0016a` AC-5'in haritası kayıtlıyken detay
+  yanıtı parça haritasını **ayrı** bir özellik olarak taşır: 13 `{part, state}` elemanı,
+  C10 sırasında, yalnız kodla.
+- **AC-13.** Alan `Zorunlu + Görünür` ve değerliyken de detay yanıtı haritayı taşır
+  ("açık" = Opsiyonel veya Zorunlu).
+- **AC-14.** Aynı ilanın `ar` ve `tr` locale'li detay yanıtlarında parça haritası özelliği
+  aynıdır; ikisi de çevrilmiş parça ya da durum adı taşımaz (C6).
+- **AC-15.** Parça haritası `Attributes` içinde **tekrar edilmez**: AC-12'nin yanıtında
+  `paint_change_map` anahtarlı ya da parça adı içeren bir nitelik satırı yoktur.
+- **AC-16.** Alan **Kapalı** iken detay yanıtının JSON'unda parça haritası özelliğinin
+  **anahtarı yoktur** — `null`, boş liste veya boş nesne olarak da yazılmaz.
+- **AC-17.** Alan `Opsiyonel + Gizli` iken detay yanıtının JSON'unda parça haritası
+  özelliğinin anahtarı yoktur — `null` veya boş olarak da yazılmaz.
+- **AC-18.** Alan `Opsiyonel + Görünür` ama araçta değer yokken detay yanıtının JSON'unda
+  parça haritası özelliğinin anahtarı yoktur — `null` veya boş olarak da yazılmaz.
+- **AC-19.** Alan Kapalı'ya çekilip yeniden `Opsiyonel + Görünür` yapıldığında detay yanıtı
+  aynı 13 çifti değişmeden yeniden taşır (F1).
+- **AC-20.** Panelde haritada `hood` `original`'dan `painted`'a değiştirilip kaydedildikten
+  sonra detay yanıtı `hood` için `painted` taşır.
+- **AC-21.** Panelde harita temizlendikten sonra (`0016a` AC-20) detay yanıtında parça
+  haritası özelliğinin anahtarı yoktur — vitrin tarafında eski harita kalmaz.
+
+### Şema (R13, R16, R19 · C2, C3 · D2, D11, D13, D29)
+
+- **AC-22.** Değerli ve public alanla detay sayfası araç şemasını basar; şemada C10'un 13
+  parçasının her biri ayrı ayrı adreslenebilir bir öğedir ve kendi parça kodunu taşır.
+- **AC-23.** 13 parçanın her biri dört durumun her birinde (52 birleşim) o durumun deseniyle
+  basılır; şemadaki her parçanın durumu yanıttaki durumuyla eşleşir.
+- **AC-24.** Dört durum dört farklı dolgu deseniyle basılır: `original` boş,
+  `local_painted` seyrek tarama, `painted` yoğun tarama, `replaced` çapraz tarama; iki durum
+  aynı deseni paylaşmaz.
+- **AC-25.** Her durumun dolgu renginin şema zeminine karşı kontrast oranı, token
+  katmanının değerlerinden hesaplandığında **en az 3:1**'dir (dört ölçüm, dördü de ≥ 3:1).
+- **AC-26.** Dört durumlu tohum ilanının şeması **gri tonlamalı** ekran görüntüsünde dört
+  durumu desenle ayırt ettirir (görsel kanıt).
+- **AC-27.** Lejant dört durumu desen örneği ve etkin locale'deki adıyla gösterir; harita
+  yalnız `original` ve `painted` içerse de lejant dört durumun **hepsini** gösterir.
+- **AC-28.** Şemanın işaretlemesinde ve stillerinde gömülü renk değeri (hex, `rgb()`,
+  `hsl()`) yoktur; renkler `frontend-002`'nin token katmanından gelir (C3).
+- **AC-29.** Şema `role="img"` taşır ve erişilebilir adı, okunabilir listeye (R17) işaret
+  eden, etkin locale'in kataloğundan gelen bir özettir.
+- **AC-30.** Şemadan önceki odaklanabilir öğede Tab'a basılınca odak şemanın hiçbir
+  parçasına uğramadan şemadan sonraki odaklanabilir öğeye geçer; şemanın içinde
+  `tabindex` ≥ 0 olan öğe yoktur.
+
+### Tamamı orijinal ve değersiz (R14, R15 · D8)
+
+- **AC-31.** 13 parçası `original` olan ilanın detayında şema basılır, 13 parçanın hepsi
+  `original` deseniyle görünür ve yanında **"13 parçanın tamamı orijinal"** cümlesi
+  bulunur.
+- **AC-32.** Haritasız ilanın detay sayfasında parça haritası bölümü — şema, lejant, liste,
+  notlar ve başlığı — **hiç basılmaz**; "13 parçanın tamamı orijinal" cümlesi de görünmez.
+- **AC-33.** Alan Kapalı veya Gizli olan ilanın detay sayfasında parça haritası bölümü hiç
+  basılmaz.
+
+### Okunabilir liste ve notlar (R17, R18 · D12)
+
+- **AC-34.** `right_front_fender` = `painted`, `trunk_lid` = `painted`, `left_rear_door` =
+  `local_painted`, diğer 10 parça `original` iken liste şu sırayla yazar: "Bagaj kapağı —
+  boyalı", "Sol arka kapı — lokal boyalı", "Sağ ön çamurluk — boyalı" (C10 sırası, girilen
+  sıra değil); ardından **"diğer 10 parça orijinal"** cümlesi gelir.
+- **AC-35.** AC-34'ün listesinde orijinal parçalar tek tek yazılmaz: "Ön tampon" listede
+  yoktur.
+- **AC-36.** Yalnız `hood`'un `original` olduğu haritada cümle **"diğer 1 parça orijinal"**
+  olur; sayı içeren cümle ICU ile kurulur ve Arapça'da sayının Arapça çoğul biçimini
+  kullanır.
+- **AC-37.** 13 parçanın hiçbiri `original` değilken liste 13 parçayı C10 sırasıyla yazar
+  ve "diğer N parça orijinal" cümlesi **basılmaz** (S6).
+- **AC-38.** Tamamı orijinal ilanda (AC-31) liste yoktur; yerinde R15'in cümlesi bulunur ve
+  "diğer 13 parça orijinal" cümlesi basılmaz.
+- **AC-39.** Şemanın yanında **"Galeri beyanı"** ve **"Diyagramın üstü aracın ön
+  kısmıdır"** notları etkin locale'in kataloğundan gelen metinle görünür.
+
+### Galeri — gezinme (R3 · D16)
+
+- **AC-40.** 3 görselli galeride "sonraki" düğmesi "1 / 3"ten "2 / 3"e geçirir; "önceki"
+  düğmesi "1 / 3"e geri getirir.
+- **AC-41.** İlk görselde "önceki" düğmesi devre dışıdır ve etkinleştirilmeye çalışılınca
+  galeri son görsele **dönmez**.
+- **AC-42.** "Sonraki" ile son görsele gelindiğinde "sonraki" düğmesi devre dışı kalır ve
+  odak `document.body`'ye düşmez; galerinin içinde bir öğede kalır.
+- **AC-43.** `/tr/`'de galeri odaktayken → tuşu sonraki, ← tuşu önceki görsele geçer;
+  parmağın sağdan sola kaydırılması sonraki görseldir (S5).
+- **AC-44.** `/ar/`'de galeri odaktayken ← tuşu sonraki, → tuşu önceki görsele geçer;
+  parmağın soldan sağa kaydırılması sonraki görseldir (S5).
+- **AC-45.** Galerinin her etkileşimli öğesi (önceki, sonraki, büyüt) yalnız klavyeyle
+  (Tab) ulaşılabilir ve odaktayken görünür bir odak halkası taşır (görsel kanıt).
+
+### Büyütme (R4 · D16, D28)
+
+- **AC-46.** Satır içi görselden büyütme açıldığında büyütülmüş görünüm aynı görselin
+  `large` türevinin adresini gösterir.
+- **AC-47.** Büyütülmüş görünümde "sonraki"/"önceki" düğmeleri, ok tuşları ve kaydırma R3
+  gibi çalışır; uçlarda dönmez.
+- **AC-48.** Büyütülmüş görünüm **Esc** ile kapanır.
+- **AC-49.** Büyütülmüş görünüm kapatma düğmesiyle kapanır.
+- **AC-50.** Görünüm açıkken Tab'a art arda 15 kez basıldığında odak her seferinde görünümün
+  içindeki bir öğededir.
+- **AC-51.** Görünüm açıkken arka plandaki öğeler etkileşimsizdir: arka plandaki bir
+  bağlantıya tıklamak sayfayı değiştirmez ve arka plan erişilebilirlik ağacından gizlidir.
+- **AC-52.** Görünüm kapandığında odak görünümü açan öğeye döner.
+- **AC-53.** Görünüm açılıp kapatıldığında ve içinde gezinildiğinde adres **değişmez** ve
+  `history.length` artmaz.
+- **AC-54.** Büyütülmüş görünümde 3. görsele gidilip görünüm kapatıldığında satır içi
+  galeri 3. görseli gösterir ve sayaç "3 / N" olur (S7).
+- **AC-55.** 3. görseldeyken sayfa yeniden yüklendiğinde galeri 1. görselden başlar.
+
+### `alt` metni (R5 · D17)
+
+- **AC-56.** Toyota Corolla 2019 modelli, 18 hazır görselli ilanın `/tr/` detayında 3.
+  görselin `alt` metni **"Toyota Corolla 2019 — görsel 3/18"**'dir.
+- **AC-57.** Aynı ilanın `/ar/` ve `/en/` detayında `alt` metni o locale'in kataloğundaki
+  şablondan üretilir ve Türkçe şablon metnini içermez.
+- **AC-58.** `Media`'da varlığın kayıtlı alt metni "Ön görünüm" iken detaydaki `alt` metni
+  bu metni içermez; yalnız R5'in şablonundan gelir (X7).
+- **AC-59.** Büyütülmüş görünümdeki görselin `alt` metni aynı şablondan, aynı sıra ve
+  toplamla üretilir.
+
+### Yükleme ve yerleşim (R6 · D18, D19, D23)
+
+- **AC-60.** Satır içi görselin `srcset`'i üç türevi **gerçek** genişlikleriyle listeler:
+  1200×900 kaynak için `400w`, `800w` ve `1200w` (`1600w` değil).
+- **AC-61.** Görselin `width`/`height` öznitelikleri satır içi türevin gerçek boyutudur:
+  `display` türevi 600×800 (dikey) olan görsel `width="600" height="800"` ile basılır;
+  `960×720` yazılmaz.
+- **AC-62.** Galeri çerçevesi 4:3'tür: 4:3 yatay, 3:4 dikey ve 16:9 görseller arasında
+  gezinirken galeri kutusunun boyutu değişmez ve galerinin altındaki içeriğin konumu
+  kaymaz.
+- **AC-63.** İlk görsel gecikmeli yüklenmez (`loading="lazy"` taşımaz) ve
+  `fetchpriority="high"` taşır; diğer görsellerin her biri `loading="lazy"` taşır.
+- **AC-64.** 30 hazır görselli ilanın detayı açıldığında, hiçbir etkileşim olmadan, ağ
+  kaydında galeri görsellerinden yalnız **1** istek bulunur (D23).
+
+### Durumlar (R20 · D15, D20)
+
+- **AC-65.** Hiç hazır görseli olmayan ilanın detayında görsel alanı, sayaç, gezinme
+  düğmeleri ve büyütme **yoktur**; model, fiyat ve nitelikler görünür (bugünkü davranış).
+- **AC-66.** Medya sırası A (`işleniyor`), B (`başarısız`) olan ilan AC-65 ile aynı biçimde
+  basılır (hazır görsel sayısı sıfır).
+- **AC-67.** Medya sırası A (`başarısız`), B (`hazır`), C (`başarısız`) olan ilanda tek
+  görsel (B) ve büyütme vardır; sayaç ve gezinme düğmesi **yoktur**.
+- **AC-68.** Tek görselli ilanda büyütülmüş görünüm açılır; görünümde sayaç ve gezinme
+  düğmesi yoktur.
+- **AC-69.** 3 görselli ilanda 2. görselin adresi `404` döndüğünde o yuvada yer tutucu
+  gösterilir (tarayıcının kırık görsel simgesi görünmez); sayaç "2 / 3" gösterir ve
+  "sonraki" ile 3. görsele geçilir.
+- **AC-70.** Galeri ve şema detay yanıtıyla gelir: detay sayfası açılırken galeri veya şema
+  için detay isteğinden ayrı bir veri isteği yapılmaz ve galeriye ya da şemaya özgü ayrı
+  bir yükleniyor veya hata göstergesi yoktur (sayfa düzeyindeki durumlar `0002` R9'dan).
+
+### Locale ve RTL (R21 · C4, C5 · D10)
+
+- **AC-71.** `/ar/` detayında lejant, okunabilir liste ve notlar sağdan sola akar (görsel
+  kanıt).
+- **AC-72.** `/ar/` detayında galeri denetimleri aynalanır: "önceki" düğmesi galerinin sağ
+  kenarında, "sonraki" sol kenarındadır (`/tr/`'nin tersi).
+- **AC-73.** Araç çizimi aynalanmaz: `/tr/` ve `/ar/` detaylarında `left_front_door`
+  öğesi şemanın **sol** yarısında, `right_front_door` **sağ** yarısındadır; 13 parçanın her
+  birinin şemaya göre konumu iki locale'de aynıdır.
+- **AC-74.** Bu spec'in eklediği stillerde fiziksel yön özelliği (`margin-left`,
+  `padding-right`, `left`, `right`, `text-align: left` vb.) yoktur; kural araç çiziminin
+  iç koordinatlarına uygulanmaz (C4).
+- **AC-75.** 13 parça adı, dört durum adı, R15, R17 ve R18'in cümleleri, lejant ve R5'in
+  `alt` şablonu için çeviri anahtarları `tr`, `ar` ve `en` kataloglarının üçünde de
+  doludur; eksik anahtar kontrolü yeşildir.
+- **AC-76.** `/en/` detayında parça haritası bölümünün ve galerinin görünen bütün metinleri
+  İngilizce'dir; Türkçe ya da Arapça metin görünmez.
+
+### Regresyon (C8 · D22)
+
+- **AC-77.** `0002`'nin 25 kabul kriterinin testleri yeşil kalır; değişen tek iddia
+  `coverImageUrl` alanına ait sözleşme iddiasıdır ve görsel listesine çevrilir (C8).
+- **AC-78.** `0002` AC-12 ve AC-13 yeni özellik için de geçerlidir: tramer (`Gizli`) detay
+  yanıtında hiçbir biçimde bulunmaz ve parça haritasının eklenmesi bunu değiştirmez.
+
+### Performans (C13 · D19, D30)
+
+- **AC-79.** Lighthouse koşusu `/tr/` ve `/tr/cars`'a ek olarak detay sayfasını ölçer;
+  ölçülen ilanın adresi ölçümden önce liste ucundan okunur, betikte sabit yazılmaz (D30).
+- **AC-80.** Ölçüm için seçilen ilan en az bir `hazır` görsel taşır; liste ucunda böyle bir
+  ilan yoksa koşu **başarısız** sayılır, "geçti" yazılmaz (S8).
+- **AC-81.** Detay sayfası Lighthouse mobil profilinde (4× CPU, Slow 4G, 3 koşu, medyan)
+  **LCP < 2,5 s** ölçülür.
+- **AC-82.** Aynı ölçümde detay sayfasının **CLS < 0,1**'dir.
+- **AC-83.** Aynı ölçümde LCP öğesi galerinin ilk görselidir (Tuzak 4; S8'in seçtiği ilan
+  görselli olduğu için ölçülebilir).
 
 ---
 
 ## Definition of Done
 
-- [x] Açık sorular karara bağlandı. *(S1–S4 → D1–D4, B1–B19 → D5–D23, 2026-11-18.)*
-- [ ] `docs/domain.md` **Parça Haritası** tanımı dört duruma güncellendi (**D1**).
-- [ ] ADR 0007'ye parça haritası değer tipi için ek karar yazıldı (**C11**, **D5**).
+- [x] Açık sorular karara bağlandı. *(S1–S4 → D1–D4, B1–B19 → D5–D23, P1–P8 → D24–D31, S5–S8 → D33–D36, 2026-11-18.)*
 - [x] `0011` tamamlandı. *(`specs/done/0011-media-yukleme-turev-filigran.md`.)*
-- [ ] Panelde 13 seçim kutusuyla veri girişi kanıtla gösterildi (**R12**, **D5**).
+- [ ] `0016a` tamamlandı (parça haritasının değeri ve kod tablosu — **D31**).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0016-ac<n>.png`); şemanın her durumu, boş ve hata
+- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0016b-ac<n>.png`); şemanın her durumu, boş ve hata
       durumları, Arapça (RTL) görünüm dâhil.
-- [ ] Şemanın renk dışı ayırt edilebilirliği kanıtla gösterildi (C2, R9).
+- [ ] Şemanın renk dışı ayırt edilebilirliği kanıtla gösterildi (C2, R19).
 - [ ] Klavyeyle tam gezinme ve odak halkası kanıtla gösterildi (R3).
 - [ ] `0002`'nin kabul kriterleri regresyon testi olarak hâlâ yeşil (C8).
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi — 13 parça adı ve durum adları dâhil.
