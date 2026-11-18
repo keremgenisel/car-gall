@@ -77,7 +77,7 @@ builder.Services.AddVehicleCatalog(
 builder.Services.AddVehicleReference(connectionString);
 // Modül kendi arka plan dağıtıcısını da kaydeder: DealershipDbContext internal'dır ve
 // host onu göremez — sınırın doğru yerde durduğunun işareti.
-builder.Services.AddDealership(connectionString, localization.DefaultLocale);
+builder.Services.AddDealership(connectionString, localization.DefaultLocale, localization.EnabledLocales);
 
 // `0017` — içerik sayfaları ve SSS. Etkin diller yapılandırmadan: eksik dil yalnız etkin
 // dillerde sayılır (R9).

@@ -438,6 +438,8 @@ internal static class CatalogProblems
             // AC-16 — tekillik ihlali bir DURUM ÇAKIŞMASIDIR: istek geçerli, dünya uygun değil.
             VehicleErrors.DuplicateVin => StatusCodes.Status409Conflict,
             VehicleErrors.BranchNotFound => StatusCodes.Status422UnprocessableEntity,
+            // `0020` D14 — kapatılmış şube bir ALAN hatasıdır: personel başka bir şube seçer.
+            VehicleErrors.BranchClosed => StatusCodes.Status422UnprocessableEntity,
             // 0012b D26 — reddin HTTP karşılığı SABİT. A3'ün geçiş reddi bir DURUM
             // ÇAKIŞMASIDIR (`409`): istek geçerli, ilan o durumda değil. A2'nin ve R21'in
             // yayın reddi bir DOĞRULAMA hatasıdır (`422`): koşullar eksik. İkisini aynı

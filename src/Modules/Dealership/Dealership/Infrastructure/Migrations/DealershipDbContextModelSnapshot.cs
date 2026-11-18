@@ -117,6 +117,11 @@ namespace CarGallery.Modules.Dealership.Infrastructure.Migrations
                         .HasColumnType("character varying(60)")
                         .HasColumnName("time_zone");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
                     b.Property<string>("WhatsApp")
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
@@ -161,6 +166,11 @@ namespace CarGallery.Modules.Dealership.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("commercial_name");
 
+                    b.Property<string>("DisplayNames")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("display_names");
+
                     b.Property<Guid?>("LogoMediaAssetId")
                         .HasColumnType("uuid")
                         .HasColumnName("logo_media_asset_id");
@@ -174,6 +184,11 @@ namespace CarGallery.Modules.Dealership.Infrastructure.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("trade_registry_number");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 

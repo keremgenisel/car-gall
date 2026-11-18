@@ -193,16 +193,33 @@ internal sealed class VehicleWriteRules(
     /// <summary>
     /// C6 — şube kimliğinin geçerliliği `Dealership.Contracts` üzerinden, TEK ATLAMA ve
     /// salt okuma. Şube adı burada saklanmıyor (Yasak Listesi 33).
+    ///
+    /// <para>`0020` **D14** — kapatılmış şube reddedilir (AC-55, AC-56). <paramref name="currentBranchId"/>
+    /// aracın KAYITLI şubesidir: istek onu değiştirmiyorsa kural uygulanmaz (AC-57). O araç A8
+    /// ile zaten "şube ataması bekliyor"dadır ve yöneticinin onu başka alanlarıyla birlikte
+    /// kaydedebilmesi gerekir.</para>
     /// </summary>
-    internal async Task<Result> ValidateBranchAsync(Guid branchId, CancellationToken cancellationToken)
+    internal async Task<Result> ValidateBranchAsync(
+        Guid branchId,
+        Guid? currentBranchId,
+        CancellationToken cancellationToken)
     {
         if (branchId == Guid.Empty)
         {
             return Failure(VehicleErrors.BranchRequired, VehicleFieldNames.BranchId);
         }
 
-        return await branches.FindAsync(branchId, locales.Default.Code, cancellationToken) is null
-            ? Failure(VehicleErrors.BranchNotFound, VehicleFieldNames.BranchId)
+        BranchSummaryDto? branch = await branches.FindAsync(branchId, locales.Default.Code, cancellationToken);
+
+        if (branch is null)
+        {
+            return Failure(VehicleErrors.BranchNotFound, VehicleFieldNames.BranchId);
+        }
+
+        bool degisiyor = currentBranchId != branchId;
+
+        return degisiyor && string.Equals(branch.Status, BranchStatusCodes.Closed, StringComparison.Ordinal)
+            ? Failure(VehicleErrors.BranchClosed, VehicleFieldNames.BranchId)
             : Result.Success();
     }
 

@@ -13,6 +13,12 @@ internal static class VehicleErrors
     internal const string BranchNotFound = "vehicle.branch_not_found";
 
     /// <summary>
+    /// `0020` D14 — kapatılmış şubeye araç bağlanamaz: yeni kayıtta da şube değişikliğinde de.
+    /// Şubesi değişmeden kaydedilen araç bu koda takılmaz (AC-57).
+    /// </summary>
+    internal const string BranchClosed = "vehicle.branch_closed";
+
+    /// <summary>
     /// AC-5 — referans veride bulunmayan değer. HANGİ alanın düştüğü `Error.Parameters`
     /// ile taşınır: altı alan ayrı ayrı doğrulanıyor ve "bir şey yanlış" diyen bir kod
     /// personele hangisini düzelteceğini söylemez.

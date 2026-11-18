@@ -167,7 +167,7 @@ internal sealed class UpdateVehicleCommand(
             return references;
         }
 
-        Result branch = await rules.ValidateBranchAsync(request.BranchId, cancellationToken);
+        Result branch = await rules.ValidateBranchAsync(request.BranchId, vehicle.BranchId, cancellationToken);
 
         if (branch.IsFailure)
         {

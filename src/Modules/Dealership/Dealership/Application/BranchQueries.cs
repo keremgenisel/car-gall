@@ -88,7 +88,8 @@ internal sealed class BranchQueries(DealershipDbContext context, Locale defaultL
             .. branches.Select(branch => new BranchSummaryDto(
                 branch.Id.Value,
                 branch.Names.Resolve(resolved, defaultLocale) ?? string.Empty,
-                // C11 — çevrilmiş durum adı değil KOD; çeviri uçta yapılır.
+                // C11 — çevrilmiş durum adı değil KOD; çeviri uçta yapılır. Kodların kendisi
+                // `BranchStatusCodes`'ta yayınlı (`0020` D14).
                 branch.Status.ToString()))
         ];
     }

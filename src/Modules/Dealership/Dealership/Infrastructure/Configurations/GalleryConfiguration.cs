@@ -19,6 +19,16 @@ internal sealed class GalleryConfiguration : IEntityTypeConfiguration<Gallery>
         builder.Property(gallery => gallery.TaxNumber).HasColumnName("tax_number").HasMaxLength(40);
         builder.Property(gallery => gallery.TradeRegistryNumber).HasColumnName("trade_registry_number").HasMaxLength(40);
 
+        // `0020` D4 — dil başına görünen ad; şube adıyla aynı saklama biçimi.
+        builder.Property(gallery => gallery.DisplayNames)
+            .HasColumnName("display_names")
+            .HasColumnType("jsonb")
+            .HasConversion(LocalizedTextStorage.Converter, LocalizedTextStorage.Comparer);
+
+        // `0020` D17 — güncelleme `WHERE version = <okunan>` ile yazılır; aynı sürümden iki
+        // paralel kaydetmeden biri sıfır satır günceller ve `409` olur (`0017` deseni).
+        builder.Property(gallery => gallery.Version).HasColumnName("version").IsConcurrencyToken();
+
         builder.OwnsMany(gallery => gallery.SocialLinks, link =>
         {
             link.ToTable("gallery_social_links");
