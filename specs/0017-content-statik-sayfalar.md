@@ -8,7 +8,7 @@
 | **Modül(ler)** | `Content` (yeni — bugün hiç yok) · `frontend/` public vitrin + panel · `Host` (eski slug yönlendirmesi — **D13**) · `frontend/` talep formu (KVKK bağlantısı — **D5**) ve altlık (Kurumsal kolonu — **D6**, **D7**) |
 | **Bağımlı spec'ler** | `0006` (roller: İçerik Editörü — tamamlandı) · `0014` (ana sayfa — tamamlandı; altlığına kolon eklenir, **D28**'i değişir — **D9**) · `0005` (talep formu — tamamlandı; izin satırına bağlantı eklenir — **D5**) · `0002` ("bulunamadı" ve hata ekranı deseni — **D10**, **D23**) · `0007` (iyimser eşzamanlılık deseni — **D18**) · `0004` (SEO — gerçek HTTP 404 kararı oraya devredildi, **D10**) |
 | **Dayanak** | ADR 0003 Ek 1, sıra #11 |
-| **Karar bekliyor** | yok — S1–S5 → **D1–D4**; QA CLARIFY turunun yirmi bulgusu (B1–B20) → **D5–D24** (2026-11-18). |
+| **Karar bekliyor** | yok — S1–S5 → **D1–D4**; QA CLARIFY turunun yirmi bulgusu (B1–B20) → **D5–D24**; plan turu → **D25–D28** (2026-11-18). |
 
 > **QA CLARIFY turu (2026-11-18, `main` @ `81e056c`).** QA spec'i bugünkü koda karşı okudu
 > ve yirmi bulgu getirdi (B1–B20); önerilerin **tamamı** Takım Yöneticisi (depo sahibi)
@@ -396,6 +396,35 @@ zaten 301 ürettiği yerde.
 **D24 — "İçerik" bölümü yalnız İçerik Editörü ve Yöneticiye (B20).** (R24)
 - *Gerekçe:* `0006` R7/R8 deseni; gezinmede görünüp tıklayınca 403 veren bağlantı kötü bir
   deneyimdir.
+
+### Verilen kararlar — plan turu, 2026-11-18
+
+**Takım Yöneticisi (ajan) kararı**, Developer'ın plan bulguları üzerine; öneriler olduğu gibi
+onaylandı (depo sahibinin onayıyla). D1–D24'ü değiştirmez, nasıl uygulanacaklarını sabitler.
+
+**D25 — D24'ün rol kısıtı `Identity`'nin yayınladığı yetki yüzeyinde yeni bir politikadır.**
+Bugün iki politika var: "oturum açmış her rol" ve "yalnız Yönetici"; C4'ü ikisi de karşılamıyor
+(ölçüldü). Yönetici + İçerik Editörü için üçüncü politika, diğer ikisinin yanında tanımlanır;
+`Content` kendi rol kontrolünü yazmaz. *Gerekçe:* politikaların tek kaynağı. *Bedel:* `Identity`'ye
+küçük bir dokunuş. *Yan bulgu (kapsam dışı, ayrı kart önerisi):* araç yönetim uçları "oturum
+açmış her rol" politikasında — İçerik Editörü bugün araç da düzenleyebiliyor; `0006` R8 ile
+çelişebilir.
+
+**D26 — D19'un gövdesi hiçbir aşamada HTML'e çevrilmez.** Ziyaretçi tarafı alt kümeyi kendi
+küçük ayrıştırıcısıyla **doğrudan arayüz öğelerine** çizer; ham HTML ve izinsiz şema bu yüzden
+yapı gereği çalıştırılamaz. Sunucu kaydederken aynı listeyi doğrular ve hatayı `errorCode` ile
+döner. *Gerekçe:* "HTML üret, sonra arındır" yerine "hiç HTML üretme"; iki yığında da Markdown
+veya arındırma kütüphanesi yok (ölçüldü) ve yeni bağımlılık + lisans kararı gerekmez. *Bedel:*
+ayrıştırıcının bakımı bizde.
+
+**D27 — D13'ün 301'i yalnız tanınmayan tek parçalı yolda bir okuma yapar.** Host, `/{locale}/{x}`
+ayrılmış bir slug değilse `Content`'in sözleşmesine "bu dilde eski bir slug mu" diye sorar;
+eşleşirse 301, eşleşmezse kabuk her zamanki gibi basılır. *Gerekçe:* `/{locale}/cars…` ve ana
+sayfa okuma maliyeti ödemez. *Bedel:* tanınmayan her tek parçalı yol bir okuma — `0016b` D37'nin
+ön yüklemesiyle aynı yer.
+
+**D28 — Kabul kriterlerini Analist yazar.** Kriterler uygulama dalı açılmadan `main`'e girer
+(`0016` D24'ün deseni; o kartın iki dilimi de revizyon 0 verdi).
 
 ---
 
