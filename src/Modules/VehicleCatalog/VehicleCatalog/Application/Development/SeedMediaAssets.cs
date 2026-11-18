@@ -1,4 +1,5 @@
 using CarGallery.Modules.Media.Contracts.Assets;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CarGallery.Modules.VehicleCatalog.Application.Development;
 
@@ -81,6 +82,28 @@ internal static class SeedMediaAssets
 /// </summary>
 internal sealed class SeedAwareMediaAssetQueries(IMediaAssetQueries inner) : IMediaAssetQueries
 {
+    /// <summary>
+    /// Kayıtlı <c>IMediaAssetQueries</c>'i bu sorguyla sarar; ömrü korunur. Burada, çünkü
+    /// `Media.Contracts` yalnız <c>Application</c> katmanında kullanılır (`0012a` AC-33).
+    /// </summary>
+    internal static IServiceCollection Register(IServiceCollection services)
+    {
+        ServiceDescriptor asil = services.Last(descriptor => descriptor.ServiceType == typeof(IMediaAssetQueries));
+        services.Remove(asil);
+        services.Add(new ServiceDescriptor(
+            typeof(IMediaAssetQueries),
+            provider => new SeedAwareMediaAssetQueries(Asil(provider, asil)),
+            asil.Lifetime));
+
+        return services;
+    }
+
+    private static IMediaAssetQueries Asil(IServiceProvider provider, ServiceDescriptor descriptor) =>
+        descriptor.ImplementationFactory is not null
+            ? (IMediaAssetQueries)descriptor.ImplementationFactory(provider)
+            : descriptor.ImplementationInstance as IMediaAssetQueries
+              ?? (IMediaAssetQueries)ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType!);
+
     /// <inheritdoc />
     public Task<MediaAssetDto?> FindAsync(Guid mediaAssetId, CancellationToken cancellationToken) =>
         SeedMediaAssets.Describe(mediaAssetId) is MediaAssetDto tohum

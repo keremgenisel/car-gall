@@ -3,7 +3,6 @@ using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.Modules.Dealership.Contracts.Events;
-using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Application;
 using CarGallery.Modules.VehicleCatalog.Application.Detail;
 using CarGallery.Modules.VehicleCatalog.Application.Development;
@@ -171,23 +170,8 @@ public static class VehicleCatalogModule
     /// <c>IMediaAssetQueries</c>'i, tohum kimliklerini kendisi cevaplayan bir sorguyla sarar.
     /// YALNIZ <c>Development:SeedShowcase</c> açıkken ve <c>AddMedia</c>'dan SONRA çağrılır.
     /// </summary>
-    public static IServiceCollection AddVehicleCatalogSeedMedia(this IServiceCollection services)
-    {
-        ServiceDescriptor asil = services.Last(descriptor => descriptor.ServiceType == typeof(IMediaAssetQueries));
-        services.Remove(asil);
-        services.Add(new ServiceDescriptor(
-            typeof(IMediaAssetQueries),
-            provider => new SeedAwareMediaAssetQueries(Asil(provider, asil)),
-            asil.Lifetime));
-
-        return services;
-    }
-
-    private static IMediaAssetQueries Asil(IServiceProvider provider, ServiceDescriptor descriptor) =>
-        descriptor.ImplementationFactory is not null
-            ? (IMediaAssetQueries)descriptor.ImplementationFactory(provider)
-            : descriptor.ImplementationInstance as IMediaAssetQueries
-              ?? (IMediaAssetQueries)ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType!);
+    public static IServiceCollection AddVehicleCatalogSeedMedia(this IServiceCollection services) =>
+        SeedAwareMediaAssetQueries.Register(services);
 
     public static void MapVehicleCatalog(this IEndpointRouteBuilder builder)
     {
