@@ -153,6 +153,18 @@
      üç Lighthouse koşusunun birinde CLS 0,098 (eşik 0,1). Çubuğun token'ına bağlı:
      kırılımlar orada değişirse bu da değişir. */
   --narrowing-form-min-block-size: calc(var(--filter-bar-min-block-size) + 58px);
+
+  /* 0015 D20 — liste ekranının filtre paneli (altı eksen). ÖLÇÜLDÜ, tahmin edilmedi
+     (2026-11-18, `/tr/cars` · `/ar/cars` · `/en/cars`, fontlar yüklendikten sonra, 8px adım):
+     panelin sütun sayısı 568px'te 1→2, 824px'te 2→3, 1080px'te 3→4 oluyor ve her bantta
+     en UZUN hâli bandın başında. Değer o en uzun hâl + 10px pay: fazla ayırmak boşluk üretir,
+     eksik ayırmak kayma — ikisi aynı şey değil (`0001`'in dersi). Türkçe ve İngilizce aynı,
+     Arapça birkaç piksel kısa.
+       < 35.5rem → 1 sütun → 1050 (360px)
+       ≥ 35.5rem → 2 sütun → 657 (568px)
+       ≥ 51.5rem → 3 sütun → 491 (824px)
+       ≥ 67.5rem → 4 sütun → 491 (1080px) */
+  --list-filters-min-block-size: 1060px;
   --form-control-min-block-size: 44px;
 
   /* 0008 — onay kutusu. Genişlik okunabilir satır uzunluğunu aşmaz; katman sırası
@@ -167,6 +179,18 @@
 @media (width >= 30rem) {
   :root {
     --filter-bar-min-block-size: 195px;
+  }
+}
+
+@media (width >= 35.5rem) {
+  :root {
+    --list-filters-min-block-size: 667px;
+  }
+}
+
+@media (width >= 51.5rem) {
+  :root {
+    --list-filters-min-block-size: 501px;
   }
 }
 

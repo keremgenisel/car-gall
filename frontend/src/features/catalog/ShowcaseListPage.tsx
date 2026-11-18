@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocale } from '../../app/localeContext'
-import { fetchShowcaseListings } from '../../shared/api/catalog'
-import type { BodyType, PagedResult, ShowcaseListing } from '../../shared/api/types'
+import { fetchReferenceTerms, fetchShowcaseListings } from '../../shared/api/catalog'
+import type { PagedResult, ShowcaseListing } from '../../shared/api/types'
 import { ListingCard } from './ListingCard'
 import { loadBodyTypeOptions } from './bodyTypeOptions'
-import { BodyTypeFilterBar } from './BodyTypeFilterBar'
+import { ListFilters, type FilterOptions } from './filters/ListFilters'
+import { SortSelect } from './filters/SortSelect'
 import { Pagination } from './Pagination'
 import { EmptyByFilter } from './states/EmptyByFilter'
 import { EmptyShowcase } from './states/EmptyShowcase'
 import { ListError } from './states/ListError'
 import { ListSkeleton } from './states/ListSkeleton'
 import { FilterBarSkeleton } from './states/FilterBarSkeleton'
-import { clearBodyTypes, toggleBodyType, withPage } from './listUrlState'
+import { activeAxes, clearFilters, toCanonicalSearch, withPage, withSort } from './listUrlState'
 import { replaceCanonicalPage, useListUrlState } from './useListUrlState'
 
 type LoadState =
@@ -23,33 +24,63 @@ type LoadState =
       readonly showcaseIsEmpty: boolean
     }
 
+type OptionsLoad =
+  { readonly kind: 'loading' } | { readonly kind: 'done'; readonly value: FilterOptions | null }
+
 export function ShowcaseListPage() {
   const { locale, t } = useLocale()
   const [state, pushState] = useListUrlState()
   const [result, setResult] = useState<{ readonly key: string; readonly value: LoadState } | null>(
     null,
   )
-  const [bodyTypes, setBodyTypes] = useState<readonly BodyType[]>([])
-  const [filterGate, setFilterGate] = useState<'loading' | 'visible' | 'hidden'>('loading')
+  const [optionsResult, setOptionsResult] = useState<{
+    readonly key: string
+    readonly value: OptionsLoad
+  } | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
   // Yükleniyor durumu efekt içinde setState ile kurulmaz, istek anahtarından TÜRETİLİR:
   // senkron setState zincirleme render tetikler ve iskelet bir kare geç görünür (AC-25, CLS).
-  const requestKey = `${locale}|${[...state.bodyTypes].join(',')}|${state.page}|${reloadToken}`
+  const search = toCanonicalSearch(state)
+  const requestKey = `${locale}|${search}|${reloadToken}`
   const load: LoadState =
     result !== null && result.key === requestKey ? result.value : { kind: 'loading' }
+  const options: OptionsLoad =
+    optionsResult !== null && optionsResult.key === locale
+      ? optionsResult.value
+      : { kind: 'loading' }
 
   useEffect(() => {
     const controller = new AbortController()
 
-    // Filtre çubuğu alan ayarlarının kapısından geçer: kasa tipi alanı public değilse
-    // çubuk HİÇ gösterilmez ve liste daraltmasız çalışmaya devam eder (R8, AC-12).
-    loadBodyTypeOptions(locale, controller.signal)
-      .then((options) => {
-        setFilterGate(options.filterable ? 'visible' : 'hidden')
-        setBodyTypes(options.bodyTypes)
+    // Kasa tipi ekseni alan ayarlarının kapısından geçer: alan public değilse eksen HİÇ
+    // gösterilmez (`0001` R8, AC-12). Yakıt ve vites çekirdek alandır, her zaman görünür
+    // (`0015` R8); değerleri mevcut public uçlardan gelir (D17). Okunamazlarsa çok değerli
+    // eksenler gizlenir, aralık eksenleri ve sıralama çalışmaya devam eder.
+    Promise.all([
+      loadBodyTypeOptions(locale, controller.signal),
+      fetchReferenceTerms('fuel-types', locale, controller.signal),
+      fetchReferenceTerms('transmission-types', locale, controller.signal),
+    ])
+      .then(([bodyTypeOptions, fuels, transmissions]) =>
+        setOptionsResult({
+          key: locale,
+          value: {
+            kind: 'done',
+            value: {
+              bodyTypeFilterable: bodyTypeOptions.filterable,
+              bodyTypes: bodyTypeOptions.bodyTypes,
+              fuels,
+              transmissions,
+            },
+          },
+        }),
+      )
+      .catch((cause: unknown) => {
+        if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
+          setOptionsResult({ key: locale, value: { kind: 'done', value: null } })
+        }
       })
-      .catch(() => setFilterGate('hidden'))
 
     return () => controller.abort()
   }, [locale])
@@ -57,21 +88,18 @@ export function ShowcaseListPage() {
   useEffect(() => {
     const controller = new AbortController()
 
-    fetchShowcaseListings(
-      { bodyTypes: state.bodyTypes, page: state.page },
-      locale,
-      controller.signal,
-    )
+    fetchShowcaseListings(state, locale, controller.signal)
       .then(async (page) => {
         if (page.page !== state.page) {
-          replaceCanonicalPage({ bodyTypes: state.bodyTypes, page: page.page })
+          replaceCanonicalPage(withPage(state, page.page))
         }
 
         // İki boş durum ayrılır. Daraltma boş sonuç verdiyse vitrinde hiç ilan olup
         // olmadığı ayrıca sorulur; ikisi aynı anda doğruysa (b) kazanır (R12, AC-27).
-        let showcaseIsEmpty = page.totalCount === 0 && state.bodyTypes.length === 0
+        const filtered = activeAxes(state).length > 0
+        let showcaseIsEmpty = page.totalCount === 0 && !filtered
 
-        if (page.totalCount === 0 && state.bodyTypes.length > 0) {
+        if (page.totalCount === 0 && filtered) {
           const unfiltered = await fetchShowcaseListings(
             { bodyTypes: [], page: 1 },
             locale,
@@ -91,13 +119,11 @@ export function ShowcaseListPage() {
       })
 
     return () => controller.abort()
-  }, [locale, state.bodyTypes, state.page, reloadToken, requestKey])
+    // `state` istek anahtarında (`search`) temsil ediliyor; nesne kimliği her render'da değişir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, requestKey])
 
-  const onToggle = useCallback(
-    (slug: string) => pushState(toggleBodyType(state, slug)),
-    [pushState, state],
-  )
-  const onClear = useCallback(() => pushState(clearBodyTypes()), [pushState])
+  const onClear = useCallback(() => pushState(clearFilters(state)), [pushState, state])
   const onPageChange = useCallback(
     (page: number) => pushState(withPage(state, page)),
     [pushState, state],
@@ -107,15 +133,22 @@ export function ShowcaseListPage() {
     <div className="page">
       <h1 className="page__title">{t('showcase.title')}</h1>
 
-      {filterGate === 'loading' ? <FilterBarSkeleton /> : null}
-      {filterGate === 'visible' ? (
-        <BodyTypeFilterBar
-          bodyTypes={bodyTypes}
-          selected={state.bodyTypes}
-          onToggle={onToggle}
-          onClear={onClear}
-        />
-      ) : null}
+      {options.kind === 'loading' ? (
+        <FilterBarSkeleton />
+      ) : (
+        <ListFilters state={state} options={options.value} onChange={pushState} />
+      )}
+
+      <div className="list-toolbar">
+        {load.kind === 'ready' ? (
+          <p className="result-count" data-testid="result-count">
+            {t('showcase.resultCount', { count: load.page.totalCount })}
+          </p>
+        ) : (
+          <span />
+        )}
+        <SortSelect sort={state.sort} onChange={(sort) => pushState(withSort(state, sort))} />
+      </div>
 
       {load.kind === 'loading' ? <ListSkeleton /> : null}
       {load.kind === 'error' ? (
@@ -123,38 +156,32 @@ export function ShowcaseListPage() {
       ) : null}
 
       {load.kind === 'ready' ? (
-        <>
-          <p className="result-count" data-testid="result-count">
-            {t('showcase.resultCount', { count: load.page.totalCount })}
-          </p>
-
-          {load.page.totalCount === 0 ? (
-            load.showcaseIsEmpty ? (
-              <EmptyShowcase />
-            ) : (
-              <EmptyByFilter onClear={onClear} />
-            )
+        load.page.totalCount === 0 ? (
+          load.showcaseIsEmpty ? (
+            <EmptyShowcase />
           ) : (
-            <>
-              <ul className="listing-grid">
-                {load.page.items.map((listing, index) => (
-                  <ListingCard
-                    key={listing.listingId}
-                    listing={listing}
-                    /* Mobilde tek sütun, masaüstünde ilk satır: ilk dört kart her iki
-                       düzende de katlama üstündedir. */
-                    aboveTheFold={index < 4}
-                  />
-                ))}
-              </ul>
-              <Pagination
-                page={load.page.page}
-                totalPages={load.page.totalPages}
-                onChange={onPageChange}
-              />
-            </>
-          )}
-        </>
+            <EmptyByFilter axes={activeAxes(state)} onClear={onClear} />
+          )
+        ) : (
+          <>
+            <ul className="listing-grid">
+              {load.page.items.map((listing, index) => (
+                <ListingCard
+                  key={listing.listingId}
+                  listing={listing}
+                  /* Mobilde tek sütun, masaüstünde ilk satır: ilk dört kart her iki
+                     düzende de katlama üstündedir. */
+                  aboveTheFold={index < 4}
+                />
+              ))}
+            </ul>
+            <Pagination
+              page={load.page.page}
+              totalPages={load.page.totalPages}
+              onChange={onPageChange}
+            />
+          </>
+        )
       ) : null}
     </div>
   )
