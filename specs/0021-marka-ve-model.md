@@ -2,13 +2,13 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak — kriterler yazıldı, QA CLARIFY turunu bekliyor |
+| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B11 → **D15–D24**) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `VehicleReference` (marka varlığı, model→marka bağı, yazma uçları, migration) · `VehicleCatalog` (vitrin okuma modelinde marka, liste marka ekseni, ana sayfa form markaları) · `frontend/` panel (marka/model ekranı, araç formunda marka → model) ve vitrin (kart, detay, liste filtresi, ana sayfa formu) |
+| **Modül(ler)** | `VehicleReference` (marka varlığı, model→marka bağı, yazma uçları, migration) · `VehicleCatalog` (liste marka ekseni ve ana sayfa form markaları — okuma modeli **değişmez**, **D15**) · `Leads`/`Notifications` (yalnız davranış korunur: talep kopyası ve e-posta tam adı taşır — **D17**) · `frontend/` panel (marka/model ekranı, araç formunda marka → model) ve vitrin (kart, detay, liste filtresi, ana sayfa formu) |
 | **Bağımlı spec'ler** | `0010a` (araç kaydı — tamamlandı; **X14**'ü bu karttır) · `0014` (ana sayfa — tamamlandı; **X13**/**X11**'in bir kısmını bu kart karşılar) · `0015` (liste eksenleri — tamamlandı; **X8** marka ekseni bu karttır) · `0012b` (ilan adresi kanonik addan bir kez üretilir — **D13**) · `0020` (sıra) |
 | **Dayanak** | Depo sahibinin 2026-11-18 isteği ve kararları (**D1**) · `0010a` **X14** · `0015` **X8** · `0014` **X13** |
-| **Karar bekliyor** | yok — **D1–D14** verildi (§ Verilen kararlar). QA CLARIFY turu bekleniyor. |
+| **Karar bekliyor** | yok — **D1–D14**; QA CLARIFY turunun on bir bulgusu (B1–B11) → **D15–D24**. |
 
 ---
 
@@ -93,15 +93,17 @@ araçlarına, listede de herhangi bir markaya göre daraltır.
 ### Uyulması zorunlu
 
 - **C1.** Marka ve model `VehicleReference`'a aittir; `VehicleCatalog` onları yalnız
-  `VehicleReference.Contracts` üzerinden okur (Yasak Listesi 1). Vitrin okuma modeli markayı
-  bugünkü model adı gibi **kendi kopyası** olarak taşır (`docs/architecture.md` § 2.E).
+  `VehicleReference.Contracts` üzerinden okur (Yasak Listesi 1). Vitrin okuma modeli **bugünkü
+  gibi yalnız model kimliğini** taşır; marka ve adlar okuma anında sözleşmeden çözülür — model
+  adının bugünkü deseni (**D15**).
 - **C2.** İlan adresleri (slug) değişmez: ilk yayında kanonik **model** adından üretilmiş bir
   adres bu kartla yeniden üretilmez (`0012b` **D13**). Yeni ilanların adresi marka + model
   kanonik adından üretilir ("toyota-corolla-2021-…") — bugünkü adreslerin biçimiyle aynı (**D3**).
-- **C3.** Kanonik ad ve kısaltma ASCII'dir; karşılaştırma ve tekillik büyük-küçük harf
-  duyarsızdır ve Türkçe `İ/ı` kuralına göre değil, değişmez kültürle yapılır (Yasak Listesi 27).
-- **C4.** Migration'lar yalnız kendi şemasına dokunur (`reference` ve `catalog` ayrı
-  migration'lar). Marka ayrılması **sabit bir eşleme listesiyle** yapılır — her model için
+- **C3.** Kanonik ad ve kısaltma ASCII'dir. **Tekillik denetimi** büyük-küçük harf duyarsızdır
+  ve değişmez kültürle yapılır. Adres parametresi (`brand=`) ise `0015` **C12** gereği **tam ve
+  harfe duyarlı** eşleşir (**D20**).
+- **C4.** Migration yalnız `vehicle_reference` şemasına dokunur; `catalog` şeması bu kartta
+  değişmez (**D15**). Marka ayrılması **sabit bir eşleme listesiyle** yapılır — her model için
   kanonik ad ve her dildeki görünen ad marka ve model parçasına elle yazılır — "ilk boşluk"
   kuralıyla değil (**D3**). *(Neden: "Mercedes-Benz C-Serisi" boşlukla değil, Arapça görünen
   adlar hiçbir kuralla bölünemez.)*
@@ -139,9 +141,22 @@ araçlarına, listede de herhangi bir markaya göre daraltır.
   `en` "BMW 3 Series", "Mercedes-Benz C-Class". Ayrılma yalnız kanonik adı değil **her dildeki
   görünen adı** da marka ve model parçasına bölmek zorunda; Arapçada hiçbir genel kural bunu
   yapamaz — **C4**'ün sabit eşlemesi dil başına yazılır.
-- **Catalog modeli kimlikle tutuyor.** `Vehicle.VehicleModelId`; vitrin okuma modeli
-  `vehicle_model_id` taşıyor (`ShowcaseListingConfiguration.cs:30`) ve adı
-  `IVehicleModelNameResolver` ile `VehicleReference.Contracts` üzerinden çözüyor.
+- **Catalog modeli kimlikle tutuyor, adı okuma anında çözüyor.** `Vehicle.VehicleModelId`;
+  vitrin okuma modeli yalnız `vehicle_model_id` taşıyor (`ShowcaseListingConfiguration.cs:30`);
+  kart adı her istekte `IVehicleModelNameResolver` ile çözülüyor (`ShowcaseCards.cs:18`) ve panel
+  listesi de adı saklamıyor (`VehicleAdminQueries.cs:190`, Yasak Listesi 33). Kasa tipi filtresi
+  kanonik kümeyi sözleşmeden okuyor (`ShowcaseListingQueries.cs:21`).
+- **Kanonik adın başka tüketicileri** (QA B3): yeni talebin araç kopyası
+  (`CanonicalModelNameSource.cs:16`, `VehicleSnapshot.cs:42`), bildirim e-postasının `modelAdi`
+  alanı (`NotificationDispatcher.cs:132`), panel araç listesi (`VehicleAdminQueries.cs:191`) ve
+  ilan adresi üretimi (`ListingTransitionCommands.cs:205`). Hepsi bugün "Toyota Corolla" alıyor.
+- **Ana sayfa düğmesindeki sayı seçimle değişmiyor** — `0014` AC-41, `NarrowingForm.tsx:9`;
+  toplam yükleme anında bir kez okunuyor (`HomeCatalog.tsx:53`).
+- **Referans okuma uçları oturum istemiyor** (`ReferenceEndpoints.cs:13-15`) ve kanonik ada
+  düşüyor (`ReferenceContracts.cs:26`); `docs/architecture.md:241` ise "zorunlu çeviri; eksikse
+  admin uyarısı" diyor — belge koddan geride.
+- **Geliştirme tohumu tek markalı.** `VehicleReferenceModule.cs:50` "Toyota Corolla" yazıyor,
+  `ShowcaseSeeder.cs:185` adres metnini sabitliyor.
 - **İlan adresi kanonik model adından** (`ListingSlug.Create(canonicalModelName, …)`,
   `0012b` **D13**). Bugünkü kanonik ad markayı içerdiği için adresler zaten "toyota-corolla-…"
   biçiminde; ayrılmadan sonra adres marka + model kanonik adından üretilirse biçim aynı kalır.
@@ -180,31 +195,79 @@ bağlı; yanlış girilmiş bir kaydı yeni seçimlerden kaldırmak yeter.
 
 **D7 — "Ana sayfada göster" marka üzerinde bir işaret; sıra alfabetik (ajan).** (R7, X6)
 
-**D8 — Ana sayfa formunda çoklu seçim, düğmede sayı (ajan).** (R13) Kasa tipinin bugünkü
-deseni (`0014`); seçim listeye `brand` parametresiyle taşınır.
+**D8 — Ana sayfa formunda çoklu seçim; düğmedeki sayı değişmez (ajan, D18 ile düzeltildi).**
+(R13) Kasa tipinin bugünkü deseni (`0014` AC-41): düğme toplam yayındaki araç sayısını gösterir,
+seçimle değişmez; seçim listeye `brand` parametresiyle taşınır.
 
 **D9 — Eksen yalnız stoğu olan markaları sunar (ajan).** (R11, R13) *Gerekçe:* `0015`'in kasa,
 yakıt ve vites eksenleri kapalı ve kısa kümelerdir; marka kümesi galerinin eklemesiyle büyür.
 Stoğu olmayan markayı sunmak ziyaretçiyi boş sonuca götürür.
 
-**D10 — Marka kısaltması kanonik addan bir kez üretilir ve değişmez (ajan).** (R1, R12)
-*Gerekçe:* kısaltma paylaşılan liste bağlantısının parçasıdır; kanonik ad düzeltilse bile
-bağlantı çalışmaya devam etmeli. Kanonik ad ASCII olduğu için üretim kuralı basittir (küçük
-harf, boşluk → `-`).
+**D10 — Marka kısaltması kanonik addan bir kez üretilir, değişmez ve tekildir (ajan, D19 ile
+genişletildi).** (R1, R12) *Gerekçe:* kısaltma paylaşılan liste bağlantısının parçasıdır;
+kanonik ad düzeltilse bile bağlantı çalışmaya devam etmeli. Kural: küçük harf; harf ve rakam
+dışındaki her karakter dizisi tek `-` olur; baştaki ve sondaki `-` atılır.
 
 **D11 — Model tekilliği marka içinde (ajan).** (R2) İki markanın "Civic" adlı modeli olabilir.
 
 **D12 — Vitrin "marka + model" gösterir (ajan).** (R10) Bugünkü görünüm ("Toyota Corolla")
 korunur; fark, iki parçanın ayrı ayrı çevrilebilmesi.
 
-**D13 — Okuma modeli markanın kimliğini, kısaltmasını ve adını taşır (ajan).** (C1, R11) Marka
-ekseni ve kart başlığı başka modülün tablosuna dokunmadan çalışır; marka adı değişince okuma
-modeli `0003`'ün şube adı desenindeki gibi bir duyuruyla güncellenir — ya da plan turu
-gerekçesiyle başka bir yolu seçer. Şart: ad değişikliği vitrine yansır.
+**D13 — (D15 ile değiştirildi.)** *(Önceki metin: okuma modeli markanın kimliğini, kısaltmasını
+ve adını taşır ve ad değişikliği bir duyuruyla yansır. QA B1: model adı okuma modelinde kopya
+olarak durmuyor, okuma anında çözülüyor — karar yanlış bir olguya dayanıyordu.)*
 
 **D14 — Model başka markaya taşınamaz (ajan).** *Gerekçe:* aracın markası modelden türüyor; model
 taşınırsa geçmiş araçların markası sessizce değişir. Yanlış markaya eklenmiş model pasif
 yapılır, doğru markaya yenisi eklenir.
+
+### Verilen kararlar — QA CLARIFY turu, 2026-11-18
+
+QA spec'i `main` @ `0cd834d`'ye karşı okudu, on bir bulgu getirdi (10 gerçek, 1 belirsiz) ve
+Context'in sayım iddialarını doğruladı. Hepsi Takım Yöneticisi (ajan) tarafından kabul edildi.
+
+**D15 — Okuma modeli değişmez; marka okuma anında çözülür (B1, B2).** (C1, C4, R10, R11) Marka
+ekseni, seçilen markaları sözleşme üzerinden **model kimliği kümesine** çevirip okuma modelini
+o kümeyle süzer — kasa tipinin bugünkü yolu. Stoğu olan markalar, yayındaki ilanların model
+kimliklerinden sözleşmeyle türetilir. Kart ve detay adı bugünkü gibi okuma anında çözülür.
+*Gerekçe:* modelin markası hiç değişmez (D14), dolayısıyla model kimliği markayı taşır; `catalog`
+şemasına kolon, eski satırları doldurma işi ve ad değişikliği için duyuru gerekmez. Ad değişikliği
+vitrine kendiliğinden yansır (AC-31).
+
+**D16 — (D15'in sonucu.)** Eski satırların doldurulması sorusu ortadan kalkar; yine de
+güncellemeden önce yayında olan ilanların marka ekseninde süzülebildiği kriterle ölçülür.
+
+**D17 — Tam kanonik ad sözleşmenin sözüdür (B3).** Bugünkü `ResolveCanonicalNamesAsync` ve
+`ResolveNamesAsync` **marka + model** tam adını döndürmeye devam eder ("Toyota Corolla");
+markasız model adı ayrı bir sözleşme üyesidir. *Gerekçe:* talep kopyası, bildirim e-postası,
+panel listesi ve ilan adresi bugün tam adı kullanıyor; ayrılma onları sessizce markasız ada
+geriletmemeli. Eski taleplerin kopyası olduğu gibi kalır (`docs/architecture.md` § 2.E).
+
+**D18 — Düğme sayısı `0014` gibi kalır (B4).** D8 düzeltildi; `0014` AC-41 geçerli.
+
+**D19 — Kısaltma tekil; çakışma ayrı hata (B5).** Kısaltma galeri genelinde tekildir; çakışan
+ekleme `brand.slug_taken` gibi ayrı bir kodla reddedilir (ad tekilliğinden ayrı).
+
+**D20 — Adres parametresi harfe duyarlı (B6).** `brand=Toyota` bilinmeyen değerdir ve yok sayılır
+(`0015` C12). Tekillik denetimi duyarsız kalır.
+
+**D21 — Seçili marka eksende her zaman görünür (B7).** Adresle gelen, var olan ama stoğu kalmamış
+bir marka uygulanır (sonuç boş olabilir) ve eksende işaretli seçenek olarak görünür — ziyaretçi
+seçimi kaldırabilsin. Var olmayan değer yok sayılır.
+
+**D22 — Durumlar (B8).** Ana sayfa formunda marka okuması düşerse marka alanı görünmez ve form
+kasa tipiyle çalışır (`0014` AC-63 deseni). Liste ekseninin yükleniyor/hata hâli diğer eksenlerle
+aynıdır. Araç formunda aktif modeli olmayan bir marka seçilince model seçicisi "bu markada model
+yok" der.
+
+**D23 — Pasif model kuralı düzenlemeyi de kapsar (B9).** Model **değiştiren** düzenleme pasif
+modeli reddeder; aracın zaten kayıtlı olduğu pasif modelle kaydetme kabul edilir (AC-26).
+
+**D24 — Okuma uçları ve belge (B10, B11).** Vitrin ve araç formu bugünkü oturumsuz referans
+uçlarından **yalnız aktif** kayıtları okur; pasifleri ve "ana sayfada göster" işaretini gösteren
+yönetim okuması Yönetici'ye kapalıdır. Araç formu aracın kendi (belki pasif) marka/modelini
+araç verisinden gösterir. `docs/architecture.md`'nin "zorunlu çeviri" satırı koda göre düzeltilir.
+Geliştirme ve performans tohumu birden çok markaya yayılır.
 
 ---
 
@@ -223,72 +286,81 @@ yapılır, doğru markaya yenisi eklenir.
 - **AC-6.** Yönetici marka ekranında bütün markaları — aktif ve pasif — kanonik adları, durumları ve "ana sayfada göster" işaretleriyle görür.
 - **AC-7.** Yönetici kanonik adı "Fiat" olan bir marka eklediğinde marka listede aktif görünür ve kısaltması `fiat` olur.
 - **AC-8.** Var olan bir markanın kanonik adıyla — büyük-küçük harf farkı gözetmeden ("toyota") — marka eklemek reddedilir ve hata adın zaten kullanıldığını söyler.
-- **AC-9.** ASCII olmayan ya da boş bir kanonik ad ("Škoda", "") reddedilir.
-- **AC-10.** "Alfa Romeo" kanonik adlı markanın kısaltması `alfa-romeo` olur.
-- **AC-11.** Markanın kanonik adı düzeltildiğinde kısaltması değişmez.
-- **AC-12.** Yönetici bir markaya Arapça görünen ad ("فيات") verdiğinde Arapça vitrin onu gösterir; Türkçe vitrin kanonik adı gösterir.
-- **AC-13.** Pasif yapılan marka araç formunun marka seçicisinde yeni seçim olarak görünmez.
-- **AC-14.** Pasif yapılan markanın ilanları vitrinde kalır ve marka ekseninde süzülebilir.
-- **AC-15.** Pasif marka yeniden etkinleştirildiğinde araç formunda yeniden seçilebilir.
+- **AC-9.** "Alfa Romeo" varken "Alfa-Romeo" eklemek, ad farklı olsa da kısaltma çakıştığı için ayrı bir hata koduyla reddedilir (D19).
+- **AC-10.** ASCII olmayan ya da boş bir kanonik ad ("Škoda", "") reddedilir.
+- **AC-11.** "Alfa Romeo" kanonik adlı markanın kısaltması `alfa-romeo`, "Rolls-Royce & Co." kanonik adlınınki `rolls-royce-co` olur (D10).
+- **AC-12.** Markanın kanonik adı düzeltildiğinde kısaltması değişmez.
+- **AC-13.** Yönetici bir markaya Arapça görünen ad ("فيات") verdiğinde Arapça vitrin onu gösterir; Türkçe vitrin kanonik adı gösterir.
+- **AC-14.** Pasif yapılan marka araç formunun marka seçicisinde yeni seçim olarak görünmez.
+- **AC-15.** Pasif yapılan markanın ilanları vitrinde kalır ve marka ekseninde süzülebilir.
+- **AC-16.** Pasif marka yeniden etkinleştirildiğinde araç formunda yeniden seçilebilir.
 
 ### Model yönetimi (R2, R5, R6 · D11, D14)
 
-- **AC-16.** Yönetici "Fiat" markasına "Egea" modelini eklediğinde model o markanın altında aktif görünür.
-- **AC-17.** Aynı markada aynı kanonik adla ikinci bir model reddedilir.
-- **AC-18.** Farklı markalarda aynı kanonik adlı modeller eklenebilir.
-- **AC-19.** Modelin markası değiştirilemez: düzenleme ekranında marka seçimi sunulmaz ve uç markayı değiştiren isteği reddeder.
-- **AC-20.** Pasif yapılan model araç formunda yeni seçim olarak sunulmaz; o modelle kayıtlı araçlar ve ilanlar değişmez.
-- **AC-21.** Pasif bir markanın aktif modelleri de araç formunda yeni seçim olarak sunulmaz.
+- **AC-17.** Yönetici "Fiat" markasına "Egea" modelini eklediğinde model o markanın altında aktif görünür.
+- **AC-18.** Aynı markada aynı kanonik adla ikinci bir model reddedilir.
+- **AC-19.** Farklı markalarda aynı kanonik adlı modeller eklenebilir.
+- **AC-20.** Modelin markası değiştirilemez: düzenleme ekranında marka seçimi sunulmaz ve uç markayı değiştiren isteği reddeder.
+- **AC-21.** Pasif yapılan model araç formunda yeni seçim olarak sunulmaz; o modelle kayıtlı araçlar ve ilanlar değişmez.
+- **AC-22.** Pasif bir markanın aktif modelleri de araç formunda yeni seçim olarak sunulmaz.
 
 ### Araç formu (R8, R9)
 
-- **AC-22.** Yeni araç formunda model seçicisi bir marka seçilene kadar devre dışıdır.
-- **AC-23.** Marka seçildiğinde model seçicisi yalnız o markanın aktif modellerini sunar.
-- **AC-24.** Seçili model varken marka değiştirildiğinde model seçimi temizlenir.
-- **AC-25.** Pasif bir modelle kayıtlı aracın düzenleme formu markayı ve modeli seçili gösterir ve araç model değiştirilmeden kaydedilebilir.
-- **AC-26.** Yeni kayıtta pasif bir model sunucuda reddedilir.
+- **AC-23.** Yeni araç formunda model seçicisi bir marka seçilene kadar devre dışıdır.
+- **AC-24.** Marka seçildiğinde model seçicisi yalnız o markanın aktif modellerini sunar.
+- **AC-25.** Seçili model varken marka değiştirildiğinde model seçimi temizlenir.
+- **AC-26.** Pasif bir modelle kayıtlı aracın düzenleme formu markayı ve modeli seçili gösterir ve araç model değiştirilmeden kaydedilebilir.
+- **AC-27.** Yeni kayıtta ve modeli değiştiren düzenlemede pasif bir model sunucuda reddedilir (D23).
+- **AC-28.** Araç formunda aktif modeli olmayan bir marka seçildiğinde model seçicisi markada model olmadığını söyler ve kayıt yapılamaz (D22).
 
 ### Vitrin (R3, R10 · D12, D13)
 
-- **AC-27.** İlan kartı, ilan detayı ve öne çıkan araçlar aracı "Toyota Corolla" biçiminde, marka ve model görünen adlarıyla gösterir.
-- **AC-28.** Görünen adı olmayan bir dilde marka ve model kanonik adlarıyla gösterilir.
-- **AC-29.** Yönetici bir markanın görünen adını değiştirdikten sonra vitrin yeni adı gösterir.
-- **AC-30.** Yeni yayına alınan bir Fiat Egea ilanının adresi `fiat-egea-<yıl>-…` biçimindedir.
+- **AC-29.** İlan kartı, ilan detayı ve öne çıkan araçlar aracı "Toyota Corolla" biçiminde, marka ve model görünen adlarıyla gösterir.
+- **AC-30.** Görünen adı olmayan bir dilde marka ve model kanonik adlarıyla gösterilir.
+- **AC-31.** Yönetici bir markanın görünen adını değiştirdikten sonra vitrin yeni adı gösterir.
+- **AC-32.** Yeni yayına alınan bir Fiat Egea ilanının adresi `fiat-egea-<yıl>-…` biçimindedir.
+- **AC-33.** Güncellemeden sonra Toyota Corolla için bırakılan talebin araç kopyası ve bildirim e-postası "Toyota Corolla" der (D17).
+- **AC-34.** Panelin araç listesi aracı marka + model olarak gösterir (D17).
 
 ### Liste marka ekseni (R11, R12 · C5 · D9)
 
-- **AC-31.** Liste filtresinde marka ekseni yalnız en az bir yayındaki ilanı olan markaları sunar.
-- **AC-32.** Toyota seçildiğinde liste yalnız Toyota ilanlarını gösterir ve toplam sayı ona göre değişir.
-- **AC-33.** Toyota ve Honda birlikte seçildiğinde liste iki markanın ilanlarını gösterir.
-- **AC-34.** Marka ve kasa tipi birlikte seçildiğinde liste ikisine de uyan ilanları gösterir.
-- **AC-35.** Seçim adres satırında `brand=toyota` olarak görünür; bu adres yeni bir sekmede açıldığında aynı daraltma gelir.
-- **AC-36.** Bilinmeyen bir marka değeri (`brand=yok`) yok sayılır ve liste hata vermez.
-- **AC-37.** Arapça listede marka ekseni Arapça görünen adları gösterir ve sağdan sola düzende çalışır.
+- **AC-35.** Liste filtresinde marka ekseni yalnız en az bir yayındaki ilanı olan markaları sunar.
+- **AC-36.** Toyota seçildiğinde liste yalnız Toyota ilanlarını gösterir ve toplam sayı ona göre değişir.
+- **AC-37.** Toyota ve Honda birlikte seçildiğinde liste iki markanın ilanlarını gösterir.
+- **AC-38.** Marka ve kasa tipi birlikte seçildiğinde liste ikisine de uyan ilanları gösterir.
+- **AC-39.** Seçim adres satırında `brand=toyota` olarak görünür; bu adres yeni bir sekmede açıldığında aynı daraltma gelir.
+- **AC-40.** Bilinmeyen bir marka değeri (`brand=yok`) ve büyük harfli bir değer (`brand=Toyota`) yok sayılır ve liste hata vermez (D20).
+- **AC-41.** Adresle gelen, var olan ama yayında ilanı kalmamış bir marka uygulanır, liste boş sonucu gösterir ve marka eksende işaretli görünür; işareti kaldırınca liste genişler (D21).
+- **AC-42.** Güncellemeden önce yayında olan bir Toyota ilanı marka ekseninde Toyota seçilince listelenir (D16).
+- **AC-43.** Marka ekseninin yüklenme ve hata hâli diğer eksenlerinkiyle aynıdır (D22).
+- **AC-44.** Arapça listede marka ekseni Arapça görünen adları gösterir ve sağdan sola düzende çalışır.
 
 ### Ana sayfa formu (R13, R14 · D8, D9)
 
-- **AC-38.** "Aracınızı bulun" formu yalnız "ana sayfada göster" işaretli ve en az bir yayındaki ilanı olan markaları sunar.
-- **AC-39.** İşaretli ama yayında ilanı olmayan bir marka formda sunulmaz.
-- **AC-40.** İşaretsiz bir markanın yayındaki ilanı olsa da formda sunulmaz.
-- **AC-41.** Formda Toyota seçildiğinde düğme Toyota ilanlarının sayısını gösterir ve tıklanınca `/{locale}/cars?brand=toyota` açılır.
-- **AC-42.** Formda marka ve kasa tipi birlikte seçildiğinde düğme ikisine uyan sayıyı gösterir ve liste ikisiyle açılır.
-- **AC-43.** Gösterilecek marka yoksa formun marka alanı hiç görünmez ve form kasa tipiyle çalışır.
+- **AC-45.** "Aracınızı bulun" formu yalnız "ana sayfada göster" işaretli ve en az bir yayındaki ilanı olan markaları sunar.
+- **AC-46.** İşaretli ama yayında ilanı olmayan bir marka formda sunulmaz.
+- **AC-47.** İşaretsiz bir markanın yayındaki ilanı olsa da formda sunulmaz.
+- **AC-48.** Formda Toyota seçilip düğmeye tıklanınca `/{locale}/cars?brand=toyota` açılır; düğmedeki sayı seçimle değişmez (`0014` AC-41, D18).
+- **AC-49.** Formda marka ve kasa tipi birlikte seçildiğinde liste ikisiyle açılır.
+- **AC-50.** Gösterilecek marka yoksa formun marka alanı hiç görünmez ve form kasa tipiyle çalışır.
+- **AC-51.** Formun marka okuması düştüğünde marka alanı görünmez, teknik ayrıntı gösterilmez ve form kasa tipiyle çalışır (D22).
 
 ### Erişim ve durumlar (R15, R16 · D4)
 
-- **AC-44.** Satış Danışmanı ve İçerik Editörü panelde marka/model ekranına bağlantı görmez; adresi doğrudan açtıklarında "erişim yok" ekranını görür.
-- **AC-45.** Yönetici olmayan rolün marka ve model yazma uçlarına isteği `403` alır.
-- **AC-46.** Satış Danışmanı araç formunda markaları ve modelleri okuyabilir.
-- **AC-47.** Marka/model ekranı veri gelirken yükleniyor, okunamazken teknik ayrıntı göstermeyen hata durumu ve yeniden deneme gösterir; hiç marka yokken boş durumu gösterir.
-- **AC-48.** Yeni metinler TR/AR/EN kataloglarında var; eksik anahtar kontrolü yeşil.
-- **AC-49.** Arapça panelde marka/model ekranı sağdan sola çalışır; kanonik ad alanı soldan sağa yazılır.
-- **AC-50.** Ana sayfa ve liste için performans kapısı yeşil kalır.
+- **AC-52.** Satış Danışmanı ve İçerik Editörü panelde marka/model ekranına bağlantı görmez; adresi doğrudan açtıklarında "erişim yok" ekranını görür.
+- **AC-53.** Yönetici olmayan rolün marka ve model yazma uçlarına isteği `403` alır.
+- **AC-54.** Satış Danışmanı araç formunda aktif markaları ve modelleri okuyabilir.
+- **AC-55.** Vitrinin ve araç formunun okuduğu referans uçları pasif marka ve modelleri döndürmez; pasifleri ve "ana sayfada göster" işaretini döndüren yönetim okuması Yönetici olmayan role `403` döner (D24).
+- **AC-56.** Marka/model ekranı veri gelirken yükleniyor, okunamazken teknik ayrıntı göstermeyen hata durumu ve yeniden deneme gösterir; hiç marka yokken boş durumu gösterir.
+- **AC-57.** Yeni metinler TR/AR/EN kataloglarında var; eksik anahtar kontrolü yeşil.
+- **AC-58.** Arapça panelde marka/model ekranı sağdan sola çalışır; kanonik ad alanı soldan sağa yazılır.
+- **AC-59.** Ana sayfa ve liste için performans kapısı yeşil kalır.
 
 ---
 
 ## Definition of Done
 
-- [ ] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı.
+- [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B11 → D15–D24, 2026-11-18.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0021-ac<n>.png`),
       boş ve hata durumları dâhil; Arapça görüntü de var.
@@ -297,7 +369,7 @@ yapılır, doğru markaya yenisi eklenir.
 - [ ] <!-- DoD:T5 --> Yeni migration'lar yalnızca kendi şemasına dokunuyor (`vehicle_reference`, `catalog`).
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
 - [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**marka**, **pasif** referans kaydı).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi; § 1'in `VehicleReference` tanımı **D4**'e göre düzeltildi.
+- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi; § 1'in `VehicleReference` tanımı **D4**'e, § 3'ün "zorunlu çeviri" satırı **D24**'e göre düzeltildi.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
@@ -307,6 +379,7 @@ yapılır, doğru markaya yenisi eklenir.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
 - [ ] `0010a` X14, `0015` X8 ve `0014` X13'e "→ `0021`" notu düşüldü.
+- [ ] Geliştirme ve performans tohumu birden çok markaya yayılıyor (**D24**).
 
 ---
 
