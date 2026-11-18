@@ -329,6 +329,68 @@ emsali).
 ekranın adresini doğrudan açtığında "erişim yok" ekranını görür (`AdminApp.tsx`'in var olan
 `admin-no-access` deseni); `403` "getirilemedi" hatası olarak gösterilmez.
 
+### Verilen kararlar — plan turu, 2026-11-18
+
+**Developer (ajan) önerisi; Takım Yöneticisi onayı PR'da bekleniyor.** D1–D23'ü değiştirmez,
+nasıl uygulanacaklarını sabitler. Her biri PR'ın "Açık konular" bölümünde de listelidir.
+
+**P1 — Görünen ad sunucunun bastığı bir `<meta>` ile taşınır (D6, D16).** Host `index.html`'i
+basarken `<meta name="gallery-display-name" content="…">` yazar (`0014` D22'nin
+`enabled-locales` deseni); değer ziyaretçinin dilinde, yoksa varsayılan dildedir ve HTML
+olarak kodlanır. Üst çubuk adı ilk boyamada senkron okur — ayrı istek yok, yer değişmez (C6).
+Okuma düşerse etiket hiç basılmaz ve yer boş kalır (R5a). Dil değiştirici tam sayfa gezinmesi
+yaptığı için (frontend-001 C8) etiket her zaman sayfanın dilindedir. *Gerekçe:* C6'yı istekle
+karşılamak bir iskelet ve bir gidiş-dönüş ister; desen depoda hazır. *Bedel:* her vitrin
+belgesi tek satırlık bir okuma yapar (önbellek yok — D6).
+
+**P2 — Görünen adın ilk değerini kurulum adımı yazar, migration değil (C4).** Migration
+`display_names`'i boş bir haritayla ekler; kurulum adımı (ADR `0002`) migration'lardan sonra
+varsayılan dildeki adı ticari unvandan doldurur (`DealershipSchema`, idempotent: yalnız
+varsayılan dilde adı olmayan satır). *Gerekçe:* varsayılan dil yapılandırmadır (Bilinen tuzak
+4); SQL'e bir dil kodu yazmak Arapça varsayılanlı bir kurulumda adı yanlış dile koyardı.
+
+**P3 — Alan hataları `422` döner; AC-30'daki `400` değil.** `docs/conventions.md` § 5
+doğrulama hatasını `422` sayar ve depoda `400` dönen tek bir uç yok; tekillik ihlali öteki alan
+hatalarıyla aynı gövdeyle (`dealership.validation_failed`, `fields`, alan başına kod) döner.
+Eski sürüm, geçersiz geçiş, son aktif şube ve kapatılmış şubenin düzenlenmesi `409`.
+*Öneri:* AC-30'un metni `422` olarak düzeltilir (sayılan bir revizyon); karar Takım
+Yöneticisinin.
+
+**P4 — Durum eylemleri de okunan sürümü taşır.** Geçici kapatma, yeniden açma ve kalıcı
+kapatma gövdede `version` alır; eski sürümde `409`. Kalıcı kapatmada sürüm kilitten sonra
+okunan agregata karşı denetlenir. *Gerekçe:* R16 eylemlerin sürümü ilerlettiğini söylüyor;
+ilerlemiş sürüme karşı eski bir ekrandan yapılan eylem de aynı sessiz ezmedir.
+
+**P5 — Şubeler ekranı var olan listeyi okur; ayrıntı ve yazma uçları yalnız Yönetici.** Liste
+`GET /api/admin/branches`'tir (AC-68: değişmez); `GET/PUT /api/admin/branches/{id}`,
+`POST /api/admin/branches`, üç eylem ucu ve `GET/PUT /api/admin/gallery`
+`AdminSurface.ManagerPolicy`'li tek bir gruptadır. `0007`/AC-8'in mimari testi ("şube kapatma
+komutunun HTTP ucu yoktur") `0003` X1'in bu kartı beklediğini söylüyordu; test, yazma uçlarının
+yalnız Yönetici politikalı grupta açıldığını ölçen bir kapıya çevrildi.
+
+**P6 — Etkin olmayan dil bir alan hatasıdır.** Görünen ad ve şube adı/adresi yalnız etkin
+dillerde kabul edilir (`dealership.locale_not_enabled`); `AddDealership` etkin dil listesini
+yapılandırmadan alır.
+
+**P7 — Aracın kayıtlı şubesi kapatılmışsa form onu seçilemez bir seçenek olarak gösterir.**
+Seçici kapatılmış şubeleri sunmaz (AC-58); aracın kendi şubesi kapatılmışsa o şube seçili ama
+devre dışı bir seçenek olarak kalır ve altında "başka bir şube seçin" uyarısı çıkar. Böylece
+şubeye dokunmadan kaydetme (AC-57) mümkün kalır.
+
+### Uygulama planı (2026-11-18)
+
+Uygulama dalı kriterler `main`'e girdikten (#103) sonra açıldı.
+
+1. `Dealership` domain ve uygulama: görünen ad, sürüm kolonları, D9'un temizleme yöntemleri,
+   D13'ün sıkılaşması, alan kuralları ve sınırları (D22), komutlar ve panel okumaları;
+   migration (yalnız `dealership`) ve kurulum adımının doldurması (P2). `VehicleCatalog`'da
+   D14. Uçlar (P3–P5) ve public yanıtın izin listesi (D15).
+2. Host: görünen adın `<meta>` ile basılması (P1).
+3. Testler: domain, PostgreSQL üzerinde komutlar, Host üzerinden roller, `409`, A8 zinciri.
+4. Ön yüz: üst çubuk ve giriş satırı, panelde galeri ve şubeler ekranları, araç formu (P7),
+   çeviriler; Vitest.
+5. E2E, görsel kanıt, belgeler (`docs/domain.md`, `docs/deploy.md` § 5, ADR `0012`).
+
 ---
 
 ## Acceptance Criteria
