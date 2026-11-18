@@ -291,7 +291,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
 | 9 | Liste: sıralama + filtre eksenleri | `0015` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 10 | Medya galerisi + parça haritası şeması | `0016a` ✅ tamamlandı · `0016b` ✅ tamamlandı *(#8'den önce — § Sapma)* |
-| 11 | `Content` sayfaları | **`0017`** (Taslak — S1–S5) |
+| 11 | `Content` sayfaları | **`0017`** (Taslak — kararlar verildi D1–D24, kriterler yazılmadı) |
 | 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
 | 13 | Bülten aboneliği | **`0018`** (Taslak — S1–S5) |
 
