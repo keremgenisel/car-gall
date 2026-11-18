@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak — kararlar verildi, kabul kriterleri yazılmadı |
+| **Durum** | Taslak — kararlar verildi, kriter turu (Analist) bekliyor |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` public vitrin · `frontend/` panel (opsiyonel alan formu — **D5**) · `VehicleCatalog` (parça haritası alanı, vitrin okuma modeli, detay sözleşmesi) · `Media` **tüketilir**, değişmez (**D17**) |
@@ -10,6 +10,10 @@
 | **Dayanak** | ADR 0003 unsur 1 ve Ek 1, sıra #10 |
 | **Karar bekliyor** | yok — S1–S4 → **D1–D4**; QA CLARIFY turunun on dokuz bulgusu (B1–B19) → **D5–D23** (2026-11-18); plan turunun sekiz bulgusu (P1–P8) → **D24–D31** (2026-11-18). |
 
+> **Bölünme (2026-11-18, D31).** Bu dosya `0016`'nın **vitrin** dilimidir; veri ve panel
+> **`0016a`**'ya ayrıldı (R8–R12, C11 ve C10'un kod tablosu). Numaralar korundu. `0016`'nın
+> tam Context'i ve D1–D31 burada kalır.
+>
 > **Plan turu (2026-11-18, `8a22fb6` üzerinde).** Developer uygulama planını çıkarırken
 > sekiz bulgu getirdi (P1–P8); önerilerin **tamamı** Takım Yöneticisi (depo sahibi)
 > tarafından onaylandı ve **D24–D31** olarak işlendi. En büyüğü **D31**: kart iki dilime
@@ -89,21 +93,7 @@ Başarı ölçütü: **ziyaretçi, aracın hangi parçasına ne olduğunu tek ba
 
 ### Parça haritası — veri ve panel
 
-- **R8.** Parça haritası, anahtarı **`paint_change_map`** olan **tek bir opsiyonel alandır**:
-  tek form durumu ve tek public görünürlük ekseni taşır. Varsayılan ayarı
-  **Opsiyonel + Görünür**dür (**D5**). → `docs/architecture.md` § 4, **F1**–**F5**.
-- **R9.** Harita **13 parçayı** C10'daki sabit kodlarla ve sabit sırayla tanır (**D6**).
-- **R10.** Her parçanın durumu dört koddan biridir: **orijinal**, **lokal boyalı**,
-  **boyalı**, **değişen** (**D1**). "Belirtilmedi" diye bir durum yoktur.
-- **R11.** Değer ya **13 parçanın tamamını** taşır ya da **hiç yoktur**; yarım harita
-  kaydedilemez ve reddedilir (**D7**).
-- **R12.** Panelde, aracın opsiyonel alan formunda alan açıksa **13 seçim kutusu** bulunur
-  (**D5**):
-  - Hiçbiri önceden seçili gelmez; "orijinal" varsayılan **değildir** (**D7**).
-  - Hiç seçim yapılmamışsa değer yazılmaz.
-  - Bazı kutular seçilip bazıları boş bırakılırsa kayıt reddedilir ve eksik parçalar
-    gösterilir.
-  - Kayıtlı bir değer bütünüyle **temizlenebilir**.
+- **R8–R12.** *(Bölündü, 2026-11-18 — **D31**.)* Parça haritasının değeri, değer tipi ve paneli **`0016a`**'dadır. Bu dilim `0016a`'nın sözleşmesine dayanır.
 
 ### Parça haritası — vitrin
 
@@ -176,29 +166,8 @@ Başarı ölçütü: **ziyaretçi, aracın hangi parçasına ne olduğunu tek ba
 - **C8.** `0002`'nin mevcut kabul kriterleri **regresyon olarak** korunur — C12'nin
   değiştirdiği sözleşme alanı hariç. → ADR 0003 unsur 1.
 - **C9.** Her kabul kriteri en az bir testle karşılanır; görsel kriterler görsel kanıt taşır.
-- **C10.** 13 parçanın **kodları ve sırası** sabittir (**D6**). Sıra hem okunabilir listenin
-  sırası hem panel formunun sırasıdır:
-
-  | # | Kod | Parça |
-  |---|---|---|
-  | 1 | `front_bumper` | Ön tampon |
-  | 2 | `hood` | Motor kaputu |
-  | 3 | `roof` | Tavan |
-  | 4 | `trunk_lid` | Bagaj kapağı |
-  | 5 | `rear_bumper` | Arka tampon |
-  | 6 | `left_front_fender` | Sol ön çamurluk |
-  | 7 | `left_front_door` | Sol ön kapı |
-  | 8 | `left_rear_door` | Sol arka kapı |
-  | 9 | `left_rear_fender` | Sol arka çamurluk |
-  | 10 | `right_front_fender` | Sağ ön çamurluk |
-  | 11 | `right_front_door` | Sağ ön kapı |
-  | 12 | `right_rear_door` | Sağ arka kapı |
-  | 13 | `right_rear_fender` | Sağ arka çamurluk |
-
-  Durum kodları: `original`, `local_painted`, `painted`, `replaced`.
-- **C11.** Parça haritası **yeni bir değer tipi**dir. ADR 0007'nin kapalı tip kümesine
-  eklenir ve bu ekleme **ADR 0007'ye ek bir karar** olarak yazılır (**D5**). Tipin depolama
-  biçimi plan turunun kararıdır.
+- **C10.** 13 parçanın **kodları ve sırası** sabittir (**D6**); tablonun **tek evi `0016a` C10**'dur (**D31**). Okunabilir listenin sırası o tablonun sırasıdır.
+- **C11.** *(Bölündü — **D31**.)* Yeni değer tipi ve ADR 0007 eki **`0016a`**'dadır.
 - **C12.** Detay sözleşmesi değişir (**D9**, **D22**):
   - `CoverImageUrl` **kaldırılır**; yerine **sıralı görsel listesi** gelir. Her eleman üç
     türevin adresini ve gerçek boyutlarını taşır.
@@ -514,6 +483,9 @@ detay sözleşmesi, şema, performans (R1–R7, R13–R21, C1–C5, C7, C8, C12,
 `0016a` önce gelir; sözleşmesi `0016b`'nin önkoşuludur. *Gerekçe:* `0010` ve `0012`'deki
 gibi; her dilim kendi başına test edilir ve kriterlerin yazılmadan bölünmesi neredeyse
 bedelsizdir (ADR 0003 Ek 1'in ölçümü).
+*Not (bölünmede eklendi):* D5 ayrı bir `0016a` spec'ini **elenen alternatif** olarak yazmıştı;
+gerekçesi 13 × 4 kod tablosunun iki yerde tanımlanmasıydı. D31 o alternatifi seçer ve
+endişeyi tablonun tek evini `0016a` C10 yaparak karşılar.
 
 ### Uygulama planı (onaylı, 2026-11-18)
 
