@@ -3,6 +3,7 @@ using CarGallery.Host;
 using CarGallery.Host.Localization;
 using CarGallery.Host.Schema;
 using CarGallery.Host.Theme;
+using CarGallery.Modules.Content;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Identity.Contracts.Setup;
@@ -77,6 +78,10 @@ builder.Services.AddVehicleReference(connectionString);
 // Modül kendi arka plan dağıtıcısını da kaydeder: DealershipDbContext internal'dır ve
 // host onu göremez — sınırın doğru yerde durduğunun işareti.
 builder.Services.AddDealership(connectionString, localization.DefaultLocale);
+
+// `0017` — içerik sayfaları ve SSS. Etkin diller yapılandırmadan: eksik dil yalnız etkin
+// dillerde sayılır (R9).
+builder.Services.AddContent(connectionString, localization.DefaultLocale, localization.EnabledLocales);
 
 // 0006 — personel kimliği. Süreler ve eşikler DAĞITIM YAPILANDIRMASINDAN gelir (C20);
 // kabul kriterleri yapılandırılan değeri doğrular, koda gömülü bir sabiti değil.
@@ -261,6 +266,7 @@ app.UseMiddleware<LocalePrefixMiddleware>();
 
 app.MapVehicleCatalog();
 app.MapDealership();
+app.MapContent();
 app.MapVehicleReference();
 app.MapIdentity();
 app.MapLeads();

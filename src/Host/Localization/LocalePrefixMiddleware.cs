@@ -1,5 +1,6 @@
 using System.Net;
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.Content.Contracts.Pages;
 using CarGallery.Modules.Identity.Contracts.Sessions;
 
 namespace CarGallery.Host.Localization;
@@ -84,8 +85,45 @@ internal sealed class LocalePrefixMiddleware(RequestDelegate next, LocalePrefixR
             return;
         }
 
+        // `0017` D13/D27 — tek parçalı içerik adresi ESKİ bir slug'sa güncel adrese 301.
+        // Okuma yalnız ayrılmış olmayan tek parçalı yolda yapılır: ana sayfa, liste ve ilan
+        // detayı `Content`'e hiç sormaz (AC-42).
+        if (ContentSlugOf(path, firstSegment) is string slug)
+        {
+            string? guncel = await context.RequestServices
+                .GetRequiredService<IContentPublicQueries>()
+                .FindCurrentSlugAsync(firstSegment, slug, context.RequestAborted);
+
+            if (guncel is not null)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.MovedPermanently;
+                context.Response.Headers.Location =
+                    $"/{firstSegment}/{Uri.EscapeDataString(guncel)}{context.Request.QueryString.Value}";
+                return;
+            }
+        }
+
         Locale locale = resolver.Resolve(firstSegment);
         await renderer.WriteAsync(context, locale);
+    }
+
+    /// <summary>
+    /// `0017` — <c>/{locale}/{x}</c> biçimindeki yolun <c>x</c>'i, ayrılmış değilse; değilse
+    /// <c>null</c>. Ayrılmış liste <c>Content.Contracts</c>'tadır (C11); liste bölümü
+    /// (<see cref="ListSegment"/>) o listede olmak zorunda (AC-50).
+    /// </summary>
+    internal static string? ContentSlugOf(PathString path, string localeSegment)
+    {
+        string[] parcalar = (path.Value ?? string.Empty).Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parcalar.Length != 2 || parcalar[0] != localeSegment)
+        {
+            return null;
+        }
+
+        string aday = Uri.UnescapeDataString(parcalar[1]);
+
+        return ContentReservedSlugs.Contains(aday) ? null : aday;
     }
 
     private static bool IsLocaleRoot(PathString path, string localeSegment) =>

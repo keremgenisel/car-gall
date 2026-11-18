@@ -8,6 +8,10 @@
     <Project Path="src/Modules/Notifications/Notifications.Contracts/Notifications.Contracts.csproj" />
     <Project Path="src/Modules/Notifications/Notifications/Notifications.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Content/">
+    <Project Path="src/Modules/Content/Content.Contracts/Content.Contracts.csproj" />
+    <Project Path="src/Modules/Content/Content/Content.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Dealership/">
     <Project Path="src/Modules/Dealership/Dealership.Contracts/Dealership.Contracts.csproj" />
     <Project Path="src/Modules/Dealership/Dealership/Dealership.csproj" />
@@ -34,6 +38,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+    <Project Path="tests/Content.Tests/Content.Tests.csproj" />
     <Project Path="tests/Dealership.Tests/Dealership.Tests.csproj" />
     <Project Path="tests/Notifications.Tests/Notifications.Tests.csproj" />
     <Project Path="tests/Host.Tests/Host.Tests.csproj" />

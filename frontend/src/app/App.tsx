@@ -6,6 +6,7 @@ import { BranchList } from '../features/dealership/BranchList'
 import { useGallery } from '../features/dealership/useGallery'
 import { LocaleProvider } from './LocaleProvider'
 import { ListingDetailPage } from '../features/catalog/ListingDetailPage'
+import { ContentPage } from '../features/content/ContentPage'
 import { ShowcaseListPage } from '../features/catalog/ShowcaseListPage'
 import { LeadForm } from '../features/leads/LeadForm'
 import type { AppLocale } from '../shared/lib/locale'
@@ -34,7 +35,7 @@ export function App({ locale }: { readonly locale: AppLocale }) {
       <LocaleProvider locale={locale}>
         <Suspense fallback={<div className="admin-page admin-page--narrow" />}>
           {/* Panelin alt yüzeyi adresten geliyor; kabuk onu propla alıyor (0010a). */}
-          <AdminApp view={route.view} vehicleId={route.vehicleId} />
+          <AdminApp view={route.view} vehicleId={route.vehicleId} pageId={route.pageId} />
         </Suspense>
       </LocaleProvider>
     )
@@ -63,6 +64,9 @@ export function App({ locale }: { readonly locale: AppLocale }) {
               <LeadForm listingSlug={detail.slug} isReserved={detail.isReserved} />
             )}
           />
+        ) : route.kind === 'content' ? (
+          /* `0017` R11 — tek parçalı adres bir içerik sayfası adayıdır (D9). */
+          <ContentPage slug={route.slug} />
         ) : (
           <ShowcaseListPage />
         )}

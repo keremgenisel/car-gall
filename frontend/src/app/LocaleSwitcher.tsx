@@ -1,5 +1,7 @@
 import { useLocale } from './localeContext'
+import { useAlternateLinks, type AlternateLinks } from '../shared/lib/alternateLinks'
 import { SUPPORTED_LOCALES, type AppLocale } from '../shared/lib/locale'
+import { homePath } from '../shared/lib/route'
 
 /**
  * Dil değiştirici bir GEZİNMEDİR, tercih kaydı değildir (frontend-001 C8):
@@ -13,13 +15,14 @@ import { SUPPORTED_LOCALES, type AppLocale } from '../shared/lib/locale'
  */
 export function LocaleSwitcher() {
   const { locale: current, t } = useLocale()
+  const alternates = useAlternateLinks()
 
   return (
     <nav className="top-bar__locales" aria-label={t('app.localeSwitcher.label')}>
       {SUPPORTED_LOCALES.map((locale) => (
         <a
           key={locale}
-          href={hrefFor(locale)}
+          href={hrefFor(locale, current, alternates)}
           className={
             locale === current ? 'top-bar__locale top-bar__locale--current' : 'top-bar__locale'
           }
@@ -33,7 +36,13 @@ export function LocaleSwitcher() {
   )
 }
 
-function hrefFor(locale: AppLocale): string {
+function hrefFor(locale: AppLocale, current: AppLocale, alternates: AlternateLinks | null): string {
+  // `0017` R15 — içerik sayfasında hedef, sayfanın o dildeki slug'ıdır; o dilde yayında
+  // değilse o dilin ana sayfası (AC-59, AC-60). Diğer ekranlarda bugünkü kural (AC-62).
+  if (alternates !== null && locale !== current) {
+    return alternates[locale] ?? homePath(locale)
+  }
+
   const rest = window.location.pathname.replace(/^\/[^/]*/, '')
   return `/${locale}${rest}${window.location.search}`
 }

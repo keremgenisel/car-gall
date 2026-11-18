@@ -495,6 +495,10 @@ altındaki ADR'lerdedir.
 | `VehicleCatalog` olaylarının gövdesi | `(EventId, OccurredAt, VehicleId, ListingId, Slug)`; **durum alanı yok** — durumu olayın tipi söyler |
 | Vitrin okuma modeline yazma | **Görünürlük kararı** yalnız yansıtmada; kopyalanmış kolonları (kapak URL'i, şube adları, galeri yuvalarının durumu ve türevleri) besleyen işleyiciler bunun dışında |
 | Vitrin galerisi | Okuma modelinde ayrı tablo (`showcase_listing_media`): konum, durum, türevlerin gerçek boyutu; `MediaAssetReady`/`MediaAssetFailed` günceller, detay isteği `Media`'yı çağırmaz (`0016b` D25) |
+| İçerik sayfası adresi | `/{locale}/{slug}`; slug dil başına ve Latin. Tek parçalı tanınmayan yol içerik adayıdır (listeye düşmez), iki parçalı tanınmayan yol listeye düşer. Ayrılmış adlar (`cars`, `admin`, `api`, `assets`) `Content.Contracts`'ta tek yerde (`0017` D9, D11) |
+| Eski içerik slug'ı | Kabuk, ayrılmamış tek parçalı yolda `Content`'e "eski slug mu" diye sorar; eşleşirse tek `301` ile güncel adrese (zincir yok); diğer adresler okuma yapmaz (`0017` D13, D27, D33) |
+| İçerik gövdesi | CommonMark alt kümesi ham saklanır; ziyaretçi tarafı doğrudan arayüz öğelerine çizer, hiçbir aşamada HTML üretmez. Sunucu yalnız izinsiz bağlantı şemasını reddeder; ham HTML metin olarak basılır (`0017` D19, D26) |
+| İçerik yazma yetkisi | `AdminSurface.ContentPolicy`: Yönetici + İçerik Editörü; rol kontrolü `Identity`'nin politikasında, `Content` rol kodu karşılaştırmaz (`0017` D25) |
 | İlan detayı ilk görseli | Kabuk, `/{locale}/cars/{slug}` için galerinin ilk hazır görselini `<link rel="preload">` olarak basar; `imagesrcset`/`imagesizes` uçla birebir aynı (`0016b` D37) |
 | Sistem tepkisiyle gelen toplu geçiş | Şube kapanması (A8) personelin seçim üst sınırına tabi değil; şube olayı başına tek işlem, geçişleri duyurulur |
 | Çok kayıtlı eylemde çapraz modül okuması | **Aynı yanıtı veren** okumalar istek başına bir kez (yapılandırma, ad haritaları); **tazeliği gereken** okuma kayıt başına ve kilidin altında |

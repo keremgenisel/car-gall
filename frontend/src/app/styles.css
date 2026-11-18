@@ -1466,3 +1466,161 @@ body {
   color: var(--color-ink-muted);
   font-size: var(--font-size-sm);
 }
+
+/* --- İçerik sayfaları (0017 R11–R19) ----------------------------------------- */
+
+.content-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  text-align: start;
+}
+
+.content-page__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.content-body {
+  display: grid;
+  gap: var(--space-5);
+  line-height: var(--line-height-base);
+}
+
+.content-body h2,
+.content-body h3,
+.content-body p,
+.content-body ul,
+.content-body ol {
+  margin: 0;
+}
+
+.content-body h2 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.content-body h3 {
+  font-size: var(--font-size-md);
+}
+
+.content-body ul,
+.content-body ol {
+  padding-inline-start: var(--space-7);
+}
+
+.content-body a {
+  color: var(--color-accent-text);
+}
+
+.content-faq {
+  display: grid;
+  gap: var(--space-6);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+.content-faq__item {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.content-faq__question {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* --- Panel: İçerik (0017 R24) ------------------------------------------------ */
+
+.content-admin__section {
+  display: grid;
+  gap: var(--space-5);
+  margin-block-start: var(--space-7);
+}
+
+.content-admin__heading {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.content-admin__list,
+.content-faq-editor {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.content-admin__row,
+.content-faq-editor__entry {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: start;
+}
+
+.content-admin__name {
+  color: var(--color-ink);
+  font-weight: var(--font-weight-semibold);
+}
+
+.content-admin__statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.content-faq-editor__order {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.content-edit {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.content-edit__locale {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: start;
+}
+
+.content-edit__legend {
+  padding-inline: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.content-edit__body {
+  min-block-size: calc(var(--form-control-min-block-size) * 4);
+  font-family: inherit;
+}
+
+.content-dialog {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  max-inline-size: var(--size-dialog);
+  text-align: start;
+}
+
+.content-dialog__title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.lead-form__privacy-link {
+  color: var(--color-accent-text);
+}

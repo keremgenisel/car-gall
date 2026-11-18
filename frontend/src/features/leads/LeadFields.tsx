@@ -14,6 +14,11 @@ interface Props {
   readonly types: readonly LeadType[]
   readonly invalidField: { readonly field: LeadFormField; readonly code: string } | null
   readonly onChange: (next: LeadFormValues) => void
+  /**
+   * `0017` R22 — KVKK aydınlatma metninin adresi; `privacy` o dilde yayında değilse `null`
+   * ve bağlantı HİÇ basılmaz (boş, `#` ya da ana sayfaya giden bağlantı da yok — AC-94).
+   */
+  readonly privacyHref?: string | null
 }
 
 /**
@@ -25,7 +30,7 @@ interface Props {
  * ve tek ekranda kullanılan şey ortak bileşen değildir (docs/frontend.md § 4.2). İkinci
  * bir form geldiğinde terfi önerilir.
  */
-export function LeadFields({ values, types, invalidField, onChange }: Props) {
+export function LeadFields({ values, types, invalidField, onChange, privacyHref = null }: Props) {
   const { t } = useLocale()
   const prefix = useId()
 
@@ -154,6 +159,18 @@ export function LeadFields({ values, types, invalidField, onChange }: Props) {
         </label>
         <p className="lead-form__consent-text" id={`${prefix}-consent-text`}>
           {t('lead.consent.text')}
+          {privacyHref === null ? null : (
+            <>
+              {' '}
+              <a
+                className="lead-form__privacy-link"
+                href={privacyHref}
+                data-testid="lead-privacy-link"
+              >
+                {t('lead.consent.privacyLink')}
+              </a>
+            </>
+          )}
         </p>
       </div>
     </>

@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocale } from '../../app/localeContext'
+import { fetchContentNavigation } from '../../shared/api/content'
 import { captureLead } from '../../shared/api/leads'
 import { ApiError } from '../../shared/api/client'
 import { LEAD_TYPES, type LeadType } from '../../shared/api/types'
 import { catalogKeys } from '../../shared/i18n/i18n'
-import { listPath } from '../../shared/lib/route'
+import { contentPath, listPath } from '../../shared/lib/route'
 import { Button, Card } from '../../shared/ui'
 import { LeadFields } from './LeadFields'
 import {
@@ -36,6 +37,7 @@ const LISTING_UNAVAILABLE = 'lead.listing_unavailable'
 
 export function LeadForm({ listingSlug, isReserved }: Props) {
   const { locale, t } = useLocale()
+  const privacyHref = usePrivacyHref()
   const [values, setValues] = useState<LeadFormValues>(EMPTY_LEAD_FORM)
   const [invalidField, setInvalidField] = useState<{
     readonly field: LeadFormField
@@ -118,6 +120,7 @@ export function LeadForm({ listingSlug, isReserved }: Props) {
           types={LEAD_TYPES as readonly LeadType[]}
           invalidField={invalidField}
           onChange={onChange}
+          privacyHref={privacyHref}
         />
 
         <Button type="submit" loading={phase.kind === 'submitting'}>
@@ -126,4 +129,36 @@ export function LeadForm({ listingSlug, isReserved }: Props) {
       </form>
     </Card>
   )
+}
+
+/**
+ * `0017` R22 · C13 — KVKK aydınlatma metninin adresi: `privacy` sistem sayfası KİMLİKLE
+ * bulunur (slug değişse de bağlantı doğrudan güncel adrese gider — AC-96). O dilde yayında
+ * değilse ya da okunamazsa `null`: bağlantı basılmaz ve form `0005`'teki gibi çalışır (AC-95).
+ */
+function usePrivacyHref(): string | null {
+  const { locale } = useLocale()
+  const [href, setHref] = useState<{ readonly locale: string; readonly value: string | null }>({
+    locale,
+    value: null,
+  })
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    fetchContentNavigation(locale, controller.signal)
+      .then((links) => {
+        const privacy = links.find((link) => link.systemKey === 'privacy')
+        setHref({ locale, value: privacy === undefined ? null : contentPath(locale, privacy.slug) })
+      })
+      .catch((cause: unknown) => {
+        if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
+          setHref({ locale, value: null })
+        }
+      })
+
+    return () => controller.abort()
+  }, [locale])
+
+  return href.locale === locale ? href.value : null
 }

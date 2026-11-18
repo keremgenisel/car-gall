@@ -1,5 +1,6 @@
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Host.Schema;
+using CarGallery.Modules.Content;
 using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity;
 using CarGallery.Modules.Leads;
@@ -38,6 +39,7 @@ internal static class TestSchema
         services.AddVehicleCatalog(connectionString, "tr", ["tr", "ar", "en"], "TRY", 2, 25, 100);
         services.AddVehicleReference(connectionString);
         services.AddDealership(connectionString, "tr");
+        services.AddContent(connectionString, "tr", ["tr", "ar", "en"]);
 
         // 0006 ile `identity` de bir modül şemasıdır; listeden düşerse Host başlangıçta
         // "şema güncel değil" diyerek reddeder ve Host.Tests'in tamamı kırılır.
