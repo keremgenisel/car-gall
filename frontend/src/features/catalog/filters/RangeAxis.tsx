@@ -10,6 +10,8 @@ interface Props {
   readonly summary: string
   readonly onApply: (range: ListRange | undefined) => void
   readonly onClear: () => void
+  /** Eksenin adını taşır; altı aynı adlı düğme ayırt edilemezdi (bkz. `ChipAxis`). */
+  readonly clearLabel: string
 }
 
 /**
@@ -20,7 +22,7 @@ interface Props {
  * Kendi `<form>`'u vardır: Enter tarayıcının yerel gönderimiyle çalışır, ayrı bir klavye
  * dinleyicisi yazılmaz. Taslak, uygulanmış aralık değiştiğinde (geri tuşu, temizle) sıfırlanır.
  */
-export function RangeAxis({ id, legend, range, summary, onApply, onClear }: Props) {
+export function RangeAxis({ id, legend, range, summary, onApply, onClear, clearLabel }: Props) {
   const { t } = useLocale()
   const applied = `${range?.min ?? ''}|${range?.max ?? ''}`
   const [draft, setDraft] = useState({ key: applied, min: text(range?.min), max: text(range?.max) })
@@ -68,7 +70,7 @@ export function RangeAxis({ id, legend, range, summary, onApply, onClear }: Prop
       <div className="filter-bar__summary">
         <span data-testid={`${id}-summary`}>{summary}</span>
         <Button variant="text" onClick={onClear} disabled={range === undefined}>
-          {t('showcase.filter.clear')}
+          {clearLabel}
         </Button>
       </div>
     </fieldset>

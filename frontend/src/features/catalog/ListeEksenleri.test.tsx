@@ -112,7 +112,7 @@ describe('0015 — eksenler ve özetler (R10, R16)', () => {
     ekran('/tr/cars?fuel=diesel&transmission=manual&yearMin=2018&sort=year-asc')
 
     const yakit = await screen.findByTestId('fuels-filter')
-    fireEvent.click(within(yakit).getByRole('button', { name: 'Seçimi temizle' }))
+    fireEvent.click(within(yakit).getByRole('button', { name: 'Yakıt seçimini temizle' }))
 
     expect(window.location.search).toBe('?transmission=manual&yearMin=2018&sort=year-asc')
   })

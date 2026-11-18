@@ -489,5 +489,6 @@
   "showcase.sort.mileage-asc": "Kilometre: düşükten yükseğe",
   "showcase.sort.year-desc": "Yıl: yeniden eskiye",
   "showcase.sort.year-asc": "Yıl: eskiden yeniye",
-  "showcase.empty.filtered.axes": "Etkin daraltmalar: {axes}. Daraltmaları kaldırıp tüm ilanlara dönebilirsiniz."
+  "showcase.empty.filtered.axes": "Etkin daraltmalar: {axes}. Daraltmaları kaldırıp tüm ilanlara dönebilirsiniz.",
+  "showcase.filter.clearAxis": "{axis} seçimini temizle"
 }

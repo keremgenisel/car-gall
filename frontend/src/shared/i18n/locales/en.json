@@ -489,5 +489,6 @@
   "showcase.sort.mileage-asc": "Mileage: low to high",
   "showcase.sort.year-desc": "Year: newest first",
   "showcase.sort.year-asc": "Year: oldest first",
-  "showcase.empty.filtered.axes": "Active filters: {axes}. Clear them to see every listing again."
+  "showcase.empty.filtered.axes": "Active filters: {axes}. Clear them to see every listing again.",
+  "showcase.filter.clearAxis": "Clear {axis} selection"
 }

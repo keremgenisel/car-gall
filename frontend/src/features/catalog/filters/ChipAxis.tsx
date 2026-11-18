@@ -1,4 +1,3 @@
-import { useLocale } from '../../../app/localeContext'
 import { Button } from '../../../shared/ui'
 
 export interface ChipOption {
@@ -14,6 +13,11 @@ interface Props {
   readonly summary: string
   readonly onToggle: (slug: string) => void
   readonly onClear: () => void
+  /**
+   * Eksenin temizle düğmesinin erişilebilir adı. Altı eksende aynı adlı altı düğme ekran
+   * okuyucuda ayırt edilemezdi; kasa tipi `0001`'in adını ("Seçimi temizle") korur.
+   */
+  readonly clearLabel: string
   /**
    * Test kimlikleri. Kasa tipi ekseni `0001`'in kimliklerini (`body-type-filter`,
    * `selected-count`) KORUR: sayfada tek olmaları gerekir ve `0001`'in testleri onlara
@@ -35,11 +39,10 @@ export function ChipAxis({
   summary,
   onToggle,
   onClear,
+  clearLabel,
   testId,
   summaryTestId,
 }: Props) {
-  const { t } = useLocale()
-
   return (
     <fieldset className="filter-axis" data-testid={testId}>
       <legend className="filter-bar__legend">{legend}</legend>
@@ -68,7 +71,7 @@ export function ChipAxis({
       <div className="filter-bar__summary">
         <span data-testid={summaryTestId}>{summary}</span>
         <Button variant="text" onClick={onClear} disabled={selected.length === 0}>
-          {t('showcase.filter.clear')}
+          {clearLabel}
         </Button>
       </div>
     </fieldset>

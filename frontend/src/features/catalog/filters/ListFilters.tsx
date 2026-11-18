@@ -36,6 +36,12 @@ interface Props {
 export function ListFilters({ state, options, onChange }: Props) {
   const { locale, t } = useLocale()
 
+  // Kasa tipi `0001`'in düğme adını korur; diğerleri eksenin adını taşır ("Yakıt seçimini temizle").
+  const clearLabel = (axis: MultiAxis | RangeAxisName) =>
+    axis === 'bodyTypes'
+      ? t('showcase.filter.clear')
+      : t('showcase.filter.clearAxis', { axis: axisName(axis, t) })
+
   const chip = (
     axis: MultiAxis,
     values: readonly { slug: string; label: string }[],
@@ -51,6 +57,7 @@ export function ListFilters({ state, options, onChange }: Props) {
       summary={t(summaryKey, { count: valuesOf(state, axis).length })}
       onToggle={(slug) => onChange(toggleValue(state, axis, slug))}
       onClear={() => onChange(clearAxis(state, axis))}
+      clearLabel={clearLabel(axis)}
       testId={testId}
       summaryTestId={summaryTestId}
     />
@@ -65,6 +72,7 @@ export function ListFilters({ state, options, onChange }: Props) {
       summary={rangeSummary(axis, state[axis], locale, t)}
       onApply={(next) => onChange(withRange(state, axis, next))}
       onClear={() => onChange(clearAxis(state, axis))}
+      clearLabel={clearLabel(axis)}
     />
   )
 

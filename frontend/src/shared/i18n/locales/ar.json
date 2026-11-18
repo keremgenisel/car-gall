@@ -489,5 +489,6 @@
   "showcase.sort.mileage-asc": "المسافة: من الأقل إلى الأعلى",
   "showcase.sort.year-desc": "السنة: من الأحدث إلى الأقدم",
   "showcase.sort.year-asc": "السنة: من الأقدم إلى الأحدث",
-  "showcase.empty.filtered.axes": "التصفيات المفعّلة: {axes}. امسح التصفيات لعرض جميع الإعلانات."
+  "showcase.empty.filtered.axes": "التصفيات المفعّلة: {axes}. امسح التصفيات لعرض جميع الإعلانات.",
+  "showcase.filter.clearAxis": "مسح تحديد {axis}"
 }
