@@ -29,7 +29,7 @@
 > SCORECARD'da revizyon **sayılmaz**, ADR 0008 / K3.)* **Kriter turu (2026-11-18, #88):**
 > 46 kabul kriteri D1–D21'den türetildi — Developer yazdı, Takım Yöneticisi onayına sunuldu
 > (§ Acceptance Criteria). *(QA BULGU-2, 2026-11-18: bu paragraf kriterler eklendikten sonra da
-> "kabul kriterleri yazılmadı" diyordu.)*
+> spec'i kriterleri yokmuş gibi anlatıyordu.)*
 
 ---
 
