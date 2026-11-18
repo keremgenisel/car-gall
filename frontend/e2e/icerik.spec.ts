@@ -346,7 +346,7 @@ test('0017/AC-86, AC-89, AC-90, AC-122: Kurumsal kolonu sabit sırada; hiçbiri 
   await kanit(page, '[data-testid="home-footer"]', '0017-ac122-ar.png')
 })
 
-test('0017/AC-93, AC-94, AC-97: talep formunun izin satırı privacy yayındayken bağlantı taşır; değilken hiç bağlantı yok', async ({
+test('0017/AC-93, AC-94, AC-95, AC-97: talep formunun izin satırı privacy yayındayken bağlantı taşır; değilken hiç bağlantı yok', async ({
   page,
 }) => {
   await sifirla(page.request)
@@ -373,6 +373,14 @@ test('0017/AC-93, AC-94, AC-97: talep formunun izin satırı privacy yayındayke
   await page.goto(`/ar/cars/${ilan}`)
   await expect(page.locator('.lead-form__consent input[type="checkbox"]')).toBeVisible()
   await expect(page.locator('.lead-form__consent a')).toHaveCount(0)
+
+  // AC-95 — bağlantı yokken de form doldurulup gönderilir ve talep kaydedilir (`0005`).
+  const form = page.getByTestId('lead-form')
+  await form.getByLabel(/اسمك/).fill('زائر الاختبار')
+  await form.getByLabel(/^الهاتف$/).fill('+905321112244')
+  await form.locator('.lead-form__consent input[type="checkbox"]').check()
+  await form.locator('button[type="submit"]').click()
+  await expect(page.getByTestId('lead-success')).toBeVisible()
 
   await yayin(page.request, ID.privacy, 'tr', false)
   await page.goto(`/tr/cars/${ilan}`)
