@@ -451,6 +451,37 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                     b.ToTable("showcase_listings", "vehicle_catalog");
                 });
 
+            modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel.ShowcaseListingMedia", b =>
+                {
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("listing_id");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<Guid>("MediaAssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("media_asset_id");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Variants")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("variants");
+
+                    b.HasKey("ListingId", "Position");
+
+                    b.HasIndex("MediaAssetId")
+                        .HasDatabaseName("ix_showcase_listing_media_asset");
+
+                    b.ToTable("showcase_listing_media", "vehicle_catalog");
+                });
+
             modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Domain.PriceChange", b =>
                 {
                     b.HasOne("CarGallery.Modules.VehicleCatalog.Domain.Vehicle", null)
@@ -577,6 +608,15 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         });
 
                     b.Navigation("OptionalValues");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel.ShowcaseListingMedia", b =>
+                {
+                    b.HasOne("CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel.ShowcaseListing", null)
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Domain.Vehicle", b =>

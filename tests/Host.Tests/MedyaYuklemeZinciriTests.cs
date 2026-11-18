@@ -250,10 +250,102 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
     }
 
     /// <summary>
+    /// `0016b` D25 — galeri yuvasının iki duyurusu da (hazır ve başarısız) ARKA PLAN
+    /// dağıtıcısı üzerinden alıcıya ulaşır. Kriter testleri işleyicileri elle çağırıyor
+    /// (`VitrinGaleriVeHaritaTests`); bu test `MediaAssetFailedHandler`'ın DI'a gerçekten
+    /// kablolandığını ölçer — `0003`'ün kaçan hatası "yazılmış ama kablolanmamış" alıcıydı.
+    ///
+    /// <para>Başarısızlık elle yazılmıyor: filigran depodan geçici olarak kaldırılıyor ve hat
+    /// `WatermarkUnavailable` ile düşüyor (`0012a` AC-17'nin yöntemi; çözülemeyen dosya
+    /// zaten yüklemede 422 ile reddediliyor).</para>
+    /// </summary>
+    [Fact]
+    public async Task Ulasir_GaleriYuvasina_HazirVeBasarisizDuyurusu()
+    {
+        HttpClient client = await GirisYapmisIstemciAsync();
+
+        Guid hazir = await YukleAsync(client, JpegUret(1200, 900));
+        Guid bozuk = Guid.CreateVersion7();
+        await IlanEkleAsync(hazir, galeri: [hazir]);
+
+        Assert.Equal((short)2, await YuvaDurumuBekleAsync(hazir, beklenen: 2));
+
+        using AmazonS3Client s3 = DepoIstemcisi();
+        await s3.DeleteObjectAsync(new DeleteObjectRequest { BucketName = Bucket, Key = WatermarkKey });
+
+        try
+        {
+            bozuk = await YukleAsync(client, JpegUret());
+            await IlanEkleAsync(bozuk, galeri: [bozuk]);
+
+            Assert.Equal((short)3, await YuvaDurumuBekleAsync(bozuk, beklenen: 3));
+        }
+        finally
+        {
+            using MemoryStream filigran = new(FiligranPng(), writable: false);
+            await s3.PutObjectAsync(new PutObjectRequest { BucketName = Bucket, Key = WatermarkKey, InputStream = filigran, ContentType = "image/png" });
+        }
+
+        // Hazır yuva türevlerin GERÇEK boyutlarını taşır (D18): 1200×900 kaynak, `large`
+        // 1600'e büyütülmez.
+        await using NpgsqlConnection connection = new(postgres.GetConnectionString());
+        await connection.OpenAsync();
+        await using NpgsqlCommand command = connection.CreateCommand();
+        command.CommandText = "SELECT variants::text FROM vehicle_catalog.showcase_listing_media WHERE media_asset_id = @id";
+        command.Parameters.AddWithValue("id", hazir);
+        string turevler = (string)(await command.ExecuteScalarAsync())!;
+
+        Assert.Contains("\"Width\": 1200, \"Height\": 900", turevler.Replace("\"width\"", "\"Width\"").Replace("\"height\"", "\"Height\""), StringComparison.Ordinal);
+    }
+
+    private AmazonS3Client DepoIstemcisi() => new("test", "test", new AmazonS3Config
+    {
+        ServiceURL = depo.GetConnectionString(),
+        ForcePathStyle = true,
+        AuthenticationRegion = "us-east-1",
+    });
+
+    private static async Task<Guid> YukleAsync(HttpClient client, byte[] icerik)
+    {
+        HttpResponseMessage yanit = await client.PostAsync(
+            new Uri($"{AdminSurface.RoutePrefix}/media/assets", UriKind.Relative),
+            Govde(icerik));
+
+        Assert.Equal(HttpStatusCode.Accepted, yanit.StatusCode);
+
+        return JsonDocument.Parse(await yanit.Content.ReadAsStringAsync()).RootElement.GetProperty("id").GetGuid();
+    }
+
+    /// <summary>Yuvanın durumu beklenen değere gelene kadar (en çok 45 sn) yoklar.</summary>
+    private async Task<short?> YuvaDurumuBekleAsync(Guid varlik, short beklenen)
+    {
+        short? son = null;
+
+        for (int deneme = 0; deneme < 90; deneme++)
+        {
+            await using NpgsqlConnection connection = new(postgres.GetConnectionString());
+            await connection.OpenAsync();
+            await using NpgsqlCommand command = connection.CreateCommand();
+            command.CommandText = "SELECT status FROM vehicle_catalog.showcase_listing_media WHERE media_asset_id = @id";
+            command.Parameters.AddWithValue("id", varlik);
+            son = await command.ExecuteScalarAsync() as short?;
+
+            if (son == beklenen)
+            {
+                return son;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+        }
+
+        return son;
+    }
+
+    /// <summary>
     /// Okuma modeline kapak varlığı bu olan bir ilan ekler. Alıcı onu `cover_asset_id`
     /// üzerinden bulacak.
     /// </summary>
-    private async Task IlanEkleAsync(Guid coverAssetId)
+    private async Task IlanEkleAsync(Guid coverAssetId, IReadOnlyList<Guid>? galeri = null)
     {
         await using NpgsqlConnection connection = new(postgres.GetConnectionString());
         await connection.OpenAsync();
@@ -280,6 +372,21 @@ public sealed class MedyaYuklemeZinciriTests : IAsyncLifetime
         command.Parameters.AddWithValue("coverAssetId", coverAssetId);
 
         await command.ExecuteNonQueryAsync();
+
+        // `0016b` — galeri yuvaları `işleniyor` doğar; duyurular onları günceller.
+        for (int konum = 0; konum < (galeri?.Count ?? 0); konum++)
+        {
+            await using NpgsqlCommand yuva = connection.CreateCommand();
+            yuva.CommandText = """
+                INSERT INTO vehicle_catalog.showcase_listing_media (listing_id, position, media_asset_id, status, variants)
+                SELECT listing_id, @konum, @varlik, 1, '[]'::jsonb
+                FROM vehicle_catalog.showcase_listings WHERE cover_asset_id = @coverAssetId
+                """;
+            yuva.Parameters.AddWithValue("konum", konum);
+            yuva.Parameters.AddWithValue("varlik", galeri![konum]);
+            yuva.Parameters.AddWithValue("coverAssetId", coverAssetId);
+            await yuva.ExecuteNonQueryAsync();
+        }
     }
 
     /// <summary>

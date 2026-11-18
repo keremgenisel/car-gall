@@ -79,6 +79,7 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
         ];
 
         List<ShowcaseListing> rows = [];
+        List<ShowcaseListingMedia> media = [];
 
         // 0010a/D12 — yazma modeli de saklanıyor; vitrin satırları artık arkalarında
         // gerçek birer araç kaydı olan ilanlardan türüyor.
@@ -126,7 +127,13 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 vin,
                 clock.UtcNow).Value;
 
-            vehicle.AttachMediaAsset(Guid.CreateVersion7());
+            // `0016b` — galerinin yuvaları. Kapak (liste kartı) bugünkü gibi `cover-n.svg`;
+            // detay galerisi türevleri `frame-…` adreslerinden alır (bkz. `SeedGallery`).
+            List<ShowcaseListingMedia> galeri = SeedGallery(index);
+            foreach (ShowcaseListingMedia yuva in galeri)
+            {
+                vehicle.AttachMediaAsset(yuva.MediaAssetId);
+            }
 
             // E10 — opsiyonel alan DEĞERLERİ yazma yolu gelene kadar buradan gelir.
             // 0010b/D17 — tramer bir TUTAR; artık `Money` olarak yazılıyor, metin olarak
@@ -190,13 +197,94 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             if (row is not null)
             {
                 rows.Add(row);
+                media.AddRange(galeri.Select(yuva => new ShowcaseListingMedia
+                {
+                    ListingId = row.ListingId,
+                    Position = yuva.Position,
+                    MediaAssetId = yuva.MediaAssetId,
+                    Status = yuva.Status,
+                    Variants = yuva.Variants,
+                }));
             }
         }
 
         context.Vehicles.AddRange(vehicles);
         context.Listings.AddRange(listings);
         context.ShowcaseListings.AddRange(rows);
+        context.ShowcaseListingMedia.AddRange(media);
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// `0016b` — galerinin geliştirme ve kanıt hâlleri, ilk beş ilanda:
+    /// <list type="bullet">
+    /// <item>0 — 30 hazır görsel; yatay 4:3, dikey 3:4 ve 16:9 sırayla (AC-61, AC-62, AC-64).</item>
+    /// <item>1 — 3 hazır görsel; ikincinin adresi 404 döner (AC-69).</item>
+    /// <item>2 — başarısız, hazır, başarısız: tek görsel (AC-67, AC-68).</item>
+    /// <item>3 — 18 hazır görsel; model yılı 2019 (AC-56).</item>
+    /// <item>4 — işleniyor, başarısız: hazır görsel yok (AC-65, AC-66).</item>
+    /// </list>
+    /// Diğer ilanlar tek hazır görsel taşır. Yuvaların <c>ListingId</c>'si çağıranda yazılır.
+    /// </summary>
+    private static List<ShowcaseListingMedia> SeedGallery(int index)
+    {
+        ShowcaseListingMedia Yuva(int konum, ShowcaseMediaStatus durum, int kare, int en, int boy) => new()
+        {
+            ListingId = Guid.Empty,
+            Position = konum,
+            MediaAssetId = Guid.CreateVersion7(),
+            Status = durum,
+            Variants = durum == ShowcaseMediaStatus.Ready ? Turevler(kare, en, boy) : [],
+        };
+
+        ShowcaseListingMedia Hazir(int konum, int kare, int en = 4, int boy = 3) =>
+            Yuva(konum, ShowcaseMediaStatus.Ready, kare, en, boy);
+
+        return index switch
+        {
+            0 => [.. Enumerable.Range(0, 30).Select(konum => (konum % 3) switch
+            {
+                1 => Hazir(konum, konum, 3, 4),
+                2 => Hazir(konum, konum, 16, 9),
+                _ => Hazir(konum, konum),
+            })],
+            // İkinci yuvanın karesi aralık dışında: uç 404 döner (AC-69'un kanıtı).
+            1 => [Hazir(0, 0), Hazir(1, SeedFrameMissing), Hazir(2, 2)],
+            2 =>
+            [
+                Yuva(0, ShowcaseMediaStatus.Failed, 0, 4, 3),
+                Hazir(1, 1),
+                Yuva(2, ShowcaseMediaStatus.Failed, 0, 4, 3),
+            ],
+            3 => [.. Enumerable.Range(0, 18).Select(konum => Hazir(konum, konum))],
+            4 =>
+            [
+                Yuva(0, ShowcaseMediaStatus.Processing, 0, 4, 3),
+                Yuva(1, ShowcaseMediaStatus.Failed, 0, 4, 3),
+            ],
+            _ => [Hazir(0, index % 30)],
+        };
+    }
+
+    /// <summary>`/seed-media/frame-…` ucunun TANIMADIĞI kare numarası: o adres 404 döner.</summary>
+    private const int SeedFrameMissing = 99;
+
+    /// <summary>
+    /// `Media`'nın üç türevinin boyut kuralı (en uzun kenar 400 / 800 / kaynak ≤ 1600):
+    /// 4:3 kaynak 1200×900 → `large` 1200×900 (1600 değil), `display` 800×600,
+    /// `thumbnail` 400×300 — `0016b` AC-10/AC-60'ın sayıları.
+    /// </summary>
+    private static List<ShowcaseMediaVariant> Turevler(int kare, int en, int boy)
+    {
+        (int W, int H) Boyut(int uzun) => en >= boy ? (uzun, uzun * boy / en) : (uzun * en / boy, uzun);
+
+        ShowcaseMediaVariant Turev(string ad, int uzun)
+        {
+            (int w, int h) = Boyut(uzun);
+            return new ShowcaseMediaVariant(ad, $"/seed-media/frame-{kare}-{w}x{h}.svg", w, h);
+        }
+
+        return [Turev("thumbnail", 400), Turev("display", 800), Turev("large", 1200)];
     }
 
     private static PaintChangeMap? SeedPaintChangeMap(int index)

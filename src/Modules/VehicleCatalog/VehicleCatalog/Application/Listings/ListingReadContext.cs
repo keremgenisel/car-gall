@@ -48,7 +48,13 @@ internal sealed record ListingReadContext(
     /// Kapak varlığı → gösterim türevinin adresi (**D56**). Anahtar VARLIK kimliği, araç
     /// kimliği değil: iki araç aynı varlığı gösterirse `Media` bir kez sorulur.
     /// </summary>
-    IReadOnlyDictionary<Guid, string> CoverUrls)
+    IReadOnlyDictionary<Guid, string> CoverUrls,
+    /// <summary>
+    /// `0016b` D25 — seçimdeki araçların medya listelerindeki BÜTÜN varlıklar, varlık
+    /// kimliğiyle. Kapak okumasıyla aynı TEK modüller arası çağrıdan geliyor; galeri yuvaları
+    /// (durum ve türevler) buradan yazılır ve 25 satırlık toplu yayın yine bir çağrı yapar.
+    /// </summary>
+    IReadOnlyDictionary<Guid, MediaAssetDto> MediaAssets)
 {
     /// <summary>
     /// Verilen araçlar için bağlamı kurar. Araç satırları **kendi şemamızdan** ve
@@ -103,18 +109,31 @@ internal sealed record ListingReadContext(
 
         // Kapak varlıkları TEK çağrıda: seçimdeki her aracın medya listesinin ilk elemanı
         // (`docs/domain.md`, Kapak Görseli) ve tekrarlar `FindManyAsync`'te elenir.
-        List<Guid> kapakVarliklari =
+        // `0016b` D25 — kapakla birlikte galerinin bütün varlıkları da aynı çağrıda.
+        List<Guid> varlikKimlikleri = [.. hedefler.SelectMany(hedef => hedef.MediaAssetIds).Distinct()];
+        HashSet<Guid> kapakVarliklari =
         [
             .. hedefler
                 .Select(hedef => hedef.MediaAssetIds.Count > 0 ? hedef.MediaAssetIds[0] : (Guid?)null)
                 .OfType<Guid>()
-                .Distinct()
         ];
 
         Dictionary<Guid, string> kapaklar = new();
+        Dictionary<Guid, MediaAssetDto> varliklar = new();
 
-        foreach (MediaAssetDto varlik in await mediaAssets.FindManyAsync(kapakVarliklari, cancellationToken))
+        IReadOnlyList<MediaAssetDto> okunan = varlikKimlikleri.Count == 0
+            ? []
+            : await mediaAssets.FindManyAsync(varlikKimlikleri, cancellationToken);
+
+        foreach (MediaAssetDto varlik in okunan)
         {
+            varliklar[varlik.Id] = varlik;
+
+            if (!kapakVarliklari.Contains(varlik.Id))
+            {
+                continue;
+            }
+
             string? adres = varlik.Derivatives
                 .FirstOrDefault(derivative => derivative.Variant == ShowcaseProjectionWriter.DisplayVariant)?.Url;
 
@@ -129,7 +148,8 @@ internal sealed record ListingReadContext(
             await AlanAnahtarlariAsync(context, zorunlu: false, cancellationToken),
             subeAdlari,
             adlar,
-            kapaklar);
+            kapaklar,
+            varliklar);
     }
 
     /// <summary>

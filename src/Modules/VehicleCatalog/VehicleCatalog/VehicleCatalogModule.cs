@@ -63,6 +63,7 @@ public static class VehicleCatalogModule
         // KABLOLANMAMIŞ kalıyordu: dağıtıcı alıcıları DI'dan çözer ve kayıtsız bir alıcı
         // hiçbir zaman çağrılmaz. `0003`'ün kaçan hatası birebir buydu.
         services.AddScoped<IIntegrationEventDispatchTarget, MediaAssetReadyHandler>();
+        services.AddScoped<IIntegrationEventDispatchTarget, MediaAssetFailedHandler>();
         services.AddScoped<IIntegrationEventHandler<BranchDetailsChanged>, BranchDetailsChangedHandler>();
         services.AddScoped<IIntegrationEventHandler<BranchDeactivated>, BranchDeactivatedHandler>();
         services.AddScoped<IVehicleModelNameResolver, VehicleModelNameResolver>();

@@ -78,13 +78,18 @@ public sealed class DetayTests(ShowcaseDatabase database)
     {
         await database.ResetAsync();
         await SeedAsync();
+        await ShowcaseQueryHarness.SeedReadyImageAsync(database, Slug);
 
         ShowcaseListingDetailDto detay = (await FindAsync(Slug))!;
 
         Assert.Equal("Toyota Corolla", detay.ModelName);
         Assert.Equal(125_000, detay.MileageKilometers);
         Assert.Equal("Merkez Şube", detay.BranchName);
-        Assert.NotNull(detay.CoverImageUrl);
+
+        // `0016b` AC-77 — `0002`'nin DEĞİŞEN tek iddiası: tek kapak adresi (`coverImageUrl`)
+        // yerine galerinin görsel listesi (C12/D22). Kapak görseli hâlâ gösterilir; artık
+        // listenin ilk elemanıdır.
+        Assert.NotEmpty(detay.Images);
 
         string[] anahtarlar = [.. detay.Attributes.Select(item => item.Key)];
         Assert.Contains("body_type", anahtarlar);
