@@ -16,6 +16,17 @@ public sealed class FiyatGecmisiInvariantTests
 {
     private static readonly string[] SilmeFiilleri = ["Remove", "Delete", "Clear", "Erase", "Drop"];
 
+    /// <summary>
+    /// Adıyla ve gerekçesiyle muaf tutulan silme metotları — fiyat geçmişine DOKUNMAYANLAR.
+    /// Kapı ad önekine bakıyor; muafiyeti görünür tutmak, onu ad değiştirerek atlatmaktan
+    /// dürüsttür ve bir sonraki silme metodu yine yakalanır.
+    /// <list type="bullet">
+    /// <item><c>RemoveOptionalFieldValue</c> — `0016a` **D32**: opsiyonel alan değerinin
+    /// temizlenmesi (13 kutusu boş kaydedilen parça haritası). Fiyat geçmişiyle ilgisi yok.</item>
+    /// </list>
+    /// </summary>
+    private static readonly string[] Muaflar = ["RemoveOptionalFieldValue"];
+
     [Fact(DisplayName = "0010a/AC-24: Fiyat geçmişindeki bir kayıt silinemez ve düzeltilemez; gözlem noktası C19'dadır")]
     public void Silinemez_FiyatGecmisiKaydi()
     {
@@ -26,6 +37,7 @@ public sealed class FiyatGecmisiInvariantTests
                 .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(method => SilmeFiilleri.Any(fiil =>
                     method.Name.StartsWith(fiil, StringComparison.Ordinal)))
+                .Where(method => !Muaflar.Contains(method.Name))
         ];
 
         Assert.True(

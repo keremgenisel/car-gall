@@ -302,6 +302,14 @@ internal sealed class VehicleAdminQueries(
                 value.Value.Option,
                 null),
 
+            // `0016a` AC-6, AC-17 — C10 sırasıyla, yalnız kod; locale'den bağımsız.
+            FieldValueKind.PartMap => new VehicleAdminOptionalValueDto(
+                value.FieldKey,
+                value.Value.Kind.ToString(),
+                null,
+                null,
+                [.. value.Value.PartMap!.Entries.Select(entry => new VehicleAdminPaintChangeDto(entry.Part, entry.State))]),
+
             _ => new VehicleAdminOptionalValueDto(
                 value.FieldKey,
                 value.Value.Kind.ToString(),

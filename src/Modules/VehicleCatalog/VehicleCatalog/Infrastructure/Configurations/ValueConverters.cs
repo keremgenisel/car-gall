@@ -16,6 +16,47 @@ internal static class CatalogConverters
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.General);
 
+    /// <summary>
+    /// `0016a` **D26** — parça haritası `jsonb`'de YALNIZ KOD olarak: <c>[{"part":…,"state":…}]</c>
+    /// (C6). Geri okurken agregatın kuralından geçer: saklanan değer elle bozulmuşsa sessizce
+    /// yarım bir harita dönmek yerine patlar — yarım harita bir beyandır (D7).
+    /// </summary>
+    internal static ValueConverter<PaintChangeMap?, string?> NullablePaintChangeMap { get; } = new(
+        map => map == null ? null : JsonSerializer.Serialize(ToRows(map.Entries), Json),
+        json => json == null ? null : ParseMap(json));
+
+    internal static ValueComparer<PaintChangeMap?> PaintChangeMapComparer { get; } = new(
+        (left, right) => SameMap(left, right),
+        map => map == null ? 0 : string.Join(',', map.Entries.Select(entry => entry.Part + ':' + entry.State)).GetHashCode(StringComparison.Ordinal),
+        map => map);
+
+    /// <summary>Okuma modelindeki kopya: aynı biçim, doğrulamasız liste (kaynağı zaten doğrulanmış agregattır).</summary>
+    internal static ValueConverter<List<PaintChangeRow>?, string?> PaintChangeRows { get; } = new(
+        rows => rows == null ? null : JsonSerializer.Serialize(rows, Json),
+        json => json == null ? null : JsonSerializer.Deserialize<List<PaintChangeRow>>(json, Json));
+
+    internal static ValueComparer<List<PaintChangeRow>?> PaintChangeRowsComparer { get; } = new(
+        (left, right) => (left == null && right == null) || (left != null && right != null && left.SequenceEqual(right)),
+        rows => rows == null ? 0 : rows.Count,
+        rows => rows == null ? null : rows.ToList());
+
+    private static List<PaintChangeRow> ToRows(IEnumerable<PaintChangeEntry> entries) =>
+        [.. entries.Select(entry => new PaintChangeRow(entry.Part, entry.State))];
+
+    private static PaintChangeMap ParseMap(string json)
+    {
+        List<PaintChangeRow> rows = JsonSerializer.Deserialize<List<PaintChangeRow>>(json, Json) ?? [];
+        Result<PaintChangeMap> map = PaintChangeMap.Create([.. rows.Select(row => new PaintChangeEntry(row.Part, row.State))]);
+
+        return map.IsSuccess
+            ? map.Value
+            : throw new InvalidOperationException($"Saklanan parça haritası geçersiz: {map.Error.Code}.");
+    }
+
+    private static bool SameMap(PaintChangeMap? left, PaintChangeMap? right) =>
+        (left == null && right == null)
+        || (left != null && right != null && left.Entries.SequenceEqual(right.Entries));
+
     internal static ValueConverter<VehicleId, Guid> VehicleId { get; } =
         new(id => id.Value, value => new VehicleId(value));
 
@@ -136,3 +177,6 @@ internal static class CatalogConverters
         ids => ids.Aggregate(0, (hash, id) => HashCode.Combine(hash, id.GetHashCode())),
         ids => new List<Guid>(ids));
 }
+
+/// <summary>`0016a` **D26** — saklama biçimi: yalnız kodlar (C6).</summary>
+internal sealed record PaintChangeRow(string Part, string State);

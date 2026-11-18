@@ -1,3 +1,4 @@
+import { PAINT_CHANGE_PARTS } from '../../../shared/lib/paintChange'
 import type { UpdateVehicleRequest, VehicleAdminDetail } from '../../../shared/api/types'
 import { catalogKeys } from '../../../shared/i18n/i18n'
 import type { AppLocale } from '../../../shared/lib/locale'
@@ -122,6 +123,11 @@ export interface VehicleEditValues extends VehicleFormValues {
   /** fieldKey → ham değer. Locale'li alanlar `locale|değer` değil, ayrı sözlükte. */
   readonly optionalValues: Readonly<Record<string, string>>
   readonly optionalLocalizedValues: Readonly<Record<string, Readonly<Record<string, string>>>>
+  /**
+   * `0016a` — fieldKey → parça → durum kodu. Boş dize "seçilmedi" demek; "orijinal"
+   * varsayılan DEĞİLDİR (D7). Kayıtlı değer yoksa anahtar hiç yoktur.
+   */
+  readonly partMaps: Readonly<Record<string, Readonly<Record<string, string>>>>
 }
 
 /**
@@ -137,9 +143,14 @@ export function toEditValues(
 ): VehicleEditValues {
   const optionalValues: Record<string, string> = {}
   const optionalLocalizedValues: Record<string, Record<string, string>> = {}
+  const partMaps: Record<string, Record<string, string>> = {}
 
   for (const item of detail.optionalValues) {
-    if (item.values !== null) {
+    if (item.partMap !== undefined && item.partMap !== null) {
+      partMaps[item.fieldKey] = Object.fromEntries(
+        item.partMap.map((entry) => [entry.part, entry.state]),
+      )
+    } else if (item.values !== null) {
       optionalLocalizedValues[item.fieldKey] = { ...item.values }
     } else if (item.value !== null) {
       optionalValues[item.fieldKey] = item.value
@@ -165,6 +176,7 @@ export function toEditValues(
     listingDescription: fillLocales(detail.listingDescription, enabledLocales),
     optionalValues,
     optionalLocalizedValues,
+    partMaps,
   }
 }
 
@@ -211,6 +223,18 @@ export function toUpdateRequest(
     ...Object.entries(values.optionalLocalizedValues)
       .filter(([, map]) => Object.values(map).some((text) => text.trim() !== ''))
       .map(([fieldKey, map]) => ({ fieldKey, value: null, values: { ...map } })),
+    // `0016a` — seçilen kutular olduğu gibi gönderilir; eksikleri SUNUCU söyler (AC-29).
+    // Hiç seçim kalmadıysa boş liste gider ve kayıtlı değer temizlenir (D32); kayıtlı
+    // değer yoksa sunucuda da bir şey yazılmaz (AC-22).
+    ...Object.entries(values.partMaps).map(([fieldKey, map]) => ({
+      fieldKey,
+      value: null,
+      values: null,
+      partMap: PAINT_CHANGE_PARTS.filter((part) => (map[part] ?? '') !== '').map((part) => ({
+        part,
+        state: map[part] ?? '',
+      })),
+    })),
   ]
 
   return {

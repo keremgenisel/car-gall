@@ -136,6 +136,14 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
                 OptionalFieldValue.OfAmount(
                     Money.Create(index * 1_250m, currency.Code, currency.MinorUnitExponent).Value));
 
+            // `0016a` AC-34 — parça haritasının üç hâli ilk üç ilanda: dört durumun HEPSİNİ
+            // içeren tam harita, 13 parçası orijinal harita ve haritasız ilan. `0016b`'nin
+            // şema, "tamamı orijinal" ve değersiz kriterlerinin kanıtı bu üçüyle alınır.
+            if (SeedPaintChangeMap(index) is PaintChangeMap harita)
+            {
+                vehicle.SetOptionalFieldValue(VehicleFieldKeys.PaintChangeMap, OptionalFieldValue.OfPartMap(harita));
+            }
+
             // 0012c D36/AC-31 — öne çıkarma anahtarı İKİ DEĞERLİ ve seed artık o iki değeri
             // yazıyor. Önceki hâli `listingCount - index` ile 200 ilana 200 ayrı ağırlık
             // veriyordu; kararın kendisini VERİ tarafında deliyordu ve "öne çıkarılmış
@@ -189,6 +197,31 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
         context.Listings.AddRange(listings);
         context.ShowcaseListings.AddRange(rows);
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private static PaintChangeMap? SeedPaintChangeMap(int index)
+    {
+        Dictionary<string, string> farklar = index switch
+        {
+            0 => new(StringComparer.Ordinal)
+            {
+                ["front_bumper"] = PaintChangeStates.Painted,
+                ["trunk_lid"] = PaintChangeStates.Replaced,
+                ["left_rear_door"] = PaintChangeStates.LocalPainted,
+            },
+            1 => new(StringComparer.Ordinal),
+            _ => null!,
+        };
+
+        if (index > 1)
+        {
+            return null;
+        }
+
+        return PaintChangeMap.Create(
+            [.. PaintChangeParts.Ordered.Select(part => new PaintChangeEntry(
+                part,
+                farklar.TryGetValue(part, out string? durum) ? durum : PaintChangeStates.Original))]).Value;
     }
 
     private static string CoverUrl(int index) =>

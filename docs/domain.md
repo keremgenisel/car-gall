@@ -41,7 +41,7 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Kanonik Ad** | `CanonicalName` | Referans verinin Latin harfli, dilden bağımsız adı. Slug bundan üretilir. |
 | **Ekspertiz** | `VehicleCondition` | Aracın hasar/boya/bakım durumu. Alanları yapılandırılabilir. |
 | **Tramer** | `DamageRecordAmount` | Hasar kayıt tutarı. Opsiyonel alan; kapatılabilir. |
-| **Parça Haritası** | `PaintChangeMap` | 13 parçanın orijinal / boyalı / değişen durumu. Opsiyonel alan. |
+| **Parça Haritası** | `PaintChangeMap` | 13 parçanın her birinin **orijinal / lokal boyalı / boyalı / değişen** durumu (`0016a` D1). Tek bir opsiyonel alandır (`paint_change_map`); değer ya 13 parçanın tamamını taşır ya da hiç yoktur — "belirtilmedi" durumu yoktur (D7). Parça ve durum kodları `specs/0016a` C10'dadır. |
 | **Alan Ayarı** | `VehicleFormSettings` | Hangi opsiyonel alanın açık/zorunlu ve public olduğunu belirleyen tekil ayar. |
 | **Medya Varlığı** | `MediaAsset` | Yüklenmiş ve işlenmiş görsel/video. Sahipsizdir; araca `VehicleCatalog` bağlar. |
 | **İşleme Durumu** | `MediaProcessingStatus` | Bir medya varlığının hat üzerindeki hâli: `Yüklendi` · `İşleniyor` · `Hazır` · `Başarısız`. Kod saklanır, uçta çevrilir. |

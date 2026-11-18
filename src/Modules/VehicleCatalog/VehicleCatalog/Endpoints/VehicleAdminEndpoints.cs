@@ -377,13 +377,26 @@ internal sealed record UpdateVehicleBody(
         Vin ?? string.Empty,
         ListingTitle ?? [],
         ListingDescription ?? [],
-        [.. (OptionalValues ?? []).Select(item => new OptionalFieldInput(item.FieldKey, item.Value, item.Values))]);
+        [.. (OptionalValues ?? []).Select(item => new OptionalFieldInput(
+            item.FieldKey,
+            item.Value,
+            item.Values,
+            item.PartMap?.Select(entry => new PaintChangeEntry(entry.Part ?? string.Empty, entry.State ?? string.Empty)).ToList()))]);
 }
 
+/// <summary>
+/// `0016a` **D27** — <c>PartMap</c> parça haritasının YAPILANDIRILMIŞ alanıdır: metne gömülmez.
+/// Harita öğesi <c>optionalValues</c>'ta HİÇ gönderilmezse kayıtlı haritaya dokunulmaz
+/// (birleştirme semantiği). Öğe gönderilip <c>partMap</c> taşımıyorsa (<c>null</c>) istek
+/// <c>vehicle.invalid_field_value</c> ile reddedilir (**AC-13**). Boş liste = temizle (**D32**).
+/// </summary>
 internal sealed record UpdateVehicleOptionalValue(
     string FieldKey,
     string? Value,
-    Dictionary<string, string>? Values);
+    Dictionary<string, string>? Values,
+    List<PaintChangeEntryBody>? PartMap = null);
+
+internal sealed record PaintChangeEntryBody(string? Part, string? State);
 
 /// <summary>
 /// Toplu eylemin isteği. Seçim **araç kimliğiyle** taşınıyor (**D44**): `0012b`'nin uçları

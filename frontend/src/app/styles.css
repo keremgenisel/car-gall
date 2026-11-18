@@ -1216,3 +1216,11 @@ body {
   align-items: center;
   gap: var(--space-3);
 }
+
+/* ── 0016a — parça haritasının panel girişi: 13 seçim kutusu ─────────────────── */
+
+.paint-change-input__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-inline-size), 1fr));
+  gap: var(--space-4);
+}

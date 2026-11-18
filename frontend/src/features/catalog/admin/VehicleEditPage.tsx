@@ -20,6 +20,7 @@ import { adminPath, vehicleMediaPath } from '../../../shared/lib/route'
 import { Button, Card, ErrorState, Field, Skeleton } from '../../../shared/ui'
 import { ListingActionBar } from './ListingActionBar'
 import { OptionalFieldInput } from './OptionalFieldInput'
+import { PaintChangeMapInput } from './PaintChangeMapInput'
 import { VehicleSelect } from './VehicleSelect'
 import {
   codeKey,
@@ -48,7 +49,13 @@ type Submission =
   | { readonly kind: 'idle' }
   | { readonly kind: 'submitting' }
   | { readonly kind: 'saved' }
-  | { readonly kind: 'failed'; readonly messageKey: string; readonly field: string | null }
+  | {
+      readonly kind: 'failed'
+      readonly messageKey: string
+      readonly field: string | null
+      /** `0016a` AC-29 — sunucunun bildirdiği eksik parça KODLARI (C10 sırasıyla). */
+      readonly parts: readonly string[]
+    }
 
 /**
  * Araç düzenleme ekranı (0010b R1).
@@ -131,6 +138,10 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
         kind: 'failed',
         messageKey: vehicleMessageKey(errorCode, locale),
         field: cause instanceof ApiError ? cause.field : null,
+        parts:
+          cause instanceof ApiError && cause.parameters['parts'] !== undefined
+            ? cause.parameters['parts'].split(',').filter((part) => part !== '')
+            : [],
       })
     }
   }
@@ -472,33 +483,65 @@ export function VehicleEditPage({ vehicleId }: { readonly vehicleId: string }) {
             <fieldset className="admin-form__group" data-testid="vehicle-optional-fields">
               <legend className="admin-form__label">{t('vehicle.edit.optionalFields')}</legend>
 
-              {sources.fields.map((field) => (
-                <OptionalFieldInput
-                  key={field.fieldKey}
-                  field={field}
-                  value={values.optionalValues[field.fieldKey] ?? ''}
-                  localizedValue={values.optionalLocalizedValues[field.fieldKey] ?? {}}
-                  errorKey={errorKeyFor(field.fieldKey)}
-                  onChange={(value) =>
-                    setValues({
-                      ...values,
-                      optionalValues: { ...values.optionalValues, [field.fieldKey]: value },
-                    })
-                  }
-                  onLocalizedChange={(item, value) =>
-                    setValues({
-                      ...values,
-                      optionalLocalizedValues: {
-                        ...values.optionalLocalizedValues,
-                        [field.fieldKey]: {
-                          ...(values.optionalLocalizedValues[field.fieldKey] ?? {}),
-                          [item]: value,
+              {sources.fields.map((field) =>
+                field.kind === 'PartMap' ? (
+                  <PaintChangeMapInput
+                    key={field.fieldKey}
+                    fieldKey={field.fieldKey}
+                    label={
+                      field.isRequired
+                        ? t('vehicle.form.field.requiredHint', {
+                            label: t(`vehicle.field.${field.fieldKey}`),
+                          })
+                        : t(`vehicle.field.${field.fieldKey}`)
+                    }
+                    value={values.partMaps[field.fieldKey] ?? {}}
+                    missingParts={
+                      submission.kind === 'failed' && submission.field === field.fieldKey
+                        ? submission.parts
+                        : []
+                    }
+                    onChange={(part, state) =>
+                      setValues({
+                        ...values,
+                        partMaps: {
+                          ...values.partMaps,
+                          [field.fieldKey]: {
+                            ...(values.partMaps[field.fieldKey] ?? {}),
+                            [part]: state,
+                          },
                         },
-                      },
-                    })
-                  }
-                />
-              ))}
+                      })
+                    }
+                  />
+                ) : (
+                  <OptionalFieldInput
+                    key={field.fieldKey}
+                    field={field}
+                    value={values.optionalValues[field.fieldKey] ?? ''}
+                    localizedValue={values.optionalLocalizedValues[field.fieldKey] ?? {}}
+                    errorKey={errorKeyFor(field.fieldKey)}
+                    onChange={(value) =>
+                      setValues({
+                        ...values,
+                        optionalValues: { ...values.optionalValues, [field.fieldKey]: value },
+                      })
+                    }
+                    onLocalizedChange={(item, value) =>
+                      setValues({
+                        ...values,
+                        optionalLocalizedValues: {
+                          ...values.optionalLocalizedValues,
+                          [field.fieldKey]: {
+                            ...(values.optionalLocalizedValues[field.fieldKey] ?? {}),
+                            [item]: value,
+                          },
+                        },
+                      })
+                    }
+                  />
+                ),
+              )}
             </fieldset>
           ) : null}
 

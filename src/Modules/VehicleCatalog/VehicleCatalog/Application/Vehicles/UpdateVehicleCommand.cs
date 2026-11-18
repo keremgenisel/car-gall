@@ -48,7 +48,8 @@ internal sealed record UpdateVehicleRequest(
 internal sealed record OptionalFieldInput(
     string FieldKey,
     string? Value,
-    IReadOnlyDictionary<string, string>? Values);
+    IReadOnlyDictionary<string, string>? Values,
+    IReadOnlyList<PaintChangeEntry>? PartMap = null);
 
 /// <summary>
 /// Araç düzenleme. **C17 gereği agregatın üzerine kurulu bir komut katmanıdır**; ortak
@@ -173,7 +174,7 @@ internal sealed class UpdateVehicleCommand(
             return branch;
         }
 
-        Result<IReadOnlyList<(string FieldKey, OptionalFieldValue Value)>> optional =
+        Result<IReadOnlyList<(string FieldKey, OptionalFieldValue? Value)>> optional =
             await ResolveOptionalValuesAsync(request.OptionalValues, cancellationToken);
 
         if (optional.IsFailure)
@@ -213,8 +214,15 @@ internal sealed class UpdateVehicleCommand(
             vehicle.AssignBranch(request.BranchId);
         }
 
-        foreach ((string fieldKey, OptionalFieldValue value) in optional.Value)
+        foreach ((string fieldKey, OptionalFieldValue? value) in optional.Value)
         {
+            // `0016a` **D32** — `null` değer TEMİZLEMEDİR: 13 kutusu boş kaydedilen harita.
+            if (value is null)
+            {
+                vehicle.RemoveOptionalFieldValue(fieldKey);
+                continue;
+            }
+
             vehicle.SetOptionalFieldValue(fieldKey, value);
         }
 
@@ -257,50 +265,104 @@ internal sealed class UpdateVehicleCommand(
     /// göstermesi imkânsız (R7); isteği ancak bayat bir sekme ya da elle kurulmuş bir
     /// çağrı taşır. Sessizce atmak bu depoda tekrar eden hata.</para>
     /// </summary>
-    private async Task<Result<IReadOnlyList<(string FieldKey, OptionalFieldValue Value)>>>
+    private async Task<Result<IReadOnlyList<(string FieldKey, OptionalFieldValue? Value)>>>
         ResolveOptionalValuesAsync(IReadOnlyList<OptionalFieldInput> inputs, CancellationToken cancellationToken)
     {
         if (inputs.Count == 0)
         {
-            return Result.Success<IReadOnlyList<(string, OptionalFieldValue)>>([]);
+            return Result.Success<IReadOnlyList<(string, OptionalFieldValue?)>>([]);
         }
 
         Dictionary<string, FieldFormState> settings = await context.VehicleFieldSettings
             .AsNoTracking()
             .ToDictionaryAsync(setting => setting.FieldKey, setting => setting.FormState, cancellationToken);
 
-        List<(string FieldKey, OptionalFieldValue Value)> resolved = [];
+        List<(string FieldKey, OptionalFieldValue? Value)> resolved = [];
 
         foreach (OptionalFieldInput input in inputs)
         {
             if (!VehicleFieldDefinitions.TryGet(input.FieldKey, out VehicleFieldDefinition definition))
             {
-                return Result.Failure<IReadOnlyList<(string, OptionalFieldValue)>>(
+                return Result.Failure<IReadOnlyList<(string, OptionalFieldValue?)>>(
                     Error.With(VehicleErrors.FieldNotDeclared, "field", input.FieldKey));
             }
 
             if (!settings.TryGetValue(input.FieldKey, out FieldFormState state) || state is FieldFormState.Closed)
             {
-                return Result.Failure<IReadOnlyList<(string, OptionalFieldValue)>>(
+                return Result.Failure<IReadOnlyList<(string, OptionalFieldValue?)>>(
                     Error.With(VehicleErrors.FieldClosed, "field", input.FieldKey));
+            }
+
+            if (definition.Kind is FieldValueKind.PartMap)
+            {
+                Result<OptionalFieldValue?> map = ResolvePartMap(input);
+
+                if (map.IsFailure)
+                {
+                    return Result.Failure<IReadOnlyList<(string, OptionalFieldValue?)>>(map.Error);
+                }
+
+                resolved.Add((input.FieldKey, map.Value));
+                continue;
             }
 
             Result<OptionalFieldValue> value = Resolve(definition, input);
 
             if (value.IsFailure)
             {
-                return Result.Failure<IReadOnlyList<(string, OptionalFieldValue)>>(
+                return Result.Failure<IReadOnlyList<(string, OptionalFieldValue?)>>(
                     Error.With(VehicleErrors.InvalidFieldValue, "field", input.FieldKey));
             }
 
             resolved.Add((input.FieldKey, value.Value));
         }
 
-        return Result.Success<IReadOnlyList<(string, OptionalFieldValue)>>(resolved);
+        return Result.Success<IReadOnlyList<(string, OptionalFieldValue?)>>(resolved);
+    }
+
+    /// <summary>
+    /// `0016a` **D27** — harita yalnız YAPILANDIRILMIŞ alanıyla gelir; metin yolu (<c>Value</c>
+    /// ya da <c>Values</c>) reddedilir (AC-13). **D32** — boş liste = temizleme (<c>null</c>
+    /// değer). Eksik parçalar hata yanıtında KOD olarak, C10 sırasıyla döner (AC-8).
+    /// </summary>
+    private static Result<OptionalFieldValue?> ResolvePartMap(OptionalFieldInput input)
+    {
+        if (input.PartMap is null || input.Value is not null || input.Values is not null)
+        {
+            return Result.Failure<OptionalFieldValue?>(Error.With(VehicleErrors.InvalidFieldValue, "field", input.FieldKey));
+        }
+
+        if (input.PartMap.Count == 0)
+        {
+            return Result.Success<OptionalFieldValue?>(null);
+        }
+
+        Result<PaintChangeMap> map = PaintChangeMap.Create(input.PartMap);
+
+        if (map.IsSuccess)
+        {
+            return Result.Success<OptionalFieldValue?>(OptionalFieldValue.OfPartMap(map.Value));
+        }
+
+        return map.Error.Code == PaintChangeMap.Incomplete
+            ? Result.Failure<OptionalFieldValue?>(new Error(
+                PaintChangeMap.Incomplete,
+                new Dictionary<string, string>
+                {
+                    ["field"] = input.FieldKey,
+                    ["parts"] = map.Error.Parameters!["parts"],
+                }))
+            : Result.Failure<OptionalFieldValue?>(Error.With(VehicleErrors.InvalidFieldValue, "field", input.FieldKey));
     }
 
     private Result<OptionalFieldValue> Resolve(VehicleFieldDefinition definition, OptionalFieldInput input)
     {
+        // `0016a` AC-14 — harita yalnız harita tipli alana gelir; tramer'e gelen harita reddedilir.
+        if (input.PartMap is not null)
+        {
+            return Result.Failure<OptionalFieldValue>(new Error(OptionalFieldValue.KindMismatch));
+        }
+
         if (definition.Kind is FieldValueKind.LocalizedText)
         {
             if (input.Values is null)

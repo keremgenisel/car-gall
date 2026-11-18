@@ -307,6 +307,13 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
         mevcut.Value = value;
     }
 
+    /// <summary>
+    /// `0016a` **D32** — opsiyonel değerin temizlenmesi. Satır SİLİNİR: "değer yok" ile
+    /// "boş değer" iki ayrı hâl olmaz ve zorunlu alan kuralı (satırın varlığı) yine işler.
+    /// </summary>
+    internal void RemoveOptionalFieldValue(string fieldKey) =>
+        optionalFieldValues.RemoveAll(item => item.FieldKey == fieldKey);
+
     internal Result ChangeMileage(int mileageKilometers)
     {
         if (mileageKilometers < 0)

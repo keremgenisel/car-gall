@@ -1,5 +1,6 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.VehicleCatalog.Domain;
+using CarGallery.Modules.VehicleCatalog.Infrastructure.Configurations;
 using CarGallery.Modules.VehicleCatalog.Infrastructure.ReadModel;
 
 namespace CarGallery.Modules.VehicleCatalog.Application.Projection;
@@ -81,7 +82,26 @@ internal static class ShowcaseListingProjector
                         Values = value.Value.Localized!.ToDictionary(),
                     })
             ],
+            PaintChangeMap = PaintChangeRowsOf(vehicle, publicOptionalFieldKeys),
         };
+    }
+
+    /// <summary>
+    /// `0016a` **D26** — parça haritasının TİPLİ kanalı. Yalnız alan açık ve public ise ve
+    /// araçta değer varsa dolu; aksi hâlde <c>null</c> (C1'in "gizleme yansıtmada" ilkesi:
+    /// gizli bir alanın değeri okuma modeline hiç inmez). Yalnız kod taşır (C6).
+    /// </summary>
+    private static List<PaintChangeRow>? PaintChangeRowsOf(Vehicle vehicle, IReadOnlySet<string> publicOptionalFieldKeys)
+    {
+        if (!publicOptionalFieldKeys.Contains(VehicleFieldKeys.PaintChangeMap))
+        {
+            return null;
+        }
+
+        PaintChangeMap? map = vehicle.OptionalFieldValues
+            .FirstOrDefault(value => value.FieldKey == VehicleFieldKeys.PaintChangeMap)?.Value.PartMap;
+
+        return map is null ? null : [.. map.Entries.Select(entry => new PaintChangeRow(entry.Part, entry.State))];
     }
 
     /// <summary>

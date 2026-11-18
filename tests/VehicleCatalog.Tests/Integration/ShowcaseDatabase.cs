@@ -64,6 +64,15 @@ public sealed class ShowcaseDatabase : IAsyncLifetime
             SET form_state = 2, public_visibility = 1
             WHERE field_key = 'body_type'
             """);
+
+        // `0016a` — parça haritasının ayarı da migration'ın seed ettiği hâle (Opsiyonel + Görünür)
+        // döner; onu değiştiren bir test patlarsa sonrakiler kirli ayarı devralmaz.
+        await context.Database.ExecuteSqlRawAsync(
+            $"""
+            UPDATE {VehicleCatalogDbContext.Schema}.vehicle_field_settings
+            SET form_state = 1, public_visibility = 1
+            WHERE field_key = 'paint_change_map'
+            """);
     }
 }
 

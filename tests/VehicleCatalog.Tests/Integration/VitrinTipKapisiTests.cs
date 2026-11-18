@@ -14,6 +14,11 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Integration;
 /// <para><b>Bugün bedel sıfır</b>: public opsiyonel alan yok. Bu test birisi bir para
 /// alanını public yaptığında sessiz kalmamak için var — o gün değer vitrine HİÇ
 /// gitmezdi ve kimse fark etmezdi.</para>
+///
+/// <para>`0016a` **D26** — parça haritası (`PartMap`) public ve kendi TİPLİ kanalı var:
+/// okuma modelinin `paint_change_map` kolonu (`ShowcaseListingProjector.PaintChangeRowsOf`).
+/// Kapı onu bu yüzden tanıyor; kanalın gerçekten dolduğunu `ParcaHaritasiYansitmaTests`
+/// ölçüyor — kanalı olmayan bir tip burada sessizce geçemez.</para>
 /// </summary>
 [Collection(ShowcaseDatabaseCollection.Name)]
 public sealed class VitrinTipKapisiTests(ShowcaseDatabase database)
@@ -33,7 +38,7 @@ public sealed class VitrinTipKapisiTests(ShowcaseDatabase database)
                 .Where(setting => !setting.IsCore && setting.IsOpen && setting.IsPublic)
                 .Where(setting =>
                     !VehicleFieldDefinitions.TryGet(setting.FieldKey, out VehicleFieldDefinition tanim)
-                    || tanim.Kind is not FieldValueKind.LocalizedText)
+                    || tanim.Kind is not (FieldValueKind.LocalizedText or FieldValueKind.PartMap))
                 .Select(setting => setting.FieldKey)
         ];
 

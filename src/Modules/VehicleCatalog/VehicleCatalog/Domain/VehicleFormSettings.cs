@@ -36,8 +36,13 @@ internal sealed class VehicleFieldSetting
     /// <summary>
     /// Bir alan filtrede görünür ⇔ açık VE public VE doğası gereği filtrelenebilir.
     /// Filtre üçüncü eksen değildir, türetilir (docs/architecture.md § 4).
+    ///
+    /// <para>"Doğası gereği filtrelenebilir" bugün **yalnız çekirdek alanlar** demektir
+    /// (`0015` R8 · D12: bu sürümde opsiyonel alan ekseni yoktur, X9). Kod bu üçüncü koşulu
+    /// `0016a`'ya kadar uygulamıyordu; ilk public opsiyonel alan (parça haritası) herkese açık
+    /// alan ayarları ucunda eksen olarak ilan edildi ve `0001` AC-11 kırmızı verdi.</para>
     /// </summary>
-    internal bool IsFilterable => IsOpen && IsPublic;
+    internal bool IsFilterable => IsCore && IsOpen && IsPublic;
 }
 
 internal static class VehicleFieldKeys
@@ -46,4 +51,7 @@ internal static class VehicleFieldKeys
 
     /// <summary>Tramer — hasar kayıt tutarı (docs/domain.md sözlüğü).</summary>
     internal const string DamageRecordAmount = "damage_record_amount";
+
+    /// <summary>`0016a` R8 — parça haritası: TEK alan, tek form durumu, tek görünürlük ekseni.</summary>
+    internal const string PaintChangeMap = "paint_change_map";
 }

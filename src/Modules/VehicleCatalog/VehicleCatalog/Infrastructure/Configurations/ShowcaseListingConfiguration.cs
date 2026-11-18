@@ -42,6 +42,10 @@ internal sealed class ShowcaseListingConfiguration : IEntityTypeConfiguration<Sh
             .HasColumnName("branch_names")
             .HasColumnType("jsonb")
             .HasConversion(LocalizedNames.Converter, LocalizedNames.Comparer);
+        builder.Property(listing => listing.PaintChangeMap)
+            .HasColumnName("paint_change_map")
+            .HasColumnType("jsonb")
+            .HasConversion(CatalogConverters.PaintChangeRows, CatalogConverters.PaintChangeRowsComparer);
         builder.Property(listing => listing.CoverAssetId).HasColumnName("cover_asset_id");
         builder.Property(listing => listing.CoverMediaUrl).HasColumnName("cover_media_url");
 
