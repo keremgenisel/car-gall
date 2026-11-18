@@ -73,12 +73,13 @@ test.describe('Kasa tipine göre daraltma', () => {
     await expect(eksenler).toHaveCount(6)
     await expect(page.locator('fieldset')).toHaveCount(6)
     await expect(eksenler.locator('legend')).toHaveText([
-      'Kasa tipi',
-      'Yakıt',
-      'Vites',
+      // Aralıklar önce, değer listesi bekleyen çipler sonra (LCP ölçümü, ListFilters.tsx).
       'Yıl',
       'Kilometre',
       'Fiyat',
+      'Kasa tipi',
+      'Yakıt',
+      'Vites',
     ])
   })
 

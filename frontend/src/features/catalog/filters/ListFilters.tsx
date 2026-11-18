@@ -23,15 +23,18 @@ export interface FilterOptions {
 
 interface Props {
   readonly state: ListState
-  /** `null` = değer listeleri okunamadı: çok değerli eksenler gizlenir, aralıklar kalır. */
-  readonly options: FilterOptions | null
+  /**
+   * `'loading'` = değer listeleri yolda; `null` = okunamadı. İkisinde de çok değerli eksenler
+   * basılmaz, aralık eksenleri basılır.
+   */
+  readonly options: FilterOptions | null | 'loading'
   readonly onChange: (next: ListState) => void
 }
 
 /**
  * `0015` R1, R10, D20 — liste ekranının filtre paneli: çok değerli eksenler çip, her aralık
- * iki sayı girişi. Yüksekliği `--list-filters-min-block-size` ile AYRILIR ve iskelet aynı
- * sayıyı okur: veri gelince altındaki liste kaymaz (AC-46).
+ * iki sayı girişi. Yüksekliği `--list-filters-min-block-size` ile AYRILIR: değer listeleri
+ * gelince altındaki liste kaymaz (AC-46).
  */
 export function ListFilters({ state, options, onChange }: Props) {
   const { locale, t } = useLocale()
@@ -76,38 +79,48 @@ export function ListFilters({ state, options, onChange }: Props) {
     />
   )
 
+  const ready = options !== null && options !== 'loading' ? options : null
+
+  /*
+   * SIRA BİLİNÇLİ: veri beklemeyen aralık eksenleri ÖNCE, değer listesi bekleyen çip
+   * eksenleri SONRA. Ölçüldü (2026-11-18, Lighthouse mobil): panel mobilde ekranın tamamını
+   * kaplıyor ve en büyük metin öğesi panelin bir düğmesi oluyor; panel değer listelerini
+   * beklediğinde `/tr/cars`'ın LCP'si 2107 → 2403 ms'e çıktı (en kötü koşu 2477, eşik 2500).
+   * Aralıklar ilk render'da çizilir; çipler sona eklenir — önlerindeki hiçbir şey yer
+   * değiştirmez ve panelin yüksekliği zaten ayrılmıştır (CLS).
+   */
   return (
-    <div className="list-filters" data-testid="list-filters">
-      {options?.bodyTypeFilterable === true
+    <div className="list-filters" data-testid="list-filters" aria-busy={options === 'loading'}>
+      {range('year')}
+      {range('mileage')}
+      {range('price')}
+      {ready?.bodyTypeFilterable === true
         ? chip(
             'bodyTypes',
-            options.bodyTypes,
+            ready.bodyTypes,
             'body-type-filter',
             'selected-count',
             'showcase.filter.selectedCount',
           )
         : null}
-      {options !== null
+      {ready !== null
         ? chip(
             'fuels',
-            options.fuels,
+            ready.fuels,
             'fuels-filter',
             'fuels-summary',
             'showcase.filter.selectedValues',
           )
         : null}
-      {options !== null
+      {ready !== null
         ? chip(
             'transmissions',
-            options.transmissions,
+            ready.transmissions,
             'transmissions-filter',
             'transmissions-summary',
             'showcase.filter.selectedValues',
           )
         : null}
-      {range('year')}
-      {range('mileage')}
-      {range('price')}
     </div>
   )
 }

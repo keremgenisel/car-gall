@@ -1150,6 +1150,11 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(var(--card-min-inline-size), 1fr));
   gap: var(--space-6);
   min-block-size: var(--list-filters-min-block-size);
+
+  /* Ayrılan yükseklik satırları GERMEMELİ: değer listeleri gelmeden yalnız üç eksen varken
+     varsayılan `stretch` satırları uzatıyordu ve çipler gelince eksenler yukarı kaydı —
+     ölçüldü, tek kayma 0,229 (Lighthouse medyanı 0,237, eşik 0,1). */
+  align-content: start;
 }
 
 .filter-axis {

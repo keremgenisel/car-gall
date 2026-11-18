@@ -155,16 +155,19 @@
   --narrowing-form-min-block-size: calc(var(--filter-bar-min-block-size) + 58px);
 
   /* 0015 D20 — liste ekranının filtre paneli (altı eksen). ÖLÇÜLDÜ, tahmin edilmedi
-     (2026-11-18, `/tr/cars` · `/ar/cars` · `/en/cars`, fontlar yüklendikten sonra, 8px adım):
-     panelin sütun sayısı 568px'te 1→2, 824px'te 2→3, 1080px'te 3→4 oluyor ve her bantta
-     en UZUN hâli bandın başında. Değer o en uzun hâl + 10px pay: fazla ayırmak boşluk üretir,
-     eksik ayırmak kayma — ikisi aynı şey değil (`0001`'in dersi). Türkçe ve İngilizce aynı,
-     Arapça birkaç piksel kısa.
-       < 35.5rem → 1 sütun → 1050 (360px)
-       ≥ 35.5rem → 2 sütun → 657 (568px)
-       ≥ 51.5rem → 3 sütun → 491 (824px)
-       ≥ 67.5rem → 4 sütun → 491 (1080px) */
-  --list-filters-min-block-size: 1060px;
+     (2026-11-18, `/tr/cars` · `/ar/cars` · `/en/cars`, fontlar yüklendikten sonra, 320–1400px
+     arası 8px adımla tam tarama): panelin sütun sayısı 568px'te 1→2, 824px'te 2→3, 1080px'te
+     3→4 oluyor ve her bantta en UZUN hâl bandın başında. Değer o en uzun hâl + 10px pay:
+     fazla ayırmak boşluk üretir, eksik ayırmak kayma — ikisi aynı şey değil (`0001`'in
+     dersi). Tek sütunlu bant 320'de 1192, 360'ta 1083 olduğu için 22.5rem'de bölündü.
+     Değerler İKİ KEZ yeniden ölçüldü ve her seferinde eski değer kayma üretti: eksen
+     düğmeleri yeniden adlandırılınca (23–35px) ve aralık eksenleri öne alınınca (LCP
+     düzeltmesi, 2–23px). Panelin içeriği değiştiğinde bu değerler YENİDEN ÖLÇÜLÜR.
+       < 22.5rem → 1 sütun → 1192 (320px, tr)
+       ≥ 22.5rem → 1 sütun → 1083 (360px, en)
+       ≥ 35.5rem → 2 sütun → 735 (564px, tr)
+       ≥ 51.5rem → 3–4 sütun → 536 (1076px, tr) */
+  --list-filters-min-block-size: 1202px;
   --form-control-min-block-size: 44px;
 
   /* 0008 — onay kutusu. Genişlik okunabilir satır uzunluğunu aşmaz; katman sırası
@@ -182,15 +185,21 @@
   }
 }
 
+@media (width >= 22.5rem) {
+  :root {
+    --list-filters-min-block-size: 1093px;
+  }
+}
+
 @media (width >= 35.5rem) {
   :root {
-    --list-filters-min-block-size: 667px;
+    --list-filters-min-block-size: 745px;
   }
 }
 
 @media (width >= 51.5rem) {
   :root {
-    --list-filters-min-block-size: 501px;
+    --list-filters-min-block-size: 546px;
   }
 }
 

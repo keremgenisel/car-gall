@@ -11,7 +11,6 @@ import { EmptyByFilter } from './states/EmptyByFilter'
 import { EmptyShowcase } from './states/EmptyShowcase'
 import { ListError } from './states/ListError'
 import { ListSkeleton } from './states/ListSkeleton'
-import { FilterBarSkeleton } from './states/FilterBarSkeleton'
 import { activeAxes, clearFilters, toCanonicalSearch, withPage, withSort } from './listUrlState'
 import { replaceCanonicalPage, useListUrlState } from './useListUrlState'
 
@@ -133,11 +132,11 @@ export function ShowcaseListPage() {
     <div className="page">
       <h1 className="page__title">{t('showcase.title')}</h1>
 
-      {options.kind === 'loading' ? (
-        <FilterBarSkeleton />
-      ) : (
-        <ListFilters state={state} options={options.value} onChange={pushState} />
-      )}
+      <ListFilters
+        state={state}
+        options={options.kind === 'loading' ? 'loading' : options.value}
+        onChange={pushState}
+      />
 
       <div className="list-toolbar">
         {load.kind === 'ready' ? (

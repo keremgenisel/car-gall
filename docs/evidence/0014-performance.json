@@ -1,25 +1,25 @@
 {
   "spec": "0014",
   "client": {
-    "url": "http://localhost:5080/tr/",
+    "url": "http://localhost:5081/tr/",
     "protocol": "Lighthouse mobil profili (4x CPU kısıtı, Slow 4G), 3 koşu, medyan (spec 0001 C3)",
     "runs": [
       {
-        "lcpMilliseconds": 2262,
+        "lcpMilliseconds": 2263,
         "cumulativeLayoutShift": 0.015
+      },
+      {
+        "lcpMilliseconds": 2258,
+        "cumulativeLayoutShift": 0.009
       },
       {
         "lcpMilliseconds": 2263,
         "cumulativeLayoutShift": 0.007
-      },
-      {
-        "lcpMilliseconds": 2262,
-        "cumulativeLayoutShift": 0.015
       }
     ],
     "median": {
-      "lcpMilliseconds": 2262,
-      "cumulativeLayoutShift": 0.015
+      "lcpMilliseconds": 2263,
+      "cumulativeLayoutShift": 0.009
     },
     "thresholds": {
       "lcpMilliseconds": 2500,

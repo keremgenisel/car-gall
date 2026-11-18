@@ -1,0 +1,38 @@
+{
+  "spec": "0015",
+  "server": [
+    {
+      "profile": "filtresiz (AC-43)",
+      "path": "/api/catalog/showcase-listings?locale=tr",
+      "protocol": "500 ilan, 20 \u0131s\u0131nma \u002B 200 \u00F6l\u00E7\u00FCm, e\u015Fzamanl\u0131l\u0131k 1 (spec 0001 C3)",
+      "filteredCount": 509,
+      "p50Milliseconds": 1.9,
+      "p95Milliseconds": 2.2,
+      "p99Milliseconds": 2.4,
+      "thresholdMilliseconds": 400,
+      "met": true
+    },
+    {
+      "profile": "R1\u0027in b\u00FCt\u00FCn eksenleri dolu (AC-44)",
+      "path": "/api/catalog/showcase-listings?bodyType=suv\u0026bodyType=sedan\u0026fuel=diesel\u0026fuel=petrol\u0026transmission=automatic\u0026transmission=manual\u0026yearMin=2015\u0026yearMax=2025\u0026mileageMax=250000\u0026priceMin=100000\u0026priceMax=5000000\u0026locale=tr",
+      "protocol": "500 ilan, 20 \u0131s\u0131nma \u002B 200 \u00F6l\u00E7\u00FCm, e\u015Fzamanl\u0131l\u0131k 1 (spec 0001 C3)",
+      "filteredCount": 31,
+      "p50Milliseconds": 3.1,
+      "p95Milliseconds": 4.8,
+      "p99Milliseconds": 5.3,
+      "thresholdMilliseconds": 400,
+      "met": true
+    },
+    {
+      "profile": "sort=price-asc (AC-45)",
+      "path": "/api/catalog/showcase-listings?sort=price-asc\u0026locale=tr",
+      "protocol": "500 ilan, 20 \u0131s\u0131nma \u002B 200 \u00F6l\u00E7\u00FCm, e\u015Fzamanl\u0131l\u0131k 1 (spec 0001 C3)",
+      "filteredCount": 509,
+      "p50Milliseconds": 2.2,
+      "p95Milliseconds": 3.3,
+      "p99Milliseconds": 4,
+      "thresholdMilliseconds": 400,
+      "met": true
+    }
+  ]
+}

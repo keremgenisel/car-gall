@@ -476,6 +476,7 @@ altındaki ADR'lerdedir.
 | Şube | Kurulum içinde 1..N; araç bir şubede durur |
 | Diller | TR / AR / EN; varsayılan yapılandırmadan |
 | Vitrin adresleri | `/{locale}/` ana sayfa · `/{locale}/cars` araç listesi · `/{locale}/cars/{slug}` ilan; eski liste adresi (`/{locale}/?bodyType…`) `301` ile listeye gider (`0014` D9, D21) |
+| Vitrin liste parametreleri | `bodyType` · `fuel` · `transmission` (tekrarlı slug) · `yearMin`/`yearMax` · `mileageMin`/`mileageMax` · `priceMin`/`priceMax` (ana birimde tam sayı, dahil sınır) · `sort`; varsayılan sıralama ve `page=1` yazılmaz; geçersiz aralık ve `sort`'u uç düzeltir, tanınmayan slug adreste kalır (`0015` C12, D18) |
 | Etkin diller (uç) | Sunucu `<meta name="enabled-locales">` olarak basar; uç dil listesini koddan değil buradan türetir (`0014` D22) |
 | Para birimi | Kurulum başına tek, sabit, `decimal(19,4)` |
 | `VehicleCatalog` | Tek modül, içinde `Vehicle` + `Listing` agregatları |
