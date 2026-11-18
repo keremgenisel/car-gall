@@ -219,6 +219,32 @@ public sealed class ParcaHaritasiTests(ShowcaseDatabase database)
         Assert.Null(await YonetimHaritasiAsync(arac.Id));
     }
 
+    /// <summary>
+    /// Triyaj BULGU-4 — sözleşmenin yazılı tarifi (`UpdateVehicleOptionalValue` özeti) ile
+    /// davranış aynı şeyi söyler: öğe listede HİÇ yoksa kayıtlı haritaya dokunulmaz; öğe
+    /// gönderilip <c>partMap</c> taşımıyorsa (<c>null</c>) istek reddedilir (AC-13) ve
+    /// kayıtlı harita değişmez.
+    /// </summary>
+    [Fact]
+    public async Task Ayirir_GonderilmeyenOgeyi_PartMapsizOgeden()
+    {
+        await using VehicleCatalogDbContext context = database.CreateContext();
+        (Guid Id, string Vin) arac = await AracKaydetAsync(context, "PHB4");
+        Assert.True((await KaydetAsync(context, arac, Tam(Ac5))).IsSuccess);
+
+        // Öğe hiç yok: dokunulmaz.
+        Assert.True((await Komut(context).ExecuteAsync(Istek(arac) with { OptionalValues = [] }, CancellationToken.None)).IsSuccess);
+        Assert.Equal(Beklenen(Ac5), (await YonetimHaritasiAsync(arac.Id))!.Select(item => (item.Part, item.State)));
+
+        // Öğe var, partMap null: reddedilir.
+        Result sonuc = await Komut(context).ExecuteAsync(
+            Istek(arac) with { OptionalValues = [new OptionalFieldInput(VehicleFieldKeys.PaintChangeMap, null, null, null)] },
+            CancellationToken.None);
+
+        Assert.Equal(VehicleErrors.InvalidFieldValue, sonuc.Error.Code);
+        Assert.Equal(Beklenen(Ac5), (await YonetimHaritasiAsync(arac.Id))!.Select(item => (item.Part, item.State)));
+    }
+
     [Fact(DisplayName = "0016a/AC-14: Tramer için yapılandırılmış harita gönderilmesi reddedilir ve tramer'in kayıtlı tutarı değişmez")]
     public async Task Reddeder_TramereHarita()
     {
