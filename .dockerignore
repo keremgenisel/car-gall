@@ -1,0 +1,18 @@
+# İmaj yalnız kaynaktan üretilir; yerel derleme artıkları, testler ve belgeler girmez.
+**/bin/
+**/obj/
+**/TestResults/
+**/node_modules/
+src/Host/wwwroot/
+frontend/test-results/
+frontend/playwright-report/
+.git/
+.github/
+docs/
+specs/
+tests/
+scripts/
+**/*.env
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.*.Local.json

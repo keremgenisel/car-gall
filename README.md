@@ -58,6 +58,11 @@ Kurulum hesabının parolası **koşu başına üretilir** ve betik onu ekrana y
 sabit bir kurulum parolası yoktur (ADR `0011`). E2E koşmak için betiğin bastığı `export`
 satırını kullanın.
 
+## Canlıya alma
+
+Tek imaj, iki komut (`--migrate`, sonra uygulama), bütün yapılandırma ortam
+değişkeninden: [`docs/deploy.md`](docs/deploy.md). Kararlar ADR `0012`'de.
+
 ## Kapılar
 
 Her kuralın bir komutu vardır; komutu olmayan kapı kapı değildir.

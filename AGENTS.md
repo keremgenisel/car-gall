@@ -53,6 +53,7 @@ Tek bir araç galerisi için satış vitrini ve yönetim paneli.
 | Test stratejisi, xUnit adlandırma, kriter→test eşlemesi, görsel kanıt, CI kapıları | `docs/testing.md` |
 | **Frontend standardı** — TS zorunluluğu, klasör yapısı, tek API client, tasarım token'ları ve bileşen envanteri, üç durum kuralı, erişilebilirlik tabanı, kalite kapıları, mini-spec süreci | `docs/frontend.md` |
 | **Neden böyle** — mimari kararların gerekçesi ve değerlendirilen alternatifler | `docs/decisions/` |
+| Canlıya alma — imaj, ortam değişkenleri, kurulum sırası | `docs/deploy.md` |
 | Spec yazma şablonu ve SCORECARD | `specs/TEMPLATE.md` |
 | Aktif spec'ler | `specs/*.md` |
 | Bitmiş spec'ler (arşiv) | `specs/done/` |
