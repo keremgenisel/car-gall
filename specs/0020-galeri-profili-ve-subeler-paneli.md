@@ -2,13 +2,13 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak — kriterler yazıldı, QA CLARIFY turunu bekliyor |
+| **Durum** | Taslak — QA CLARIFY turu işlendi (B1–B11 → **D13–D23**) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `Dealership` (yazma uçları, galerinin görünen adı — yeni alan + migration) · `frontend/` panel (galeri ve şubeler ekranları) ve vitrin (üst çubuk, ana sayfa giriş satırı) · `Host` (yalnız kayıt) |
-| **Bağımlı spec'ler** | `0003` (galeri profili ve şubeler — tamamlandı; bu kart onun **X1**'idir) · `0006` (roller — tamamlandı) · `0014` (ana sayfa — tamamlandı; giriş satırı ve altlık bu kartın verisini okur, **D6**'sı değişir — **D4**) · `0012b` (A8: şube kapanınca araçların yayından kalkması — tamamlandı) |
+| **Modül(ler)** | `Dealership` (yazma uçları, görünen ad ve sürüm kolonları — migration, B5 kuralının sıkılaşması — **D13**) · `VehicleCatalog` (kapatılmış şubeye araç bağlanamaz — **D14**) · `frontend/` panel (galeri ve şubeler ekranları, araç formunun şube seçicisi) ve vitrin (üst çubuk, ana sayfa giriş satırı) · `Host` (görünen adın `index.html`'e basılması seçilirse — plan turu, **D16**) |
+| **Bağımlı spec'ler** | `0003` (galeri profili ve şubeler — tamamlandı; bu kart onun **X1**'idir; **R4**'ü sıkılaşır — **D13**) · `0006` (roller — tamamlandı) · `0014` (ana sayfa — tamamlandı; giriş satırı ve altlık bu kartın verisini okur; **D6**'sı ve **D15**'in izin listesi değişir — **D4**, **D15**) · `0012b` (A8: şube kapanınca araçların yayından kalkması — tamamlandı) · `0010a` (araç formu şube seçicisi — tamamlandı; **D14**) |
 | **Dayanak** | `0003` **X1** ("yazma yüzeyi, `Identity` spec'inden sonra ayrı bir spec'tir") · ADR `0012` § Açık engeller 1 · depo sahibinin 2026-11-18 sırası (**D1**) |
-| **Karar bekliyor** | yok — **D1–D12** verildi (§ Verilen kararlar). QA CLARIFY turu bekleniyor. |
+| **Karar bekliyor** | yok — **D1–D12** verildi; QA CLARIFY turunun on bir bulgusu (B1–B11) → **D13–D23** (§ Verilen kararlar). |
 
 ---
 
@@ -40,12 +40,19 @@ galeri adı galerinin kendi adıdır ve ziyaretçiyi her sayfadan ana sayfaya g�
 - **R3.** **Görünen ad** ziyaretçiye gösterilen addır ve **dil başına** tutulur. Varsayılan
   dildeki karşılığı **zorunludur**; diğer etkin dillerdeki karşılık opsiyoneldir ve yoksa
   varsayılan dildeki gösterilir (**D4**).
+- **R3a.** Metin alanları sınırlıdır (**D22**): ticari unvan 200, vergi ve ticaret sicil
+  numarası 40, görünen ad dil başına 120 karakter. Şubede ad 120, adres 300 karakter (dil
+  başına); telefon ve WhatsApp 16, e-posta 254, saat dilimi 60, adres kısaltması 80 karakter.
+  Sınırı aşan değer alan hatasıyla reddedilir.
 
 ### Vitrinde galeri adı
 
 - **R4.** Vitrinin her sayfasının üst çubuğu, ziyaretçinin dilindeki **görünen adı** gösterir.
 - **R5.** Üst çubuktaki ad, ziyaretçinin dilindeki **ana sayfaya** götüren bir bağlantıdır
   (**D5**).
+- **R5a.** Görünen ad okunamazsa üst çubukta adın yeri **boş** kalır ve sayfanın geri kalanı
+  çalışır; teknik bir metin ya da yazılımın kendi adı gösterilmez (**D16**). Ad **metin
+  olarak** gösterilir: içindeki `<`, `"`, `&` gibi karakterler işaretleme olarak yorumlanmaz.
 - **R6.** Ana sayfanın giriş bölümündeki galeri adı satırı da **görünen adı** gösterir
   (`0014` **D6**'yı değiştirir — **D4**).
 - **R7.** Profilde yapılan bir değişiklik ziyaretçiye **bir sonraki sayfa açışında** görünür
@@ -58,28 +65,38 @@ galeri adı galerinin kendi adıdır ve ziyaretçiyi her sayfadan ana sayfaya g�
 - **R9.** Yönetici **yeni şube açar.** Zorunlu alanlar `0003` **R2**'ninkilerdir: varsayılan
   dildeki ad ve adres, telefon, saat dilimi ve adres kısaltması (slug). Opsiyoneller:
   diğer dillerin ad ve adresi, WhatsApp numarası, e-posta, koordinat.
-- **R10.** Yönetici var olan bir şubenin **R9'daki bütün alanlarını** düzenler. Opsiyonel bir
-  alan **boşaltılabilir** (**D9**).
+- **R10.** Yönetici aktif ya da geçici kapalı bir şubenin **R9'daki bütün alanlarını**
+  düzenler. Opsiyonel bir alan **boşaltılabilir** (**D9**). **Kapatılmış** şube düzenlenemez:
+  kapatılmış şube geçmiş kayıtların referansıdır (`0003` **R3**, **D21**).
 - **R11.** Yönetici bir şubeyi **geçici kapatır** ve geçici kapalı bir şubeyi **yeniden
   açar.** Geçici kapatma son aktif şubede de mümkündür (`0003` **D3**).
 - **R12.** Yönetici bir şubeyi **kalıcı olarak kapatır.** Kalıcı kapatma **geri alınamaz**
   (`0003` **R3**) ve şubedeki araçlar yayından kalkar (`docs/domain.md` **A8**); yönetici bu
   iki sonucu kapatmadan **önce** görür ve açıkça onaylar (**D8**).
-- **R13.** **Son aktif şube** kalıcı olarak kapatılamaz (**B5**); deneme reddedilir ve yönetici
+- **R12a.** Kalıcı kapatma aktif ve **geçici kapalı** şubede sunulur (**D21**).
+- **R13.** Galeride **başka aktif şube yoksa** hiçbir şube kalıcı olarak kapatılamaz — kapatılan
+  şube aktif de olsa geçici kapalı da olsa (**B5**, **D13**). Deneme reddedilir ve yönetici
   nedenini görür.
 - **R14.** Şube açma, şube adı değişikliği ve kalıcı kapatma `0003` **R7–R9**'daki duyuruları
   bugünkü gibi üretir; panelden yapılan değişiklik bunların hiçbirini atlamaz.
+
+- **R13a.** Kapatılmış bir şubeye araç **bağlanamaz**: yeni araç kaydında ya da aracın şubesi
+  değiştirilirken kapatılmış şube reddedilir ve panelin araç formu kapatılmış şubeyi seçenek
+  olarak sunmaz. Şubesi değişmeden kaydedilen bir araç bu kurala takılmaz (**D14**).
 
 ### Kurallar, eşzamanlılık, erişim
 
 - **R15.** Şube alanları `0003`'ün kurallarıyla doğrulanır: telefon ve WhatsApp uluslararası
   biçimde, e-posta geçerli bir adres, saat dilimi bir **IANA bölge kimliği**, adres kısaltması
-  küçük harfli ASCII ve galeri genelinde **tekil**. Kural dışı bir değer kaydedilmez ve
-  yönetici hangi alanın neden reddedildiğini görür.
+  küçük harfli ASCII ve galeri genelinde — **kapatılmış şubeler dâhil** — **tekil**. Kural
+  dışı bir değer kaydedilmez ve yönetici hangi alanın neden reddedildiğini görür; tekillik
+  ihlali de bir alan hatasıdır, sunucu hatası değil (**D19**).
 - **R16.** Aynı profili ya da şubeyi **eski bir sürüm üzerinden** kaydetmek reddedilir; yönetici
-  bunu bir uyarıyla görür ve güncel hâli yükleyebilir (**D7**).
+  bunu bir uyarıyla görür ve güncel hâli yükleyebilir (**D7**, **D17**). Durum eylemleri
+  (geçici kapat, yeniden aç, kalıcı kapat) sürümü ilerletir.
 - **R17.** Galeri ve şube ekranları ile yazma uçları **yalnız Yönetici** içindir. Diğer roller
-  ekranlara gezinme bağlantısı görmez, uçlar onlara `403` döner (**D2**).
+  ekranlara gezinme bağlantısı görmez, adresi doğrudan açtıklarında "erişim yok" ekranını
+  görür ve uçlar onlara `403` döner (**D2**, **D23**).
 - **R18.** Panel ekranları yükleniyor, boş ve hata durumlarını ele alır
   (`docs/frontend.md` § 3), üç dilde ve Arapçada sağdan sola çalışır.
 
@@ -97,11 +114,13 @@ galeri adı galerinin kendi adıdır ve ziyaretçiyi her sayfadan ana sayfaya g�
 - **C3.** B5 kontrolü eşzamanlı iki kapatmada da tutar: iki farklı aktif şubenin aynı anda
   kalıcı kapatılması galeriyi aktif şubesiz bırakamaz (`0007`, `InvariantGuard` —
   bugünkü `BranchCommands.CloseAsync` zaten bunu yapıyor).
-- **C4.** Yeni migration yalnız `dealership` şemasına dokunur. Var olan kurulumlarda görünen
-  adın varsayılan dildeki karşılığı **ticari unvandan** doldurulur; hiçbir kurulum görünen
-  adsız kalmaz (**D4**).
+- **C4.** Yeni migration yalnız `dealership` şemasına dokunur: `galleries`'e görünen ad ve
+  sürüm kolonu, `branches`'a sürüm kolonu ekler. Var olan kurulumlarda görünen adın varsayılan
+  dildeki karşılığı **ticari unvandan** doldurulur; hiçbir kurulum görünen adsız kalmaz
+  (**D4**, **D17**).
 - **C5.** Kullanıcıya görünen hiçbir metin koda gömülmez; uçlar hata **kodu** döner ve panel
-  onu çevirir (Altın Kural 6).
+  onu çevirir (Altın Kural 6). Veritabanı kısıtı ihlali (tekillik, uzunluk) kullanıcıya bir
+  alan hata kodu olarak döner; `500` dönmez (**D19**, **D22**).
 - **C6.** Üst çubuktaki ad sayfa ilk boyandığında **yerinde** durur: ad gelirken üst çubuk
   yer değiştirmez ve içerik kaymaz (`0014` performans kapısı, CLS) (**D6**).
 
@@ -157,7 +176,30 @@ galeri adı galerinin kendi adıdır ve ziyaretçiyi her sayfadan ana sayfaya g�
   karşılıyor; `GET /api/admin/branches` bugün `AuthenticatedPolicy` ile, çünkü araç formu
   şube listesini her rolde okuyor — o okuma bu kartta değişmez.
 - **Eşzamanlılık deseni.** `0017` sürüm kolonunu `IsConcurrencyToken` ile kullanıyor
-  (`ContentPageConfiguration.cs:40`); bu kart aynı deseni izler (**D7**).
+  (`ContentPageConfiguration.cs:40`); bu kart aynı deseni izler (**D7**). `galleries` ve
+  `branches`'ta bugün sürüm kolonu **yok** (`GalleryConfiguration.cs`, `BranchConfiguration.cs`).
+- **B5 iki adımda deliniyor** (QA B1). `Branch.Close` yalnız "aktif **ve** başka aktif yok"
+  durumunu reddediyor; son aktif şube önce geçici kapatılır (serbest), sonra kalıcı kapatılırsa
+  geçer ve galerinin bütün şubeleri `Kapatılmış` olur. Bugün bu yolu açan bir uç yok; bu kart
+  açacaktı (**D13**).
+- **Kapatılmış şubeye araç bağlanabiliyor** (QA B2). `VehicleWriteRules.ValidateBranchAsync`
+  (`Application/Vehicles/VehicleWriteRules.cs:197`) yalnız şubenin var olup olmadığına bakıyor;
+  araç formu kapatılmış şubeyi de seçenek olarak gösteriyor ve kendi yorumu "sunucu kapalı
+  şubeye kaydı reddetmiyor" diyor (`VehicleFormPage.tsx:183`). A8 işleyicisi yalnız kapanış
+  anındaki araçları işaretliyor (`BranchEventHandlers.cs`) (**D14**).
+- **Public galeri yanıtının izin listesi ölçülüyor** (QA B3). `GaleriPublicUcTests.cs:23` yanıtın
+  anahtarlarını `["branches","commercialName"]` olarak birebir sınıyor (`0014` **D15**);
+  `GaleriPublicOkumaTests` aynı unvanı tr ve ar için bekliyor. Bu kart izin listesini
+  `commercialName` → `displayName` olarak değiştirir ve o testler kartın parçası olarak
+  güncellenir — gerileme değil (**D15**).
+- **A8 işleyicisi** yayındaki **ve rezerve** ilanları yayından kaldırıyor, taslak dâhil bütün
+  araçları "lokasyon ataması bekliyor" olarak işaretliyor; satılmış ve arşivlenmiş araçlara
+  dokunmuyor (`BranchEventHandlers.cs:95-113`) (**D18**).
+- **Adres kısaltmasının tekil indeksi** kapatılmış şubeleri de kapsıyor
+  (`BranchConfiguration.cs:93`); ihlali önceden yakalayan bir alan kontrolü ve hata kodu yok,
+  bugün veritabanı istisnası olarak düşüyor (**D19**).
+- **Şema sınırları.** `galleries`: unvan 200, vergi/sicil 40; `branches`: telefon/WhatsApp 16,
+  e-posta 254, saat dilimi 60, kısaltma 80; ad ve adres `jsonb` — sınırsız (**D22**).
 
 ### Geçerli kurallar
 
@@ -235,6 +277,58 @@ kaydetmede gösterir.
 üretilmez. *Gerekçe:* Türkçe ve Arapça adlardan ASCII kısaltma üretmek kendi kuralını ister
 (Yasak Listesi 27); alan zaten zorunlu ve doğrulanıyor.
 
+### Verilen kararlar — QA CLARIFY turu, 2026-11-18
+
+QA spec'i `main` @ `674011a`'ya karşı okudu ve on bir bulgu getirdi; Context'in bütün ölçüm
+iddialarını doğruladı. Önerilerin **tamamı** Takım Yöneticisi (ajan) tarafından kabul edildi.
+
+**D13 — B5 tek koşulla: başka aktif şube yoksa kalıcı kapatma yok (B1).** (R13) Kapatılan
+şubenin durumu ne olursa olsun, galeride **başka** aktif şube yoksa kapatma reddedilir;
+`Branch.Close` buna göre sıkılaşır, kilit deseni aynı kalır. *Gerekçe:* B5'in amacı galerinin
+en az bir yaşayan şubesi olması; "önce geçici kapat, sonra kapat" dizisi bugün onu deliyor ve
+bu kart o diziyi panele açıyor.
+
+**D14 — Kapatılmış şubeye araç bağlanamaz (B2).** (R13a) Yeni araç kaydı ve şube değişikliği
+kapatılmış şubeyi reddeder; formun seçicisi onu sunmaz. Şubesi değişmeden kaydedilen araç
+takılmaz — o araç A8 ile zaten "şube ataması bekliyor"dadır ve yöneticinin onu düzeltebilmesi
+gerekir. *Gerekçe:* kapatmayı gerçek bir eylem hâline getiren bu kart; A8'in güvenlik ağı
+sonradan bağlanan araçta delinirse kapatma yarım kalır.
+
+**D15 — `0014` D15'in izin listesi değişir (B3).** Public galeri yanıtı `commercialName` yerine
+`displayName` taşır; `GaleriPublicUcTests` ve `GaleriPublicOkumaTests` bu kartta güncellenir ve
+PR'da "beklenen değişiklik" olarak gösterilir.
+
+**D16 — Üst çubuğun yokluk durumu ve metin güvenliği (B4).** (R5a) Ad okunamazsa yer boş kalır
+(`0014` AC-54'ün deseni). Ad nasıl taşınırsa taşınsın metin olarak basılır; özel karakterli bir
+adla kriter yazılır. Adın taşıma yolu (sunucunun bastığı değer ya da istek) yine plan turunun.
+
+**D17 — Sürüm kolonları ve `409` (B5).** (R16, C4) `galleries` ve `branches` sürüm kolonu alır;
+eski sürümle kaydetme `409` ve bir hata koduyla reddedilir (`0017` **D18**). Durum eylemleri
+sürümü ilerletir: düzenleme formu açıkken şube geçici kapatılırsa formun kaydı reddedilir ve
+yönetici güncel durumu görür.
+
+**D18 — Onay metni A8'in gerçek sonucunu söyler (B8).** (D8'i düzeltir, R12) Metin: "Bu işlem
+geri alınamaz. Bu şubedeki araçlar vitrinden kalkar ve şube ataması bekler."
+
+**D19 — Kısaltma tekilliği alan hatası (B7).** (R15, C5) Tekillik kapatılmış şubeleri de kapsar
+(bugünkü indeks) ve ihlal `branch.slug_taken` gibi bir alan koduna çevrilir; `500` dönmez.
+
+**D20 — Ad duyurusu dil başına (B6).** `0003` **R8**: herhangi bir dildeki ad değişikliği
+duyurulur; ad ve adres birlikte değiştiğinde **bir** duyuru yazılır.
+
+**D21 — Düzenleme ve kalıcı kapatma hangi durumda (B9).** (R10, R12a) Düzenleme aktif ve geçici
+kapalı şubede; kalıcı kapatma aktif ve geçici kapalı şubede (D13'ün kuralıyla) sunulur.
+Kapatılmış şube salt okunurdur.
+
+**D22 — Uzunluk sınırları (B10).** (R3a) Var olan şema sınırları korunur; sınırı olmayan
+alanlara (görünen ad, şube adı ve adresi) sınır konur. *Gerekçe:* bugün sınırı aşan değer
+veritabanı hatasıyla düşer; sınırsız `jsonb` altlığı ve üst çubuğu taşırabilir (`0017` **D22**
+emsali).
+
+**D23 — Doğrudan adresle gelen yetkisiz rol (B11).** (R17) Satış Danışmanı ve İçerik Editörü
+ekranın adresini doğrudan açtığında "erişim yok" ekranını görür (`AdminApp.tsx`'in var olan
+`admin-no-access` deseni); `403` "getirilemedi" hatası olarak gösterilmez.
+
 ---
 
 ## Acceptance Criteria
@@ -248,81 +342,99 @@ kaydetmede gösterir.
 - **AC-5.** Varsayılan dildeki görünen ad boş bırakılarak yapılan kaydetme reddedilir; kayıtlı ad değişmez.
 - **AC-6.** Varsayılan olmayan bir dildeki görünen ad boş bırakılarak kaydedilebilir.
 - **AC-7.** Migration'dan sonra var olan bir kurulumda varsayılan dildeki görünen ad ticari unvana eşittir ve diğer dillerin görünen adı boştur.
+- **AC-8.** 200 karakteri aşan ticari unvan, 40 karakteri aşan vergi ya da sicil numarası ve 120 karakteri aşan görünen ad alan hatasıyla reddedilir; `500` dönmez (R3a, D22).
 
 ### Vitrinde galeri adı (R4, R5, R6, R7 · C6 · D4, D5, D6)
 
-- **AC-8.** Vitrinin ana sayfasında, araç listesinde, ilan detayında ve bir içerik sayfasında üst çubuk ziyaretçinin dilindeki görünen adı gösterir.
-- **AC-9.** Ziyaretçinin dilinde görünen ad yoksa üst çubuk varsayılan dildeki görünen adı gösterir.
-- **AC-10.** Üst çubuktaki ada tıklamak ziyaretçiyi `/{locale}/` ana sayfasına götürür ve `{locale}` ziyaretçinin o anki dilidir.
-- **AC-11.** Arapça sayfada üst çubuktaki ad Arapça görünen adı gösterir ve sağdan sola düzende doğru hizalanır.
-- **AC-12.** Ana sayfanın giriş bölümündeki galeri adı satırı ziyaretçinin dilindeki görünen adı gösterir; ticari unvanı göstermez.
-- **AC-13.** Yönetici görünen adı değiştirip kaydettikten sonra açılan ilk vitrin sayfası yeni adı gösterir.
-- **AC-14.** Üst çubuk sayfanın ilk boyamasında görünen adla gelir: ad sonradan yüklenip üst çubuğu ya da içeriği kaydırmaz (ana sayfa ve liste için performans kapısının CLS eşiği yeşil kalır).
-- **AC-15.** Ticari unvan, vergi numarası ve ticaret sicil numarası hiçbir vitrin sayfasında ve vitrinin okuduğu hiçbir public yanıtta yer almaz.
+- **AC-9.** Vitrinin ana sayfasında, araç listesinde, ilan detayında ve bir içerik sayfasında üst çubuk ziyaretçinin dilindeki görünen adı gösterir.
+- **AC-10.** Ziyaretçinin dilinde görünen ad yoksa üst çubuk varsayılan dildeki görünen adı gösterir.
+- **AC-11.** Üst çubuktaki ada tıklamak ziyaretçiyi `/{locale}/` ana sayfasına götürür ve `{locale}` ziyaretçinin o anki dilidir.
+- **AC-12.** Arapça sayfada üst çubuktaki ad Arapça görünen adı gösterir ve sağdan sola düzende doğru hizalanır.
+- **AC-13.** Ana sayfanın giriş bölümündeki galeri adı satırı ziyaretçinin dilindeki görünen adı gösterir; ticari unvanı göstermez.
+- **AC-14.** Yönetici görünen adı değiştirip kaydettikten sonra açılan ilk vitrin sayfası yeni adı gösterir.
+- **AC-15.** Üst çubuk sayfanın ilk boyamasında görünen adla gelir: ad sonradan yüklenip üst çubuğu ya da içeriği kaydırmaz (ana sayfa ve liste için performans kapısının CLS eşiği yeşil kalır).
+- **AC-16.** Ticari unvan, vergi numarası ve ticaret sicil numarası hiçbir vitrin sayfasında ve vitrinin okuduğu hiçbir public yanıtta yer almaz; public galeri yanıtının anahtar kümesi `displayName` ve `branches`'tır (D15).
+- **AC-17.** Görünen ad okunamadığında üst çubukta adın yeri boş kalır, yazılımın adı ya da teknik bir metin gösterilmez ve sayfanın geri kalanı çalışır (R5a, D16).
+- **AC-18.** `<b>Galeri & "Oto"</b>` görünen adı üst çubukta ve giriş satırında bu karakterlerle **metin olarak** görünür; işaretleme olarak yorumlanmaz (R5a, D16).
 
 ### Şube listesi (R8)
 
-- **AC-16.** Şubeler ekranı aktif, geçici kapalı ve kapatılmış şubelerin hepsini, her birinin adı ve durumuyla listeler.
-- **AC-17.** Listedeki şube adı yöneticinin panel dilindeki karşılığıdır; yoksa varsayılan dildekidir.
+- **AC-19.** Şubeler ekranı aktif, geçici kapalı ve kapatılmış şubelerin hepsini, her birinin adı ve durumuyla listeler.
+- **AC-20.** Listedeki şube adı yöneticinin panel dilindeki karşılığıdır; yoksa varsayılan dildekidir.
 
 ### Şube açma (R9, R14, R15 · D11, D12)
 
-- **AC-18.** Yönetici zorunlu alanları doldurup kaydettiğinde yeni şube listede **aktif** olarak görünür.
-- **AC-19.** Yeni şube açıldığında şube açılış duyurusu şubenin kimliği ve dil başına adlarıyla outbox'a yazılır.
-- **AC-20.** Yeni aktif şube, ziyaretçinin bir sonraki ana sayfa açışında altlıkta adı, adresi ve telefonuyla görünür.
-- **AC-21.** Varsayılan dildeki adı boş olan şube açılamaz ve hata ad alanının yanında gösterilir.
-- **AC-22.** Varsayılan dildeki adresi boş olan şube açılamaz.
-- **AC-23.** Uluslararası biçimde olmayan bir telefon (`02165554433`) reddedilir.
-- **AC-24.** IANA bölge kimliği olmayan bir saat dilimi (`+03:00`) sunucuda reddedilir.
-- **AC-25.** Panelin saat dilimi alanı serbest metin değil, bölge kimliklerinin listesidir.
-- **AC-26.** Küçük harfli ASCII olmayan bir adres kısaltması (`kadıköy-şubesi`) reddedilir.
-- **AC-27.** Başka bir şubenin kullandığı adres kısaltması reddedilir ve hata kısaltmanın zaten kullanıldığını söyler.
-- **AC-28.** Geçersiz bir e-posta (`kadikoy@`) reddedilir.
-- **AC-29.** Reddedilen bir kaydetmede hiçbir şube oluşmaz ve hiçbir duyuru yazılmaz.
+- **AC-21.** Yönetici zorunlu alanları doldurup kaydettiğinde yeni şube listede **aktif** olarak görünür.
+- **AC-22.** Yeni şube açıldığında şube açılış duyurusu şubenin kimliği ve dil başına adlarıyla outbox'a yazılır.
+- **AC-23.** Yeni aktif şube, ziyaretçinin bir sonraki ana sayfa açışında altlıkta adı, adresi ve telefonuyla görünür.
+- **AC-24.** Varsayılan dildeki adı boş olan şube açılamaz ve hata ad alanının yanında gösterilir.
+- **AC-25.** Varsayılan dildeki adresi boş olan şube açılamaz.
+- **AC-26.** Uluslararası biçimde olmayan bir telefon (`02165554433`) reddedilir.
+- **AC-27.** IANA bölge kimliği olmayan bir saat dilimi (`+03:00`) sunucuda reddedilir.
+- **AC-28.** Panelin saat dilimi alanı serbest metin değil, bölge kimliklerinin listesidir.
+- **AC-29.** Küçük harfli ASCII olmayan bir adres kısaltması (`kadıköy-şubesi`) reddedilir.
+- **AC-30.** Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `400` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.
+- **AC-31.** Geçersiz bir e-posta (`kadikoy@`) reddedilir.
+- **AC-32.** Reddedilen bir kaydetmede hiçbir şube oluşmaz ve hiçbir duyuru yazılmaz.
+- **AC-33.** 120 karakteri aşan şube adı ve 300 karakteri aşan adres alan hatasıyla reddedilir (R3a, D22).
 
 ### Şube düzenleme (R10, R14, R15 · D9)
 
-- **AC-30.** Yönetici bir şubenin varsayılan dildeki adını değiştirip kaydettiğinde ad değişikliği duyurusu güncel adlarla outbox'a yazılır.
-- **AC-31.** Adı değişmeden yalnız adresi, telefonu, saat dilimi ya da kısaltması değiştirilen kaydetme **hiçbir** duyuru yazmaz.
-- **AC-32.** Değiştirilen adres ve telefon ziyaretçinin bir sonraki ana sayfa açışında altlıkta görünür.
-- **AC-33.** WhatsApp numarası, e-posta ve koordinat boşaltılıp kaydedildiğinde üçü de boş kaydedilir.
-- **AC-34.** Şubenin kendi kullandığı adres kısaltmasıyla kaydetmek tekillik hatası vermez.
-- **AC-35.** AC-21–AC-28'deki doğrulamalar düzenlemede de aynı hatayla geçerlidir.
-- **AC-36.** Kapatılmış bir şube düzenlenemez: ekran alanları salt okunur gösterir ve uç reddeder.
+- **AC-34.** Yönetici bir şubenin varsayılan dildeki adını değiştirip kaydettiğinde ad değişikliği duyurusu güncel adlarla outbox'a yazılır.
+- **AC-35.** Yalnız Arapça adı değiştirilen kaydetme tam olarak **bir** ad değişikliği duyurusu yazar.
+- **AC-36.** Ad ve adres birlikte değiştirilen kaydetme tam olarak **bir** ad değişikliği duyurusu yazar.
+- **AC-37.** Adı değişmeden yalnız adresi, telefonu, saat dilimi ya da kısaltması değiştirilen kaydetme **hiçbir** duyuru yazmaz.
+- **AC-38.** Değiştirilen adres ve telefon ziyaretçinin bir sonraki ana sayfa açışında altlıkta görünür.
+- **AC-39.** WhatsApp numarası, e-posta ve koordinat boşaltılıp kaydedildiğinde üçü de boş kaydedilir.
+- **AC-40.** Şubenin kendi kullandığı adres kısaltmasıyla kaydetmek tekillik hatası vermez.
+- **AC-41.** AC-24–AC-31'deki doğrulamalar düzenlemede de aynı hatayla geçerlidir.
+- **AC-42.** Kapatılmış bir şube düzenlenemez: ekran alanları salt okunur gösterir ve uç reddeder (R10, D21).
 
 ### Şube durumu (R11, R12, R13, R14 · C3 · D8)
 
-- **AC-37.** Aktif bir şube geçici kapatıldığında listede **geçici kapalı** görünür ve altlıkta görünmez.
-- **AC-38.** Galerinin tek aktif şubesi de geçici kapatılabilir.
-- **AC-39.** Geçici kapatma şubedeki araçları yayından kaldırmaz.
-- **AC-40.** Geçici kapalı bir şube yeniden açıldığında **aktif** olur ve altlıkta yeniden görünür.
-- **AC-41.** Kalıcı kapatma, işlem yapılmadan önce "geri alınamaz" ve "bu şubedeki yayındaki araçlar yayından kalkar" diyen bir onay ister; onaydan vazgeçmek şubeyi değiştirmez.
-- **AC-42.** Onaylanan kalıcı kapatmadan sonra şube **kapatılmış** olur ve şube kapanış duyurusu outbox'a yazılır.
-- **AC-43.** Kalıcı kapatılan şubedeki yayındaki araçlar vitrinden kalkar (A8).
-- **AC-44.** Galerinin son aktif şubesini kalıcı kapatma reddedilir; panel bunun nedenini söyler ve şube aktif kalır.
-- **AC-45.** İki farklı aktif şubenin, başka aktif şube yokken eşzamanlı kalıcı kapatılması en fazla birinde başarılı olur.
-- **AC-46.** Kapatılmış bir şube için yeniden açma ve geçici kapatma eylemleri sunulmaz ve uç onları reddeder.
+- **AC-43.** Aktif bir şube geçici kapatıldığında listede **geçici kapalı** görünür ve altlıkta görünmez.
+- **AC-44.** Galerinin tek aktif şubesi de geçici kapatılabilir.
+- **AC-45.** Geçici kapatma şubedeki araçları yayından kaldırmaz.
+- **AC-46.** Geçici kapalı bir şube yeniden açıldığında **aktif** olur ve altlıkta yeniden görünür.
+- **AC-47.** Kalıcı kapatma, işlem yapılmadan önce D18'deki metni — "geri alınamaz" ve "bu şubedeki araçlar vitrinden kalkar ve şube ataması bekler" — gösteren bir onay ister; onaydan vazgeçmek şubeyi değiştirmez.
+- **AC-48.** Onaylanan kalıcı kapatmadan sonra şube **kapatılmış** olur ve şube kapanış duyurusu outbox'a yazılır.
+- **AC-49.** Kalıcı kapatılan şubedeki yayındaki ve rezerve araçlar vitrinden kalkar ve şubedeki araçlar şube ataması bekler olarak işaretlenir (A8).
+- **AC-50.** Galerinin son aktif şubesini kalıcı kapatma reddedilir; panel bunun nedenini söyler ve şube aktif kalır.
+- **AC-51.** Galerinin tek aktif şubesi önce geçici kapatılıp ardından kalıcı kapatılmak istendiğinde kalıcı kapatma reddedilir ve şube geçici kapalı kalır (D13).
+- **AC-52.** Başka bir aktif şube varken geçici kapalı bir şube kalıcı kapatılabilir (D21).
+- **AC-53.** İki farklı aktif şubenin, başka aktif şube yokken eşzamanlı kalıcı kapatılması en fazla birinde başarılı olur.
+- **AC-54.** Kapatılmış bir şube için yeniden açma ve geçici kapatma eylemleri sunulmaz ve uç onları reddeder.
 
-### Eşzamanlı kaydetme (R16 · D7)
+### Kapatılmış şube ve araçlar (R13a · D14)
 
-- **AC-47.** Galeri profilini, okunduktan sonra başka bir kaydetmeyle değişmiş bir sürüm üzerinden kaydetmek reddedilir ve kayıtlı değer değişmez.
-- **AC-48.** Aynı kural şube düzenlemesi için de geçerlidir.
-- **AC-49.** Reddedilen eski sürüm kaydetmesinde panel bir uyarı gösterir ve güncel hâli yükleme yolu sunar; yöneticinin yazdığı değerler uyarıyla birlikte ekranda kalır.
+- **AC-55.** Kapatılmış bir şubeyle yeni araç kaydı bir alan hata koduyla reddedilir ve araç oluşmaz.
+- **AC-56.** Bir aracın şubesini kapatılmış bir şubeye değiştiren kaydetme reddedilir.
+- **AC-57.** Şubesi kapatılmış bir aracın şubesine dokunmadan yapılan kaydetme kabul edilir.
+- **AC-58.** Panelin araç formundaki şube seçicisi kapatılmış şubeleri seçenek olarak sunmaz; aracın mevcut şubesi kapatılmışsa form bunu gösterir ve başka bir şube seçilmesini ister.
+
+### Eşzamanlı kaydetme (R16 · D7, D17)
+
+- **AC-59.** Galeri profilini, okunduktan sonra başka bir kaydetmeyle değişmiş bir sürüm üzerinden kaydetmek `409` ve bir hata koduyla reddedilir; kayıtlı değer değişmez.
+- **AC-60.** Aynı kural şube düzenlemesi için de geçerlidir.
+- **AC-61.** Aynı sürümden yapılan iki eşzamanlı şube kaydetmesinden yalnız biri kabul edilir; diğeri `409` alır.
+- **AC-62.** Düzenleme formu açıkken şube geçici kapatılırsa formdaki kaydetme `409` ile reddedilir (D17).
+- **AC-63.** Reddedilen eski sürüm kaydetmesinde panel bir uyarı gösterir ve güncel hâli yükleme yolu sunar; yöneticinin yazdığı değerler uyarıyla birlikte ekranda kalır.
 
 ### Erişim (R17 · D2)
 
-- **AC-50.** Satış Danışmanı ve İçerik Editörü panelde galeri ve şubeler ekranına giden bir bağlantı görmez.
-- **AC-51.** Satış Danışmanı ve İçerik Editörü'nün galeri ve şube yazma uçlarına isteği `403` alır ve hiçbir değişiklik yapılmaz.
-- **AC-52.** Oturumu olmayan isteğe yazma uçları `401` döner.
-- **AC-53.** `GET /api/admin/branches`'in bugünkü okuyucuları (araç formu) değişmeden çalışır.
+- **AC-64.** Satış Danışmanı ve İçerik Editörü panelde galeri ve şubeler ekranına giden bir bağlantı görmez.
+- **AC-65.** Satış Danışmanı galeri ya da şubeler ekranının adresini doğrudan açtığında "erişim yok" ekranını görür; giriş ekranına yönlendirilmez ve "getirilemedi" hatası görmez (D23).
+- **AC-66.** Satış Danışmanı ve İçerik Editörü'nün galeri ve şube yazma uçlarına isteği `403` alır ve hiçbir değişiklik yapılmaz.
+- **AC-67.** Oturumu olmayan isteğe yazma uçları `401` döner.
+- **AC-68.** `GET /api/admin/branches`'in bugünkü okuyucuları (araç formu) değişmeden çalışır.
 
 ### Panel durumları ve dil (R18)
 
-- **AC-54.** Galeri ve şubeler ekranı veri gelirken yükleniyor durumunu gösterir.
-- **AC-55.** Veri okunamadığında ekran teknik ayrıntı göstermeyen bir hata durumu ve yeniden deneme yolu gösterir.
-- **AC-56.** Kaydetme sunucu hatasıyla düştüğünde yöneticinin yazdığı değerler kaybolmaz.
-- **AC-57.** Ekranların bütün metinleri TR/AR/EN çeviri kataloğundan gelir; eksik anahtar kontrolü yeşildir.
-- **AC-58.** Arapça panelde galeri ve şube formları sağdan sola düzende çalışır; telefon, e-posta ve kısaltma alanları soldan sağa yazılır.
+- **AC-69.** Galeri ve şubeler ekranı veri gelirken yükleniyor durumunu gösterir.
+- **AC-70.** Veri okunamadığında ekran teknik ayrıntı göstermeyen bir hata durumu ve yeniden deneme yolu gösterir.
+- **AC-71.** Kaydetme sunucu hatasıyla düştüğünde yöneticinin yazdığı değerler kaybolmaz.
+- **AC-72.** Ekranların bütün metinleri TR/AR/EN çeviri kataloğundan gelir; eksik anahtar kontrolü yeşildir.
+- **AC-73.** Arapça panelde galeri ve şube formları sağdan sola düzende çalışır; telefon, e-posta ve kısaltma alanları soldan sağa yazılır.
 
 ---
 
@@ -331,14 +443,14 @@ kaydetmede gösterir.
 - [ ] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı.
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0020-ac<n>.png`),
-      boş ve hata durumları dâhil; Arapça görüntü de var (AC-11, AC-58).
+      boş ve hata durumları dâhil; Arapça görüntü de var (AC-12, AC-73).
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
 - [ ] <!-- DoD:T5 --> Yeni migration yalnızca `dealership` şemasına dokunuyor.
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
 - [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**görünen ad** — D4).
 - [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); performans kapısı ana sayfa ve listede yeşil (AC-14).
+- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); performans kapısı ana sayfa ve listede yeşil (AC-15).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
