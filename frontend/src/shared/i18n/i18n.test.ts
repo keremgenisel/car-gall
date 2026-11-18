@@ -53,6 +53,7 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           max: '2021',
           axes: 'Yakıt',
           axis: 'Yakıt',
+          parts: 'Tavan',
           // 0008 — onay metinleri personelin adını taşıyor (AC-5).
           name: 'Ayşe Yılmaz',
           // 0010a — şube etiketi kapatılmış şubede durumu da taşıyor.

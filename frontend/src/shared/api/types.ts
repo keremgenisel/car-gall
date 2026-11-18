@@ -1,3 +1,4 @@
+import type { PaintChangeEntry } from '../lib/paintChange'
 /** Backend DTO'ları tek yerde tanımlanır; bileşenler bu tipleri kullanır (docs/frontend.md § 2). */
 
 export interface ShowcasePrice {
@@ -304,7 +305,16 @@ export interface BulkListingResult {
  */
 export interface VehicleAdminField {
   readonly fieldKey: string
-  readonly kind: 'Text' | 'LocalizedText' | 'Integer' | 'Amount' | 'Boolean' | 'Date' | 'Option'
+  readonly kind:
+    | 'Text'
+    | 'LocalizedText'
+    | 'Integer'
+    | 'Amount'
+    | 'Boolean'
+    | 'Date'
+    | 'Option'
+    /** `0016a` C11 — parça haritası: 13 parça × 4 durum, yalnız kod. */
+    | 'PartMap'
   readonly isRequired: boolean
 }
 
@@ -313,6 +323,8 @@ export interface VehicleAdminOptionalValue {
   readonly kind: string
   readonly value: string | null
   readonly values: Record<string, string> | null
+  /** `0016a` — yalnız `PartMap` tipinde dolu; C10 sırasıyla 13 kod çifti. */
+  readonly partMap?: readonly PaintChangeEntry[] | null
 }
 
 /** Düzenleme ekranının okuduğu tam kayıt. Yalnız AÇIK alanların değerleri gelir (F3). */
@@ -366,6 +378,11 @@ export interface UpdateVehicleRequest {
     readonly fieldKey: string
     readonly value: string | null
     readonly values: Record<string, string> | null
+    /**
+     * `0016a` **D27** — parça haritasının yapılandırılmış alanı. Yoksa haritaya dokunulmaz;
+     * boş liste TEMİZLER (**D32**).
+     */
+    readonly partMap?: readonly PaintChangeEntry[]
   }[]
 }
 
