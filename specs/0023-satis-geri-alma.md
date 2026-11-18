@@ -2,13 +2,13 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak — kriterler yazıldı, QA CLARIFY turunu bekliyor |
+| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B8 → **D12–D19**) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (yeni geçiş, satış öncesi durumun saklanması, geri alma kaydı, migration) · `frontend/` panel (ilan eylem çubuğu, onay penceresi, geri alma geçmişi) · `docs/domain.md` (**A3**, **A4** değişir) |
 | **Bağımlı spec'ler** | `0012b` (yayın ve durum eylemleri — tamamlandı; **R4**'ü ve Bilinen tuzak 4'ü bu kartla değişir) · `0012c` (öne çıkarma — tamamlandı) · `0003`/A8 (şube ataması bekleyen araç) · `0006` (roller) |
 | **Dayanak** | Depo sahibinin 2026-11-18 isteği ve kararı (**D1**) |
-| **Karar bekliyor** | yok — **D1–D11** verildi. QA CLARIFY turu bekleniyor. |
+| **Karar bekliyor** | yok — **D1–D11**; QA CLARIFY turunun sekiz bulgusu (B1–B8) → **D12–D19**. |
 
 ---
 
@@ -35,19 +35,27 @@ kayıtta kalır; sıradan personel bu kapıyı kullanamaz.
 - **R3.** Geri alınan ilan **satıştan önceki durumuna** döner — **Yayında** ya da **Rezerve**
   (**D2**). Satıştan önceki durumu bilinmeyen (bu kart gelmeden önce satılmış) ilan **Yayında**ya
   döner (**D3**).
-- **R4.** Aracı bugün vitrine çıkamayacak bir ilan — şube ataması bekleyen araç (A8) — geri
-  alındığında **Taslak**'a döner, yayına girmez (**D5**).
+- **R4.** Bugün vitrine çıkamayacak bir araç — şube ataması bekleyen, **şubesi kalıcı kapatılmış**
+  ya da yayın koşullarını (`docs/domain.md` **A2**: görsel, zorunlu alanlar) artık sağlamayan
+  araç — geri alındığında ilan **Taslak**'a döner ve yayına girmez. Şubesi kapatılmış aracın
+  "şube ataması bekliyor" bayrağı da yazılır (**D5**, **D12**, **D13**).
 - **R5.** Geri alma ilanın **adresini**, **ilk yayın tarihini** (dolayısıyla vitrindeki sırasını),
-  fotoğraflarını, fiyatını ve **öne çıkarma** durumunu değiştirmez (**D6**).
+  fotoğraflarını, fiyatını ve **öne çıkarma** anahtarının **o anki** değerini değiştirmez (**D6**,
+  **D15**).
 - **R6.** Her geri alma **kayda geçer**: ilan, geri alan personel, an, gerekçe ve dönülen durum.
   Kayıt silinmez ve düzenlenmez (**D7**).
 - **R7.** Yönetici bir ilanın geri alma kayıtlarını panelde o ilanın ekranında görür.
 - **R8.** Geri alma, satışın da kendisinin olduğu gibi sistemde **duyurulur** (**D8**).
 - **R9.** Geri alma bir **onay** ister: yönetici ilanın hangi duruma döneceğini görür ve gerekçeyi
-  aynı pencerede yazar.
+  aynı pencerede yazar. İstek bu **beklenen durumu** taşır; sunucunun hesapladığı durum farklıysa
+  (pencere açıkken şube kapandı, fotoğraf silindi) geri alma `409` ile reddedilir ve yönetici güncel
+  hedefi görür (**D16**).
 - **R10.** **Arşiv**deki ilan geri alınamaz; geri alma yalnız **Satıldı** durumundan yapılır.
 - **R11.** Aynı ilan için eşzamanlı iki geri alma ya da geri alma ile arşivleme yarışında yalnız
-  biri başarılı olur (`0012b` eşzamanlılık deseni, `0007`).
+  biri başarılı olur (`0012b` eşzamanlılık deseni, `0007`). Araç düzenlemesi ve taşınmayla yarış
+  `0012b` **X9**'un kapsamındadır ve bu kartta da kapsam dışıdır (**D19**).
+- **R11a.** Satış öncesi durum her satışta yeniden yazılır, geri almada temizlenir; arşivde
+  anlamı yoktur (**D18**).
 - **R12.** Satış Danışmanı ve İçerik Editörü geri alma eylemini görmez; uç onlara `403` döner.
 - **R13.** Geri alma **toplu eylem** değildir; ilan ilan yapılır (**D9**).
 
@@ -60,8 +68,8 @@ kayıtta kalır; sıradan personel bu kapıyı kullanamaz.
 - **C1.** Geçiş agregatın kendi yöntemiyle yapılır; durum doğrudan atanmaz. Duyuru değişiklikle
   aynı işlemde outbox'a yazılır (`docs/architecture.md` § 2.C).
 - **C2.** Migration yalnız `catalog` şemasına dokunur.
-- **C3.** `docs/domain.md` **A3** geçiş tablosu ve **A4** aynı PR'da güncellenir; bu kart onlarla
-  çelişen bir davranış bırakmaz.
+- **C3.** `docs/domain.md` **A3** geçiş tablosu ve **A4** ile `docs/architecture.md`'nin olay akışı
+  (§ 2, `:130-132`) aynı PR'da güncellenir; bu kart onlarla çelişen bir davranış bırakmaz.
 - **C4.** Kullanıcıya görünen hiçbir metin koda gömülmez (Altın Kural 6).
 - **C5.** Gerekçe kişisel veri taşıyabilir; kayıt dışında hiçbir loga yazılmaz
   (`docs/conventions.md` § 12).
@@ -94,11 +102,24 @@ kayıtta kalır; sıradan personel bu kapıyı kullanamaz.
   terminal; aynı araç geri alınırsa yeni kayıt".
 - **Panel bilerek düğme koymuyor.** `ListingActionBar.tsx:133` yorumu: "A4 — Satıldı terminaldir;
   geri al düğmesi kuralı delerdi". `0012b` Bilinen tuzak 4 aynı gerekçeyi yazıyor.
-- **İlk yayın tarihi donuk.** `Publish` `PublishedAt ??=` ile ilk yayında donduruyor ve adres de
-  ilk yayında bir kez yazılıyor (`Listing.cs`, `0012b` **D13**, **D31**); geri alma bunları
-  korumak için yayına alma yolunu **kullanmamalı** (yeni bir geçiş).
-- **Öne çıkarma satışla silinmiyor.** `MarkSold` `ShowcaseSortWeight`'e dokunmuyor
-  (`Listing.cs:274-300`); geri alınan ilan satıştan önceki öne çıkarma durumuyla döner.
+- **İlk yayın tarihi ve adres zaten korunuyor.** `Publish` `PublishedAt ??=` ve `Slug ??=` ile
+  ikisini ilk yayında donduruyor (`Listing.cs:183-184`, `0012b` **D13**, **D31**). Geri alma yine de
+  ayrı bir geçiştir — gerekçesi **D6**'da (QA B3 eski gerekçeyi düzeltti).
+- **Öne çıkarma satışla silinmiyor ama satılmışken değişebiliyor.** `MarkSold`
+  (`Listing.cs:213-223`) ağırlığa dokunmuyor; `Feature`/`Unfeature` yalnız `Arşiv`'i reddediyor
+  (`Listing.cs:288-296`, `0012c` **D36**), yani satılmış ilanda da çalışıyor (**D15**).
+- **A8 satılmış ilanlara dokunmuyor** (QA B1). Kalıcı kapatma işleyicisi `Satıldı` ve `Arşiv`
+  ilanlarını atlıyor, bayrağı da yazmıyor (`BranchEventHandlers.cs:98-104`). Satıştan sonra şubesi
+  kapanan araç **bayraksız** ve kapalı şubeye bağlı kalıyor; yansıtma yalnız bayrağa bakıyor
+  (`ShowcaseListingProjector.cs`). Bayraklı araca ait **satılmış** ilan doğal akışta oluşmuyor.
+- **Satılmış araç düzenlenebiliyor** (QA B2). `UpdateVehicleCommand` ilan durumuna bakmıyor;
+  fotoğraflar boşaltılabiliyor (`Vehicle.cs:251-264`); yayın koşulları `PublishEligibility.Evaluate`
+  ile yalnız yayına almada denetleniyor (`ListingTransitionCommands.cs:161`).
+- **Aynı şaseyle ikinci canlı kayıt oluşamaz.** Şase indeksi `NOT is_archived`
+  (`VehicleConfiguration.cs:38-41`); yeni kayıt ancak eski kayıt arşivlenince açılır ve arşiv geri
+  alınamaz (R10).
+- **Talepler satışa tepki vermiyor**; talep kopyası vitrin satırından okunuyor
+  (`ListingSnapshotQueries.cs`), geri alınan ilanın adresi yeniden talep kabul eder.
 - **Denetim kaydı emsali.** `0013` ikinci adımın kaydını `identity` şemasında kendi tablosunda
   tutuyor (`docs/architecture.md` § Karar Defteri, "İkinci adımın kaydı") — bu depodaki ilk
   denetim kaydı.
@@ -121,14 +142,15 @@ kılar; üst sınır kaydı ve ekranı korur.
 **D5 — Vitrine çıkamayacak araç Taslak'a döner (ajan).** (R4) *Gerekçe:* A8'in "şube ataması
 bekliyor" bayrağı taşıyan araç yayına alınamıyor; geri alma bu kuralı arka kapıdan delmemeli.
 
-**D6 — Yeni bir geçiş; yayına alma yolu kullanılmaz (ajan).** (R5) *Gerekçe:* adres, ilk yayın
-tarihi ve sıra korunmalı; `Publish` yalnız `Taslak`'tan çalışıyor ve kendi olayını üretiyor.
+**D6 — Yeni bir geçiş; yayına alma yolu kullanılmaz (ajan, D14 ile gerekçesi düzeltildi).** (R5)
+*Gerekçe:* `Publish` yalnız `Taslak`'tan çalışır, `Rezerve`'ye dönemez ve `ListingPublished`
+duyurusunu üretir; geri alma ayrı bir olgudur ve kendi duyurusu vardır (D8).
 
 **D7 — Kayıt `catalog` şemasında kendi tablosunda (ajan).** (R6, R7) `0013`'ün denetim kaydı
 deseni. Kayıt ekleme dışında değişmez. *Gerekçe:* satış geçmişinin "silinmemesi, üstüne geri
 alındı yazılması" — sahibin kararı — bir kayıt satırıdır.
 
-**D8 — Yeni duyuru: satış geri alındı (ajan).** (R8) `VehicleSold` gibi outbox'a yazılır.
+**D8 — Yeni duyuru: satış geri alındı (ajan, D17 ile somutlaştı).** (R8) `VehicleSold` gibi outbox'a yazılır.
 *Gerekçe:* bugün `VehicleSold`'u dinleyen yok, ama yarın satışları sayan bir tüketici (rapor)
 geri almayı görmezse yanlış sayar. Simetri ucuz ve sözleşmenin yarım kalmasını önler.
 
@@ -141,6 +163,37 @@ Taslak` — son üçü **yalnız** "satışı geri al" geçişiyle ve yalnız Y�
 ticari olarak terminaldir; yanlış işaretleme Yönetici'nin gerekçeli geri almasıyla düzeltilir.
 Aynı fiziksel araç **gerçekten** geri alınırsa yine yeni kayıt açılır."
 
+### Verilen kararlar — QA CLARIFY turu, 2026-11-18
+
+QA spec'i `main` @ `0cd834d`'ye karşı okudu ve sekiz bulgu getirdi (7 gerçek, 1 belirsiz); hepsi
+Takım Yöneticisi (ajan) tarafından kabul edildi. Aynı şaseyle ikinci kayıt, talepler, rezervasyon
+ve kilit deseni sorularını kodla kapattı (Context).
+
+**D12 — Kapalı şube kontrolü şubenin durumundan (B1).** (R4) Geri alma aracın şubesini
+`IBranchQueries` üzerinden okur; şube kalıcı kapatılmışsa ilan `Taslak`'a döner **ve** aracın
+"şube ataması bekliyor" bayrağı yazılır. *Gerekçe:* A8 satılmış ilanı atladığı için bayrak bu
+durumda hiç yazılmamış olur; yalnız bayrağa bakmak aracı kapalı şubeyle vitrine çıkarırdı.
+
+**D13 — Yayın koşulları yeniden denetlenir (B2).** (R4) Geri alma `PublishEligibility`'yi koşar;
+sağlanmıyorsa ilan `Taslak`'a döner. *Gerekçe:* satılmış araç düzenlenebiliyor; geri alma A2'yi
+atlamamalı.
+
+**D14 — D6'nın gerekçesi düzeltildi (B3).**
+
+**D15 — Öne çıkarmanın o anki değeri korunur (B4).** (R5) Geri alma anahtara dokunmaz; satılmışken
+değiştirildiyse değişmiş hâliyle döner.
+
+**D16 — Beklenen durum istekte (B5).** (R9) Pencerenin gösterdiği hedef istekle gelir; sunucu farklı
+hesaplarsa `409`, kayıt yazılmaz.
+
+**D17 — Duyurunun adı ve gövdesi (B6).** (R8, C3) `VehicleSaleReverted`: araç, ilan, adres ve dönülen
+durum. `docs/architecture.md`'nin olay akışına eklenir.
+
+**D18 — Satış öncesi durumun yaşam döngüsü (B7).** (R11a) `MarkSold` her seferinde yazar, geri alma
+temizler; `null` "bilinmiyor" demektir (D3).
+
+**D19 — Düzenleme/taşınma yarışı kapsam dışı (B8).** (R11) `0012b` **X9** ile aynı gerekçe.
+
 ---
 
 ## Acceptance Criteria
@@ -150,64 +203,67 @@ Aynı fiziksel araç **gerçekten** geri alınırsa yine yeni kayıt açılır."
 - **AC-1.** Yayındayken satıldı işaretlenen ilanın satışı Yönetici tarafından geri alındığında ilan **Yayında** olur ve vitrinde yeniden görünür.
 - **AC-2.** Rezervedeyken satıldı işaretlenen ilanın satışı geri alındığında ilan **Rezerve** olur ve vitrinde rezerve olarak görünür.
 - **AC-3.** Bu kart gelmeden önce satıldı işaretlenmiş (önceki durumu kayıtlı olmayan) ilanın satışı geri alındığında ilan **Yayında** olur.
-- **AC-4.** Şube ataması bekleyen bir aracın satılmış ilanı geri alındığında ilan **Taslak** olur ve vitrinde görünmez.
-- **AC-5.** Geri alınan ilan, onay penceresinde gösterilen duruma döner.
+- **AC-4.** Satıştan sonra şubesi kalıcı kapatılan aracın ilanı geri alındığında ilan **Taslak** olur, aracın "şube ataması bekliyor" bayrağı yazılır ve araç vitrinde görünmez (D12).
+- **AC-5.** Satıştan sonra bütün fotoğrafları kaldırılan aracın ilanı geri alındığında ilan **Taslak** olur ve vitrinde görünmez (D13).
+- **AC-6.** Geri alınan ilan, onay penceresinde gösterilen duruma döner.
+- **AC-7.** Onay penceresi açıldıktan sonra aracın şubesi kalıcı kapatılırsa, pencerenin gösterdiği "Yayında" hedefiyle gönderilen geri alma `409` ile reddedilir, ilan Satıldı kalır ve kayıt yazılmaz (D16).
 
 ### Korunanlar (R5 · D6)
 
-- **AC-6.** Geri alınan ilanın adresi değişmez; eski adres ilanı açar.
-- **AC-7.** Geri alınan ilanın ilk yayın tarihi değişmez ve vitrin sırasındaki yeri satıştan öncekiyle aynıdır.
-- **AC-8.** Geri alınan ilanın fotoğrafları ve fiyatı değişmez.
-- **AC-9.** Satıştan önce öne çıkarılmış ilan geri alındığında yine öne çıkarılmış olarak döner.
+- **AC-8.** Geri alınan ilanın adresi değişmez; eski adres ilanı açar.
+- **AC-9.** Geri alınan ilanın ilk yayın tarihi değişmez ve vitrin sırasındaki yeri satıştan öncekiyle aynıdır.
+- **AC-10.** Geri alınan ilanın fotoğrafları ve fiyatı değişmez.
+- **AC-11.** Satıştan önce öne çıkarılmış ve satılmışken dokunulmamış ilan geri alındığında öne çıkarılmış olarak döner.
+- **AC-12.** Satılmışken öne çıkarması kaldırılan ilan geri alındığında öne çıkarılmamış olarak döner (D15).
 
 ### Gerekçe ve onay (R2, R9 · D4)
 
-- **AC-10.** Geri alma onay penceresi ilanın döneceği durumu ve bir gerekçe alanı gösterir; gerekçesiz onay düğmesi etkin değildir.
-- **AC-11.** 10 karakterden kısa gerekçe sunucuda reddedilir ve ilan Satıldı kalır.
-- **AC-12.** 500 karakterden uzun gerekçe reddedilir.
-- **AC-13.** Yalnız boşluktan oluşan gerekçe boş sayılır ve reddedilir.
-- **AC-14.** Onaydan vazgeçmek ilanı değiştirmez ve kayıt yazmaz.
+- **AC-13.** Geri alma onay penceresi ilanın döneceği durumu ve bir gerekçe alanı gösterir; gerekçesiz onay düğmesi etkin değildir.
+- **AC-14.** 10 karakterden kısa gerekçe sunucuda reddedilir ve ilan Satıldı kalır.
+- **AC-15.** 500 karakterden uzun gerekçe reddedilir.
+- **AC-16.** Yalnız boşluktan oluşan gerekçe boş sayılır ve reddedilir.
+- **AC-17.** Onaydan vazgeçmek ilanı değiştirmez ve kayıt yazmaz.
 
 ### Kayıt ve duyuru (R6, R7, R8 · D7, D8)
 
-- **AC-15.** Her başarılı geri alma bir kayıt yazar: ilan, geri alan personel, an, gerekçe ve dönülen durum.
-- **AC-16.** Reddedilen bir geri alma kayıt yazmaz.
-- **AC-17.** Yönetici ilanın panel ekranında geri alma kayıtlarını en yenisi üstte, personel adı, an, gerekçe ve dönülen durumla görür.
-- **AC-18.** Geri alma kaydını düzenleyen ya da silen bir uç yoktur.
-- **AC-19.** Başarılı geri alma "satış geri alındı" duyurusunu değişiklikle aynı işlemde outbox'a yazar.
-- **AC-20.** Aynı ilan geri alınıp yeniden satıldı işaretlenip yeniden geri alınabilir; iki kayıt da durur.
+- **AC-18.** Her başarılı geri alma bir kayıt yazar: ilan, geri alan personel, an, gerekçe ve dönülen durum.
+- **AC-19.** Reddedilen bir geri alma kayıt yazmaz.
+- **AC-20.** Yönetici ilanın panel ekranında geri alma kayıtlarını en yenisi üstte, personel adı, an, gerekçe ve dönülen durumla görür.
+- **AC-21.** Geri alma kaydını düzenleyen ya da silen bir uç yoktur.
+- **AC-22.** Başarılı geri alma `VehicleSaleReverted` duyurusunu araç, ilan, adres ve dönülen durumla değişiklikle aynı işlemde outbox'a yazar (D17).
+- **AC-23.** Yayındayken satılıp geri alınan, sonra rezerve edilip yeniden satılan ilan ikinci geri almada **Rezerve**'ye döner; iki kayıt da durur (D18).
 
 ### Geçersiz durumlar ve yarış (R10, R11)
 
-- **AC-21.** Arşivdeki ilan için geri alma reddedilir.
-- **AC-22.** Yayında, Rezerve ya da Taslak bir ilan için geri alma reddedilir.
-- **AC-23.** Aynı ilan için eşzamanlı iki geri alma isteğinden yalnız biri başarılı olur ve yalnız bir kayıt yazılır.
-- **AC-24.** Geri alma ile arşivleme eşzamanlı istendiğinde yalnız biri başarılı olur.
+- **AC-24.** Arşivdeki ilan için geri alma reddedilir.
+- **AC-25.** Yayında, Rezerve ya da Taslak bir ilan için geri alma reddedilir.
+- **AC-26.** Aynı ilan için eşzamanlı iki geri alma isteğinden yalnız biri başarılı olur ve yalnız bir kayıt yazılır.
+- **AC-27.** Geri alma ile arşivleme eşzamanlı istendiğinde yalnız biri başarılı olur.
 
 ### Erişim (R12, R13 · D9)
 
-- **AC-25.** Satış Danışmanı ve İçerik Editörü satılmış ilanda "Satışı geri al" eylemini görmez.
-- **AC-26.** Yönetici olmayan rolün geri alma ucuna isteği `403` alır ve ilan değişmez.
-- **AC-27.** Toplu eylem çubuğunda "Satışı geri al" seçeneği yoktur.
+- **AC-28.** Satış Danışmanı ve İçerik Editörü satılmış ilanda "Satışı geri al" eylemini görmez.
+- **AC-29.** Yönetici olmayan rolün geri alma ucuna isteği `403` alır ve ilan değişmez.
+- **AC-30.** Toplu eylem çubuğunda "Satışı geri al" seçeneği yoktur.
 
 ### Panel durumları ve dil
 
-- **AC-28.** Geri alma sunucu hatasıyla düştüğünde pencere teknik ayrıntı göstermeyen bir hata gösterir ve yazılan gerekçe kaybolmaz.
-- **AC-29.** Yeni metinler TR/AR/EN kataloglarında var; eksik anahtar kontrolü yeşil.
-- **AC-30.** Arapça panelde onay penceresi ve kayıt listesi sağdan sola çalışır.
+- **AC-31.** Geri alma sunucu hatasıyla düştüğünde pencere teknik ayrıntı göstermeyen bir hata gösterir ve yazılan gerekçe kaybolmaz.
+- **AC-32.** Yeni metinler TR/AR/EN kataloglarında var; eksik anahtar kontrolü yeşil.
+- **AC-33.** Arapça panelde onay penceresi ve kayıt listesi sağdan sola çalışır.
 
 ### Belge (C3 · D11)
 
-- **AC-31.** `docs/domain.md` A3 geçiş tablosu ve A4 bu kartın davranışını anlatır; `ListingActionBar.tsx`'teki "A4 — geri al düğmesi kuralı delerdi" yorumu kaldırılır.
+- **AC-34.** `docs/domain.md` A3 geçiş tablosu ve A4 bu kartın davranışını anlatır; `ListingActionBar.tsx`'teki "A4 — geri al düğmesi kuralı delerdi" yorumu kaldırılır.
 
 ---
 
 ## Definition of Done
 
-- [ ] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı.
+- [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B8 → D12–D19, 2026-11-18.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0023-ac<n>.png`),
-      hata durumu dâhil; Arapça görüntü de var (AC-30).
+      hata durumu dâhil; Arapça görüntü de var (AC-33).
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
 - [ ] <!-- DoD:T5 --> Yeni migration yalnızca `catalog` şemasına dokunuyor.
