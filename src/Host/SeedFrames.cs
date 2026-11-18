@@ -21,7 +21,9 @@ internal static class SeedFrames
 
         using (SKCanvas tuval = new(bitmap))
         {
-            float ton = index * 37 % 360;
+            // Koordinatlar ve ton TAM SAYI: kare bir piksel ızgarası ve Yasak Listesi 26
+            // `src` altında kayan noktalı bildirime istisnasız kapalı.
+            int ton = index * 37 % 360;
 
             using SKPaint zemin = new()
             {
@@ -35,13 +37,13 @@ internal static class SeedFrames
 
             // Izgara ve çizgiler: JPEG'e gerçek fotoğrafa yakın bir bilgi yoğunluğu verir.
             using SKPaint cizgi = new() { Color = new SKColor(255, 255, 255, 40), StrokeWidth = Math.Max(1, width / 400f), IsAntialias = true };
-            float adim = Math.Max(8, width / 24f);
-            for (float x = 0; x < width; x += adim)
+            int adim = Math.Max(8, width / 24);
+            for (int x = 0; x < width; x += adim)
             {
                 tuval.DrawLine(x, 0, x + (height / 3f), height, cizgi);
             }
 
-            for (float y = 0; y < height; y += adim)
+            for (int y = 0; y < height; y += adim)
             {
                 tuval.DrawLine(0, y, width, y + (adim / 2), cizgi);
             }
