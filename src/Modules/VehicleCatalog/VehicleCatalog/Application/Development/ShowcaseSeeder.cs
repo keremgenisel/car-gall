@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Application.Projection;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
@@ -12,6 +13,12 @@ namespace CarGallery.Modules.VehicleCatalog.Application.Development;
 /// yazmaz — agregatları kurup ShowcaseListingProjector'dan geçirir, yani üretimdeki
 /// görünürlük kararının AYNI yolunu kullanır. Elle satır yazan bir seed, kanıt
 /// görüntülerini gerçek davranıştan kopartırdı.
+///
+/// <para><b>`0016b` — galeri yuvaları da aynı kuraldan geçer</b> (triyaj BULGU-3): yuva,
+/// yansıtıcının <c>Yuva</c> kuralıyla ve tohum varlığının `Media` karşılığıyla kurulur
+/// (<c>SeedMediaAssets</c>). Tohum bayrağı açıkken o karşılığı gerçek sorgunun önündeki
+/// <c>SeedAwareMediaAssetQueries</c> verir; bu yüzden tohum ilanı panelde ya da toplu
+/// eylemde yeniden yansıtıldığında galerisini KORUR. Bayrak kapalıyken tohum zaten yoktur.</para>
 ///
 /// <para><b>0010a/D12 — artık YAZMA modelini de yazıyor.</b> Bu spec'e kadar agregatlar
 /// bellekte kurulup atılıyordu ve saklanan tek şey okuma modeli satırlarıydı. Yazma modeli
@@ -224,21 +231,31 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
     /// <item>3 — 18 hazır görsel; model yılı 2019 (AC-56).</item>
     /// <item>4 — işleniyor, başarısız: hazır görsel yok (AC-65, AC-66).</item>
     /// </list>
-    /// Diğer ilanlar tek hazır görsel taşır. Yuvaların <c>ListingId</c>'si çağıranda yazılır.
+    /// Diğer ilanlar tek hazır görsel taşır. Yuvanın durumu ve türevleri, yansıtıcının KENDİ
+    /// kuralından (<c>ShowcaseProjectionWriter.Yuva</c>) ve tohum varlığının `Media`
+    /// karşılığından (<see cref="SeedMediaAssets"/>) türetilir: tohum, ilan yeniden
+    /// yansıtıldığında oluşacak satırın AYNISINI yazar. <c>ListingId</c> çağıranda yazılır.
     /// </summary>
     private static List<ShowcaseListingMedia> SeedGallery(int index)
     {
-        ShowcaseListingMedia Yuva(int konum, ShowcaseMediaStatus durum, int kare, int en, int boy) => new()
+        ShowcaseListingMedia Yuva(int konum, MediaProcessingStatus durum, int kare, int en, int boy)
         {
-            ListingId = Guid.Empty,
-            Position = konum,
-            MediaAssetId = Guid.CreateVersion7(),
-            Status = durum,
-            Variants = durum == ShowcaseMediaStatus.Ready ? Turevler(kare, en, boy) : [],
-        };
+            Guid kimlik = SeedMediaAssets.Id(index, konum, durum, kare, en, boy);
+            (ShowcaseMediaStatus yuvaDurumu, List<ShowcaseMediaVariant> turevler) =
+                ShowcaseProjectionWriter.Yuva(SeedMediaAssets.Describe(kimlik));
+
+            return new ShowcaseListingMedia
+            {
+                ListingId = Guid.Empty,
+                Position = konum,
+                MediaAssetId = kimlik,
+                Status = yuvaDurumu,
+                Variants = turevler,
+            };
+        }
 
         ShowcaseListingMedia Hazir(int konum, int kare, int en = 4, int boy = 3) =>
-            Yuva(konum, ShowcaseMediaStatus.Ready, kare, en, boy);
+            Yuva(konum, MediaProcessingStatus.Ready, kare, en, boy);
 
         return index switch
         {
@@ -252,15 +269,15 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             1 => [Hazir(0, 0), Hazir(1, SeedFrameMissing), Hazir(2, 2)],
             2 =>
             [
-                Yuva(0, ShowcaseMediaStatus.Failed, 0, 4, 3),
+                Yuva(0, MediaProcessingStatus.Failed, 0, 4, 3),
                 Hazir(1, 1),
-                Yuva(2, ShowcaseMediaStatus.Failed, 0, 4, 3),
+                Yuva(2, MediaProcessingStatus.Failed, 0, 4, 3),
             ],
             3 => [.. Enumerable.Range(0, 18).Select(konum => Hazir(konum, konum))],
             4 =>
             [
-                Yuva(0, ShowcaseMediaStatus.Processing, 0, 4, 3),
-                Yuva(1, ShowcaseMediaStatus.Failed, 0, 4, 3),
+                Yuva(0, MediaProcessingStatus.Processing, 0, 4, 3),
+                Yuva(1, MediaProcessingStatus.Failed, 0, 4, 3),
             ],
             _ => [Hazir(0, index % 30)],
         };
@@ -268,24 +285,6 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
 
     /// <summary>`/seed-media/frame-…` ucunun TANIMADIĞI kare numarası: o adres 404 döner.</summary>
     private const int SeedFrameMissing = 99;
-
-    /// <summary>
-    /// `Media`'nın üç türevinin boyut kuralı (en uzun kenar 400 / 800 / kaynak ≤ 1600):
-    /// 4:3 kaynak 1200×900 → `large` 1200×900 (1600 değil), `display` 800×600,
-    /// `thumbnail` 400×300 — `0016b` AC-10/AC-60'ın sayıları.
-    /// </summary>
-    private static List<ShowcaseMediaVariant> Turevler(int kare, int en, int boy)
-    {
-        (int W, int H) Boyut(int uzun) => en >= boy ? (uzun, uzun * boy / en) : (uzun * en / boy, uzun);
-
-        ShowcaseMediaVariant Turev(string ad, int uzun)
-        {
-            (int w, int h) = Boyut(uzun);
-            return new ShowcaseMediaVariant(ad, $"/seed-media/frame-{kare}-{w}x{h}.jpg", w, h);
-        }
-
-        return [Turev("thumbnail", 400), Turev("display", 800), Turev("large", 1200)];
-    }
 
     private static PaintChangeMap? SeedPaintChangeMap(int index)
     {

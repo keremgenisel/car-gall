@@ -203,6 +203,14 @@ builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocal
 builder.Services.AddSingleton<IndexHtmlRenderer>();
 builder.Services.AddSingleton<AdminShellRenderer>();
 
+// `0016b` (triyaj BULGU-3) — tohumun medya varlıkları `Media`'da kayıtlı değil; tohum
+// bayrağı açıkken onları tohumun kendisi cevaplar ki tohum ilanı yeniden yansıtılınca
+// galerisini kaybetmesin. `AddMedia`'dan SONRA: sardığı kayıt onunki.
+if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
+{
+    builder.Services.AddVehicleCatalogSeedMedia();
+}
+
 WebApplication app = builder.Build();
 
 app.UseExceptionHandler();
