@@ -101,3 +101,18 @@
 .ui-skeleton--line::after {
   content: '\00a0';
 }
+
+/* `0016b` D28 — ortak modal görünüm. Perde `::backdrop`'tan; boyut çağıranın sınıfında. */
+.ui-dialog {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  max-inline-size: 100vw;
+  max-block-size: 100vh;
+}
+
+.ui-dialog::backdrop {
+  background: var(--color-backdrop);
+}

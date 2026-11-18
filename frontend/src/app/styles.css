@@ -1224,3 +1224,245 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(var(--card-min-inline-size), 1fr));
   gap: var(--space-4);
 }
+
+/* --- Galeri ve büyütme (0016b R1–R7) --------------------------------------- */
+
+/* Çerçeve SABİT 4:3 (D18): farklı oranlı görsel çerçeveye sığdırılır ve gezinirken
+   sayfa kaymaz (AC-62). Görselin kendi `width`/`height`'i gerçek boyuttur; çerçeveyi
+   belirleyen o değil, buradaki oran. */
+.gallery__frame {
+  position: relative;
+  aspect-ratio: var(--media-aspect-ratio);
+  background: var(--color-surface-muted);
+  overflow: hidden;
+}
+
+.gallery__enlarge {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+}
+
+.gallery__image,
+.lightbox__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+}
+
+.gallery__placeholder {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 100%;
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* "Önceki" okuma yönünün başında, "sonraki" sonunda: RTL'de kendiliğinden yer değiştirir
+   (AC-72). */
+.gallery__nav {
+  position: absolute;
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  inline-size: var(--form-control-min-block-size);
+  block-size: var(--form-control-min-block-size);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.gallery__nav--previous {
+  inset-inline-start: var(--space-4);
+}
+
+.gallery__nav--next {
+  inset-inline-end: var(--space-4);
+}
+
+/* Uçtaki düğme `aria-disabled`: odaklanabilir kalır (AC-42), soluk görünür. */
+.gallery__nav[aria-disabled='true'] {
+  color: var(--color-ink-muted);
+  border-color: var(--color-surface-muted);
+  cursor: default;
+}
+
+.gallery__chevron {
+  inline-size: var(--space-7);
+  block-size: var(--space-7);
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+}
+
+/* Ok işareti okuma yönünü izler: "sonraki" ileri, "önceki" geri gösterir. */
+.gallery__nav--next .gallery__chevron {
+  rotate: 180deg;
+}
+
+[dir='rtl'] .gallery__chevron {
+  scale: -1 1;
+}
+
+.gallery__counter {
+  margin: 0;
+  padding-block: var(--space-4);
+  padding-inline: var(--space-6);
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+  text-align: end;
+}
+
+.lightbox {
+  inline-size: min(100vw, var(--layout-max-inline-size));
+}
+
+.lightbox__content {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.lightbox__close {
+  justify-self: end;
+}
+
+.lightbox__frame {
+  position: relative;
+  aspect-ratio: var(--media-aspect-ratio);
+  max-block-size: 80vh;
+  background: var(--color-surface-muted);
+}
+
+/* --- Parça haritası (0016b R13–R19) ----------------------------------------- */
+
+.paint-map {
+  display: grid;
+  gap: var(--space-5);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+.paint-map__title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.paint-map__layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-min-inline-size), 1fr));
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* Şema fiziksel bir üstten görünümdür ve RTL'de AYNALANMAZ (R21, D10): çizimin içinde
+   yön yoktur; yalnız kutunun yeri metin akışını izler. */
+.paint-map__schema {
+  inline-size: 100%;
+  max-inline-size: var(--card-min-inline-size);
+  block-size: auto;
+  justify-self: center;
+}
+
+.paint-map__ground {
+  fill: var(--color-surface);
+}
+
+.paint-map__part {
+  stroke-width: 2;
+}
+
+.paint-map__hatch {
+  stroke-width: 2;
+}
+
+.paint-map__part--original {
+  stroke: var(--color-paint-original);
+}
+
+.paint-map__part--local_painted,
+.paint-map__hatch--local_painted {
+  stroke: var(--color-paint-local-painted);
+}
+
+.paint-map__part--painted,
+.paint-map__hatch--painted {
+  stroke: var(--color-paint-painted);
+}
+
+.paint-map__part--replaced,
+.paint-map__hatch--replaced {
+  stroke: var(--color-paint-replaced);
+}
+
+.paint-map__glass {
+  fill: var(--color-surface-muted);
+  stroke: var(--color-border);
+}
+
+.paint-map__wheel {
+  fill: var(--color-ink);
+}
+
+.paint-map__trim {
+  fill: var(--color-ink-muted);
+}
+
+.paint-map__text {
+  display: grid;
+  gap: var(--space-5);
+  text-align: start;
+}
+
+.paint-map__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.paint-map__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.paint-map__swatch {
+  inline-size: var(--space-7);
+  block-size: var(--space-6);
+}
+
+.paint-map__summary,
+.paint-map__list,
+.paint-map__others,
+.paint-map__all-original {
+  margin: 0;
+}
+
+.paint-map__list {
+  display: grid;
+  gap: var(--space-2);
+  padding-inline-start: var(--space-6);
+}
+
+.paint-map__notes {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-inline-start: var(--space-6);
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+}
