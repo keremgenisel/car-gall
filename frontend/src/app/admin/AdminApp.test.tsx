@@ -50,6 +50,9 @@ function ekran() {
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  // `window.location` casusu geri alınır; yoksa sonra eklenen bir test sahte `assign`'ı
+  // görür ve gerçek gezinmeyi yutar (QA, PR #102).
+  vi.restoreAllMocks()
 })
 
 describe('AC-24: Oturumu olmayan biri yönetim ekranına gittiğinde giriş ekranına yönlendirilir', () => {
@@ -254,5 +257,23 @@ describe('0013/R7: Zorunlu rolde kurulumu biten personel panelde çalışabilir;
     fireEvent.click(await screen.findByTestId('two-factor-enrolled-continue'))
 
     expect(assign).toHaveBeenCalledWith(adminPath())
+  })
+
+  it('kapılı ekran kurulumu zaten yapılmış bulursa yönetim paneli değil, panel köküne gezinme gösterilir', async () => {
+    const assign = vi.fn()
+    vi.spyOn(window, 'location', 'get').mockReturnValue({ ...window.location, assign } as Location)
+
+    vi.mocked(fetchCurrentSession).mockRejectedValue(
+      new ApiError('identity.two_factor_setup_required', null, 403),
+    )
+    vi.mocked(fetchTwoFactorStatus).mockResolvedValue({
+      enrolled: true,
+      required: true,
+      remainingRecoveryCodes: 10,
+    })
+
+    ekran()
+
+    await vi.waitFor(() => expect(assign).toHaveBeenCalledWith(adminPath()))
   })
 })

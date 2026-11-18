@@ -47,6 +47,17 @@ export function TwoFactorPage({ onEnrolled }: { readonly onEnrolled?: () => void
     return () => controller.abort()
   }, [locale, reloadToken])
 
+  // Kapılı ekran kurulumu ZATEN yapılmış bulursa (ör. kurulum başka bir sekmede bitti ve bu
+  // sekme durumu yeniden çekti) yönetim paneli değil, aynı gezinme gösterilir: aksi hâlde
+  // personel yine menüsüz bir ekranda kalırdı (QA, PR #102).
+  const alreadyEnrolled = state.kind === 'ready' && state.status.enrolled
+
+  useEffect(() => {
+    if (onEnrolled !== undefined && alreadyEnrolled) {
+      onEnrolled()
+    }
+  }, [onEnrolled, alreadyEnrolled])
+
   return (
     <div className="admin-page admin-page--narrow">
       <Card as="div" testId="two-factor-page">
