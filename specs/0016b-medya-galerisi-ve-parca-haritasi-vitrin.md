@@ -2,13 +2,13 @@
 
 | | |
 |---|---|
-| **Durum** | Onaya sunuldu (2026-11-18) — 83 kabul kriteri, kriter turu (Analist) |
+| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi, depo sahibi) — 83 kabul kriteri |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` public vitrin · `frontend/` panel (opsiyonel alan formu — **D5**) · `VehicleCatalog` (parça haritası alanı, vitrin okuma modeli, detay sözleşmesi) · `Media` **tüketilir**, değişmez (**D17**) |
 | **Bağımlı spec'ler** | `0002` (ilan detayı — tamamlandı; **X2** ve **X3**'ü geri açar) · `0011` (Media — tamamlandı) · `0012a` (aracın medya yüzeyi — tamamlandı) · `0010b` (opsiyonel alan tipleri — **X22**'nin bir kısmını geri açar, **D5**) · `0010a` (**X4**'ün veri yarısını üstlenir, **D5**) |
 | **Dayanak** | ADR 0003 unsur 1 ve Ek 1, sıra #10 |
-| **Karar bekliyor** | **S5–S8** (kriter turu, 2026-11-18 — kaydırma yönü, "diğer 0 parça", büyütmeden dönüş, Lighthouse'un ölçtüğü ilan), Takım Yöneticisi. Önceki kararlar: S1–S4 → **D1–D4**; QA CLARIFY turunun on dokuz bulgusu (B1–B19) → **D5–D23** (2026-11-18); plan turunun sekiz bulgusu (P1–P8) → **D24–D31** (2026-11-18). |
+| **Karar bekliyor** | yok — S1–S4 → **D1–D4**; QA CLARIFY turunun on dokuz bulgusu (B1–B19) → **D5–D23**; plan turunun sekiz bulgusu (P1–P8) → **D24–D31**; kriter turunun dört sorusu S5–S8 → **D33–D36** (2026-11-18). |
 
 > **Bölünme (2026-11-18, D31).** Bu dosya `0016`'nın **vitrin** dilimidir; veri ve panel
 > **`0016a`**'ya ayrıldı (R8–R12, C11 ve C10'un kod tablosu). Numaralar korundu. `0016`'nın
@@ -66,8 +66,10 @@ Başarı ölçütü: **ziyaretçi, aracın hangi parçasına ne olduğunu tek ba
   gezebilir (**D16**):
   - İlk görselden geriye ve son görselden ileriye **dönülmez**; uçtaki düğme devre dışı
     kalır ve odak kaybolmaz.
-  - Ok tuşları ve kaydırma **okuma yönünü** izler: Arapça'da ← ve sola kaydırma *sonraki*
-    görseldir.
+  - Ok tuşları ve kaydırma **okuma yönünü** izler: Arapça'da ← tuşu *sonraki* görseldir.
+    Kaydırma yönü **parmağın hareketiyle** tanımlanır: TR/EN'de sağdan sola, AR'da soldan
+    sağa kaydırma *sonraki* görsele geçer (**D33**). *(2026-11-18: "Arapça'da sola kaydırma
+    sonraki" yazıyordu; parmak hareketi olarak okununca okuma yönü ilkesiyle çelişiyordu.)*
   - Her etkileşimli öğe klavyeyle erişilebilir ve odak halkası görünür.
     → `docs/frontend.md` § 7.
 - **R4.** Ziyaretçi bir görseli **büyütebilir** (**D16**):
@@ -487,6 +489,24 @@ bedelsizdir (ADR 0003 Ek 1'in ölçümü).
 gerekçesi 13 × 4 kod tablosunun iki yerde tanımlanmasıydı. D31 o alternatifi seçer ve
 endişeyi tablonun tek evini `0016a` C10 yaparak karşılar.
 
+### Verilen kararlar — kriter turu, 2026-11-18
+
+**Takım Yöneticisi (depo sahibi) kararı**, Analist'in kriter turu soruları S5–S8 üzerine;
+öneriler olduğu gibi onaylandı.
+
+**D33 — Kaydırma yönü parmağın hareketiyle tanımlanır (S5).** TR/EN'de sağdan sola, AR'da
+soldan sağa kaydırma *sonraki* görsele geçer. → R3, AC-43, AC-44.
+
+**D34 — Hiçbir parça orijinal değilken "diğer N parça orijinal" cümlesi basılmaz (S6).**
+*Gerekçe:* bilgi taşımaz ve bir beyan gibi okunur. → R17, AC-37.
+
+**D35 — Büyütülmüş görünüm kapanınca satır içi galeri büyütmede kalınan görseldedir (S7).**
+*Gerekçe:* R4 tek bir "seçili görsel"den söz ediyor. → R4, AC-54.
+
+**D36 — Lighthouse en az bir hazır görseli olan ilk ilanı ölçer; yoksa koşu başarısızdır;
+LCP öğesinin galerinin ilk görseli olduğu da doğrulanır (S8).** *Gerekçe:* görselsiz ilan
+seçilirse ilk görselin LCP'si hiç ölçülmeden "geçti" yazılır. → C13, D30, AC-80, AC-83.
+
 ### Uygulama planı (onaylı, 2026-11-18)
 
 1. **`0016a`** — `FieldValueKind.PartMap` ve doğrulama (13 parça, 4 durum, yarım harita
@@ -503,9 +523,9 @@ endişeyi tablonun tek evini `0016a` C10 yaparak karşılar.
 > **Çözüldü (2026-11-18).** S1–S4 → **D1–D4**. Taslağın sorularının metni git geçmişinde
 > (`aaf0cec`).
 >
-> **Kriter turu (2026-11-18, Analist).** S5–S8 açık. Requirements ve Constraints
-> **değiştirilmedi**; her birinin kriteri önerilen okumayla yazıldı ve okuma kriterde adıyla
-> belirtildi.
+> **Kriter turu (2026-11-18, Analist).** S5–S8 → **D33–D36**; öneriler olduğu gibi
+> onaylandı (Takım Yöneticisi, depo sahibi). D33 R3'ün kaydırma cümlesini netleştirdi;
+> kriterler henüz `main`'de olmadığı için revizyon sayılmaz.
 
 S5. **"Sola kaydırma" parmağın yönü mü?** R3 *"Arapça'da ← ve sola kaydırma sonraki
     görseldir"* diyor. Parmağın sola (sağdan sola) kaydırılması soldan sağa okunan
@@ -781,15 +801,13 @@ S8. **Lighthouse hangi ilanı ölçer?** D30 adresin liste ucundan okunacağın�
 
 ## Definition of Done
 
-- [x] Açık sorular karara bağlandı. *(S1–S4 → D1–D4, B1–B19 → D5–D23, 2026-11-18.)*
-- [ ] `docs/domain.md` **Parça Haritası** tanımı dört duruma güncellendi (**D1**).
-- [ ] ADR 0007'ye parça haritası değer tipi için ek karar yazıldı (**C11**, **D5**).
+- [x] Açık sorular karara bağlandı. *(S1–S4 → D1–D4, B1–B19 → D5–D23, P1–P8 → D24–D31, S5–S8 → D33–D36, 2026-11-18.)*
 - [x] `0011` tamamlandı. *(`specs/done/0011-media-yukleme-turev-filigran.md`.)*
-- [ ] Panelde 13 seçim kutusuyla veri girişi kanıtla gösterildi (**R12**, **D5**).
+- [ ] `0016a` tamamlandı (parça haritasının değeri ve kod tablosu — **D31**).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0016-ac<n>.png`); şemanın her durumu, boş ve hata
+- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0016b-ac<n>.png`); şemanın her durumu, boş ve hata
       durumları, Arapça (RTL) görünüm dâhil.
-- [ ] Şemanın renk dışı ayırt edilebilirliği kanıtla gösterildi (C2, R9).
+- [ ] Şemanın renk dışı ayırt edilebilirliği kanıtla gösterildi (C2, R19).
 - [ ] Klavyeyle tam gezinme ve odak halkası kanıtla gösterildi (R3).
 - [ ] `0002`'nin kabul kriterleri regresyon testi olarak hâlâ yeşil (C8).
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi — 13 parça adı ve durum adları dâhil.

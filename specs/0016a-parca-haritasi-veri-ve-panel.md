@@ -2,13 +2,13 @@
 
 | | |
 |---|---|
-| **Durum** | Onaya sunuldu (2026-11-18) — 34 kabul kriteri, kriter turu (Analist) |
+| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi, depo sahibi) — 34 kabul kriteri |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleCatalog` (değer tipi, kalıcılık, alan ayarı, yönetim sözleşmesi) · `frontend/` yönetim paneli |
 | **Bağımlı spec'ler** | `0010a`, `0010b` (opsiyonel alan formu — tamamlandı) · **`0016b`** bu dilimin sözleşmesine dayanır |
 | **Dayanak** | ADR 0003 Ek 1, sıra #10'un **birinci dilimi** (`0016` **D31**) · ADR 0007 (opsiyonel alan tipleri) |
-| **Karar bekliyor** | **S1** (temizlemenin biçimi — kriter turu, 2026-11-18), Takım Yöneticisi. Önceki kararlar `0016`'nın CLARIFY ve plan turlarından (D1–D31; bu dilime düşenler aşağıda birebir). |
+| **Karar bekliyor** | yok — S1 → **D32** (kriter turu, 2026-11-18). Önceki kararlar `0016`'nın CLARIFY ve plan turlarından (D1–D31; bu dilime düşenler aşağıda birebir). |
 
 > **Bölünme (2026-11-18, `0016` D31).** `0016` iki dilime ayrıldı: bu dilim parça
 > haritasının **verisini ve panelini** taşır; vitrin (galeri, şema, detay sözleşmesi)
@@ -117,6 +117,14 @@ D1–D31'in tamamı `0016b`'de durur. Bu dilimin dayandığı ölçüm:
   - `0010a` X4 *"alanın değeri R9 kapsamında girilebilir"* diyordu; `0010b` X22 liste
     tiplerini kapsam dışı bıraktı. Sonuç: **alanın hiçbir spec'te sahibi yoktu** → **D5**.
 
+### Verilen kararlar — kriter turu, 2026-11-18
+
+**D32 — 13 kutunun tamamı boş kaydedilirse kayıtlı değer temizlenir (S1).** Kayıtlı değer
+yoksa sonuç "değer yazılmaz"la aynıdır. *Gerekçe:* boşaltılan form kaydedilip değer dolu
+kalırsa form yalan söyler; tek kural ("boş = yok") R12'nin iki cümlesini çelişkisiz birleştirir.
+*Bedel:* yanlışlıkla boşaltıp kaydetmek kayıtlı haritayı siler; geri alma yok. → R12, AC-20,
+AC-22, AC-31.
+
 ### Verilen kararlar — bu dilime düşenler (birebir, `0016`'dan)
 
 **D1 — Dört durum; sözlük güncellenir (S1).** Durumlar: orijinal, lokal boyalı, boyalı,
@@ -179,8 +187,8 @@ bedelsizdir (ADR 0003 Ek 1'in ölçümü).
 
 ## Açık sorular
 
-> Kriter turunda (2026-11-18, Analist) çıktı. Requirements ve Constraints **değiştirilmedi**;
-> kriter önerilen okumayla yazıldı ve okuma kriterde adıyla belirtildi.
+> **Çözüldü (2026-11-18).** S1 → **D32**, öneri olduğu gibi onaylandı (Takım Yöneticisi,
+> depo sahibi). Sorunun metni gerekçe kaydı olarak duruyor.
 
 S1. **"Temizleme" neyle ifade edilir?** R12 hem *"hiç seçim yapılmamışsa değer
     yazılmaz"* hem *"kayıtlı bir değer bütünüyle temizlenebilir"* diyor. Kayıtlı değerli
