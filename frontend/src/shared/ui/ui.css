@@ -84,6 +84,11 @@
   color: var(--color-ink-muted);
 }
 
+/* 0022 D17 — galerinin yazdığı açıklamanın satır sonu; yalnız bu değiştiriciyle. */
+.ui-state__body--lines {
+  white-space: pre-line;
+}
+
 .ui-skeleton {
   background: var(--color-surface-muted);
 }

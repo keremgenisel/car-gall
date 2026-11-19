@@ -1113,6 +1113,9 @@ a.top-bar__brand:hover {
   max-inline-size: var(--layout-max-inline-size);
   margin-block: 0;
   color: var(--color-ink-muted);
+
+  /* 0022 R3 — galerinin yazdığı açıklamanın satır sonu korunur (AC-14). */
+  white-space: pre-line;
 }
 
 .home-section {
