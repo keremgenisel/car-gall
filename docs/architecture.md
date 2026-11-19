@@ -539,3 +539,4 @@ altındaki ADR'lerdedir.
 | Tema (renk) | Dağıtım yapılandırmasından, **ya tam ya hiç**; panelden düzenlenmez |
 | Kontrast güvencesi | Başlangıçta doğrulanır — karşılanmazsa uygulama ayağa kalkmaz; varsayılan palet için ayrıca CI testi |
 | Tipografi | V1'de yapılandırılamaz; yazı tipleri kendi kaynağımızdan servis edilir |
+| Galerinin yazdığı vitrin metni (ilk boyama) | Host belgeye `<meta>` olarak basar (öznitelik kodlamalı), uç senkron okur; ayrı istek yok. Belge `Cache-Control: no-store` — önbellek/geçersizleme yerine her istekte okuma (`0022` D6, D20, D21; emsal `0020` P1) |

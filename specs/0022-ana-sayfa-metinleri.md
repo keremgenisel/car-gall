@@ -206,6 +206,66 @@ birlikte verir.
 **D22 — LCP öğesi ölçülmedi diye yazıldı (B12).** Plan turu `lighthouse-run.mjs`'in `lcpElement`
 değerini ana sayfa için kanıta ekler.
 
+
+### Verilen kararlar — plan turu, 2026-11-19
+
+**Developer (ajan) önerisi**, uygulama PR'ında Takım Yöneticisi onayına sunuldu. D1–D22'yi
+değiştirmez; nasıl uygulandıklarını sabitler. R/C/AC'ye dokunulmadı.
+
+**P1 — D6 · D21: metin belgeye `<meta>` olarak basılır, yalnız iki belgede.** `IndexHtmlRenderer`
+ziyaretçinin dilinde KAYDEDİLMİŞ her alanı `<meta name="home-text-…" content="…">` olarak basar
+(`0020` P1'in görünen ad deseni); uç ilk render'da senkron okur, ayrı istek yoktur. Okuma yalnız
+ana sayfa (`/{locale}/`) ve liste (`/{locale}/cars`) belgesinde yapılır — boş stok mesajı ikisinde
+görünür (R6); ilan detayı ve içerik sayfaları bu okumayı ödemez. Boş alan için etiket basılmaz ve uç
+kataloğun varsayılanına düşer (D3). Okuma düşerse etiket basılmaz, sayfa varsayılanlarla açılır.
+*Gerekçe:* `0016b` C13'ün tek okuma emsali; tek satır, birincil anahtarla.
+
+**P2 — D20: önbellek yerine `Cache-Control: no-store`, bütün vitrin/panel belgelerinde.** Kayıtta
+geçersizleme seçilmedi: süreç içi bir önbellek çok örnekli dağıtımda örnekler arasında ayrışır ve
+görünen ad (`0020`) zaten her istekte okunuyor. Başlık JS/CSS varlıklarına uygulanmaz.
+
+**P3 — D16: öznitelik kodlaması.** Değer `&`, `<`, `>`, `"`, `'` ve satır sonu (`&#10;`, `&#13;`)
+kodlanarak basılır; kodlanmış değerde `</script>` ve `</head>` dizisi kalmaz, bu yüzden sonraki
+`Replace("</head>", …)` çağrıları metnin içine yazamaz. Sınama sunucu yanıtı üzerinde
+(`AnaSayfaMetinleriZinciriTests`, AC-13) ve tarayıcıda (`evidence-0022.spec.ts`).
+
+**P4 — Veri modeli.** `content.home_texts` (tek kayıt, migration tohumlar; `version` eşzamanlılık
+belirteci) + `content.home_text_localizations` (dil başına altı kolon). Hata kodları: başlık
+`content.title_too_long` (0017'nin 120'si, aynı sınır), açıklama yeni `content.description_too_long`.
+*Uygulama içi bulgu:* dilin satırı henüz yokken aynı sürümden iki paralel kayıt birincil anahtar
+çakışmasına düşüyordu (500); bu da `concurrency.lost` → `409` sayılır (paralel test ölçtü).
+
+**P5 — D12: iki iskelet de gerçek başlığı basar.** Form iskeleti iskelet çizgisi
+yerine `h2.narrowing-form__title`'ı, öne çıkanlar iskeleti `h2.home-section__title`'ı (yardımcı
+teknolojiden gizli) gerçek metinle çizer.
+
+**P6 — R8 · AC-26: çakışmada otomatik yeniden yükleme yok.** `0017`'nin ekranı 409'da güncel hâli
+kendiliğinden yükler ve yazılanları siler; burada editör uyarıyı ve "Güncel hâli yükle" düğmesini
+görür, yazdıkları ekranda kalır. Başarılı kayıttan sonra da okuma tekrarlanmaz — yanıttaki yeni
+sürüm alınır (e2e ölçtü: kayıttan hemen sonra yazmaya devam edenin metni dönen okumayla eziliyordu).
+
+**P7 — D17: `EmptyState`'e varsayılanı kapalı `preserveLineBreaks`.** Yalnız `EmptyShowcase` açar;
+diğer kullanımların sınıfı ve görünümü değişmez.
+
+**P8 — D9 · D15: ekran `/admin/content/home`.** İçerik bölümünde "Ana sayfa" girdisi; sayaç kod
+noktası sayar (`Array.from`), tarayıcının `maxLength`'i kullanılmaz. Yön ve dil (`dir`, `lang`)
+yalnız alanın kendisinde; etiket, ipucu ve sayaç panelin dilinde ve yönünde kalır.
+
+**P9 — D11 · D22: perf tohumu ve LCP öğesi.** `Development:SeedHomeTexts` etkin her dilde her alanı
+tam sınırında (120/500, açıklamalarda satır sonu) yazar; `perf.yml` açar, e2e ortamı açmaz.
+Ölçüldü (CI koşusu `44468742548`): tohumlu ana sayfanın LCP öğesi üç koşunun üçünde
+`<p class="home-hero__body">` — giriş açıklaması.
+
+### Uygulama planı (2026-11-19)
+
+1. `Content`: kayıt, alan kuralları, migration (yalnız `content`), panel uçları (`ContentPolicy`),
+   `Content.Contracts` okuma yüzeyi, geliştirme tohumu; PostgreSQL üzerinde testler.
+2. `Host`: belgeye metin etiketleri ve `no-store` (P1–P3); `Host.Tests` (roller, kodlama, önbellek).
+3. Ön yüz, vitrin: metinleri ilk render'da okuma, iskeletler (P5), satır sonu (P7).
+4. Ön yüz, panel: ekran, sayaç, çakışma ve durumlar; panel kataloğu (ADR `0013`).
+5. CI: `perf.yml` tohumu (P9).
+6. e2e ve görsel kanıt; belgeler (sözlük, Karar Defteri).
+
 ---
 
 ## Acceptance Criteria
@@ -273,14 +333,14 @@ değerini ana sayfa için kanıta ekler.
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B12 → D11–D22, 2026-11-18.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0022-ac<n>.png`),
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0022-ac<n>.png`),
       boş ve hata durumları dâhil; Arapça görüntü de var (AC-34).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `content` şemasına dokunuyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**ana sayfa metinleri**).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `content` şemasına dokunuyor.
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**ana sayfa metinleri**).
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); performans kapısı kaydedilmiş metinlerle de ölçüldü (AC-21).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
