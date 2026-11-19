@@ -92,7 +92,7 @@ public sealed class AbonelikTests(NotificationsDatabase database)
     }
 
     [Fact(DisplayName = "0018/AC-13: Biçimi geçersiz istekler geçerli istek bütçesini tüketmez: geçerli eşik kadar geçersiz istekten sonra gelen geçerli istek kabul edilir (D9)")]
-    public async Task TuketmezBütceyi_GecersizIstekler()
+    public async Task TuketmezButceyi_GecersizIstekler()
     {
         await database.ResetNewsletterAsync();
         AbonelikDuzeni duzen = new(database, saat);

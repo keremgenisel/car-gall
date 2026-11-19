@@ -252,6 +252,34 @@ public sealed partial class BildirimSinirTests
     }
 
     /// <summary>
+    /// `0018` AC-15 (log yarısı) — IP KİŞİSEL VERİDİR: abonelik yolunun hiçbir log çağrısı
+    /// istemci anahtarını ya da bağlantının uzak adresini parametre olarak almaz. Kalıcı kayıt
+    /// yarısı `Notifications.Tests/AbonelikTests`'te (bütün satırlar taranır).
+    /// </summary>
+    [Fact(DisplayName = "0018/AC-15: İstek yapan IP hiçbir kalıcı kayıtta ve abonelik yolunun hiçbir log çağrısında yer almaz")]
+    public void AlmazParametreOlarak_Ip()
+    {
+        List<string> violations = [];
+
+        foreach (string file in NotificationsFiles())
+        {
+            foreach (string call in LogCalls(File.ReadAllText(file)))
+            {
+                Match banned = IpToken().Match(call);
+
+                if (banned.Success)
+                {
+                    violations.Add($"{SolutionLayout.Relative(file)}: '{banned.Value}' → {Ozet(call)}");
+                }
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            $"IP log parametresine girmez (0018 AC-15, 0005 C17):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+    }
+
+    /// <summary>
     /// `0018` AC-99 · C12 — `Notifications` yaprak kalır: olay YAYINLAMAZ (outbox'ı yok, yazıcı
     /// kullanmaz) ve hiçbir modül onun sözleşmesine bağlanmaz (yalnız Host kurulum ayarları).
     /// </summary>
@@ -458,6 +486,9 @@ public sealed partial class BildirimSinirTests
 
     [GeneratedRegex(@"\blogger\s*\.\s*Log\w*\s*\(")]
     private static partial Regex LogCallStart();
+
+    [GeneratedRegex(@"\b(?:\w*ClientKey\w*|RemoteIpAddress|Connection\s*\.|\w*Ip(?:Address)?\b|clientKey)")]
+    private static partial Regex IpToken();
 
     [GeneratedRegex(@"\bclass\s+\w+(?:<[^>]*>)?")]
     private static partial Regex ClassDeclaration();
