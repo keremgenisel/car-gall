@@ -127,7 +127,7 @@ talep bildirimi, `Dealership` şube iletişimi, `VehicleCatalog` ilan adresi) `0
 üçü eklendi: `VehicleCatalog` **ilan özeti** (`IListingSummaryQueries` — model **kimliği**
 döner, adı değil), `VehicleReference` **model adı** (`IVehicleModelQueries`) ve `Dealership`
 **galerinin görünen adı** (`IGalleryDisplayNameQueries`). Model adını `VehicleCatalog`'un
-çözmesi `Notifications → VehicleCatalog → VehicleReference` zinciri kurardı (Yasak 13); ad
+çözmesi üç modüllü bir zincir kurardı (`Notifications`, `VehicleCatalog`, `VehicleReference` — Yasak 13); ad
 bu yüzden `Notifications`'ın kendi tek atlamasıyla okunur (`0018` D11). Zincir testi
 tüketilen arayüzleri artık koddan türetiyor — sabit bir ad listesi yeni yüzeyi görmüyordu. Gönderilecek mesajın kişisel verisi olayın
 gövdesinden değil kaynaktan okunur: olay gövdesinde taşınan kişisel veri, silinme
