@@ -57,6 +57,27 @@ public sealed class GonderimTests(NotificationsDatabase database)
         Assert.Contains("https://ornek.com/tr/cars/toyota-corolla-2019-abc123", mesaj.Body, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// `0021` **D17** — e-postanın model adı talebin araç kopyasından gelir ve kopya marka +
+    /// model TAM adıdır. Kopyanın kendisi (`Leads`, güncellemeden sonra "Toyota Corolla")
+    /// `Host.Tests/MarkaModelZinciriTests` içinde gerçek boru hattında ölçülür; bu test
+    /// zincirin ikinci yarısını, Arapça bırakılmış bir talepte bile gövdenin kopyayı OLDUĞU
+    /// GİBİ — markasız "Corolla"ya ya da çeviriye dönmeden — taşıdığını ölçer.
+    /// </summary>
+    [Fact(DisplayName = "0021/AC-33: Güncellemeden sonra Toyota Corolla için bırakılan talebin araç kopyası ve bildirim e-postası \"Toyota Corolla\" der (D17).")]
+    public async Task Der_ToyotaCorolla_BildirimEpostasi()
+    {
+        await database.ResetMessagesAsync();
+        await KuyrugaAsync(TemplateKeys.LeadReceivedGallery, "ar");
+
+        SahteTasiyici tasiyici = new();
+        await IsleAsync(tasiyici, talep: Talep(locale: "ar"));
+
+        OutboundMessage mesaj = Assert.Single(tasiyici.Gonderilenler);
+        Assert.Contains("Toyota Corolla", mesaj.Body, StringComparison.Ordinal);
+        Assert.DoesNotContain("كورولا", mesaj.Body, StringComparison.Ordinal);
+    }
+
     [Fact(DisplayName = "0009/AC-4: Şubenin e-posta adresi varsa bildirim o adrese gider")]
     public async Task Gider_SubeninAdresine()
     {
