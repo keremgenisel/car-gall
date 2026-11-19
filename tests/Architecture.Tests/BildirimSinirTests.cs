@@ -119,10 +119,8 @@ public sealed partial class BildirimSinirTests
         {
             string ownModule = SolutionLayout.ModuleNameOf(file);
 
-            foreach (Match match in ForeignContractUsing().Matches(File.ReadAllText(file)))
+            foreach (string referencedModule in ContractReferences(file))
             {
-                string referencedModule = match.Groups["module"].Value;
-
                 if (referencedModule != ownModule)
                 {
                     violations.Add($"{SolutionLayout.Relative(file)} → {referencedModule}.Contracts (ikinci atlama)");
@@ -206,11 +204,11 @@ public sealed partial class BildirimSinirTests
         {
             string ownModule = SolutionLayout.ModuleNameOf(file);
 
-            foreach (Match match in ForeignContractUsing().Matches(File.ReadAllText(file)))
+            foreach (string referencedModule in ContractReferences(file))
             {
-                if (match.Groups["module"].Value != ownModule)
+                if (referencedModule != ownModule)
                 {
-                    violations.Add($"{SolutionLayout.Relative(file)} → {match.Groups["module"].Value}.Contracts (ikinci atlama)");
+                    violations.Add($"{SolutionLayout.Relative(file)} → {referencedModule}.Contracts (ikinci atlama)");
                 }
             }
         }
@@ -319,6 +317,24 @@ public sealed partial class BildirimSinirTests
             violations.Count == 0,
             $"Notifications olay yayınlamaz ve hiçbir modül ona bağlanmaz (0009 C11, 0018 C12):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
     }
+
+    /// <summary>
+    /// Dosyanın KODUNDA geçen modül sözleşmeleri: <c>using</c> satırı da, tam nitelikli ad da
+    /// (<c>CarGallery.Modules.VehicleReference.Contracts.IVehicleModelQueries models</c>). İlk
+    /// sürüm yalnız <c>using</c>'i görüyordu ve tam nitelikli kurucu parametresi kapıdan
+    /// geçiyordu (QA BULGU-1, PR #122). Yorum satırları ve satır sonu yorumları sayılmaz.
+    ///
+    /// <para><b>Kapının bilinen sınırı:</b> yalnız sözleşmeyi GERÇEKLEŞTİREN dosyaya bakar.
+    /// Gerçekleştirim kendi modülünün başka bir iç servisini çağırır ve o servis başka bir
+    /// modülün sözleşmesine uzanırsa (dolaylı ikinci atlama) kapı bunu görmez; çağrı grafiğini
+    /// izlemek kaynak taramasıyla yapılamaz. Bu yol gözden geçirmenin işidir.</para>
+    /// </summary>
+    private static IEnumerable<string> ContractReferences(string file) =>
+        SolutionLayout.CodeLines(file)
+            .Select(line => TrailingComment().Replace(line, string.Empty))
+            .SelectMany(line => ContractReference().Matches(line))
+            .Select(match => match.Groups["module"].Value)
+            .Distinct(StringComparer.Ordinal);
 
     private static IEnumerable<string> NotificationsFiles() =>
         SolutionLayout.SourceFiles().Where(file => SolutionLayout.ModuleNameOf(file) == Module);
@@ -481,8 +497,11 @@ public sealed partial class BildirimSinirTests
     [GeneratedRegex(@"\b(?:MailKit|MimeKit|MimeMessage|SmtpClient|System\.Net\.Mail|SendMailAsync)\b")]
     private static partial Regex EmailSendingCall();
 
-    [GeneratedRegex(@"^\s*using\s+CarGallery\.Modules\.(?<module>\w+)\.Contracts", RegexOptions.Multiline)]
-    private static partial Regex ForeignContractUsing();
+    [GeneratedRegex(@"\bCarGallery\.Modules\.(?<module>\w+)\.Contracts\b")]
+    private static partial Regex ContractReference();
+
+    [GeneratedRegex(@"\s//.*$")]
+    private static partial Regex TrailingComment();
 
     [GeneratedRegex(@"\blogger\s*\.\s*Log\w*\s*\(")]
     private static partial Regex LogCallStart();
