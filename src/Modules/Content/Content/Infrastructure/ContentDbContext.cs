@@ -14,6 +14,9 @@ internal sealed class ContentDbContext(DbContextOptions<ContentDbContext> option
     /// <summary>SSS girdileri.</summary>
     internal DbSet<FaqEntry> FaqEntries => Set<FaqEntry>();
 
+    /// <summary>`0022` — ana sayfa metinleri (tek kayıt).</summary>
+    internal DbSet<HomeTexts> HomeTexts => Set<HomeTexts>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

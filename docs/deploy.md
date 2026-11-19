@@ -77,8 +77,10 @@ Bütün değerler ortam değişkenidir. `__` iki nokta yerine geçer
 | `Identity__TwoFactor__Issuer` | `CarGallery` — personelin kimlik doğrulayıcı uygulamasında görünen ad; galerinin adı verilir |
 | `Media__Storage__ForcePathStyle` | `true` (MinIO/R2 için doğru); sanal-host adresleme isteyen sağlayıcıda `false` |
 
-**Asla verilmeyecekler:** `Development__SeedShowcase`, `Development__SeedListingCount`.
-Bunlar demo ilan ve `/seed-media` uçlarını açar. `Identity__PasswordIterations`'ı da
+**Asla verilmeyecekler:** `Development__SeedShowcase`, `Development__SeedListingCount`,
+`Development__SeedHomeTexts`. İlk ikisi demo ilan ve `/seed-media` uçlarını açar;
+`Development__SeedHomeTexts` her başlangıçta galerinin panelden yazdığı ana sayfa
+metinlerini her dilde 120/500 karakterlik ölçüm dolgusuyla EZER (`0022` D11, yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
 düşürmeyin; geliştirme betiği bunu hız için 1000'e çeker, üretim değeri 210.000'dir.
 
 ## 4. Sıra: önce kurulum adımı, sonra uygulama

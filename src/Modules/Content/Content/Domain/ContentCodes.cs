@@ -65,4 +65,5 @@ internal static class ContentErrors
     internal const string PageNotFound = "content.page_not_found";
     internal const string FaqEntryNotFound = "content.faq_entry_not_found";
     internal const string SystemPageNotDeletable = "content.system_page_not_deletable";
+    internal const string DescriptionTooLong = "content.description_too_long";
 }

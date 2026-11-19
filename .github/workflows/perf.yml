@@ -82,6 +82,11 @@ jobs:
           ConnectionStrings__VehicleCatalog: Host=localhost;Port=5432;Database=cargallery;Username=postgres;Password=cionly
           Development__SeedShowcase: 'true'
           Development__SeedListingCount: '500'
+          # 0022 D11 — ana sayfa metinleri her dilde, her alan SINIRINDA (120/500, satır
+          # sonlu açıklama): AC-21 ve AC-22 en kötü hâli ölçer. Bayrak kapalı olsaydı ana
+          # sayfa varsayılan metinlerle ölçülür ve D5'in "düzeni ve LCP'yi korur" iddiası
+          # sınanmamış kalırdı.
+          Development__SeedHomeTexts: 'true'
           # D2/AC-53 — uygulama bu parola olmadan HİÇ başlamaz. Ölçüm işi giriş
           # yapmaz ama Host'u ayağa kaldırmak zorunda. ADR 0011 — değer SABİT DEĞİL:
           # önceki adımda üretilip `$GITHUB_ENV`'e yazılıyor ve kayıtlarda maskeli.

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useLocale } from '../../../app/localeContext'
+import { homeText } from '../../../shared/lib/homeTexts'
 import { listPath } from '../../../shared/lib/route'
 import { Button } from '../../../shared/ui'
 import type { ShowcaseBrand } from '../../../shared/api/types'
@@ -57,7 +58,7 @@ export function NarrowingForm({ total, options, brands = [], onNavigate = naviga
 
   return (
     <form className="narrowing-form" data-testid="narrowing-form" onSubmit={onSubmit}>
-      <h2 className="narrowing-form__title">{t('home.form.title')}</h2>
+      <h2 className="narrowing-form__title">{homeText('form-title', t('home.form.title'))}</h2>
 
       {/* D25 — alan filtrelenemezse liste çubuğu göstermiyor; form da ekseni göstermez. */}
       {options.filterable ? (

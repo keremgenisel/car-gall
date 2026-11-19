@@ -37,6 +37,8 @@ export type AdminView =
   | 'content'
   /** `0017` — bir içerik sayfasının düzenlemesi (`/admin/content/{id}`). */
   | 'content-edit'
+  /** `0022` **D9** — İçerik bölümündeki ana sayfa metinleri (`/admin/content/home`). */
+  | 'content-home'
   /** `0020` R1 — galeri profili (`/admin/gallery`); yalnız Yönetici (D2). */
   | 'gallery'
   /** `0020` R8 — şubeler listesi (`/admin/branches`). */
@@ -149,6 +151,11 @@ export function parseRoute(pathname: string): Route {
       return { kind: 'admin', view: 'brand-edit', brandId: decodeURIComponent(slugSegment) }
     }
 
+    // `0022` D9 — `home` bir sayfa kimliği değil (kimlikler Guid): ana sayfa metinleri ekranı.
+    if (sectionSegment === 'content' && slugSegment === 'home') {
+      return { kind: 'admin', view: 'content-home' }
+    }
+
     if (sectionSegment === 'content' && slugSegment !== undefined) {
       return { kind: 'admin', view: 'content-edit', pageId: decodeURIComponent(slugSegment) }
     }
@@ -221,6 +228,10 @@ export function listingPath(locale: AppLocale, slug: string): string {
 export function adminPath(view: AdminView = 'staff'): string {
   if (view === 'branch-new') {
     return `/${ADMIN_SEGMENT}/branches/new`
+  }
+
+  if (view === 'content-home') {
+    return `/${ADMIN_SEGMENT}/content/home`
   }
 
   return view === 'staff' ? `/${ADMIN_SEGMENT}` : `/${ADMIN_SEGMENT}/${view}`

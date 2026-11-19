@@ -190,3 +190,41 @@ export async function moveFaqEntry(
 ): Promise<void> {
   await sendJson<null>('POST', `${ROOT}/faq/${encodeURIComponent(id)}/move`, { direction }, locale)
 }
+
+/**
+ * `0022` R1 — ana sayfa metinlerinin altı alanı. Anahtarlar sunucunun alan anahtarlarıyla
+ * aynıdır (hata alanı da `tr.introTitle` biçimindedir).
+ */
+export type HomeTextFieldKey =
+  'introTitle' | 'introBody' | 'formTitle' | 'featuredTitle' | 'emptyTitle' | 'emptyBody'
+
+/** Bir dilin ana sayfa metinleri; boş dize "varsayılan metin" demektir (R2). */
+export interface HomeTextLocale {
+  readonly locale: string
+  readonly values: Readonly<Record<HomeTextFieldKey, string>>
+}
+
+/** `0022` — panelin ana sayfa metinleri: sürüm (R8) ve yalnız ETKİN diller (AC-36). */
+export interface AdminHomeTexts {
+  readonly version: number
+  readonly locales: readonly HomeTextLocale[]
+}
+
+export function fetchHomeTexts(locale: AppLocale, signal?: AbortSignal): Promise<AdminHomeTexts> {
+  return getJson<AdminHomeTexts>(`${ROOT}/home`, locale, signal)
+}
+
+/** Kaydeder; yeni sürümü döner. Eski sürümle `409` (R8). */
+export async function saveHomeTexts(
+  version: number,
+  texts: readonly HomeTextLocale[],
+  locale: AppLocale,
+): Promise<number> {
+  const result = await sendJson<{ readonly version: number }>(
+    'PUT',
+    `${ROOT}/home`,
+    { version, locales: texts.map(({ locale: l, values }) => ({ locale: l, ...values })) },
+    locale,
+  )
+  return result?.version ?? version
+}
