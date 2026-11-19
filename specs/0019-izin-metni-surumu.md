@@ -491,6 +491,82 @@ yoktur. D9'un "aynısıdır" cümlesi "aynı ilke, farklı yanıt kodu" olarak d
 - **`leads`'te durum ↔ sürüm kimliği tutarlılık kısıtı:** durum "sürüm" ise kimlik doludur, diğer
   iki durumda boştur; aykırı satır veritabanında reddedilir (AC-43).
 
+### Verilen kararlar — plan turu (Developer, 2026-11-19)
+
+R/C/AC'ye dokunmaz; kriterlerin **nasıl** karşılanacağını sabitler. Takım Yöneticisi (ajan)
+görev tanımında planı Developer'a bıraktı; plan kararları "P" ile işaretli.
+
+- **P1 — Sürüm ayrı bir varlıktır, sayfanın parçası değil.** `content.privacy_notice_versions`
+  (`id`, `locale`, `title`, `body`, `recorded_at`, `is_initial` — AC-41'in altı kolonu). Sayfanın
+  owned koleksiyonu olsaydı EF her sayfa okumasında bütün geçmişi yüklerdi — D13'ün yakalamak
+  istediği "bütün geçmişi taşıyan okuma" hatası. Yalnız eklenir; uygulamada düzenleyen ya da
+  silen kod yoktur (AC-38).
+- **P2 — "En son sürüm" bir işaretçidir, sıralama değil.** `content.page_localizations`'a
+  `published_version_id` (boş olabilir, FK yok) eklenir; yalnız yayındaki `privacy` dilinde
+  doludur ve metinle **aynı satırda, aynı işlemde** yazılır. *Neden:* `recorded_at`'e göre
+  sıralama saatin tekdüze olmasına dayanırdı — `IClock` geri gidebilir, sabit saatli testte iki
+  sürüm aynı anı taşır ve Guid v7 aynı milisaniyede sıralı değildir. İşaretçi R13'ü (canlı metin
+  = en son sürüm) tek satırın içine indirir; D22'nin "işlenmiş durum" okuması da tek satırdır.
+  *Bedel:* tabloya bir kolon; AC-15 işaretçiyi ve `recorded_at`'e göre en son sürümü **ayrı
+  ayrı** ölçer, biri diğerine güvenmez.
+- **P3 — Sürüm doğurma kuralı tek fonksiyondur.** Kaydetme, yayına alma ve yayından kaldırma,
+  sayfayı yükledikten hemen sonra `privacy`'nin yayındaki dillerinin (başlık, gövde) kopyasını
+  alır; değişiklik uygulandıktan sonra aynı fonksiyon karşılaştırır: şimdi yayında olup önce
+  yayında olmayan ya da başlığı/gövdesi ordinal farklı olan dil sürüm doğurur (D5, D16, D17);
+  yayında olmayan dilin işaretçisi boşalır. Sürüm, sayfa değişikliğiyle **aynı**
+  `SaveChangesAsync`'e eklenir — reddedilen kayıt (409, slug yarışı) sürüm bırakmaz (C3,
+  Bilinen tuzak 5).
+- **P4 — `FindPublishedAsync` tek LINQ sorgusudur.** `privacy` satırı + dilin durumu +
+  işaretçinin gösterdiği sürüm satırının varlığı tek SQL komutunda okunur. Satır yok → istisna;
+  yayında ama işaretçi boş ya da işaretçinin satırı yok → istisna (D14); taslak ya da dil satırı
+  yok → `NotPublished`. Ham SQL gerekmez.
+- **P5 — Koruma tetikleyicisi `BEFORE UPDATE OR DELETE … FOR EACH STATEMENT`.** Emsal
+  (`AddLeadDeleteGuard`) gibi deyim düzeyinde; `TRUNCATE` kapsam dışı (D18). `Content.Tests`'in
+  temizlik yolu sürüm tablosu için `TRUNCATE`'e geçer.
+- **P6 — Başlangıç sürümü migration'da SQL ile, kimlik SQL'de Guid v7.** PostgreSQL 17'de
+  `uuidv7()` yok; v7 bitleri `gen_random_uuid()` + `clock_timestamp()` ile kurulur
+  (`docs/conventions.md` § 9'un v7 kuralı korunur; üretim yeri migration olduğu için
+  veritabanıdır — veriyi migration doğuruyor, uygulama değil). `recorded_at` = `now()`.
+- **P7 — Talepteki durum KOD olarak saklanır.** `leads.leads.privacy_notice_status`
+  `varchar(20)`: `not_recorded` · `not_published` · `published`; veritabanı varsayılanı
+  `not_recorded` (D15). `privacy_notice_version_id uuid NULL`. Tutarlılık kısıtı
+  `ck_leads_privacy_notice` (D27). *Neden kod:* D7 gereği bugün metni bir teknik kişi sorguyla
+  okuyacak; `2` yerine `not_published` okumak yanlış okumayı önler. EF modelinde varsayılan
+  bildirilir ama **gözcü değeri imkânsız bir değere** çekilir: EF değeri her eklemede açıkça
+  gönderir, unutulmuş bir değer veritabanı varsayılanına sessizce düşemez (AC-23).
+- **P8 — Talepte sürüm bağı bir değer tipiyle doğar.** `Lead.Capture` bir `PrivacyNoticeLink`
+  alır; yalnız iki fabrikası vardır (`NotPublished`, `Published(id)`) — "kayıt tutulmuyordu"
+  uygulama kodundan kurulamaz, yalnız eski satırdan okunur.
+- **P9 — `Leads`'te port + adaptör.** `IPrivacyNoticeSource` (Application) ↔ `PrivacyNoticeSource`
+  (Infrastructure, `IPrivacyNoticeQueries`'i sarar) — `IListingSnapshotSource` deseni. `Leads`
+  `IPrivacyNoticeQueries` için kayıt yapmaz (AC-49). Çağrı yeri: model adı çözüldükten sonra,
+  `Lead.Capture` ve `quota.TryAcquire`'dan önce (D25) — reddedilen ilan için okuma yapılmaz.
+- **P10 — AC-35 deterministik: testin kendi ertelenmiş tetikleyicisi.** `Host.Tests` gerçek
+  panel ucuyla `tr` metnini kaydeder; test veritabanına eklenen bir `DEFERRABLE INITIALLY
+  DEFERRED` kısıt tetikleyicisi sürüm satırı eklendikten **sonra**, işlem **commit edilirken**
+  testin tuttuğu danışma kilidini bekler. Test `pg_locks`'ta bekleyen kilidi görünce talebi
+  bırakır (uyku yok), sonra kilidi bırakır. Bu, "yazılmış ama işlenmemiş" hâlini gerçek
+  `Content` koduyla kurar; tetikleyici yalnız testin kapsayıcısında yaşar.
+- **P11 — AC-52 profili isteğe bağlıdır.** `PERF_PROFILE=lead-capture` verilmedikçe benchmark
+  bugünkü vitrin profillerini koşar; C3 iş akışı değişmez (D21 "C3 iş akışında değil").
+- **P12 — Belge kriterleri (AC-55, AC-56) mimari testle korunur.** Bağımlılık haritasının
+  `Leads` satırı ve `Dealership`'in gelen listesi `.csproj` referanslarıyla karşılaştırılır;
+  `docs/domain.md`'de L8 ve terim aranır.
+
+### Uygulama planı
+
+| Adım | İş | Kriterler | Modül |
+|---|---|---|---|
+| **P-1** | Bu bölüm | — | spec |
+| **P-2** | `Content.Contracts`: `IPrivacyNoticeQueries`, `PrivacyNoticeLookup`, `PrivacyNoticeVersionDto` · sürüm varlığı, yapılandırma, işaretçi · sürüm doğurma (P3) · okuma (P4) · migration: tablo, işaretçi, başlangıç sürümü, tetikleyici, `Down` → `NotSupportedException` | AC-1…AC-17, AC-26, AC-36, AC-38…AC-41, AC-48 (content), AC-50 | `Content` |
+| **P-3** | `Content.Tests` | aynı | `Content.Tests` |
+| **P-4** | `Leads`: `PrivacyNoticeLink`, iki kolon + kısıt, migration (`Down` → `NotSupportedException`), port + adaptör, `Content.Contracts` referansı · `Leads.Tests` kurulumu (sahte port) | AC-23, AC-42, AC-43, AC-48 (leads), AC-49, AC-51, AC-53 | `Leads` |
+| **P-5** | `Leads.Tests` kriter testleri | AC-34, AC-42, AC-43, AC-48, AC-49, AC-51, AC-53 | `Leads.Tests` |
+| **P-6** | `Host.Tests`: iki modül birlikte, gerçek panel ve talep uçlarıyla | AC-18…AC-33, AC-35, AC-37, AC-44, AC-54 | `Host.Tests` |
+| **P-7** | Belgeler: `architecture.md` § 1 + § 7, `domain.md` terim + L8, `deploy.md` dağıtım notu, `0017` X8 notu | AC-55, AC-56, DoD | `docs` |
+| **P-8** | Mimari testler | AC-38, AC-45, AC-46, AC-47, AC-55, AC-56 | `Architecture.Tests` |
+| **P-9** | Benchmark `POST /api/leads` profili ve D21 ölçümü | AC-52 | `tests/Performance` |
+
 ---
 
 ## Acceptance Criteria
