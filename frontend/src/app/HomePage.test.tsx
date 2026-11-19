@@ -89,7 +89,7 @@ describe('0014 — adres ve giriş (R10, R1, R2)', () => {
     expect((await screen.findByTestId('gallery-name')).textContent).toBe('Örnek Otomotiv')
   })
 
-  it('0020/AC-13: Ana sayfanın giriş bölümündeki galeri adı satırı ziyaretçinin dilindeki görünen adı gösterir; ticari unvanı göstermez', async () => {
+  it('0020/AC-14: Yönetici görünen adı değiştirip kaydettikten sonra açılan ilk vitrin sayfası yeni adı gösterir.', async () => {
     ekran()
     await screen.findByText('Örnek Otomotiv')
     cleanup()
@@ -99,6 +99,11 @@ describe('0014 — adres ve giriş (R10, R1, R2)', () => {
 
     // Ad bir sonraki yüklemede yeni değeri gösterir; çeviri kataloğundan gelmez.
     expect((await screen.findByTestId('gallery-name')).textContent).toBe('Başka Ad')
+    // `0014`/AC-13'ten taşındı (QA BULGU-5): katalogdaki marka adı ("Oto Galeri") ana
+    // sayfanın adı DEĞİLDİR — ad sunucudan gelir, çeviri kataloğundan değil.
+    expect(screen.getByTestId('gallery-name').textContent).not.toBe(
+      createTranslator('tr')('app.brandName'),
+    )
   })
 
   it('0020/AC-18: `\u003cb>Galeri & "Oto"\u003c/b>` görünen adı üst çubukta ve giriş satırında bu karakterlerle **metin olarak** görünür; işaretleme olarak yorumlanmaz (R5a, D16).', async () => {
