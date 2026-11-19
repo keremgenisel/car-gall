@@ -71,10 +71,13 @@ public sealed partial class IzinMetniMimariTests
                     && ImplementsPrivacyNoticeQueries().IsMatch(File.ReadAllText(file))),
         ];
 
+        // QA BULGU-3 — yalnız `using` satırı değil, HER kod satırı: takma adlı using
+        // (`using K = …Identity.Contracts;`) ve tam nitelikli ad da ikinci atlamadır.
+        // Yorum satırları hariç (SolutionLayout.CodeLines).
         List<string> ikinciAtlama =
         [
-            .. gerceklemeler.SelectMany(file => ForeignContractUsing().Matches(File.ReadAllText(file))
-                .Select(match => match.Groups["module"].Value)
+            .. gerceklemeler.SelectMany(file => SolutionLayout.CodeLines(file)
+                .SelectMany(line => ContractNamespace().Matches(line).Select(match => match.Groups["module"].Value))
                 .Where(module => module != "Content")
                 .Select(module => $"{SolutionLayout.Relative(file)} → {module}.Contracts")),
         ];
@@ -209,8 +212,8 @@ public sealed partial class IzinMetniMimariTests
     [GeneratedRegex(@"(?::|,)\s*IPrivacyNoticeQueries\b")]
     private static partial Regex ImplementsPrivacyNoticeQueries();
 
-    [GeneratedRegex(@"^\s*using\s+CarGallery\.Modules\.(?<module>\w+)\.Contracts", RegexOptions.Multiline)]
-    private static partial Regex ForeignContractUsing();
+    [GeneratedRegex(@"\bCarGallery\.Modules\.(?<module>\w+)\.Contracts\b")]
+    private static partial Regex ContractNamespace();
 
     [GeneratedRegex(@"const string Schema = ""(?<schema>[a-z_]+)""")]
     private static partial Regex SchemaConstant();
