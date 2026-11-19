@@ -16,6 +16,7 @@ import { StaffListPage } from '../../features/identity/StaffListPage'
 import { TwoFactorPage } from '../../features/identity/TwoFactorPage'
 import { ContentAdminPage } from '../../features/content/admin/ContentAdminPage'
 import { ContentEditPage } from '../../features/content/admin/ContentEditPage'
+import { HomeTextsPage } from '../../features/content/admin/HomeTextsPage'
 import { BranchEditPage } from '../../features/dealership/admin/BranchEditPage'
 import { BranchListPage } from '../../features/dealership/admin/BranchListPage'
 import { GalleryProfilePage } from '../../features/dealership/admin/GalleryProfilePage'
@@ -199,7 +200,7 @@ export function AdminApp({
           <a
             className="admin-shell__nav-link"
             href={adminPath('content')}
-            aria-current={view === 'content' || view === 'content-edit' ? 'page' : undefined}
+            aria-current={isContentView(view) ? 'page' : undefined}
           >
             {t('admin.nav.content')}
           </a>
@@ -243,7 +244,9 @@ export function AdminApp({
         {view === 'content-edit' && pageId !== undefined && canEditContent(gate.session.role) ? (
           <ContentEditPage pageId={pageId} />
         ) : null}
-        {(view === 'content' || view === 'content-edit') && !canEditContent(gate.session.role) ? (
+        {/* `0022` R9 — ana sayfa metinleri İçerik bölümünde, aynı rol kısıtıyla (D8, D9). */}
+        {view === 'content-home' && canEditContent(gate.session.role) ? <HomeTextsPage /> : null}
+        {isContentView(view) && !canEditContent(gate.session.role) ? (
           <div className="admin-page">
             <EmptyState
               title={t('admin.noAccess.title')}
@@ -316,6 +319,11 @@ export function AdminApp({
  */
 function canEditContent(role: string): boolean {
   return role === 'manager' || role === 'content_editor'
+}
+
+/** "İçerik" bölümünün görünümleri; gezinmede tek bağlantı (`0017`, `0022` D9). */
+function isContentView(view: AdminView): boolean {
+  return view === 'content' || view === 'content-edit' || view === 'content-home'
 }
 
 /** `0020` — şubeler bölümünün üç görünümü; gezinmede tek bağlantı. */

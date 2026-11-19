@@ -63,6 +63,8 @@ public sealed class ContentDatabase : IAsyncLifetime
             DELETE FROM content.page_localizations;
             DELETE FROM content.pages WHERE system_key IS NULL;
             UPDATE content.pages SET version = 1;
+            DELETE FROM content.home_text_localizations;
+            UPDATE content.home_texts SET version = 1;
             """);
     }
 }
@@ -105,6 +107,20 @@ internal sealed class Icerik(ContentDatabase database, params string[] locales)
     {
         await using ContentDbContext context = database.CreateContext();
         return await okuma(new ContentPublicQueries(context, Locales));
+    }
+
+    /// <summary>`0022` — ana sayfa metinleri komutuyla bir işlem.</summary>
+    internal async Task<T> AnaSayfaKomutAsync<T>(Func<HomeTextCommands, Task<T>> islem, IInterceptor? interceptor = null)
+    {
+        await using ContentDbContext context = database.CreateContext(interceptor);
+        return await islem(new HomeTextCommands(context, Locales));
+    }
+
+    /// <summary>`0022` — ana sayfa metinleri sorgusuyla bir okuma (panel ve vitrin aynı sınıf).</summary>
+    internal async Task<T> AnaSayfaOkuAsync<T>(Func<HomeTextQueries, Task<T>> okuma)
+    {
+        await using ContentDbContext context = database.CreateContext();
+        return await okuma(new HomeTextQueries(context, Locales));
     }
 
     /// <summary>Sayfanın güncel sürümü.</summary>

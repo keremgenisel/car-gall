@@ -1,5 +1,6 @@
 import { useLocale } from '../../../app/localeContext'
 import type { ShowcaseListing } from '../../../shared/api/types'
+import { homeText } from '../../../shared/lib/homeTexts'
 import { ErrorState } from '../../../shared/ui'
 import { ListingCard } from '../ListingCard'
 import { FeaturedSkeleton } from './FeaturedSkeleton'
@@ -52,7 +53,7 @@ export function FeaturedSection({
       aria-labelledby="featured-title"
     >
       <h2 className="home-section__title" id="featured-title">
-        {t('home.featured.title')}
+        {homeText('featured-title', t('home.featured.title'))}
       </h2>
       <ul className="listing-grid">
         {load.items.map((listing, index) => (

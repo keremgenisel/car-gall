@@ -19,6 +19,13 @@ import * as chromeLauncher from 'chrome-launcher'
  * metin olur ve ilk görselin LCP'si hiç ölçülmeden "geçti" yazılırdı. Aynı ölçümde LCP
  * öğesinin galerinin ilk görseli olduğu da her koşuda doğrulanır (AC-83).
  */
+/*
+ * `0022` — perf ortamı ana sayfa metinlerini her alan sınırında tohumlar (`perf.yml`,
+ * `Development__SeedHomeTexts`, D11). Bu yüzden iki hedef iki kriteri de ölçer:
+ *   0022/AC-21: Her alanı sınırında (120/500, satır sonlu) kaydedilmiş metinlerle ana sayfa için performans kapısı (LCP < 2,5 sn, CLS < 0,1) yeşildir (D11).
+ *   0022/AC-24: Liste için performans kapısı yeşil kalır.
+ * Ana sayfanın LCP öğesi her koşuda loglanır ve rapora yazılır (`lcpElement`, D22).
+ */
 const BASE_URL = process.env.PERF_BASE_URL ?? 'http://localhost:5080'
 const TARGETS = [
   {
