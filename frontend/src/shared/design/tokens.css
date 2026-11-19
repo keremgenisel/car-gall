@@ -190,7 +190,24 @@
        ≥ 22.5rem → 1 sütun → 1390 (400px, en)
        ≥ 35.5rem → 2 sütun → 1161 (576px, tr)
        ≥ 51.5rem → 3 sütun → 950 (840px, tr)
-       ≥ 67.5rem → 4 sütun → 751 (1104px, tr) — yedinci eksen 3 ve 4 sütunu ayrıştırdı */
+       ≥ 67.5rem → 4 sütun → 751 (1104px, tr) — yedinci eksen 3 ve 4 sütunu ayrıştırdı
+     2026-11-19 (fix/0015-filtre-paneli-boslugu) — beş bant BOŞLUK üretiyordu: içerik bandın
+     başında en uzun, sonuna doğru kısalıyor; tohumun dokuz markasıyla en büyük boşluk 324px
+     (724px), 1280px'te 182px. Aynı yöntemle (tohum + en uzun adlı markanın bir kopyası,
+     tr/ar/en, 320–1600px) yeniden tarandı ve bant sayısı 13'e çıktı. Değer = bant içindeki
+     en uzun hâl + 10px:
+       < 21rem → 1618 · ≥ 21rem → 1466 · ≥ 22.5rem → 1433 · ≥ 26rem → 1314 · ≥ 32rem → 1185
+       ≥ 35.5rem → 1161 · ≥ 38rem → 1032 · ≥ 41rem → 933 · ≥ 51rem → 950 · ≥ 55rem → 821
+       ≥ 63rem → 730 · ≥ 67rem → 751 · ≥ 72.5rem → 622
+     İki ders: (1) sütun sayısı medya sorgusuyla değil ızgaranın KENDİ genişliğiyle değişir —
+     3. sütun 818px'te, 4. sütun 1074px'te geliyor; 3 ve 4 sütun bantları bu yüzden 51rem
+     (816) ve 67rem (1072) başlar, 51.5/67.5rem'de bırakılınca aradaki 6px'te 7–11px kayma
+     oluyordu (QA, 1px tarama). 8px adım bu pencereleri görmez: tarama 1px adımla yapılır.
+     (2) Kaymayı panelin GERÇEK yüksekliğiyle ölçme — içerik taşınca panel uzar ve fark 0
+     görünür; içerik, token'ın değeriyle (`getComputedStyle(...).minBlockSize`) karşılaştırılır.
+     Sonuç (1px tarama, üç dilin en dar hâli): kayma yok (eskisi on markada 360–367px'te
+     33px, en); en büyük boşluk dokuz markada 200px (335px), on markada 158px; ortalama
+     188 → 68px (dokuz marka); 1280px'te 182 → 53px. */
   --list-filters-min-block-size: 1628px;
   --form-control-min-block-size: 44px;
 
@@ -209,9 +226,27 @@
   }
 }
 
+@media (width >= 21rem) {
+  :root {
+    --list-filters-min-block-size: 1476px;
+  }
+}
+
 @media (width >= 22.5rem) {
   :root {
-    --list-filters-min-block-size: 1400px;
+    --list-filters-min-block-size: 1443px;
+  }
+}
+
+@media (width >= 26rem) {
+  :root {
+    --list-filters-min-block-size: 1324px;
+  }
+}
+
+@media (width >= 32rem) {
+  :root {
+    --list-filters-min-block-size: 1195px;
   }
 }
 
@@ -221,15 +256,45 @@
   }
 }
 
-@media (width >= 51.5rem) {
+@media (width >= 38rem) {
+  :root {
+    --list-filters-min-block-size: 1042px;
+  }
+}
+
+@media (width >= 41rem) {
+  :root {
+    --list-filters-min-block-size: 943px;
+  }
+}
+
+@media (width >= 51rem) {
   :root {
     --list-filters-min-block-size: 960px;
   }
 }
 
-@media (width >= 67.5rem) {
+@media (width >= 55rem) {
+  :root {
+    --list-filters-min-block-size: 831px;
+  }
+}
+
+@media (width >= 63rem) {
+  :root {
+    --list-filters-min-block-size: 740px;
+  }
+}
+
+@media (width >= 67rem) {
   :root {
     --list-filters-min-block-size: 761px;
+  }
+}
+
+@media (width >= 72.5rem) {
+  :root {
+    --list-filters-min-block-size: 632px;
   }
 }
 
