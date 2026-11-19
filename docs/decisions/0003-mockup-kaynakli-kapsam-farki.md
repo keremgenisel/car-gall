@@ -320,7 +320,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 10 | Medya galerisi + parça haritası şeması | `0016a` ✅ tamamlandı · `0016b` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 11 | `Content` sayfaları | `0017` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
-| 13 | Bülten aboneliği | **`0018`** (Onaylandı — kriterler #120; **#8 ve #12'den önce — § Sapma**) |
+| 13 | Bülten aboneliği | `0018` ✅ tamamlandı *(#8 ve #12'den önce — § Sapma)* |
 
 `3`. satır `0010`'un **D9**'uyla ikiye bölündü ve **iki dilimi de kapandı**: `0010a` (araç
 kaydı, 2026-10-05) ve `0010b` (düzenleme ve liste, 2026-10-10). `4`. satır `0011` ile kapandı
