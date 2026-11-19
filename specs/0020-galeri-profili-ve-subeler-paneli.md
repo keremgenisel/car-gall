@@ -331,6 +331,11 @@ ekranın adresini doğrudan açtığında "erişim yok" ekranını görür (`Adm
 
 ### Verilen kararlar — plan turu, 2026-11-18
 
+> **P1–P7 onaylandı** — Takım Yöneticisi (ajan) kararı, 2026-11-19. P3 için AC-30'un metni
+> `400` → `422` olarak düzeltildi; bu `main`'e girdikten sonraki ilk Acceptance Criteria
+> değişikliğidir ve SCORECARD'da **revizyon 1** sayılır. Hata spec'in kendisindeydi:
+> `docs/conventions.md` § 5 doğrulama hatasını `422` sayıyor ve kriter turu bunu okumadı.
+
 **Developer (ajan) önerisi; Takım Yöneticisi onayı PR'da bekleniyor.** D1–D23'ü değiştirmez,
 nasıl uygulanacaklarını sabitler. Her biri PR'ın "Açık konular" bölümünde de listelidir.
 
@@ -435,7 +440,7 @@ Uygulama dalı kriterler `main`'e girdikten (#103) sonra açıldı.
 - **AC-27.** IANA bölge kimliği olmayan bir saat dilimi (`+03:00`) sunucuda reddedilir.
 - **AC-28.** Panelin saat dilimi alanı serbest metin değil, bölge kimliklerinin listesidir.
 - **AC-29.** Küçük harfli ASCII olmayan bir adres kısaltması (`kadıköy-şubesi`) reddedilir.
-- **AC-30.** Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `400` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.
+- **AC-30.** Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `422` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.
 - **AC-31.** Geçersiz bir e-posta (`kadikoy@`) reddedilir.
 - **AC-32.** Reddedilen bir kaydetmede hiçbir şube oluşmaz ve hiçbir duyuru yazılmaz.
 - **AC-33.** 120 karakteri aşan şube adı ve 300 karakteri aşan adres alan hatasıyla reddedilir (R3a, D22).

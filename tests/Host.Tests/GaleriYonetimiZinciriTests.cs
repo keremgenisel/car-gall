@@ -165,7 +165,7 @@ public sealed class GaleriYonetimiZinciriTests : IAsyncLifetime
     /// § 5 doğrulama hatasını `422` sayar ve depoda `400` dönen uç yok). Bu sapma PR'da
     /// "karşılanmayan kriterler" altında yazılıdır; test GERÇEK davranışı ölçer.
     /// </summary>
-    [Fact(DisplayName = "0020/AC-30: Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `400` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.")]
+    [Fact(DisplayName = "0020/AC-30: Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `422` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.")]
     public async Task Reddeder_KullanilmisKisaltma_AlanKoduyla()
     {
         (Guid kapanacak, int surum) = await SubeAcAsync("kapanan-kisaltma");

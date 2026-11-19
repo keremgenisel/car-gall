@@ -147,7 +147,7 @@ public sealed class SubeYonetimiKomutTests : IAsyncLifetime
         Assert.Empty(await DuyurularAsync());
     }
 
-    [Fact(DisplayName = "0020/AC-30: Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `400` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.")]
+    [Fact(DisplayName = "0020/AC-30: Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `422` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.")]
     public async Task Reddedilir_BaskaSubeninKisaltmasi_KapatilmisDahil()
     {
         await TemizleAsync();
