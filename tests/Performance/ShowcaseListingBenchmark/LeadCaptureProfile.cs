@@ -30,6 +30,15 @@ internal static class LeadCaptureProfile
 
         using HttpClient client = new() { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(30) };
 
+        // QA BULGU-5 — D21 en pahalı yolu ister: `privacy` ölçüm dilinde yayında değilse
+        // ölçülen yol "yayında değildi" olurdu. Altlık okuması yayındaki sistem sayfalarını
+        // döner; `privacy` yoksa koşu düşer.
+        if (!await PrivacyPublishedAsync(client, locale))
+        {
+            Console.Error.WriteLine($"  GEÇERSİZ — privacy '{locale}' dilinde yayında değil ({label}); D21 en pahalı yolu ölçer.");
+            return 1;
+        }
+
         string slug = await FirstAvailableListingAsync(client, locale);
         Console.WriteLine($"Profil: POST /api/leads (0019 D21) — {label} — ilan '{slug}', dil '{locale}'");
 
@@ -81,6 +90,16 @@ internal static class LeadCaptureProfile
         }
 
         return 0;
+    }
+
+    private static async Task<bool> PrivacyPublishedAsync(HttpClient client, string locale)
+    {
+        using HttpResponseMessage response = await client.GetAsync($"/api/content/navigation?locale={locale}");
+        response.EnsureSuccessStatusCode();
+        using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        return document.RootElement.EnumerateArray()
+            .Any(link => link.GetProperty("systemKey").GetString() == "privacy");
     }
 
     private static async Task<string> FirstAvailableListingAsync(HttpClient client, string locale)
