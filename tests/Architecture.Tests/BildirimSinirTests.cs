@@ -169,17 +169,168 @@ public sealed partial class BildirimSinirTests
             $"Kişisel veri log parametresine girmez (docs/conventions.md § 12):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
     }
 
+    /// <summary>
+    /// `0018` AC-83 — zincir bekçisinin taradığı arayüzler ARTIK SABİT DEĞİL: başka modüllerin
+    /// `Contracts`'ında tanımlı ve `Notifications`'ın kodunda adı geçen her arayüz. Eski hâli üç
+    /// adı elle sayıyordu ve yorumu "liste kendiliğinden değişir" diyordu; yeni bir arayüz
+    /// eklendiğinde değişmiyor ve kapı yeşil kalıyordu (`0018` Context, QA B2).
+    /// </summary>
+    [Fact(DisplayName = "0018/AC-83: Zincir testi (`BildirimSinirTests`) `Notifications`'ın tükettiği **bütün** sorgu arayüzlerini tarar — yeni ilan özeti okuması, model adı okuması ve `IGalleryDisplayNameQueries` dâhil — ve gerçekleştirimlerinden biri başka bir modülün `Contracts`'ına uzandığında kırmızı verir (negatif kanıt DoD'da)")]
+    public void Tarar_TuketilenButunArayuzleri()
+    {
+        IReadOnlyList<string> consumed = ConsumedInterfaces();
+
+        // Kapının boşalmadığı ayrıca sınanır: sıfır arayüzle koşan tarama yeşildir.
+        foreach (string expected in new[]
+        {
+            "ILeadNotificationQueries",
+            "IBranchContactQueries",
+            "IListingSlugQueries",
+            "IListingSummaryQueries",
+            "IVehicleModelQueries",
+            "IGalleryDisplayNameQueries",
+        })
+        {
+            Assert.Contains(expected, consumed);
+        }
+
+        List<string> implementations = [.. ConsumedQueryImplementations()];
+
+        Assert.True(
+            implementations.Count >= 5,
+            $"Gerçekleştirim bulunamadı; tarama boş koşuyor: {string.Join(", ", implementations)}");
+
+        List<string> violations = [];
+
+        foreach (string file in implementations)
+        {
+            string ownModule = SolutionLayout.ModuleNameOf(file);
+
+            foreach (Match match in ForeignContractUsing().Matches(File.ReadAllText(file)))
+            {
+                if (match.Groups["module"].Value != ownModule)
+                {
+                    violations.Add($"{SolutionLayout.Relative(file)} → {match.Groups["module"].Value}.Contracts (ikinci atlama)");
+                }
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            $"Notifications'ın okuduğu yüzeyler başka bir modüle uzanmaz (Yasak Listesi 13, 0018 C12):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+    }
+
+    /// <summary>
+    /// `0018` AC-90 — abonelik, teyit, çıkış, dönem ve gönderim yolundaki log çağrıları e-posta
+    /// adresini, teyit anahtarını ve çıkış bağlantısını PARAMETRE OLARAK almaz (`0009` AC-25'in
+    /// çağrı yüzeyi taraması; yasak kümeye anahtar ve bağlantı eklendi).
+    /// </summary>
+    [Fact(DisplayName = "0018/AC-90: Abonelik, teyit, çıkış, dönem ve gönderim yolundaki log çağrıları e-posta adresini, teyit anahtarını ve çıkış bağlantısını parametre olarak almaz — çağrı yüzeyini tarayan testle (`0009` AC-25 deseni)")]
+    public void AlmazParametreOlarak_AdresAnahtarVeBaglanti()
+    {
+        List<string> violations = [];
+        int calls = 0;
+
+        foreach (string file in NotificationsFiles())
+        {
+            foreach (string call in LogCalls(File.ReadAllText(file)))
+            {
+                calls++;
+                Match banned = LinkOrTokenToken().Match(call);
+
+                if (banned.Success)
+                {
+                    violations.Add($"{SolutionLayout.Relative(file)}: '{banned.Value}' → {Ozet(call)}");
+                }
+            }
+        }
+
+        Assert.True(calls >= 10, $"yalnız {calls} log çağrısı tarandı; tarama boş koşuyor olabilir");
+        Assert.True(
+            violations.Count == 0,
+            $"Adres, anahtar ve bağlantı log parametresine girmez (0018 C5, D25):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+    }
+
+    /// <summary>
+    /// `0018` AC-99 · C12 — `Notifications` yaprak kalır: olay YAYINLAMAZ (outbox'ı yok, yazıcı
+    /// kullanmaz) ve hiçbir modül onun sözleşmesine bağlanmaz (yalnız Host kurulum ayarları).
+    /// </summary>
+    [Fact(DisplayName = "0018/AC-99: Yeni migration'lar yalnız `notifications` şemasına dokunur; mimari testler (modül sınırı, `Notifications`'ın olay yayınlamaması) yeşildir")]
+    public void YayinlamazOlay_VeKimseBaglanmaz()
+    {
+        List<string> violations = [];
+
+        foreach (string file in NotificationsFiles())
+        {
+            foreach (string line in SolutionLayout.CodeLines(file))
+            {
+                if (line.Contains("IOutboxDbContext", StringComparison.Ordinal)
+                    || line.Contains("OutboxWriter<", StringComparison.Ordinal)
+                    || line.Contains("OutboxMessages", StringComparison.Ordinal))
+                {
+                    violations.Add($"{SolutionLayout.Relative(file)}: {line.Trim()}");
+                }
+            }
+        }
+
+        foreach (string project in SolutionLayout.ProjectFiles())
+        {
+            if (!SolutionLayout.IsModuleProject(project) || SolutionLayout.ModuleNameOf(project) == Module)
+            {
+                continue;
+            }
+
+            if (SolutionLayout.ProjectReferences(project).Any(reference =>
+                    Path.GetFileName(reference).StartsWith("Notifications", StringComparison.Ordinal)))
+            {
+                violations.Add($"{SolutionLayout.Relative(project)} → Notifications");
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            $"Notifications olay yayınlamaz ve hiçbir modül ona bağlanmaz (0009 C11, 0018 C12):{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+    }
+
     private static IEnumerable<string> NotificationsFiles() =>
         SolutionLayout.SourceFiles().Where(file => SolutionLayout.ModuleNameOf(file) == Module);
 
     /// <summary>
-    /// `Notifications`'ın tükettiği üç sorgunun GERÇEKLEŞTİRİMLERİ. Arayüz adından
-    /// bulunuyor: sözleşme yüzeyi değişirse bu liste de kendiliğinden değişir ve testin
-    /// elle güncellenmesi gereken bir adımı kalmaz.
+    /// Başka modüllerin `Contracts`'ında tanımlı ve `Notifications`'ın kodunda adı geçen
+    /// arayüzler. `Notifications`'ın kendi sözleşmesi ve `BuildingBlocks` sayılmaz.
+    /// </summary>
+    private static IReadOnlyList<string> ConsumedInterfaces()
+    {
+        HashSet<string> declared = new(StringComparer.Ordinal);
+
+        foreach (string file in SolutionLayout.SourceFiles())
+        {
+            if (SolutionLayout.ModuleNameOf(file) == Module
+                || !SolutionLayout.Relative(file).Contains(".Contracts/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            foreach (Match match in PublicInterfaceDeclaration().Matches(File.ReadAllText(file)))
+            {
+                declared.Add(match.Groups["name"].Value);
+            }
+        }
+
+        string notifications = string.Join('\n', NotificationsFiles().SelectMany(SolutionLayout.CodeLines));
+
+        return [.. declared
+            .Where(name => Regex.IsMatch(notifications, $@"\b{Regex.Escape(name)}\b", RegexOptions.None, TimeSpan.FromSeconds(2)))
+            .Order(StringComparer.Ordinal)];
+    }
+
+    /// <summary>
+    /// `Notifications`'ın tükettiği sorguların GERÇEKLEŞTİRİMLERİ — `0018` AC-83 ile arayüz
+    /// listesi de koddan türetilir (<see cref="ConsumedInterfaces"/>).
     /// </summary>
     private static IEnumerable<string> ConsumedQueryImplementations()
     {
-        string[] interfaces = ["ILeadNotificationQueries", "IBranchContactQueries", "IListingSlugQueries"];
+        IReadOnlyList<string> interfaces = ConsumedInterfaces();
 
         return SolutionLayout.SourceFiles().Where(file =>
             SolutionLayout.ModuleNameOf(file) != Module
@@ -204,12 +355,46 @@ public sealed partial class BildirimSinirTests
     /// </summary>
     private static Regex SchemaReference(string schema) => SolutionLayout.SchemaReference(schema);
 
-    private static bool ImplementationDeclaration(string text, string interfaceName) =>
-        Regex.IsMatch(
-            text,
-            $@"(?::|,)\s*{Regex.Escape(interfaceName)}\b",
-            RegexOptions.None,
-            TimeSpan.FromSeconds(2));
+    /// <summary>
+    /// Arayüzü GERÇEKLEŞTİREN sınıf mı? Taban listesi sınıf bildiriminde, birincil kurucunun
+    /// parantezinden SONRA gelir. Eski desen (<c>(:|,)\s*IAd</c>) yalnız üç arayüzle yetiyordu;
+    /// `0018` ile liste koddan türetilince kurucu parametresi olarak arayüzü TÜKETEN sınıfları
+    /// (<c>VehicleWriteRules(…, IVehicleModelQueries models)</c>) da gerçekleştirim sanıyordu.
+    /// </summary>
+    private static bool ImplementationDeclaration(string text, string interfaceName)
+    {
+        foreach (Match declaration in ClassDeclaration().Matches(text))
+        {
+            int index = declaration.Index + declaration.Length;
+
+            if (index < text.Length && text[index] == '(')
+            {
+                int depth = 0;
+
+                for (; index < text.Length; index++)
+                {
+                    depth += text[index] switch { '(' => 1, ')' => -1, _ => 0 };
+
+                    if (depth == 0)
+                    {
+                        index++;
+                        break;
+                    }
+                }
+            }
+
+            int end = text.IndexOfAny(['{', ';'], index);
+            string tail = text[index..(end < 0 ? text.Length : end)];
+
+            if (tail.TrimStart().StartsWith(':')
+                && Regex.IsMatch(tail, $@"\b{Regex.Escape(interfaceName)}\b", RegexOptions.None, TimeSpan.FromSeconds(2)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Log çağrısının TAMAMINI çıkarır. Satır satır taramak yetmez: çağrılar çok satırlı
@@ -273,6 +458,17 @@ public sealed partial class BildirimSinirTests
 
     [GeneratedRegex(@"\blogger\s*\.\s*Log\w*\s*\(")]
     private static partial Regex LogCallStart();
+
+    [GeneratedRegex(@"\bclass\s+\w+(?:<[^>]*>)?")]
+    private static partial Regex ClassDeclaration();
+
+    [GeneratedRegex(@"\bpublic\s+interface\s+(?<name>I\w+)")]
+    private static partial Regex PublicInterfaceDeclaration();
+
+    // `0018` — adres, teyit anahtarı ve bağlantı: alan adı, değişken adı ya da yer tutucu
+    // olarak. Gönderenin ve kurulumun adresi de yasak (`PersonalDataToken`'ın gerekçesi).
+    [GeneratedRegex(@"\b(?:\w*(?<![cC]ancellation|stopping)Token|token|\w*Link\w*|\w*Baglanti\w*|\w*Email\w*|\w*Address\w*|Recipient\w*|\w*Hash\w*|hash)\b")]
+    private static partial Regex LinkOrTokenToken();
 
     // Gönderenin adresi de yasak: galerinin kendi adresi olsa bile bir log satırına
     // yazılmasının hiçbir faydası yok ve kuralın istisnası onu aşındırırdı.
