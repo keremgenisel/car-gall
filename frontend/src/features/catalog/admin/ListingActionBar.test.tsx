@@ -26,6 +26,7 @@ function ekran(listingStatus: string, options: { locale?: AppLocale; bekliyor?: 
         vehicleId={ARAC}
         listingStatus={listingStatus}
         awaitingBranchAssignment={options.bekliyor ?? false}
+        staffRole="sales_advisor"
         onApplied={uygulandi}
       />
     </LocaleProvider>,

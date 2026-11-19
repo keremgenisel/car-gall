@@ -198,6 +198,16 @@ temizler; `null` "bilinmiyor" demektir (D3).
 
 ## Acceptance Criteria
 
+
+### Verilen kararlar — uygulama gözden geçirmesi, 2026-11-19
+
+**D20 — AC-27 serileşmeyi ölçer, "yalnız biri"ni değil (QA BULGU-1, PR #108; Takım Yöneticisi
+(ajan) kararı).** Geri alma önce kazanırsa ilan `Yayında`/`Taslak`'a döner ve ardından gelen
+arşivleme o durumdan meşru bir A3 geçişidir; ikisi de başarılı olur ve ikisi de kayda geçer.
+Kriterin eski metni ("yalnız biri başarılı olur") yalnız `Rezerve`'ye dönen ilanda doğruydu.
+Kriter düzeltildi — `main`'e girdikten sonraki ilk Acceptance Criteria değişikliği, SCORECARD'da
+**revizyon 1**. *Neden (b) değil:* arşivlemenin de beklenen durumu taşıması (`409`) `0012b`'nin
+bütün geçişlerini ilgilendiren genel bir desen değişikliği; ayrı kart olarak önerildi.
 ### Geri alma ve dönülen durum (R1, R3, R4 · D2, D3, D5)
 
 - **AC-1.** Yayındayken satıldı işaretlenen ilanın satışı Yönetici tarafından geri alındığında ilan **Yayında** olur ve vitrinde yeniden görünür.
@@ -238,7 +248,7 @@ temizler; `null` "bilinmiyor" demektir (D3).
 - **AC-24.** Arşivdeki ilan için geri alma reddedilir.
 - **AC-25.** Yayında, Rezerve ya da Taslak bir ilan için geri alma reddedilir.
 - **AC-26.** Aynı ilan için eşzamanlı iki geri alma isteğinden yalnız biri başarılı olur ve yalnız bir kayıt yazılır.
-- **AC-27.** Geri alma ile arşivleme eşzamanlı istendiğinde yalnız biri başarılı olur.
+- **AC-27.** Geri alma ile arşivleme eşzamanlı istendiğinde istekler aynı kilitte sırayla işlenir: hiçbir değişiklik kaybolmaz, geri alma kaydı yalnız geri alma başarılıysa yazılır ve ilanın son durumu iki isteğin bir sıralamasının sonucudur.
 
 ### Erişim (R12, R13 · D9)
 
@@ -261,24 +271,24 @@ temizler; `null` "bilinmiyor" demektir (D3).
 ## Definition of Done
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B8 → D12–D19, 2026-11-18.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0023-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0023-ac<n>.png`),
       hata durumu dâhil; Arapça görüntü de var (AC-33).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `catalog` şemasına dokunuyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**satışı geri alma**); A3 ve A4 güncellendi.
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `catalog` şemasına dokunuyor.
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**satışı geri alma**); A3 ve A4 güncellendi.
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
-- [ ] `0012b` R4 ve Bilinen tuzak 4'e "→ `0023`" notu düşüldü.
+- [x] `0012b` R4 ve Bilinen tuzak 4'e "→ `0023`" notu düşüldü.
 
 ---
 

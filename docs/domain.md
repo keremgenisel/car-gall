@@ -39,6 +39,7 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Vitrin** | — | Sitenin ziyaretçiye açık araç listesi ve detay sayfaları. |
 | **Öne Çıkarma** | `Listing.Feature` | Bir ilanı vitrin sıralamasının başına taşıyan **sıralama** eylemi. Durum geçişi DEĞİLDİR: A3 onu tanımaz, duyuru üretmez ve arşiv dışındaki her durumda çalışır. Anahtar iki değerlidir; öne çıkarılmışların kendi aralarındaki sıra eşitlik hâlinde yayın tarihiyle kırılır. *(spec `0012c`, 2026-10-11.)* |
 | **Yayın Durumu** | `ListingStatus` | `Taslak` · `Yayında` · `Rezerve` · `Satıldı` · `Arşiv` |
+| **Satışı Geri Alma** | `Listing.RevertSale` · `ListingSaleReversal` | Yanlışlıkla `Satıldı` işaretlenen ilanın **Yöneticinin gerekçeli** kararıyla satıştan önceki durumuna (`Yayında` / `Rezerve`; bilinmiyorsa `Yayında`) döndürülmesi. Araç bugün vitrine çıkamıyorsa (şube ataması bekliyor, şubesi kalıcı kapatılmış ya da **A2**'yi sağlamıyor) ilan `Taslak`'a döner. Adres, ilk yayın tarihi ve öne çıkarma anahtarı değişmez. Her geri alma silinmeyen, düzenlenmeyen bir **kayıt** yazar (ilan, personel, an, gerekçe, dönülen durum) ve `VehicleSaleReverted` duyurusu üretir. Toplu eylem değildir. *(spec `0023`, 2026-11-18.)* |
 | **Referans Veri** | `VehicleReference` | Marka / model / kasa / donanım sözlüğü. Galeri yazmaz, sistem besler. |
 | **Kanonik Ad** | `CanonicalName` | Referans verinin Latin harfli, dilden bağımsız adı. Slug bundan üretilir. |
 | **Ekspertiz** | `VehicleCondition` | Aracın hasar/boya/bakım durumu. Alanları yapılandırılabilir. |
@@ -119,9 +120,19 @@ Her kural test edilebilir bir ifadedir. Spec'ler bu kurallara atıf yapar.
 Taslak   → Yayında | Arşiv
 Yayında  → Rezerve | Satıldı | Taslak | Arşiv
 Rezerve  → Yayında | Satıldı | Taslak
-Satıldı  → Arşiv
+Satıldı  → Arşiv | Yayında* | Rezerve* | Taslak*
 Arşiv    → (terminal)
 ```
+
+`*` **Yalnız "satışı geri al" geçişiyle ve yalnız Yöneticiye** (spec `0023` / D11, Takım
+Yöneticisi (ajan) kararı, 2026-11-18). Geri alma gerekçe ister (10–500 karakter), ilanı
+satıştan önceki durumuna döndürür (`Yayında` ya da `Rezerve`; bu kuraldan önce satılmış ve
+önceki durumu kayıtlı olmayan ilan `Yayında`ya döner) ve araç bugün vitrine çıkamıyorsa —
+şube ataması bekliyor, şubesi kalıcı kapatılmış ya da **A2**'yi artık sağlamıyor —
+`Taslak`'a döner; kapalı şubenin "şube ataması bekliyor" bayrağı da o an yazılır (**A8**
+satılmış ilanları atladığı için). Yayına alma yolu kullanılmaz: adres, ilk yayın tarihi ve
+öne çıkarma anahtarı değişmez. Gerekçe: yanlış bir tıklama satış değildir ve tek çıkışı
+arşivleyip aracı yeniden girmek, adresi ve vitrin sırasını kaybettiriyordu.
 
 `Rezerve → Taslak` **2026-10-11'de eklendi** (spec `0012b` / D32, Takım Yöneticisi onayı).
 Gerekçe ölçülerek bulundu: **A8** şube kapatıldığında o şubedeki araçların yayından
@@ -140,9 +151,12 @@ ve **hiç yayınlanmamış** bir taslağı ne silinebilir ne arşivlenebilir bı
 galeri genelinde kalıcı olarak tutuluydu. A5'in muafiyeti yanlış kaydın emekliye
 ayrılabilmesi için vardır ve çıkışı olmayan bir muafiyet kâğıt üstünde kalır.
 
-**A4.** `Satıldı` bir **terminal ticari durumdur**: araç yeniden yayına alınamaz.
-Aynı fiziksel araç geri alınırsa **yeni bir araç kaydı** açılır; eskisi arşivde kalır.
-(Gerekçe: satış geçmişi ve fiyat geçmişi bozulmaz.)
+**A4.** `Satıldı` **ticari olarak terminaldir**: araç yayına alma yoluyla yeniden yayına
+alınamaz. Yanlış işaretleme **Yöneticinin gerekçeli geri almasıyla** düzeltilir (A3, `*`);
+geri alma kayda geçer ve satış geçmişi silinmez, üstüne "geri alındı" yazılır. Aynı fiziksel
+araç **gerçekten** geri alınırsa yine **yeni bir araç kaydı** açılır; eskisi arşivde kalır.
+(Gerekçe: satış geçmişi ve fiyat geçmişi bozulmaz. Geri alma kuralı spec `0023` / D1, D11,
+2026-11-18.)
 
 **A5.** Şase numarası galeri genelinde **tekildir**, ancak `Arşiv` durumundaki kayıtlar bu
 tekillik kontrolünden muaftır (A4'ün sonucu).

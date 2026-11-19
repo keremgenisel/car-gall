@@ -26,6 +26,12 @@ internal sealed class VehicleCatalogDbContext(DbContextOptions<VehicleCatalogDbC
     /// <summary>A6 — yalnız ekleme alır; silme ve güncelleme yolu yoktur.</summary>
     internal DbSet<PriceChange> PriceChanges => Set<PriceChange>();
 
+    /// <summary>
+    /// `0023` **D7** — satış geri alma kayıtları. Yalnız ekleme alır; silme ve güncelleme
+    /// yolu yoktur (**AC-21**).
+    /// </summary>
+    internal DbSet<ListingSaleReversal> SaleReversals => Set<ListingSaleReversal>();
+
     internal DbSet<ShowcaseListing> ShowcaseListings => Set<ShowcaseListing>();
 
     /// <summary>`0016b` D25 — vitrin galerisinin yuvaları.</summary>

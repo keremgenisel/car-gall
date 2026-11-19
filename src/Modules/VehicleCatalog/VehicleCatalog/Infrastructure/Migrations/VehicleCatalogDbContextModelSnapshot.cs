@@ -122,6 +122,10 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("status");
 
+                    b.Property<int?>("StatusBeforeSale")
+                        .HasColumnType("integer")
+                        .HasColumnName("status_before_sale");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -142,6 +146,52 @@ namespace CarGallery.Modules.VehicleCatalog.Infrastructure.Migrations
                         .HasDatabaseName("ux_listings_vehicle_id");
 
                     b.ToTable("listings", "vehicle_catalog");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Domain.ListingSaleReversal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("listing_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("RestoredStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("restored_status");
+
+                    b.Property<DateTimeOffset>("RevertedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reverted_at");
+
+                    b.Property<string>("StaffDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("staff_display_name");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("staff_id");
+
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VehicleId")
+                        .HasDatabaseName("ix_listing_sale_reversals_vehicle_id");
+
+                    b.ToTable("listing_sale_reversals", "vehicle_catalog");
                 });
 
             modelBuilder.Entity("CarGallery.Modules.VehicleCatalog.Domain.PriceChange", b =>

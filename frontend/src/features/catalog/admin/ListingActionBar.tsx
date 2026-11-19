@@ -5,6 +5,8 @@ import { applyListingAction } from '../../../shared/api/catalogAdmin'
 import type { ListingAction } from '../../../shared/api/types'
 import { Badge, Button } from '../../../shared/ui'
 import { codeKey } from './vehicleFormState'
+import { SaleRevertDialog } from './SaleRevertDialog'
+import { canRevertSale } from './saleReversalState'
 import {
   availableActions,
   messageKey,
@@ -43,21 +45,28 @@ type Durum =
  * "zorunlu alan boş" aynı anda doğru olabilir ve personel ikisini birden görmeli — tek
  * kod dönmek onu tek tek denemeye zorlardı.</p>
  *
- * <p><b>Rol ayrımı YOK</b> (**D22**): eylemler oturum açmış her personele açık.</p>
+ * <p><b>Rol ayrımı YOK</b> (**D22**): eylemler oturum açmış her personele açık. Tek
+ * istisna `0023`'ün "Satışı geri al" eylemi: yalnız Yöneticiye basılır (**R12**) ve
+ * A3'ün tek tıklık geçişlerinden ayrı, gerekçe isteyen bir onay penceresiyle çalışır.</p>
  */
 export function ListingActionBar({
   vehicleId,
   listingStatus,
   awaitingBranchAssignment,
+  staffRole,
   onApplied,
 }: {
   readonly vehicleId: string
   readonly listingStatus: string
   readonly awaitingBranchAssignment: boolean
+  /** Oturumdaki personelin rol kodu; yalnız "Satışı geri al"ın görünürlüğü için (**R12**). */
+  readonly staffRole: string
   readonly onApplied: () => void
 }) {
   const { locale, t } = useLocale()
   const [durum, setDurum] = useState<Durum>({ kind: 'idle' })
+  const [geriAlmaAcik, setGeriAlmaAcik] = useState(false)
+  const geriAlabilir = canRevertSale(staffRole, listingStatus)
 
   const eylemler = availableActions(listingStatus)
 
@@ -130,11 +139,40 @@ export function ListingActionBar({
         </div>
       )}
 
-      {/* A4 — `Satıldı` terminaldir; "geri al" düğmesi kuralı delerdi ve ekran bunu söylüyor. */}
-      {listingStatus === 'Sold' ? (
+      {/*
+        `0023` — satılmış ilanın tek geri dönüşü Yöneticinin gerekçeli geri almasıdır (A3,
+        A4). Düğme yalnız Yöneticiye basılır; diğer rollere yalnız kimin yapabileceği
+        söylenir (AC-28).
+      */}
+      {geriAlabilir ? (
+        <div className="vehicle-actions__buttons">
+          <Button
+            variant="secondary"
+            onClick={() => setGeriAlmaAcik(true)}
+            data-testid="vehicle-action-revert-sale"
+          >
+            {t('vehicle.saleRevert.action')}
+          </Button>
+        </div>
+      ) : null}
+
+      {listingStatus === 'Sold' && !geriAlabilir ? (
         <p className="admin-form__hint" data-testid="vehicle-sold-terminal">
           {t('vehicle.action.terminal')}
         </p>
+      ) : null}
+
+      {geriAlabilir ? (
+        <SaleRevertDialog
+          vehicleId={vehicleId}
+          open={geriAlmaAcik}
+          onClose={() => setGeriAlmaAcik(false)}
+          onReverted={() => {
+            setGeriAlmaAcik(false)
+            setDurum({ kind: 'done' })
+            onApplied()
+          }}
+        />
       ) : null}
 
       {durum.kind === 'done' ? (

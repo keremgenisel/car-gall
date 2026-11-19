@@ -173,8 +173,12 @@ test('0012b/AC-14: `Satıldı` terminaldir ve ekran bunu söyler', async ({ page
   await expect(page.getByTestId('vehicle-action-done')).toBeVisible()
 
   await page.getByTestId('vehicle-action-sold').click()
-  await expect(page.getByTestId('vehicle-sold-terminal')).toBeVisible()
+  await expect(page.getByTestId('vehicle-action-done')).toBeVisible()
 
+  // `0023` — oturum Yöneticinin: "terminal" ipucunun yerinde gerekçeli geri alma düğmesi
+  // var (R12); yayına alma yolu yine kapalı (A4). İpucunun kendisi Yönetici olmayan rolde
+  // `evidence-0023`'ün AC-28 testinde ölçülüyor.
+  await expect(page.getByTestId('vehicle-action-revert-sale')).toBeVisible()
   await expect(page.getByTestId('vehicle-action-publish')).toHaveCount(0)
 
   await kanit(page, page.getByTestId('vehicle-actions'), '0012b-ac14.png')

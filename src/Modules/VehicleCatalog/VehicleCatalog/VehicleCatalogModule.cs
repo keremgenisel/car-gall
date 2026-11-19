@@ -127,6 +127,10 @@ public static class VehicleCatalogModule
         services.AddScoped<ListingTransitionCommands>();
         services.AddScoped<ListingFeatureCommands>();
         services.AddScoped<ListingBulkCommands>();
+        // 0023 — satışı geri alma: değerlendirme TEK yerde, komut ve önizleme onu paylaşıyor.
+        services.AddScoped<SaleRevertAssessor>();
+        services.AddScoped<ListingSaleReversalCommand>();
+        services.AddScoped<ListingSaleReversalQueries>();
 
         services.AddScoped(provider => new OutboxDispatcher<VehicleCatalogDbContext>(
             provider.GetRequiredService<VehicleCatalogDbContext>(),

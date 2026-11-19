@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.Modules.Identity.Contracts;
@@ -78,6 +79,30 @@ internal static class VehicleAdminEndpoints
                 .Produces(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status422UnprocessableEntity);
         }
+
+        // `0023` — satışı geri alma YALNIZ Yöneticiye (**D1**, **R12**). Politika uç
+        // düzeyinde: grup "oturum açmış personel" diyor, bu uç ona ek olarak rol istiyor ve
+        // rol kısıtı politikaların tek kaynağında (`AdminSurface`) yaşıyor. Rota tekil
+        // yüzeyin tablosunda (`ListingOperations.All`) DEĞİL: gövde taşıyor ve toplu
+        // karşılığı yok (**D9**, **AC-30**) — tabloya girseydi toplu rotası kendiliğinden
+        // doğardı.
+        vehicles.MapPost("/{vehicleId:guid}/revert-sale", RevertSaleAsync)
+            .RequireAuthorization(AdminSurface.ManagerPolicy)
+            .WithName("VehicleListingRevertSale")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict)
+            .Produces(StatusCodes.Status422UnprocessableEntity);
+
+        // R7/R9 — pencerenin önizlemesi ve ilanın geri alma kayıtları. Kayıt YALNIZ okunur:
+        // düzenleyen ya da silen bir uç yok (**AC-21**).
+        vehicles.MapGet("/{vehicleId:guid}/sale-reversals", SaleReversalsAsync)
+            .RequireAuthorization(AdminSurface.ManagerPolicy)
+            .WithName("VehicleListingSaleReversals")
+            .Produces<SaleReversalOverview>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
         // `0012c` **D18** — toplu yüzey ALTI işlemi taşıyor; rezerve ve rezervasyon
         // kaldırma burada yok ve yokluğun karşılığı `404`'tür (rota tanımlanmadı).
@@ -240,6 +265,52 @@ internal static class VehicleAdminEndpoints
     }
 
     /// <summary>
+    /// `0023` — satışı geri almanın ince ucu. Personelin kimliği ve adı OTURUMDAN okunur,
+    /// gövdeden değil: gövdeye güvenmek kaydın "kim yaptı" sütununu istemcinin beyanı
+    /// yapardı (**R6**).
+    ///
+    /// <para><b>Gerekçe hiçbir yere loglanmaz</b> (**C5**): bu uç ve komut onu yalnız
+    /// kayda yazar.</para>
+    /// </summary>
+    private static async Task<IResult> RevertSaleAsync(
+        Guid vehicleId,
+        RevertSaleBody body,
+        HttpContext httpContext,
+        ListingSaleReversalCommand command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        if (!Guid.TryParse(httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid staffId))
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        Result sonuc = await command.ExecuteAsync(
+            new RevertSaleRequest(
+                vehicleId,
+                body.Reason,
+                body.ExpectedStatus,
+                staffId,
+                httpContext.User.FindFirstValue(ClaimTypes.Name) ?? string.Empty),
+            cancellationToken);
+
+        return sonuc.IsFailure ? CatalogProblems.From(sonuc.Error) : TypedResults.NoContent();
+    }
+
+    private static async Task<IResult> SaleReversalsAsync(
+        Guid vehicleId,
+        ListingSaleReversalQueries queries,
+        CancellationToken cancellationToken)
+    {
+        SaleReversalOverview? sonuc = await queries.FindAsync(vehicleId, cancellationToken);
+
+        return sonuc is null
+            ? CatalogProblems.From(Error.With(VehicleErrors.NotFound, "field", VehicleFieldNames.VehicleId))
+            : TypedResults.Ok(sonuc);
+    }
+
+    /// <summary>
     /// `0012c` **R4**/**D6** — toplu eylemin ucu. İstek düzeyi reddi `ProblemDetails`
     /// (`422`), satır düzeyi sonuçlar `200` + liste.
     ///
@@ -399,6 +470,12 @@ internal sealed record UpdateVehicleOptionalValue(
 internal sealed record PaintChangeEntryBody(string? Part, string? State);
 
 /// <summary>
+/// `0023` — satışı geri alma isteği: gerekçe (**D4**) ve pencerenin gösterdiği hedef durum
+/// (**D16**, `Published` · `Reserved` · `Draft`).
+/// </summary>
+internal sealed record RevertSaleBody(string? Reason, string? ExpectedStatus);
+
+/// <summary>
 /// Toplu eylemin isteği. Seçim **araç kimliğiyle** taşınıyor (**D44**): `0012b`'nin uçları
 /// araç kimliğiyle çalışıyor ve yönetim sözleşmesinde ilan kimliği diye bir yüzey yok.
 /// </summary>
@@ -451,6 +528,8 @@ internal static class CatalogProblems
             // için "geçersiz durum geçişi" derse personel olmayan bir geçişi arar.
             Listing.CannotFeatureArchived => StatusCodes.Status409Conflict,
             ConcurrencyErrors.Lost => StatusCodes.Status409Conflict,
+            // 0023 D16 — pencere açıkken hedef değişti: istek geçerli, dünya değişti.
+            SaleReversalErrors.TargetChanged => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status422UnprocessableEntity,
         };
 

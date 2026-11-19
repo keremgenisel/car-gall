@@ -949,6 +949,69 @@ a.top-bar__brand:hover {
   padding-inline-start: var(--space-7);
 }
 
+/* `0023` — satışı geri alma penceresi ve kayıtları. Yön özellikleri MANTIKSAL: Arapça
+   panelde pencere ve liste sağdan sola akar (AC-33). */
+.sale-revert {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  max-inline-size: var(--size-dialog);
+  text-align: start;
+}
+
+.sale-revert__title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sale-revert__target {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.sale-revert__reason {
+  min-block-size: calc(var(--form-control-min-block-size) * 3);
+  font-family: inherit;
+}
+
+.sale-revert__count {
+  text-align: end;
+}
+
+.sale-reversals__list {
+  display: grid;
+  gap: var(--space-5);
+  margin-block: var(--space-0);
+  padding-inline-start: var(--space-0);
+  list-style: none;
+}
+
+.sale-reversals__item {
+  display: grid;
+  gap: var(--space-3);
+  padding-block-start: var(--space-5);
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+.sale-reversals__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  margin-block: var(--space-0);
+}
+
+.sale-reversals__staff {
+  font-weight: var(--font-weight-semibold);
+}
+
+.sale-reversals__reason {
+  margin-block: var(--space-0);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .vehicle-list__filters {
   display: flex;
   flex-wrap: wrap;
