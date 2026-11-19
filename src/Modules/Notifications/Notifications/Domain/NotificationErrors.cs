@@ -21,4 +21,25 @@ internal static class NotificationErrors
 
     /// <summary>Sağlayıcı mesajı kalıcı olarak reddetti (`5xx`) veya adres geçersiz.</summary>
     internal const string RecipientRejected = "notification.recipient_rejected";
+
+    /// <summary>`0018` AC-7–AC-9 — biçimi geçersiz adres (**D10**).</summary>
+    internal const string SubscriptionEmailInvalid = "notification.subscription_email_invalid";
+
+    /// <summary>`0018` AC-10 — kurulumda etkin olmayan ya da tanınmayan dil (**D14**).</summary>
+    internal const string SubscriptionInvalidLocale = "notification.subscription_invalid_locale";
+
+    /// <summary>`0018` AC-12, AC-14 — üç hız sınırının kaynak başına ikisi (**D9**).</summary>
+    internal const string SubscriptionRateLimited = "notification.subscription_rate_limited";
+
+    /// <summary>
+    /// `0018` **D7** · **D8** — süresi dolmuş, kullanılmış, yerine yenisi gelmiş, bozuk ve hiç
+    /// var olmamış bağlantı: TEK kod (AC-35, AC-44).
+    /// </summary>
+    internal const string SubscriptionLinkInvalid = "notification.subscription_link_invalid";
+
+    /// <summary>`0018` **D22** — dağıtım anında abonelik etkin değil (çıkmış, kayıt yok, teyit bekliyor).</summary>
+    internal const string SubscriptionInactive = "notification.subscription_inactive";
+
+    /// <summary>`0018` **D21** — dağıtım anında dönemin hiçbir ilanı Yayında değil; boş bülten çıkmaz (R9).</summary>
+    internal const string NewsletterEmpty = "notification.newsletter_empty";
 }

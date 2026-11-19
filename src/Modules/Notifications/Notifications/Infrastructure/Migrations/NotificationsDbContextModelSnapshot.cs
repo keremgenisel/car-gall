@@ -43,6 +43,188 @@ namespace CarGallery.Modules.Notifications.Infrastructure.Migrations
                     b.ToTable("inbox_entries", "notifications");
                 });
 
+            modelBuilder.Entity("CarGallery.Modules.Notifications.Domain.ConsentEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subscription_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId", "OccurredAt")
+                        .HasDatabaseName("ix_consent_events_subscription_occurred_at");
+
+                    b.ToTable("consent_events", "notifications");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.Notifications.Domain.NewsletterCandidate", b =>
+                {
+                    b.Property<Guid>("ListingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("listing_id");
+
+                    b.Property<Guid?>("PeriodId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("period_id");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.HasKey("ListingId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_newsletter_candidates_status");
+
+                    b.ToTable("newsletter_candidates", "notifications");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.Notifications.Domain.NewsletterPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CutoffAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cutoff_at");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CutoffAt")
+                        .IsUnique()
+                        .HasDatabaseName("ux_newsletter_periods_regular_cutoff")
+                        .HasFilter("kind = 2");
+
+                    b.HasIndex("Kind")
+                        .IsUnique()
+                        .HasDatabaseName("ux_newsletter_periods_baseline")
+                        .HasFilter("kind = 1");
+
+                    b.ToTable("newsletter_periods", "notifications");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.Notifications.Domain.NewsletterPeriodListing", b =>
+                {
+                    b.Property<Guid>("PeriodId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("period_id");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("listing_id");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.HasKey("PeriodId", "ListingId");
+
+                    b.ToTable("newsletter_period_listings", "notifications");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.Notifications.Domain.NewsletterSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ConfirmationExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmation_expires_at");
+
+                    b.Property<byte[]>("ConfirmationTokenHash")
+                        .HasColumnType("bytea")
+                        .HasColumnName("confirmation_token_hash");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("locale");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("normalized_email");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset?>("UnsubscribedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("unsubscribed_at");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConfirmationTokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ux_newsletter_subscriptions_confirmation_token_hash")
+                        .HasFilter("confirmation_token_hash IS NOT NULL");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique()
+                        .HasDatabaseName("ux_newsletter_subscriptions_normalized_email");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_newsletter_subscriptions_status");
+
+                    b.ToTable("newsletter_subscriptions", "notifications");
+                });
+
             modelBuilder.Entity("CarGallery.Modules.Notifications.Domain.NotificationMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -67,7 +249,7 @@ namespace CarGallery.Modules.Notifications.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("failure_code");
 
-                    b.Property<Guid>("LeadId")
+                    b.Property<Guid?>("LeadId")
                         .HasColumnType("uuid")
                         .HasColumnName("lead_id");
 
@@ -81,6 +263,10 @@ namespace CarGallery.Modules.Notifications.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("next_attempt_at");
 
+                    b.Property<Guid?>("PeriodId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("period_id");
+
                     b.Property<DateTimeOffset>("QueuedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("queued_at");
@@ -88,6 +274,10 @@ namespace CarGallery.Modules.Notifications.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");
+
+                    b.Property<Guid?>("SubscriptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subscription_id");
 
                     b.Property<string>("TemplateKey")
                         .IsRequired()
@@ -103,7 +293,18 @@ namespace CarGallery.Modules.Notifications.Infrastructure.Migrations
                     b.HasIndex("Status", "NextAttemptAt")
                         .HasDatabaseName("ix_messages_status_next_attempt");
 
-                    b.ToTable("messages", "notifications");
+                    b.HasIndex("SubscriptionId", "PeriodId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_messages_subscription_period")
+                        .HasFilter("period_id IS NOT NULL");
+
+                    b.HasIndex("SubscriptionId", "QueuedAt")
+                        .HasDatabaseName("ix_messages_subscription_queued_at");
+
+                    b.ToTable("messages", "notifications", t =>
+                        {
+                            t.HasCheckConstraint("ck_messages_single_target", "(lead_id IS NOT NULL AND subscription_id IS NULL AND period_id IS NULL) OR (lead_id IS NULL AND subscription_id IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("CarGallery.Modules.Notifications.Domain.NotificationTemplate", b =>

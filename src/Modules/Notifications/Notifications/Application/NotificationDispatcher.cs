@@ -93,7 +93,15 @@ internal sealed class NotificationDispatcher(
 
     private async Task DispatchOneAsync(NotificationMessage message, CancellationToken cancellationToken)
     {
-        LeadNotificationDto? lead = await leads.FindAsync(message.LeadId, cancellationToken);
+        if (message.LeadId is not Guid leadId)
+        {
+            // `0018` D23 — talebe bağlı olmayan kayıt bir aboneliğe bağlıdır; onun yolu
+            // bülten adımında (P7) bağlanır. O zamana kadar böyle bir kayıt üretilmiyor.
+            Finish(message, SendFailureKind.Permanent, NotificationErrors.NoChannel);
+            return;
+        }
+
+        LeadNotificationDto? lead = await leads.FindAsync(leadId, cancellationToken);
 
         if (lead is null)
         {

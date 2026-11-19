@@ -19,6 +19,16 @@ internal sealed class NotificationsDbContext(DbContextOptions<NotificationsDbCon
 
     internal DbSet<NotificationTemplate> Templates => Set<NotificationTemplate>();
 
+    internal DbSet<NewsletterSubscription> Subscriptions => Set<NewsletterSubscription>();
+
+    internal DbSet<ConsentEvent> ConsentEvents => Set<ConsentEvent>();
+
+    internal DbSet<NewsletterCandidate> Candidates => Set<NewsletterCandidate>();
+
+    internal DbSet<NewsletterPeriod> Periods => Set<NewsletterPeriod>();
+
+    internal DbSet<NewsletterPeriodListing> PeriodListings => Set<NewsletterPeriodListing>();
+
     public DbSet<InboxEntry> InboxEntries => Set<InboxEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
