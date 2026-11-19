@@ -93,6 +93,14 @@ docker run --rm --env-file <sır-dosyası> cargall:<sürüm> --migrate
 docker run -d --restart unless-stopped -p 8080:8080 --env-file <sır-dosyası> cargall:<sürüm>
 ```
 
+> **`0019` (izin metni sürümü) içeren sürüme geçerken: eski uygulama `--migrate`'ten ÖNCE
+> durdurulur.** Bu sürümün migration'ı `privacy`'nin yayındaki her dili için bir başlangıç
+> sürümü yazar. Migration'dan sonra çalışmaya devam eden ESKİ uygulama, aydınlatma metnini
+> sürüm yazmadan yayınlayabilir; o zaman canlı metin ile en son sürüm ayrışır (`0019` R13)
+> ve yeni uygulama o dilde talep kabul etmez (`0019` R10 — talep reddedilir, yanlış bir
+> "yayında değildi" yazılmaz). Sıra: (1) eski uygulamayı durdur, (2) `--migrate`, (3) yeni
+> uygulamayı başlat. Bedel kısa bir kesinti penceresidir (`0019` C10, D15).
+
 Kurulum adımı atlanırsa uygulama **başlamaz** ve hangi modüllerin eksik olduğunu yazıp
 134 ile çıkar (ADR `0002`). Bu bir arıza değil, korumadır: yeniden başlatmak çözmez,
 `--migrate` çözer.

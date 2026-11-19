@@ -108,17 +108,29 @@ Burası büyümeye başladıysa modül sınırları yanlış çizilmiştir.
 BuildingBlocks   ← herkes (yalnızca primitive)
 
 ANA VERİ
-  Dealership          ◄──── VehicleCatalog, Leads, Identity
+  Dealership          ◄──── VehicleCatalog, Identity, Notifications
   VehicleReference    ◄──── VehicleCatalog, Leads
 
 ÇEKİRDEK
   VehicleCatalog  ──►  Dealership, VehicleReference, Media
-  Leads           ──►  VehicleCatalog, VehicleReference, Dealership
+  Leads           ──►  VehicleCatalog, VehicleReference, Content
+
+SENKRON OKUNAN DESTEK
+  Content             ◄──── Leads   (yalnız OKUMA, tek atlama — 0019)
 
 YAPRAK (hiçbir modül onlara senkron bağımlı değil)
-  Content · Notifications · Audit · Engagement
+  Notifications · Audit · Engagement
   Notifications   ──►  Leads, Dealership, VehicleCatalog   (yalnız OKUMA, tek atlama)
 ```
+
+`Content` **2026-11-19'da yapraktan çıktı** (spec `0019` / D8, Takım Yöneticisi (ajan)
+kararı): talep kaydedilirken `Leads`, talebin dilinde o an yayındaki KVKK aydınlatma metni
+sürümünü `Content.Contracts`'tan okur. § 2.A'nın üç koşulu sağlanır — salt okuma, aynı
+istek, tek atlama: sürüm okumasını gerçekleyen dosya başka bir modülün sözleşmesine
+uzanmaz (0019/AC-46). Döngü yok: `Content` `Leads`'e bağlı değil. Aynı düzeltmede iki
+sapma da kapandı (D27): `Leads` `Dealership.Contracts`'a hiç referans vermiyordu ve
+`Dealership`'in gelen listesinde `Notifications` eksikti. Harita artık `.csproj`
+referanslarına karşı bir mimari testle korunur (0019/AC-55).
 
 `Notifications` yaprak olmaya devam eder: ok **ondan dışarı** çıkar, ona doğru gelmez.
 Okuduğu üç yüzeyin hiçbiri kendisi başka bir modüle uzanmaz — zincir tek atlamadır ve
@@ -546,4 +558,5 @@ altındaki ADR'lerdedir.
 | Tema (renk) | Dağıtım yapılandırmasından, **ya tam ya hiç**; panelden düzenlenmez |
 | Kontrast güvencesi | Başlangıçta doğrulanır — karşılanmazsa uygulama ayağa kalkmaz; varsayılan palet için ayrıca CI testi |
 | Tipografi | V1'de yapılandırılamaz; yazı tipleri kendi kaynağımızdan servis edilir |
+| İzin anındaki aydınlatma metni | `Content`, `privacy`'nin bir dili taslaktan yayına geçtiğinde ya da yayındaki dilin başlığı/gövdesi değiştiğinde **değişmez bir sürüm** yazar (yalnız eklenir; `UPDATE`/`DELETE` veritabanında deyim düzeyinde reddedilir). Talep kaydedilirken `Leads`, `Content.Contracts`'tan o dilde yayındaki sürümü **tek atlamayla** okur ve kimliğini + durumunu (`published` · `not_published` · `not_recorded`) tutar; okuma hata verirse talep yazılmaz. `Content` yaprak değildir (`0019` D1, D8, D9, D14) |
 | Galerinin yazdığı vitrin metni (ilk boyama) | Host belgeye `<meta>` olarak basar (öznitelik kodlamalı), uç senkron okur; ayrı istek yok. Belge `Cache-Control: no-store` — önbellek/geçersizleme yerine her istekte okuma (`0022` D6, D20, D21; emsal `0020` P1) |
