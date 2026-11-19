@@ -300,11 +300,12 @@ public sealed class DonemTests(NotificationsDatabase database)
     {
         DonemDuzeni d = await HazirlaAsync();
         await d.EtkinAboneAsync("cikan@ornek.com");
-        await d.Abonelik.AboneOlAsync("teyitEden@ornek.com");
         await d.YeniIlanAsync();
         d.Saat.Set(d.SonrakiDonemAni() + TimeSpan.FromHours(5));
 
-        // Dönem anı geçti, işlenmedi (uygulama kapalıydı); arada biri teyit etti, biri çıktı.
+        // Dönem anı geçti, işlenmedi (uygulama kapalıydı); arada biri abone olup teyit etti,
+        // biri çıktı. Teyit bağlantısının süresi istekten başlar (D28).
+        await d.Abonelik.AboneOlAsync("teyitEden@ornek.com");
         await d.Abonelik.TeyitEtAsync(await d.Abonelik.AnahtarVerAsync("teyitEden@ornek.com"));
         await d.Abonelik.CikAsync(d.Abonelik.Cikis.Create(await d.AbonelikIdOf("cikan@ornek.com")));
 

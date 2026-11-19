@@ -5,16 +5,31 @@ using System.Text;
 namespace CarGallery.Modules.Notifications.Application.Newsletter;
 
 /// <summary>
-/// `0018` **D25** — teyit anahtarı: CSPRNG, 256 bit. Veritabanında yalnız SHA-256 özeti
-/// durur; düz anahtar yalnız iletide yaşar (AC-48, AC-49). Bağlantıda Base64Url taşınır.
+/// `0018` **D25** · **D28** — teyit anahtarı: teyit iletisinin GÖNDERİM KAYDI kimliğinden,
+/// yapılandırmadaki imza sırrıyla HMAC-SHA256 ile türetilir (256 bit). Aynı kayıt her
+/// denemede AYNI anahtarı verir: geçici hatayla yeniden denenen ileti aynı bağlantıyı taşır ve
+/// ilk teslim edilmiş olanın bağlantısı ölmez. Yeni istek yeni kayıt, dolayısıyla yeni anahtar
+/// demektir; abonelikte yalnız en sonuncunun SHA-256 özeti durur (**D7**, AC-34, AC-48, AC-49).
+///
+/// <para><b>Çıkış bağlantısıyla aynı sır, ayrı amaç önekiyle.</b> İki ayrı sır, kurulumda iki
+/// ayrı zorunlu değişken ve iki ayrı yedek demekti; amaç öneki (<c>newsletter-confirm:</c> ·
+/// <c>newsletter-unsubscribe:</c>) bir türün imzasının öbür türde geçmesini engeller. Bedel:
+/// sır değişirse bekleyen teyit bağlantıları da ölür (çıkış bağlantılarıyla birlikte, D25).</para>
 /// </summary>
-internal static class ConfirmationTokens
+internal sealed class ConfirmationTokens(NewsletterOptions options)
 {
     internal const int TokenBytes = 32;
 
-    internal static (string Token, byte[] Hash) Generate()
+    private static readonly byte[] Purpose = Encoding.ASCII.GetBytes("newsletter-confirm:");
+
+    /// <summary>Gönderim kaydının anahtarı ve onun SHA-256 özeti.</summary>
+    internal (string Token, byte[] Hash) For(Guid messageId)
     {
-        byte[] raw = RandomNumberGenerator.GetBytes(TokenBytes);
+        byte[] message = new byte[Purpose.Length + 16];
+        Purpose.CopyTo(message, 0);
+        messageId.TryWriteBytes(message.AsSpan(Purpose.Length));
+
+        byte[] raw = HMACSHA256.HashData(options.UnsubscribeSigningKey, message);
 
         return (Base64Url.EncodeToString(raw), SHA256.HashData(raw));
     }

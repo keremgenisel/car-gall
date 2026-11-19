@@ -77,6 +77,72 @@ public sealed partial class BultenGonderimTests(NotificationsDatabase database)
         Assert.NotEqual(anahtarlar[0], anahtarlar[1]);
     }
 
+    /// <summary>
+    /// **D28** (Takım Yöneticisi kararı) — anahtar gönderim kaydından türetilir: geçici hatayla
+    /// yeniden denenen teyit iletisinin iki teslimi AYNI bağlantıyı taşır. Taşıyıcı ilk denemede
+    /// iletiyi teslim edip geçici hata döndürüyor (bağlantı kopması sonrası sağlayıcı kabul
+    /// etmişti); o ilk teslimin bağlantısı yeniden denemeden sonra da çalışmalı.
+    /// </summary>
+    [Fact(DisplayName = "0018/AC-48: Teyit bağlantısındaki anahtar veritabanının hiçbir alanında düz olarak bulunmaz; aboneliğin kaydında yalnız anahtarın SHA-256 özeti durur")]
+    public async Task AyniBaglanti_YenidenDenenenTeyitIletisinde()
+    {
+        DonemDuzeni d = await HazirlaAsync();
+        await d.Abonelik.AboneOlAsync("ali@ornek.com");
+
+        List<OutboundMessage> teslimler = [];
+        KayitTasiyici tasiyici = new()
+        {
+            Kural = ileti =>
+            {
+                teslimler.Add(ileti);
+                return teslimler.Count == 1 ? SendResult.Transient("baglanti koptu") : SendResult.Success();
+            },
+        };
+
+        await d.DagitAsync(tasiyici);
+        NotificationMessage bekleyen = Assert.Single(await d.IletilerAsync());
+        Assert.Equal(NotificationStatus.Queued, bekleyen.Status);
+
+        d.Saat.Set(bekleyen.NextAttemptAt!.Value);
+        await d.DagitAsync(tasiyici);
+
+        Assert.Equal(2, teslimler.Count);
+        string ilk = AnahtarOf(teslimler[0].Body, "tr");
+        string ikinci = AnahtarOf(teslimler[1].Body, "tr");
+
+        Assert.Equal(ilk, ikinci);
+        Assert.Equal(NotificationStatus.Sent, Assert.Single(await d.IletilerAsync()).Status);
+        Assert.Equal(SHA256.HashData(Base64Url.DecodeFromChars(ilk)), (await d.Abonelik.AbonelikAsync("ali@ornek.com")).ConfirmationTokenHash);
+        Assert.All(await d.Abonelik.TumSatirlarAsync(), satir => Assert.DoesNotContain(ilk, satir, StringComparison.Ordinal));
+
+        // İlk teslimin bağlantısı geçerli; ilk tıklamadan sonra ikisi birden kullanılmıştır.
+        Assert.True((await d.Abonelik.TeyitEtAsync(ilk)).IsSuccess);
+        Assert.True((await d.Abonelik.TeyitEtAsync(ikinci)).IsFailure);
+    }
+
+    /// <summary>
+    /// **D7** kayıt düzeyinde: yeni istek yeni gönderim kaydı demektir; önceki kayıt henüz
+    /// dağıtılmadıysa hiç gönderilmez — taşıyacağı bağlantı zaten geçersizdir.
+    /// </summary>
+    [Fact(DisplayName = "0018/AC-34: Teyit bekleyen adrese yeni teyit iletisi gittikten sonra önceki iletinin bağlantısı aboneliği etkinleştirmez")]
+    public async Task Gonderilmez_YerineYenisiGelenTeyitKaydi()
+    {
+        DonemDuzeni d = await HazirlaAsync();
+        await d.Abonelik.AboneOlAsync("ali@ornek.com");
+        await d.Abonelik.AboneOlAsync("ali@ornek.com", "en");
+        KayitTasiyici tasiyici = new();
+
+        await d.DagitAsync(tasiyici);
+
+        OutboundMessage gonderilen = Assert.Single(tasiyici.Gonderilenler);
+        List<NotificationMessage> kayitlar = await d.IletilerAsync();
+
+        Assert.Matches(TeyitBaglantisi("en"), gonderilen.Body);
+        Assert.Equal(NotificationErrors.SubscriptionInactive, kayitlar[0].FailureCode);
+        Assert.Equal(NotificationStatus.Sent, kayitlar[1].Status);
+        Assert.True((await d.Abonelik.TeyitEtAsync(AnahtarOf(gonderilen.Body, "en"))).IsSuccess);
+    }
+
     [Fact(DisplayName = "0018/AC-34: Teyit bekleyen adrese yeni teyit iletisi gittikten sonra önceki iletinin bağlantısı aboneliği etkinleştirmez")]
     public async Task Etkinlestirmez_OncekiIletininBaglantisi_Dagitimla()
     {

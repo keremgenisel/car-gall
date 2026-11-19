@@ -96,8 +96,8 @@ internal static class Besteci
             subeler ?? new SahteSubeler(),
             galeri ?? new SahteGaleri(),
             new UnsubscribeTokens(bulten),
+            new ConfirmationTokens(bulten),
             bulten,
-            Bulten.Secenekler(),
-            saat);
+            Bulten.Secenekler());
     }
 }

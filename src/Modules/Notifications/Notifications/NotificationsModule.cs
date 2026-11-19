@@ -76,6 +76,7 @@ public static class NotificationsModule
 
         services.AddSingleton(newsletterOptions.Value);
         services.AddSingleton<UnsubscribeTokens>();
+        services.AddSingleton<ConfirmationTokens>();
 
         // D9 — geçerli istek bütçesi süreç ömrü boyunca yaşar; tekil olmalı.
         services.AddSingleton<INewsletterRequestQuota, NewsletterRequestQuota>();

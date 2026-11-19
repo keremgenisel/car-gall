@@ -14,7 +14,7 @@ public sealed class AbonelikTests(NotificationsDatabase database)
 {
     private readonly Bulten.IleriSaat saat = new(DateTimeOffset.UtcNow);
 
-    [Theory(DisplayName = "0018/AC-7: `ali@` ve boş adres alan hatasıyla reddedilir; API `400` ve `notification.subscription_email_invalid` döner; kayıt oluşmaz ve ileti kuyruğa girmez")]
+    [Theory(DisplayName = "0018/AC-7: `ali@` ve boş adres alan hatasıyla reddedilir; API `422` ve `notification.subscription_email_invalid` döner; kayıt oluşmaz ve ileti kuyruğa girmez")]
     [InlineData("ali@")]
     [InlineData("")]
     [InlineData("   ")]
@@ -48,7 +48,7 @@ public sealed class AbonelikTests(NotificationsDatabase database)
         Assert.Equal(1, await duzen.AbonelikSayisiAsync());
     }
 
-    [Theory(DisplayName = "0018/AC-10: Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `400` ve `notification.subscription_invalid_locale` alır; kayıt oluşmaz (D14)")]
+    [Theory(DisplayName = "0018/AC-10: Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `422` ve `notification.subscription_invalid_locale` alır; kayıt oluşmaz (D14)")]
     [InlineData("de")]
     [InlineData("xx")]
     [InlineData("TR")]

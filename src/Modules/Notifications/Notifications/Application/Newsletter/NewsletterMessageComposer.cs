@@ -42,9 +42,9 @@ internal sealed class NewsletterMessageComposer(
     IBranchContactQueries branches,
     IGalleryDisplayNameQueries gallery,
     UnsubscribeTokens unsubscribeTokens,
+    ConfirmationTokens confirmationTokens,
     NewsletterOptions newsletterOptions,
-    NotificationsOptions options,
-    IClock clock)
+    NotificationsOptions options)
 {
     /// <summary>**D11** — bir bülten en çok bu kadar satır taşır.</summary>
     internal const int MaximumRows = 20;
@@ -66,16 +66,21 @@ internal sealed class NewsletterMessageComposer(
     }
 
     /// <summary>
-    /// **D28** — teyit anahtarı BURADA üretilir; özeti ve süresi aboneliğe GÖNDERMEDEN ÖNCE
-    /// yazılır: teslim edilen her bağlantının özeti veritabanındadır. Önceki bağlantı bu anda
-    /// geçersizleşir (**D7**, AC-34). Düz anahtar yalnız iletinin gövdesinde yaşar (AC-48).
+    /// **D28** — anahtar gönderim kaydının kimliğinden TÜRETİLİR; burada üretilmez ve
+    /// veritabanına yazılmaz. Her deneme aynı bağlantıyı taşır. Kaydın özeti abonelikteki özet
+    /// değilse yerine yeni bir istek gelmiştir: bu ileti gönderilmez — geçersiz bir bağlantı
+    /// taşırdı (**D7**).
     /// </summary>
     private async Task<Composition> ComposeConfirmationAsync(
         NotificationMessage message,
         NewsletterSubscription subscription,
         CancellationToken cancellationToken)
     {
-        if (subscription.Status != SubscriptionStatus.PendingConfirmation)
+        (string token, byte[] hash) = confirmationTokens.For(message.Id);
+
+        if (subscription.Status != SubscriptionStatus.PendingConfirmation
+            || subscription.ConfirmationTokenHash is null
+            || !hash.AsSpan().SequenceEqual(subscription.ConfirmationTokenHash))
         {
             return Composition.Permanent(NotificationErrors.SubscriptionInactive);
         }
@@ -92,10 +97,6 @@ internal sealed class NewsletterMessageComposer(
         }
 
         string locale = template.Value.Locale;
-        (string token, byte[] hash) = ConfirmationTokens.Generate();
-
-        subscription.IssueConfirmationToken(hash, clock.UtcNow + newsletterOptions.ConfirmationLinkLifetime);
-        await context.SaveChangesAsync(cancellationToken);
 
         Dictionary<string, string> values = new(StringComparer.Ordinal)
         {

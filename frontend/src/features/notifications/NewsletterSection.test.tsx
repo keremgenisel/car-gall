@@ -108,8 +108,8 @@ describe('0018/AC-6: Geçerli bir adresle gönderimden sonra form yerinde başar
   })
 })
 
-describe('0018/AC-7: `ali@` ve boş adres alan hatasıyla reddedilir; API `400` ve `notification.subscription_email_invalid` döner', () => {
-  it('sunucunun 400 cevabı alanı işaretler; adres alanda kalır', async () => {
+describe('0018/AC-7: `ali@` ve boş adres alan hatasıyla reddedilir; API `422` ve `notification.subscription_email_invalid` döner', () => {
+  it('sunucunun 422 cevabı alanı işaretler; adres alanda kalır', async () => {
     sahteFetch(SUNUCU.adresGecersiz)
     bolum()
 

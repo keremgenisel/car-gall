@@ -48,7 +48,7 @@ Bütün değerler ortam değişkenidir. `__` iki nokta yerine geçer
 | `Identity__SeedAdmin__Password` | İlk Yönetici'nin parolası. Üretin: `openssl rand -hex 16`. İlk girişte değiştirilmesi zorunludur. Depodaki geliştirme parolaları reddedilir (ADR `0011`) |
 | `Identity__TwoFactor__EncryptionKey` | 32 bayt, Base64: `openssl rand -base64 32`. **Kaybolursa bütün ikinci adım kurulumları çözülemez** — yedeklenir |
 | `Notifications__Smtp__User`, `Notifications__Smtp__Password` | SMTP hesabı |
-| `Notifications__Newsletter__UnsubscribeSigningKey` | Bülten çıkış bağlantılarının imza sırrı; 32 bayt, Base64: `openssl rand -base64 32`. **Değişirse eski bütün çıkış bağlantıları geçersiz olur** — eski bir bültenden çıkmak isteyen kişi "bağlantı geçerli değil" görür. Yedeklenir ve döndürülmez (`0018` D25) |
+| `Notifications__Newsletter__UnsubscribeSigningKey` | Bülten çıkış bağlantılarının imza sırrı; 32 bayt, Base64: `openssl rand -base64 32`. **Değişirse eski bütün çıkış bağlantıları ve bekleyen teyit bağlantıları geçersiz olur** — eski bir bültenden çıkmak isteyen kişi "bağlantı geçerli değil" görür (teyit anahtarı da bu sırla türetilir, `0018` D28). Yedeklenir ve döndürülmez (`0018` D25) |
 | `Media__Storage__AccessKey`, `Media__Storage__SecretKey` | Nesne deposu anahtarı |
 
 ### Kuruluma özel — zorunlu

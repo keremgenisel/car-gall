@@ -32,6 +32,7 @@ internal sealed record SubscribeCommand(
 internal sealed class SubscribeToNewsletter(
     NotificationsDbContext context,
     INewsletterRequestQuota quota,
+    ConfirmationTokens tokens,
     NewsletterOptions options,
     InvariantGuardOptions<NotificationsDbContext> guardOptions,
     IClock clock)
@@ -124,10 +125,17 @@ internal sealed class SubscribeToNewsletter(
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// **D28** — teyit anahtarı gönderim kaydı OLUŞURKEN türetilir ve özeti aynı anda aboneliğe
+    /// yazılır: önceki kaydın bağlantısı bu anda geçersizleşir (**D7**) ve süre istekten başlar.
+    /// </summary>
     private void Queue(NewsletterSubscription subscription, string locale, DateTimeOffset now)
     {
+        NotificationMessage message = NotificationMessage.QueueConfirmation(subscription.Id, locale, now);
+
+        subscription.IssueConfirmationToken(tokens.For(message.Id).Hash, now + options.ConfirmationLinkLifetime);
         context.ConsentEvents.Add(ConsentEvent.Record(subscription.Id, ConsentEventKind.Requested, now));
-        context.Messages.Add(NotificationMessage.QueueConfirmation(subscription.Id, locale, now));
+        context.Messages.Add(message);
     }
 
     private Task<int> ConfirmationsInWindowAsync(Guid subscriptionId, DateTimeOffset now, CancellationToken cancellationToken)

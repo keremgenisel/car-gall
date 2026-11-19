@@ -49,7 +49,7 @@ internal static class NewsletterEndpoints
             .WithName("SubscribeToNewsletter")
             .RequireRateLimiting(RateLimitPolicy)
             .Produces<SubscribeResponse>(StatusCodes.Status202Accepted)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
             .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/confirmations", ConfirmAsync)

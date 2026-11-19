@@ -9,10 +9,10 @@ import { vi } from 'vitest'
 export const SUNUCU = {
   kabul: { status: 202, body: { status: 'accepted' }, type: 'application/json' },
   adresGecersiz: {
-    status: 400,
+    status: 422,
     body: {
       type: 'about:blank',
-      status: 400,
+      status: 422,
       errorCode: 'notification.subscription_email_invalid',
       field: 'email',
     },

@@ -15,7 +15,7 @@ namespace CarGallery.Modules.Notifications.Endpoints;
 internal static class NewsletterProblems
 {
     /// <summary>
-    /// **D33** — biçim ve dil hatası `400` (AC-7, AC-10), hız sınırı `429`, geçersiz bağlantı
+    /// **D33** — biçim ve dil hatası `422` (AC-7, AC-10; docs/conventions.md § 5), hız sınırı `429`, geçersiz bağlantı
     /// `404`; satır kilidi zaman aşımına uğradıysa `409` (docs/conventions.md § 5 — uç genel
     /// hata ve "tekrar dene" gösterir).
     /// </summary>
@@ -26,7 +26,7 @@ internal static class NewsletterProblems
             NotificationErrors.SubscriptionRateLimited => StatusCodes.Status429TooManyRequests,
             NotificationErrors.SubscriptionLinkInvalid => StatusCodes.Status404NotFound,
             ConcurrencyErrors.Lost => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status400BadRequest,
+            _ => StatusCodes.Status422UnprocessableEntity,
         };
 
         Dictionary<string, object?> body = new(StringComparer.Ordinal)

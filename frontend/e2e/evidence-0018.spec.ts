@@ -138,14 +138,14 @@ test('0018/AC-6: Geçerli bir adresle gönderimden sonra form yerinde başarı m
   await kanit(page, bolum, '0018-ac6.png')
 })
 
-test('0018/AC-7: `ali@` ve boş adres alan hatasıyla reddedilir; API `400` ve `notification.subscription_email_invalid` döner', async ({
+test('0018/AC-7: `ali@` ve boş adres alan hatasıyla reddedilir; API `422` ve `notification.subscription_email_invalid` döner', async ({
   page,
 }) => {
   const bolum = await anaSayfa(page)
   const yanit = page.waitForResponse(ABONELIK)
   await gonder(page, 'ali@')
 
-  expect((await yanit).status()).toBe(400)
+  expect((await yanit).status()).toBe(422)
   await expect(bolum.getByLabel('E-posta adresiniz')).toHaveAttribute('aria-invalid', 'true')
   await expect(bolum).toContainText('Geçerli bir e-posta adresi yazın.')
   await kanit(page, bolum, '0018-ac7.png')

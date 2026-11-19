@@ -89,27 +89,27 @@ public sealed class BultenZinciriTests : IAsyncLifetime
         Assert.DoesNotContain("ornek.com", Encoding.UTF8.GetString(cevaplar[0].Govde), StringComparison.Ordinal);
     }
 
-    [Theory(DisplayName = "0018/AC-7: `ali@` ve boş adres alan hatasıyla reddedilir; API `400` ve `notification.subscription_email_invalid` döner; kayıt oluşmaz ve ileti kuyruğa girmez")]
+    [Theory(DisplayName = "0018/AC-7: `ali@` ve boş adres alan hatasıyla reddedilir; API `422` ve `notification.subscription_email_invalid` döner; kayıt oluşmaz ve ileti kuyruğa girmez")]
     [InlineData("ali@")]
     [InlineData("")]
-    public async Task Doner400_GecersizAdres(string adres)
+    public async Task Doner422_GecersizAdres(string adres)
     {
         HttpResponseMessage cevap = await factory!.CreateClient().PostAsJsonAsync(Abonelik, new { email = adres, locale = "tr" });
         JsonElement govde = await GovdeAsync(cevap);
 
-        Assert.Equal(HttpStatusCode.BadRequest, cevap.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableContent, cevap.StatusCode);
         Assert.Equal("notification.subscription_email_invalid", govde.GetProperty("errorCode").GetString());
         Assert.Equal("email", govde.GetProperty("field").GetString());
         Assert.Equal(0, await SayAsync("newsletter_subscriptions"));
         Assert.Equal(0, await SayAsync("messages"));
     }
 
-    [Fact(DisplayName = "0018/AC-10: Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `400` ve `notification.subscription_invalid_locale` alır; kayıt oluşmaz (D14)")]
-    public async Task Doner400_EtkinOlmayanDil()
+    [Fact(DisplayName = "0018/AC-10: Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `422` ve `notification.subscription_invalid_locale` alır; kayıt oluşmaz (D14)")]
+    public async Task Doner422_EtkinOlmayanDil()
     {
         HttpResponseMessage cevap = await factory!.CreateClient().PostAsJsonAsync(Abonelik, new { email = "ali@ornek.com", locale = "de" });
 
-        Assert.Equal(HttpStatusCode.BadRequest, cevap.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableContent, cevap.StatusCode);
         Assert.Equal("notification.subscription_invalid_locale", (await GovdeAsync(cevap)).GetProperty("errorCode").GetString());
         Assert.Equal(0, await SayAsync("newsletter_subscriptions"));
     }
@@ -165,7 +165,7 @@ public sealed class BultenZinciriTests : IAsyncLifetime
         // Eşik `appsettings.json`'daki değer (30); hepsi GEÇERSİZ — geçerli bütçeye dokunmaz.
         for (int sira = 1; sira <= 30; sira++)
         {
-            Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync(Abonelik, new { email = "ali@", locale = "tr" })).StatusCode);
+            Assert.Equal(HttpStatusCode.UnprocessableContent, (await client.PostAsJsonAsync(Abonelik, new { email = "ali@", locale = "tr" })).StatusCode);
         }
 
         HttpResponseMessage fazla = await client.PostAsJsonAsync(Abonelik, new { email = "ali@ornek.com", locale = "tr" });

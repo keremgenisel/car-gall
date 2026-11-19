@@ -28,7 +28,7 @@ internal sealed class AbonelikDuzeni(NotificationsDatabase database, IClock saat
     {
         await using NotificationsDbContext context = database.CreateContext(araya);
 
-        return await new SubscribeToNewsletter(context, Kota, Secenekler, CarGallery.BuildingBlocks.Concurrency.InvariantGuardOptions<NotificationsDbContext>.Default, saat)
+        return await new SubscribeToNewsletter(context, Kota, new ConfirmationTokens(Secenekler), Secenekler, CarGallery.BuildingBlocks.Concurrency.InvariantGuardOptions<NotificationsDbContext>.Default, saat)
             .HandleAsync(new SubscribeCommand(adres, dil, ip), CancellationToken.None);
     }
 
@@ -47,21 +47,21 @@ internal sealed class AbonelikDuzeni(NotificationsDatabase database, IClock saat
     }
 
     /// <summary>
-    /// **D28** — dağıtıcının teyit iletisini kurarken yaptığı şey: anahtar üretilir, özeti ve
-    /// süresi aboneliğe yazılır. Teyit testleri iletiyi göndermeden bağlantıyı elde eder.
+    /// **D28** — adrese giden SON teyit iletisinin bağlantısındaki anahtar: gönderim kaydının
+    /// kimliğinden türetilir. Teyit testleri iletiyi göndermeden bağlantıyı elde eder.
     /// </summary>
     internal async Task<string> AnahtarVerAsync(string adres)
     {
         await using NotificationsDbContext context = database.CreateContext();
 
-        NewsletterSubscription abonelik = await context.Subscriptions
-            .SingleAsync(item => item.NormalizedEmail == adres.Trim().ToLowerInvariant());
+        Guid abonelik = (await AbonelikAsync(adres)).Id;
+        Guid sonIleti = await context.Messages.AsNoTracking()
+            .Where(item => item.SubscriptionId == abonelik && item.TemplateKey == TemplateKeys.NewsletterConfirmation)
+            .OrderByDescending(item => item.Id)
+            .Select(item => item.Id)
+            .FirstAsync();
 
-        (string anahtar, byte[] ozet) = ConfirmationTokens.Generate();
-        abonelik.IssueConfirmationToken(ozet, saat.UtcNow + Secenekler.ConfirmationLinkLifetime);
-        await context.SaveChangesAsync();
-
-        return anahtar;
+        return new ConfirmationTokens(Secenekler).For(sonIleti).Token;
     }
 
     internal async Task<NewsletterSubscription> AbonelikAsync(string adres)
