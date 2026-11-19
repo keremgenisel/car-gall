@@ -85,6 +85,8 @@ internal sealed class FakePrivacyNoticeSource : IPrivacyNoticeSource
     internal void YayindaDegil() => current = PrivacyNoticeLink.NotPublished();
 
     internal void Bozuk(Exception exception) => failure = exception;
+
+    internal void Onar() => failure = null;
 }
 
 internal sealed class TalepOlusturmaHarness
