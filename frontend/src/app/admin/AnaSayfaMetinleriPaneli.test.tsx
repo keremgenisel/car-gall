@@ -157,6 +157,15 @@ describe('0022 — ekran ve kaydetme (R1, R2)', () => {
       "Kadıköy'ün güvenilir galerisi",
     )
     expect(gonderilen.map((item) => item.locale)).toEqual(['tr', 'ar', 'en'])
+
+    // Kayıttan sonra okuma tekrarlanmaz (yazmaya devam eden editörün metni ezilmez); ikinci
+    // kayıt yanıttaki yeni sürümle gider.
+    expect(vi.mocked(api.fetchHomeTexts)).toHaveBeenCalledTimes(1)
+    fireEvent.change(alan('tr', 'formTitle'), { target: { value: 'Devam' } })
+    fireEvent.click(screen.getByTestId('home-texts-save'))
+    await waitFor(() => expect(vi.mocked(api.saveHomeTexts)).toHaveBeenCalledTimes(2))
+    expect(vi.mocked(api.saveHomeTexts).mock.calls[1]![0]).toBe(4)
+    expect(alan('tr', 'introTitle').value).toBe("Kadıköy'ün güvenilir galerisi")
   })
 })
 
@@ -280,7 +289,7 @@ describe('0022 — eşzamanlılık ve durumlar (R8, R10)', () => {
       expect(alan('ar', field).getAttribute('dir')).toBe('rtl')
       expect(alan('tr', field).getAttribute('dir')).toBe('ltr')
     }
-    expect(screen.getByTestId('home-texts-ar').getAttribute('lang')).toBe('ar')
+    expect(alan('ar', 'introTitle').getAttribute('lang')).toBe('ar')
   })
 
   it('0022/AC-36: Etkin dil listesinden çıkarılmış bir dilin alanları ekranda gösterilmez.', async () => {

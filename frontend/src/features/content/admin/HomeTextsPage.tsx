@@ -144,9 +144,12 @@ export function HomeTextsPage() {
     setBanner({ kind: 'none' })
 
     try {
-      await saveHomeTexts(version, texts, locale)
+      // Yeniden yükleme YOK: kayıttan sonra yazmaya devam eden editörün metnini dönen
+      // okuma ezerdi (e2e'de ölçüldü — AC-18'in ikinci denemesi kayboldu). Yeni sürüm
+      // yanıttan alınır, ekrandaki metin kaydedilen metindir.
+      const next = await saveHomeTexts(version, texts, locale)
+      setLoad({ kind: 'ready', texts: { version: next, locales: texts } })
       setBanner({ kind: 'saved' })
-      setReload((value) => value + 1)
     } catch (cause) {
       if (isConflict(cause)) {
         setBanner({ kind: 'conflict' })
@@ -215,13 +218,7 @@ export function HomeTextsPage() {
           const prefix = `home-texts-${text.locale}`
 
           return (
-            <fieldset
-              className="content-edit__locale"
-              key={text.locale}
-              data-testid={prefix}
-              lang={text.locale}
-              dir={fieldLocale === null ? undefined : directionOf(fieldLocale)}
-            >
+            <fieldset className="content-edit__locale" key={text.locale} data-testid={prefix}>
               <legend className="content-edit__legend">{t(`app.locale.${text.locale}`)}</legend>
 
               {HOME_TEXT_FIELDS.map((field) => (
@@ -233,6 +230,7 @@ export function HomeTextsPage() {
                   description={DESCRIPTIONS.has(field)}
                   limit={LIMITS[field]}
                   value={text.values[field]}
+                  lang={text.locale}
                   dir={fieldLocale === null ? 'auto' : directionOf(fieldLocale)}
                   error={errors[`${text.locale}.${field}`]}
                   onChange={(value) => update(text.locale, field, value)}
@@ -263,6 +261,7 @@ function HomeTextInput({
   description,
   limit,
   value,
+  lang,
   dir,
   error,
   onChange,
@@ -273,6 +272,7 @@ function HomeTextInput({
   readonly description: boolean
   readonly limit: number
   readonly value: string
+  readonly lang: string
   readonly dir: 'ltr' | 'rtl' | 'auto'
   readonly error: string | undefined
   readonly onChange: (value: string) => void
@@ -287,6 +287,9 @@ function HomeTextInput({
   const common = {
     id,
     className: description ? 'admin-form__control content-edit__body' : 'admin-form__control',
+    // Yön ve dil yalnız ALANIN kendisinde: etiket, ipucu ve sayaç panelin dilindedir ve
+    // panelin yönünde kalır (Türkçe panelde Arapça alanın sayacı "karakter 120 / 0" okunmasın).
+    lang,
     dir,
     value,
     placeholder,
