@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B11 → **D13–D23**) |
+| **Durum** | Tamamlandı (2026-11-19) — kararlar ve kriterler #103 → `0cd834d`, uygulama #107 → `afe9557` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (yazma uçları, görünen ad ve sürüm kolonları — migration, B5 kuralının sıkılaşması — **D13**) · `VehicleCatalog` (kapatılmış şubeye araç bağlanamaz — **D14**) · `frontend/` panel (galeri ve şubeler ekranları, araç formunun şube seçicisi) ve vitrin (üst çubuk, ana sayfa giriş satırı) · `Host` (görünen adın `index.html`'e basılması seçilirse — plan turu, **D16**) |
@@ -515,14 +515,14 @@ Uygulama dalı kriterler `main`'e girdikten (#103) sonra açıldı.
 - [x] <!-- DoD:T5 --> Yeni migration yalnızca `dealership` şemasına dokunuyor. *(`AddGalleryDisplayNameAndVersions`.)*
 - [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
 - [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**görünen ad** — D4). *(Ticari Unvan, Görünen Ad.)*
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); performans kapısı ana sayfa ve listede yeşil (AC-15).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi. *(Üç satır: galerinin görünen adı, B5'in uygulanması, kapatılmış şube ve araç — bu kapanış.)*
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); performans kapısı ana sayfa ve listede yeşil (AC-15). *(#107 son commit `3e9922c` — 0023 ile birleşik hâl: Backend, Frontend, E2E, C3 yeşil; ana sayfa 2416, liste 2126, detay 2411 ms. İlk denemede ana sayfa 2561 / detay 2556 kırmızıydı; kök neden `main`'deydi, #109 ile çözüldü.)*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
+      bunun yerine geçmez. *(2026-11-19, merge'den önce: BULGU-1…5 → plan 0020/6; mutasyon kanıtlı.)*
 - [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(Takım Yöneticisi (ajan), `afe9557`, 2026-11-19.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
 - [x] `docs/deploy.md` § 5 ve ADR `0012` § Açık engeller 1, bu kartın ekranlarına göre güncellendi (**D10**).
 
@@ -542,14 +542,22 @@ tanımın netleştirilmesini öner.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e afe9557^:specs/0020-galeri-profili-ve-subeler-paneli.md` → var. Kararlar ve 73 kriter #103 ile (`0cd834d`) uygulamadan önce girdi. |
+| **Kriter sayısı: önce → bugün** | **73 → 73** | Kriter eklenmedi ya da çıkarılmadı; bir kriterin metni değişti (aşağıda). |
+| **Spec revizyon sayısı** | **1** | AC-30 `400` → `422` (P3, `bbc5bfe`). Hata spec'teydi: `docs/conventions.md` § 5 doğrulama hatasını `422` sayıyor ve kriter turu bunu okumadı. |
+| **Düzeltme turu sayısı** | **1** | QA bir tur döndürdü (BULGU-1…5). T10 `[x]`. `main`'in alınması ve C3'ün kırmızısı düzeltme turu değil: kök neden kartın dışındaydı (#109). |
+| **Dış bulgu (gerçek/gürültü)** | **5 / 0** | En ağırı BULGU-1: durum eylemlerinin kilit sonrası sürüm denetimi silinse hiçbir test kırılmıyordu; üç yeni test mutasyonla kırmızı. BULGU-2 bir dil kapatılınca adı sessizce siliyordu. CLARIFY turunun on bir bulgusu spec turuna aittir. |
+| **Uygulama içi bulgu** | **3** | Geliştiricinin raporlarından: panel anahtarları vitrin paketini +22 kB büyütüyordu (ölçtü ve bildirdi → #109) · Lighthouse koşusu başka kartların ölçüm JSON'larının üstüne yazıyordu (geri aldı) · e2e oturum dosyaları paylaşılan geçici klasörde çakışıyordu (`TMPDIR` ile aştı; kod değişmedi). |
+| **Regresyon sayısı** | **0** | `main`'e ulaşan yok. `0014`'ün public yanıt testi bilinçli olarak güncellendi (D15). |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-19 (`afe9557`). |
 
 **Bu spec'ten çıkarılan ders:**
-<!-- 1-2 cümle. Bir sonraki spec'i nasıl daha iyi yazarız? -->
+
+**Onaylanmış bir kararın tek koruyucusu kod satırının kendisiydi.** P4 "durum eylemleri okunan
+sürümü taşır" diyordu ve uygulandı; ama kilit sonrası denetim silinse hiçbir test kırılmıyordu.
+Dış gözden geçirme bunu mutasyonla buldu. Eşzamanlılık kararı yazılırken "hangi test bunu
+kırar?" sorusu kararın kendisine eklenmeli.
+
+**Kriter turu depo kuralını okumadan sayı yazdı.** AC-30'un `400`'ü `docs/conventions.md` § 5 ile
+çelişiyordu; QA CLARIFY turu da görmedi. Hata koduna dair her kriter, kural belgesinden alınmalı.
+
