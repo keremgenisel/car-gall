@@ -23,7 +23,14 @@ const { fetchVehicle, fetchReferenceOptions, fetchBranches, fetchVehicleFields, 
   await import('../../../shared/api/catalogAdmin')
 
 const SECENEKLER = {
-  models: [{ value: '0192c000-0000-7000-8000-00000000000a', label: 'Toyota Corolla' }],
+  brands: [{ value: '0192c000-0000-7000-8000-0000000000b8', label: 'Toyota' }],
+  models: [
+    {
+      value: '0192c000-0000-7000-8000-00000000000a',
+      label: 'Corolla',
+      brandId: '0192c000-0000-7000-8000-0000000000b8',
+    },
+  ],
   bodyTypes: [{ value: 'suv', label: 'SUV' }],
   fuelTypes: [{ value: 'petrol', label: 'Benzin' }],
   transmissions: [{ value: 'automatic', label: 'Otomatik' }],
@@ -53,6 +60,11 @@ const KAYIT: VehicleAdminDetail = {
   ],
   updatedAt: '2026-10-10T12:30:00Z',
   awaitingBranchAssignment: false,
+  model: {
+    brandId: '0192c000-0000-7000-8000-0000000000b8',
+    brandLabel: 'Toyota',
+    modelLabel: 'Corolla',
+  },
 }
 
 const TRAMER: VehicleAdminField = {

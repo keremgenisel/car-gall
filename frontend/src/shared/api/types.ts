@@ -218,6 +218,24 @@ export interface ReferenceOption {
   readonly label: string
 }
 
+/** `0021` — araç formunun model seçeneği; marka seçimine göre süzülür (R8). */
+export interface ModelOption extends ReferenceOption {
+  readonly brandId: string
+}
+
+/** `0021` — vitrin marka ekseninin seçeneği: adres kısaltması ve ziyaretçinin dilindeki ad. */
+export interface ShowcaseBrand {
+  readonly slug: string
+  readonly label: string
+}
+
+/** `0021` D24 — aracın kayıtlı modelinin marka kimliği ve iki parçanın adı (pasif olabilir). */
+export interface VehicleAdminModel {
+  readonly brandId: string
+  readonly brandLabel: string
+  readonly modelLabel: string
+}
+
 export interface VehicleAdminPrice {
   readonly onRequest: boolean
   readonly amount: number | null
@@ -410,6 +428,8 @@ export interface VehicleAdminDetail {
    * basılmadan söylüyor; sunucu da reddediyor (AC-29).
    */
   readonly awaitingBranchAssignment: boolean
+  /** `0021` D24 — aracın kendi marka ve modeli; yoksa (bilinmeyen kimlik) `null`. */
+  readonly model?: VehicleAdminModel | null
 }
 
 /**

@@ -14,6 +14,8 @@ interface Props {
   readonly disabledValues?: readonly string[]
   /** Alanın altındaki uyarının katalog anahtarı (`0020` AC-58: "başka bir şube seçin"). */
   readonly hintKey?: string
+  /** `0021` AC-23 — model seçicisi marka seçilene kadar devre dışıdır. */
+  readonly disabled?: boolean
   readonly onChange: (value: string) => void
 }
 
@@ -37,6 +39,7 @@ export function VehicleSelect({
   errorKey,
   disabledValues = [],
   hintKey,
+  disabled = false,
   onChange,
 }: Props) {
   const { t } = useLocale()
@@ -53,6 +56,7 @@ export function VehicleSelect({
         id={id}
         className="admin-form__control"
         value={value}
+        disabled={disabled}
         aria-describedby={describedBy.length > 0 ? describedBy : undefined}
         aria-invalid={errorKey === undefined ? undefined : true}
         onChange={(event) => onChange(event.target.value)}

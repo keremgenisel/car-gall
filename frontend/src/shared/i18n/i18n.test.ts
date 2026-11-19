@@ -79,6 +79,8 @@ describe('AC-29: hiçbir locale de ham çeviri anahtarı görünmez', () => {
           limit: 100,
           applied: 2,
           failed: 1,
+          // 0021 — markanın adres kısaltması.
+          slug: 'toyota',
         })
         expect(value).not.toBe(key)
         expect(value.trim()).not.toBe('')

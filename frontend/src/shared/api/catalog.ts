@@ -7,6 +7,7 @@ import type {
   ReferenceTerm,
   ShowcaseListing,
   ShowcaseListingDetail,
+  ShowcaseBrand,
 } from './types'
 
 const NOT_FOUND = 404
@@ -29,6 +30,8 @@ export interface ShowcaseQuery {
   readonly mileage?: ShowcaseRange
   readonly price?: ShowcaseRange
   readonly sort?: string
+  /** `0021` R11 — marka ekseni (`brand`, tekrarlı kısaltma). */
+  readonly brands?: readonly string[]
 }
 
 export function fetchShowcaseListings(
@@ -48,6 +51,10 @@ export function fetchShowcaseListings(
 
   for (const transmission of query.transmissions ?? []) {
     params.append('transmission', transmission)
+  }
+
+  for (const brand of query.brands ?? []) {
+    params.append('brand', brand)
   }
 
   appendRange(params, 'year', query.year)
@@ -106,6 +113,42 @@ export function fetchReferenceTerms(
  * 0014 **D3** — ana sayfanın öne çıkan bölümü: galerinin öne çıkardığı görünür ilanlar,
  * listeyle aynı sırada, en çok altı tane. Boş dizi bir hata değildir (AC-21).
  */
+/**
+ * `0021` R11 · D21 — liste marka ekseninin seçenekleri: stoğu olan markalar ve adresle gelen,
+ * var olan ama stoğu kalmamış seçili markalar (ziyaretçi seçimi kaldırabilsin).
+ */
+export function fetchShowcaseBrands(
+  selected: readonly string[],
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<readonly ShowcaseBrand[]> {
+  const params = new URLSearchParams()
+
+  for (const brand of selected) {
+    params.append('brand', brand)
+  }
+
+  params.set('locale', locale)
+
+  return getJson<readonly ShowcaseBrand[]>(
+    `/api/catalog/showcase-brands?${params.toString()}`,
+    locale,
+    signal,
+  )
+}
+
+/** `0021` R13 — ana sayfa formunun markaları: "ana sayfada göster" işaretli ve stoğu olanlar. */
+export function fetchHomeBrands(
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<readonly ShowcaseBrand[]> {
+  return getJson<readonly ShowcaseBrand[]>(
+    `/api/catalog/showcase-brands?scope=home&locale=${locale}`,
+    locale,
+    signal,
+  )
+}
+
 export function fetchFeaturedListings(
   locale: AppLocale,
   signal?: AbortSignal,

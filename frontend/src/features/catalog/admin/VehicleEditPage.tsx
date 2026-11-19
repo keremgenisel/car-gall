@@ -7,7 +7,7 @@ import {
   fetchVehicle,
   fetchVehicleFields,
   updateVehicle,
-  type ReferenceSetName,
+  type ReferenceOptions,
 } from '../../../shared/api/catalogAdmin'
 import type {
   BranchSummary,
@@ -22,6 +22,7 @@ import { ListingActionBar } from './ListingActionBar'
 import { SaleReversalHistory } from './SaleReversalHistory'
 import { OptionalFieldInput } from './OptionalFieldInput'
 import { PaintChangeMapInput } from './PaintChangeMapInput'
+import { BrandModelFields } from './BrandModelFields'
 import { VehicleSelect } from './VehicleSelect'
 import {
   codeKey,
@@ -34,7 +35,7 @@ import {
   type VehicleEditValues,
 } from './vehicleFormState'
 
-type Options = Record<ReferenceSetName, readonly ReferenceOption[]>
+type Options = ReferenceOptions
 
 type Sources =
   | { readonly kind: 'loading' }
@@ -218,6 +219,7 @@ export function VehicleEditPage({
    */
   const markable = new Set([
     'branchId',
+    'brandId',
     'vehicleModelId',
     'bodyType',
     'fuelType',
@@ -332,13 +334,19 @@ export function VehicleEditPage({
             onChange={(branchId) => setValues({ ...values, branchId })}
           />
 
-          <VehicleSelect
-            id="vehicle-model"
-            label={t('vehicle.form.field.model')}
-            options={sources.options.models}
-            value={values.vehicleModelId}
-            errorKey={errorKeyFor('vehicleModelId')}
-            onChange={(vehicleModelId) => setValues({ ...values, vehicleModelId })}
+          <BrandModelFields
+            brands={sources.options.brands}
+            models={sources.options.models}
+            brandId={values.brandId}
+            vehicleModelId={values.vehicleModelId}
+            current={
+              sources.detail.model
+                ? { ...sources.detail.model, vehicleModelId: sources.detail.vehicleModelId }
+                : null
+            }
+            brandErrorKey={errorKeyFor('brandId')}
+            modelErrorKey={errorKeyFor('vehicleModelId')}
+            onChange={(next) => setValues({ ...values, ...next })}
           />
 
           <VehicleSelect

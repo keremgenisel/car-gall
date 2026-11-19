@@ -16,6 +16,8 @@ vi.mock('../../shared/api/catalog', () => ({
   fetchBodyTypes: vi.fn(),
   fetchFieldSettings: vi.fn(),
   fetchReferenceTerms: vi.fn(),
+  // `0021` — marka okuması; varsayılan: gösterilecek marka yok.
+  fetchShowcaseBrands: vi.fn().mockResolvedValue([]),
 }))
 
 const { fetchShowcaseListings, fetchBodyTypes, fetchFieldSettings, fetchReferenceTerms } =

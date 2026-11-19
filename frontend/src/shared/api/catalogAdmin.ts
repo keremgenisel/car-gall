@@ -5,6 +5,7 @@ import type {
   BulkListingOperation,
   BulkListingResult,
   CreateVehicleRequest,
+  ModelOption,
   PagedResult,
   ReferenceOption,
   UpdateVehicleRequest,
@@ -80,7 +81,7 @@ export function fetchVehicle(
   signal?: AbortSignal,
 ): Promise<VehicleAdminDetail> {
   return getJson<VehicleAdminDetail>(
-    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}`,
+    `${ADMIN_VEHICLES}/${encodeURIComponent(vehicleId)}?locale=${locale}`,
     locale,
     signal,
   )
@@ -271,26 +272,37 @@ export function fetchBranches(
 export async function fetchReferenceOptions(
   locale: AppLocale,
   signal?: AbortSignal,
-): Promise<Record<ReferenceSetName, readonly ReferenceOption[]>> {
-  const [models, bodyTypes, fuelTypes, transmissions, drivetrains, trimLevels] = await Promise.all([
-    getJson<readonly { id: string; label: string }[]>(
-      `${REFERENCE}/models?locale=${locale}`,
-      locale,
-      signal,
-    ),
-    getJson<readonly { slug: string; label: string }[]>(
-      `${REFERENCE}/body-types?locale=${locale}`,
-      locale,
-      signal,
-    ),
-    terms('fuel-types', locale, signal),
-    terms('transmission-types', locale, signal),
-    terms('drivetrain-types', locale, signal),
-    terms('trim-levels', locale, signal),
-  ])
+): Promise<ReferenceOptions> {
+  const [brands, models, bodyTypes, fuelTypes, transmissions, drivetrains, trimLevels] =
+    await Promise.all([
+      getJson<readonly { id: string; label: string }[]>(
+        `${REFERENCE}/brands?locale=${locale}`,
+        locale,
+        signal,
+      ),
+      getJson<readonly { id: string; brandId: string; label: string }[]>(
+        `${REFERENCE}/models?locale=${locale}`,
+        locale,
+        signal,
+      ),
+      getJson<readonly { slug: string; label: string }[]>(
+        `${REFERENCE}/body-types?locale=${locale}`,
+        locale,
+        signal,
+      ),
+      terms('fuel-types', locale, signal),
+      terms('transmission-types', locale, signal),
+      terms('drivetrain-types', locale, signal),
+      terms('trim-levels', locale, signal),
+    ])
 
   return {
-    models: models.map((model) => ({ value: model.id, label: model.label })),
+    brands: brands.map((brand) => ({ value: brand.id, label: brand.label })),
+    models: models.map((model) => ({
+      value: model.id,
+      label: model.label,
+      brandId: model.brandId,
+    })),
     bodyTypes: bodyTypes.map((type) => ({ value: type.slug, label: type.label })),
     fuelTypes,
     transmissions,
@@ -300,7 +312,17 @@ export async function fetchReferenceOptions(
 }
 
 export type ReferenceSetName =
-  'models' | 'bodyTypes' | 'fuelTypes' | 'transmissions' | 'drivetrains' | 'trimLevels'
+  'bodyTypes' | 'fuelTypes' | 'transmissions' | 'drivetrains' | 'trimLevels'
+
+/**
+ * `0021` R8 · D24 — araç formunun seçenekleri. Marka ve model oturumsuz referans uçlarından
+ * gelir ve YALNIZ aktif kayıtları içerir (AC-14, AC-21, AC-22); model etiketi markasızdır
+ * ("Corolla"), form onu markaya göre süzer.
+ */
+export type ReferenceOptions = Record<ReferenceSetName, readonly ReferenceOption[]> & {
+  readonly brands: readonly ReferenceOption[]
+  readonly models: readonly ModelOption[]
+}
 
 async function terms(
   segment: string,

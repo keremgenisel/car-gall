@@ -19,6 +19,8 @@ import { ContentEditPage } from '../../features/content/admin/ContentEditPage'
 import { BranchEditPage } from '../../features/dealership/admin/BranchEditPage'
 import { BranchListPage } from '../../features/dealership/admin/BranchListPage'
 import { GalleryProfilePage } from '../../features/dealership/admin/GalleryProfilePage'
+import { BrandEditPage } from '../../features/reference/admin/BrandEditPage'
+import { BrandListPage } from '../../features/reference/admin/BrandListPage'
 import { EmptyState } from '../../shared/ui'
 
 type Gate =
@@ -49,12 +51,15 @@ export function AdminApp({
   vehicleId,
   pageId,
   branchId,
+  brandId,
 }: {
   readonly view?: AdminView
   readonly vehicleId?: string
   readonly pageId?: string
   /** `0020` — `branch-edit` görünümünün şube kimliği. */
   readonly branchId?: string
+  /** `0021` — `brand-edit` görünümünün marka kimliği. */
+  readonly brandId?: string
 }) {
   const { locale, t } = useLocale()
   const [gate, setGate] = useState<Gate>({ kind: 'checking' })
@@ -224,6 +229,14 @@ export function AdminApp({
             >
               {t('admin.nav.branches')}
             </a>
+            {/* `0021` R15 · D4 — marka ve model yönetimi yalnız Yöneticiye basılır (AC-52). */}
+            <a
+              className="admin-shell__nav-link"
+              href={adminPath('brands')}
+              aria-current={isBrandView(view) ? 'page' : undefined}
+            >
+              {t('admin.nav.brands')}
+            </a>
           </>
         ) : null}
       </nav>
@@ -267,9 +280,14 @@ export function AdminApp({
             {view === 'branch-edit' && branchId !== undefined ? (
               <BranchEditPage key={branchId} branchId={branchId} />
             ) : null}
+            {view === 'brands' ? <BrandListPage /> : null}
+            {view === 'brand-edit' && brandId !== undefined ? (
+              <BrandEditPage key={brandId} brandId={brandId} />
+            ) : null}
           </>
         ) : null}
-        {(view === 'gallery' || isBranchView(view)) && gate.session.role !== 'manager' ? (
+        {(view === 'gallery' || isBranchView(view) || isBrandView(view)) &&
+        gate.session.role !== 'manager' ? (
           <div className="admin-page">
             <EmptyState
               title={t('admin.noAccess.title')}
@@ -316,6 +334,11 @@ export function AdminApp({
  */
 function canEditContent(role: string): boolean {
   return role === 'manager' || role === 'content_editor'
+}
+
+/** `0021` — markalar bölümünün iki görünümü; gezinmede tek bağlantı. */
+function isBrandView(view: AdminView): boolean {
+  return view === 'brands' || view === 'brand-edit'
 }
 
 /** `0020` — şubeler bölümünün üç görünümü; gezinmede tek bağlantı. */

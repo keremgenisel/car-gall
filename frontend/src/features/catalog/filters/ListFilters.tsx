@@ -1,5 +1,5 @@
 import { useLocale } from '../../../app/localeContext'
-import type { BodyType, ReferenceTerm } from '../../../shared/api/types'
+import type { BodyType, ReferenceTerm, ShowcaseBrand } from '../../../shared/api/types'
 import {
   clearAxis,
   toggleValue,
@@ -19,6 +19,11 @@ export interface FilterOptions {
   readonly bodyTypes: readonly BodyType[]
   readonly fuels: readonly ReferenceTerm[]
   readonly transmissions: readonly ReferenceTerm[]
+  /**
+   * `0021` R11 · D9, D21 — stoğu olan markalar ve adresle gelen, var olan ama stoğu kalmamış
+   * seçili markalar. Liste boşsa eksen basılmaz (seçilecek bir şey yok).
+   */
+  readonly brands: readonly ShowcaseBrand[]
 }
 
 interface Props {
@@ -118,6 +123,16 @@ export function ListFilters({ state, options, onChange }: Props) {
             ready.transmissions,
             'transmissions-filter',
             'transmissions-summary',
+            'showcase.filter.selectedValues',
+          )
+        : null}
+      {/* `0021` — marka ekseni SONDA: önceki eksenlerin yeri değişmez (D22, AC-43). */}
+      {ready !== null && ready.brands.length > 0
+        ? chip(
+            'brands',
+            ready.brands,
+            'brands-filter',
+            'brands-summary',
             'showcase.filter.selectedValues',
           )
         : null}
