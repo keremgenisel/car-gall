@@ -128,6 +128,41 @@ public sealed class MarkaAyrilmasiTests(ReferenceDatabase database)
         Assert.Equal("مرسيدس بنز الفئة C", ar[MercedesC]);
     }
 
+    /// <summary>
+    /// Plan turu **P5** — eşlemede olmayan bir model varken güncelleme hata ile durur ve
+    /// YARIM uygulanmaz: migration tek işlemde koşar, şema ve veri güncelleme öncesindeki gibi
+    /// kalır (marka tablosu yok, model adı ve geçmiş kaydı değişmemiş).
+    /// </summary>
+    [Fact]
+    public async Task Durur_EslemedeOlmayanModelde_YarimUygulanmaz()
+    {
+        string baglanti = await database.NewDatabaseAsync(OncekiMigration);
+        await using (NpgsqlConnection connection = new(baglanti))
+        {
+            await connection.OpenAsync();
+            await using NpgsqlCommand ekle = new(
+                "INSERT INTO vehicle_reference.vehicle_models (id, canonical_name) VALUES ('0192c000-0000-7000-8000-0000000000ff', 'Lada Niva')",
+                connection);
+            await ekle.ExecuteNonQueryAsync();
+        }
+
+        await Assert.ThrowsAsync<PostgresException>(() => GuncelleAsync(baglanti));
+
+        await using NpgsqlConnection kontrol = new(baglanti);
+        await kontrol.OpenAsync();
+        await using NpgsqlCommand tablo = new("SELECT to_regclass('vehicle_reference.vehicle_brands') IS NULL", kontrol);
+        Assert.True((bool)(await tablo.ExecuteScalarAsync())!);
+        await using NpgsqlCommand kolon = new(
+            "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'vehicle_reference' AND table_name = 'vehicle_models' AND column_name = 'brand_id'",
+            kontrol);
+        Assert.Equal(0L, (long)(await kolon.ExecuteScalarAsync())!);
+        await using NpgsqlCommand gecmis = new(
+            "SELECT max(\"MigrationId\") FROM vehicle_reference.__ef_migrations_history",
+            kontrol);
+        Assert.Equal(OncekiMigration, (string)(await gecmis.ExecuteScalarAsync())!);
+        Assert.Equal("Toyota Corolla", (await OncekiKanonikAdlarAsync(baglanti))[Corolla]);
+    }
+
     [Fact]
     public async Task GeriAlinir_TamAdlarGeriYazilir()
     {

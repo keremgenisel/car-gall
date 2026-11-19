@@ -248,6 +248,55 @@ public sealed class MarkaModelZinciriTests : IAsyncLifetime
         Assert.Equal("Corolla", detay.GetProperty("model").GetProperty("modelLabel").GetString());
     }
 
+    /// <summary>
+    /// Plan turu **P6** — düzenleme model değişikliğini uygular ve vitrin okuma modeli aynı
+    /// yansıtmayla güncellenir: yayındaki Corolla Civic'e çevrilince satır Civic'in kimliğini
+    /// taşır, Honda ekseninde listelenir, Toyota ekseninde listelenmez; adres DEĞİŞMEZ (C2).
+    /// </summary>
+    [Fact]
+    public async Task Yansitir_ModelDegisikligini_OkumaModelineAdresDegismeden()
+    {
+        Guid civic = Guid.Parse("0192c000-0000-7000-8000-0000000000a8");
+        const string sase = "P6MODELDEGISIM01";
+        Guid arac = await YayinlaAsync(Corolla, sase);
+        string adres = (await AdresAsync(arac))!;
+
+        HttpResponseMessage yanit = await yonetici.PutAsJsonAsync($"{AdminSurface.RoutePrefix}/vehicles/{arac}", new
+        {
+            branchId = SeedSube,
+            vehicleModelId = civic,
+            bodyType = "suv",
+            fuelType = "diesel",
+            transmissionType = "automatic",
+            drivetrainType = "front-wheel-drive",
+            trimLevel = "comfort",
+            color = new Dictionary<string, string> { ["tr"] = "Beyaz" },
+            modelYear = 2019,
+            mileageKilometers = 45_000,
+            priceAmount = 750_000m,
+            priceOnRequest = false,
+            vin = sase,
+            listingTitle = new Dictionary<string, string>(),
+            listingDescription = new Dictionary<string, string>(),
+            optionalValues = Array.Empty<object>(),
+        });
+
+        Assert.True(yanit.IsSuccessStatusCode, $"PUT → {(int)yanit.StatusCode} {await yanit.Content.ReadAsStringAsync()}");
+        Assert.Equal(
+            civic.ToString(),
+            await TekDegerAsync($"SELECT vehicle_model_id FROM vehicle_catalog.showcase_listings WHERE vehicle_id = '{arac}'"));
+        Assert.Equal(adres, await AdresAsync(arac));
+        Assert.Equal(adres, await TekDegerAsync($"SELECT slug FROM vehicle_catalog.showcase_listings WHERE vehicle_id = '{arac}'"));
+
+        HttpClient ziyaretci = Istemci();
+        string honda = await ziyaretci.GetStringAsync("/api/catalog/showcase-listings?brand=honda&locale=tr&pageSize=24");
+        string toyota = await ziyaretci.GetStringAsync("/api/catalog/showcase-listings?brand=toyota&locale=tr&pageSize=24");
+
+        Assert.Contains(adres, honda, StringComparison.Ordinal);
+        Assert.DoesNotContain(adres, toyota, StringComparison.Ordinal);
+        Assert.Contains("Honda Civic", honda, StringComparison.Ordinal);
+    }
+
     private IEnumerable<(HttpMethod, string, object)> YazmaUclari(Guid marka, Guid model) =>
     [
         (HttpMethod.Post, $"{Kok}/brands", new { canonicalName = $"Yetkisiz {Guid.NewGuid():N}" }),
