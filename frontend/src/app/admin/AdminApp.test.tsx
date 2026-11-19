@@ -90,6 +90,12 @@ describe('AC-27: `403` alan uç giriş ekranına yönlendirmez; personel bulundu
 
     // "Getirilemedi, tekrar dene" YALAN olurdu: istek başarısız olmadı, izin yok.
     expect(screen.queryByTestId('staff-error')).toBeNull()
+
+    // Metin bu EKRANIN kapalı olduğunu söyler; "rolünüze açık bir ekran henüz yok" demez —
+    // İçerik Editörünün İçerik, Satış Danışmanının Araçlar ekranı var (0020 PR #107, açık konu 2).
+    const metin = screen.getByTestId('admin-no-access').textContent ?? ''
+    expect(metin).toContain('Bu ekran rolünüze açık değil')
+    expect(metin).not.toContain('henüz yok')
     expect(screen.queryByTestId('add-staff-form')).toBeNull()
   })
 
