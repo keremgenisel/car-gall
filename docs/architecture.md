@@ -522,6 +522,9 @@ altındaki ADR'lerdedir.
 | Admin paneli | Tek Vite uygulaması, `/admin` rota ağacı, lazy-load |
 | Veritabanı | PostgreSQL, şema başına ayrı rol |
 | Migration uygulama | Tek seferlik kurulum adımı (`--migrate`); çalışan uygulama yalnız doğrular |
+| Galerinin görünen adı | Dil başına, **ticari unvandan ayrı** (unvan yasal ad, vitrinde gösterilmez); vitrine sunucunun bastığı `<meta>` ile ilk boyamada gelir, ayrı istek yok; ilk değeri kurulum adımı varsayılan dilde unvandan yazar (`0020` D4, P1, P2) |
+| En az bir aktif şube (B5) | Kalıcı kapatma, kapatılan şubenin durumundan bağımsız olarak **başka aktif şube yoksa** reddedilir; geçici kapatma son aktif şubede de serbesttir (`0020` D13) |
+| Kapatılmış şube ve araç | Kapatılmış şubeye yeni araç bağlanamaz ve araç ona taşınamaz; şubesine dokunmayan kaydetme serbesttir (`0020` D14) |
 | Dağıtım | Tek konteyner imajı (ön yüz içinde derlenir), iki komut, imajda sır yok; init süreci imajda; ters proxy `X-Forwarded-For` + `X-Forwarded-Proto` iletir, yalnız listelenmiş proxy'ye güvenilir (ADR `0012`) |
 | Medya | S3-uyumlu (R2/MinIO) + CDN, ilk günden |
 | Medya işleme | Türevler (1600/800/400 WebP) ve filigran **sunucuda**; asenkron hat + işleme durumu |
