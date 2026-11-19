@@ -48,10 +48,13 @@ internal sealed class SahteKasaSorgusu(bool bulunur = true) : IBodyTypeQueries
 }
 
 /// <summary>
-/// `0021` — <paramref name="secilebilir"/> modelin YENİ seçim olarak kabul edilip
-/// edilmediğini söyler (pasif model ya da pasif markanın modeli <c>false</c>).
+/// `0021` — <paramref name="secilebilir"/> ve <paramref name="pasifler"/> modelin YENİ seçim
+/// olarak kabul edilip edilmediğini söyler (pasif model ya da pasif markanın modeli).
 /// </summary>
-internal sealed class SahteModelSorgusu(bool bulunur = true, bool secilebilir = true) : IVehicleModelQueries
+internal sealed class SahteModelSorgusu(
+    bool bulunur = true,
+    bool secilebilir = true,
+    IReadOnlySet<Guid>? pasifler = null) : IVehicleModelQueries
 {
     public Task<IReadOnlyDictionary<Guid, string>> ResolveNamesAsync(
         IReadOnlyCollection<Guid> vehicleModelIds,
@@ -74,7 +77,7 @@ internal sealed class SahteModelSorgusu(bool bulunur = true, bool secilebilir = 
         Task.FromResult<IReadOnlyDictionary<Guid, VehicleModelPartsDto>>(new Dictionary<Guid, VehicleModelPartsDto>());
 
     public Task<bool?> FindSelectableAsync(Guid vehicleModelId, CancellationToken cancellationToken) =>
-        Task.FromResult<bool?>(bulunur ? secilebilir : null);
+        Task.FromResult<bool?>(bulunur ? secilebilir && pasifler?.Contains(vehicleModelId) != true : null);
 }
 
 /// <summary>Eksik olarak bildirilecek türler; boşsa hepsi var sayılır.</summary>

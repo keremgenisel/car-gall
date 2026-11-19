@@ -2,6 +2,7 @@ using CarGallery.Modules.VehicleCatalog;
 using CarGallery.Modules.VehicleCatalog.Application.Detail;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Tests.Integration;
+using CarGallery.Modules.VehicleReference.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -24,7 +25,7 @@ internal sealed class ModuleApi : IAsyncDisposable
 
     internal HttpClient Client { get; private set; } = null!;
 
-    internal static async Task<ModuleApi> StartAsync(ShowcaseDatabase database)
+    internal static async Task<ModuleApi> StartAsync(ShowcaseDatabase database, IVehicleBrandQueries? brands = null)
     {
         WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.UseTestServer();
@@ -40,6 +41,9 @@ database.ConnectionString, "tr", ["tr", "ar", "en"],
         builder.Services.Replace(ServiceDescriptor.Singleton<IBodyTypeCatalog>(new FakeBodyTypeCatalog()));
         builder.Services.Replace(ServiceDescriptor.Singleton<IReferenceTermCatalog>(new FakeReferenceTermCatalog()));
         builder.Services.Replace(ServiceDescriptor.Singleton<IReferenceLabelResolver>(new FakeReferenceLabelResolver()));
+
+        // `0021` — marka `VehicleReference`'a aittir; liste ve eksen ucu onu sözleşmeden okur.
+        builder.Services.AddSingleton<IVehicleBrandQueries>(brands ?? new FakeBrandQueries());
 
         WebApplication app = builder.Build();
         app.MapVehicleCatalog();

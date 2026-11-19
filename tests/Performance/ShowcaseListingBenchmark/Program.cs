@@ -29,6 +29,11 @@ Profile[] profiles =
         // ölçüm en ucuz yolu ölçer. Sonuç sıfırsa profil GEÇERSİZ sayılır (D13).
         RequireResults: true),
     new("0015", "sort=price-asc (AC-45)", "/api/catalog/showcase-listings?sort=price-asc&locale=tr", RequireResults: true),
+
+    // `0021` C5 · D24 — marka ekseni: iki marka (sözleşmeden model kimliği kümesine çevrilir)
+    // ve kasa tipiyle birlikte. Tohum dokuz markaya yayıldığı için iki marka gerçek bir alt küme.
+    new("0021", "iki marka (C5)", "/api/catalog/showcase-listings?brand=toyota&brand=honda&locale=tr", RequireResults: true),
+    new("0021", "marka + kasa tipi (C5)", "/api/catalog/showcase-listings?brand=toyota&brand=honda&bodyType=suv&bodyType=sedan&locale=tr", RequireResults: true),
 ];
 
 using HttpClient client = new() { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(30) };
@@ -83,6 +88,7 @@ foreach (Profile profile in profiles)
 // Ölçüm yalnız iş log'unda kalırsa kanıt koşuyla birlikte kaybolur; rapora yazılır.
 WriteReport("0001", results.Where(item => item.Profile.Spec == "0001").ToList());
 WriteReport("0015", results.Where(item => item.Profile.Spec == "0015").ToList());
+WriteReport("0021", results.Where(item => item.Profile.Spec == "0021").ToList());
 
 if (!allMet)
 {
