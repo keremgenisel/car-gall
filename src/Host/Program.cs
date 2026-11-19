@@ -74,7 +74,7 @@ builder.Services.AddVehicleCatalog(
 
 // Model adı ve kasa tipi etiketleri referans veridir ve VehicleReference'a aittir
 // (docs/architecture.md § 3). Catalog onlara yalnız Contracts üzerinden ulaşır.
-builder.Services.AddVehicleReference(connectionString);
+builder.Services.AddVehicleReference(connectionString, localization.EnabledLocales);
 // Modül kendi arka plan dağıtıcısını da kaydeder: DealershipDbContext internal'dır ve
 // host onu göremez — sınırın doğru yerde durduğunun işareti.
 builder.Services.AddDealership(connectionString, localization.DefaultLocale, localization.EnabledLocales);
@@ -276,8 +276,6 @@ app.MapMedia();
 // ve bu uç noktalar hiç tanımlanmaz; üretimde erişilebilir bir yüzeyi yoktur.
 if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
 {
-    Guid seedModelId = Guid.Parse("0192c000-0000-7000-8000-00000000000a");
-
     // Rota parametresi SVG gövdesine giriyor; serbest metin kabul etmek aynı origin'de
     // yansıtılmış XSS demektir (image/svg+xml içinde script çalışır). Seed yalnızca
     // cover-0..5 üretiyor, bu yüzden parametre int kısıtına bağlandı ve aralık dışı
@@ -314,9 +312,10 @@ if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
 
     // Demo VERİSİ; şema değil. Şemayı kurulum adımı uygular ve yukarıdaki doğrulama
     // buraya gelinmeden önce eksikse zaten reddetmiştir.
-    await app.Services.SeedVehicleReferenceForDevelopmentAsync(seedModelId);
+    // `0021` D24 — tohum ilanları kurulumun on iki modeline, dolayısıyla dokuz markaya yayılır.
+    IReadOnlyList<Guid> seedModelIds = await app.Services.SeedVehicleReferenceForDevelopmentAsync();
     int seedCount = builder.Configuration.GetValue<int?>("Development:SeedListingCount") ?? 200;
-    await app.Services.SeedVehicleCatalogForDevelopmentAsync(seedCount, seedModelId);
+    await app.Services.SeedVehicleCatalogForDevelopmentAsync(seedCount, seedModelIds);
 }
 
 // `0022` D11 — performans ortamının en kötü hâli: ana sayfa metinleri her dilde, her alan

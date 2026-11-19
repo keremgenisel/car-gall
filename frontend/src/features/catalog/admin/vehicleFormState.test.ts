@@ -11,6 +11,7 @@ import {
 
 const DOLU: VehicleFormValues = {
   branchId: '0192c000-0000-7000-8000-00000000b001',
+  brandId: '0192c000-0000-7000-8000-0000000000b8',
   vehicleModelId: '0192c000-0000-7000-8000-00000000000a',
   bodyType: 'suv',
   fuelType: 'petrol',

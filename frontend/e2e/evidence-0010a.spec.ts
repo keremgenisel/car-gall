@@ -6,6 +6,7 @@ import {
   yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync,
   oturumuBirakAsync,
 } from './giris'
+import { modeliOlanMarkayiSecAsync } from './marka'
 
 /**
  * `0013` D28/D46 — giriş yolu ORTAK yardımcıya taşındı (`e2e/giris.ts`): D30 Yönetici'de
@@ -42,6 +43,11 @@ async function yoneticiOlarakGirAsync(page: Page) {
 /** Seçenekler SIRAYLA seçiliyor; etiketleri seed'e bağlamak kırılgan test üretirdi. */
 async function formuDoldurAsync(page: Page, sase: string, alanlar: readonly string[]) {
   for (const alan of alanlar) {
+    if (alan === 'Marka') {
+      await modeliOlanMarkayiSecAsync(page)
+      continue
+    }
+
     const secim = page.getByLabel(alan, { exact: true })
     const deger = await secim.locator('option').nth(1).getAttribute('value')
 
@@ -56,7 +62,16 @@ async function formuDoldurAsync(page: Page, sase: string, alanlar: readonly stri
   await page.getByLabel('Şase numarası', { exact: true }).fill(sase)
 }
 
-const TR_ALANLAR = ['Şube', 'Model', 'Kasa tipi', 'Donanım paketi', 'Yakıt', 'Vites', 'Çekiş']
+const TR_ALANLAR = [
+  'Şube',
+  'Marka',
+  'Model',
+  'Kasa tipi',
+  'Donanım paketi',
+  'Yakıt',
+  'Vites',
+  'Çekiş',
+]
 
 test('0010a/AC-1, AC-12: kayıt formu ve altı referans kümesi', async ({ page }) => {
   await yoneticiOlarakGirAsync(page)

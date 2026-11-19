@@ -62,7 +62,8 @@ export function ChipAxis({
                 onChange={() => onToggle(option.slug)}
                 value={option.slug}
               />
-              {option.label}
+              {/* `0021` — marka adı Arapça listede Latin kalabilir; yönü kendinden (AC-44). */}
+              <bdi>{option.label}</bdi>
             </label>
           )
         })}

@@ -1703,6 +1703,55 @@ a.top-bar__brand:hover {
   color: var(--color-accent-text);
 }
 
+/* `0021` — marka ve model yönetimi (panel). Yalnız mantıksal yön özellikleri: panel Arapçada
+   sağdan sola çalışır; kanonik ad ve kısaltma `dir="ltr"` ile soldan sağa kalır (AC-58). */
+.reference-new {
+  margin-block: var(--space-6);
+}
+
+.reference-slug {
+  overflow-wrap: anywhere;
+}
+
+.reference-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.reference-models {
+  margin-block-start: var(--space-7);
+}
+
+.reference-models__list {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reference-models__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.reference-models__row > form {
+  flex: 1 1 100%;
+}
+
+.reference-models__name {
+  flex: 1 1 auto;
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
 /* `0020` — galeri profili ve şubeler (panel). Yalnız mantıksal yön özellikleri: panel Arapçada
    sağdan sola çalışır (AC-73). */
 .dealership-branches {

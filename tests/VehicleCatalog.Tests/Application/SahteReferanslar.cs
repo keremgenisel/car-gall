@@ -47,7 +47,14 @@ internal sealed class SahteKasaSorgusu(bool bulunur = true) : IBodyTypeQueries
     public Task<bool> ExistsAsync(string slug, CancellationToken cancellationToken) => Task.FromResult(bulunur);
 }
 
-internal sealed class SahteModelSorgusu(bool bulunur = true) : IVehicleModelQueries
+/// <summary>
+/// `0021` — <paramref name="secilebilir"/> ve <paramref name="pasifler"/> modelin YENİ seçim
+/// olarak kabul edilip edilmediğini söyler (pasif model ya da pasif markanın modeli).
+/// </summary>
+internal sealed class SahteModelSorgusu(
+    bool bulunur = true,
+    bool secilebilir = true,
+    IReadOnlySet<Guid>? pasifler = null) : IVehicleModelQueries
 {
     public Task<IReadOnlyDictionary<Guid, string>> ResolveNamesAsync(
         IReadOnlyCollection<Guid> vehicleModelIds,
@@ -63,8 +70,14 @@ internal sealed class SahteModelSorgusu(bool bulunur = true) : IVehicleModelQuer
     public Task<IReadOnlyList<VehicleModelDto>> GetAllAsync(string locale, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<VehicleModelDto>>([]);
 
-    public Task<bool> ExistsAsync(Guid vehicleModelId, CancellationToken cancellationToken) =>
-        Task.FromResult(bulunur);
+    public Task<IReadOnlyDictionary<Guid, VehicleModelPartsDto>> ResolvePartsAsync(
+        IReadOnlyCollection<Guid> vehicleModelIds,
+        string locale,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, VehicleModelPartsDto>>(new Dictionary<Guid, VehicleModelPartsDto>());
+
+    public Task<bool?> FindSelectableAsync(Guid vehicleModelId, CancellationToken cancellationToken) =>
+        Task.FromResult<bool?>(bulunur ? secilebilir && pasifler?.Contains(vehicleModelId) != true : null);
 }
 
 /// <summary>Eksik olarak bildirilecek türler; boşsa hepsi var sayılır.</summary>

@@ -65,6 +65,11 @@ export function codeKey(prefix: string, code: string): string {
 
 export interface VehicleFormValues {
   readonly branchId: string
+  /**
+   * `0021` R8 — formun marka seçimi. Sunucuya GİTMEZ: aracın markası modelden türer (D2);
+   * burada yalnız model listesini süzmek ve marka değişince modeli temizlemek için tutulur.
+   */
+  readonly brandId: string
   readonly vehicleModelId: string
   readonly bodyType: string
   readonly fuelType: string
@@ -81,6 +86,7 @@ export interface VehicleFormValues {
 
 export const EMPTY_VEHICLE_FORM: VehicleFormValues = {
   branchId: '',
+  brandId: '',
   vehicleModelId: '',
   bodyType: '',
   fuelType: '',
@@ -109,6 +115,7 @@ export const EMPTY_VEHICLE_FORM: VehicleFormValues = {
  */
 const CORE_FIELDS: readonly (keyof VehicleFormValues)[] = [
   'branchId',
+  'brandId',
   'vehicleModelId',
   'bodyType',
   'fuelType',
@@ -181,6 +188,7 @@ export function toEditValues(
 
   return {
     branchId: detail.branchId,
+    brandId: detail.model?.brandId ?? '',
     vehicleModelId: detail.vehicleModelId,
     bodyType: detail.bodyType,
     fuelType: detail.fuelType,
@@ -293,4 +301,51 @@ export function missingLocalesOf(
       (values.listingTitle[locale] ?? '').trim() === '' ||
       (values.listingDescription[locale] ?? '').trim() === '',
   )
+}
+
+/**
+ * `0021` R8, R9 · D24 — marka ve model seçicilerinin seçenekleri. Liste yalnız AKTİF kayıtları
+ * içerir (AC-14, AC-21, AC-22); aracın kendi (belki pasif) markası ve modeli araç verisinden
+ * eklenir ki düzenleme formu onları seçili gösterebilsin (AC-26). Model seçenekleri seçili
+ * markaya göre süzülür (AC-24).
+ */
+export function brandModelOptions<
+  B extends { readonly value: string; readonly label: string },
+  M extends { readonly value: string; readonly label: string; readonly brandId: string },
+>(
+  brands: readonly B[],
+  models: readonly M[],
+  selectedBrandId: string,
+  current?: {
+    readonly vehicleModelId: string
+    readonly brandId: string
+    readonly brandLabel: string
+    readonly modelLabel: string
+  } | null,
+): {
+  readonly brands: readonly { readonly value: string; readonly label: string }[]
+  readonly models: readonly { readonly value: string; readonly label: string }[]
+} {
+  const brandOptions: { value: string; label: string }[] = brands.map((brand) => ({
+    value: brand.value,
+    label: brand.label,
+  }))
+
+  if (current && !brandOptions.some((brand) => brand.value === current.brandId)) {
+    brandOptions.push({ value: current.brandId, label: current.brandLabel })
+  }
+
+  const modelOptions: { value: string; label: string }[] = models
+    .filter((model) => model.brandId === selectedBrandId)
+    .map((model) => ({ value: model.value, label: model.label }))
+
+  if (
+    current &&
+    current.brandId === selectedBrandId &&
+    !modelOptions.some((model) => model.value === current.vehicleModelId)
+  ) {
+    modelOptions.push({ value: current.vehicleModelId, label: current.modelLabel })
+  }
+
+  return { brands: brandOptions, models: modelOptions }
 }

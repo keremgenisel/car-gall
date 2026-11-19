@@ -23,6 +23,9 @@ vi.mock('../shared/api/catalog', () => ({
   fetchShowcaseListings: vi.fn(),
   fetchListingDetail: vi.fn(),
   fetchReferenceTerms: vi.fn(),
+  // `0021` — ana sayfa formunun ve liste ekseninin marka okuması; varsayılan: marka yok.
+  fetchHomeBrands: vi.fn().mockResolvedValue([]),
+  fetchShowcaseBrands: vi.fn().mockResolvedValue([]),
 }))
 vi.mock('../shared/api/dealership', () => ({ fetchGallery: vi.fn() }))
 

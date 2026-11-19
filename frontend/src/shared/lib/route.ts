@@ -47,6 +47,10 @@ export type AdminView =
   | 'branch-new'
   /** `0020` R10–R12 — bir şubenin düzenlemesi ve durum eylemleri (`/admin/branches/{id}`). */
   | 'branch-edit'
+  /** `0021` R5 — markalar ve modeller (`/admin/brands`); yalnız Yönetici (D4). */
+  | 'brands'
+  /** `0021` — bir markanın ekranı ve modelleri (`/admin/brands/{id}`). */
+  | 'brand-edit'
 
 export type Route =
   /** 0014 **D9** — `/{locale}/` artık ana sayfadır; liste `/{locale}/cars`'a taşındı. */
@@ -70,6 +74,8 @@ export type Route =
       readonly pageId?: string
       /** `0020` — `branch-edit` görünümünün şube kimliği. */
       readonly branchId?: string
+      /** `0021` — `brand-edit` görünümünün marka kimliği. */
+      readonly brandId?: string
     }
 
 /**
@@ -98,6 +104,9 @@ function adminViewOf(segment: string | undefined): AdminView {
       return 'gallery'
     case 'branches':
       return 'branches'
+    // `0021` — markalar ve modeller.
+    case 'brands':
+      return 'brands'
     default:
       return 'staff'
   }
@@ -135,6 +144,11 @@ export function parseRoute(pathname: string): Route {
       return slugSegment === 'new'
         ? { kind: 'admin', view: 'branch-new' }
         : { kind: 'admin', view: 'branch-edit', branchId: decodeURIComponent(slugSegment) }
+    }
+
+    // `0021` — `/admin/brands/{id}` bir markanın ekranı.
+    if (sectionSegment === 'brands' && slugSegment !== undefined) {
+      return { kind: 'admin', view: 'brand-edit', brandId: decodeURIComponent(slugSegment) }
     }
 
     // `0022` D9 — `home` bir sayfa kimliği değil (kimlikler Guid): ana sayfa metinleri ekranı.
@@ -226,6 +240,11 @@ export function adminPath(view: AdminView = 'staff'): string {
 /** `0020` — bir şubenin panel düzenleme adresi. */
 export function branchEditPath(branchId: string): string {
   return `/${ADMIN_SEGMENT}/branches/${encodeURIComponent(branchId)}`
+}
+
+/** `0021` — bir markanın panel adresi. */
+export function brandEditPath(brandId: string): string {
+  return `/${ADMIN_SEGMENT}/brands/${encodeURIComponent(brandId)}`
 }
 
 /** Düzenleme adresi (D29). Listeye dönüş `adminPath('vehicles')`. */

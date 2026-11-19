@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { YONETICI_PAROLA } from './global-setup'
 import { yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync } from './giris'
+import { modeliOlanMarkayiSecAsync } from './marka'
 
 /**
  * 0010a'nın kritik akışı: personel giriş yapar → araç kaydeder → kayıt listede görünür
@@ -30,7 +31,21 @@ async function yoneticiOlarakGirAsync(page: Page) {
  * "personel listeden bir şey seçebiliyor mu" — hangi şeyi seçtiği değil.
  */
 async function formuDoldurAsync(page: Page, sase: string) {
-  for (const alan of ['Şube', 'Model', 'Kasa tipi', 'Donanım paketi', 'Yakıt', 'Vites', 'Çekiş']) {
+  for (const alan of [
+    'Şube',
+    'Marka',
+    'Model',
+    'Kasa tipi',
+    'Donanım paketi',
+    'Yakıt',
+    'Vites',
+    'Çekiş',
+  ]) {
+    if (alan === 'Marka') {
+      await modeliOlanMarkayiSecAsync(page)
+      continue
+    }
+
     const secim = page.getByLabel(alan, { exact: true })
     await expect(secim).toBeVisible()
 

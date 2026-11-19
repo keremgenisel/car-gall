@@ -40,6 +40,7 @@ export function App({ locale }: { readonly locale: AppLocale }) {
             vehicleId={route.vehicleId}
             pageId={route.pageId}
             branchId={route.branchId}
+            brandId={route.brandId}
           />
         </Suspense>
       </LocaleProvider>

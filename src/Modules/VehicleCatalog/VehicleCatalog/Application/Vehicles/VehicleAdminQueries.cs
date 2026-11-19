@@ -96,7 +96,10 @@ internal sealed class VehicleAdminQueries(
         return new VehicleAdminSummaryDto(totalCount, eksik);
     }
 
-    public async Task<VehicleAdminDetailDto?> FindAsync(Guid vehicleId, CancellationToken cancellationToken)
+    public async Task<VehicleAdminDetailDto?> FindAsync(
+        Guid vehicleId,
+        CancellationToken cancellationToken,
+        string? locale = null)
     {
         Vehicle? vehicle = await context.Vehicles
             .AsNoTracking()
@@ -118,6 +121,16 @@ internal sealed class VehicleAdminQueries(
         }
 
         HashSet<string> acikAlanlar = await AcikAlanlarAsync(cancellationToken);
+
+        // `0021` D24 — aracın kendi (belki pasif) marka ve modeli araç verisinden gelir; araç
+        // formunun seçenekleri yalnız aktif kayıtları içerir.
+        IReadOnlyDictionary<Guid, VehicleModelPartsDto> parcalar = await models.ResolvePartsAsync(
+            [vehicle.VehicleModelId],
+            locales.ResolveOrDefault(locale ?? string.Empty).Code,
+            cancellationToken);
+        VehicleAdminModelDto? model = parcalar.TryGetValue(vehicle.VehicleModelId, out VehicleModelPartsDto? parca)
+            ? new VehicleAdminModelDto(parca.BrandId, parca.BrandLabel, parca.ModelLabel)
+            : null;
 
         return new VehicleAdminDetailDto(
             vehicle.Id.Value,
@@ -146,7 +159,8 @@ internal sealed class VehicleAdminQueries(
                     .Select(value => OptionalValue(value))
             ],
             vehicle.UpdatedAt,
-            vehicle.AwaitingBranchAssignment);
+            vehicle.AwaitingBranchAssignment,
+            model);
     }
 
     public async Task<IReadOnlyList<VehicleAdminFieldDto>> GetFormFieldsAsync(CancellationToken cancellationToken)

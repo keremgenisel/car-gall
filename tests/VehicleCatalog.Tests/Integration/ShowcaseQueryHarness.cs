@@ -1,3 +1,4 @@
+using CarGallery.Modules.VehicleReference.Contracts;
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.VehicleCatalog.Application.Showcase;
 using CarGallery.Modules.VehicleCatalog.Contracts.Showcase;
@@ -57,7 +58,8 @@ internal static class ShowcaseQueryHarness
     internal static async Task<PagedResult<ShowcaseListingDto>> QueryAsync(
         ShowcaseDatabase database,
         ShowcaseListingFilter filter,
-        IVehicleModelNameResolver? modelNames = null)
+        IVehicleModelNameResolver? modelNames = null,
+        IVehicleBrandQueries? brands = null)
     {
         await using VehicleCatalogDbContext context = database.CreateContext();
         ShowcaseListingQueries queries = new(
@@ -65,6 +67,7 @@ internal static class ShowcaseQueryHarness
             modelNames ?? new FakeModelNameResolver(),
             new FakeBodyTypeCatalog(),
             new FakeReferenceTermCatalog(),
+            brands ?? new FakeBrandQueries(),
             Locales);
 
         return await queries.GetAsync(filter, CancellationToken.None);

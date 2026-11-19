@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { YONETICI_PAROLA } from './global-setup'
 import { pngUret } from './gorsel'
 import { yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync } from './giris'
+import { modeliOlanMarkayiSecAsync } from './marka'
 
 /**
  * `0012a`'nın kritik akışı: personel bir fotoğraf yükler, araca bağlar, sıralar, kapağı
@@ -33,7 +34,22 @@ async function aracKaydetAsync(page: Page, sase: string) {
   await page.goto('/admin/vehicle-new')
   await expect(page.getByTestId('vehicle-form')).toBeVisible()
 
-  for (const alan of ['Şube', 'Model', 'Kasa tipi', 'Donanım paketi', 'Yakıt', 'Vites', 'Çekiş']) {
+  for (const alan of [
+    'Şube',
+    'Marka',
+    'Model',
+    'Kasa tipi',
+    'Donanım paketi',
+    'Yakıt',
+    'Vites',
+    'Çekiş',
+  ]) {
+    if (alan === 'Marka') {
+      await modeliOlanMarkayiSecAsync(page)
+
+      continue
+    }
+
     const secim = page.getByLabel(alan, { exact: true })
     const deger = await secim.locator('option').nth(1).getAttribute('value')
 

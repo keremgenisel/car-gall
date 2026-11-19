@@ -5,11 +5,12 @@ import {
   createVehicle,
   fetchBranches,
   fetchReferenceOptions,
-  type ReferenceSetName,
+  type ReferenceOptions,
 } from '../../../shared/api/catalogAdmin'
 import type { BranchSummary, ReferenceOption } from '../../../shared/api/types'
 import { adminPath } from '../../../shared/lib/route'
 import { Button, Card, ErrorState, Field, Skeleton } from '../../../shared/ui'
+import { BrandModelFields } from './BrandModelFields'
 import { VehicleSelect } from './VehicleSelect'
 import {
   codeKey,
@@ -20,7 +21,7 @@ import {
   type VehicleFormValues,
 } from './vehicleFormState'
 
-type Options = Record<ReferenceSetName, readonly ReferenceOption[]>
+type Options = ReferenceOptions
 
 /** Seçenekler İKİ uçtan gelir: referans veri `VehicleReference`'tan, şubeler `Dealership`'ten. */
 type Sources =
@@ -237,13 +238,14 @@ export function VehicleFormPage() {
             onChange={(branchId) => setValues({ ...values, branchId })}
           />
 
-          <VehicleSelect
-            id="vehicle-model"
-            label={t('vehicle.form.field.model')}
-            options={sources.options.models}
-            value={values.vehicleModelId}
-            errorKey={errorKeyFor('vehicleModelId')}
-            onChange={(vehicleModelId) => setValues({ ...values, vehicleModelId })}
+          <BrandModelFields
+            brands={sources.options.brands}
+            models={sources.options.models}
+            brandId={values.brandId}
+            vehicleModelId={values.vehicleModelId}
+            brandErrorKey={errorKeyFor('brandId')}
+            modelErrorKey={errorKeyFor('vehicleModelId')}
+            onChange={(next) => setValues({ ...values, ...next })}
           />
 
           <VehicleSelect

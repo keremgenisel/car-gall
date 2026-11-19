@@ -76,13 +76,16 @@ public sealed class KasaTipiTests(ReferenceDatabase database)
 
         await using (VehicleReferenceDbContext write = database.CreateContext())
         {
+            // `0021` — model bir markaya bağlıdır; ad marka + model olarak çözülür.
             write.VehicleModels.Add(new VehicleModel
             {
                 Id = modelId,
-                CanonicalName = "Toyota Corolla",
+                BrandId = ToyotaBrandId,
+                CanonicalName = $"Corolla {modelId:N}",
+                CanonicalKey = $"COROLLA {modelId:N}".ToUpperInvariant(),
                 Translations =
                 [
-                    new VehicleModelTranslation { VehicleModelId = modelId, Locale = "ar", Name = "تويوتا كورولا" },
+                    new VehicleModelTranslation { VehicleModelId = modelId, Locale = "ar", Name = "كورولا" },
                 ],
             });
             await write.SaveChangesAsync();
@@ -95,6 +98,8 @@ public sealed class KasaTipiTests(ReferenceDatabase database)
         IReadOnlyDictionary<Guid, string> turkish = await queries.ResolveNamesAsync([modelId], "tr", CancellationToken.None);
 
         Assert.Equal("تويوتا كورولا", arabic[modelId]);
-        Assert.Equal("Toyota Corolla", turkish[modelId]);
+        Assert.Equal($"Toyota Corolla {modelId:N}", turkish[modelId]);
     }
+
+    private static readonly Guid ToyotaBrandId = Guid.Parse("0192c000-0000-7000-8000-0000000000b8");
 }

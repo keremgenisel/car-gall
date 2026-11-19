@@ -169,6 +169,57 @@ namespace CarGallery.Modules.VehicleReference.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CarGallery.Modules.VehicleReference.Domain.VehicleBrand", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CanonicalKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("canonical_key");
+
+                    b.Property<string>("CanonicalName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("canonical_name");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("ShowOnHome")
+                        .HasColumnType("boolean")
+                        .HasColumnName("show_on_home");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("slug");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CanonicalKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_vehicle_brands_canonical_key");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ux_vehicle_brands_slug");
+
+                    b.ToTable("vehicle_brands", "vehicle_reference");
+                });
+
             modelBuilder.Entity("CarGallery.Modules.VehicleReference.Domain.VehicleModel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -176,13 +227,36 @@ namespace CarGallery.Modules.VehicleReference.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("BrandId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("brand_id");
+
+                    b.Property<string>("CanonicalKey")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("canonical_key");
+
                     b.Property<string>("CanonicalName")
                         .IsRequired()
                         .HasMaxLength(160)
                         .HasColumnType("character varying(160)")
                         .HasColumnName("canonical_name");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("BrandId", "CanonicalKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_vehicle_models_brand_canonical_key");
 
                     b.ToTable("vehicle_models", "vehicle_reference");
                 });
@@ -617,8 +691,44 @@ namespace CarGallery.Modules.VehicleReference.Infrastructure.Migrations
                     b.Navigation("Translations");
                 });
 
+            modelBuilder.Entity("CarGallery.Modules.VehicleReference.Domain.VehicleBrand", b =>
+                {
+                    b.OwnsMany("CarGallery.Modules.VehicleReference.Domain.VehicleBrandTranslation", "Translations", b1 =>
+                        {
+                            b1.Property<Guid>("BrandId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("brand_id");
+
+                            b1.Property<string>("Locale")
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("locale");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)")
+                                .HasColumnName("name");
+
+                            b1.HasKey("BrandId", "Locale");
+
+                            b1.ToTable("vehicle_brand_translations", "vehicle_reference");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BrandId");
+                        });
+
+                    b.Navigation("Translations");
+                });
+
             modelBuilder.Entity("CarGallery.Modules.VehicleReference.Domain.VehicleModel", b =>
                 {
+                    b.HasOne("CarGallery.Modules.VehicleReference.Domain.VehicleBrand", null)
+                        .WithMany()
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.OwnsMany("CarGallery.Modules.VehicleReference.Domain.VehicleModelTranslation", "Translations", b1 =>
                         {
                             b1.Property<Guid>("VehicleModelId")

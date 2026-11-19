@@ -269,6 +269,79 @@ yönetim okuması Yönetici'ye kapalıdır. Araç formu aracın kendi (belki pas
 araç verisinden gösterir. `docs/architecture.md`'nin "zorunlu çeviri" satırı koda göre düzeltilir.
 Geliştirme ve performans tohumu birden çok markaya yayılır.
 
+### Verilen kararlar — plan turu, 2026-11-19
+
+**Developer (ajan) önerisi**, uygulama sırasında; R/C/AC'ye dokunmaz, nasıl uygulandıklarını
+sabitler. Takım Yöneticisi onayı PR'da bekleniyor.
+
+**P1 — Yönetim uçları `VehicleReference`'ta, Yönetici politikalı tek grupta.**
+`/api/admin/reference/{brands,models}…` `AdminSurface.ManagerPolicy` taşır (`0020` D2 deseni);
+modül bunun için `Identity.Contracts`'a referans verir (`Dealership` emsali). Oturumsuz okuma
+uçları `/api/reference/brands` ve `/api/reference/models` yalnız aktif kayıt döndürür (D24);
+yönetim okuması pasifleri ve "ana sayfada göster" işaretini taşır.
+
+**P2 — İyimser eşzamanlılık ve tekillik yarışı.** Marka ve model bir sürüm kolonu taşır; eski
+sürümle yazma `409 concurrency.lost` (`0020` D17 deseni). Tekillik ön denetimle **ve** tekil
+indeksle korunur (kanonik anahtar, kısaltma, marka içi model anahtarı); yarışta ikinci ekleme
+indeksten düşer ve yine alan hatası döner, `500` değil. Anahtar kanonik adın değişmez kültürle
+büyük harfidir (C3).
+
+**P3 — Kanonik ad kuralı ve hata kodları.** Kırpılmış, yazdırılabilir ASCII (0x20–0x7E), en az bir
+harf ya da rakam; marka ≤ 80, model ≤ 120, görünen ad ≤ 120 karakter. Kodlar
+`brand.canonical_name_{required,invalid,too_long}`, `brand.name_taken`, `brand.slug_taken` (D19),
+`vehicle_model.*` karşılıkları, `vehicle_model.brand_immutable` (AC-20),
+`reference.locale_not_enabled`; hepsi `field` parametresiyle `422`.
+
+**P4 — Tam ad = marka parçası + boşluk + model parçası.** Her parça kendi dilindeki görünen ada,
+yoksa kanonik ada düşer (R3). C4'ün sabit eşlemesi her dili bu kurala göre böldü; AC-5'in testi on
+iki modelin üç dildeki adını güncelleme öncesiyle **birebir** karşılaştırır.
+
+**P5 — Eşlemede olmayan model varsa güncelleme hata ile durur.** Bugüne kadar yazma yolu yoktu ve
+geliştirme tohumu aynı kimliği kullanıyordu; listede olmayan bir satırı tahminle bölmek C4'ün
+yasakladığı şeydir. Geri alma (`Down`) tam adları geri yazar.
+
+**P6 — Düzenleme model değişikliğini artık UYGULAR.** Ölçüldü: `UpdateVehicleCommand` istekteki
+modeli doğruluyor ama araca yazmıyordu — araç formunda değiştirilen model sessizce eskisinde
+kalıyordu. D23 "model değiştiren düzenleme"yi varsaydığı için `Vehicle.ChangeModel` eklendi;
+okuma modeli aynı yansıtmayla güncellenir, adres değişmez (C2). Kapsam genişlemesi değil, D23'ün
+ön koşulu; yine de açıkça yazılıyor.
+
+**P7 — Vitrin marka ekseni ucu `GET /api/catalog/showcase-brands`.** Stoklu markalar okuma
+modelinin tekil model kimliklerinden sözleşmeyle türetilir (D15); `brand` parametreleri D21 için
+uca da verilir (var olan, stoksuz seçili marka eksende kalır); `scope=home` ana sayfanın süzgecidir
+(R13). Ziyaretçi yanıtı yalnız `slug` + `label` taşır.
+
+**P8 — Ana sayfa marka okuması formun okumalarıyla PARALEL.** Hata formu düşürmez, alan görünmez
+(D22); ilk boyamanın önüne ek bir gidiş-dönüş girmez. Liste ekseni diğer eksenlerin okumasıyla
+aynı `Promise.all`'da: yükleniyor ve hata hâli birebir aynıdır (AC-43); seçenekler yalnız dil
+değişince ya da adres eksende olmayan bir marka getirdiğinde yeniden okunur.
+
+**P9 — Liste paneli: marka ekseni SONDA, ayrılan yükseklik yeniden ölçüldü.** `0015` D20'nin
+yöntemiyle (320–1400 px, 8 px adım, tr/ar/en); yedinci eksen 3 ve 4 sütunu ayrıştırdı ve bir bant
+eklendi. Eksenin yüksekliği stoklu marka sayısına bağlıdır; ölçüm tohumun markalarıyla yapıldı.
+
+**P10 — Tohum (D24).** İlanlar on iki modele altılı bloklarla dağılır (her model altı kasa tipini
+gezer); "ana sayfada göster" tohumda Honda, Renault ve Toyota — yalnız hiç işaret yoksa.
+Performans ölçümüne iki marka profili eklendi (`0021-performance.json`): iki marka ve iki marka +
+iki kasa tipi.
+
+**P11 — AC-4'ün ölçümü.** Adres yazma modelindedir (`0012b` D13) ve bu kart o şemaya dokunmaz;
+test güncellemenin yalnız `vehicle_reference` şemasında çalıştığını ve adresin kaynağı olan kanonik
+tam adın güncelleme öncesiyle aynı olduğunu ölçer. Var olan `YayinZinciriTests` yeni ilanın
+`toyota-corolla-2019-` kalıbını ölçmeye devam eder.
+
+### Uygulama planı (2026-11-19)
+
+1. `VehicleReference`: marka varlığı, model → marka, eşleme migration'ı, sözleşme (tam ad, parçalar,
+   seçilebilirlik, marka yüzeyi), komutlar, yönetim ve okuma uçları. `VehicleCatalog`: marka ekseni,
+   `showcase-brands`, pasif model kuralı (D23), düzenlemede model değişikliği (P6), tohum (P10).
+2. Testler: gerçek PostgreSQL'de ayrılma, komutlar, eksen; `Host.Tests`'te rol kapısı, yalnız aktif
+   okuma, Fiat Egea adresi, talep kopyası, panel listesi; performans profili.
+3. Ön yüz: panelde "Markalar ve modeller" (yalnız Yönetici), araç formunda marka → model; vitrinde
+   liste marka ekseni ve ana sayfa marka alanı; katalog anahtarları ADR 0013'e göre.
+4. E2E ve görsel kanıt (`evidence-0021.spec.ts`), var olan form akışlarına "Marka" adımı, belge
+   güncellemeleri (DoD T7, T8) ve bu bölüm.
+
 ---
 
 ## Acceptance Criteria
@@ -362,24 +435,24 @@ Geliştirme ve performans tohumu birden çok markaya yayılır.
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B11 → D15–D24, 2026-11-18.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0021-ac<n>.png`),
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0021-ac<n>.png`),
       boş ve hata durumları dâhil; Arapça görüntü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration'lar yalnızca kendi şemasına dokunuyor (`vehicle_reference`, `catalog`).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**marka**, **pasif** referans kaydı).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi; § 1'in `VehicleReference` tanımı **D4**'e, § 3'ün "zorunlu çeviri" satırı **D24**'e göre düzeltildi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] <!-- DoD:T5 --> Yeni migration'lar yalnızca kendi şemasına dokunuyor (`vehicle_reference`, `catalog`).
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**marka**, **pasif** referans kaydı).
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi; § 1'in `VehicleReference` tanımı **D4**'e, § 3'ün "zorunlu çeviri" satırı **D24**'e göre düzeltildi.
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
-- [ ] `0010a` X14, `0015` X8 ve `0014` X13'e "→ `0021`" notu düşüldü.
-- [ ] Geliştirme ve performans tohumu birden çok markaya yayılıyor (**D24**).
+- [x] `0010a` X14, `0015` X8 ve `0014` X13'e "→ `0021`" notu düşüldü.
+- [x] Geliştirme ve performans tohumu birden çok markaya yayılıyor (**D24**).
 
 ---
 

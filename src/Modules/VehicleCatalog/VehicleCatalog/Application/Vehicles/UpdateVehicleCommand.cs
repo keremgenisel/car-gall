@@ -160,7 +160,8 @@ internal sealed class UpdateVehicleCommand(
             request.TransmissionType,
             request.DrivetrainType,
             request.TrimLevel,
-            cancellationToken);
+            cancellationToken,
+            vehicle.VehicleModelId);
 
         if (references.IsFailure)
         {
@@ -206,6 +207,13 @@ internal sealed class UpdateVehicleCommand(
         if (vehicle.Price != price.Value)
         {
             vehicle.ChangePrice(price.Value, now);
+        }
+
+        // `0021` D23 — model değiştiren düzenleme. Bu karta kadar istekteki model doğrulanıyor
+        // ama UYGULANMIYORDU: araç formunda değiştirilen model sessizce eskisinde kalıyordu.
+        if (vehicle.VehicleModelId != request.VehicleModelId)
+        {
+            vehicle.ChangeModel(request.VehicleModelId);
         }
 
         // Şube ataması: aynı şubeye atamak bayrağı da bozmaz.

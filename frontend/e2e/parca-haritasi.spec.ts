@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { YONETICI_PAROLA } from './global-setup'
 import { girisYap, oturumuBirakAsync, yoneticiOlarakGirAsync } from './giris'
 import { kanit } from './kanit'
+import { modeliOlanMarkayiSecAsync } from './marka'
 
 /**
  * 0016a — panelde parça haritası, gerçek Host'a karşı: 13 kutu, yarım haritanın reddi ve
@@ -18,7 +19,21 @@ async function aracKaydetVeDuzenlemeyeGitAsync(page: Page, onek: string): Promis
   const sase = benzersizSase(onek)
   await page.goto('/admin/vehicle-new')
   await expect(page.getByTestId('vehicle-form')).toBeVisible()
-  for (const alan of ['Şube', 'Model', 'Kasa tipi', 'Donanım paketi', 'Yakıt', 'Vites', 'Çekiş']) {
+  for (const alan of [
+    'Şube',
+    'Marka',
+    'Model',
+    'Kasa tipi',
+    'Donanım paketi',
+    'Yakıt',
+    'Vites',
+    'Çekiş',
+  ]) {
+    if (alan === 'Marka') {
+      await modeliOlanMarkayiSecAsync(page)
+      continue
+    }
+
     const secim = page.getByLabel(alan, { exact: true })
     await secim.selectOption((await secim.locator('option').nth(1).getAttribute('value'))!)
   }

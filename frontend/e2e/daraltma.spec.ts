@@ -62,6 +62,9 @@ test.describe('Kasa tipine göre daraltma', () => {
    * ve R1 altı eksen istiyor. Kriterin "yalnızca kasa tipi" iddiası `0015` C10'un istisnasıdır
    * (C10 notu, Takım Yöneticisi onayına #88'de sunuldu). İddia GEVŞETİLMEDİ, sayılan küme
    * değişti: panel tam olarak R1'in altı eksenini sunar ve başka filtre grubu yoktur.
+   *
+   * `0021` R11 kümeye yedinci ekseni, markayı ekledi (`0015` X8 → `0021`). İddia yine
+   * gevşetilmedi: sayılan küme bir eleman büyüdü ve başka filtre grubu yoktur.
    */
   test("0001/AC-11 (0015 D16 ile genişledi): Daraltma çubuğu kasa tipi eksenini ve 0015 R1'in eksenlerini sunar; başka filtre grubu yoktur", async ({
     page,
@@ -70,8 +73,8 @@ test.describe('Kasa tipine göre daraltma', () => {
 
     await expect(page.getByTestId('body-type-filter')).toBeVisible()
     const eksenler = page.getByTestId('list-filters').locator('fieldset')
-    await expect(eksenler).toHaveCount(6)
-    await expect(page.locator('fieldset')).toHaveCount(6)
+    await expect(eksenler).toHaveCount(7)
+    await expect(page.locator('fieldset')).toHaveCount(7)
     await expect(eksenler.locator('legend')).toHaveText([
       // Aralıklar önce, değer listesi bekleyen çipler sonra (LCP ölçümü, ListFilters.tsx).
       'Yıl',
@@ -80,6 +83,7 @@ test.describe('Kasa tipine göre daraltma', () => {
       'Kasa tipi',
       'Yakıt',
       'Vites',
+      'Marka',
     ])
   })
 

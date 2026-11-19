@@ -188,10 +188,14 @@ internal static class VehicleAdminEndpoints
 
     private static async Task<IResult> FindAsync(
         Guid vehicleId,
+        HttpContext httpContext,
         IVehicleAdminQueries queries,
         CancellationToken cancellationToken)
     {
-        VehicleAdminDetailDto? vehicle = await queries.FindAsync(vehicleId, cancellationToken);
+        VehicleAdminDetailDto? vehicle = await queries.FindAsync(
+            vehicleId,
+            cancellationToken,
+            httpContext.Request.Query["locale"].FirstOrDefault());
 
         return vehicle is null
             ? CatalogProblems.From(Error.With(VehicleErrors.NotFound, "field", VehicleFieldNames.VehicleId))

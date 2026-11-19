@@ -12,6 +12,7 @@ internal sealed class ShowcaseListingQueries(
     IVehicleModelNameResolver modelNameResolver,
     IBodyTypeCatalog bodyTypeCatalog,
     IReferenceTermCatalog termCatalog,
+    IVehicleBrandQueries brandQueries,
     ShowcaseLocaleOptions localeOptions) : IShowcaseListingQueries
 {
     public async Task<PagedResult<ShowcaseListingDto>> GetAsync(
@@ -53,6 +54,24 @@ internal sealed class ShowcaseListingQueries(
         {
             List<string> transmissions = [.. request.TransmissionTypes];
             query = query.Where(listing => transmissions.Contains(listing.TransmissionTypeSlug));
+        }
+
+        // `0021` R11 · D15 — marka okuma modelinde YOK; seçilen markalar sözleşmeyle model
+        // kimliği kümesine çevrilir ve okuma modeli o kümeyle süzülür (kasa tipinin yolu).
+        // Kısaltmaların HİÇBİRİ tanınmazsa eksen yok sayılır (D20); tanınan ama stoğu ya da
+        // modeli olmayan marka uygulanır ve sonuç boş olabilir (D21). Eksensiz istek
+        // `VehicleReference`'a fazladan tur ödemez (C5).
+        List<string> brandSlugs = [.. filter.Brands.Where(slug => slug.Length > 0).Distinct(StringComparer.Ordinal)];
+
+        if (brandSlugs.Count > 0)
+        {
+            BrandModelSetDto brands = await brandQueries.GetModelSetAsync(brandSlugs, cancellationToken);
+
+            if (brands.KnownSlugs.Count > 0)
+            {
+                List<Guid> modelIds = [.. brands.ModelIds];
+                query = query.Where(listing => modelIds.Contains(listing.VehicleModelId));
+            }
         }
 
         // R15 — sınırlar DAHİL.

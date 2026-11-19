@@ -28,7 +28,8 @@ export const LIST_SORTS = [
 
 export type ListSort = (typeof LIST_SORTS)[number]
 
-export const MULTI_AXES = ['bodyTypes', 'fuels', 'transmissions'] as const
+/** `0021` R11 — marka ekseni SONA eklendi: kanonik adreste var olan eksenlerin sırası değişmez. */
+export const MULTI_AXES = ['bodyTypes', 'fuels', 'transmissions', 'brands'] as const
 export type MultiAxis = (typeof MULTI_AXES)[number]
 
 export const RANGE_AXES = ['year', 'mileage', 'price'] as const
@@ -41,6 +42,8 @@ export interface ListState {
   readonly page: number
   readonly fuels?: readonly string[]
   readonly transmissions?: readonly string[]
+  /** `0021` R12 — `brand` (tekrarlı kısaltma); tanınmayan değeri sunucu yok sayar (D20). */
+  readonly brands?: readonly string[]
   readonly year?: ListRange
   readonly mileage?: ListRange
   readonly price?: ListRange
@@ -54,6 +57,7 @@ const MULTI_PARAMS: Record<MultiAxis, string> = {
   bodyTypes: BODY_TYPE_PARAM,
   fuels: 'fuel',
   transmissions: 'transmission',
+  brands: 'brand',
 }
 
 const RANGE_PARAMS: Record<RangeAxis, readonly [string, string]> = {
@@ -69,7 +73,7 @@ export function parseListState(search: string): ListState {
 
   let state: ListState = { bodyTypes: parseValues(params.getAll(BODY_TYPE_PARAM)), page: 1 }
 
-  for (const axis of ['fuels', 'transmissions'] as const) {
+  for (const axis of ['fuels', 'transmissions', 'brands'] as const) {
     const values = parseValues(params.getAll(MULTI_PARAMS[axis]))
     if (values.length > 0) {
       state = { ...state, [axis]: values }

@@ -91,7 +91,14 @@ function gonderilenHarita(cagri = 0) {
 
 beforeEach(() => {
   vi.mocked(fetchReferenceOptions).mockResolvedValue({
-    models: [{ value: '0192c000-0000-7000-8000-00000000000a', label: 'Toyota Corolla' }],
+    brands: [{ value: '0192c000-0000-7000-8000-0000000000b8', label: 'Toyota' }],
+    models: [
+      {
+        value: '0192c000-0000-7000-8000-00000000000a',
+        label: 'Corolla',
+        brandId: '0192c000-0000-7000-8000-0000000000b8',
+      },
+    ],
     bodyTypes: [{ value: 'suv', label: 'SUV' }],
     fuelTypes: [{ value: 'petrol', label: 'Benzin' }],
     transmissions: [{ value: 'automatic', label: 'Otomatik' }],

@@ -170,7 +170,8 @@ sayfadan ayrılmadan stoğun ne içerdiğini anlar.**
   (`'Toyota Corolla'`); `0010a` X14 marka taksonomisini `VehicleReference`'ın kendi spec'ine
   bıraktı. Sayılacak bir marka olmadan marka sayan okuma yazılamaz. Marka taksonomisi ayrı
   bir kart olarak önerilir; ana sayfanın marka bölümü ve `0015` R1'in marka ekseni ona
-  bağlanır. → **D11**.
+  bağlanır. → **D11**. *(Marka taksonomisi ve "Aracınızı bulun" formunun marka alanı →
+  `0021`, 2026-11-19; marka bölümü ve marka başına araç sayısı `0021` X3 ile yine kapsam dışı.)*
 - **X14.** **Üst çubuktaki dil değiştiricinin etkin locale'lere uyması** — *neden:* aynı
   kusur (D22) ama ana sayfanın değil kabuğun; `frontend-001`'in yüzeyi. Ayrı kart. → D23.
 

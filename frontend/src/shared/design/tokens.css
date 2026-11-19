@@ -179,8 +179,19 @@
        < 22.5rem → 1 sütun → 1192 (320px, tr)
        ≥ 22.5rem → 1 sütun → 1083 (360px, en)
        ≥ 35.5rem → 2 sütun → 735 (564px, tr)
-       ≥ 51.5rem → 3–4 sütun → 536 (1076px, tr) */
-  --list-filters-min-block-size: 1202px;
+       ≥ 51.5rem → 3–4 sütun → 536 (1076px, tr)
+     `0021` — panele YEDİNCİ eksen (marka) eklendi ve değerler aynı yöntemle yeniden ölçüldü
+     (2026-11-19, tohumun stoklu on markasıyla; aynı tarama, 320–1400px, 8px adım, tr/ar/en).
+     Marka ekseninin yüksekliği STOKLU MARKA SAYISINA bağlıdır ve kurulumdan kuruluma değişir;
+     ölçüm tohumun dokuz markasından bir fazlasıyla yapıldı. Daha çok markalı bir kurulumda panel
+     ayrılan yükseklikten uzar; eksen panelin SONUNDA olduğu için panelin içinde hiçbir şey
+     kaymaz, yalnız altındaki liste aşağı iner.
+       < 22.5rem → 1 sütun → 1618 (320px, tr)
+       ≥ 22.5rem → 1 sütun → 1390 (400px, en)
+       ≥ 35.5rem → 2 sütun → 1161 (576px, tr)
+       ≥ 51.5rem → 3 sütun → 950 (840px, tr)
+       ≥ 67.5rem → 4 sütun → 751 (1104px, tr) — yedinci eksen 3 ve 4 sütunu ayrıştırdı */
+  --list-filters-min-block-size: 1628px;
   --form-control-min-block-size: 44px;
 
   /* 0008 — onay kutusu. Genişlik okunabilir satır uzunluğunu aşmaz; katman sırası
@@ -200,19 +211,25 @@
 
 @media (width >= 22.5rem) {
   :root {
-    --list-filters-min-block-size: 1093px;
+    --list-filters-min-block-size: 1400px;
   }
 }
 
 @media (width >= 35.5rem) {
   :root {
-    --list-filters-min-block-size: 745px;
+    --list-filters-min-block-size: 1171px;
   }
 }
 
 @media (width >= 51.5rem) {
   :root {
-    --list-filters-min-block-size: 546px;
+    --list-filters-min-block-size: 960px;
+  }
+}
+
+@media (width >= 67.5rem) {
+  :root {
+    --list-filters-min-block-size: 761px;
   }
 }
 

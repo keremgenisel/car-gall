@@ -64,6 +64,12 @@ public sealed record ShowcaseListingFilter(
 
     /// <summary>`0015` R5 — `sort` ham değeri; tanınmayan değer varsayılan sıralamaya düşer.</summary>
     public string? Sort { get; init; }
+
+    /// <summary>
+    /// `0021` R11, R12 — marka ekseni (`brand`, tekrarlı kısaltma). Ham girdi; eşleşme tam ve
+    /// harfe duyarlıdır ve tanınmayan değer yok sayılır (D20).
+    /// </summary>
+    public IReadOnlyList<string> Brands { get; init; } = [];
 }
 
 /// <summary>
@@ -79,6 +85,24 @@ public sealed record ShowcaseRange(string? Min, string? Max)
 public interface IShowcaseListingQueries
 {
     Task<PagedResult<ShowcaseListingDto>> GetAsync(ShowcaseListingFilter filter, CancellationToken cancellationToken);
+}
+
+/// <summary>`0021` — marka ekseninin ziyaretçiye dönen seçeneği: adres kısaltması ve görünen ad.</summary>
+public sealed record ShowcaseBrandOptionDto(string Slug, string Label);
+
+/// <summary>
+/// `0021` R11, R13 · D9, D21 — vitrin marka ekseninin seçenekleri. Liste: en az bir yayındaki
+/// ilanı olan markalar ve adresle gelen, var olan ama stoğu kalmamış seçili markalar.
+/// Ana sayfa formu: yalnız "ana sayfada göster" işaretli ve stoğu olan markalar.
+/// </summary>
+public interface IShowcaseBrandQueries
+{
+    Task<IReadOnlyList<ShowcaseBrandOptionDto>> GetForListAsync(
+        string locale,
+        IReadOnlyList<string> selectedSlugs,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ShowcaseBrandOptionDto>> GetForHomeAsync(string locale, CancellationToken cancellationToken);
 }
 
 /// <summary>`0014` **D3** — ana sayfanın öne çıkan bölümü en çok bu kadar kart gösterir.</summary>

@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useLocale } from '../../../app/localeContext'
-import { fetchFeaturedListings, fetchShowcaseTotal } from '../../../shared/api/catalog'
+import {
+  fetchFeaturedListings,
+  fetchHomeBrands,
+  fetchShowcaseTotal,
+} from '../../../shared/api/catalog'
+import type { ShowcaseBrand } from '../../../shared/api/types'
 import { ErrorState } from '../../../shared/ui'
 import { loadBodyTypeOptions, type BodyTypeOptions } from '../bodyTypeOptions'
 import { EmptyShowcase } from '../states/EmptyShowcase'
@@ -11,7 +16,13 @@ import { NarrowingForm } from './NarrowingForm'
 type FormLoad =
   | { readonly kind: 'loading' }
   | { readonly kind: 'error' }
-  | { readonly kind: 'ready'; readonly total: number; readonly options: BodyTypeOptions }
+  | {
+      readonly kind: 'ready'
+      readonly total: number
+      readonly options: BodyTypeOptions
+      /** `0021` R13 — formun markaları; okunamazsa boş (D22: alan görünmez). */
+      readonly brands: readonly ShowcaseBrand[]
+    }
 
 interface Keyed<T> {
   readonly key: string
@@ -46,12 +57,15 @@ export function HomeCatalog() {
   useEffect(() => {
     const controller = new AbortController()
 
+    // `0021` D22 — marka okuması PARALEL ve formu düşürmez: düşerse marka alanı görünmez ve
+    // form kasa tipiyle çalışır (AC-51). İlk boyamanın önüne ek bir gidiş-dönüş koymaz.
     Promise.all([
       fetchShowcaseTotal(locale, controller.signal),
       loadBodyTypeOptions(locale, controller.signal),
+      fetchHomeBrands(locale, controller.signal).catch((): readonly ShowcaseBrand[] => []),
     ])
-      .then(([total, options]) =>
-        setFormResult({ key: formKey, value: { kind: 'ready', total, options } }),
+      .then(([total, options, brands]) =>
+        setFormResult({ key: formKey, value: { kind: 'ready', total, options, brands } }),
       )
       .catch((cause: unknown) => {
         if (!isAbort(cause)) {
@@ -114,7 +128,7 @@ function FormBlock({ load, onRetry }: { readonly load: FormLoad; readonly onRetr
     )
   }
 
-  return <NarrowingForm total={load.total} options={load.options} />
+  return <NarrowingForm total={load.total} options={load.options} brands={load.brands} />
 }
 
 function isAbort(cause: unknown): boolean {

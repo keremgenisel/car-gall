@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocale } from '../../app/localeContext'
-import { fetchReferenceTerms, fetchShowcaseListings } from '../../shared/api/catalog'
+import {
+  fetchReferenceTerms,
+  fetchShowcaseBrands,
+  fetchShowcaseListings,
+} from '../../shared/api/catalog'
 import type { PagedResult, ShowcaseListing } from '../../shared/api/types'
 import { ListingCard } from './ListingCard'
 import { loadBodyTypeOptions } from './bodyTypeOptions'
@@ -11,7 +15,14 @@ import { EmptyByFilter } from './states/EmptyByFilter'
 import { EmptyShowcase } from './states/EmptyShowcase'
 import { ListError } from './states/ListError'
 import { ListSkeleton } from './states/ListSkeleton'
-import { activeAxes, clearFilters, toCanonicalSearch, withPage, withSort } from './listUrlState'
+import {
+  activeAxes,
+  clearFilters,
+  toCanonicalSearch,
+  valuesOf,
+  withPage,
+  withSort,
+} from './listUrlState'
 import { replaceCanonicalPage, useListUrlState } from './useListUrlState'
 
 type LoadState =
@@ -35,6 +46,8 @@ export function ShowcaseListPage() {
   const [optionsResult, setOptionsResult] = useState<{
     readonly key: string
     readonly value: OptionsLoad
+    /** `0021` D21 — okumanın sorduğu seçili markalar; eksen onları stoksuz olsalar da taşır. */
+    readonly requestedBrands: readonly string[]
   } | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
@@ -44,8 +57,13 @@ export function ShowcaseListPage() {
   const requestKey = `${locale}|${search}|${reloadToken}`
   const load: LoadState =
     result !== null && result.key === requestKey ? result.value : { kind: 'loading' }
+  // `0021` D21 — seçenekler yalnız dil değişince ya da adres eksende OLMAYAN bir marka
+  // getirdiğinde (geri tuşu, paylaşılan bağlantı) yeniden okunur; eksenin kendi çipine basmak
+  // okuma tetiklemez.
+  const selectedBrands = valuesOf(state, 'brands')
+  const optionsKey = brandOptionsKey(locale, selectedBrands, optionsResult)
   const options: OptionsLoad =
-    optionsResult !== null && optionsResult.key === locale
+    optionsResult !== null && optionsResult.key === optionsKey
       ? optionsResult.value
       : { kind: 'loading' }
 
@@ -60,10 +78,12 @@ export function ShowcaseListPage() {
       loadBodyTypeOptions(locale, controller.signal),
       fetchReferenceTerms('fuel-types', locale, controller.signal),
       fetchReferenceTerms('transmission-types', locale, controller.signal),
+      fetchShowcaseBrands(selectedBrands, locale, controller.signal),
     ])
-      .then(([bodyTypeOptions, fuels, transmissions]) =>
+      .then(([bodyTypeOptions, fuels, transmissions, brands]) =>
         setOptionsResult({
-          key: locale,
+          key: optionsKey,
+          requestedBrands: selectedBrands,
           value: {
             kind: 'done',
             value: {
@@ -71,18 +91,25 @@ export function ShowcaseListPage() {
               bodyTypes: bodyTypeOptions.bodyTypes,
               fuels,
               transmissions,
+              brands,
             },
           },
         }),
       )
       .catch((cause: unknown) => {
         if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
-          setOptionsResult({ key: locale, value: { kind: 'done', value: null } })
+          setOptionsResult({
+            key: optionsKey,
+            requestedBrands: selectedBrands,
+            value: { kind: 'done', value: null },
+          })
         }
       })
 
     return () => controller.abort()
-  }, [locale])
+    // `selectedBrands` anahtarda (`optionsKey`) temsil ediliyor; dizi kimliği her render'da değişir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, optionsKey])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -184,4 +211,34 @@ export function ShowcaseListPage() {
       ) : null}
     </div>
   )
+}
+
+/**
+ * `0021` D21 — marka seçeneklerinin okuma anahtarı. Seçili markaların hepsi son okumada ya
+ * soruldu ya da döndüyse anahtar değişmez; değilse (adres eksende olmayan bir marka getirdi)
+ * seçimin kendisi anahtara girer ve okuma yinelenir.
+ */
+function brandOptionsKey(
+  locale: string,
+  selected: readonly string[],
+  last: {
+    readonly key: string
+    readonly value: OptionsLoad
+    readonly requestedBrands: readonly string[]
+  } | null,
+): string {
+  if (last !== null && last.key.startsWith(`${locale}|`)) {
+    const known = new Set(last.requestedBrands)
+    if (last.value.kind === 'done' && last.value.value !== null) {
+      for (const brand of last.value.value.brands) {
+        known.add(brand.slug)
+      }
+    }
+
+    if (selected.every((slug) => known.has(slug))) {
+      return last.key
+    }
+  }
+
+  return `${locale}|${[...selected].sort().join(',')}`
 }

@@ -25,6 +25,12 @@ internal static class VehicleErrors
     /// </summary>
     internal const string ReferenceNotFound = "vehicle.reference_not_found";
 
+    /// <summary>
+    /// `0021` D23 — seçilen model ya da markası pasif; yeni seçim olarak kabul edilmez. Aracın
+    /// zaten kayıtlı olduğu pasif modelle kaydetmek bu hatayı ALMAZ (AC-26, AC-27).
+    /// </summary>
+    internal const string ModelInactive = "vehicle.model_inactive";
+
     /// <summary>AC-16 — galeride aynı şase ikinci kez kaydedilemez (A5).</summary>
     internal const string DuplicateVin = "vehicle.duplicate_vin";
 

@@ -21,7 +21,14 @@ const { fetchReferenceOptions, fetchBranches, createVehicle } =
 
 /** Altı referans kümesi; etiketler personelin locale'inde gelir (AC-13). */
 const SECENEKLER = {
-  models: [{ value: '0192c000-0000-7000-8000-00000000000a', label: 'Toyota Corolla' }],
+  brands: [{ value: '0192c000-0000-7000-8000-0000000000b8', label: 'Toyota' }],
+  models: [
+    {
+      value: '0192c000-0000-7000-8000-00000000000a',
+      label: 'Corolla',
+      brandId: '0192c000-0000-7000-8000-0000000000b8',
+    },
+  ],
   bodyTypes: [{ value: 'suv', label: 'SUV' }],
   fuelTypes: [{ value: 'petrol', label: 'Benzin' }],
   transmissions: [{ value: 'automatic', label: 'Otomatik' }],
@@ -44,6 +51,7 @@ function yaz(etiket: string, deger: string) {
 /** Çekirdek alanların hepsini doldurur: R10 eksik alanda isteği hiç atmıyor. */
 function formuDoldur() {
   yaz('Şube', '0192c000-0000-7000-8000-00000000b001')
+  yaz('Marka', SECENEKLER.brands[0].value)
   yaz('Model', SECENEKLER.models[0].value)
   yaz('Kasa tipi', 'suv')
   yaz('Donanım paketi', 'base')
@@ -87,7 +95,7 @@ describe('0010a/AC-12: Panel; model, kasa tipi, donanım paketi, yakıt, vites v
       expect(await screen.findByLabelText(etiket)).toBeTruthy()
     }
 
-    expect(await screen.findByRole('option', { name: 'Toyota Corolla' })).toBeTruthy()
+    expect(await screen.findByRole('option', { name: 'Toyota' })).toBeTruthy()
     expect(screen.getByRole('option', { name: 'SUV' })).toBeTruthy()
     expect(screen.getByRole('option', { name: 'Benzin' })).toBeTruthy()
     expect(screen.getByRole('option', { name: 'Otomatik' })).toBeTruthy()
@@ -219,6 +227,9 @@ describe('0010a/AC-42: Doğrulama hatası olan alan işaretlenir ve hata persone
     // Etiketler İngilizce; alanlar da öyle sorgulanıyor.
     fireEvent.change(screen.getByLabelText('Branch'), {
       target: { value: '0192c000-0000-7000-8000-00000000b001' },
+    })
+    fireEvent.change(screen.getByLabelText('Brand'), {
+      target: { value: SECENEKLER.brands[0].value },
     })
     fireEvent.change(screen.getByLabelText('Model'), {
       target: { value: SECENEKLER.models[0].value },

@@ -58,6 +58,19 @@ internal sealed class VehicleModelConfiguration : IEntityTypeConfiguration<Vehic
         builder.Property(model => model.Id).HasColumnName("id");
         builder.Property(model => model.CanonicalName).HasColumnName("canonical_name").HasMaxLength(160);
 
+        // `0021` — marka bağı, tekillik anahtarı (D11: marka İÇİNDE tekil), pasiflik ve sürüm.
+        builder.Property(model => model.BrandId).HasColumnName("brand_id");
+        builder.Property(model => model.CanonicalKey).HasColumnName("canonical_key").HasMaxLength(160);
+        builder.Property(model => model.IsActive).HasColumnName("is_active");
+        builder.Property(model => model.Version).HasColumnName("version").IsConcurrencyToken();
+        builder.HasIndex(model => new { model.BrandId, model.CanonicalKey })
+            .IsUnique()
+            .HasDatabaseName("ux_vehicle_models_brand_canonical_key");
+        builder.HasOne<VehicleBrand>()
+            .WithMany()
+            .HasForeignKey(model => model.BrandId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.OwnsMany(model => model.Translations, translation =>
         {
             translation.ToTable("vehicle_model_translations");
@@ -66,6 +79,43 @@ internal sealed class VehicleModelConfiguration : IEntityTypeConfiguration<Vehic
             translation.Property(item => item.VehicleModelId).HasColumnName("vehicle_model_id");
             translation.Property(item => item.Locale).HasColumnName("locale").HasMaxLength(3);
             translation.Property(item => item.Name).HasColumnName("name").HasMaxLength(160);
+        });
+    }
+}
+
+/// <summary>
+/// `0021` — marka. Kanonik ad ve kısaltma galeri genelinde tekildir (C3, D19); ikisi ayrı
+/// indekstir, çünkü çakışmaları ayrı hata kodlarıdır ("Alfa-Romeo" adı farklı ama kısaltması
+/// "Alfa Romeo"nunkiyle aynı — AC-9). Yarışta ikinci ekleme indeksten düşer.
+/// </summary>
+internal sealed class VehicleBrandConfiguration : IEntityTypeConfiguration<VehicleBrand>
+{
+    internal const string CanonicalKeyIndex = "ux_vehicle_brands_canonical_key";
+
+    internal const string SlugIndex = "ux_vehicle_brands_slug";
+
+    public void Configure(EntityTypeBuilder<VehicleBrand> builder)
+    {
+        builder.ToTable("vehicle_brands");
+        builder.HasKey(brand => brand.Id);
+        builder.Property(brand => brand.Id).HasColumnName("id");
+        builder.Property(brand => brand.CanonicalName).HasColumnName("canonical_name").HasMaxLength(ReferenceNames.BrandCanonicalMaxLength);
+        builder.Property(brand => brand.CanonicalKey).HasColumnName("canonical_key").HasMaxLength(ReferenceNames.BrandCanonicalMaxLength);
+        builder.Property(brand => brand.Slug).HasColumnName("slug").HasMaxLength(ReferenceNames.BrandCanonicalMaxLength);
+        builder.Property(brand => brand.IsActive).HasColumnName("is_active");
+        builder.Property(brand => brand.ShowOnHome).HasColumnName("show_on_home");
+        builder.Property(brand => brand.Version).HasColumnName("version").IsConcurrencyToken();
+        builder.HasIndex(brand => brand.CanonicalKey).IsUnique().HasDatabaseName(CanonicalKeyIndex);
+        builder.HasIndex(brand => brand.Slug).IsUnique().HasDatabaseName(SlugIndex);
+
+        builder.OwnsMany(brand => brand.Translations, translation =>
+        {
+            translation.ToTable("vehicle_brand_translations");
+            translation.WithOwner().HasForeignKey(item => item.BrandId);
+            translation.HasKey(item => new { item.BrandId, item.Locale });
+            translation.Property(item => item.BrandId).HasColumnName("brand_id");
+            translation.Property(item => item.Locale).HasColumnName("locale").HasMaxLength(3);
+            translation.Property(item => item.Name).HasColumnName("name").HasMaxLength(ReferenceNames.DisplayNameMaxLength);
         });
     }
 }

@@ -16,6 +16,9 @@ namespace CarGallery.Modules.VehicleReference.Endpoints;
 ///
 /// <para>Etiket personelin locale'inde gelir ve çevirisi olmayan değerde kanonik Latin ada
 /// düşülür — ham slug HİÇBİR yerde gösterilmez (AC-13).</para>
+///
+/// <para>`0021` D24 — marka ve model uçları YALNIZ aktif kayıtları döndürür (AC-55); pasifler
+/// ve "ana sayfada göster" işareti yalnız Yönetici'nin yönetim okumasındadır.</para>
 /// </summary>
 internal static class ReferenceEndpoints
 {
@@ -28,6 +31,10 @@ internal static class ReferenceEndpoints
         builder.MapGet("/api/reference/models", GetModelsAsync)
             .WithName("GetVehicleModels")
             .Produces<IReadOnlyList<VehicleModelDto>>(StatusCodes.Status200OK);
+
+        builder.MapGet("/api/reference/brands", GetBrandsAsync)
+            .WithName("GetVehicleBrands")
+            .Produces<IReadOnlyList<VehicleBrandDto>>(StatusCodes.Status200OK);
 
         MapTerm(builder, "fuel-types", ReferenceTermKinds.FuelType, "GetFuelTypes");
         MapTerm(builder, "transmission-types", ReferenceTermKinds.TransmissionType, "GetTransmissionTypes");
@@ -64,6 +71,14 @@ internal static class ReferenceEndpoints
         IVehicleModelQueries queries,
         CancellationToken cancellationToken) =>
         TypedResults.Ok(await queries.GetAllAsync(
+            httpContext.Request.Query["locale"].ToString(),
+            cancellationToken));
+
+    private static async Task<Ok<IReadOnlyList<VehicleBrandDto>>> GetBrandsAsync(
+        HttpContext httpContext,
+        IVehicleBrandQueries queries,
+        CancellationToken cancellationToken) =>
+        TypedResults.Ok(await queries.GetActiveAsync(
             httpContext.Request.Query["locale"].ToString(),
             cancellationToken));
 }
