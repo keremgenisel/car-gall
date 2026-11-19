@@ -319,6 +319,14 @@ if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))
     await app.Services.SeedVehicleCatalogForDevelopmentAsync(seedCount, seedModelId);
 }
 
+// `0022` D11 — performans ortamının en kötü hâli: ana sayfa metinleri her dilde, her alan
+// sınırında. İlan tohumundan BAĞIMSIZ bayrak; `perf.yml` açar, e2e ortamı açmaz (e2e
+// varsayılan metinleri bekleyen kriterleri de koşuyor).
+if (builder.Configuration.GetValue<bool>("Development:SeedHomeTexts"))
+{
+    await app.Services.SeedHomeTextsForDevelopmentAsync();
+}
+
 // Kurulum Yönetici hesabı olmadan hiç kimse giriş yapamaz ve sistem kalıcı olarak
 // kapalı kalır (0006/D2, Tuzak 1). İdempotenttir: hesap varsa dokunulmaz.
 //
