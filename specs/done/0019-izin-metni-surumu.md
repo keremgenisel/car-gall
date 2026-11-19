@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-19 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B17 → **D14–D27**) |
+| **Durum** | Tamamlandı (2026-11-19) — kararlar ve kriterler #119 → `56fe70f`, uygulama #121 → `ae19b25` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Content` (yayınlanmış sürüm kaydı, okuma sözleşmesi, migration — `content` şeması) · `Leads` (talebin sürüm bağı, migration — `leads` şeması; `Content`'e yalnız `Content.Contracts` üzerinden okuma) · `docs/architecture.md` (bağımlılık haritası — **D8**) · `docs/domain.md` (yeni terim — **D12**; yeni iş kuralı **L8** — **D27**) · `docs/deploy.md` (dağıtım sırası notu — **D15**) |
@@ -681,29 +681,29 @@ görev tanımında planı Developer'a bıraktı; plan kararları "P" ile işaret
 ## Definition of Done
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B17 → D14–D27, Takım Yöneticisi (ajan) kararı, 2026-11-19.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-      AC-18…AC-35 gerçek `Content` ile kanıtlandı (Bilinen tuzak 1).
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/<no>-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+      AC-18…AC-35 gerçek `Content` ile kanıtlandı (Bilinen tuzak 1). *(56/56; eşleme PR #121'de.)*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/<no>-ac<n>.png`),
       boş ve hata durumları dâhil; RTL kriteri varsa Arapça görüntü de var.
-      — Bu kartta arayüz kriteri **yok** (D7, X2); görsel kanıt uygulanabilir değildir.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration'lar yalnızca kendi şemasına dokunuyor: `Content` → `content`, `Leads` → `leads` (ham SQL dâhil — AC-47).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-      — Yeni kullanıcı metni beklenmiyor; eklenirse üç dilde.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**Yayınlanmış Metin Sürümü** — D12; iş kuralı **L8** — D27).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D8; bağımlılık haritası dâhil — AC-55).
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      — Bu kartta arayüz kriteri **yok** (D7, X2); görsel kanıt uygulanabilir değildir. *(Uygulanamaz: kart arayüz değiştirmiyor — panel talep ekranı yok, D7.)*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] <!-- DoD:T5 --> Yeni migration'lar yalnızca kendi şemasına dokunuyor: `Content` → `content`, `Leads` → `leads` (ham SQL dâhil — AC-47).
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+      — Yeni kullanıcı metni beklenmiyor; eklenirse üç dilde. *(Uygulanamaz: yeni kullanıcı metni yok.)*
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**Yayınlanmış Metin Sürümü** — D12; iş kuralı **L8** — D27).
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D8; bağımlılık haritası dâhil — AC-55).
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *(`290cd2a`: Backend, E2E, C3 yeşil; Frontend değişmediği için atlandı.)*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+      bunun yerine geçmez. *(2026-11-19, merge'den önce: 0/1/4 — beşi de `b3698d2`…`290cd2a`'te işlendi; BULGU-1 sessiz yanlış bağı yüksek sesli D14 hatasına çevirdi, P13.)*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(Takım Yöneticisi (ajan), `ae19b25`, 2026-11-19.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
-- [ ] `docs/deploy.md`'ye bu sürüm için "eski uygulama `--migrate`'ten önce durdurulur" notu düşüldü (C10, D15).
-- [ ] AC-52'nin altı p95 ölçümü ve altı `201` sayısı PR'a yazıldı.
-- [ ] `0017` **X8**'e "→ `0019`" notu düşüldü.
+- [x] `docs/deploy.md`'ye bu sürüm için "eski uygulama `--migrate`'ten önce durdurulur" notu düşüldü (C10, D15).
+- [x] AC-52'nin altı p95 ölçümü ve altı `201` sayısı PR'a yazıldı.
+- [x] `0017` **X8**'e "→ `0019`" notu düşüldü.
 
 ---
 
@@ -721,14 +721,20 @@ tanımın netleştirilmesini öner.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e ae19b25^:specs/0019-izin-metni-surumu.md` → var. Kararlar ve 56 kriter #119 ile (`56fe70f`) uygulamadan önce girdi. |
+| **Kriter sayısı: önce → bugün** | **56 → 56** | Analistin ilk önerisi 42 kriterdi (`0618fa8`); CLARIFY turu onaydan önce 56'ya çıkardı. |
+| **Spec revizyon sayısı** | **1** | Onay anındaki CLARIFY turu (ADR 0008 / K3 gereği sayılır): QA'nin 17 bulgusu (3 engelleyici) → D14–D27, 42 → 56 kriter. `main`'e girdikten sonra R, C ve AC değişmedi; uygulama yalnız Context'e plan kararları (P1–P13) ekledi. |
+| **Düzeltme turu sayısı** | **1** | QA turu tek seferde işlendi (`b3698d2`…`290cd2a`). T10 `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **5 / 0** | BULGU-1 (önemli): `deploy.md` notu arıza biçimini yanlış anlatıyordu ve eski uygulama yayındaki metni düzenlerse talepler canlı metinle aynı olmayan sürüme SESSİZCE bağlanıyordu → not düzeltildi ve okuma metni karşılaştırıyor (P13) · BULGU-2: işaretçinin var olmayan sürümü gösterdiği dal test edilmemişti · BULGU-3: AC-46 kapısı takma adlı `using`'i görmüyordu · BULGU-4: biçim · BULGU-5: benchmark profili ön koşulu denetlemiyordu. CLARIFY'ın 17 bulgusu spec turuna aittir. |
+| **Uygulama içi bulgu** | **3** | AC-50'nin "iki sorgu" mutasyonu ilk denemede sessizce yeşil kaldı (sonda kusurlu) · Host hata yolu testinde sıraya bağımlı sayım · 72 karakteri aşan üç commit başlığı (push'tan önce). |
+| **Regresyon sayısı** | **0** | 0005 ve 0017 testlerinin doğrulamaları değişmeden yeşil (AC-53, AC-54). |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-19 (`ae19b25`). |
 
 **Bu spec'ten çıkarılan ders:**
-<!-- 1-2 cümle. Bir sonraki spec'i nasıl daha iyi yazarız? -->
+
+**Değişmezi yalnız yazarken değil okurken de uygula.** R13 ("en son sürüm canlı metinle
+aynıdır") yazma yolunda garanti ediliyordu; ama dağıtım penceresinde eski bir uygulama yazma
+yolunun DIŞINDAN metni değiştirebiliyordu ve okuma bunu görmeden yanlış kanıt üretiyordu. QA
+bunu belgedeki bir cümleden yakaladı. Kanıt üreten bir okumada değişmez, okumanın kendisinde
+de denetlenmeli; sessiz yanlış yerine yüksek sesli hata.
+
