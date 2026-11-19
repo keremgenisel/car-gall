@@ -110,10 +110,6 @@ export function fetchReferenceTerms(
 }
 
 /**
- * 0014 **D3** — ana sayfanın öne çıkan bölümü: galerinin öne çıkardığı görünür ilanlar,
- * listeyle aynı sırada, en çok altı tane. Boş dizi bir hata değildir (AC-21).
- */
-/**
  * `0021` R11 · D21 — liste marka ekseninin seçenekleri: stoğu olan markalar ve adresle gelen,
  * var olan ama stoğu kalmamış seçili markalar (ziyaretçi seçimi kaldırabilsin).
  */
@@ -149,6 +145,10 @@ export function fetchHomeBrands(
   )
 }
 
+/**
+ * 0014 **D3** — ana sayfanın öne çıkan bölümü: galerinin öne çıkardığı görünür ilanlar,
+ * listeyle aynı sırada, en çok altı tane. Boş dizi bir hata değildir (AC-21).
+ */
 export function fetchFeaturedListings(
   locale: AppLocale,
   signal?: AbortSignal,
