@@ -20,8 +20,9 @@ internal sealed class PrivacyNoticeQueries(ContentDbContext context, ContentLoca
             return PrivacyNoticeLookup.NotPublished;
         }
 
-        // P4/C7 — sayfa satırı, dilin durumu ve işaretçinin gösterdiği sürüm satırının
-        // varlığı TEK komutta okunur. İki ayrı sorgu, aralarına giren bir yayınla iki farklı
+        // P4/C7 — sayfa satırı, dilin durumu, işaretçinin gösterdiği sürüm satırının
+        // varlığı ve (P13) o satırın metninin canlı metinden farklı olup olmadığı TEK
+        // komutta okunur. İki ayrı sorgu, aralarına giren bir yayınla iki farklı
         // anın karışımını okuyabilirdi (R8).
         var satir = await context.Pages
             .AsNoTracking()
@@ -35,6 +36,9 @@ internal sealed class PrivacyNoticeQueries(ContentDbContext context, ContentLoca
                         item.Status,
                         item.PublishedVersionId,
                         SurumVar = context.PrivacyNoticeVersions.Any(surum => surum.Id == item.PublishedVersionId),
+                        MetinFarkli = context.PrivacyNoticeVersions.Any(surum =>
+                            surum.Id == item.PublishedVersionId
+                            && (surum.Title != item.Title || surum.Body != item.Body)),
                     })
                     .FirstOrDefault(),
             })
@@ -56,6 +60,16 @@ internal sealed class PrivacyNoticeQueries(ContentDbContext context, ContentLoca
         {
             throw new InvalidOperationException(
                 $"KVKK aydınlatma metni '{locale}' dilinde yayında ama yayınlanmış sürümü yok.");
+        }
+
+        // P13 — R13'ün değişmezi çalışma anında da uygulanır: işaretçinin gösterdiği sürüm
+        // canlı metinle birebir aynı değilse (ör. eski uygulama migration'dan sonra yayındaki
+        // metni düzenledi — C10) talep o sürüme BAĞLANMAZ; kanıt canlı metni söylemezdi.
+        // PostgreSQL'in deterministik harmanlamasında `=` bayt eşitliğidir: ordinal.
+        if (satir.Dil.MetinFarkli)
+        {
+            throw new InvalidOperationException(
+                $"KVKK aydınlatma metninin '{locale}' dilindeki en son sürümü canlı metinle aynı değil.");
         }
 
         return PrivacyNoticeLookup.Published(surumKimligi);

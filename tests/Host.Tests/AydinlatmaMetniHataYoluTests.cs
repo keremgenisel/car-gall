@@ -69,6 +69,24 @@ public sealed class AydinlatmaMetniHataYoluTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// P13 (QA BULGU-1) — C10 kırıldığında ikinci arıza biçimi: eski uygulama YAYINDAKİ metni
+    /// düzenledi, işaretçi hâlâ eski sürümü gösteriyor. Talep canlı metinle aynı olmayan bir
+    /// sürüme bağlanmaz; okuma D14 hatası verir ve talep yazılmaz.
+    /// </summary>
+    [Fact(DisplayName = "0019/AC-33: tr yayındayken tr için hiç sürüm yoksa bırakılan tr talebi kaydedilmez")]
+    public Task Kaydedilmez_SurumMetniCanliMetinleAyniDegilken() => TutarsizYayinAsync(
+        "ac33-farkli",
+        surumGovdesi: "Sürüme kaydedilmiş ESKİ gövde.",
+        isaretci: null);
+
+    /// <summary>P4 (QA BULGU-2) — işaretçi var olmayan bir sürümü gösteriyor.</summary>
+    [Fact(DisplayName = "0019/AC-33: tr yayındayken tr için hiç sürüm yoksa bırakılan tr talebi kaydedilmez")]
+    public Task Kaydedilmez_IsaretciVarOlmayanSurumuGosterirken() => TutarsizYayinAsync(
+        "ac33-yok",
+        surumGovdesi: "Canlı gövde.",
+        isaretci: Guid.CreateVersion7());
+
     [Fact(DisplayName = "0019/AC-44: Talep anında sürüm okuması hata verdiğinde talep kaydedilmez, hiçbir talebe \"yayında değildi\" yazılmaz, hız bütçesi tüketilmez (aynı istemciden ardından gelen geçerli talepler bütçenin tamamını kullanabilir) ve yanıt 500 application/problem+json'dur; gövdede istisna metni ve yığın izi yoktur")]
     public async Task Tuketmez_Butceyi_OkumaHatasinda()
     {
@@ -109,5 +127,38 @@ public sealed class AydinlatmaMetniHataYoluTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.TooManyRequests, (await AydinlatmaMetniOrtami.TalepAsync(client, "tr", "ac44-6")).StatusCode);
         Assert.Equal(0, await ortam.SayAsync("SELECT count(*) FROM leads.leads WHERE idempotency_key = 'ac44-hata'"));
+    }
+
+    /// <summary>
+    /// Canlı metin "Canlı gövde." ile tr'de yayında; bir sürüm satırı <paramref name="surumGovdesi"/>
+    /// ile yazılır ve işaretçi ya ona (<paramref name="isaretci"/> boşsa) ya da verilen kimliğe
+    /// bağlanır. Kurulum `content` şemasına doğrudan yazar — eski uygulamanın bırakacağı hâl.
+    /// </summary>
+    private async Task TutarsizYayinAsync(string anahtar, string surumGovdesi, Guid? isaretci)
+    {
+        HttpClient client = ortam.Fabrika().CreateClient();
+        await ortam.YeniKurulumAsync();
+        long once = await ortam.SayAsync("SELECT count(*) FROM leads.leads");
+        Guid surum = Guid.CreateVersion7();
+
+        await ortam.SqlAsync(
+            $"""
+            INSERT INTO content.privacy_notice_versions (id, locale, title, body, recorded_at, is_initial)
+            VALUES ('{surum}', 'tr', 'KVKK Metni', '{surumGovdesi}', now(), false);
+            INSERT INTO content.page_localizations (page_id, locale, title, body, slug, status, published_version_id)
+            VALUES ('{AydinlatmaMetniOrtami.Privacy}', 'tr', 'KVKK Metni', 'Canlı gövde.', 'kvkk', 'published', '{isaretci ?? surum}');
+            """);
+
+        try
+        {
+            HttpResponseMessage yanit = await AydinlatmaMetniOrtami.TalepAsync(client, "tr", anahtar);
+
+            Assert.Equal(HttpStatusCode.InternalServerError, yanit.StatusCode);
+            Assert.Equal(once, await ortam.SayAsync("SELECT count(*) FROM leads.leads"));
+        }
+        finally
+        {
+            await ortam.YeniKurulumAsync();
+        }
     }
 }
