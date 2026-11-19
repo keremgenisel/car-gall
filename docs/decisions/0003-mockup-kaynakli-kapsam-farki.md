@@ -251,6 +251,21 @@ dönüyor; (2) kabuk, tek parçalı ayrılmamış yolda `Content`'e eski slug so
 ve `0004`'ün meta enjeksiyonu aynı istekten geçecek. `0004` başlarken `LocalePrefixMiddleware`'in
 eski slug dalı ve `0016b` **D37**'nin enjeksiyonu birlikte okunmalı. **`0004` hâlâ başlanmamış ilk iş.**
 
+### Sapma — `0018` (#13), #8 ve #12'den önce yapılıyor
+
+`0017` kapandığında başlanmamış ilk iş yine **#8** (`0004`, SEO) idi ve #12 (`frontend-003`)
+da taslaktı. Depo sahibi 2026-11-19'da **#13**'ü (`0018`, bülten aboneliği) `0019` (izin
+metninin kaydı) ile birlikte istedi — **sahip kararı, 2026-11-19**. Kartın S1, S2 ve S5'i sahibin
+kendi cevaplarıyla, S3 ve S4'ü Takım Yöneticisi (ajan) onayıyla kapandı (#120).
+
+**Neden kayda geçiyor:** önceki sapmalarla aynı sebep. **Kesişmeler:** (1) `0018` vitrine ana
+sayfada bir bölüm ve iki sayfa ekliyor; `0004`'ün meta enjeksiyonu ve C3'ün dar LCP payı aynı
+yüzeyde (`0018` **D17**); (2) `0018` `newsletter` adını `Content`'in ayrılmış ad listesine
+ekliyor (`0018` **D26**) ve `0004`'ün gerçek 404 kararı (`0017` D10) aynı yol çözümünden
+geçiyor; (3) `0019` izin metni sürümünü talep izni için ele alıyor, bülten izni için gerekip
+gerekmediği `0018` **SS5**'te sahibe soruldu. **`0004` hâlâ başlanmamış ilk iş**; `frontend-003`
+taslak.
+
 ### `0010`'un kendi dilimlemesi — unsur 7 #2 ikiye bölündü
 
 `0010`'un **D1** kararı, unsur 7'nin 2. maddesini üç dilime ayırıyor ve ilk dilimi kendisi
@@ -305,7 +320,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 10 | Medya galerisi + parça haritası şeması | `0016a` ✅ tamamlandı · `0016b` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 11 | `Content` sayfaları | `0017` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
-| 13 | Bülten aboneliği | **`0018`** (Taslak — S1–S5) |
+| 13 | Bülten aboneliği | **`0018`** (Onaylandı — kriterler #120; **#8 ve #12'den önce — § Sapma**) |
 
 `3`. satır `0010`'un **D9**'uyla ikiye bölündü ve **iki dilimi de kapandı**: `0010a` (araç
 kaydı, 2026-10-05) ve `0010b` (düzenleme ve liste, 2026-10-10). `4`. satır `0011` ile kapandı
@@ -421,6 +436,14 @@ Başlanmamış ilk iş **#8** (`0004`). Tablodaki taslak sayısı üçten **ikiy
 `0018`); tablo dışında `0019` taslağı açıldı. `0017`'nin beş sorusu D1–D5 ile kapanmıştı ve
 kriter turunun S6–S13'ü aynı gün D29–D36 ile kapandı; `0019`'un üç sorusu eklendi, yani toplam
 açık soru 15'ten **13**'e düştü.
+
+**`0018` onaylandı** (2026-11-19, #120; § Sapma — `0018`). Beş sorusunun üçü (S1, S2, S5) sahibin
+cevabıyla, ikisi (S3, S4) Takım Yöneticisi (ajan) onayıyla kapandı; QA CLARIFY turunun yirmi
+bulgusu aynı gün **D21–D27** ile işlendi. Toplam açık soru 13'ten **8**'e düştü (`frontend-003` 5,
+`0019` 3). **`0019` de aynı gün onaylandı** (#119, `56fe70f`): üç sorusu kapandı ve toplam
+açık soru **5**'e indi — kalan tek taslak `frontend-003`. `0018` ayrıca sahibe beş **yasal** soru bıraktı (**SS1–SS5**: İYS, gönderici
+kimliği, saklama, aydınlatma vaadi, izin metni sürümü); bunlar karar değil, sahibin ya da
+hukukun cevabını bekleyen sorulardır ve açık soru sayımına girmez — kriterleri değiştirmezler.
 
 **Devir ikiden DÖRDE çıktı.** Bu paragraf 2026-10-11'de "`0011`'den iki iş devraldı (X7, X8)"
 diyordu; CLARIFY turu ölçtü ve sayı yanlıştı: `0011` § **X3** (fotoğrafların araca

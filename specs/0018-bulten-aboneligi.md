@@ -2,16 +2,13 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
-| **Sahip** | — |
+| **Durum** | Onaylandı (2026-11-19 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B20 → **D4**, **D9–D11**, **D13**, **D14**, **D16**, **D17**, **D20** yeniden yazıldı · **D21–D27** eklendi) |
+| **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `Notifications` · `frontend/` public vitrin |
-| **Bağımlı spec'ler** | `0009` (bildirim altyapısı — tamamlandı; **X2**'yi geri açar) · `0012b` (yayın olayları) · `0017` (KVKK metni) |
-| **Dayanak** | ADR 0003 Ek 1, sıra #13 |
-| **Karar bekliyor** | **S1–S5** — § Açık sorular (5 soru, **5 öneri yazılı**). Cevaplar Acceptance Criteria'yı belirliyor; gelmeden spec onaya sunulmaz. |
-
-> **Bu bir Analist taslağıdır.** Kabul kriterleri yazılmadı — beş açık sorunun cevabı
-> onları belirliyor.
+| **Modül(ler)** | `Notifications` (abonelik kaydı, izin olay kaydı, aday ve dönem kayıtları, teyit, çıkış, şablonlar, migration) · `Content.Contracts` (yalnız ayrılmış ad listesine `newsletter` — **D26**) · `VehicleCatalog.Contracts` (ilan özeti okuması — **D11**) · `frontend/` public vitrin (ana sayfadaki bülten bölümü, teyit ve çıkış sayfaları) · `docs/domain.md` (sözlük önerisi — **D19**) |
+| **Bağımlı spec'ler** | `0009` (bildirim altyapısı — tamamlandı; **X2**'sini bu kart kapatır) · `0012b` (yayın olayları — tamamlandı; **D31**'in formülü bu kartta kullanılmaz, → **D4**) · `0017` (KVKK sayfası — tamamlandı) · `0020` (galeri adı — tamamlandı) · `0014` (ana sayfa — tamamlandı; **X2**'si bu kart) · `0019` (izin metni sürümü — onaylandı, `56fe70f`; ilişki **X12**) |
+| **Dayanak** | ADR 0003 Ek 1, sıra #13 — **#8 (`0004`) ve #12 (`frontend-003`) başlanmadan öne alındı**: sahip kararı, 2026-11-19 (`0019` ile birlikte istendi; ADR 0003 § Sapma — `0018`) · depo sahibinin 2026-11-19 kararları (**D1–D3**) |
+| **Karar bekliyor** | **Takım Yöneticisi:** yok — **D4–D20** onaylandı ve QA CLARIFY turu **D21–D27** ile işlendi (Takım Yöneticisi (ajan) kararı, 2026-11-19). **Sahip:** § Sahibe sorular **SS1–SS5** (yasal; kriterleri değiştirmez, canlıya çıkışı etkileyebilir). |
 
 ---
 
@@ -26,39 +23,63 @@ Galerinin elinde ise düzenli bir haber var: **stoğa yeni araç giriyor.** Bu h
 yalnızca vitrine bakanlara ulaşıyor.
 
 **Galeri** ilgilenen ziyaretçiye yeni araçları haber vermek istiyor; **ziyaretçi** her gün
-site kontrol etmek yerine haberi kendisine gelmesini istiyor — ve **tek tıkla** bu listeden
+site kontrol etmek yerine haberin kendisine gelmesini istiyor — ve **tek tıkla** bu listeden
 çıkabilmek istiyor.
 
-Bu iş bittiğinde ziyaretçi e-posta adresini bırakıp onaylar, yeni araçların özetini alır ve
-istediği an tek bağlantıyla çıkar. Başarı ölçütü: **onay vermemiş hiç kimseye pazarlama
-mesajı gitmez ve çıkmak isteyen tek adımda çıkar.**
+Bu iş bittiğinde ziyaretçi e-posta adresini bırakıp onaylar, haftada bir yeni araçların
+özetini alır ve istediği an tek bağlantıyla çıkar. Başarı ölçütü: **onay vermemiş hiç kimseye
+pazarlama mesajı gitmez, çıkmak isteyen tek adımda çıkar ve yeni araç olmayan hafta kimseye
+mesaj gitmez.**
 
 ---
 
 ## Requirements
 
-- **R1.** Ziyaretçi e-posta adresini bırakarak bültene abone olmak isteyebilir.
-- **R2.** Abonelik, ziyaretçi **adresini teyit etmeden** etkinleşmez. → Açık soru **S1**.
-- **R3.** Abonelik kaydı, ziyaretçinin **hangi dilde** abone olduğunu taşır; bülten o dilde
-  gider. → `docs/domain.md` **L1** ile aynı ilke.
-- **R4.** Abone olmadan önce ziyaretçiye **ne alacağı** ve **nasıl çıkacağı** söylenir;
-  KVKK aydınlatma metnine bağlantı verilir. → `0017`.
-- **R5.** Her pazarlama mesajı **abonelikten çıkma bağlantısı** taşır; bağlantı **tek
-  adımda** çalışır ve çıkmak için giriş veya onay istemez.
-- **R6.** Abonelikten çıkan adrese bir daha pazarlama mesajı gönderilmez; çıkış kaydı
-  **silinmez**, çıkmış olarak işaretlenir.
+- **R1.** Ziyaretçi vitrinin ana sayfasında e-posta adresini bırakarak bültene abone olmak
+  isteyebilir (**D16**).
+- **R2.** Abonelik, ziyaretçi **adresini teyit etmeden** etkinleşmez ve teyit edilmemiş adrese
+  bülten gitmez (**D1** — sahip kararı, 2026-11-19).
+- **R3.** Abonelik kaydı, ziyaretçinin **hangi dilde** abone olduğunu taşır; teyit iletisi ve
+  bülten o dilde gider. → `docs/domain.md` **L1** ile aynı ilke (**D14**).
+- **R4.** Abone olmadan önce ziyaretçiye **ne alacağı** (haftalık yeni araç özeti) ve **nasıl
+  çıkacağı** söylenir; KVKK aydınlatma metni o dilde yayındaysa ona bağlantı verilir
+  (**D15**). → `0017` **D5**.
+- **R5.** Her bülten iletisi **abonelikten çıkma bağlantısı** taşır; bağlantı **tek adımda**
+  çalışır ve çıkmak için giriş veya onay istemez (**D6**, **D8**).
+- **R6.** Abonelikten çıkan adrese bir daha bülten gönderilmez; çıkış kaydı **silinmez**,
+  çıkmış olarak işaretlenir.
 - **R7.** Aynı adres ikinci kez abone olmaya çalıştığında yeni bir kayıt oluşmaz ve
-  ziyaretçiye adresin durumu **ifşa edilmez**. → Açık soru **S4**.
-- **R8.** Bülten, son gönderimden sonra **yayına alınan** araçların özetini taşır. Hangi
-  araçların "yeni" sayıldığı tanımlıdır. → Açık soru **S3**.
-- **R9.** Gönderilecek yeni araç yoksa **bülten gönderilmez**; boş bülten çıkmaz.
-- **R10.** Bülten gönderimi `0009`'un **kuyruğunu ve tekrar deneme** davranışını kullanır;
-  yeni bir gönderim mekanizması kurulmaz.
-- **R11.** Abonelik formu **yükleniyor**, **başarılı**, **doğrulama hatası** ve **hata**
-  durumlarını ele alır. → `docs/frontend.md` § 3.
-- **R12.** Form ve bülten şablonu üç locale'de çalışır; Arapça'da RTL.
-- **R13.** Aynı kaynaktan kısa sürede gelen aşırı sayıda abonelik isteği reddedilir.
-  → `0005` R12 deseni.
+  ziyaretçiye adresin durumu **ifşa edilmez** — cevap her durumda aynıdır (**D5**).
+- **R8.** Bülten, henüz hiçbir bültende yer almamış, **ilk kez yayına alınmış** ve hem dönem
+  işlenirken hem iletinin dağıtıldığı anda hâlâ **Yayında** olan ilanların özetini taşır.
+  Daha önce yayınlanmış bir ilanın yeniden yayına alınması "yeni araç" değildir; yayın
+  duyurusunun geç işlenmesi bir ilanı bültenden düşürmez (**D4**, **D12**, **D21**).
+- **R9.** Bir dönemde gönderilecek yeni araç yoksa **bülten gönderilmez**; boş bülten çıkmaz.
+- **R10.** Bülten ve teyit iletileri `0009`'un **kuyruğunu ve tekrar deneme** davranışını
+  kullanır; ikinci bir gönderim mekanizması kurulmaz.
+- **R11.** Abonelik formu **yükleniyor**, **başarılı**, **doğrulama hatası**, **hız sınırı** ve
+  **hata** durumlarını ele alır; teyit ve çıkış sayfaları **yükleniyor**, **başarılı**,
+  **geçersiz bağlantı** ve **hata** durumlarını ele alır. → `docs/frontend.md` § 3.
+- **R12.** Form, teyit sayfası, çıkış sayfası ve ileti şablonları üç locale'de çalışır;
+  Arapça'da RTL.
+- **R13.** Aynı kaynaktan kısa sürede gelen aşırı sayıda abonelik isteği reddedilir; aynı
+  adrese kısa sürede çok sayıda teyit iletisi gönderilmez (**D9**). → `0005` **R16** / **C17**
+  deseni.
+- **R14.** Teyit bağlantısının **süresi** vardır ve **tek kullanımlıktır**; süresi dolmuş,
+  kullanılmış ya da yerine yenisi gönderilmiş bağlantı aboneliği etkinleştirmez (**D7**).
+- **R15.** Bülten **haftada bir** gider; gönderim günü ve saati **dağıtım yapılandırmasından**
+  gelir ve panelden değiştirilemez (**D2** — sahip kararı, 2026-11-19; **D13**).
+- **R16.** Bülten her araç için ziyaretçinin karar vermesine yetecek özeti ve ilanın
+  bağlantısını taşır; bir bülten sınırsız uzamaz (**D11**).
+- **R17.** Teyit iletisi ve bülten, gönderenin **galeri** olduğunu adıyla söyler (**D18**).
+- **R18.** Talep formunda verilen iletişim izni bülten izni yerine **kullanılmaz** (**D3** —
+  sahip kararı, 2026-11-19).
+- **R19.** Abonelikle ilgili her olay — istek, teyit, çıkış — zamanıyla birlikte **silinmeyen
+  ve değiştirilmeyen** bir kayda geçer; aynı adresin ikinci aboneliği ilkinin geçmişini
+  silmez (**D27**).
+- **R20.** Çıkmış bir aboneye, çıkıştan önce sıraya girmiş bir bülten de gitmez (**D22**).
+- **R21.** Teyit ve çıkış bağlantıları tahmin edilemez; arama motorlarına açılmaz ve başka
+  sitelere sızmaz (**D25**, **D26**).
 
 ---
 
@@ -67,179 +88,830 @@ mesajı gitmez ve çıkmak isteyen tek adımda çıkar.**
 ### Uyulması zorunlu
 
 - **C1.** Dışarıya giden her mesaj **yalnızca `Notifications`** üzerinden gider.
-  → Yasak Listesi 17.
+  → Yasak Listesi 17 · `0009` **C1**.
 - **C2.** **İletişim izni ve abonelikten çıkma `Notifications`'ın verisidir.**
   → `docs/architecture.md` § 1 (`Notifications` sorumluluk satırı).
 - **C3.** İzni olmayana **pazarlama** mesajı gönderilmez; işlemsel mesaj bundan ayrıdır.
-  → `docs/domain.md` **L7**.
+  Teyit iletisi işlemseldir, bülten pazarlamadır. → `docs/domain.md` **L7**.
 - **C4.** **Talep izni ile bülten izni ayrı izinlerdir.** `0005`'in topladığı
-  `ConsentGiven`, bülten aboneliği **değildir**. → Açık soru **S5**.
-- **C5.** Kişisel veri ne loga ne gönderim geçmişine yazılır; adres gönderim anında
-  kaynaktan okunur. → `0009` C5.
+  `ConsentGiven`, bülten aboneliği **değildir** (**D3**).
+- **C5.** Kişisel veri (e-posta adresi, IP) ne loga ne gönderim geçmişine yazılır; adres
+  gönderim anında kaynaktan okunur. Teyit ve çıkış bağlantıları adresi içermez; bağlantı
+  anahtarları da loga yazılmaz (**D25**). → `0009` **C5**, `0005` **C17**.
 - **C6.** Şablonlar **(anahtar × locale)** olarak tutulur ve seed migration ile gelir;
-  istenen dilde şablon yoksa varsayılana düşülür. → `0009` R6, C13.
-- **C7.** Tüketim outbox üzerinden ve **idempotent**'tir; aynı olay iki kez gelirse ikinci
-  mesaj gönderilmez. → `0009` C3.
-- **C8.** Kullanıcıya görünen metin koda gömülmez; API `errorCode` döner.
+  istenen dilde şablon yoksa varsayılana düşülür. → `0009` **R9**, **C13**.
+- **C7.** Olay tüketimi outbox üzerinden ve **idempotent**'tir; aynı olay iki kez gelirse
+  ilan bültende iki kez yer almaz. → `0009` **C3**.
+- **C8.** Kullanıcıya görünen metin koda gömülmez; API kararlı bir `errorCode` döner.
   → Altın Kural 6.
 - **C9.** Zaman damgaları UTC. → Yasak Listesi 30.
-- **C10.** Yeni migration yalnızca `notifications` şemasına dokunur. → Yasak Listesi 3.
+- **C10.** Yeni migration yalnızca `notifications` şemasına dokunur. → Yasak Listesi 3 ·
+  `0009` **C12**.
 - **C11.** Her kabul kriteri en az bir testle karşılanır.
+- **C12.** `Notifications` **yaprak** modül olarak kalır: hiçbir modül ona senkron bağlanmaz,
+  o da olay yayınlamaz. Başka modülden okuma tek atlama ve salt okumadır; okunan yüzeyin
+  arkası başka bir modüle uzanmaz — `Notifications → VehicleCatalog → VehicleReference`
+  zinciri **yasaktır** (**D11**). → `0009` **C4**, **C11** · Yasak Listesi 13.
+- **C13.** **Vitrin performans kapısı (C3 eşikleri) kırmızıya dönmez:** ana sayfa, liste ve
+  ilan detayı için Lighthouse mobil medyan LCP < 2,5 sn, CLS < 0,1. Bülten metinleri vitrin
+  çeviri kümesine girer ve ilk paketi büyütür; büyüme **D17**'nin bütçesindedir.
+  → ADR `0013`, `docs/frontend.md` § 5.
+- **C14.** Zorunlu yapılandırma eksikse uygulama ayağa kalkmaz; koda gömülü bir varsayılan
+  üretilmez. → `0009` **C9** deseni (**D13**, **D25**).
+- **C15.** Yeni bir dış bağımlılık (ICU MessageFormat kütüphanesi dâhil) eklenmez; bülten
+  metni (anahtar × locale) şablonlarıyla, sayı ve para biçimi .NET `CultureInfo` ile kurulur
+  (**D11**, **D24**).
 
 ### KAPSAM DIŞI
 
 - **X1.** **Segmentasyon** ("yalnızca SUV ilgilenenlere gönder") — *neden:* ilgi alanı
   verisi toplanmıyor ve toplamak ayrı bir izin ve veri kararı.
-- **X2.** **Açılma ve tıklama takibi** — *neden:* takip pikseli ve bağlantı sarmalama, KVKK
-  açısından ayrı bir aydınlatma gerektirir; `docs/architecture.md` § 6 analitiği üçüncü
-  partiye bırakmıştı.
+- **X2.** **Açılma ve tıklama takibi** — *neden:* takip pikseli ve bağlantı sarmalama KVKK
+  açısından ayrı bir aydınlatma gerektirir (`0009` **X7**); `docs/architecture.md` § 6
+  analitiği üçüncü partiye bıraktı.
 - **X3.** **Fiyat düşüşü ve favori aracı için bildirim** — *neden:* favori `localStorage`'da
-  (§ 6) ve sunucu kimin neyi favorilediğini bilmiyor; sıra #12 ile de çelişir.
+  (§ 6) ve sunucu kimin neyi favorilediğini bilmiyor.
 - **X4.** **Panelden bülten içeriği düzenleme / kampanya metni ekleme** — *neden:* kampanya
-  `Content` tarafının işi (`0017` § X2) ve bülten içeriği bu spec'te **otomatik** üretilir.
-- **X5.** **SMS ve WhatsApp ile bülten** — *neden:* `0009` § X1 kanalları kapsam dışı
+  `Content` tarafının işi (`0017` **X2**) ve bülten içeriği bu spec'te **otomatik** üretilir.
+- **X5.** **SMS ve WhatsApp ile bülten** — *neden:* `0009` **X1** kanalları kapsam dışı
   bıraktı; ayrıca pazarlama SMS'i ayrı bir izin sınıfı.
 - **X6.** **Abone listesinin panelden görüntülenmesi ve dışa aktarılması** — *neden:*
   kişisel veri listesini bir ekrana koymak kendi yetki ve KVKK kararını gerektirir.
+- **X7.** **Talep formuna bülten onay kutusu** — *neden:* sahip kararı (**D3**): `0005`'in
+  talep izni bülten için kullanılmaz; ayrı bir kutu `0005`'i değiştirir ve ayrı kart ister
+  (ADR 0003 unsur 1).
+- **X8.** **İYS (İleti Yönetim Sistemi) entegrasyonu** — onayların İYS'ye bildirilmesi,
+  İYS'den gelen retlerin içeri alınması — *neden:* yükümlülüğün olup olmadığı hukuki bir
+  sorudur ve sahibe sorulmuştur (**SS1**); gerekirse kendi kartını hak eder. Bu kart, böyle
+  bir entegrasyonun dayanacağı kaydı — izin olay kaydı (**D27**): istek, teyit ve çıkış
+  zamanları — üretir.
+- **X9.** **Bülten bölümü metinlerinin panelden düzenlenmesi** — *neden:* `0022` ana sayfanın
+  panelden düzenlenen altı alanını sabitledi; bülten metinleri çeviri kataloğundadır (**D16**).
+- **X10.** **Gönderim sıklığının panelden değiştirilmesi** — *neden:* sahip kararı (**D2**).
+- **X11.** **Kalıcı teslim hatasında (adres reddedildi) aboneliğin otomatik kapanması ve
+  sağlayıcı şikâyet geri bildirimi** — *neden:* `0009` kalıcı hatayı **mesaj** başına işler;
+  hatayı abonelik durumuna bağlamak sağlayıcıya özgü geri bildirim kanalı ister ve ayrı bir
+  karardır. Kalıcı hata yine `0009`'daki gibi tekrar denenmez.
+- **X12.** **Bülten izni anındaki aydınlatma metni sürümünün kaydı** — *neden:* `0019` bunu
+  talep izni için ele alıyor (onaylandı, `56fe70f`) ve bülten iznini kapsamıyor; bülten için gerekip gerekmediği **SS5**.
+- **X13.** **E-posta başlığında istemcinin "abonelikten çık" düğmesi** (List-Unsubscribe) —
+  *neden:* vaat edilen tek adımlı çıkış gövdedeki bağlantıyla karşılanır; başlık bir teslim
+  edilebilirlik iyileştirmesidir ve ayrı karar ister.
+- **X14.** **Görselli / HTML bülten** — *neden:* `0009` **X6** şablonları düz metin tuttu;
+  marka tasarımı ve istemci uyumluluğu ayrı bir iş.
+- **X15.** **Teyit hatırlatma iletisi** — *neden:* teyit etmeyene ikinci kez yazmak, izni
+  olmayana yazmaktır.
+- **X16.** **Abonelik cevabının süresinin ölçülmesi** (`0002` C13'ün "süre farkı" bileşeni) —
+  *neden:* zamanlama farkını güvenilir ölçen bir test CI'da gürültülüdür. Tasarım kuralı
+  yine geçerli (**D5**): cevap gönderimi beklemez ve dört durumun hepsi aynı yazma yolundan
+  geçer; kriter yalnız durum kodu ve gövdeyi ölçer (AC-16).
 
 ---
 
 ## Context
 
-### Mevcut davranış — doğrulandı
+### Mevcut davranış — ölçüldü (2026-11-19, `main` @ `740c771`)
 
-- **Bu spec'i `0009` kendisi tetikledi.** `0009` § X2: *"Abonelikten çıkma (unsubscribe)
-  akışı ve bağlantısı — yalnız işlemsel mesaj gönderildiği sürece gerekli değil; **pazarlama
-  mesajı girdiği gün zorunlu hâle gelir ve o zaman kendi spec'ini hak eder.**"* Bu spec o gün.
-- **`0009` § X2'nin ikinci yarısı da önemli:** *"Sonucu: bu spec'te pazarlama şablonu
-  yoktur."* Yani `Notifications` bugün yalnızca işlemsel mesaj gönderiyor ve
-  "pazarlama mesajı gönderilmez" kriteri `0009`'da **doğrulanacak bir şey olmadığı için**
-  yazılmamıştı. Bu spec pazarlama sınıfını **ilk kez** var ediyor; **L7**'nin ayrımı
-  ilk kez gerçek bir fark yaratacak.
-- **Altyapı hazır:** `0009` tamamlandı — kuyruk, arka plan servisi, tekrar deneme, hata
-  sınıfları, şablon (anahtar × locale) ve varsayılan dile düşme mevcut. R10 bunları
-  **kullanıyor**, yeniden kurmuyor.
-- **`Notifications` izni ve abonelikten çıkmayı sahiplenmiş:** `docs/architecture.md` § 1
-  bu modülün verisi olarak *"iletişim izni & abonelikten çıkma"*yı sayıyor — C2'nin kaynağı.
-- **Mockup ne vaat ediyor:** *"Yeni gelen araçları ilk siz görün. E-posta adresinizi bırakın;
-  galeriye giren her yeni aracı **haftada bir** özetle gönderelim."* ve altında
-  *"**Tek tıkla** çıkabilirsiniz. Adresiniz üçüncü kişilerle paylaşılmaz — KVKK aydınlatma
-  metni."* Üç vaat: haftalık sıklık, tek tıkla çıkış, üçüncü kişiyle paylaşmama.
-- **"Yeni araç" olayı henüz yok.** `docs/architecture.md` § 1 `VehiclePublished` olayını
-  sayıyor ama kodda yok. 2026-10-11'de **karara bağlandı**: `0012b` / **D11** sekiz olayı
-  üretiyor ve `VehiclePublished` onlardan biri. Yani bu spec `0012b`'ye bağlı ve olayın
-  **geleceği artık belirsiz değil**, sırası belirsiz. → Açık soru **S3**.
-- **"Yeniden yayın" da bir `VehiclePublished`'dır.** `0012b` / **D31**: yayından kaldırılıp
-  yeniden yayınlanan ilan duyuruyu **yine** üretir ve ilanın **ilk** yayın zamanı değişmez
-  (ölçüldü: `Listing.PublishedAt` yalnız ilk yayında yazılıyor). Bu yüzden duyuru ilk yayın
-  zamanını da taşıyor: `OccurredAt > FirstPublishedAt` olan bir olay **yeni araç değildir**.
-  Bu ayrımı yapmayan bir pencere, aynı aracı her yeniden yayında yeniden postalar.
-  → Açık soru **S3**.
-- **KVKK metni yok.** R4'ün bağlantı verdiği sayfa `0017`'nin işi; `0017` § S5 bu metni
-  `Content`'e koymayı öneriyor.
+Her madde dosyasıyla birlikte; **koşturulmadan, koddan okunanlar** öyle işaretli.
+
+- **Bu spec'i `0009` kendisi tetikledi.** `0009` **X2**: abonelikten çıkma *"pazarlama mesajı
+  girdiği gün zorunlu hâle gelir ve o zaman kendi spec'ini hak eder."* Kodda karşılığı:
+  `TemplateKeys.All` yalnız iki işlemsel anahtar taşıyor ve yorumu *"Üçüncüsü yoktur (X2:
+  pazarlama yok)"* diyor (`Notifications/Domain/NotificationTemplate.cs:23-29`). Bu spec
+  pazarlama sınıfını **ilk kez** var ediyor; **L7**'nin ayrımı ilk kez gerçek bir fark yaratacak.
+- **`VehiclePublished` üretiliyor** — taslak "kodda yok" diyordu, artık var. Altı alan:
+  `EventId`, `OccurredAt`, `VehicleId`, `ListingId`, `Slug`, `PublishedAt`
+  (`VehicleCatalog.Contracts/Events/VehicleEvents.cs:26-32`). Model, fiyat, şube **taşımıyor**
+  (`0012b` **D30**: değişken veri kaynaktan okunur). Üreten tek yer
+  `VehicleCatalogUnitOfWork.cs:118`; her `ListingPublished` alan olayı için yazılıyor —
+  **yeniden yayın da dâhil** (`0012b` **D31**).
+- **`PublishedAt` ilk yayın zamanıdır ve donar:** `PublishedAt ??= clock.UtcNow`
+  (`VehicleCatalog/Domain/Listing.cs:193`).
+- **`0012b` D31'in formülü kodla tutmuyor** (koddan okundu, koşturulmadı). D31 "bu ilk yayın
+  değil" bilgisini `OccurredAt > FirstPublishedAt` karşılaştırmasına bırakmıştı. Alanın adı
+  `PublishedAt`'tır ve iki değer **ayrı** `clock.UtcNow` okumalarından gelir: `PublishedAt`
+  `Listing.Publish` içinde (`Listing.cs:193`), `OccurredAt` ise kayıt sırasında
+  `Translate` içinde (`VehicleCatalogUnitOfWork.cs:110`). Gerçek saatte `OccurredAt` **ilk
+  yayında da** `PublishedAt`'tan büyüktür; formül her ilk yayını "yeniden yayın" sayar. Sahte
+  saatle koşan testte iki değer eşit çıkar ve kusur görünmez. → **D4** pencereyi bu yüzden
+  yalnız `PublishedAt` üzerine kurar.
+- **Bugün `VehicleCatalog` olaylarının HİÇ tüketicisi yok.** `VehicleCatalog.Contracts.Events`'i
+  kullanan tek dosya üreticinin kendisi. Outbox dağıtıcısı alıcısı olmayan olayı **işlenmiş**
+  işaretliyor (`BuildingBlocks/Outbox/OutboxDispatcher.cs:67-91`: alıcı listesi boşsa hata
+  yok, `ProcessedAt` yazılır — koddan okundu). Sonuç: bu kart devreye girmeden önce yayınlanan
+  ilanların duyuruları **geri gelmez** → **D13**'ün "ilk dönem" kuralı.
+- **İlan kimliğiyle vitrin özeti dönen bir okuma yok.** `VehicleCatalog.Contracts`'ta
+  `IListingSlugQueries` yalnız adres, `IListingSnapshotQueries` adresle arayıp model
+  **kimliği** döner (`Listings/ListingSnapshotContracts.cs`); model adı, yıl, km, fiyat ve şube
+  adını taşıyan `ShowcaseListingDto` yalnız filtreli liste ve öne çıkanlar sorgularından gelir
+  (`Showcase/ShowcaseListingContracts.cs`). R16'nın içeriği için bu yüzeyde bir eksik var;
+  okumanın biçimi **D11**'de karara bağlandı (model adı değil model kimliği döner).
+- **`Notifications`'ın gönderim yolu talebe bağlı.** Gönderim kaydı zorunlu bir `LeadId`
+  taşıyor (`Notifications/Domain/NotificationMessage.cs:29`) ve dağıtıcı alıcıyı
+  `ILeadNotificationQueries` ile talepten çözüyor (`Application/NotificationDispatcher.cs:96`).
+  Kuyruk, tekrar deneme, hata sınıfları ve şablon düşüşü **yeniden kullanılabilir**; alıcının
+  talepten başka bir kaynaktan gelmesi bugün mümkün değil. R10 bunu genişletmeyi gerektiriyor.
+- **Alıcı adresi gönderim kaydında yok** (`NotificationMessage.cs:12-17`, `0009` **C5**) —
+  bülten de aynı kurala tabi.
+- **`Notifications`'ın HTTP ucu yok** (modülde `Map*` çağrısı sıfır) ve **zamanlanmış işi yok**
+  — tek arka plan servisi kuyruğu yoklayan `NotificationQueueHostedService`. Abonelik formu
+  modülün ilk public ucu, haftalık dönem ilk zamanlı işi olacak (**D20**).
+- **Hız sınırı deseni `0005`'te:** **R16** + **C17** — aynı IP'den 10 dakikada 5 **kaydedilen**
+  talep, `429` + `lead.rate_limited`; IP yalnız geçici sayaçta. Eşikler yapılandırmadan
+  (`Host/Program.cs:118-128`). *(Taslak bunu `0005` R12 diye anıyordu; R12 "talep `Yeni`
+  durumunda başlar" kuralıdır.)*
+- **KVKK aydınlatma metni var.** `privacy` sistem sayfası (`0017` **D6**); vitrin onu slug'dan
+  bağımsız **kimliğiyle** bulur ve `/{locale}/{slug}` adresine bağlar; o dilde yayında değilse
+  bağlantı basılmaz (`frontend/src/features/leads/LeadForm.tsx:134-164`,
+  `shared/lib/route.ts:213`). R4 aynı yolu kullanır (**D15**).
+- **Galeri adı okunabiliyor:** `IGalleryDisplayNameQueries.FindDisplayNameAsync(locale)`
+  (`Dealership.Contracts/Gallery/PublicGalleryContracts.cs:24-30`, `0020`). R17'nin kaynağı.
+- **Ana sayfada bülten bölümü yok.** `HomePage.tsx` giriş bölümü + `HomeCatalog`'dan ibaret;
+  altlık (`HomeFooter`) yalnız ana sayfa rotasında basılıyor (`App.tsx:88-96`). `0014` **X2**
+  bülteni bu karta bıraktı; `0022`'nin panelden düzenlenen altı metni arasında bülten **yok**.
+- **Mockup depoda değil.** ADR 0003 mockup'ı bir tasarım tuvali olarak anıyor; taslağın
+  alıntıladığı metin (*"Yeni gelen araçları ilk siz görün … haftada bir … Tek tıkla
+  çıkabilirsiniz. Adresiniz üçüncü kişilerle paylaşılmaz — KVKK aydınlatma metni."*) depoda
+  arandı ve **bulunamadı** (yalnız bu dosyada geçiyor); **ölçülmedi**, taslaktan taşındı.
+  Bölümün yeri `0014` Context'inin mockup sırasından: öne çıkanlar → marka listesi → bülten →
+  altlık.
+- **Vitrin LCP payı dar.** C3 eşiği 2500 ms. ADR `0013` öncesi `main`'de ana sayfa **2481 ms**
+  ölçülmüştü (19 ms pay) ve yalnız panel ekranı ekleyen iki kart vitrini kırmızıya
+  çevirmişti; çeviri kataloğu vitrin/panel diye bölündü, ilk paket gzip 122.818 → 100.952 B.
+  Bugünkü son ölçüm (koşu `44505722622`, #118'in dalı, 2026-11-19): ana sayfa medyan
+  **2298 ms** (koşular 2298 / 2273 / **2430**), liste **2121 ms**, ilan detayı **2405 ms**.
+  Tek koşu içindeki yayılım 157 ms; ana sayfanın LCP öğesi giriş açıklaması
+  (`p.home-hero__body`). Ana sayfanın tek koşusu 2430 ms'ye, detay sayfası medyanı 95 ms paya
+  iniyor. Bu kart vitrine **form + iki sayfa + üç dilde metin** ekliyor ve her vitrin anahtarı
+  üç dilde ilk pakete girer (ADR `0013` § Karar) → C13, **D17**.
+- **Altyapı yarı hazır:** `0009` tamamlandı — kuyruk, arka plan servisi, artan aralıkla
+  tekrar deneme, geçici/kalıcı hata ayrımı, şablon (anahtar × locale) ve varsayılan dile
+  düşme var; `NotificationsDbContext` idempotent tüketim altyapısını taşıyor. **Bülten için
+  eksik olanlar** (QA CLARIFY turu, 2026-11-19 — koddan okundu):
+  - `TemplateRenderer` düz yer tutucu değiştirmesi yapıyor; döngü ve ICU yok. Yorumu
+    (`Application/TemplateRenderer.cs:8-11`) sayı ya da çoğul içeren şablonun ICU
+    gerektireceğini söylüyor → **D11** çoğul cümleyi hiç kurmuyor.
+  - Backend'de para, km ve yıl biçimlendiricisi yok; biçim bugün yalnız uçta
+    (`frontend/src/shared/i18n/format.ts`: `formatMoney`, `formatMileage`, `formatYear`,
+    `Intl.NumberFormat`) → **D24**.
+  - Vitrin özetindeki model adı `VehicleReference.Contracts`'tan çözülüyor
+    (`VehicleCatalog/Infrastructure/VehicleModelNameResolver.cs:3,12`). `VehicleCatalog`'a
+    açılacak bir özet okuması bu çözücüyü kullanırsa zincir iki atlama olur → **D11**.
+  - Zincir bekçisi (`tests/Architecture.Tests/BildirimSinirTests.cs:180-190`) tüketilen
+    arayüzleri **sabit üç adla** tarıyor; yorumu "liste kendiliğinden değişir" dese de
+    yeni bir arayüz eklenince değişmez ve kapı yeşil kalır → AC-83.
+  - `NotificationsOptions.IsSendableAddress`'in dayandığı `MailboxAddress.TryParse`
+    (QA ölçümü, MimeKit 4.18.1) `ali`, `ali@ornek`, `Ali <ali@ornek.com>` biçimlerini
+    **kabul** ediyor, yalnız `ali@`'yi reddediyor → **D10**.
+  - `ContentReservedSlugs.All` yalnız `cars|admin|api|assets` taşıyor
+    (`Content.Contracts/Pages/ContentPageContracts.cs:50`); tek parçalı yeni bir vitrin yolu
+    içerik slug'larıyla çakışır → **D26**.
+  - Sır üretim deseni: `Identity__TwoFactor__EncryptionKey` — `dev-up.sh` `openssl rand
+    -base64 32` ile üretir, `docs/deploy.md` zorunlu ortam değişkeni olarak listeler → **D25**.
+  - `0005` iki hız sınırı taşıyor: kayıt sayan `CapturedLeadLimit` (5) ve kaba
+    `RequestLimit` (30), ikisi de 10 dakikalık pencerede (`Host/Program.cs:118-128`); dil
+    istek gövdesinde gelir, etkin olmayan dil `lead.invalid_locale` ile reddedilir → **D9**,
+    **D14**.
 
 ### Bilinen tuzaklar
 
 1. **Teyitsiz aboneliğe gönderim.** Birinin başkasının adresini yazması, o adrese istenmeyen
-   pazarlama gitmesi demektir — ve o kişi için bu spam'dir (S1).
-2. **Çıkış bağlantısını onaya bağlamak.** "Çıkmak istediğinizden emin misiniz?" ekranı
-   R5'in "tek adımda" vaadini bozar ve mockup'ın yazılı vaadiyle çelişir.
-3. **Abone adresini gönderim geçmişine yazmak.** `0009` C5 bunu yasakladı; bülten de aynı
-   yoldan geçtiği için aynı kural geçerli.
-4. **Talep iznini bülten izni sanmak.** `0005` iletişim izni topluyor; o izin **talebin
-   kendisine** dairdir. Bülten için ayrı izin gerekir (C4, S5).
-5. **Boş bülten göndermek.** Yeni araç girmemiş bir haftada "bu hafta yeni araç yok"
-   e-postası, abonelikten çıkmanın en hızlı yoludur (R9).
-6. **Adresin kayıtlı olup olmadığını ifşa etmek.** "Bu adres zaten abone" mesajı, üçüncü
-   bir kişinin bir adresin abone olup olmadığını öğrenmesine yol açar (R7, S4).
+   pazarlama gitmesi demektir (R2).
+2. **Bağlantıyı kendiliğinden açan tarayıcılar.** Kurumsal e-posta güvenlik ürünleri gelen
+   iletideki bağlantıları açar. Teyit bağlantısını **açmak** teyit sayılırsa, başkasının
+   yazdığı adres insan eli değmeden teyit edilir ve çift onay boşa düşer (**D6**). Çıkış
+   bağlantısında aynı tarayıcı aboneyi istemeden çıkarabilir — bu bedel bilerek kabul edilir.
+3. **Çıkışı onaya bağlamak.** "Emin misiniz?" ekranı R5'in "tek adımda" vaadini bozar.
+4. **Abone adresini gönderim geçmişine ya da loga yazmak** (C5).
+5. **Talep iznini bülten izni sanmak** (C4, **D3**).
+6. **Boş bülten** (R9).
+7. **Adresin kayıtlı olup olmadığını ifşa etmek** (R7). Ayırt edici olan yalnız mesaj değil:
+   durum kodu, gövde ve **cevabın teyit iletisini beklemesi** de ayırt eder.
+8. **"Yeni araç"ı olay zamanıyla ayırmak.** `0012b` D31'in formülü ilk yayını da yeniden yayın
+   sayar (yukarıdaki ölçüm). Sahte saatli test bunu göstermez (AC-58).
+9. **Tek kullanımlık bağlantı ve eşzamanlılık.** Ardışık test ikinci kullanımı yakalar ama
+   **aynı anda** gelen iki isteği yakalamaz; eşzamanlı test bir bariyerle kurulmazsa istekler
+   fiilen ardışık koşar (AC-33, AC-70).
+10. **Teyit iletisiyle bir adresi bombalamak.** IP başına hız sınırı, IP değiştiren birinin
+    aynı kurbana yüzlerce teyit iletisi göndermesini engellemez (**D9**).
+11. **Gecikmeli duyuru.** Aday `Notifications`'a outbox'la, gecikmeli gelir. Pencereyi
+    `PublishedAt`'a bağlamak, kesimden hemen önce yayınlanıp duyurusu kesimden sonra işlenen
+    ilanı **hiçbir** bültene sokmaz ve bunu hiçbir şey göstermez (QA B1 → **D4**).
+12. **"Gönderim anı" iki şey.** Dönemin işlenmesi ile iletinin dağıtılması saatler
+    ayrışabilir (tekrar deneme). İçerik dağıtımda baştan hesaplanırsa aynı dönemin iletileri
+    farklı listeler taşır ve satışlar boş bülten doğurabilir (QA B3 → **D21**).
+
+### Verilen kararlar — sahip, 2026-11-19
+
+**D1 — Çift onay (S1).** *Sahip kararı, 2026-11-19.* Adres bırakıldığında bir teyit iletisi
+gider; bağlantıya tıklanmadan abonelik etkinleşmez ve bülten gitmez. → R2, R14.
+*Bedel:* teyit oranı %100 olmadığı için abone sayısı düşer; akış bir adım uzar.
+
+**D2 — Haftalık, dağıtım yapılandırmasından (S2).** *Sahip kararı, 2026-11-19.* Sıklık haftalık;
+gün ve saat yapılandırmadan gelir, panelden düzenlenmez. Yeni araç yoksa o hafta gitmez (R9).
+→ R15, X10.
+
+**D3 — Talep izni bülten için kullanılmaz (S5).** *Sahip kararı, 2026-11-19.* Talep formuna
+bülten kutusu bu kartın kapsamı dışında, ayrı karttır. → R18, C4, X7.
+
+### Verilen kararlar — Takım Yöneticisi (ajan), 2026-11-19
+
+**D4–D20** Analistin önerisiydi ve onaylandı. QA CLARIFY turunun yirmi bulgusu (B1–B20) aynı gün,
+QA'nin önerdiği biçimde ve aşağıdaki Takım Yöneticisi seçimleriyle işlendi. Bulgunun metni
+değiştirdiği kararlarda `(Bn)` etiketi duruyor; eşleme:
+B1 → **D4**, **D13** · B2 → **D11**, **D20**, AC-83 · B3 → **D21** · B4 → **D22** ·
+B5 → **D23** · B6 → **D11**, **D24** · B7 → **D10** · B8 → **D25** · B9 → AC-25 ·
+B10 → **D26** · B11 → **D27** · B12 → **D13** · B13 → **D9** · B14 → **D9**, **D14** ·
+B15 → **D5**, X16 · B16 → AC-57/58 · B17 → **D16** · B18 → **D17** · B19 → **D20** ·
+B20 → Dayanak satırı ve ADR 0003 § Sapma — `0018`.
+
+**D4 — "Yeni araç": `notifications`'ta tekil aday kaydı (S3; B1).** Kaynak `VehiclePublished`
+olayıdır, ama pencere olayın zamanına **bağlanmaz**:
+- Her olay `ListingId` üzerinde **tekil** bir **aday** kaydına dönüşür. Aynı ilanın ikinci
+  olayı (yeniden yayın, tekrar teslim) yeni aday oluşturmaz; tekil kayıt düşürür.
+- Yalnız `PublishedAt ≥ devreye giriş anı` (**D13**) olan olay aday olur. Kart öncesi
+  yayınlanmış bir ilanın yeniden yayını bu yüzden hiç aday olmaz.
+- Bir dönem, **henüz bir döneme atanmamış** bütün adayları alır (**D21**). Dönem kesiminden
+  önce yayınlanıp olayı kesimden sonra işlenen ilan, bir sonraki dönemde bir kez yer alır.
+- `0012b` **D31**'in `OccurredAt > FirstPublishedAt` formülü **kullanılmaz** (Context: ilk
+  yayını da yeniden yayın sayıyor); D31'in Bedel cümlesi bu tanımla geçersizleşir.
+*Gerekçe:* Tuzak 11. Olay zamanına bağlı pencere, gecikmeli işlenen bir duyuruyu sessizce
+kaybeder: outbox tekrar denemesi, açılışta birikmiş outbox ve çok örnekli çalışma aynı kayba
+yol açar. "Atanmamış aday" tanımında geç gelen aday bir sonraki işlenen döneme kadar bekler,
+kaybolmaz; o dönemde Yayında değilse elenir (**D21**).
+*Bedel:* `notifications` şemasında yeni bir tablo (ilan kimliği ve ilk yayın zamanı — kişisel
+veri değil). Kart öncesi yayınlanan ilanlar hiçbir bültene girmez (**D13**).
+*Elenen alternatif:* yalnız `PublishedAt` ile `VehicleCatalog`'u sorgulamak — `VehicleCatalog`'a
+tarih filtreli yeni bir okuma açar ve "yeni"nin ikinci bir tanımını doğurur.
+
+**D5 — Her durumda aynı cevap (S4).** Adres hiç yokken, teyit beklerken, etkinken ve
+çıkmışken abonelik isteğinin cevabı **aynı durum kodu ve aynı gövdedir**: "adresinizi aldık,
+teyit bağlantısı gönderdik; gelmezse istenmeyen e-posta klasörüne bakın." Arkadaki davranış:
+- yeni adres → kayıt **teyit bekliyor**, teyit iletisi kuyruğa girer;
+- teyit bekleyen → yeni kayıt yok, yeni teyit iletisi (önceki bağlantı geçersiz — **D7**);
+- etkin → hiçbir şey değişmez, ileti gitmez;
+- çıkmış → aynı kayıt **teyit bekliyor**'a döner, teyit iletisi gider; teyit edilene dek
+  bülten gitmez.
+
+Cevap teyit iletisinin **gönderilmesini beklemez** (Tuzak 7) ve dört dalın hepsi **aynı yazma
+yolundan** geçer (B15). Süre farkı kriterle ölçülmez (X16).
+*Doğrulama:* `0002` **C13** ve `0006` **AC-5** (taslak AC-4 diyordu).
+*Bedel:* gerçekten yeni abone olan biri teyit gelmezse nedenini bilemez; etkin abone ikinci kez
+yazdığında hiçbir şey almaz.
+
+**D6 — Teyit sayfadaki düğmeyle, çıkış bağlantının açılmasıyla.** Teyit bağlantısı bir sayfa
+açar; abonelik sayfadaki **tek düğmeye** ("Aboneliği onayla") basılınca etkinleşir. Çıkış
+bağlantısı ise **açıldığı anda** çıkarır; ek düğme yoktur.
+*Gerekçe:* Tuzak 2. İki yön asimetrik: istenmeyen **teyit**, izni olmayana pazarlama demektir;
+istenmeyen **çıkış**, yalnız bir bültenin kaçması. D1'in "bağlantıya tıklanmadan etkinleşmez"
+kararıyla çelişmez — bağlantı yine şarttır, üstüne bir düğme eklenir.
+*Bedel:* teyit bir tık uzar. Kurumsal tarayıcısı bağlantıları açan bir abone ilk bültende
+istemeden çıkabilir; çıkış sayfası yeniden abone olma yolu sunar.
+*Elenen:* çıkışta da düğme — R5'in "tek adım" vaadini ve mockup'ın "tek tıkla" sözünü bozar.
+
+**D7 — Teyit bağlantısı: süreli, tek kullanımlık, en son gönderilen geçerli.** Süre dağıtım
+yapılandırmasından gelir (öneri: **72 saat**). Bağlantı bir kez kullanılınca geçersizdir;
+teyit bekleyen adrese yeni teyit iletisi gidince önceki bağlantı geçersiz olur. Süresi dolmuş,
+kullanılmış, geçersizleşmiş ve hiç var olmamış bağlantının cevabı **aynıdır** ("bağlantı artık
+geçerli değil" + yeniden abone olma yolu). Anahtarın üretimi ve saklanması **D25**'te.
+*Bedel:* bağlantıyı iki kez kullanan kişi ikinci seferde "geçerli değil" görür, oysa aboneliği
+etkindir — sayfa metni bunu söyler ("Aboneliğinizi daha önce onayladıysanız bir şey yapmanız
+gerekmez").
+
+**D8 — Çıkış bağlantısı süresiz, aboneye bağlı, döndürülmez.** Aynı adresin bütün bültenlerindeki
+çıkış bağlantısı aynı abonelik kaydına çıkar; yeniden abone olmak eski bağlantıyı geçersiz
+kılmaz. Çıkmış hâldeyken bağlantıyı yeniden açmak yine "çıktınız" der, durum ve çıkış zamanı
+değişmez. Bağlantı saklanmaz; abonelik kimliğinden bir sırla üretilir (**D25**).
+*Bedel:* sızan bir bağlantı o kişiyi listeden çıkarabilir; zararı bir bültenin kaçmasıdır.
+
+**D9 — Üç sınır: kaynak başına kaba istek, kaynak başına geçerli istek, adres başına teyit
+iletisi (B13, B14).** (R13) Hepsinin eşik ve pencereleri dağıtım yapılandırmasından gelir; eksikse
+uygulama ayağa kalkmaz (C14, AC-97).
+- **Kaba istek:** `0005`'in `RequestLimit` deseni — aynı IP'den pencerede (öneri: 10 dakikada
+  30) **her** istek sayılır, geçersizler dâhil; aşan istek `429` +
+  `notification.subscription_rate_limited`.
+- **Geçerli istek:** aynı IP'den pencerede (öneri: 10 dakikada 5) **geçerli** abonelik isteği;
+  aşan istek aynı `429`. Biçimi geçersiz istek bu bütçeyi tüketmez (`0005` C17 notu).
+- **Adres:** aynı adrese pencerede (öneri: 24 saatte **3**) teyit iletisi. Aşıldığında cevap
+  **yine aynıdır** (D5), ileti gitmez ve **kayıtta hiçbir şey değişmez** — teyit anahtarı,
+  dil, durum ve izin olay kaydı (**D27**) olduğu gibi kalır. Son gönderilen bağlantı geçerli
+  kalmaya devam eder.
+
+IP yalnız geçici sayaçta tutulur; kalıcı kayda ve loga yazılmaz.
+*Gerekçe:* Tuzak 10; adres sınırı ifşa etmeden bombalamayı keser. Sınırdayken anahtarı
+yenilemek, ileti gitmediği hâlde geçerli tek bağlantıyı sessizce öldürürdü.
+*Bedel:* dördüncü kez deneyen dürüst ziyaretçi teyit alamaz ve nedenini görmez.
+
+**D10 — Adresin biçimi ve kimliği (B7).** Girdi ayrıştırılır ve **ayrıştırılmış adres**
+(MimeKit `MailboxAddress.Address`) kullanılır; ham metin hiçbir yerde kimlik olmaz.
+- Reddedilen biçimler (`400` + `notification.subscription_email_invalid`): boş; 254
+  karakterden uzun; **görünen adlı** biçim (`Ali <ali@ornek.com>`, `"x y" <ali@ornek.com>`);
+  **alan adsız** ya da alan adında nokta olmayan biçim (`ali`, `ali@ornek`); `ali@`.
+- Baştaki ve sondaki boşluk atılır. Adresler büyük/küçük harf farkı gözetmeden **aynı adres**
+  sayılır ve bu, büyük/küçük harf duyarsız **tekil** bir kuralla saklamada da korunur: aynı
+  yeni adrese eşzamanlı iki istek tek kayıt üretir.
+*Gerekçe:* QA ölçümü — `MailboxAddress.TryParse` alan adsız ve görünen adlı biçimleri kabul
+ediyor. Ham metne göre normalleştirme `Ali <ali@ornek.com>` ile `ali@ornek.com`'u iki kayıt
+yapar ve R6/R7 delinir.
+*Bedel:* yerel kısmı harf duyarlı nadir posta sunucularında ayrı iki adres tek sayılır; tek
+etiketli alan adı (yerel ağ adresi) kabul edilmez.
+
+**D11 — Bülten içeriği ve kaynakları (B2, B6).**
+- **Satır:** **model adı** (abonenin dilinde), **model yılı**, **km**, **fiyat** (ya da "Fiyat
+  sorunuz"), **şube adı**, ilanın abonenin dilindeki **mutlak bağlantısı**. En çok **20** satır,
+  ilk yayını en yeni olan önce. 20'den fazla ilan varsa sayı **taşımayan** bir cümle eklenir —
+  "Diğer yeni araçlar için vitrine göz atın" — ve vitrin listesinin bağlantısı. Çoğul kuralı
+  gerekmez; `0009` **C7**'nin ICU şartı yalnız sayı ya da çoğul içeren cümle için geçerli ve
+  böyle bir cümle yok (biçimlendirilmiş değerler cümle değil, yer tutucu).
+- **Şablonlar:** bülten **başlık**, **satır** ve **altlık** olarak ayrı (anahtar × locale)
+  şablonlardır; satır şablonu kendi anahtarındadır. "Fiyat sorunuz" ve "Diğer yeni araçlar…"
+  metinleri de şablon kataloğundadır (C8). Düz metin, görsel yok (X14). Yeni ICU bağımlılığı
+  **yok** (C15).
+- **Okuma — tek atlama:** `VehicleCatalog.Contracts`'a açılacak ilan özeti okuması model
+  **adı** değil model **kimliği** döner; `Notifications` adı `VehicleReference.Contracts`'tan
+  kendisi çözer. Şube adı `Dealership.Contracts`'tan, galeri adı `IGalleryDisplayNameQueries`'ten.
+  Her okuma tek atlamadır (C12).
+*Gerekçe:* B2 — model adını `VehicleCatalog` içinde çözmek `Notifications → VehicleCatalog →
+VehicleReference` zinciri kurar (Yasak 13) ve bugünkü kapı bunu görmez (Context). B6 — şablon
+motoru döngü ve çoğul bilmiyor; satırı ayrı şablon yapmak motoru değiştirmeden listeyi kurar.
+*Bedel:* `Notifications` dört modülün yüzeyini okur; "kaç araç daha" bilgisi iletide yok.
+
+**D12 — Rezerve, satılmış, arşivlenmiş ve yayından kalkmış ilan bültene girmez.** Yalnız
+**Yayında** olan ilan — dönem işlenirken de, ileti dağıtılırken de (**D21**).
+*Gerekçe:* rezerve araç vitrinde rozetiyle kalır ama ziyaretçiye "yeni geldi" diye duyurulması
+yanıltıcıdır.
+*Bedel:* dönem işlenirken Yayında olmayan aday **elenir** ve bir daha aday olmaz (**D21**) —
+dönem anında geçici olarak Rezerve görünen, sonra vitrine dönen ilan da hiçbir bültene girmez.
+Dönem işlendikten sonra rezerve edilen ilan o dönemin iletisinden düşer.
+
+**D13 — Bülten dönemi (B1, B12).** Dönem anı yapılandırmadan gelir: **haftanın günü + saat,
+UTC** (C9). Yapılandırma eksikse uygulama ayağa kalkmaz (C14).
+- **Devreye giriş anı:** uygulamanın bu kartla ilk açılışında, yoksa yazılan **başlangıç
+  dönemi kaydının** zamanı. Sonraki açılışlar bu kaydı değiştirmez. Aday eşiği (**D4**) budur.
+- **İşleyici:** dönem işleyicisi `IClock` alan ve testten **doğrudan çağrılabilen** bir
+  birimdir (`Notifications.Tests/Integration/KuyrukTests.cs` deseni); zamanlı servis yalnız
+  onu tetikler.
+- **Dönem anından önce işlem yapılmaz:** işleyici dönem anından önce çağrılırsa hiçbir
+  dönem kaydı ve ileti üretmez.
+- **Hedef kitle:** dönemin **işlendiği anda** etkin olan aboneler. Kaçırılmış bir dönem
+  sonradan işlenirse o anda etkin olanlar alır.
+- Aynı dönem iki kez işlenmez; bir aboneye bir dönem için en çok **bir** bülten kaydı oluşur
+  (**D23**).
+- Uygulama dönem anında kapalıysa açılışta kaçırılan dönem **bir kez** işlenir; birden çok
+  kaçırılmış dönem **tek bültende** birleşir.
+- Kart öncesi yayınlanan ilanlar hiçbir bültene girmez (Context: duyurular geri gelmez).
+*Gerekçe:* "kartın devreye girdiği an" ve "dönem anında etkin" ölçülemiyordu (B12); tanımları
+bir kayda ve doğrudan çağrılabilir bir birime bağlamak kriterleri test edilebilir yapar.
+*Bedel:* yaz saati uygulanan ülkelerde yerel gönderim saati yılda iki kez bir saat kayar.
+
+**D14 — Dil (B14).** Dil, isteğin gövdesinde `0005`'teki gibi taşınır; kurulumda etkin olmayan
+ya da tanınmayan bir dil `400` + `notification.subscription_invalid_locale` ile reddedilir
+(`0005`'in `lead.invalid_locale` cevabının karşılığı) ve kayıt oluşmaz. Teyit bekleyen adrese
+başka bir dilden yeni istek gelirse dil güncellenir (yeni teyit iletisi o dilde; adres sınırı
+aşılmışsa **D9** gereği güncellenmez); **etkin** aboneliğin dili yeni istekle değişmez (D5).
+Abonenin dili kurulumda sonradan etkin olmaktan çıkarsa ileti varsayılan dilde gider.
+*Bedel:* etkin abone bülten dilini değiştirmek için çıkıp yeniden abone olmak zorunda.
+
+**D15 — KVKK bağlantısı `0017` D5 deseniyle.** `privacy` o dilde yayındaysa form notu ona bağlanır;
+değilse bağlantı basılmaz ve form çalışmaya devam eder.
+*Gerekçe:* talep formuyla aynı davranış; metin `Content`'te, galerinin elinde.
+*Bedel:* aydınlatma metnini yayınlamamış bir galeri bağlantısız izin toplar — bunun kabul
+edilebilirliği sahibin sorusu (**SS3**).
+
+**D16 — Bülten bölümü yalnız ana sayfada, `HomeCatalog`'un altında (B17).** Bölüm ana sayfada
+`HomeCatalog`'un hemen altında ve altlıktan önce durur. **Vitrin boşken de görünür**: `HomeCatalog`
+o durumda yalnız boş stok mesajını basar (`HomeCatalog.tsx:93-99`) ve bülten bölümü onun altında
+kalır. Metinler vitrin çeviri kümesindedir ve panelden düzenlenmez (X9).
+*Gerekçe:* "yeni araç gelince haber verelim" vaadi tam vitrin boşken anlamlı; "öne çıkanların
+altında" çapası boş vitrinde tanımsızdı.
+*Bedel:* listeye ya da ilana doğrudan gelen ziyaretçi bülteni görmez.
+
+**D17 — Performans bütçesi (B18).** Ölçüm ADR `0013`'ün protokolüyle yapılır: `vite build`
+çıktısının **giriş JS'i + giriş CSS'i** (ana sayfa ilk yüklemede inen, `index.html`'in
+başvurduğu dosyalar), her biri `gzip -9` ile sıkıştırılıp toplanır. Toplam `main` tabanına göre
+**en çok 3072 B** artar; iki sayı ve fark PR'da yazılır. C3 medyanı bir sayfada **2450 ms**'yi
+aşarsa ikinci bir koşu istenir ve LCP öğesi yazılır.
+*Gerekçe:* Context'teki ölçüm: tek koşu içi yayılım 157 ms, detay sayfasının payı 95 ms.
+*Bedel:* bütçe, teyit ve çıkış sayfalarının ilk pakete girmemesini fiilen zorunlu kılar.
+
+**D18 — Galeri adı.** Teyit iletisi ve bülten, galerinin abonenin dilindeki görünen adını taşır
+(`0020`); o dilde ad yoksa `0020`'nin düşüş kuralı geçerlidir.
+*Gerekçe:* alıcı iletinin kimden geldiğini bilmeli (R17); yasal kimlik bilgisi ayrı bir soru
+(**SS2**).
+
+**D19 — Sözlük** (`docs/domain.md` § Bildirim): **Bülten** (haftalık yeni araç özeti —
+pazarlama iletisi) · **Bülten Aboneliği** (adres + dil + durum) · **Abonelik Durumu**
+(`Teyit bekliyor` · `Etkin` · `Çıkmış`) · **Teyit Bağlantısı** · **Çıkış Bağlantısı** ·
+**Bülten Dönemi** (bir haftalık pencere ve kesim anı) · **Bülten Adayı** (henüz bir döneme
+atanmamış, ilk kez yayınlanmış ilan — **D4**) · **İzin Olayı** (**D27**).
+
+**D20 — ADR gerekmez; `docs/architecture.md` güncellenir (B2, B19).** `Notifications` ilk public
+ucunu ve ilk zamanlı işini alıyor; yaprak konumu (C12) korunuyor: olay yayınlamıyor, kimse ona
+senkron bağlanmıyor. Gönderim kaydının alıcısını talepten bağımsız hâle getirmek modül içi bir
+değişiklik. **Koşulsuz** güncellenecekler (DoD T8):
+- § Karar Defteri'ne bir satır;
+- bağımlılık haritasındaki "Okuduğu üç yüzey" (`docs/architecture.md:124`) yeni okunan
+  yüzeylerle (`VehicleCatalog` ilan özeti, `VehicleReference` model adı,
+  `IGalleryDisplayNameQueries`);
+- olay akışında `VehiclePublished`'ın tüketicisi olarak `Notifications`;
+- § 2.A koşul 2'ye ("aynı HTTP isteği", `:170`) zamanlı işten senkron okumanın istisnası —
+  `NotificationDispatcher` zaten emsal.
+
+**D21 — İlan kümesi dönem işlenirken dondurulur (B3).** Dönem işlenirken atanmamış adayların
+**hepsi** o dönemde karara bağlanır: o an **Yayında** olanlar o döneme atanır ve **dönem ↔ ilan**
+kayıtlarına yazılır; Yayında olmayanlar (Taslak, Rezerve, Satıldı, Arşiv) **elendi** olarak
+işaretlenir ve bir sonraki döneme kalmaz (**D12**; Takım Yöneticisi (ajan) kararı, 2026-11-19).
+Bu kayıtlar kişisel veri taşımaz. İletinin **dağıtımında** küme yeniden hesaplanmaz;
+yalnız değişken veri — model adı, fiyat, şube adı ve ilanın **durumu** — kaynaktan okunur.
+Dağıtım anında hâlâ **Yayında** olan ilanlar satır olur; hiçbiri kalmadıysa ileti **kalıcı
+başarısız** işaretlenir ve gönderilmez (R9). Dönem işlenirken hiç Yayında aday yoksa dönem
+kaydı yazılır ama ileti üretilmez.
+*Gerekçe:* Tuzak 12. Aynı dönemin iletileri aynı kümeden türer; tekrar denenen ileti saatler
+sonra farklı bir liste taşımaz ve satışlar boş bülten doğurmaz. Eleme, satışı geri alınan
+(`0023`) ya da aylar sonra yeniden yayına alınan bir ilanın bekleyen adaylığıyla "yeni araç"
+diye bültene çıkmasını önler.
+*Bedel:* dağıtımda satılan ilan iletiden düşer; ileti dönemdeki ilanlardan daha azını taşıyabilir.
+Dönem anında geçici olarak Rezerve görünen ilan da bültene girmez.
+
+**D22 — Dağıtım anında abonelik durumu okunur (B4).** Dağıtıcı her bülten iletisini göndermeden
+önce aboneliğin **o anki** durumunu okur; `Çıkmış` (ya da kayıt yok) ise ileti gönderilmez ve
+**kalıcı başarısız** işaretlenir — talepteki `lead is null → Permanent` deseni
+(`NotificationDispatcher.cs:96`). Adres de bu okumada, kaynaktan alınır (C5).
+*Gerekçe:* dönem işlendikten sonra çıkan abonenin tekrar denemede bekleyen iletisi aksi hâlde
+gönderilirdi (R6, R20).
+*Bedel:* yok denecek kadar küçük: her gönderimde bir okuma.
+
+**D23 — Gönderim kaydının biçimi ve göç (B5).** Gönderim kaydı **ya** bir talebe **ya** bir
+abonelik + döneme (bülten) **ya da** bir aboneliğe (teyit iletisi) bağlıdır; birden fazlasına
+birden değil. Kural veritabanında bir **CHECK** kısıtıyla korunur. `(abonelik, dönem)` çifti
+**tekildir**: aynı dönemin ikinci işlenmesi — ardışık ya da eşzamanlı — ikinci kayıt üretemez.
+Migration **önce** kuyrukta duran talep iletileri migration'dan **sonra** da gönderilir.
+*Gerekçe:* `LeadId` bugün zorunlu (Context); şema değişikliği kriterde yazılı değildi ve
+"tam bir kez" garantisi kod yoluna değil kısıta dayanmalı.
+*Bedel:* `0009`'un tek tablolu kaydı üç anlamlı hâle gelir; her okuyucu bağlamı ayırt eder.
+
+**D24 — Sayı ve para biçimi vitrin kartıyla birebir (B6).** Bültendeki fiyat, km ve yıl .NET
+`CultureInfo` ile biçimlenir ve aynı değerler için vitrinin `formatMoney`, `formatMileage`,
+`formatYear` çıktısıyla (`frontend/src/shared/i18n/format.ts`) **üç dilde de bayt bayt aynıdır** —
+Arapça'nın rakam kümesi, gruplama ayracı ve para birimi simgesinin yeri dâhil. Yıl gruplama
+almaz; KWD üç ondalık taşır. Ölçüm uyuşmazlık gösterirse geliştirici **ön yüzün çıktısını
+otorite sayan** bir biçim kuralı yazar ve bu karta karar olarak eklenir (AP-08) — uyuşmazlık
+sessizce kabul edilmez.
+*Gerekçe:* ziyaretçi aynı aracı e-postada ve vitrinde iki farklı biçimde görmemeli; ICU
+(`Intl`) ile .NET `CultureInfo` aynı CLDR verisine dayansa da sürüm ve varsayılan farkı olabilir.
+*Bedel:* ön yüz biçimi değişirse backend testi kırmızıya döner; iki taraf birlikte değişir.
+
+**D25 — Bağlantı anahtarlarının güvenliği (B8).**
+- Teyit anahtarı **CSPRNG** ile üretilir, **256 bit**. Veritabanında yalnız **SHA-256 özeti**
+  tutulur; düz anahtar yalnız iletide yaşar.
+- Çıkış bağlantısı **saklanmaz**: abonelik kimliği üzerinden, dağıtım yapılandırmasındaki
+  bir sırla **HMAC-SHA256** ile üretilir ve doğrulanır. Sır, diğer sırlar gibi üretilir
+  (`dev-up.sh` `openssl rand -base64 32` · `docs/deploy.md` zorunlu ortam değişkeni — ADR 0011
+  deseni, `Identity__TwoFactor__EncryptionKey` emsali); **sır yoksa uygulama ayağa kalkmaz**.
+- Anahtarlar ve bağlantılar loga ve gönderim geçmişine girmez (AC-90 taraması).
+*Gerekçe:* özetli saklama, veritabanı sızsa bile teyit yetkisi vermez; HMAC, D8'in süresiz ve
+her bültende yeniden basılan bağlantısını düz saklamadan mümkün kılar.
+*Bedel:* **sır değişirse eski bütün çıkış bağlantıları geçersiz olur** — eski bir bültenden
+çıkmak isteyen kişi "bağlantı geçerli değil" görür. Sır yedeklenir ve döndürülmez;
+döndürme gerekirse ayrı karar. `docs/deploy.md`'ye bu uyarı yazılır.
+
+**D26 — Teyit ve çıkış sayfalarının adresleri (B10).** Yollar
+`/{locale}/newsletter/confirm?token=…` ve `/{locale}/newsletter/unsubscribe?token=…`; anahtar
+sorgu parametresinde taşınır. `newsletter` ilk segmenti `ContentReservedSlugs.All`'a eklenir —
+bu adda içerik sayfası açılamaz. İki sayfa `noindex` taşır ve `Referrer-Policy: no-referrer`
+ile sunulur. Backend'in kurduğu mutlak bağlantı (`PublicBaseUrl` + yol) ile ön yüzün rotası bu
+iki kalıpla **aynıdır**.
+*Gerekçe:* tek parçalı yol `0017`'nin slug'larıyla çakışırdı (Context); anahtar `Referer`
+başlığıyla başka bir siteye ya da arama motoruna sızmamalı.
+*Bedel:* `newsletter` İngilizce bir segment; TR/AR adreslerde de böyle görünür. Değişikliğe
+`Content` modülü dokunur (yalnız ayrılmış ad listesi).
+
+**D27 — İzin olay kaydı (B11).** `notifications` şemasında **yalnız eklenen** bir izin olay
+kaydı tutulur: her **istek**, **teyit** ve **çıkış** için olay türü, zamanı (UTC) ve abonelik
+kimliği. Adres bu kayıtta **yoktur**; abonelik kimliği üzerinden bağlanır. Kayıt silinmez ve
+düzenlenmez. Aboneliğin kendisi yalnız **son** durumu taşır; "çıkmış → teyit bekliyor"
+geçişinde geçmiş olay kaydında kalır. Adres sınırına takılan istek (D9) olay yazmaz.
+*Gerekçe:* tek kaydın yeniden kullanılması (D5) eski teyit ve çıkış zamanlarını ezerdi; R19 ve
+§ Sahibe sorular'daki "kodun garanti ettiği" ancak bu kayıtla doğru olur. Olası bir İYS
+entegrasyonu (X8) bu kayda dayanır.
+*Bedel:* yeni bir tablo; KVKK silme talebinde (SS3) adresin aboneliği silinse bile olaylar
+kimlikle kalır — sahibin cevabı bunu değiştirebilir.
 
 ---
 
-## Açık sorular
+## Sahibe sorular
 
-**S1. Çift onay (teyitli abonelik) olacak mı?**
-*Öneri:* **evet.** Adres bırakıldığında bir teyit mesajı gider; bağlantıya tıklanmadan
-abonelik etkinleşmez.
-*Gerekçe:* Tuzak 1. Ayrıca **L7** izni bir **kayıt** olarak istiyor; teyit edilmemiş adres,
-izni kanıtlanamayan bir adrestir.
-*Bedel:* abone sayısı belirgin biçimde düşer (teyit oranı hiçbir zaman %100 değildir) ve
-akış bir adım uzar. Bu bilinçli: izni kanıtlanamayan abone, galeriyi riske atar.
+Bunlar **karar değildir**; hukuki ya da ticari cevap ister ve Analist karara bağlamaz. Kriterler
+bu cevaplardan bağımsız yazıldı; cevaplar canlıya çıkışı etkileyebilir.
 
-**S2. Gönderim sıklığını kim belirler?**
-Mockup "haftada bir" diyor.
-*Öneri:* sıklık **dağıtım yapılandırmasından** gelir, varsayılanı haftalık; panelden
-düzenlenmez.
-*Gerekçe:* `0009` D4 ve `frontend-002` D1'in deseni — operasyonel değerler yapılandırmada.
-Panelden sıklık değiştirmek, yanlışlıkla günlük gönderim riskidir.
-*Bedel:* galeri sıklığı kendi değiştiremez.
+**Kodun bu kartla garanti ettiği:** her abonelik için adres, dil ve son durum; her **istek**,
+**teyit** ve **çıkış** için zamanıyla (UTC), yalnız eklenen ve silinmeyen bir **izin olay
+kaydı** (**D27** — aynı adresin yeniden aboneliği eski olayları ezmez); teyitsiz adrese bülten
+gitmemesi; her bültende tek adımlı çıkış bağlantısı; çıkıştan sonra — kuyrukta bekleyen dâhil —
+gönderim olmaması (**D22**); çıkış kaydının silinmemesi; adresin ve bağlantı anahtarlarının loga
+ve gönderim geçmişine girmemesi. **Garanti etmediği:** dış bir sisteme (İYS) bildirim, saklama
+süresi uygulaması, yasal gönderici kimliği metni, izin anındaki metnin sürümü.
 
-**S3. "Yeni araç" nasıl belirlenir?**
-*Öneri:* son başarılı gönderimden sonra **yayına alınmış** ilanlar; kaynak `0012b`'nin
-ürettiği `VehiclePublished` olayı (D11 ile karara bağlandı).
-*Gerekçe:* "yayına alınma" galerinin kasıtlı eylemidir; araç kaydının oluşturulma tarihi
-değil (taslak haftalar önce girilmiş olabilir).
-*Bedel:* **bu spec `0012b`'ye bağımlı hâle gelir** ve ondan önce başlayamaz. `0012b`'nin
-D11'i olayı taahhüt ediyor; yine de olay gelmeden bülten içeriği sorgu ile hesaplanmak
-zorunda kalır ve "son gönderimden beri" penceresi kırılgan olur.
-*Elenen alternatif:* ilanın `PublishedAt` alanını sorgulamak — `Listing` bu alanı taşıyor,
-yani olaysız da mümkün; ama o zaman bülten `VehicleCatalog`'un okuma modeline senkron
-bağımlı olur ve `Notifications`'ın yaprak konumu tartışmaya açılır.
-
-**S4. Zaten abone olan adres ne görür?**
-*Öneri:* **her durumda aynı mesaj:** "adresinizi aldık, teyit bağlantısını gönderdik."
-Zaten aboneyse yeni bir teyit gönderilmez.
-*Gerekçe:* Tuzak 6; `0002` C13 ve `0006` AC-4'ün "ayırt edilemez cevap" ilkesinin bu
-spec'teki karşılığı.
-*Bedel:* gerçekten yeni abone olan biri teyit gelmediğinde nedenini anlamaz; mesaj
-"gelmezse spam klasörüne bakın" demek zorunda.
-
-**S5. `0005`'in iletişim izni bülten için kullanılabilir mi?**
-*Öneri:* **hayır.** İki izin ayrı tutulur (C4).
-*Gerekçe:* **L7** izni *"talebin kendisine dair işlemsel bildirim"* için tanımlıyor ve
-pazarlamayı açıkça ayırıyor. Talep bırakan birini bültene eklemek, vermediği bir izni
-kullanmaktır.
-*Bedel:* galeri, talep bırakan ziyaretçilere bülten gönderemez — ticari olarak cazip ama
-izinsiz. Talep formuna **ayrı bir bülten onay kutusu** eklemek meşru bir yoldur, ama o
-`0005`'i değiştirir (ADR 0003 unsur 1 gereği yeni bir spec) ve bu spec'in kapsamında değil.
+- **SS1. Ticari elektronik ileti ve İYS.** Türkiye'de ticari elektronik ileti mevzuatı (6563
+  sayılı Kanun ve ilgili yönetmelik) e-posta onaylarının İleti Yönetim Sistemi'ne (İYS)
+  kaydını ve retlerin oradan da alınabilmesini öngörüyor olabilir. Bu galeri için yükümlülük
+  var mı (gönderim hacmi, muafiyet)? Varsa entegrasyon ayrı karttır (X8). KWD gibi başka ülke
+  kurulumlarında hangi mevzuat geçerli?
+- **SS2. Gönderici kimliği.** Ticari iletide gönderenin hangi bilgileri (ticari unvan, adres,
+  iletişim, MERSİS no.) taşıması gerekiyor? Kod yalnız galerinin görünen adını basacak (D18);
+  fazlası şablon metni ya da kurulum verisi olarak eklenebilir.
+- **SS3. Aydınlatma ve saklama.** (a) Aydınlatma metni yayında değilken izin toplanmasına izin
+  verilsin mi (D15 izin veriyor)? (b) Çıkmış adresin kaydı ne kadar saklanır ve KVKK silme
+  talebinde ne olur — silinirse "bu adres çıkmıştı" bilgisi de gider. (c) Hiç teyit edilmemiş
+  kayıtlar ne kadar tutulur?
+- **SS4. Mockup'ın vaadi.** "Adresiniz üçüncü kişilerle paylaşılmaz" cümlesi, adresi işleyen bir
+  e-posta sağlayıcısı kullanılırken hukuken doğru mu? Cümle çeviri kataloğuna girecek; ifadesi
+  sahibin onayıyla yazılmalı.
+- **SS5. İzin metninin sürümü.** `0019` talep izni için "hangi metne izin verildi" kaydını
+  tartışıyor. Bülten izni için de aynı kayıt gerekli mi? (X12)
 
 ---
 
 ## Acceptance Criteria
 
-> Beş açık soru cevaplandıktan sonra yazılacak. En az şu kümeleri kapsayacak:
-> abonelik isteği ve teyit akışı · teyitsiz adrese gönderim yapılmaması · tek adımda çıkış ·
-> çıkmış adrese bir daha gönderilmemesi · zaten abone olan adresin ayırt edilemezliği ·
-> locale başına gönderim ve şablon düşüşü · boş bülten gönderilmemesi · kuyruk ve tekrar
-> deneme davranışının korunması · idempotentlik · kişisel verinin logda ve geçmişte
-> bulunmaması · hız sınırı · form üç durumu · üç locale ve RTL.
+### Abone olma formu (R1, R4, R11 · D10, D14, D15, D16)
+
+- **AC-1.** Ana sayfada `HomeCatalog`'un hemen altında ve altlıktan önce bir bülten bölümü vardır:
+  başlık, haftalık yeni araç özeti alınacağını söyleyen açıklama, e-posta alanı, gönder düğmesi ve
+  tek tıkla çıkılabileceğini söyleyen not.
+- **AC-2.** Yayında hiç ilan yokken bülten bölümü yine görünür ve boş stok mesajının altında durur.
+- **AC-3.** `privacy` o dilde yayındayken nottaki KVKK bağlantısı `/{locale}/{privacy slug}`
+  adresine gider.
+- **AC-4.** `privacy` o dilde yayında değilken notta bağlantı yoktur ve form abonelik isteği
+  göndermeye devam eder.
+- **AC-5.** Gönder'e basıldıktan sonra yanıt gelene kadar düğme yükleniyor durumunu gösterir ve
+  devre dışıdır; bu sürede ikinci basış ikinci istek göndermez.
+- **AC-6.** Geçerli bir adresle gönderimden sonra form yerinde başarı mesajını gösterir: teyit
+  bağlantısının gönderildiği ve gelmezse istenmeyen e-posta klasörüne bakılması.
+- **AC-7.** `ali@` ve boş adres alan hatasıyla reddedilir; API `400` ve
+  `notification.subscription_email_invalid` döner; kayıt oluşmaz ve ileti kuyruğa girmez.
+- **AC-8.** `Ali <ali@ornek.com>`, `"x y" <ali@ornek.com>`, `ali` ve `ali@ornek` AC-7 gibi
+  reddedilir (D10).
+- **AC-9.** 255 karakterlik adres AC-7 gibi reddedilir; 254 karakterlik geçerli adres kabul edilir.
+- **AC-10.** Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `400` ve
+  `notification.subscription_invalid_locale` alır; kayıt oluşmaz (D14).
+- **AC-11.** Sunucu `500` döndüğünde ya da ağ koptuğunda form teknik ayrıntı içermeyen bir hata ve
+  yeniden deneme yolu gösterir; yazılan adres alanda kalır.
+- **AC-12.** Aynı IP'den yapılandırılan pencerede geçerli istek eşiği kadar istekten sonraki geçerli
+  istek `429` ve `notification.subscription_rate_limited` alır; kayıt oluşmaz, ileti kuyruğa girmez
+  ve form hız sınırı mesajı gösterir (D9).
+- **AC-13.** Biçimi geçersiz istekler geçerli istek bütçesini tüketmez: geçerli eşik kadar geçersiz
+  istekten sonra gelen geçerli istek kabul edilir (D9).
+- **AC-14.** Aynı IP'den yapılandırılan pencerede kaba istek eşiği kadar istekten (geçersizler
+  dâhil) sonraki istek `429` alır (D9).
+- **AC-15.** İstek yapan IP hiçbir kalıcı kayıtta ve abonelik yolunun hiçbir log çağrısında yer
+  almaz.
+
+### Ayırt edilemez cevap ve kayıt (R7, R13, R18, R19 · D3, D5, D9, D10, D14, D27)
+
+- **AC-16.** Hiç kaydı olmayan, teyit bekleyen, etkin ve çıkmış dört adres için abonelik
+  isteğinin cevabı aynı durum kodunu ve bayt bayt aynı gövdeyi taşır (süre ölçülmez — X16).
+- **AC-17.** Yeni bir adres için istek tek bir **teyit bekliyor** kaydı, tek bir **istek** izin
+  olayı oluşturur ve tek bir teyit iletisini isteğin dilinde kuyruğa koyar.
+- **AC-18.** Etkin bir adres için istek yeni kayıt oluşturmaz, ileti kuyruğa koymaz; kaydın
+  durumu, dili ve teyit zamanı değişmez.
+- **AC-19.** Teyit bekleyen bir adres için başka bir dilden gelen istek yeni kayıt oluşturmaz,
+  kaydın dilini günceller ve yeni dilde bir teyit iletisi kuyruğa koyar.
+- **AC-20.** Çıkmış bir adres için istek yeni kayıt oluşturmaz, kaydı **teyit bekliyor**'a
+  döndürür ve teyit iletisi kuyruğa koyar; önceki **teyit** ve **çıkış** izin olayları zamanlarıyla
+  olay kaydında kalır; teyit edilmeden gelen dönemde o adrese bülten kuyruğa girmez.
+- **AC-21.** `Ali@Ornek.com ` (sonda boşlukla) ile `ali@ornek.com` aynı adres sayılır: ikinci
+  istek yeni kayıt oluşturmaz (D10).
+- **AC-22.** Kaydı olmayan bir adrese, harf büyüklüğü farklı iki istek bir bariyerle **aynı anda**
+  başlatıldığında tek abonelik kaydı oluşur (D10).
+- **AC-23.** Aynı adres için adres penceresindeki dördüncü istek ilk üçüyle aynı cevabı alır;
+  teyit iletisi kuyruğa girmez ve kayıtta hiçbir şey değişmez — teyit anahtarı özeti, dil, durum ve
+  izin olayları aynı kalır; üçüncü iletinin bağlantısı aboneliği hâlâ etkinleştirir (D9).
+- **AC-24.** Taşıyıcı yanıt vermezken (gönderim askıda) abonelik isteğinin cevabı yine döner;
+  cevap gönderimi beklemez.
+- **AC-25.** Talep formunda iletişim izni vererek e-postasıyla talep bırakan bir ziyaretçinin
+  adresi, abone olmadıkça bülten almaz; `LeadCaptured` hiçbir abonelik kaydı oluşturmaz (D3).
+
+### Teyit (R2, R14 · D1, D6, D7, D18, D27)
+
+- **AC-26.** Teyit iletisi, abonenin dilindeki teyit sayfasını açan mutlak bir bağlantı ve
+  galerinin görünen adını taşır; araç, fiyat ya da başka bir tanıtım içeriği taşımaz.
+- **AC-27.** Teyit bağlantısının açılması (sayfanın yüklenmesi) aboneliği etkinleştirmez: kayıt
+  **teyit bekliyor** kalır ve sayfa "Aboneliği onayla" düğmesini gösterir.
+- **AC-28.** Düğmeye basıldığında kayıt **etkin** olur, teyit zamanı UTC olarak yazılır, bir
+  **teyit** izin olayı eklenir ve sayfa başarı mesajını gösterir.
+- **AC-29.** Teyit bekleyen abone, dönem işlenirken Yayında aday varken bülten almaz.
+- **AC-30.** Yapılandırılan süre dolduktan 1 dakika sonra kullanılan bağlantı aboneliği
+  etkinleştirmez ve sayfa "bağlantı artık geçerli değil" mesajıyla yeniden abone olma yolunu
+  gösterir.
+- **AC-31.** Süre dolmadan 1 dakika önce kullanılan bağlantı aboneliği etkinleştirir.
+- **AC-32.** Bir kez kullanılmış bağlantı ikinci kez kullanıldığında kaydın durumu ve teyit zamanı
+  değişmez, ikinci teyit olayı eklenmez ve sayfa AC-30'un mesajını gösterir.
+- **AC-33.** Aynı bağlantıyla **aynı anda** gelen iki teyit isteğinden (istekler bir bariyerle
+  eşzamanlı başlatılır) yalnız biri başarılı olur; teyit zamanı ve teyit olayı bir kez yazılır.
+- **AC-34.** Teyit bekleyen adrese yeni teyit iletisi gittikten sonra önceki iletinin bağlantısı
+  aboneliği etkinleştirmez.
+- **AC-35.** Hiç var olmamış ya da bozuk bir teyit bağlantısının cevabı, süresi dolmuş ve
+  kullanılmış bağlantınınkiyle aynı durum kodu ve aynı gövdedir.
+- **AC-36.** Teyit sayfası istek sürerken yükleniyor durumunu, sunucu hatasında teknik ayrıntı
+  içermeyen bir hata ve yeniden deneme yolunu gösterir.
+
+### Çıkış (R5, R6, R20 · D6, D8, D22, D25, D27)
+
+- **AC-37.** Her bülten iletisi aboneye özgü, mutlak bir çıkış bağlantısı taşır.
+- **AC-38.** Çıkış bağlantısı oturum açılmamış bir tarayıcıda açıldığında başka bir düğme ya da
+  onay istemeden kaydı **çıkmış** yapar, çıkış zamanını UTC olarak yazar, bir **çıkış** izin olayı
+  ekler ve sayfa "abonelikten çıktınız" mesajını gösterir.
+- **AC-39.** Çıkıştan sonraki ilk dönemde, Yayında aday varken o adrese bülten kuyruğa girmez.
+- **AC-40.** Çıkmış kayıt silinmez: çıkıştan sonra kayıt **çıkmış** durumunda ve çıkış zamanıyla
+  durur.
+- **AC-41.** Aynı çıkış bağlantısının ikinci kez açılması aynı mesajı gösterir; durum ve çıkış
+  zamanı değişmez, ikinci çıkış olayı eklenmez.
+- **AC-42.** Çıkıp yeniden abone olan ve teyit eden bir adreste, **ilk** aboneliğin bültenindeki
+  çıkış bağlantısı aboneliği yine çıkmış yapar.
+- **AC-43.** Çıkış sayfası ana sayfadaki bülten bölümüne giden bir yeniden abone olma bağlantısı
+  gösterir.
+- **AC-44.** Geçersiz bir çıkış bağlantısı hiçbir kaydı değiştirmez ve sayfa "bağlantı artık
+  geçerli değil" mesajını gösterir.
+- **AC-45.** Çıkış sayfası istek sürerken yükleniyor durumunu, sunucu hatasında teknik ayrıntı
+  içermeyen bir hata ve yeniden deneme yolunu gösterir.
+- **AC-46.** Dönem işlendikten sonra geçici hatayla tekrar denemeye düşmüş bir bülten, abone
+  çıktıktan sonraki denemede gönderilmez ve kalıcı başarısız işaretlenir (D22).
+- **AC-47.** Çıkış bağlantılarını imzalayan sır değiştirildiğinde, önceki sırla üretilmiş bir
+  çıkış bağlantısı AC-44'ün cevabını verir (D25'in bedeli).
+
+### Bağlantı güvenliği ve adresler (R21 · D25, D26)
+
+- **AC-48.** Teyit bağlantısındaki anahtar veritabanının hiçbir alanında düz olarak bulunmaz;
+  aboneliğin kaydında yalnız anahtarın SHA-256 özeti durur.
+- **AC-49.** Teyit anahtarı kodu çözüldüğünde 32 bayttır ve aynı adres için ardışık iki teyit
+  iletisi farklı anahtar taşır.
+- **AC-50.** Çıkış bağlantısının imza sırrı yapılandırmada yokken uygulama ayağa kalkmaz.
+- **AC-51.** Teyit bağlantısı `{PublicBaseUrl}/{locale}/newsletter/confirm?token=…`, çıkış
+  bağlantısı `{PublicBaseUrl}/{locale}/newsletter/unsubscribe?token=…` kalıbındadır ve ön yüz
+  iki yolu da ilgili sayfayla açar.
+- **AC-52.** Slug'ı `newsletter` olan bir içerik sayfası kaydı reddedilir.
+- **AC-53.** Teyit ve çıkış sayfaları `noindex` taşır.
+- **AC-54.** Teyit ve çıkış sayfalarının yanıtı `Referrer-Policy: no-referrer` başlığını taşır.
+
+### "Yeni araç" ve dönem (R8, R9, R15 · D4, D12, D13, D21, D23)
+
+- **AC-55.** Dönem işlenirken, henüz bir döneme atanmamış ve o an **Yayında** olan her aday ilan,
+  her etkin abonenin bülteninde tam bir kez yer alır.
+- **AC-56.** Dönem kesiminden önce yayınlanan ama `VehiclePublished` olayı kesimden **sonra**
+  işlenen ilan, bir sonraki dönemin bülteninde bir kez yer alır.
+- **AC-57.** Bir bültende yer almış ilan yayından kaldırılıp sonraki dönemde yeniden
+  yayınlandığında sonraki bültende yer almaz.
+- **AC-58.** Her okumada ilerleyen bir sahte saatle (`OccurredAt ≠ PublishedAt`) bu dönemde ilk kez
+  yayınlanan ilan bültende yer alır.
+- **AC-59.** Aynı dönemde ilk kez yayınlanan, sonra kaldırılıp yeniden yayınlanan ilan bültende bir
+  kez yer alır.
+- **AC-60.** İlk yayını devreye giriş anından önce olan bir ilan, devreye girişten sonra yeniden
+  yayınlansa da hiçbir bültende yer almaz.
+- **AC-61.** Dönem işlenirken **satılmış**, **arşivlenmiş**, **yayından kaldırılmış** ya da
+  **rezerve** olan aday o dönemin bülteninde yer almaz (dört ayrı test).
+- **AC-62.** Dönem işlenirken rezerve olduğu için elenen ilan, vitrine döndükten sonraki dönemlerin
+  hiçbirinin bülteninde yer almaz (D12, D21).
+- **AC-63.** Dönem işlenirken **Satıldı** olduğu için elenen ilan, satışı geri alınıp (`0023`)
+  Yayında'ya döndükten sonraki dönemlerin hiçbirinin bülteninde yer almaz (D21).
+- **AC-64.** Dönem işlenirken Yayında aday yokken hiçbir aboneye ileti kuyruğa girmez ve gönderim
+  geçmişinde o dönem için kayıt oluşmaz.
+- **AC-65.** Dönem işlendikten sonra, iletiler dağıtılmadan önce dönemin bütün ilanları satılırsa
+  ileti gönderilmez ve kalıcı başarısız işaretlenir (D21).
+- **AC-66.** Dönemin iki ilanından biri dağıtımdan önce satılırsa ileti yalnız Yayında kalan ilanı
+  taşır; dağıtımdan önce fiyatı değişen ilanın satırı yeni fiyatı taşır (D21).
+- **AC-67.** Dönem işleyicisi dönem anından önce çağrıldığında hiçbir dönem kaydı ve ileti üretmez.
+- **AC-68.** Kaçırılmış bir dönem sonradan işlendiğinde bülteni **işlenme** anında etkin olan
+  aboneler alır: arada teyit eden alır, arada çıkan almaz.
+- **AC-69.** Dönem işleyicisi aynı dönem için **ardışık** iki kez çağrıldığında her abone o dönem
+  için en çok bir bülten kaydı alır.
+- **AC-70.** Dönem işleyicisi aynı dönem için bir bariyerle **eşzamanlı** iki kez çağrıldığında
+  her abone o dönem için en çok bir bülten kaydı alır.
+- **AC-71.** Uygulama iki dönem anı boyunca kapalı kaldıysa açılışta her etkin aboneye tek bir
+  bülten gider ve iki dönemin adaylarını birlikte taşır.
+- **AC-72.** İlk açılış bir başlangıç dönemi kaydı yazar; ikinci açılış bu kaydı ve zamanını
+  değiştirmez.
+- **AC-73.** Aynı `VehiclePublished` olayı iki kez teslim edildiğinde tek aday kaydı oluşur ve ilan
+  bültende bir kez yer alır.
+
+### Bülten içeriği (R3, R16, R17 · D11, D14, D18, D24)
+
+- **AC-74.** Bültendeki her araç satırı model adını abonenin dilinde, model yılını, km'yi, fiyatı,
+  şube adını ve ilanın abonenin dilindeki mutlak bağlantısını taşır.
+- **AC-75.** Fiyatı "sorunuz" olan ilanın satırı tutar yerine şablon kataloğundaki "Fiyat sorunuz"
+  karşılığını taşır.
+- **AC-76.** KWD kurulumunda `12500.750` tutarlı ilanın fiyatı üç ondalık basamakla ve para
+  birimiyle yazılır; son basamak (`0`) düşmez.
+- **AC-77.** TRY ve KWD fiyatı, km ve model yılı için bültenin biçimi, aynı değerlerle vitrinin
+  `formatMoney`, `formatMileage` ve `formatYear` çıktısıyla TR, AR ve EN'de bayt bayt aynıdır;
+  Arapça'da rakam kümesi dâhil (D24).
+- **AC-78.** 23 aday ilanlı bir dönemde bülten ilk yayını en yeni 20 ilanı sırayla taşır, ardından
+  sayı içermeyen "Diğer yeni araçlar için vitrine göz atın" cümlesini ve vitrin listesinin
+  bağlantısını taşır; 20 ya da daha az adayda bu cümle yoktur.
+- **AC-79.** Bülten galerinin abonenin dilindeki görünen adını taşır.
+- **AC-80.** Arapça abone olunmuş adrese teyit iletisi ve bülten Arapça şablonlarla gider.
+- **AC-81.** Abonenin dilinde şablon yoksa ileti varsayılan dilde gider ve düşüş loglanır.
+- **AC-82.** Abonenin dili kurulumun etkin dilleri arasından çıkarıldıysa bülten varsayılan dilde
+  gider.
+
+### Mimari, şema ve kuyruk (R10 · C12 · D11, D20, D23)
+
+- **AC-83.** Zincir testi (`BildirimSinirTests`) `Notifications`'ın tükettiği **bütün** sorgu
+  arayüzlerini tarar — yeni ilan özeti okuması, model adı okuması ve `IGalleryDisplayNameQueries`
+  dâhil — ve gerçekleştirimlerinden biri başka bir modülün `Contracts`'ına uzandığında kırmızı
+  verir (negatif kanıt DoD'da).
+- **AC-84.** Hem bir talebe hem bir aboneliğe bağlı ya da hiçbirine bağlı olmayan bir gönderim
+  kaydı veritabanı tarafından reddedilir (D23).
+- **AC-85.** Migration'dan önce kuyrukta bekleyen bir talep iletisi, migration'dan sonra
+  gönderilir ve gönderildi işaretlenir.
+- **AC-86.** Bülten iletisinde geçici hata yapılandırılan sayıda, artan aralıkla yeniden denenir;
+  kalıcı hata yeniden denenmez.
+- **AC-87.** Bir abonenin iletisinin başarısız olması aynı dönemdeki diğer abonelerin iletilerini
+  engellemez.
+- **AC-88.** `0009`'un kabul kriterleri regresyon olarak yeşildir.
+
+### Kişisel veri (C5 · D25, D27)
+
+- **AC-89.** Teyit ve bülten iletilerinin gönderim geçmişi kaydı alıcının e-posta adresini hiçbir
+  alanda taşımaz.
+- **AC-90.** Abonelik, teyit, çıkış, dönem ve gönderim yolundaki log çağrıları e-posta adresini,
+  teyit anahtarını ve çıkış bağlantısını parametre olarak almaz — çağrı yüzeyini tarayan testle
+  (`0009` AC-25 deseni).
+- **AC-91.** Teyit ve çıkış bağlantıları adresi düz, URL kodlu ya da Base64 olarak içermez.
+- **AC-92.** Abonelik, teyit ve çıkış uçlarının hiçbir hata yanıtı e-posta adresini içermez.
+- **AC-93.** İzin olay kaydı e-posta adresini hiçbir alanda taşımaz; bir istek → teyit → çıkış →
+  istek → teyit dizisinden sonra beş olayın beşi de zamanlarıyla durur.
+
+### Dil ve RTL (R12)
+
+- **AC-94.** Bülten bölümü, teyit sayfası ve çıkış sayfasının metinleri TR/AR/EN vitrin
+  kataloglarında vardır; eksik anahtar kontrolü (`check:locales`) yeşildir.
+- **AC-95.** Arapça ana sayfadaki bülten bölümü ile Arapça teyit ve çıkış sayfaları sağdan sola
+  düzendedir; metnin hizası Range ölçümüyle sağdır.
+- **AC-96.** Teyit iletisi ile bültenin başlık, satır ve altlık şablonları ve "Fiyat sorunuz" ile
+  "Diğer yeni araçlar…" metinleri TR, AR ve EN üçünde de seed edilmiştir; eksik şablon kontrolü
+  backend testiyle yeşildir (`0009` C13).
+
+### Yapılandırma ve sınır (C10, C14 · D9, D13, D25)
+
+- **AC-97.** Dönem günü/saati, teyit bağlantısı süresi, üç hız sınırının (kaba istek, geçerli
+  istek, adres başına teyit iletisi) eşik ve pencerelerinden ya da çıkış bağlantısı sırrından biri
+  yapılandırmada yokken uygulama ayağa kalkmaz.
+- **AC-98.** Dönem anı, teyit süresi ve üç hız sınırını doğrulayan testler yapılandırılan değeri
+  kullanır, koda gömülü bir sabiti değil.
+- **AC-99.** Yeni migration'lar yalnız `notifications` şemasına dokunur; mimari testler (modül
+  sınırı, `Notifications`'ın olay yayınlamaması) yeşildir.
+
+### Performans (C13 · D17)
+
+- **AC-100.** PR'ın C3 koşusunda ana sayfa, liste ve ilan detayı için medyan LCP < 2500 ms ve medyan
+  CLS < 0,1'dir; bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi PR'da
+  yazılıdır.
+- **AC-101.** Ana sayfanın giriş JS'i ile giriş CSS'inin `gzip -9` boyutları toplamı `main`
+  tabanına göre en çok 3072 B artar; iki toplam ve fark PR'da yazılıdır (D17).
 
 ---
 
 ## Definition of Done
 
-- [ ] Açık sorular karara bağlandı ve Context'e **Verilen kararlar** olarak işlendi.
-- [ ] `0012b` ve `0017` ile olan bağımlılıklar çözüldü (S3, R4).
+- [x] S3 ve S4 (**D4**, **D5**) ile **D6–D20** Takım Yöneticisi (ajan) tarafından onaylandı
+      (2026-11-19); sahip kararları **D1–D3** işlendi.
+- [x] QA CLARIFY turu yapıldı ve yirmi bulgusu (B1–B20) **D4**, **D9–D11**, **D13**, **D14**,
+      **D16**, **D17**, **D20** ve **D21–D27** ile kriterlere işlendi (2026-11-19).
+- [ ] **SS1–SS5** sahibe iletildi; cevaplar ya bu karta ya da açılan ayrı karta işlendi.
+- [x] `0012b`, `0017` ve `0020` tamamlandı (2026-11-19 ölçüldü — Context).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/0018-ac<n>.png`), hata durumu dâhil, Arapça
+- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0018-ac<n>.png`),
+      yükleniyor, hata, hız sınırı, boş vitrin ve geçersiz bağlantı durumları dâhil; Arapça
       görüntü de var.
-- [ ] Teyit edilmemiş adrese pazarlama gönderilmediği testle gösterildi (R2, S1).
-- [ ] Çıkış bağlantısının **tek adımda** çalıştığı testle gösterildi (R5).
-- [ ] Kişisel verinin logda ve gönderim geçmişinde bulunmadığı testle gösterildi (C5).
-- [ ] `0009`'un kabul kriterleri regresyon olarak hâlâ yeşil (R10).
-- [ ] Şablonlar TR/AR/EN üçünde de seed edildi; eksik şablon kontrolü yeşil (C6).
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `notifications` şemasına dokunuyor.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
+- [ ] Teyit edilmemiş adrese bülten gönderilmediği testle gösterildi (R2 · AC-29).
+- [ ] Çıkış bağlantısının **tek adımda** ve oturumsuz çalıştığı testle gösterildi (R5 · AC-38).
+- [ ] Kişisel verinin logda, gönderim geçmişinde ve izin olay kaydında bulunmadığı testle
+      gösterildi (C5 · AC-89–93).
+- [ ] **Zincir testinin negatif kanıtı:** yeni tüketilen bir arayüzün gerçekleştirimine geçici
+      olarak başka bir modülün `Contracts` çağrısı eklendiğinde AC-83'nin testinin kırmızı verdiği
+      çıktısıyla PR'da gösterildi; ekleme geri alındı.
+- [ ] `0009`'un kabul kriterleri regresyon olarak hâlâ yeşil (R10 · AC-88).
+- [ ] Şablonlar TR/AR/EN üçünde de seed edildi; eksik şablon kontrolü yeşil (C6 · AC-96).
+- [ ] `docs/deploy.md` çıkış bağlantısı sırrını zorunlu ortam değişkeni olarak ve "değişirse eski
+      çıkış bağlantıları geçersiz olur" uyarısıyla listeliyor; `dev-up.sh` sırrı üretiyor (D25).
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `notifications` şemasına dokunuyor.
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [ ] <!-- DoD:T7 --> Yeni domain terimleri (**D19**) `docs/domain.md` sözlüğüne eklendi.
+- [ ] <!-- DoD:T8 --> `docs/architecture.md` güncellendi: Karar Defteri satırı, bağımlılık haritası
+      ("Okuduğu üç yüzey"), `VehiclePublished` tüketicisi ve § 2.A koşul 2 istisnası (**D20** —
+      koşulsuz).
+- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); C3 eşikleri dâhil (AC-100).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
 - [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+      ve spec `specs/done/` klasörüne taşındı; taşımadan sonra `tests/Architecture.Tests`'in
+      tamamı koşturuldu.
 
 ---
 
