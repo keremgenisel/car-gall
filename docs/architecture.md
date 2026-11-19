@@ -237,7 +237,7 @@ metinlerini kendi düzenlemek isterse.
 
 | Katman | Sahibi | Saklama | Fallback |
 |---|---|---|---|
-| Arayüz metinleri | **frontend deposu** | `locales/{tr,ar,en}.json` | Varsayılan dil; CI'da eksik anahtar testi |
+| Arayüz metinleri | **frontend deposu** | `locales/{tr,ar,en}.json` (vitrin) + `locales/panel/{tr,ar,en}.json` (panel, ADR `0013`) | Varsayılan dil; CI'da eksik anahtar testi |
 | Referans veri (marka, model, kasa, yakıt…) | `VehicleReference` | Locale başına satır + kanonik Latin ad | Zorunlu çeviri; eksikse admin uyarısı |
 | Araç serbest metni | `VehicleCatalog` | Locale başına satır | **Sessiz fallback** |
 | CMS içeriği | `Content` | Locale başına satır + **locale başına yayın durumu** | Yayınlanmamışsa o dilde menüden düşer |
