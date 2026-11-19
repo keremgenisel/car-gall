@@ -1,5 +1,7 @@
+using System.Security.Cryptography;
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Notifications.Application;
+using CarGallery.Modules.Notifications.Application.Newsletter;
 using CarGallery.Modules.Notifications.Contracts.Setup;
 
 namespace CarGallery.Modules.Notifications.Tests.Integration;
@@ -25,6 +27,37 @@ internal static class Bulten
         MaximumAttempts: 3,
         RetryBaseSeconds: 10,
         SendTimeoutSeconds: 10)).Value;
+
+    /// <summary>Koşu başına üretilen imza sırrı; depoda sabit bir anahtar durmaz (ADR 0011 deseni).</summary>
+    internal static readonly string ImzaSirri = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+
+    /// <summary>
+    /// Bülten kurulumu. Değerler BİLEREK spec'in önerilerinden farklı (AC-98): testler
+    /// yapılandırılan değeri kullanır, koda gömülü bir sabiti değil — 72 saat yerine 48,
+    /// 5 yerine 4, 3 yerine 2 ile koşan bir test, sabite bağlı bir kodu yakalar.
+    /// </summary>
+    internal static NewsletterSetup BultenKurulumu(
+        int teyitSaati = 48,
+        int gecerliIstek = 4,
+        int adresSiniri = 2,
+        string imzaSirri = "",
+        string gun = "Wednesday",
+        string saat = "08:30",
+        IReadOnlyList<string>? diller = null) => new(
+        diller ?? ["tr", "ar", "en"],
+        SendDayOfWeek: gun,
+        SendTimeUtc: saat,
+        ConfirmationLinkHours: teyitSaati,
+        RequestLimit: 30,
+        RequestWindowMinutes: 10,
+        ValidRequestLimit: gecerliIstek,
+        ValidRequestWindowMinutes: 10,
+        AddressConfirmationLimit: adresSiniri,
+        AddressWindowHours: 24,
+        UnsubscribeSigningKey: imzaSirri.Length == 0 ? ImzaSirri : imzaSirri);
+
+    internal static NewsletterOptions BultenSecenekleri(NewsletterSetup? kurulum = null) =>
+        NewsletterOptions.Create(kurulum ?? BultenKurulumu()).Value;
 
     internal sealed class SabitSaat(DateTimeOffset an) : IClock
     {

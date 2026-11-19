@@ -1,9 +1,14 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.BuildingBlocks.Concurrency;
 using CarGallery.BuildingBlocks.Outbox;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Notifications.Application;
+using CarGallery.Modules.Notifications.Application.Newsletter;
 using CarGallery.Modules.Notifications.Contracts.Setup;
+using CarGallery.Modules.Notifications.Endpoints;
 using CarGallery.Modules.Notifications.Infrastructure;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,17 +16,22 @@ using Microsoft.Extensions.Logging;
 namespace CarGallery.Modules.Notifications;
 
 /// <summary>
-/// Modülün tek giriş noktası. **Endpoint kaydı yoktur**: `Notifications` bir yaprak
-/// modüldür (C11), dışarıya yüzeyi yok — sistemden dışarı giden mesajların tek kapısı
-/// olmak dışında.
+/// Modülün tek giriş noktası: DI kaydı ve endpoint kaydı.
+///
+/// <para>`Notifications` bir yaprak modüldür (`0009` C11, `0018` C12): hiçbir MODÜL ona
+/// senkron bağlanmaz, o da olay yayınlamaz. `0018` ile ilk public ucunu (bülten aboneliği)
+/// ve ilk zamanlı işini (haftalık dönem) aldı (**D20**); ikisi de ziyaretçiye ya da saate
+/// açılır, başka bir modüle değil.</para>
 /// </summary>
 public static class NotificationsModule
 {
     public static IServiceCollection AddNotifications(
         this IServiceCollection services,
-        NotificationsSetup setup)
+        NotificationsSetup setup,
+        NewsletterSetup newsletter)
     {
         ArgumentNullException.ThrowIfNull(setup);
+        ArgumentNullException.ThrowIfNull(newsletter);
 
         services.AddDbContext<NotificationsDbContext>(options =>
             options.UseNpgsql(
@@ -54,6 +64,31 @@ public static class NotificationsModule
         services.AddSingleton(options.Value);
         services.AddScoped<TemplateResolver>();
 
+        // `0018` C14/AC-97 — bülten yapılandırması da KURULUŞTA doğrulanır; imza sırrı,
+        // dönem anı, bağlantı süresi ya da üç sınırdan biri eksikse uygulama ayağa kalkmaz.
+        Result<NewsletterOptions> newsletterOptions = NewsletterOptions.Create(newsletter);
+
+        if (newsletterOptions.IsFailure)
+        {
+            throw new InvalidOperationException(
+                $"Notifications bülten yapılandırması eksik veya geçersiz: {newsletterOptions.Error.Code}");
+        }
+
+        services.AddSingleton(newsletterOptions.Value);
+        services.AddSingleton<UnsubscribeTokens>();
+
+        // D9 — geçerli istek bütçesi süreç ömrü boyunca yaşar; tekil olmalı.
+        services.AddSingleton<INewsletterRequestQuota, NewsletterRequestQuota>();
+        // 0007 R3 — satır kilidi ortak desenden; süresi modülün kendi seçeneği (0012c D57).
+        services.AddSingleton(InvariantGuardOptions<NotificationsDbContext>.Default);
+        services.AddScoped<SubscribeToNewsletter>();
+        services.AddScoped<ConfirmSubscription>();
+        services.AddScoped<UnsubscribeFromNewsletter>();
+
+        // D9 — kaba istek sınırı boru hattında; politika DI'dan kurulur.
+        services.AddRateLimiter(limiter => limiter.AddPolicy<string, NewsletterRateLimitPolicy>(
+            NewsletterEndpoints.RateLimitPolicy));
+
         // D4 — gönderici soyutlamanın arkasında. Bugün SMTP; sağlayıcıya geçiş bu tek
         // satırı değiştirir, kuyruk ve tekrar deneme hiç dokunulmadan kalır.
         services.AddScoped<INotificationTransport, SmtpNotificationTransport>();
@@ -70,4 +105,7 @@ public static class NotificationsModule
 
         return services;
     }
+
+    /// <summary>`0018` — bülten aboneliğinin üç ucu; Host yalnız bunu çağırır.</summary>
+    public static void MapNotifications(this IEndpointRouteBuilder builder) => builder.MapNewsletterEndpoints();
 }

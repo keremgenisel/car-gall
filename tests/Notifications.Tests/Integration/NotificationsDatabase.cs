@@ -27,12 +27,17 @@ public sealed class NotificationsDatabase : IAsyncLifetime
 
     public Task DisposeAsync() => container.DisposeAsync().AsTask();
 
-    internal NotificationsDbContext CreateContext()
+    internal NotificationsDbContext CreateContext(params Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor[] interceptors)
     {
         DbContextOptionsBuilder<NotificationsDbContext> builder = new();
         builder.UseNpgsql(
             ConnectionString,
             npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", NotificationsDbContext.Schema));
+
+        if (interceptors.Length > 0)
+        {
+            builder.AddInterceptors(interceptors);
+        }
 
         return new NotificationsDbContext(builder.Options);
     }

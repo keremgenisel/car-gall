@@ -84,7 +84,8 @@ internal static class TestSchema
             SmtpUseStartTls: false,
             MaximumAttempts: 5,
             RetryBaseSeconds: 30,
-            SendTimeoutSeconds: 20));
+            SendTimeoutSeconds: 20),
+            NotificationsTestSettings.Newsletter());
 
         // 0011 ile `media` de bir modül şemasıdır. Listeden düşerse Host başlangıçta
         // "şema güncel değil" diyerek reddeder ve Host.Tests'in TAMAMI kırılır — `0009`'da
