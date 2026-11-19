@@ -563,7 +563,9 @@ sessizce kabul edilmez.
 
 **D25 — Bağlantı anahtarlarının güvenliği (B8).**
 - Teyit anahtarı **CSPRNG** ile üretilir, **256 bit**. Veritabanında yalnız **SHA-256 özeti**
-  tutulur; düz anahtar yalnız iletide yaşar.
+  tutulur; düz anahtar yalnız iletide yaşar. *(Üretim yolu **D28** ile değişti: anahtar
+  gönderim kaydı kimliğinin HMAC-SHA256'sıdır — 256 bit, sırsız tahmin edilemez; "yalnız özet"
+  ve "düz anahtar yalnız iletide" aynen geçerli. Takım Yöneticisi (ajan) kararı, 2026-11-19.)*
 - Çıkış bağlantısı **saklanmaz**: abonelik kimliği üzerinden, dağıtım yapılandırmasındaki
   bir sırla **HMAC-SHA256** ile üretilir ve doğrulanır. Sır, diğer sırlar gibi üretilir
   (`dev-up.sh` `openssl rand -base64 32` · `docs/deploy.md` zorunlu ortam değişkeni — ADR 0011
@@ -603,14 +605,20 @@ kimlikle kalır — sahibin cevabı bunu değiştirebilir.
 dokunmaz; QA turunda gözden geçirilir). Her biri, kriterin bıraktığı bir uygulama boşluğunu
 kapatır.
 
-**D28 — Teyit anahtarı iletinin DAĞITIMINDA üretilir.** Kuyruk gövdeyi dağıtım anında kurar
-(`0009` C10) ve **D25** veritabanında yalnız özeti istiyor: istek anında üretilen düz anahtarın
-dağıtıma kadar yaşayacağı bir yer yok. Dağıtıcı, teyit iletisini kurarken anahtarı CSPRNG ile
-üretir, özetini ve son geçerlilik zamanını aboneliğe **göndermeden önce** yazar, sonra gönderir.
-*Sonuç:* süre gönderimden başlar; "en son gönderilen geçerli" (**D7**) dağıtım sırasıdır.
-*Bedel:* geçici hatayla tekrar denenen teyit iletisi yeni bir anahtar taşır; ilk deneme
-aslında teslim edildiyse onun bağlantısı geçersizdir. *Elenen:* anahtarı iletide şifreli
-saklamak — **D25**'in "yalnız özet" cümlesiyle çelişir.
+**D28 — Teyit anahtarı gönderim kaydından türetilir (deterministik).** *Takım Yöneticisi (ajan)
+kararı, 2026-11-19 — ilk yazımın "dağıtımda CSPRNG ile üret" çözümünün bedeli kabul edilmedi.*
+Anahtar = **HMAC-SHA256**(imza sırrı, `newsletter-confirm:` ‖ teyit iletisinin gönderim kaydı
+kimliği) — 32 bayt, Base64Url. Kuyruk gövdeyi dağıtımda kurar (`0009` C10) ve anahtarı her
+denemede aynı kayıttan YENİDEN türetir; veritabanına yazılmaz. Özeti (SHA-256) ve süresi
+aboneliğe **kayıt oluşurken** (istek anında) yazılır. *Sonuç:* geçici hatayla yeniden denenen
+iletinin bütün teslimleri AYNI bağlantıyı taşır ve hepsi ilk tıklamaya kadar geçerlidir; süre
+istekten başlar. **D7**'nin "yalnız en son gönderilen geçerli" kuralı kayıt düzeyindedir: yeni
+istek → yeni gönderim kaydı → yeni anahtar; önceki kaydın özeti abonelikten silinir ve o kayıt
+henüz dağıtılmadıysa hiç gönderilmez (geçersiz bir bağlantı taşırdı). *Sır seçimi:* çıkış
+bağlantısının sırrı (**D25**) ayrı bir amaç önekiyle — iki ayrı sır kurulumda iki zorunlu
+değişken ve iki yedek demekti; önek bir türün imzasının öbür türde geçmesini engeller.
+*Bedel:* sır değişirse bekleyen teyit bağlantıları da ölür. *Elenen:* düz anahtarı iletide
+şifreli saklamak (D25'in "yalnız özet"i); dağıtımda üretmek (ilk teslimin bağlantısını öldürür).
 
 **D29 — Adres sınırı (D9) gönderim kaydından sayılır.** Pencere içindeki teyit iletileri,
 aboneliğin `messages` satırlarından sayılır; sayım ve yazma aboneliğin satır kilidi altında
@@ -644,10 +652,12 @@ para birimi için dilin genel kalıbı (TR/EN `KOD` + U+00A0 + sayı, AR U+200F 
 Vitest `Intl` çıktısını, xUnit bülten biçimini — ön yüz değişirse önce Vitest, fikstür
 güncellenince backend testi kırmızıya döner (**D24**'ün bedeli). *Açık konu (PR):* tablo
 TRY ve KWD'yi taşır; başka bir para birimi kurulduğunda ön yüzle aynı simgeyi garanti etmez.
+*Takım Yöneticisi (ajan) onayı, 2026-11-19:* kural onaylandı; yeni para birimi ekleyen kart
+tabloya satır ve fikstüre vaka ekler.
 
 **D33 — HTTP sözleşmesi.** `POST /api/notifications/newsletter/subscriptions`
-(`{ email, locale }`) → `202` + sabit gövde (**D5**); biçim/dil hatası `400` (AC-7, AC-10 —
-`docs/conventions.md` § 5'in `422`'si yerine kriterin `400`'ü). `POST …/confirmations` ve
+(`{ email, locale }`) → `202` + sabit gövde (**D5**); biçim/dil hatası `422` (AC-7, AC-10 —
+`docs/conventions.md` § 5; kriter Revizyon 1 ile 400'den 422'ye çekildi). `POST …/confirmations` ve
 `POST …/unsubscriptions` (`{ token }`) → `200`; geçersiz bağlantı `404` +
 `notification.subscription_link_invalid` (AC-35, AC-44). Çıkış sayfası açılır açılmaz isteği
 gönderir (**D6**); teyit sayfası yalnız düğmeyle.
@@ -691,6 +701,7 @@ gömülü varsayılanı yok (C14).
 | **P11** | e2e + görsel kanıt (Arapça dâhil) | `frontend/e2e` | AC-2, AC-5, AC-6, AC-12, AC-28, AC-38, AC-95 |
 | **P12** | Sözlük, mimari, dağıtım, `dev-up.sh`, iş akışları (sır) | `docs`, `scripts`, `ci` | D19, D20, D25 |
 | **P13** | Performans ölçümü (gzip toplamı + C3) PR'da | — | AC-100, AC-101 |
+| **P14** | Takım Yöneticisi kararları (PR #122): AC-7/AC-10 422 (Revizyon 1), D28 deterministik anahtar, D32 onayı | spec, `Notifications`, `frontend` | AC-7, AC-10, AC-34, AC-48, AC-49 |
 
 ---
 
