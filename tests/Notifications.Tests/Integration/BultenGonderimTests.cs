@@ -121,6 +121,32 @@ public sealed partial class BultenGonderimTests(NotificationsDatabase database)
     }
 
     /// <summary>
+    /// QA BULGU-4 — geçici hatalarla tekrar denenen teyit iletisi, bağlantının süresi dolduktan
+    /// sonraki denemede GÖNDERİLMEZ ve kalıcı başarısız işaretlenir: alıcı tıkladığı an
+    /// "geçerli değil" görecekti.
+    /// </summary>
+    [Fact(DisplayName = "0018/AC-30: Yapılandırılan süre dolduktan 1 dakika sonra kullanılan bağlantı aboneliği etkinleştirmez ve sayfa \"bağlantı artık geçerli değil\" mesajıyla yeniden abone olma yolunu gösterir")]
+    public async Task Gonderilmez_SuresiDolmusTeyitBaglantisi()
+    {
+        DonemDuzeni d = await HazirlaAsync();
+        await d.Abonelik.AboneOlAsync("ali@ornek.com");
+
+        await d.DagitAsync(new KayitTasiyici { Kural = _ => SendResult.Transient("x") });
+        Assert.Equal(NotificationStatus.Queued, Assert.Single(await d.IletilerAsync()).Status);
+
+        d.Saat.Advance(d.Secenekler.ConfirmationLinkLifetime + TimeSpan.FromMinutes(1));
+        KayitTasiyici tasiyici = new();
+        await d.DagitAsync(tasiyici);
+
+        NotificationMessage ileti = Assert.Single(await d.IletilerAsync());
+
+        Assert.Empty(tasiyici.Gonderilenler);
+        Assert.Equal(NotificationStatus.Failed, ileti.Status);
+        Assert.Equal(NotificationErrors.ConfirmationLinkExpired, ileti.FailureCode);
+        Assert.Null(ileti.NextAttemptAt);
+    }
+
+    /// <summary>
     /// **D7** kayıt düzeyinde: yeni istek yeni gönderim kaydı demektir; önceki kayıt henüz
     /// dağıtılmadıysa hiç gönderilmez — taşıyacağı bağlantı zaten geçersizdir.
     /// </summary>
@@ -519,10 +545,12 @@ public sealed partial class BultenGonderimTests(NotificationsDatabase database)
     {
         DonemDuzeni d = await HazirlaAsync();
         await d.EtkinAboneAsync("ali@ornek.com");
-        await d.Abonelik.AboneOlAsync("veli@ornek.com");
         await d.YeniIlanAsync();
         d.DonemeIlerle();
         await d.IsleAsync();
+
+        // Teyit bağlantısının süresi istekten başlar: veli dağıtımdan hemen önce abone olur.
+        await d.Abonelik.AboneOlAsync("veli@ornek.com");
 
         await d.DagitAsync(new KayitTasiyici());
 

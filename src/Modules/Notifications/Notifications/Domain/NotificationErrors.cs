@@ -40,6 +40,9 @@ internal static class NotificationErrors
     /// <summary>`0018` **D22** — dağıtım anında abonelik etkin değil (çıkmış, kayıt yok, teyit bekliyor).</summary>
     internal const string SubscriptionInactive = "notification.subscription_inactive";
 
+    /// <summary>`0018` **D7** — teyit iletisinin bağlantısı dağıtım anında süresini doldurmuş; gönderilmez.</summary>
+    internal const string ConfirmationLinkExpired = "notification.confirmation_link_expired";
+
     /// <summary>`0018` **D21** — dağıtım anında dönemin hiçbir ilanı Yayında değil; boş bülten çıkmaz (R9).</summary>
     internal const string NewsletterEmpty = "notification.newsletter_empty";
 }

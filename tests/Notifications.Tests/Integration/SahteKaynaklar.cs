@@ -98,6 +98,7 @@ internal static class Besteci
             new UnsubscribeTokens(bulten),
             new ConfirmationTokens(bulten),
             bulten,
-            Bulten.Secenekler());
+            Bulten.Secenekler(),
+            saat);
     }
 }

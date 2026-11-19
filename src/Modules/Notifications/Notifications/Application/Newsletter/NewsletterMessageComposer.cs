@@ -44,7 +44,8 @@ internal sealed class NewsletterMessageComposer(
     UnsubscribeTokens unsubscribeTokens,
     ConfirmationTokens confirmationTokens,
     NewsletterOptions newsletterOptions,
-    NotificationsOptions options)
+    NotificationsOptions options,
+    IClock clock)
 {
     /// <summary>**D11** — bir bülten en çok bu kadar satır taşır.</summary>
     internal const int MaximumRows = 20;
@@ -83,6 +84,13 @@ internal sealed class NewsletterMessageComposer(
             || !hash.AsSpan().SequenceEqual(subscription.ConfirmationTokenHash))
         {
             return Composition.Permanent(NotificationErrors.SubscriptionInactive);
+        }
+
+        // QA BULGU-4 — süresi dolmuş bağlantı gönderilmez: tekrar denemeleri süreyi aşan bir
+        // ileti, alıcıya tıklandığı an "geçerli değil" diyecek bir bağlantı taşırdı (D7).
+        if (subscription.ConfirmationExpiresAt is not DateTimeOffset expiresAt || expiresAt <= clock.UtcNow)
+        {
+            return Composition.Permanent(NotificationErrors.ConfirmationLinkExpired);
         }
 
         Result<ResolvedTemplate> template = await templates.ResolveAsync(
