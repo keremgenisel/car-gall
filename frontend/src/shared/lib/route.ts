@@ -52,9 +52,20 @@ export type AdminView =
   /** `0021` — bir markanın ekranı ve modelleri (`/admin/brands/{id}`). */
   | 'brand-edit'
 
+/**
+ * `0018` **D26** — bülten teyit ve çıkış sayfalarının yol parçası:
+ * `/{locale}/newsletter/confirm?token=…` · `/{locale}/newsletter/unsubscribe?token=…`.
+ * Bültendeki mutlak bağlantı ve Host'un `noindex` kararı aynı kalıbı okur (AC-51).
+ */
+export const NEWSLETTER_SEGMENT = 'newsletter'
+
 export type Route =
   /** 0014 **D9** — `/{locale}/` artık ana sayfadır; liste `/{locale}/cars`'a taşındı. */
   | { readonly kind: 'home' }
+  /** `0018` — teyit sayfası; abonelik yalnız sayfadaki düğmeyle etkinleşir (D6). */
+  | { readonly kind: 'newsletter-confirm' }
+  /** `0018` — çıkış sayfası; açıldığı anda çıkarır (D6). */
+  | { readonly kind: 'newsletter-unsubscribe' }
   | { readonly kind: 'list' }
   | { readonly kind: 'detail'; readonly slug: string }
   /**
@@ -173,6 +184,17 @@ export function parseRoute(pathname: string): Route {
     return { kind: 'home' }
   }
 
+  // `0018` D26 — `newsletter` ayrılmış addır (`ContentReservedSlugs`); içerik sayfası olamaz.
+  if (sectionSegment === NEWSLETTER_SEGMENT && tailSegment === undefined) {
+    if (slugSegment === 'confirm') {
+      return { kind: 'newsletter-confirm' }
+    }
+
+    if (slugSegment === 'unsubscribe') {
+      return { kind: 'newsletter-unsubscribe' }
+    }
+  }
+
   // `0017` D9 — `0014` D28'in "tanınmayan alt yol listeye düşer" davranışı TEK parçalı yol
   // için kalkar: `/tr/foo` bir içerik sayfası adayıdır (AC-37). İki parçalı tanınmayan yol
   // (`/tr/foo/bar`) eskisi gibi listeye düşer (AC-38).
@@ -202,6 +224,16 @@ function decodeSegment(segment: string): string {
 /** 0014 **D9** — araç listesinin adresi. "Vitrine dön" bağlantıları buraya gider (AC-9–AC-11). */
 export function listPath(locale: AppLocale): string {
   return `/${locale}/${LISTING_SEGMENT}`
+}
+
+/** `0018` AC-43 — ana sayfadaki bülten bölümü; yeniden abone olma bağlantısının hedefi. */
+export function newsletterSectionPath(locale: AppLocale): string {
+  return `/${locale}/#${NEWSLETTER_SEGMENT}`
+}
+
+/** `0018` **D26** — bağlantının anahtarı sorgu parametresindedir; yoksa boş metin. */
+export function newsletterTokenOf(search: string): string {
+  return new URLSearchParams(search).get('token') ?? ''
 }
 
 /** 0014 — ana sayfanın adresi; altlığın dil bağlantıları (AC-46). */

@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { fetchContentNavigation, type ContentNavigationLink } from '../shared/api/content'
+import type { ReactNode } from 'react'
+import type { ContentNavigationLink } from '../shared/api/content'
 import { enabledLocales } from '../shared/lib/locale'
 import { contentPath, homePath, listPath } from '../shared/lib/route'
 import { useLocale } from './localeContext'
@@ -11,9 +11,18 @@ import { useLocale } from './localeContext'
  *
  * `id="contact"` boş vitrin durumunun "Galeriye ulaşın" eyleminin hedefidir.
  */
-export function HomeFooter({ branches }: { readonly branches: ReactNode }) {
+export function HomeFooter({
+  branches,
+  corporate,
+}: {
+  readonly branches: ReactNode
+  /**
+   * `0018` **D36** — kurumsal bağlantılar ÇAĞIRANDAN gelir: bülten notunun KVKK bağlantısı da
+   * aynı okumadan beslenir ve ana sayfaya ikinci bir `Content` isteği eklenmez.
+   */
+  readonly corporate: readonly ContentNavigationLink[]
+}) {
   const { locale: current, t } = useLocale()
-  const corporate = useCorporateLinks()
 
   return (
     <footer className="home-footer" id="contact" data-testid="home-footer">
@@ -71,35 +80,4 @@ export function HomeFooter({ branches }: { readonly branches: ReactNode }) {
       </div>
     </footer>
   )
-}
-
-/** `0017` R21 — o dilde yayında olan sistem sayfalarının bağlantıları. */
-function useCorporateLinks(): readonly ContentNavigationLink[] {
-  const { locale } = useLocale()
-  const [links, setLinks] = useState<{
-    readonly locale: string
-    readonly items: readonly ContentNavigationLink[]
-  }>({
-    locale,
-    items: [],
-  })
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    fetchContentNavigation(locale, controller.signal)
-      .then((items) => setLinks({ locale, items }))
-      .catch((cause: unknown) => {
-        // İptal edilen eski istek yeni dilin bağlantılarını ezmesin.
-        if (cause instanceof DOMException && cause.name === 'AbortError') {
-          return
-        }
-
-        setLinks({ locale, items: [] })
-      })
-
-    return () => controller.abort()
-  }, [locale])
-
-  return links.locale === locale ? links.items : []
 }

@@ -1,16 +1,18 @@
 import { Suspense, lazy } from 'react'
 import { AppShell } from './AppShell'
 import { HomeFooter } from './HomeFooter'
+import { useCorporateLinks } from './useCorporateLinks'
 import { HomePage } from './HomePage'
 import { BranchList } from '../features/dealership/BranchList'
 import { useGallery } from '../features/dealership/useGallery'
 import { LocaleProvider } from './LocaleProvider'
+import { useLocale } from './localeContext'
 import { ListingDetailPage } from '../features/catalog/ListingDetailPage'
 import { ContentPage } from '../features/content/ContentPage'
 import { ShowcaseListPage } from '../features/catalog/ShowcaseListPage'
 import { LeadForm } from '../features/leads/LeadForm'
 import type { AppLocale } from '../shared/lib/locale'
-import { parseRoute } from '../shared/lib/route'
+import { contentPath, parseRoute } from '../shared/lib/route'
 
 /**
  * Yönetim paneli AYRI BİR UYGULAMA DEĞİLDİR: aynı Vite uygulamasında `/admin` rota
@@ -18,6 +20,21 @@ import { parseRoute } from '../shared/lib/route'
  */
 const AdminApp = lazy(() =>
   import('./admin/AdminApp').then((module) => ({ default: module.AdminApp })),
+)
+
+/**
+ * `0018` **D37** — teyit ve çıkış sayfaları ilk pakete girmez (**D17**'nin bedeli); metinleri
+ * vitrin kataloğundadır (AC-94, ADR `0013`).
+ */
+const NewsletterConfirmPage = lazy(() =>
+  import('../features/notifications/NewsletterConfirmPage').then((module) => ({
+    default: module.NewsletterConfirmPage,
+  })),
+)
+const NewsletterUnsubscribePage = lazy(() =>
+  import('../features/notifications/NewsletterUnsubscribePage').then((module) => ({
+    default: module.NewsletterUnsubscribePage,
+  })),
 )
 
 /**
@@ -55,6 +72,22 @@ export function App({ locale }: { readonly locale: AppLocale }) {
     )
   }
 
+  if (route.kind === 'newsletter-confirm' || route.kind === 'newsletter-unsubscribe') {
+    return (
+      <LocaleProvider locale={locale}>
+        <AppShell>
+          <Suspense fallback={<div className="ui-state newsletter-page" />}>
+            {route.kind === 'newsletter-confirm' ? (
+              <NewsletterConfirmPage />
+            ) : (
+              <NewsletterUnsubscribePage />
+            )}
+          </Suspense>
+        </AppShell>
+      </LocaleProvider>
+    )
+  }
+
   return (
     <LocaleProvider locale={locale}>
       <AppShell>
@@ -87,10 +120,19 @@ export function App({ locale }: { readonly locale: AppLocale }) {
  */
 function HomeRoute() {
   const gallery = useGallery()
+  const { locale } = useLocale()
+  // `0018` D36 — kurumsal bağlantılar bir kez okunur: altlık ve bülten notunun KVKK bağlantısı.
+  const corporate = useCorporateLinks()
+  const privacy = corporate.find((link) => link.systemKey === 'privacy')
 
   return (
-    <AppShell footer={<HomeFooter branches={<BranchList load={gallery} />} />}>
-      <HomePage gallery={gallery} />
+    <AppShell
+      footer={<HomeFooter branches={<BranchList load={gallery} />} corporate={corporate} />}
+    >
+      <HomePage
+        gallery={gallery}
+        privacyHref={privacy === undefined ? null : contentPath(locale, privacy.slug)}
+      />
     </AppShell>
   )
 }
