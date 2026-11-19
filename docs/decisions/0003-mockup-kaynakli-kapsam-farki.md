@@ -440,7 +440,8 @@ açık soru 15'ten **13**'e düştü.
 **`0018` onaylandı** (2026-11-19, #120; § Sapma — `0018`). Beş sorusunun üçü (S1, S2, S5) sahibin
 cevabıyla, ikisi (S3, S4) Takım Yöneticisi (ajan) onayıyla kapandı; QA CLARIFY turunun yirmi
 bulgusu aynı gün **D21–D27** ile işlendi. Toplam açık soru 13'ten **8**'e düştü (`frontend-003` 5,
-`0019` 3). `0018` ayrıca sahibe beş **yasal** soru bıraktı (**SS1–SS5**: İYS, gönderici
+`0019` 3). **`0019` de aynı gün onaylandı** (#119, `56fe70f`): üç sorusu kapandı ve toplam
+açık soru **5**'e indi — kalan tek taslak `frontend-003`. `0018` ayrıca sahibe beş **yasal** soru bıraktı (**SS1–SS5**: İYS, gönderici
 kimliği, saklama, aydınlatma vaadi, izin metni sürümü); bunlar karar değil, sahibin ya da
 hukukun cevabını bekleyen sorulardır ve açık soru sayımına girmez — kriterleri değiştirmezler.
 
