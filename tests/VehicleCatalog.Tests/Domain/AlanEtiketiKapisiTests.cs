@@ -90,12 +90,34 @@ public sealed class AlanEtiketiKapisiTests
             .OfType<string>()
             .Order(StringComparer.Ordinal)];
 
+    /// <summary>
+    /// Bir dilin kataloğu İKİ dosyanın birleşimidir (ADR <c>0013</c>): vitrin
+    /// (<c>locales/&lt;dil&gt;.json</c>) ve panel (<c>locales/panel/&lt;dil&gt;.json</c>).
+    /// Form etiketi panelde basılıyor, yani anahtar panel dosyasında yaşıyor; yalnız vitrin
+    /// dosyasını okumak bu kapıyı kırmızıya, yalnız paneli okumak vitrine taşınan bir
+    /// anahtarı görünmez kılardı.
+    /// </summary>
     private static Dictionary<string, string> Katalog(string katalogAdi)
     {
-        string yol = Path.Combine(LocaleKlasoru.Value, $"{katalogAdi}.json");
+        Dictionary<string, string> birlesik = [];
 
-        return JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(yol))
-            ?? throw new InvalidOperationException($"{yol} okunamadı.");
+        foreach (string yol in new[]
+                 {
+                     Path.Combine(LocaleKlasoru.Value, $"{katalogAdi}.json"),
+                     Path.Combine(LocaleKlasoru.Value, "panel", $"{katalogAdi}.json"),
+                 })
+        {
+            Dictionary<string, string> parca =
+                JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(yol))
+                ?? throw new InvalidOperationException($"{yol} okunamadı.");
+
+            foreach ((string anahtar, string deger) in parca)
+            {
+                birlesik[anahtar] = deger;
+            }
+        }
+
+        return birlesik;
     }
 
     /// <summary>
