@@ -215,6 +215,9 @@ Kod bir kez yayınlandıktan sonra **anlamı değişmez**; gerekirse yeni kod ek
 - `X.Contracts` sınırında **çıplak `Guid`** olarak geçer — güçlü tipli id sızdırılmaz.
 - Modüller arası referanslar **soft reference**'tır: foreign key kısıtı yoktur.
 - Üretim: `Guid` v7 (sıralanabilir), veritabanı değil uygulama tarafında üretilir.
+  **İstisna:** veriyi uygulama değil bir migration doğuruyorsa kimlik migration SQL'inde yine
+  **v7** olarak kurulur (PostgreSQL 17'de `uuidv7()` yok; v4'ün ilk 48 biti milisaniye
+  damgasıyla, sürüm alanı `0111`). *(Spec `0019` P6, Takım Yöneticisi (ajan) onayı 2026-11-19.)*
 
 ---
 

@@ -552,6 +552,13 @@ görev tanımında planı Developer'a bıraktı; plan kararları "P" ile işaret
 - **P12 — Belge kriterleri (AC-55, AC-56) mimari testle korunur.** Bağımlılık haritasının
   `Leads` satırı ve `Dealership`'in gelen listesi `.csproj` referanslarıyla karşılaştırılır;
   `docs/domain.md`'de L8 ve terim aranır.
+- **P13 — R13 okuma anında da uygulanır (QA BULGU-1, Takım Yöneticisi (ajan) kararı
+  2026-11-19).** `FindPublishedAsync`, işaretçinin gösterdiği sürüm satırını ancak başlığı
+  ve gövdesi canlı metinle ordinal olarak birebir aynıysa `Published(sürüm)` sayar; değilse
+  D14'ün hatasıdır ve talep reddedilir. *Neden:* C10 kırıldığında (eski uygulama
+  migration'dan sonra yayındaki metni düzenledi) işaretçi başlangıç sürümünü gösterir ve
+  talep canlı metinle aynı olmayan bir kanıta bağlanırdı. Karşılaştırma aynı SQL komutunun
+  içindedir (C7/AC-50 korunur). Kurtarma adımı `docs/deploy.md` § 4'te.
 
 ### Uygulama planı
 
