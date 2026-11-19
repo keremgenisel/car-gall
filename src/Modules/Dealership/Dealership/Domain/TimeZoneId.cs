@@ -22,7 +22,10 @@ internal readonly record struct TimeZoneId
 
     internal static Result<TimeZoneId> Create(string value)
     {
-        if (string.IsNullOrWhiteSpace(value) || !value.Contains('/', StringComparison.Ordinal))
+        // `0020` D22 — şemanın 60 karakterlik sınırı; aşan değer kimlik değildir.
+        if (string.IsNullOrWhiteSpace(value)
+            || value.Length > DealershipLimits.TimeZone
+            || !value.Contains('/', StringComparison.Ordinal))
         {
             // IANA kimliği daima "Bölge/Şehir" biçimindedir; "+03:00" ve "UTC" buradan düşer.
             return Result.Failure<TimeZoneId>(new Error(InvalidZone));

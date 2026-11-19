@@ -329,6 +329,72 @@ emsali).
 ekranın adresini doğrudan açtığında "erişim yok" ekranını görür (`AdminApp.tsx`'in var olan
 `admin-no-access` deseni); `403` "getirilemedi" hatası olarak gösterilmez.
 
+### Verilen kararlar — plan turu, 2026-11-18
+
+> **P1–P7 onaylandı** — Takım Yöneticisi (ajan) kararı, 2026-11-19. P3 için AC-30'un metni
+> `400` → `422` olarak düzeltildi; bu `main`'e girdikten sonraki ilk Acceptance Criteria
+> değişikliğidir ve SCORECARD'da **revizyon 1** sayılır. Hata spec'in kendisindeydi:
+> `docs/conventions.md` § 5 doğrulama hatasını `422` sayıyor ve kriter turu bunu okumadı.
+
+**Developer (ajan) önerisi; Takım Yöneticisi (ajan) 2026-11-19'da onayladı (yukarıdaki not).**
+D1–D23'ü değiştirmez, nasıl uygulanacaklarını sabitler.
+
+**P1 — Görünen ad sunucunun bastığı bir `<meta>` ile taşınır (D6, D16).** Host `index.html`'i
+basarken `<meta name="gallery-display-name" content="…">` yazar (`0014` D22'nin
+`enabled-locales` deseni); değer ziyaretçinin dilinde, yoksa varsayılan dildedir ve HTML
+olarak kodlanır. Üst çubuk adı ilk boyamada senkron okur — ayrı istek yok, yer değişmez (C6).
+Okuma düşerse etiket hiç basılmaz ve yer boş kalır (R5a). Dil değiştirici tam sayfa gezinmesi
+yaptığı için (frontend-001 C8) etiket her zaman sayfanın dilindedir. *Gerekçe:* C6'yı istekle
+karşılamak bir iskelet ve bir gidiş-dönüş ister; desen depoda hazır. *Bedel:* her vitrin
+belgesi tek satırlık bir okuma yapar (önbellek yok — D6).
+
+**P2 — Görünen adın ilk değerini kurulum adımı yazar, migration değil (C4).** Migration
+`display_names`'i boş bir haritayla ekler; kurulum adımı (ADR `0002`) migration'lardan sonra
+varsayılan dildeki adı ticari unvandan doldurur (`DealershipSchema`, idempotent: yalnız
+varsayılan dilde adı olmayan satır). *Gerekçe:* varsayılan dil yapılandırmadır (Bilinen tuzak
+4); SQL'e bir dil kodu yazmak Arapça varsayılanlı bir kurulumda adı yanlış dile koyardı.
+
+**P3 — Alan hataları `422` döner; AC-30'un ilk metnindeki `400` değil.** `docs/conventions.md` § 5
+doğrulama hatasını `422` sayar ve depoda `400` dönen tek bir uç yok; tekillik ihlali öteki alan
+hatalarıyla aynı gövdeyle (`dealership.validation_failed`, `fields`, alan başına kod) döner.
+Eski sürüm, geçersiz geçiş, son aktif şube ve kapatılmış şubenin düzenlenmesi `409`.
+*Karar:* AC-30'un metni `422` olarak düzeltildi (revizyon 1; Takım Yöneticisi, 2026-11-19).
+
+**P4 — Durum eylemleri de okunan sürümü taşır.** Geçici kapatma, yeniden açma ve kalıcı
+kapatma gövdede `version` alır; eski sürümde `409`. Kalıcı kapatmada sürüm kilitten sonra
+okunan agregata karşı denetlenir. *Gerekçe:* R16 eylemlerin sürümü ilerlettiğini söylüyor;
+ilerlemiş sürüme karşı eski bir ekrandan yapılan eylem de aynı sessiz ezmedir.
+
+**P5 — Şubeler ekranı var olan listeyi okur; ayrıntı ve yazma uçları yalnız Yönetici.** Liste
+`GET /api/admin/branches`'tir (AC-68: değişmez); `GET/PUT /api/admin/branches/{id}`,
+`POST /api/admin/branches`, üç eylem ucu ve `GET/PUT /api/admin/gallery`
+`AdminSurface.ManagerPolicy`'li tek bir gruptadır. `0007`/AC-8'in mimari testi ("şube kapatma
+komutunun HTTP ucu yoktur") `0003` X1'in bu kartı beklediğini söylüyordu; test, yazma uçlarının
+yalnız Yönetici politikalı grupta açıldığını ölçen bir kapıya çevrildi.
+
+**P6 — Etkin olmayan dil bir alan hatasıdır.** Görünen ad ve şube adı/adresi yalnız etkin
+dillerde kabul edilir (`dealership.locale_not_enabled`); `AddDealership` etkin dil listesini
+yapılandırmadan alır.
+
+**P7 — Aracın kayıtlı şubesi kapatılmışsa form onu seçilemez bir seçenek olarak gösterir.**
+Seçici kapatılmış şubeleri sunmaz (AC-58); aracın kendi şubesi kapatılmışsa o şube seçili ama
+devre dışı bir seçenek olarak kalır ve altında "başka bir şube seçin" uyarısı çıkar. Böylece
+şubeye dokunmadan kaydetme (AC-57) mümkün kalır.
+
+### Uygulama planı (2026-11-18)
+
+Uygulama dalı kriterler `main`'e girdikten (#103) sonra açıldı.
+
+1. `Dealership` domain ve uygulama: görünen ad, sürüm kolonları, D9'un temizleme yöntemleri,
+   D13'ün sıkılaşması, alan kuralları ve sınırları (D22), komutlar ve panel okumaları;
+   migration (yalnız `dealership`) ve kurulum adımının doldurması (P2). `VehicleCatalog`'da
+   D14. Uçlar (P3–P5) ve public yanıtın izin listesi (D15).
+2. Host: görünen adın `<meta>` ile basılması (P1).
+3. Testler: domain, PostgreSQL üzerinde komutlar, Host üzerinden roller, `409`, A8 zinciri.
+4. Ön yüz: üst çubuk ve giriş satırı, panelde galeri ve şubeler ekranları, araç formu (P7),
+   çeviriler; Vitest.
+5. E2E, görsel kanıt, belgeler (`docs/domain.md`, `docs/deploy.md` § 5, ADR `0012`).
+
 ---
 
 ## Acceptance Criteria
@@ -373,7 +439,7 @@ ekranın adresini doğrudan açtığında "erişim yok" ekranını görür (`Adm
 - **AC-27.** IANA bölge kimliği olmayan bir saat dilimi (`+03:00`) sunucuda reddedilir.
 - **AC-28.** Panelin saat dilimi alanı serbest metin değil, bölge kimliklerinin listesidir.
 - **AC-29.** Küçük harfli ASCII olmayan bir adres kısaltması (`kadıköy-şubesi`) reddedilir.
-- **AC-30.** Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `400` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.
+- **AC-30.** Başka bir şubenin — kapatılmış bir şube dâhil — kullandığı adres kısaltması `422` ve bir alan hata koduyla reddedilir; hata kısaltmanın zaten kullanıldığını söyler.
 - **AC-31.** Geçersiz bir e-posta (`kadikoy@`) reddedilir.
 - **AC-32.** Reddedilen bir kaydetmede hiçbir şube oluşmaz ve hiçbir duyuru yazılmaz.
 - **AC-33.** 120 karakteri aşan şube adı ve 300 karakteri aşan adres alan hatasıyla reddedilir (R3a, D22).
@@ -441,24 +507,24 @@ ekranın adresini doğrudan açtığında "erişim yok" ekranını görür (`Adm
 ## Definition of Done
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B11 → D13–D23, 2026-11-18.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0020-ac<n>.png`),
-      boş ve hata durumları dâhil; Arapça görüntü de var (AC-12, AC-73).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `dealership` şemasına dokunuyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**görünen ad** — D4).
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0020-ac<n>.png`),
+      boş ve hata durumları dâhil; Arapça görüntü de var (AC-12, AC-73). *(51 görsel; `evidence-0020.spec.ts`.)*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(PR'da: `dotnet test` çözüm geneli yeşil.)*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok. *(`0007`/AC-8'in kapısı P5'e göre daraltıldı.)*
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `dealership` şemasına dokunuyor. *(`AddGalleryDisplayNameAndVersions`.)*
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**görünen ad** — D4). *(Ticari Unvan, Görünen Ad.)*
 - [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); performans kapısı ana sayfa ve listede yeşil (AC-15).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
-- [ ] `docs/deploy.md` § 5 ve ADR `0012` § Açık engeller 1, bu kartın ekranlarına göre güncellendi (**D10**).
+- [x] `docs/deploy.md` § 5 ve ADR `0012` § Açık engeller 1, bu kartın ekranlarına göre güncellendi (**D10**).
 
 ---
 

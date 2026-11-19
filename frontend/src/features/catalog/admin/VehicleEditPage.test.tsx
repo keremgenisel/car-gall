@@ -382,3 +382,57 @@ describe('0010b/AC-35: Liste başlıkları ve göstergeler TR, AR ve EN de kendi
     expect(document.body.textContent).not.toContain('vehicle.edit.')
   })
 })
+
+describe('0020/AC-58: Panelin araç formundaki şube seçicisi kapatılmış şubeleri seçenek olarak sunmaz; aracın mevcut şubesi kapatılmışsa form bunu gösterir ve başka bir şube seçilmesini ister.', () => {
+  const KAPALI = {
+    branchId: '0192c000-0000-7000-8000-00000000b009',
+    name: 'Liman Şube',
+    status: 'Closed',
+  }
+
+  it('düzenleme formu kapatılmış şubeyi seçenek olarak sunmaz', async () => {
+    vi.mocked(fetchBranches).mockResolvedValue([
+      { branchId: KAYIT.branchId, name: 'Merkez Şube', status: 'Active' },
+      KAPALI,
+    ])
+    ekran()
+
+    await screen.findByTestId('vehicle-edit-form')
+    expect(screen.queryByRole('option', { name: /Liman Şube/ })).toBeNull()
+    expect(screen.queryByTestId('vehicle-branch-hint')).toBeNull()
+  })
+
+  it('aracın kayıtlı şubesi kapatılmışsa form bunu gösterir, seçilemez kılar ve başka bir şube seçilmesini ister', async () => {
+    vi.mocked(fetchVehicle).mockResolvedValue({ ...KAYIT, branchId: KAPALI.branchId })
+    vi.mocked(fetchBranches).mockResolvedValue([
+      { branchId: KAYIT.branchId, name: 'Merkez Şube', status: 'Active' },
+      KAPALI,
+    ])
+    ekran()
+
+    const secenek = (await screen.findByRole('option', {
+      name: 'Liman Şube (Kapalı)',
+    })) as HTMLOptionElement
+    expect(secenek.disabled).toBe(true)
+    expect((screen.getByLabelText('Şube') as HTMLSelectElement).value).toBe(KAPALI.branchId)
+    expect(screen.getByTestId('vehicle-branch-hint').textContent).toBe(
+      'Bu aracın şubesi kalıcı olarak kapatılmış. Başka bir şube seçin.',
+    )
+
+    // Başka bir şube seçilince uyarı kalkar.
+    fireEvent.change(screen.getByLabelText('Şube'), { target: { value: KAYIT.branchId } })
+    expect(screen.queryByTestId('vehicle-branch-hint')).toBeNull()
+  })
+
+  it('kayıtlı şubesi kapatılmış araç şubesine dokunulmadan kaydedilir (sunucu kabul eder — AC-57)', async () => {
+    vi.mocked(fetchVehicle).mockResolvedValue({ ...KAYIT, branchId: KAPALI.branchId })
+    vi.mocked(fetchBranches).mockResolvedValue([KAPALI])
+    ekran()
+
+    await screen.findByTestId('vehicle-edit-form')
+    fireEvent.click(screen.getByRole('button', { name: 'Değişiklikleri kaydet' }))
+    await screen.findByTestId('vehicle-edit-saved')
+
+    expect(vi.mocked(updateVehicle).mock.calls[0][1]).toMatchObject({ branchId: KAPALI.branchId })
+  })
+})

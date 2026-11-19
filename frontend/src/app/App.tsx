@@ -35,7 +35,12 @@ export function App({ locale }: { readonly locale: AppLocale }) {
       <LocaleProvider locale={locale}>
         <Suspense fallback={<div className="admin-page admin-page--narrow" />}>
           {/* Panelin alt yüzeyi adresten geliyor; kabuk onu propla alıyor (0010a). */}
-          <AdminApp view={route.view} vehicleId={route.vehicleId} pageId={route.pageId} />
+          <AdminApp
+            view={route.view}
+            vehicleId={route.vehicleId}
+            pageId={route.pageId}
+            branchId={route.branchId}
+          />
         </Suspense>
       </LocaleProvider>
     )

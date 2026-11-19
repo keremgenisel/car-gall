@@ -119,6 +119,11 @@ davranış değişikliğidir ve spec ister; burada yalnız kayda geçiyor.
    da panel ekranı yok** — `0003` X1 bunları kapsam dışı bıraktı ve sonraki hiçbir kart
    üstlenmedi. Canlıda bu veriyi değiştirmenin bugünkü tek yolu veritabanına elle SQL
    yazmaktır.
+
+   **Çözüldü — spec `0020` (2026-11-18).** Galeri profili ve şubeler artık panelden
+   düzenleniyor (yalnız Yönetici); demo veri ilk girişte düzeltilir ya da kapatılır.
+   Kurulum adımının örnek veriyi yazması bilinçli olarak değişmedi (`0020` X5 · D10:
+   şubesiz başlayan galeri B5'i ilk andan kırardı). Adım `docs/deploy.md` § 5'te.
 2. **Barındırma seçilmedi** (sağlayıcı, alan adı, PostgreSQL, S3-uyumlu depo, SMTP,
    sır deposu). Depo sahibinin kararı.
 

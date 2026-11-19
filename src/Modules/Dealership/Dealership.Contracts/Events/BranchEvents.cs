@@ -38,6 +38,18 @@ public sealed record BranchDeactivated(
 /// </summary>
 public sealed record BranchSummaryDto(Guid BranchId, string Name, string Status);
 
+/// <summary>
+/// `0020` **D14** — <see cref="BranchSummaryDto.Status"/>'un alabileceği KODLAR. Tüketici
+/// `Dealership`'in enum'unu kullanamaz (Yasak Listesi 9); karşılaştırma bu sabitlerle yapılır,
+/// dize sabiti iki modüle ayrı ayrı gömülmez.
+/// </summary>
+public static class BranchStatusCodes
+{
+    public const string Active = "Active";
+    public const string TemporarilyClosed = "TemporarilyClosed";
+    public const string Closed = "Closed";
+}
+
 public interface IBranchQueries
 {
     /// <summary>

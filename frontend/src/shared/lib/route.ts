@@ -37,6 +37,14 @@ export type AdminView =
   | 'content'
   /** `0017` — bir içerik sayfasının düzenlemesi (`/admin/content/{id}`). */
   | 'content-edit'
+  /** `0020` R1 — galeri profili (`/admin/gallery`); yalnız Yönetici (D2). */
+  | 'gallery'
+  /** `0020` R8 — şubeler listesi (`/admin/branches`). */
+  | 'branches'
+  /** `0020` R9 — yeni şube (`/admin/branches/new`). */
+  | 'branch-new'
+  /** `0020` R10–R12 — bir şubenin düzenlemesi ve durum eylemleri (`/admin/branches/{id}`). */
+  | 'branch-edit'
 
 export type Route =
   /** 0014 **D9** — `/{locale}/` artık ana sayfadır; liste `/{locale}/cars`'a taşındı. */
@@ -58,6 +66,8 @@ export type Route =
       readonly vehicleId?: string
       /** `0017` — `content-edit` görünümünün sayfa kimliği. */
       readonly pageId?: string
+      /** `0020` — `branch-edit` görünümünün şube kimliği. */
+      readonly branchId?: string
     }
 
 /**
@@ -81,6 +91,11 @@ function adminViewOf(segment: string | undefined): AdminView {
     // `0017` R24 — panelin "İçerik" bölümü.
     case 'content':
       return 'content'
+    // `0020` — galeri profili ve şubeler.
+    case 'gallery':
+      return 'gallery'
+    case 'branches':
+      return 'branches'
     default:
       return 'staff'
   }
@@ -111,6 +126,13 @@ export function parseRoute(pathname: string): Route {
       return tailSegment === 'media'
         ? { kind: 'admin', view: 'vehicle-media', vehicleId }
         : { kind: 'admin', view: 'vehicle-edit', vehicleId }
+    }
+
+    // `0020` — `/admin/branches/new` yeni şube, `/admin/branches/{id}` düzenleme.
+    if (sectionSegment === 'branches' && slugSegment !== undefined) {
+      return slugSegment === 'new'
+        ? { kind: 'admin', view: 'branch-new' }
+        : { kind: 'admin', view: 'branch-edit', branchId: decodeURIComponent(slugSegment) }
     }
 
     if (sectionSegment === 'content' && slugSegment !== undefined) {
@@ -183,7 +205,16 @@ export function listingPath(locale: AppLocale, slug: string): string {
 
 /** Panel içindeki adres. Giriş ekranının ayrı bir adresi yoktur: oturumsuz `/admin` odur. */
 export function adminPath(view: AdminView = 'staff'): string {
+  if (view === 'branch-new') {
+    return `/${ADMIN_SEGMENT}/branches/new`
+  }
+
   return view === 'staff' ? `/${ADMIN_SEGMENT}` : `/${ADMIN_SEGMENT}/${view}`
+}
+
+/** `0020` — bir şubenin panel düzenleme adresi. */
+export function branchEditPath(branchId: string): string {
+  return `/${ADMIN_SEGMENT}/branches/${encodeURIComponent(branchId)}`
 }
 
 /** Düzenleme adresi (D29). Listeye dönüş `adminPath('vehicles')`. */

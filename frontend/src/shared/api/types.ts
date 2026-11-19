@@ -523,6 +523,7 @@ export interface PublicBranch {
 }
 
 export interface PublicGallery {
-  readonly commercialName: string
+  /** `0020` D15 — ziyaretçinin dilindeki görünen ad; ticari unvan public yanıtta YOKTUR. */
+  readonly displayName: string
   readonly branches: readonly PublicBranch[]
 }

@@ -1,0 +1,623 @@
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { LocaleProvider } from '../LocaleProvider'
+import { ApiError } from '../../shared/api/client'
+import type { AdminBranch, AdminGallery } from '../../shared/api/dealershipAdmin'
+import type { CurrentSession } from '../../shared/api/types'
+import { catalogKeys, createTranslator } from '../../shared/i18n/i18n'
+import type { AppLocale } from '../../shared/lib/locale'
+import type { AdminView } from '../../shared/lib/route'
+import { AdminApp } from './AdminApp'
+
+/**
+ * `0020` — panelin galeri ve şubeler ekranları gerçek kabuğun içinde; yalnız API istemcileri
+ * sahtelenir (docs/frontend.md § 8.1). Sunucunun kuralları (alan kodları, `409`, `403`) kendi
+ * testlerinde ölçülür; burada ölçülen, ekranın onlara verdiği cevap.
+ */
+vi.mock('../../shared/api/identity', () => ({
+  fetchCurrentSession: vi.fn(),
+  fetchStaff: vi.fn(),
+  addStaff: vi.fn(),
+  logout: vi.fn(),
+  fetchTwoFactorStatus: vi.fn(),
+  startTwoFactorEnrollment: vi.fn(),
+  confirmTwoFactorEnrollment: vi.fn(),
+  disableTwoFactor: vi.fn(),
+  regenerateRecoveryCodes: vi.fn(),
+  resetStaffTwoFactor: vi.fn(),
+}))
+
+vi.mock('../../shared/api/dealershipAdmin', () => ({
+  fetchGalleryProfile: vi.fn(),
+  saveGalleryProfile: vi.fn(),
+  fetchBranchList: vi.fn(),
+  fetchAdminBranch: vi.fn(),
+  openBranch: vi.fn(),
+  saveBranch: vi.fn(),
+  runBranchAction: vi.fn(),
+}))
+
+const { fetchCurrentSession } = await import('../../shared/api/identity')
+const api = await import('../../shared/api/dealershipAdmin')
+
+const assign = vi.fn()
+
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+    this.setAttribute('open', '')
+  }
+  HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+    this.removeAttribute('open')
+    this.dispatchEvent(new Event('close'))
+  }
+  Object.defineProperty(window, 'location', {
+    configurable: true,
+    value: { ...window.location, assign, pathname: '/admin' },
+  })
+})
+
+function oturum(role: string, preferredLocale: AppLocale = 'tr'): CurrentSession {
+  return {
+    staffId: '0192c000-0000-7000-8000-00000000a001',
+    displayName: 'Ayşe Yılmaz',
+    role,
+    preferredLocale,
+    mustChangePassword: false,
+    twoFactorEnrolled: true,
+  } as CurrentSession
+}
+
+const GALERI: AdminGallery = {
+  commercialName: 'Oto Galeri Ticaret A.Ş.',
+  taxNumber: '1234567890',
+  tradeRegistryNumber: 'TR-123456',
+  displayNames: { tr: 'Oto Galeri', ar: 'أوتو غاليري' },
+  version: 4,
+}
+
+const SUBE: AdminBranch = {
+  branchId: 'b-1',
+  names: { tr: 'Kadıköy Şubesi', ar: 'فرع كاديكوي' },
+  addresses: { tr: 'Bağdat Caddesi 1' },
+  phone: '+902165554433',
+  whatsApp: '+905321112233',
+  email: 'kadikoy@ornek.com',
+  timeZone: 'Europe/Istanbul',
+  slug: 'kadikoy-subesi',
+  latitude: 40.9833,
+  longitude: 29.0667,
+  status: 'Active',
+  version: 2,
+}
+
+const LISTE = [
+  { branchId: 'b-1', name: 'Kadıköy Şubesi', status: 'Active' },
+  { branchId: 'b-2', name: 'Moda Şubesi', status: 'TemporarilyClosed' },
+  { branchId: 'b-3', name: 'Eski Liman Şubesi', status: 'Closed' },
+]
+
+async function panel(
+  view: AdminView,
+  role = 'manager',
+  locale: AppLocale = 'tr',
+  branchId?: string,
+) {
+  vi.mocked(fetchCurrentSession).mockResolvedValue(oturum(role, locale))
+  render(
+    <LocaleProvider locale={locale}>
+      <AdminApp view={view} branchId={branchId} />
+    </LocaleProvider>,
+  )
+  await screen.findByRole('navigation')
+}
+
+beforeEach(() => {
+  vi.mocked(api.fetchGalleryProfile).mockResolvedValue(GALERI)
+  vi.mocked(api.fetchBranchList).mockResolvedValue(LISTE)
+  vi.mocked(api.fetchAdminBranch).mockResolvedValue(SUBE)
+})
+
+afterEach(() => {
+  cleanup()
+  vi.clearAllMocks()
+})
+
+describe('0020/AC-1: Yönetici galeri ekranında ticari unvanı, vergi numarasını, ticaret sicil numarasını ve etkin her dil için görünen adı görür.', () => {
+  it('profil ekranı dört alanı ve etkin her dil için görünen adı gösterir', async () => {
+    await panel('gallery')
+
+    expect(await screen.findByLabelText('Ticari unvan')).toHaveProperty(
+      'value',
+      'Oto Galeri Ticaret A.Ş.',
+    )
+    expect(screen.getByLabelText('Vergi numarası')).toHaveProperty('value', '1234567890')
+    expect(screen.getByLabelText('Ticaret sicil numarası')).toHaveProperty('value', 'TR-123456')
+
+    const adlar = within(screen.getByTestId('gallery-display-names'))
+    expect(adlar.getByLabelText('Türkçe')).toHaveProperty('value', 'Oto Galeri')
+    expect(adlar.getByLabelText('العربية')).toHaveProperty('value', 'أوتو غاليري')
+    // Eksik dil boş görünür; varsayılan dile düşmez (AC-7).
+    expect(adlar.getByLabelText('English')).toHaveProperty('value', '')
+  })
+})
+
+describe('0020/AC-2: Yönetici ticari unvanı değiştirip kaydettiğinde ekran yeniden açıldığında yeni unvan görünür.', () => {
+  it('kaydetme ekrandaki unvanı gönderir ve ekran yeniden okunur', async () => {
+    vi.mocked(api.saveGalleryProfile).mockResolvedValue(5)
+    await panel('gallery')
+
+    fireEvent.change(await screen.findByLabelText('Ticari unvan'), {
+      target: { value: 'Yeni Unvan Ltd' },
+    })
+    vi.mocked(api.fetchGalleryProfile).mockResolvedValue({
+      ...GALERI,
+      commercialName: 'Yeni Unvan Ltd',
+      version: 5,
+    })
+    fireEvent.click(screen.getByTestId('gallery-save'))
+
+    await screen.findByTestId('dealership-saved')
+    expect(vi.mocked(api.saveGalleryProfile).mock.calls[0][0]).toBe(4)
+    expect(vi.mocked(api.saveGalleryProfile).mock.calls[0][1]).toMatchObject({
+      commercialName: 'Yeni Unvan Ltd',
+    })
+    await waitFor(() => expect(vi.mocked(api.fetchGalleryProfile)).toHaveBeenCalledTimes(2))
+    expect(screen.getByLabelText('Ticari unvan')).toHaveProperty('value', 'Yeni Unvan Ltd')
+  })
+})
+
+describe('0020/AC-3: Boş ya da yalnız boşluktan oluşan bir ticari unvan reddedilir ve hata alanın yanında gösterilir; kayıtlı unvan değişmez.', () => {
+  it('sunucunun alan hatası unvan alanının yanında çevrilmiş metinle gösterilir', async () => {
+    vi.mocked(api.saveGalleryProfile).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'commercialName',
+        commercialName: 'gallery.commercial_name_required',
+      }),
+    )
+    await panel('gallery')
+
+    fireEvent.change(await screen.findByLabelText('Ticari unvan'), { target: { value: '   ' } })
+    fireEvent.click(screen.getByTestId('gallery-save'))
+
+    const hata = await screen.findByTestId('gallery-commercial-name-error')
+    expect(hata.textContent).toBe('Ticari unvan boş bırakılamaz.')
+    expect(screen.getByLabelText('Ticari unvan').getAttribute('aria-invalid')).toBe('true')
+    expect(screen.getByLabelText('Ticari unvan').getAttribute('aria-describedby')).toContain(
+      'gallery-commercial-name-error',
+    )
+  })
+})
+
+describe('0020/AC-4: Vergi numarası ve ticaret sicil numarası boşaltılıp kaydedildiğinde ikisi de boş kaydedilir.', () => {
+  it('boşaltılan vergi ve sicil numarası boş metin olarak gönderilir', async () => {
+    vi.mocked(api.saveGalleryProfile).mockResolvedValue(5)
+    await panel('gallery')
+
+    fireEvent.change(await screen.findByLabelText('Vergi numarası'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Ticaret sicil numarası'), { target: { value: '' } })
+    fireEvent.click(screen.getByTestId('gallery-save'))
+
+    await screen.findByTestId('dealership-saved')
+    expect(vi.mocked(api.saveGalleryProfile).mock.calls[0][1]).toMatchObject({
+      taxNumber: '',
+      tradeRegistryNumber: '',
+    })
+  })
+})
+
+describe('0020/AC-6: Varsayılan olmayan bir dildeki görünen ad boş bırakılarak kaydedilebilir.', () => {
+  it('boş bırakılan Arapça görünen ad gönderilmez; sunucu onu boş kaydeder', async () => {
+    vi.mocked(api.saveGalleryProfile).mockResolvedValue(5)
+    await panel('gallery')
+
+    fireEvent.change(
+      within(await screen.findByTestId('gallery-display-names')).getByLabelText('العربية'),
+      { target: { value: ' ' } },
+    )
+    fireEvent.click(screen.getByTestId('gallery-save'))
+
+    await screen.findByTestId('dealership-saved')
+    expect(vi.mocked(api.saveGalleryProfile).mock.calls[0][1].displayNames).toEqual({
+      tr: 'Oto Galeri',
+    })
+  })
+})
+
+describe('0020/AC-19: Şubeler ekranı aktif, geçici kapalı ve kapatılmış şubelerin hepsini, her birinin adı ve durumuyla listeler.', () => {
+  it('liste üç durumu da adı ve durum metniyle gösterir', async () => {
+    await panel('branches')
+
+    const satirlar = await screen.findAllByTestId('branch-row')
+    expect(satirlar.map((satir) => satir.textContent)).toEqual([
+      'Kadıköy ŞubesiAçık',
+      'Moda ŞubesiGeçici olarak kapalı',
+      'Eski Liman ŞubesiKapalı',
+    ])
+    expect(within(satirlar[0]).getByRole('link').getAttribute('href')).toBe('/admin/branches/b-1')
+  })
+})
+
+describe('0020/AC-20: Listedeki şube adı yöneticinin panel dilindeki karşılığıdır; yoksa varsayılan dildekidir.', () => {
+  it('liste panel dilinde istenir ve sunucunun çözdüğü ad basılır', async () => {
+    vi.mocked(api.fetchBranchList).mockResolvedValue([
+      { branchId: 'b-1', name: 'فرع كاديكوي', status: 'Active' },
+    ])
+    await panel('branches', 'manager', 'ar')
+
+    expect(await screen.findByText('فرع كاديكوي')).toBeTruthy()
+    expect(vi.mocked(api.fetchBranchList).mock.calls[0][0]).toBe('ar')
+  })
+})
+
+describe('0020/AC-21: Yönetici zorunlu alanları doldurup kaydettiğinde yeni şube listede **aktif** olarak görünür.', () => {
+  it('yeni şube formu zorunlu alanları gönderir ve listeye döner', async () => {
+    vi.mocked(api.openBranch).mockResolvedValue('b-9')
+    await panel('branch-new')
+
+    const adlar = screen.getAllByRole('group')[1]
+    fireEvent.change(within(adlar).getByLabelText('Türkçe'), { target: { value: 'Moda Şubesi' } })
+    fireEvent.change(screen.getAllByLabelText('Türkçe')[1], { target: { value: 'Moda Caddesi 9' } })
+    fireEvent.change(screen.getByLabelText('Telefon'), { target: { value: '+902161112233' } })
+    fireEvent.change(screen.getByLabelText('Saat dilimi'), { target: { value: 'Europe/Istanbul' } })
+    fireEvent.change(screen.getByLabelText('Adres kısaltması'), {
+      target: { value: 'moda-subesi' },
+    })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/admin/branches'))
+    expect(vi.mocked(api.openBranch).mock.calls[0][0]).toMatchObject({
+      names: { tr: 'Moda Şubesi' },
+      addresses: { tr: 'Moda Caddesi 9' },
+      phone: '+902161112233',
+      timeZone: 'Europe/Istanbul',
+      slug: 'moda-subesi',
+      latitude: null,
+      longitude: null,
+    })
+  })
+})
+
+describe('0020/AC-24: Varsayılan dildeki adı boş olan şube açılamaz ve hata ad alanının yanında gösterilir.', () => {
+  it('varsayılan dildeki ad hatası ad alanının yanında gösterilir; yazılanlar kalır', async () => {
+    vi.mocked(api.openBranch).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'name.tr',
+        'name.tr': 'branch.default_locale_name_required',
+      }),
+    )
+    await panel('branch-new')
+
+    fireEvent.change(screen.getByLabelText('Telefon'), { target: { value: '+902161112233' } })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    expect((await screen.findByTestId('branch-name-tr-error')).textContent).toBe(
+      'Varsayılan dildeki şube adı boş bırakılamaz.',
+    )
+    expect(screen.getByLabelText('Telefon')).toHaveProperty('value', '+902161112233')
+    expect(assign).not.toHaveBeenCalled()
+  })
+})
+
+describe('0020/AC-28: Panelin saat dilimi alanı serbest metin değil, bölge kimliklerinin listesidir.', () => {
+  it('saat dilimi alanı bir listedir ve IANA kimliklerini sunar', async () => {
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    const alan = await screen.findByLabelText('Saat dilimi')
+    expect(alan.tagName).toBe('SELECT')
+    expect((alan as HTMLSelectElement).value).toBe('Europe/Istanbul')
+    const secenekler = within(alan)
+      .getAllByRole('option')
+      .map((option) => option.getAttribute('value'))
+    expect(secenekler).toContain('Asia/Kuwait')
+    expect(secenekler).not.toContain('+03:00')
+  })
+})
+
+describe('0020/AC-39: WhatsApp numarası, e-posta ve koordinat boşaltılıp kaydedildiğinde üçü de boş kaydedilir.', () => {
+  it('boşaltılan WhatsApp, e-posta ve koordinat boş olarak gönderilir', async () => {
+    vi.mocked(api.saveBranch).mockResolvedValue(3)
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    fireEvent.change(await screen.findByLabelText('WhatsApp numarası'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('E-posta'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Enlem'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Boylam'), { target: { value: '' } })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    await screen.findByTestId('dealership-saved')
+    expect(vi.mocked(api.saveBranch).mock.calls[0][2]).toMatchObject({
+      whatsApp: '',
+      email: '',
+      latitude: null,
+      longitude: null,
+    })
+  })
+})
+
+describe('0020/AC-42: Kapatılmış bir şube düzenlenemez: ekran alanları salt okunur gösterir ve uç reddeder (R10, D21).', () => {
+  it('kapatılmış şubenin alanları salt okunur, kaydet ve eylemler yok', async () => {
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue({ ...SUBE, status: 'Closed' })
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    expect(await screen.findByTestId('branch-closed-note')).toBeTruthy()
+    expect((screen.getByTestId('branch-fields') as HTMLFieldSetElement).disabled).toBe(true)
+    expect(screen.queryByTestId('branch-save')).toBeNull()
+  })
+})
+
+describe('0020/AC-43: Aktif bir şube geçici kapatıldığında listede **geçici kapalı** görünür ve altlıkta görünmez.', () => {
+  it('geçici kapatma eylemi okunan sürümle gönderilir ve ekran güncel durumu gösterir', async () => {
+    vi.mocked(api.runBranchAction).mockResolvedValue(3)
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue({
+      ...SUBE,
+      status: 'TemporarilyClosed',
+      version: 3,
+    })
+    fireEvent.click(await screen.findByTestId('branch-close-temporarily'))
+
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId('branch-status')).getByText('Geçici olarak kapalı'),
+      ).toBeTruthy(),
+    )
+    expect(vi.mocked(api.runBranchAction).mock.calls[0].slice(0, 3)).toEqual([
+      'b-1',
+      2,
+      'close-temporarily',
+    ])
+    expect(await screen.findByTestId('branch-reopen')).toBeTruthy()
+  })
+})
+
+describe('0020/AC-47: Kalıcı kapatma, işlem yapılmadan önce D18\'deki metni — "geri alınamaz" ve "bu şubedeki araçlar vitrinden kalkar ve şube ataması bekler" — gösteren bir onay ister; onaydan vazgeçmek şubeyi değiştirmez.', () => {
+  it('kalıcı kapatma D18 metniyle onay ister; vazgeçmek hiçbir istek göndermez', async () => {
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    fireEvent.click(await screen.findByTestId('branch-close'))
+
+    expect(screen.getByTestId('branch-close-body').textContent).toBe(
+      'Bu işlem geri alınamaz. Bu şubedeki araçlar vitrinden kalkar ve şube ataması bekler.',
+    )
+    fireEvent.click(screen.getByTestId('branch-close-cancel'))
+
+    expect(vi.mocked(api.runBranchAction)).not.toHaveBeenCalled()
+    expect(within(screen.getByTestId('branch-status')).getByText('Açık')).toBeTruthy()
+  })
+
+  it('onaylanan kalıcı kapatma gönderilir', async () => {
+    vi.mocked(api.runBranchAction).mockResolvedValue(3)
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    fireEvent.click(await screen.findByTestId('branch-close'))
+    fireEvent.click(screen.getByTestId('branch-close-confirm'))
+
+    await waitFor(() =>
+      expect(vi.mocked(api.runBranchAction).mock.calls[0].slice(0, 3)).toEqual(['b-1', 2, 'close']),
+    )
+  })
+})
+
+describe('0020/AC-50: Galerinin son aktif şubesini kalıcı kapatma reddedilir; panel bunun nedenini söyler ve şube aktif kalır.', () => {
+  it('son aktif şubenin reddi nedeniyle söylenir', async () => {
+    vi.mocked(api.runBranchAction).mockRejectedValue(
+      new ApiError('branch.last_active_branch', null, 409),
+    )
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    fireEvent.click(await screen.findByTestId('branch-close'))
+    fireEvent.click(screen.getByTestId('branch-close-confirm'))
+
+    expect((await screen.findByTestId('dealership-save-failed')).textContent).toBe(
+      'Galerinin başka aktif şubesi olmadığı için bu şube kalıcı olarak kapatılamaz. Önce başka bir şubeyi açın ya da yeniden açın.',
+    )
+    expect(within(screen.getByTestId('branch-status')).getByText('Açık')).toBeTruthy()
+  })
+})
+
+describe('0020/AC-54: Kapatılmış bir şube için yeniden açma ve geçici kapatma eylemleri sunulmaz ve uç onları reddeder.', () => {
+  it('kapatılmış şubede yeniden açma ve geçici kapatma sunulmaz', async () => {
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue({ ...SUBE, status: 'Closed' })
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    await screen.findByTestId('branch-closed-note')
+    expect(screen.queryByTestId('branch-reopen')).toBeNull()
+    expect(screen.queryByTestId('branch-close-temporarily')).toBeNull()
+    expect(screen.queryByTestId('branch-close')).toBeNull()
+  })
+})
+
+describe('0020/AC-63: Reddedilen eski sürüm kaydetmesinde panel bir uyarı gösterir ve güncel hâli yükleme yolu sunar; yöneticinin yazdığı değerler uyarıyla birlikte ekranda kalır.', () => {
+  it('eski sürüm reddinde uyarı çıkar, yazılan değer ekranda kalır ve güncel hâl yüklenebilir', async () => {
+    vi.mocked(api.saveBranch).mockRejectedValue(new ApiError('concurrency.lost', null, 409))
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    fireEvent.change(await screen.findByLabelText('Telefon'), {
+      target: { value: '+902160000000' },
+    })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    expect(await screen.findByTestId('dealership-conflict')).toBeTruthy()
+    expect(screen.getByLabelText('Telefon')).toHaveProperty('value', '+902160000000')
+    expect(vi.mocked(api.fetchAdminBranch)).toHaveBeenCalledTimes(1)
+
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue({
+      ...SUBE,
+      phone: '+902169999999',
+      version: 7,
+    })
+    fireEvent.click(screen.getByTestId('dealership-conflict-reload'))
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Telefon')).toHaveProperty('value', '+902169999999'),
+    )
+    expect(screen.queryByTestId('dealership-conflict')).toBeNull()
+  })
+
+  it('galeri profilinde de aynı: uyarı ve değerler birlikte', async () => {
+    vi.mocked(api.saveGalleryProfile).mockRejectedValue(new ApiError('concurrency.lost', null, 409))
+    await panel('gallery')
+
+    fireEvent.change(await screen.findByLabelText('Ticari unvan'), {
+      target: { value: 'Benim Yazdığım' },
+    })
+    fireEvent.click(screen.getByTestId('gallery-save'))
+
+    expect(await screen.findByTestId('dealership-conflict')).toBeTruthy()
+    expect(screen.getByLabelText('Ticari unvan')).toHaveProperty('value', 'Benim Yazdığım')
+  })
+})
+
+describe('0020/AC-64: Satış Danışmanı ve İçerik Editörü panelde galeri ve şubeler ekranına giden bir bağlantı görmez.', () => {
+  it.each(['sales_advisor', 'content_editor'])(
+    '%s gezinmesinde Galeri ve Şubeler bağlantısı yoktur',
+    async (role) => {
+      await panel('vehicles', role)
+
+      expect(screen.queryByRole('link', { name: 'Galeri' })).toBeNull()
+      expect(screen.queryByRole('link', { name: 'Şubeler' })).toBeNull()
+    },
+  )
+
+  it('Yönetici gezinmesinde iki bağlantı da vardır', async () => {
+    await panel('vehicles', 'manager')
+
+    expect(screen.getByRole('link', { name: 'Galeri' }).getAttribute('href')).toBe('/admin/gallery')
+    expect(screen.getByRole('link', { name: 'Şubeler' }).getAttribute('href')).toBe(
+      '/admin/branches',
+    )
+  })
+})
+
+describe('0020/AC-65: Satış Danışmanı galeri ya da şubeler ekranının adresini doğrudan açtığında "erişim yok" ekranını görür; giriş ekranına yönlendirilmez ve "getirilemedi" hatası görmez (D23).', () => {
+  it.each<AdminView>(['gallery', 'branches', 'branch-new', 'branch-edit'])(
+    'Satış Danışmanı %s adresinde "erişim yok" görür; istek gitmez, hata ekranı yok',
+    async (view) => {
+      await panel(view, 'sales_advisor', 'tr', 'b-1')
+
+      expect(await screen.findByTestId('admin-no-access')).toBeTruthy()
+      expect(screen.queryByTestId('gallery-error')).toBeNull()
+      expect(screen.queryByTestId('branches-error')).toBeNull()
+      expect(vi.mocked(api.fetchGalleryProfile)).not.toHaveBeenCalled()
+      expect(vi.mocked(api.fetchBranchList)).not.toHaveBeenCalled()
+      expect(vi.mocked(api.fetchAdminBranch)).not.toHaveBeenCalled()
+    },
+  )
+})
+
+describe('0020/AC-69: Galeri ve şubeler ekranı veri gelirken yükleniyor durumunu gösterir.', () => {
+  it.each<[AdminView, string]>([
+    ['gallery', 'gallery-loading'],
+    ['branches', 'branches-loading'],
+    ['branch-edit', 'branch-loading'],
+  ])('%s veri gelirken yükleniyor durumunu gösterir', async (view, testId) => {
+    vi.mocked(api.fetchGalleryProfile).mockReturnValue(new Promise(() => {}))
+    vi.mocked(api.fetchBranchList).mockReturnValue(new Promise(() => {}))
+    vi.mocked(api.fetchAdminBranch).mockReturnValue(new Promise(() => {}))
+    await panel(view, 'manager', 'tr', 'b-1')
+
+    expect(await screen.findByTestId(testId)).toBeTruthy()
+  })
+})
+
+describe('0020/AC-70: Veri okunamadığında ekran teknik ayrıntı göstermeyen bir hata durumu ve yeniden deneme yolu gösterir.', () => {
+  it.each<[AdminView, string, string]>([
+    ['gallery', 'gallery-error', 'gallery-profile'],
+    ['branches', 'branches-error', 'branches'],
+    ['branch-edit', 'branch-error', 'branch-edit'],
+  ])(
+    '%s okunamadığında teknik ayrıntısız hata ve yeniden deneme gösterir',
+    async (view, testId, hazir) => {
+      const hata = new ApiError('api.unavailable', 'trace-123', 500)
+      const okuma =
+        view === 'gallery'
+          ? api.fetchGalleryProfile
+          : view === 'branches'
+            ? api.fetchBranchList
+            : api.fetchAdminBranch
+      vi.mocked(okuma).mockRejectedValueOnce(hata)
+      await panel(view, 'manager', 'tr', 'b-1')
+
+      const durum = await screen.findByTestId(testId)
+      expect(durum.textContent).not.toMatch(/500|trace-123|api\.unavailable/)
+
+      await act(async () => {
+        fireEvent.click(within(durum).getByRole('button', { name: 'Yeniden dene' }))
+      })
+      expect(await screen.findByTestId(hazir)).toBeTruthy()
+    },
+  )
+})
+
+describe('0020/AC-71: Kaydetme sunucu hatasıyla düştüğünde yöneticinin yazdığı değerler kaybolmaz.', () => {
+  it('sunucu hatasında yazılan değerler kaybolmaz', async () => {
+    vi.mocked(api.saveBranch).mockRejectedValue(new ApiError('api.unavailable', 'trace-1', 500))
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+
+    fireEvent.change(await screen.findByLabelText('Adres kısaltması'), {
+      target: { value: 'yeni-kisaltma' },
+    })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    expect(await screen.findByTestId('dealership-save-failed')).toBeTruthy()
+    expect(screen.getByLabelText('Adres kısaltması')).toHaveProperty('value', 'yeni-kisaltma')
+    expect(screen.getByTestId('dealership-save-failed').textContent).not.toMatch(/500|trace/)
+  })
+
+  it('galeri profilinde de aynı', async () => {
+    vi.mocked(api.saveGalleryProfile).mockRejectedValue(new ApiError('api.unavailable', null, 500))
+    await panel('gallery')
+
+    fireEvent.change(await screen.findByLabelText('Vergi numarası'), { target: { value: '5555' } })
+    fireEvent.click(screen.getByTestId('gallery-save'))
+
+    expect(await screen.findByTestId('dealership-save-failed')).toBeTruthy()
+    expect(screen.getByLabelText('Vergi numarası')).toHaveProperty('value', '5555')
+  })
+})
+
+describe('0020/AC-72: Ekranların bütün metinleri TR/AR/EN çeviri kataloğundan gelir; eksik anahtar kontrolü yeşildir.', () => {
+  it('ekranların anahtarları üç katalogda da var ve boş değil', () => {
+    const tr = catalogKeys('tr').filter(
+      (key) =>
+        key.startsWith('dealership.') ||
+        key === 'admin.nav.gallery' ||
+        key === 'admin.nav.branches',
+    )
+
+    expect(tr.length).toBeGreaterThan(50)
+
+    for (const locale of ['tr', 'ar', 'en'] as const) {
+      const keys = catalogKeys(locale)
+      const t = createTranslator(locale)
+
+      for (const key of tr) {
+        expect(keys).toContain(key)
+        expect(t(key).trim()).not.toBe('')
+      }
+    }
+  })
+})
+
+describe('0020/AC-73: Arapça panelde galeri ve şube formları sağdan sola düzende çalışır; telefon, e-posta ve kısaltma alanları soldan sağa yazılır.', () => {
+  it('Arapça panelde telefon, e-posta, kısaltma ve koordinat soldan sağa; ad ve adres içerikten', async () => {
+    await panel('branch-edit', 'manager', 'ar', 'b-1')
+
+    for (const label of [
+      'الهاتف',
+      'رقم واتساب',
+      'البريد الإلكتروني',
+      'الاختصار في العنوان',
+      'خط العرض',
+      'خط الطول',
+      'المنطقة الزمنية',
+    ]) {
+      expect((await screen.findByLabelText(label)).getAttribute('dir')).toBe('ltr')
+    }
+
+    for (const field of screen.getAllByLabelText('العربية')) {
+      expect(field.getAttribute('dir')).toBe('auto')
+    }
+  })
+})

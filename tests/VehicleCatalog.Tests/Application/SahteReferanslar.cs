@@ -7,10 +7,16 @@ namespace CarGallery.Modules.VehicleCatalog.Tests.Application;
 /// Modül sınırının ötesindeki üç yüzey sahtelenir (docs/testing.md § 1). Sınanan şey
 /// referans verinin nasıl okunduğu değil, okunanla ne yapıldığı.
 /// </summary>
-internal sealed class SahteSubeSorgusu(bool bulunur = true) : IBranchQueries
+internal sealed class SahteSubeSorgusu(bool bulunur = true, IReadOnlySet<Guid>? kapatilmis = null) : IBranchQueries
 {
+    /// <summary>`0020` D14 — <paramref name="kapatilmis"/>'teki şubeler `Closed` döner.</summary>
     public Task<BranchSummaryDto?> FindAsync(Guid branchId, string locale, CancellationToken cancellationToken) =>
-        Task.FromResult(bulunur ? new BranchSummaryDto(branchId, "Merkez Şube", "Active") : null);
+        Task.FromResult(bulunur
+            ? new BranchSummaryDto(
+                branchId,
+                "Merkez Şube",
+                kapatilmis?.Contains(branchId) == true ? BranchStatusCodes.Closed : BranchStatusCodes.Active)
+            : null);
 
     public Task<IReadOnlyList<BranchSummaryDto>> ListAsync(string locale, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<BranchSummaryDto>>([]);

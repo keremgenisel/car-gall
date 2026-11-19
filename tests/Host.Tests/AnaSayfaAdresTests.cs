@@ -114,7 +114,8 @@ public sealed class AnaSayfaAdresTests(HostFactory factory) : IClassFixture<Host
         IndexHtmlRenderer renderer = new(
             new SabitWebRoot(),
             ThemeOptions.Default,
-            new LocalePrefixResolver("tr", ["tr", "en"]));
+            new LocalePrefixResolver("tr", ["tr", "en"]),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<IndexHtmlRenderer>.Instance);
 
         DefaultHttpContext context = new();
         using MemoryStream govde = new();

@@ -20,6 +20,10 @@ public sealed class DealershipDatabase : IAsyncLifetime
 
         await using DealershipDbContext context = CreateContext();
         await context.Database.MigrateAsync();
+
+        // `0020` C4 — kurulum adımı migration'dan sonra görünen adı doldurur; test veritabanı
+        // aynı sırayı izler, yoksa testler kurulumun üretmediği bir durumu ölçerdi.
+        await DealershipSchema.BackfillDisplayNameAsync(context, CarGallery.BuildingBlocks.Locale.Create("tr").Value, CancellationToken.None);
     }
 
     public Task DisposeAsync() => container.DisposeAsync().AsTask();

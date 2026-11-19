@@ -29,6 +29,28 @@ export function vehicleMessageKey(errorCode: string, locale: AppLocale): string 
 }
 
 /**
+ * `0020` **D14** — araç formunun şube seçicisinin seçenekleri: kapatılmış şube SUNULMAZ
+ * (AC-58). <paramref name="currentBranchId"/> aracın kayıtlı şubesidir; o kapatılmışsa
+ * listede KALIR ama seçilemez bir seçenek olarak işaretlenir (plan turu P7) — böylece şubeye
+ * dokunmadan kaydetme mümkün kalır (AC-57) ve form başka bir şube seçilmesini ister.
+ */
+export function selectableBranches<
+  T extends { readonly branchId: string; readonly status: string },
+>(branches: readonly T[], currentBranchId?: string): readonly T[] {
+  return branches.filter(
+    (branch) => branch.status !== 'Closed' || branch.branchId === currentBranchId,
+  )
+}
+
+/** `0020` P7 — aracın kayıtlı şubesi kapatılmış mı. */
+export function isClosedBranch(
+  branches: readonly { readonly branchId: string; readonly status: string }[],
+  branchId: string,
+): boolean {
+  return branches.some((branch) => branch.branchId === branchId && branch.status === 'Closed')
+}
+
+/**
  * Sunucudan gelen KOD için çeviri anahtarı: `TemporarilyClosed` → `branch.status.temporarily_closed`.
  * Çevrilmiş ad veritabanında saklanmaz (Yasak Listesi 22); dönüşüm uçta yapılır.
  */

@@ -66,6 +66,11 @@ beforeEach(() => {
   vi.mocked(fetchBranches).mockResolvedValue([
     { branchId: '0192c000-0000-7000-8000-00000000b001', name: 'Merkez Şube', status: 'Active' },
     { branchId: '0192c000-0000-7000-8000-00000000b002', name: 'Liman Şube', status: 'Closed' },
+    {
+      branchId: '0192c000-0000-7000-8000-00000000b003',
+      name: 'Sahil Şube',
+      status: 'TemporarilyClosed',
+    },
   ])
 })
 
@@ -102,11 +107,27 @@ describe('0010a/AC-13: Referans listeleri personelin locale indeki etiketlerle g
     expect(kasa.textContent).not.toContain('suv')
   })
 
-  it('kapatılmış şube durumuyla etiketlenir; ham kod görünmez', async () => {
+  it('geçici kapalı şube durumuyla etiketlenir; ham kod görünmez', async () => {
     ekran()
 
-    expect(await screen.findByRole('option', { name: 'Liman Şube (Kapalı)' })).toBeTruthy()
-    expect(screen.getByLabelText('Şube').textContent).not.toContain('Closed')
+    expect(
+      await screen.findByRole('option', { name: 'Sahil Şube (Geçici olarak kapalı)' }),
+    ).toBeTruthy()
+    expect(screen.getByLabelText('Şube').textContent).not.toContain('TemporarilyClosed')
+  })
+})
+
+/**
+ * `0020` D14 — bu dosyanın eski hâli kapatılmış şubeyi "(Kapalı)" etiketiyle SEÇENEK olarak
+ * bekliyordu ve kendi yorumu "sunucu kapalı şubeye kaydı reddetmiyor" diyordu. Sunucu artık
+ * reddediyor (AC-55); seçici onu sunmaz. Beklenen değişiklik, gerileme değil.
+ */
+describe('0020/AC-58: Panelin araç formundaki şube seçicisi kapatılmış şubeleri seçenek olarak sunmaz; aracın mevcut şubesi kapatılmışsa form bunu gösterir ve başka bir şube seçilmesini ister.', () => {
+  it('yeni araç formunun şube seçicisi kapatılmış şubeyi sunmaz', async () => {
+    ekran()
+
+    await screen.findByRole('option', { name: 'Sahil Şube (Geçici olarak kapalı)' })
+    expect(screen.queryByRole('option', { name: /Liman Şube/ })).toBeNull()
   })
 })
 

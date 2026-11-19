@@ -106,7 +106,7 @@ internal sealed class CreateVehicleCommand(
             return Result.Failure<Guid>(references.Error);
         }
 
-        Result branch = await rules.ValidateBranchAsync(request.BranchId, cancellationToken);
+        Result branch = await rules.ValidateBranchAsync(request.BranchId, null, cancellationToken);
 
         if (branch.IsFailure)
         {

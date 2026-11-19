@@ -1,0 +1,137 @@
+import type { AppLocale } from '../lib/locale'
+import { getJson, sendJson } from './client'
+import type { BranchSummary } from './types'
+
+const ROOT = '/api/admin'
+
+/**
+ * `0020` R1 — panelin galeri profili. Görünen ad dil → metin haritasıdır; eksik dil haritada
+ * YOKTUR ve panelde boş alan olarak görünür (AC-1, AC-7). `version` iyimser eşzamanlılık
+ * içindir (R16).
+ */
+export interface AdminGallery {
+  readonly commercialName: string
+  readonly taxNumber: string | null
+  readonly tradeRegistryNumber: string | null
+  readonly displayNames: Readonly<Record<string, string>>
+  readonly version: number
+}
+
+/** `0020` R1 — galeri profili kaydetme girdisi. */
+export interface GalleryProfileInput {
+  readonly commercialName: string
+  readonly taxNumber: string
+  readonly tradeRegistryNumber: string
+  readonly displayNames: Readonly<Record<string, string>>
+}
+
+/** `0020` R10 — panelin şube düzenleme formu; durum bir KOD'dur (`Active`, `TemporarilyClosed`, `Closed`). */
+export interface AdminBranch {
+  readonly branchId: string
+  readonly names: Readonly<Record<string, string>>
+  readonly addresses: Readonly<Record<string, string>>
+  readonly phone: string
+  readonly whatsApp: string | null
+  readonly email: string | null
+  readonly timeZone: string
+  readonly slug: string
+  readonly latitude: number | null
+  readonly longitude: number | null
+  readonly status: string
+  readonly version: number
+}
+
+/** `0020` R9 — şube açma ve kaydetme girdisi; opsiyonel alan boş metinle boşaltılır (D9). */
+export interface BranchInput {
+  readonly names: Readonly<Record<string, string>>
+  readonly addresses: Readonly<Record<string, string>>
+  readonly phone: string
+  readonly whatsApp: string
+  readonly email: string
+  readonly timeZone: string
+  readonly slug: string
+  readonly latitude: number | null
+  readonly longitude: number | null
+}
+
+/** `0020` R11, R12 — durum eylemleri. */
+export type BranchAction = 'close-temporarily' | 'reopen' | 'close'
+
+export function fetchGalleryProfile(
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<AdminGallery> {
+  return getJson<AdminGallery>(`${ROOT}/gallery`, locale, signal)
+}
+
+/** Kaydeder; yeni sürümü döner. Eski sürümle `409` (R16). */
+export async function saveGalleryProfile(
+  version: number,
+  input: GalleryProfileInput,
+  locale: AppLocale,
+): Promise<number> {
+  const result = await sendJson<{ readonly version: number }>(
+    'PUT',
+    `${ROOT}/gallery`,
+    { version, ...input },
+    locale,
+  )
+  return result?.version ?? version
+}
+
+/**
+ * `0020` R8 — şubeler ekranının listesi. Araç formunun okuduğu listenin AYNISI (P5,
+ * AC-68): bütün durumlar, panel dilindeki ad, durum kodu.
+ */
+export function fetchBranchList(
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<readonly BranchSummary[]> {
+  return getJson<readonly BranchSummary[]>(`${ROOT}/branches?locale=${locale}`, locale, signal)
+}
+
+export function fetchAdminBranch(
+  branchId: string,
+  locale: AppLocale,
+  signal?: AbortSignal,
+): Promise<AdminBranch> {
+  return getJson<AdminBranch>(`${ROOT}/branches/${encodeURIComponent(branchId)}`, locale, signal)
+}
+
+/** Yeni şube açar; kimliğini döner (R9). */
+export async function openBranch(input: BranchInput, locale: AppLocale): Promise<string> {
+  const created = await sendJson<{ readonly id: string }>('POST', `${ROOT}/branches`, input, locale)
+  return created?.id ?? ''
+}
+
+/** Kaydeder; yeni sürümü döner. Eski sürümle `409` (R16). */
+export async function saveBranch(
+  branchId: string,
+  version: number,
+  input: BranchInput,
+  locale: AppLocale,
+): Promise<number> {
+  const result = await sendJson<{ readonly version: number }>(
+    'PUT',
+    `${ROOT}/branches/${encodeURIComponent(branchId)}`,
+    { version, ...input },
+    locale,
+  )
+  return result?.version ?? version
+}
+
+/** Durum eylemi; yeni sürümü döner (P4). */
+export async function runBranchAction(
+  branchId: string,
+  version: number,
+  action: BranchAction,
+  locale: AppLocale,
+): Promise<number> {
+  const result = await sendJson<{ readonly version: number }>(
+    'POST',
+    `${ROOT}/branches/${encodeURIComponent(branchId)}/${action}`,
+    { version },
+    locale,
+  )
+  return result?.version ?? version
+}

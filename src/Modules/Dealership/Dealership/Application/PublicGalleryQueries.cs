@@ -6,29 +6,48 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarGallery.Modules.Dealership.Application;
 
-/// <summary>`0014` — ana sayfanın galeri adı ve altlığın şube bloğu (R1, R7).</summary>
+/// <summary>`0014` — ana sayfanın galeri adı (`0020`'den beri görünen ad) ve altlığın şube bloğu (R1, R7).</summary>
 internal interface IPublicGalleryQueries
 {
     /// <summary>Galeri profili yoksa <c>null</c>.</summary>
     Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken);
 }
 
-internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale defaultLocale) : IPublicGalleryQueries
+internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale defaultLocale)
+    : IPublicGalleryQueries, IGalleryDisplayNameQueries
 {
-    public async Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken)
+    /// <summary>
+    /// `0020` D16 — Host'un `index.html`'e bastığı ad. Projeksiyon sorguda: ticari unvan,
+    /// vergi ve sicil numarası süreç belleğine hiç inmez (AC-16).
+    /// </summary>
+    public async Task<string?> FindDisplayNameAsync(string locale, CancellationToken cancellationToken)
     {
-        string? commercialName = await context.Galleries
+        var row = await context.Galleries
             .AsNoTracking()
-            .Select(gallery => gallery.CommercialName)
+            .Select(gallery => new { gallery.DisplayNames })
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (commercialName is null)
+        return row?.DisplayNames.Resolve(Resolve(locale), defaultLocale);
+    }
+
+    public async Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken)
+    {
+        // `0020` D15 — ticari unvan DEĞİL görünen ad (AC-13, AC-16).
+        var gallery = await context.Galleries
+            .AsNoTracking()
+            .Select(item => new { item.DisplayNames })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (gallery is null)
         {
             return null;
         }
 
-        Result<Locale> requested = Locale.Create(locale);
-        Locale resolved = requested.IsSuccess ? requested.Value : defaultLocale;
+        Locale resolved = Resolve(locale);
+
+        // AC-10 — ziyaretçinin dilinde yoksa varsayılan dildeki ad. O da yoksa (kurulum adımı
+        // atlanmış bir veritabanı) boş: R5a "adın yeri boş kalır" diyor, unvana düşmek değil.
+        string displayName = gallery.DisplayNames.Resolve(resolved, defaultLocale) ?? string.Empty;
 
         // AC-48 — süzgeç SORGUDA: geçici kapalı ve kapatılmış şube süreç belleğine hiç
         // inmez. Projeksiyon da sorguda (D15): e-posta, WhatsApp, koordinat ve slug okunmaz.
@@ -53,6 +72,12 @@ internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale d
                     row.Phone.Value))
         ];
 
-        return new PublicGalleryDto(commercialName, branches);
+        return new PublicGalleryDto(displayName, branches);
+    }
+
+    private Locale Resolve(string locale)
+    {
+        Result<Locale> requested = Locale.Create(locale);
+        return requested.IsSuccess ? requested.Value : defaultLocale;
     }
 }

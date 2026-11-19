@@ -38,7 +38,7 @@ internal static class TestSchema
         services.AddLogging();
         services.AddVehicleCatalog(connectionString, "tr", ["tr", "ar", "en"], "TRY", 2, 25, 100);
         services.AddVehicleReference(connectionString);
-        services.AddDealership(connectionString, "tr");
+        services.AddDealership(connectionString, "tr", ["tr", "ar", "en"]);
         services.AddContent(connectionString, "tr", ["tr", "ar", "en"]);
 
         // 0006 ile `identity` de bir modül şemasıdır; listeden düşerse Host başlangıçta

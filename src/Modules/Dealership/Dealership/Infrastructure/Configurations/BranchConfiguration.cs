@@ -50,6 +50,9 @@ internal sealed class BranchConfiguration : IEntityTypeConfiguration<Branch>
             .HasMaxLength(60)
             .HasConversion(zone => zone.Value, value => TimeZoneId.Create(value).Value);
 
+        // `0020` D17 — iyimser eşzamanlılık; durum eylemleri de sürümü ilerletir (AC-62).
+        builder.Property(branch => branch.Version).HasColumnName("version").IsConcurrencyToken();
+
         // C13 — durumun ÇEVRİLMİŞ adı saklanmaz; kod saklanır, uçta çevrilir.
         builder.Property(branch => branch.Status).HasColumnName("status").HasConversion<int>();
 

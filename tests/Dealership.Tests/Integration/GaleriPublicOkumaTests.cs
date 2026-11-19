@@ -24,32 +24,41 @@ public sealed class GaleriPublicOkumaTests(DealershipDatabase database)
 
     private static int sayac;
 
-    [Fact(DisplayName = "0014/AC-12: Ana sayfa galeri profilindeki ticari unvanı gösterir: profil \"Örnek Otomotiv\" iken sayfada bu ad görünür")]
-    public async Task Doner_TicariUnvan()
+    /// <summary>
+    /// `0020` **D15** — `0014`/AC-12 ve AC-13 burada ticari unvanı ölçüyordu; `0020` D4 giriş
+    /// satırını görünen ada çevirdi ve iki test o kriterin yerine geçti. Beklenen değişiklik,
+    /// gerileme değil.
+    /// </summary>
+    [Fact(DisplayName = "0020/AC-13: Ana sayfanın giriş bölümündeki galeri adı satırı ziyaretçinin dilindeki görünen adı gösterir; ticari unvanı göstermez")]
+    public async Task Doner_ZiyaretcininDilindekiGorunenAd_UnvanDegil()
     {
         await using DealershipDbContext context = database.CreateContext();
         await using IDbContextTransaction islem = await context.Database.BeginTransactionAsync();
-        await UnvanYazAsync(context, "Örnek Otomotiv");
+        await UnvanYazAsync(context, "Örnek Otomotiv Ticaret A.Ş.");
+        await GorunenAdYazAsync(context, """{"tr":"Örnek Oto","ar":"أمثلة أوتو"}""");
 
-        PublicGalleryDto galeri = await OkuAsync(context, "tr");
+        PublicGalleryDto tr = await OkuAsync(context, "tr");
+        PublicGalleryDto ar = await OkuAsync(context, "ar");
 
-        Assert.Equal("Örnek Otomotiv", galeri.CommercialName);
+        Assert.Equal("Örnek Oto", tr.DisplayName);
+        Assert.Equal("أمثلة أوتو", ar.DisplayName);
+        Assert.DoesNotContain("Ticaret", tr.DisplayName, StringComparison.Ordinal);
     }
 
-    [Fact(DisplayName = "0014/AC-13: Profilin ticari unvanı \"Başka Ad\" yapıldığında ana sayfa bir sonraki yüklemede yeni adı gösterir — ad çeviri kataloğundan gelmez")]
-    public async Task Doner_YeniUnvan_DegistirildiktenSonra()
+    [Fact(DisplayName = "0020/AC-10: Ziyaretçinin dilinde görünen ad yoksa üst çubuk varsayılan dildeki görünen adı gösterir")]
+    public async Task Doner_VarsayilanDildekiGorunenAd_ZiyaretcininDilindeYoksa()
     {
         await using DealershipDbContext context = database.CreateContext();
         await using IDbContextTransaction islem = await context.Database.BeginTransactionAsync();
-        await UnvanYazAsync(context, "Örnek Otomotiv");
-        Assert.Equal("Örnek Otomotiv", (await OkuAsync(context, "tr")).CommercialName);
+        await GorunenAdYazAsync(context, """{"tr":"Örnek Oto"}""");
 
-        await UnvanYazAsync(context, "Başka Ad");
+        // Üst çubuğun kaynağı Host'un bastığı ad; Host onu bu yüzeyden okur (D16).
+        string? en = await new PublicGalleryQueries(context, Tr).FindDisplayNameAsync("en", CancellationToken.None);
+        string? ar = await new PublicGalleryQueries(context, Tr).FindDisplayNameAsync("ar", CancellationToken.None);
 
-        // Önbellek yok: bir sonraki okuma yeni adı görür. Ad dile göre değişmez — çeviri
-        // kataloğundan gelseydi Arapça okuma başka bir metin döndürürdü.
-        Assert.Equal("Başka Ad", (await OkuAsync(context, "tr")).CommercialName);
-        Assert.Equal("Başka Ad", (await OkuAsync(context, "ar")).CommercialName);
+        Assert.Equal("Örnek Oto", en);
+        Assert.Equal("Örnek Oto", ar);
+        Assert.Equal("Örnek Oto", (await OkuAsync(context, "ar")).DisplayName);
     }
 
     [Fact(DisplayName = "0014/AC-42: İki aktif şube varken altlık her ikisinin adını, adresini ve telefonunu gösterir")]
@@ -184,6 +193,11 @@ public sealed class GaleriPublicOkumaTests(DealershipDatabase database)
 
     private static Task UnvanYazAsync(DealershipDbContext context, string unvan) =>
         context.Galleries.ExecuteUpdateAsync(setters => setters.SetProperty(gallery => gallery.CommercialName, unvan));
+
+    private static Task GorunenAdYazAsync(DealershipDbContext context, string json) =>
+        context.Database.ExecuteSqlRawAsync(
+            $"UPDATE {DealershipDbContext.Schema}.galleries SET display_names = {{0}}::jsonb",
+            [json]);
 
     private static Task SubeleriTemizleAsync(DealershipDbContext context) =>
         context.Database.ExecuteSqlRawAsync($"DELETE FROM {DealershipDbContext.Schema}.branches");

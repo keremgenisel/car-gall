@@ -14,6 +14,9 @@ internal sealed class Branch : AggregateRoot<BranchId>
     internal const string InvalidTransition = "branch.invalid_status_transition";
     internal const string LastActiveBranch = "branch.last_active_branch";
 
+    /// <summary>`0020` R10 · D21 — kapatılmış şube salt okunurdur.</summary>
+    internal const string ClosedReadOnly = "branch.closed_read_only";
+
     private readonly List<Guid> mediaAssetIds = [];
 
     private Branch(
@@ -56,6 +59,12 @@ internal sealed class Branch : AggregateRoot<BranchId>
     internal IReadOnlyList<Guid> MediaAssetIds => mediaAssetIds;
 
     /// <summary>
+    /// `0020` R16 · D17 — iyimser eşzamanlılık. Alan düzenlemesi DE durum eylemleri de bir
+    /// artırır: düzenleme formu açıkken şube geçici kapatılırsa formun kaydı reddedilir (AC-62).
+    /// </summary>
+    internal int Version { get; private set; } = 1;
+
+    /// <summary>
     /// Varsayılan locale'deki ad ve adres ZORUNLUDUR (R2, AC-6). R5 okuma yolunun hiçbir
     /// koşulda boş ad döndürmemesini bu garantiye dayandırıyor.
     /// </summary>
@@ -83,11 +92,114 @@ internal sealed class Branch : AggregateRoot<BranchId>
         return Result.Success(branch);
     }
 
+    /// <summary>`0020` R9 — açma: zorunlu alanlar `Open`'dan, opsiyoneller ardından.</summary>
+    internal static Result<Branch> Open(BranchDraft draft, Locale defaultLocale)
+    {
+        Result<Branch> opened = Open(draft.Names, draft.Addresses, draft.Phone, draft.TimeZone, draft.Slug, defaultLocale);
+
+        if (opened.IsSuccess)
+        {
+            opened.Value.ApplyOptionals(draft);
+        }
+
+        return opened;
+    }
+
     internal void SetCoordinate(Coordinate coordinate) => Coordinate = coordinate;
 
     internal void SetWhatsApp(PhoneNumber number) => WhatsApp = number;
 
     internal void SetEmail(EmailAddress email) => Email = email;
+
+    /// <summary>`0020` D9 — opsiyonel alanlar boşaltılabilir (AC-39).</summary>
+    internal void ClearCoordinate() => Coordinate = null;
+
+    /// <summary>`0020` D9.</summary>
+    internal void ClearWhatsApp() => WhatsApp = null;
+
+    /// <summary>`0020` D9.</summary>
+    internal void ClearEmail() => Email = null;
+
+    /// <summary>
+    /// `0020` R10 — panelin "kaydet"i: R9'daki bütün alanlar tek seferde. Durum alanına
+    /// DOKUNMAZ (Bilinen tuzak 2); durum yalnız üç eylemden değişir.
+    ///
+    /// <para><b>Ad yalnız değiştiyse</b> <see cref="ChangeDisplayNames"/> çağrılır (Bilinen
+    /// tuzak 1): adı aynı kalan bir kaydetme duyuru üretmez (AC-37), herhangi bir dildeki
+    /// ad değişikliği tam olarak bir duyuru üretir — ad ve adres birlikte değişse de
+    /// (AC-35, AC-36, D20).</para>
+    /// </summary>
+    internal Result Update(BranchDraft draft, Locale defaultLocale)
+    {
+        if (Status is BranchStatus.Closed)
+        {
+            return Result.Failure(new Error(ClosedReadOnly));
+        }
+
+        if (!SameTexts(Names, draft.Names))
+        {
+            Result names = ChangeDisplayNames(draft.Names, defaultLocale);
+
+            if (names.IsFailure)
+            {
+                return names;
+            }
+        }
+
+        Result addresses = ChangeAddresses(draft.Addresses, defaultLocale);
+
+        if (addresses.IsFailure)
+        {
+            return addresses;
+        }
+
+        ChangePhone(draft.Phone);
+        ChangeTimeZone(draft.TimeZone);
+        ChangeSlug(draft.Slug);
+        ApplyOptionals(draft);
+        Version++;
+
+        return Result.Success();
+    }
+
+    private void ApplyOptionals(BranchDraft draft)
+    {
+        if (draft.WhatsApp is { } whatsApp)
+        {
+            SetWhatsApp(whatsApp);
+        }
+        else
+        {
+            ClearWhatsApp();
+        }
+
+        if (draft.Email is { } email)
+        {
+            SetEmail(email);
+        }
+        else
+        {
+            ClearEmail();
+        }
+
+        if (draft.Coordinate is { } coordinate)
+        {
+            SetCoordinate(coordinate);
+        }
+        else
+        {
+            ClearCoordinate();
+        }
+    }
+
+    private static bool SameTexts(LocalizedText left, LocalizedText right)
+    {
+        Dictionary<string, string> a = left.ToDictionary();
+        Dictionary<string, string> b = right.ToDictionary();
+
+        return a.Count == b.Count
+            && a.All(pair => b.TryGetValue(pair.Key, out string? value) && string.Equals(value, pair.Value, StringComparison.Ordinal));
+    }
 
     internal void AttachMediaAsset(Guid mediaAssetId)
     {
@@ -141,6 +253,7 @@ internal sealed class Branch : AggregateRoot<BranchId>
         }
 
         Status = BranchStatus.TemporarilyClosed;
+        Version++;
         return Result.Success();
     }
 
@@ -153,12 +266,18 @@ internal sealed class Branch : AggregateRoot<BranchId>
         }
 
         Status = BranchStatus.Active;
+        Version++;
         return Result.Success();
     }
 
     /// <summary>
     /// B5/AC-16 — son AKTİF şube kapatılamaz. Sayı dışarıdan verilir: bir şube kaç kardeşi
     /// olduğunu bilemez, ama invariant'ın agregatın dışına kaçması da gerekmez.
+    ///
+    /// <para>`0020` **D13** — kural TEK koşulludur: galeride BAŞKA aktif şube yoksa kapatılan
+    /// şubenin durumu ne olursa olsun reddedilir. Eskiden yalnız "aktif ve başka aktif yok"
+    /// reddediliyordu; son aktif şube önce geçici kapatılıp sonra kalıcı kapatılınca galerinin
+    /// bütün şubeleri `Kapatılmış` olabiliyordu (AC-51).</para>
     /// </summary>
     internal Result Close(int otherActiveBranchCount)
     {
@@ -167,12 +286,13 @@ internal sealed class Branch : AggregateRoot<BranchId>
             return Result.Failure(new Error(InvalidTransition));
         }
 
-        if (Status is BranchStatus.Active && otherActiveBranchCount == 0)
+        if (otherActiveBranchCount == 0)
         {
             return Result.Failure(new Error(LastActiveBranch));
         }
 
         Status = BranchStatus.Closed;
+        Version++;
         Raise(new BranchWasClosed(Id));
 
         return Result.Success();

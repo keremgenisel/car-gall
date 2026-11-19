@@ -7,6 +7,13 @@ interface Props {
   readonly options: readonly ReferenceOption[]
   readonly value: string
   readonly errorKey?: string
+  /**
+   * `0020` P7 — listede görünen ama SEÇİLEMEYEN değerler: aracın kayıtlı şubesi kapatılmışsa
+   * seçili kalır, başka bir değerden ona dönülemez.
+   */
+  readonly disabledValues?: readonly string[]
+  /** Alanın altındaki uyarının katalog anahtarı (`0020` AC-58: "başka bir şube seçin"). */
+  readonly hintKey?: string
   readonly onChange: (value: string) => void
 }
 
@@ -22,9 +29,20 @@ interface Props {
  * Boş ilk seçenek VAR: seçimsiz hâl geçerli bir başlangıçtır ve ilk seçeneği sessizce
  * seçmek, personelin hiç bakmadığı bir değeri onaylamış gibi göstermek olurdu.
  */
-export function VehicleSelect({ id, label, options, value, errorKey, onChange }: Props) {
+export function VehicleSelect({
+  id,
+  label,
+  options,
+  value,
+  errorKey,
+  disabledValues = [],
+  hintKey,
+  onChange,
+}: Props) {
   const { t } = useLocale()
   const errorId = errorKey === undefined ? undefined : `${id}-error`
+  const hintId = hintKey === undefined ? undefined : `${id}-hint`
+  const describedBy = [hintId, errorId].filter((item) => item !== undefined).join(' ')
 
   return (
     <div className="admin-form__field">
@@ -35,17 +53,26 @@ export function VehicleSelect({ id, label, options, value, errorKey, onChange }:
         id={id}
         className="admin-form__control"
         value={value}
-        aria-describedby={errorId}
+        aria-describedby={describedBy.length > 0 ? describedBy : undefined}
         aria-invalid={errorKey === undefined ? undefined : true}
         onChange={(event) => onChange(event.target.value)}
       >
         <option value="">{t('vehicle.form.choose')}</option>
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option
+            key={option.value}
+            value={option.value}
+            disabled={disabledValues.includes(option.value)}
+          >
             {option.label}
           </option>
         ))}
       </select>
+      {hintKey === undefined ? null : (
+        <p className="admin-form__hint" id={hintId} data-testid={`${id}-hint`}>
+          {t(hintKey)}
+        </p>
+      )}
       {errorKey === undefined ? null : (
         <p className="admin-form__field-error" id={errorId} role="alert">
           {t(errorKey)}

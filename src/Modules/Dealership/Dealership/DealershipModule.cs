@@ -5,6 +5,7 @@ using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Dealership.Application;
 using CarGallery.Modules.Dealership.Contracts.Branches;
 using CarGallery.Modules.Dealership.Contracts.Events;
+using CarGallery.Modules.Dealership.Contracts.Gallery;
 using CarGallery.Modules.Dealership.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using CarGallery.Modules.Dealership.Endpoints;
@@ -15,15 +16,17 @@ using Microsoft.Extensions.Logging;
 namespace CarGallery.Modules.Dealership;
 
 /// <summary>
-/// Modülün tek giriş noktası. **Endpoint kaydı yoktur**: D1 uyarınca bu spec'te yazma ucu
-/// açılmaz ve okuma yüzeyi yalnız `Contracts` üzerinden tüketilir (D6).
+/// Modülün tek giriş noktası. `0003` D1 yazma ucunu `Identity`'ye kadar ertelemişti; `0020`
+/// onu yalnız Yönetici politikasının arkasında açar. Diğer modüller veriyi yalnız
+/// `Contracts` üzerinden okur (C1).
 /// </summary>
 public static class DealershipModule
 {
     public static IServiceCollection AddDealership(
         this IServiceCollection services,
         string connectionString,
-        string defaultLocale)
+        string defaultLocale,
+        IReadOnlyList<string> enabledLocales)
     {
         services.AddDbContext<DealershipDbContext>(options =>
             options.UseNpgsql(
@@ -37,9 +40,32 @@ public static class DealershipModule
             throw new InvalidOperationException($"Varsayılan locale geçersiz: '{defaultLocale}'.");
         }
 
-        services.AddScoped<IModuleSchema>(provider => new ModuleSchema<DealershipDbContext>(
+        // `0020` C4 — migration'lar ve ardından görünen adın varsayılan dildeki doldurması.
+        services.AddScoped<IModuleSchema>(provider => new DealershipSchema(
             provider.GetRequiredService<DealershipDbContext>(),
-            "Dealership"));
+            parsed.Value));
+
+        // `0020` — görünen adın ve şube adının dil anahtarları etkin dillere karşı süzülür.
+        List<Locale> enabled = [];
+
+        foreach (string code in enabledLocales)
+        {
+            Result<Locale> locale = Locale.Create(code);
+
+            if (locale.IsFailure)
+            {
+                throw new InvalidOperationException($"Etkin locale geçersiz: '{code}'.");
+            }
+
+            enabled.Add(locale.Value);
+        }
+
+        if (!enabled.Contains(parsed.Value))
+        {
+            enabled.Insert(0, parsed.Value);
+        }
+
+        services.AddSingleton(new DealershipLocales(parsed.Value, enabled));
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<OutboxWriter<DealershipDbContext>>();
@@ -49,6 +75,8 @@ public static class DealershipModule
         // varsayılandan, çünkü kilit süresi bir iş kuralı değil bir güvenlik marjıdır.
         services.AddSingleton(InvariantGuardOptions<DealershipDbContext>.Default);
         services.AddScoped<BranchCommands>();
+        services.AddScoped<GalleryCommands>();
+        services.AddScoped<DealershipAdminQueries>();
         services.AddScoped(provider => new OutboxDispatcher<DealershipDbContext>(
             provider.GetRequiredService<DealershipDbContext>(),
             provider,
@@ -76,16 +104,23 @@ public static class DealershipModule
             provider.GetRequiredService<DealershipDbContext>(),
             parsed.Value));
 
+        // `0020` D16 — Host'un `index.html`'e bastığı görünen ad; aynı sınıf, dar yüzey.
+        services.AddScoped<IGalleryDisplayNameQueries>(provider => new PublicGalleryQueries(
+            provider.GetRequiredService<DealershipDbContext>(),
+            parsed.Value));
+
         return services;
     }
 
     /// <summary>
     /// 0010a — modülün İLK uç kaydı. `0003` bilinçli olarak hiç uç açmamıştı; araç kaydı
     /// formu şube seçimi istediği için açıldı. `0014` ziyaretçinin galeri okumasını ekledi.
+    /// `0020` galeri profilinin ve şubelerin yazma uçlarını yalnız Yönetici için açtı (D2).
     /// </summary>
     public static void MapDealership(this IEndpointRouteBuilder builder)
     {
         builder.MapBranchEndpoints();
         builder.MapPublicGalleryEndpoints();
+        builder.MapDealershipAdminEndpoints();
     }
 }

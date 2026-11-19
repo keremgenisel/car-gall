@@ -54,7 +54,7 @@ public sealed class SemaKurulumTests : IAsyncLifetime
         services.AddLogging();
         services.AddVehicleCatalog(container.GetConnectionString(), "tr", ["tr", "ar", "en"], "TRY", 2, 25, 100);
         services.AddVehicleReference(container.GetConnectionString());
-        services.AddDealership(container.GetConnectionString(), "tr");
+        services.AddDealership(container.GetConnectionString(), "tr", ["tr", "ar", "en"]);
 
         await using ServiceProvider provider = services.BuildServiceProvider();
         using IServiceScope scope = provider.CreateScope();

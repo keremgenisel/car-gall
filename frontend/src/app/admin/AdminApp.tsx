@@ -16,6 +16,9 @@ import { StaffListPage } from '../../features/identity/StaffListPage'
 import { TwoFactorPage } from '../../features/identity/TwoFactorPage'
 import { ContentAdminPage } from '../../features/content/admin/ContentAdminPage'
 import { ContentEditPage } from '../../features/content/admin/ContentEditPage'
+import { BranchEditPage } from '../../features/dealership/admin/BranchEditPage'
+import { BranchListPage } from '../../features/dealership/admin/BranchListPage'
+import { GalleryProfilePage } from '../../features/dealership/admin/GalleryProfilePage'
 import { EmptyState } from '../../shared/ui'
 
 type Gate =
@@ -45,10 +48,13 @@ export function AdminApp({
   view = 'staff',
   vehicleId,
   pageId,
+  branchId,
 }: {
   readonly view?: AdminView
   readonly vehicleId?: string
   readonly pageId?: string
+  /** `0020` — `branch-edit` görünümünün şube kimliği. */
+  readonly branchId?: string
 }) {
   const { locale, t } = useLocale()
   const [gate, setGate] = useState<Gate>({ kind: 'checking' })
@@ -198,6 +204,28 @@ export function AdminApp({
             {t('admin.nav.content')}
           </a>
         ) : null}
+        {/*
+          `0020` R17 · D2 — galeri ve şubeler yalnız Yöneticiye basılır (AC-64): yetkisi
+          olmayana basılan bağlantı sunucunun `403`'üne yürüyen bir davet olurdu.
+        */}
+        {gate.session.role === 'manager' ? (
+          <>
+            <a
+              className="admin-shell__nav-link"
+              href={adminPath('gallery')}
+              aria-current={view === 'gallery' ? 'page' : undefined}
+            >
+              {t('admin.nav.gallery')}
+            </a>
+            <a
+              className="admin-shell__nav-link"
+              href={adminPath('branches')}
+              aria-current={isBranchView(view) ? 'page' : undefined}
+            >
+              {t('admin.nav.branches')}
+            </a>
+          </>
+        ) : null}
       </nav>
 
       <main className="admin-shell__content">
@@ -225,6 +253,31 @@ export function AdminApp({
           </div>
         ) : null}
         {view === 'two-factor' ? <TwoFactorPage /> : null}
+
+        {/*
+          `0020` D23 — Satış Danışmanı ve İçerik Editörü adresi doğrudan açtığında "erişim
+          yok" görür (AC-65): ekran basılmaz, istek hiç gitmez ve `403` "getirilemedi" diye
+          gösterilmez. Sınır sunucudadır (AC-66); bu dürüstlük meselesidir.
+        */}
+        {gate.session.role === 'manager' ? (
+          <>
+            {view === 'gallery' ? <GalleryProfilePage /> : null}
+            {view === 'branches' ? <BranchListPage /> : null}
+            {view === 'branch-new' ? <BranchEditPage /> : null}
+            {view === 'branch-edit' && branchId !== undefined ? (
+              <BranchEditPage key={branchId} branchId={branchId} />
+            ) : null}
+          </>
+        ) : null}
+        {(view === 'gallery' || isBranchView(view)) && gate.session.role !== 'manager' ? (
+          <div className="admin-page">
+            <EmptyState
+              title={t('admin.noAccess.title')}
+              description={t('admin.noAccess.body')}
+              testId="admin-no-access"
+            />
+          </div>
+        ) : null}
 
         {/*
           R8 — erişilebilen işlemler ROLE göre belirlenir. Personel yönetimi yalnız
@@ -263,4 +316,9 @@ export function AdminApp({
  */
 function canEditContent(role: string): boolean {
   return role === 'manager' || role === 'content_editor'
+}
+
+/** `0020` — şubeler bölümünün üç görünümü; gezinmede tek bağlantı. */
+function isBranchView(view: AdminView): boolean {
+  return view === 'branches' || view === 'branch-new' || view === 'branch-edit'
 }
