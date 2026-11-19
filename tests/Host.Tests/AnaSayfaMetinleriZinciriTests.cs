@@ -196,6 +196,24 @@ public sealed class AnaSayfaMetinleriZinciriTests : IAsyncLifetime
         }
     }
 
+    [Fact(DisplayName = "0022/AC-23: Ana sayfanın HTML yanıtı önbelleklenmeyi engelleyen bir başlık taşır ya da kayıt önbelleği geçersizler (D20).")]
+    public async Task Tasimaz_NoStore_StatikVarlikta()
+    {
+        // P2 — `no-store` yalnız belgede; adı içerik özetli statik varlık kendi önbellek
+        // davranışını korur. Varlık testin web kökünde koşu anında üretilir.
+        string assets = Path.Combine(AppContext.BaseDirectory, "TestWebRoot", "assets");
+        Directory.CreateDirectory(assets);
+        await File.WriteAllTextAsync(Path.Combine(assets, "index-0022abcd.js"), "export {};");
+
+        HttpClient ziyaretci = Istemci();
+        HttpResponseMessage varlik = await ziyaretci.GetAsync("/assets/index-0022abcd.js");
+        HttpResponseMessage belge = await ziyaretci.GetAsync("/tr/");
+
+        Assert.Equal(HttpStatusCode.OK, varlik.StatusCode);
+        Assert.NotEqual(true, varlik.Headers.CacheControl?.NoStore);
+        Assert.True(belge.Headers.CacheControl?.NoStore);
+    }
+
     [Fact(DisplayName = "0022/AC-25: Okunduktan sonra başka bir kaydetmeyle değişmiş sürüm üzerinden kaydetmek `409` ve bir hata koduyla reddedilir; kayıtlı metin değişmez.")]
     public async Task Doner_409_EskiSurumde()
     {

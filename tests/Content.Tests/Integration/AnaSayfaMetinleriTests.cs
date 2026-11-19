@@ -207,6 +207,25 @@ public sealed class AnaSayfaMetinleriTests(ContentDatabase database) : IAsyncLif
         Assert.Single(sonuclar, item => item.IsFailure && item.Error.Code == ConcurrencyErrors.Lost);
     }
 
+    [Fact(DisplayName = "0022/AC-25: Okunduktan sonra başka bir kaydetmeyle değişmiş sürüm üzerinden kaydetmek `409` ve bir hata koduyla reddedilir; kayıtlı metin değişmez.")]
+    public async Task Reddeder_ParalelKayitlardanBirini_SatirVarken()
+    {
+        // QA önerisi: dilin satırı ZATEN varken iki paralel kayıt. Bu yolda birincil anahtar
+        // çakışması yok; kaybı yalnız sürüm kolonunun eşzamanlılık belirteci yakalar.
+        await KaydetAsync(Girdi("tr", ("introTitle", "Önceki")));
+        int surum = await SurumAsync();
+
+        KayitBariyeri bariyer = new(2);
+        Result<int>[] sonuclar = await Task.WhenAll(Enumerable.Range(0, 2).Select(i =>
+            Task.Run(() => icerik.AnaSayfaKomutAsync(
+                k => k.SaveAsync(surum, [Girdi("tr", ("introTitle", $"Paralel {i}"))], CancellationToken.None),
+                bariyer))));
+
+        Assert.Single(sonuclar, item => item.IsSuccess);
+        Assert.Single(sonuclar, item => item.IsFailure && item.Error.Code == ConcurrencyErrors.Lost);
+        Assert.Equal(surum + 1, await SurumAsync());
+    }
+
     [Fact(DisplayName = "0022/AC-36: Etkin dil listesinden çıkarılmış bir dilin alanları ekranda gösterilmez.")]
     public async Task Gostermez_EtkinOlmayanDili()
     {
