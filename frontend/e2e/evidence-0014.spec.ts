@@ -9,7 +9,7 @@ import { kanit } from './kanit'
 async function galeriAdi(page: Page, ad: string) {
   await page.route('**/api/dealership/gallery*', async (route) => {
     const yanit = await route.fetch()
-    await route.fulfill({ response: yanit, json: { ...(await yanit.json()), commercialName: ad } })
+    await route.fulfill({ response: yanit, json: { ...(await yanit.json()), displayName: ad } })
   })
 }
 
