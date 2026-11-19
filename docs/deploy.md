@@ -48,6 +48,7 @@ Bütün değerler ortam değişkenidir. `__` iki nokta yerine geçer
 | `Identity__SeedAdmin__Password` | İlk Yönetici'nin parolası. Üretin: `openssl rand -hex 16`. İlk girişte değiştirilmesi zorunludur. Depodaki geliştirme parolaları reddedilir (ADR `0011`) |
 | `Identity__TwoFactor__EncryptionKey` | 32 bayt, Base64: `openssl rand -base64 32`. **Kaybolursa bütün ikinci adım kurulumları çözülemez** — yedeklenir |
 | `Notifications__Smtp__User`, `Notifications__Smtp__Password` | SMTP hesabı |
+| `Notifications__Newsletter__UnsubscribeSigningKey` | Bülten çıkış bağlantılarının imza sırrı; 32 bayt, Base64: `openssl rand -base64 32`. **Değişirse eski bütün çıkış bağlantıları ve bekleyen teyit bağlantıları geçersiz olur** — eski bir bültenden çıkmak isteyen kişi "bağlantı geçerli değil" görür (teyit anahtarı da bu sırla türetilir, `0018` D28). Yedeklenir ve döndürülmez (`0018` D25) |
 | `Media__Storage__AccessKey`, `Media__Storage__SecretKey` | Nesne deposu anahtarı |
 
 ### Kuruluma özel — zorunlu
@@ -76,6 +77,14 @@ Bütün değerler ortam değişkenidir. `__` iki nokta yerine geçer
 | `Theme__…` | Varsayılan palet (ADR `0005`; ya tam ya hiç) |
 | `Identity__TwoFactor__Issuer` | `CarGallery` — personelin kimlik doğrulayıcı uygulamasında görünen ad; galerinin adı verilir |
 | `Media__Storage__ForcePathStyle` | `true` (MinIO/R2 için doğru); sanal-host adresleme isteyen sağlayıcıda `false` |
+| `Notifications__Newsletter__SendDayOfWeek`, `…__SendTimeUtc` | `Monday`, `07:00` — bültenin haftalık gönderim anı, **UTC** (yerel saat yaz saatinde kayar). Panelden değiştirilmez (`0018` D2, D13) |
+| `Notifications__Newsletter__ConfirmationLinkHours` | `72` — teyit bağlantısının süresi |
+| `Notifications__Newsletter__RequestLimit`, `…__RequestWindowMinutes` | `30`, `10` — aynı IP'den abonelik ucuna her istek (`0018` D9) |
+| `Notifications__Newsletter__ValidRequestLimit`, `…__ValidRequestWindowMinutes` | `5`, `10` — aynı IP'den geçerli abonelik isteği |
+| `Notifications__Newsletter__AddressConfirmationLimit`, `…__AddressWindowHours` | `3`, `24` — aynı adrese teyit iletisi |
+
+Bülten değerlerinin hepsi `appsettings.json`'da durur; biri **boşaltılırsa** uygulama ayağa
+kalkmaz (koda gömülü varsayılan yok — `0018` C14).
 
 **Asla verilmeyecekler:** `Development__SeedShowcase`, `Development__SeedListingCount`,
 `Development__SeedHomeTexts`. İlk ikisi demo ilan ve `/seed-media` uçlarını açar;
@@ -158,6 +167,8 @@ galeri-alanadi.com {
   § Karar Defteri); türevler onlardan yeniden üretilebilir, orijinaller üretilemez.
 - **`Identity__TwoFactor__EncryptionKey`:** veritabanı yedeğiyle **ayrı** yerde. Anahtarsız
   yedek, ikinci adımı kurulmuş her hesabı kilitli geri getirir.
+- **`Notifications__Newsletter__UnsubscribeSigningKey`:** aynı biçimde ayrı yerde. Yeni bir
+  sırla geri yüklenen kurulumda gönderilmiş bütün bültenlerin çıkış bağlantısı çalışmaz.
 
 ## 7. Doğrulandı / doğrulanmadı
 

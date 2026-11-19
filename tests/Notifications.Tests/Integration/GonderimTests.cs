@@ -366,6 +366,7 @@ public sealed class GonderimTests(NotificationsDatabase database)
             new SahteTalepSorgusu(talep ?? Talep()),
             new SahteSubeSorgusu(sube ?? new BranchNotificationContactDto(SubeId, "Kadıköy Şubesi", "kadikoy@ornek.com")),
             new SahteSlugSorgusu(slug),
+            Besteci.Kur(context, new SabitSaat(An)),
             Secenekler(zamanAsimiSaniye),
             new SabitSaat(simdi ?? An),
             NullLogger<NotificationDispatcher>.Instance);

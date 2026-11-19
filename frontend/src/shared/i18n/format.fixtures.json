@@ -1,0 +1,105 @@
+{
+  "_comment": "0018 D24 / D32 — vitrinin biçim çıktısı (Intl, -u-nu-latn). Vitest bu değerleri formatMoney/formatMileage/formatYear ile ÜRETİR ve karşılaştırır; xUnit bülten biçimini aynı değerlere karşı ölçer. Ön yüz biçimi değişirse önce Vitest kırmızıya döner; fikstür güncellenince backend testi.",
+  "money": [
+    {
+      "amount": "1250000",
+      "currencyCode": "TRY",
+      "minorUnitExponent": 2,
+      "tr": "₺1.250.000,00",
+      "ar": "‏1,250,000.00 TRY",
+      "en": "TRY 1,250,000.00"
+    },
+    {
+      "amount": "1234.5",
+      "currencyCode": "TRY",
+      "minorUnitExponent": 2,
+      "tr": "₺1.234,50",
+      "ar": "‏1,234.50 TRY",
+      "en": "TRY 1,234.50"
+    },
+    {
+      "amount": "0.5",
+      "currencyCode": "TRY",
+      "minorUnitExponent": 2,
+      "tr": "₺0,50",
+      "ar": "‏0.50 TRY",
+      "en": "TRY 0.50"
+    },
+    {
+      "amount": "12500.750",
+      "currencyCode": "KWD",
+      "minorUnitExponent": 3,
+      "tr": "KWD 12.500,750",
+      "ar": "‏12,500.750 د.ك.‏",
+      "en": "KWD 12,500.750"
+    },
+    {
+      "amount": "1250.505",
+      "currencyCode": "KWD",
+      "minorUnitExponent": 3,
+      "tr": "KWD 1.250,505",
+      "ar": "‏1,250.505 د.ك.‏",
+      "en": "KWD 1,250.505"
+    },
+    {
+      "amount": "999999999.999",
+      "currencyCode": "KWD",
+      "minorUnitExponent": 3,
+      "tr": "KWD 999.999.999,999",
+      "ar": "‏999,999,999.999 د.ك.‏",
+      "en": "KWD 999,999,999.999"
+    }
+  ],
+  "mileage": [
+    {
+      "value": 0,
+      "tr": "0",
+      "ar": "0",
+      "en": "0"
+    },
+    {
+      "value": 999,
+      "tr": "999",
+      "ar": "999",
+      "en": "999"
+    },
+    {
+      "value": 1500,
+      "tr": "1.500",
+      "ar": "1,500",
+      "en": "1,500"
+    },
+    {
+      "value": 125000,
+      "tr": "125.000",
+      "ar": "125,000",
+      "en": "125,000"
+    },
+    {
+      "value": 1234567,
+      "tr": "1.234.567",
+      "ar": "1,234,567",
+      "en": "1,234,567"
+    }
+  ],
+  "year": [
+    {
+      "value": 1998,
+      "tr": "1998",
+      "ar": "1998",
+      "en": "1998"
+    },
+    {
+      "value": 2019,
+      "tr": "2019",
+      "ar": "2019",
+      "en": "2019"
+    },
+    {
+      "value": 2026,
+      "tr": "2026",
+      "ar": "2026",
+      "en": "2026"
+    }
+  ]
+}

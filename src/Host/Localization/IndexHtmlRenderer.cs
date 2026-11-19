@@ -98,6 +98,14 @@ internal sealed class IndexHtmlRenderer(
             html = html.Replace(HeadEnd, metinler + HeadEnd, StringComparison.Ordinal);
         }
 
+        // `0018` D26 · D35 — teyit ve çıkış sayfaları: anahtar adreste taşınır. Sayfa arama
+        // motoruna açılmaz (AC-53) ve `Referer` başlığıyla başka bir siteye sızmaz (AC-54).
+        if (IsNewsletterLinkPage(context.Request.Path, locale))
+        {
+            html = html.Replace(HeadEnd, "<meta name=\"robots\" content=\"noindex\" />" + HeadEnd, StringComparison.Ordinal);
+            context.Response.Headers["Referrer-Policy"] = "no-referrer";
+        }
+
         string onYukleme = await IlkGorselOnYuklemesiAsync(context);
 
         if (onYukleme.Length > 0)
@@ -261,6 +269,24 @@ internal sealed class IndexHtmlRenderer(
         return $"<link rel=\"preload\" as=\"image\" href=\"{WebUtility.HtmlEncode(gorsel.Display.Url)}\" "
             + $"imagesrcset=\"{WebUtility.HtmlEncode(srcset)}\" imagesizes=\"{GallerySizes}\" fetchpriority=\"high\" />";
     }
+
+    /// <summary>
+    /// `0018` **D26** — <c>/{locale}/newsletter/confirm</c> ve <c>/{locale}/newsletter/unsubscribe</c>.
+    /// Ön yüzün rotası (`frontend/src/shared/lib/route.ts`) ve bültendeki mutlak bağlantı bu iki
+    /// kalıpla aynıdır (AC-51).
+    /// </summary>
+    internal static bool IsNewsletterLinkPage(PathString path, Locale locale)
+    {
+        string[] parcalar = (path.Value ?? string.Empty).Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        return parcalar.Length == 3
+            && parcalar[0] == locale.Code
+            && parcalar[1] == NewsletterSegment
+            && parcalar[2] is "confirm" or "unsubscribe";
+    }
+
+    /// <summary>`0018` D26 — `ContentReservedSlugs`'taki `newsletter`.</summary>
+    internal const string NewsletterSegment = "newsletter";
 
     /// <summary>Galerinin `sizes` değeri; `Gallery.tsx` ile aynı (yukarıdaki not).</summary>
     internal const string GallerySizes = "(min-width: 1232px) 1200px, 100vw";

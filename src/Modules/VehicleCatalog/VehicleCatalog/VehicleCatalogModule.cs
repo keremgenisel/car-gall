@@ -90,6 +90,9 @@ public static class VehicleCatalogModule
         // 0009 D5 — bildirimdeki detay bağlantısının slug'ı.
         services.AddScoped<IListingSlugQueries, ListingSlugQueries>();
 
+        // 0018 D11 — bülten satırının değişken verisi; model ADI değil KİMLİĞİ döner (C12).
+        services.AddScoped<IListingSummaryQueries, ListingSummaryQueries>();
+
         // 0010a — yazma yüzeyi. Para birimi KURULUM BAŞINA SABİTTİR ve panelden
         // değiştirilemez (C3, P3): personel yalnız tutar girer.
         services.AddSingleton(new CatalogCurrencyOptions(currencyCode, currencyMinorUnitExponent));

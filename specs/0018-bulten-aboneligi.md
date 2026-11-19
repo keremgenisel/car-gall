@@ -300,6 +300,12 @@ Her madde dosyasıyla birlikte; **koşturulmadan, koddan okunanlar** öyle işar
 12. **"Gönderim anı" iki şey.** Dönemin işlenmesi ile iletinin dağıtılması saatler
     ayrışabilir (tekrar deneme). İçerik dağıtımda baştan hesaplanırsa aynı dönemin iletileri
     farklı listeler taşır ve satışlar boş bülten doğurabilir (QA B3 → **D21**).
+13. **Çıkış ile gönderim arasındaki pencere.** Dağıtıcı aboneliğin durumunu iletiyi kurarken
+    okur (**D22**); okuma ile SMTP teslimi arasında — en çok yapılandırılan gönderim zaman aşımı
+    (`SendTimeout`) kadar — gelen çıkış o iletiyi durdurmaz ve tek bir bülten çıkıştan hemen
+    sonra ulaşabilir. Davranış bilerek değiştirilmedi (QA BULGU-2, PR #122 —
+    Takım Yöneticisi (ajan) kararı, 2026-11-19): pencereyi kapatmak gönderimi aboneliğin
+    kilidi altında yapmak, yani SMTP beklemesini veritabanı kilidine bağlamak demekti.
 
 ### Verilen kararlar — sahip, 2026-11-19
 
@@ -404,7 +410,7 @@ yenilemek, ileti gitmediği hâlde geçerli tek bağlantıyı sessizce öldürü
 
 **D10 — Adresin biçimi ve kimliği (B7).** Girdi ayrıştırılır ve **ayrıştırılmış adres**
 (MimeKit `MailboxAddress.Address`) kullanılır; ham metin hiçbir yerde kimlik olmaz.
-- Reddedilen biçimler (`400` + `notification.subscription_email_invalid`): boş; 254
+- Reddedilen biçimler (`422` + `notification.subscription_email_invalid`): boş; 254
   karakterden uzun; **görünen adlı** biçim (`Ali <ali@ornek.com>`, `"x y" <ali@ornek.com>`);
   **alan adsız** ya da alan adında nokta olmayan biçim (`ali`, `ali@ornek`); `ali@`.
 - Baştaki ve sondaki boşluk atılır. Adresler büyük/küçük harf farkı gözetmeden **aynı adres**
@@ -465,7 +471,7 @@ bir kayda ve doğrudan çağrılabilir bir birime bağlamak kriterleri test edil
 *Bedel:* yaz saati uygulanan ülkelerde yerel gönderim saati yılda iki kez bir saat kayar.
 
 **D14 — Dil (B14).** Dil, isteğin gövdesinde `0005`'teki gibi taşınır; kurulumda etkin olmayan
-ya da tanınmayan bir dil `400` + `notification.subscription_invalid_locale` ile reddedilir
+ya da tanınmayan bir dil `422` + `notification.subscription_invalid_locale` ile reddedilir
 (`0005`'in `lead.invalid_locale` cevabının karşılığı) ve kayıt oluşmaz. Teyit bekleyen adrese
 başka bir dilden yeni istek gelirse dil güncellenir (yeni teyit iletisi o dilde; adres sınırı
 aşılmışsa **D9** gereği güncellenmez); **etkin** aboneliğin dili yeni istekle değişmez (D5).
@@ -563,7 +569,9 @@ sessizce kabul edilmez.
 
 **D25 — Bağlantı anahtarlarının güvenliği (B8).**
 - Teyit anahtarı **CSPRNG** ile üretilir, **256 bit**. Veritabanında yalnız **SHA-256 özeti**
-  tutulur; düz anahtar yalnız iletide yaşar.
+  tutulur; düz anahtar yalnız iletide yaşar. *(Üretim yolu **D28** ile değişti: anahtar
+  gönderim kaydı kimliğinin HMAC-SHA256'sıdır — 256 bit, sırsız tahmin edilemez; "yalnız özet"
+  ve "düz anahtar yalnız iletide" aynen geçerli. Takım Yöneticisi (ajan) kararı, 2026-11-19.)*
 - Çıkış bağlantısı **saklanmaz**: abonelik kimliği üzerinden, dağıtım yapılandırmasındaki
   bir sırla **HMAC-SHA256** ile üretilir ve doğrulanır. Sır, diğer sırlar gibi üretilir
   (`dev-up.sh` `openssl rand -base64 32` · `docs/deploy.md` zorunlu ortam değişkeni — ADR 0011
@@ -597,6 +605,110 @@ entegrasyonu (X8) bu kayda dayanır.
 *Bedel:* yeni bir tablo; KVKK silme talebinde (SS3) adresin aboneliği silinse bile olaylar
 kimlikle kalır — sahibin cevabı bunu değiştirebilir.
 
+### Verilen kararlar — plan turu, 2026-11-19
+
+**Developer (ajan) plan kararları**, Takım Yöneticisi görevlendirmesi kapsamında (R/C/AC'ye
+dokunmaz; QA turunda gözden geçirilir). Her biri, kriterin bıraktığı bir uygulama boşluğunu
+kapatır.
+
+**D28 — Teyit anahtarı gönderim kaydından türetilir (deterministik).** *Takım Yöneticisi (ajan)
+kararı, 2026-11-19 — ilk yazımın "dağıtımda CSPRNG ile üret" çözümünün bedeli kabul edilmedi.*
+Anahtar = **HMAC-SHA256**(imza sırrı, `newsletter-confirm:` ‖ teyit iletisinin gönderim kaydı
+kimliği) — 32 bayt, Base64Url. Kuyruk gövdeyi dağıtımda kurar (`0009` C10) ve anahtarı her
+denemede aynı kayıttan YENİDEN türetir; veritabanına yazılmaz. Özeti (SHA-256) ve süresi
+aboneliğe **kayıt oluşurken** (istek anında) yazılır. *Sonuç:* geçici hatayla yeniden denenen
+iletinin bütün teslimleri AYNI bağlantıyı taşır ve hepsi ilk tıklamaya kadar geçerlidir; süre
+istekten başlar. **D7**'nin "yalnız en son gönderilen geçerli" kuralı kayıt düzeyindedir: yeni
+istek → yeni gönderim kaydı → yeni anahtar; önceki kaydın özeti abonelikten silinir ve o kayıt
+henüz dağıtılmadıysa hiç gönderilmez (geçersiz bir bağlantı taşırdı). *Sır seçimi:* çıkış
+bağlantısının sırrı (**D25**) ayrı bir amaç önekiyle — iki ayrı sır kurulumda iki zorunlu
+değişken ve iki yedek demekti; önek bir türün imzasının öbür türde geçmesini engeller.
+*Bedel:* sır değişirse bekleyen teyit bağlantıları da ölür. *Elenen:* düz anahtarı iletide
+şifreli saklamak (D25'in "yalnız özet"i); dağıtımda üretmek (ilk teslimin bağlantısını öldürür).
+
+**D29 — Adres sınırı (D9) gönderim kaydından sayılır.** Pencere içindeki teyit iletileri,
+aboneliğin `messages` satırlarından sayılır; sayım ve yazma aboneliğin satır kilidi altında
+yapılır (eşzamanlı iki istek sınırı birlikte aşamaz). *Gerekçe:* yeni bir sayaç durumu yok
+ve sayım süreç yeniden başlasa da kaybolmaz. *Bedel:* her abonelik isteğinde bir sayım
+sorgusu.
+
+**D30 — "Yayında" = vitrin okuma modelinde rezerve olmayan satır.** Yeni ilan özeti okuması
+(`IListingSummaryQueries`, **D11**) vitrin okuma modelinden okur: model yalnız Yayında ve
+Rezerve ilanları taşır ve durum geçişiyle aynı transaction'da yazılır (`0012b` D12). Okuma
+`VehicleReference`'a uzanmaz (C12). *Bedel:* yok — vitrinde görünmeyen bir ilan bültende de
+görünmez.
+
+**D31 — İletinin dili bir kez seçilir.** Teyit iletisinde teyit şablonu, bültende başlık
+şablonu abonenin dilinde (kurulumda etkin değilse varsayılanda — AC-82) çözülür; o dilde yoksa
+varsayılana düşülür ve **çözülen dil** satır, altlık ve "Fiyat sorunuz"/"Diğer yeni araçlar…"
+parçalarında da kullanılır. *Gerekçe:* parça parça düşüş tek iletide iki dil üretirdi.
+
+**D32 — D24'ün ölçümü ve biçim kuralı (ön yüz otoritedir).** Ölçüldü (2026-11-19; .NET 10
+`CultureInfo`, Node 24.22 ICU 78.3 `Intl`): km ve yıl **birebir aynı** (`N0`/`D` ↔
+`formatMileage`/`formatYear`: TR `125.000`, AR/EN `125,000`, yıl `2019`). **Para birebir
+DEĞİL:** nötr kültürün para simgesi `¤`'dır (`1250000m.ToString("C2", tr)` → `¤1.250.000,00`),
+`CultureInfo` para birimini kodla seçemez ve `Intl`'in boşlukları (U+00A0) ile Arapça yön
+işaretlerini (U+200F) üretmez. `Intl`: TR `₺1.250.000,00` · `KWD 12.500,750`; AR
+`‏1,250,000.00 TRY` · `‏12,500.750 د.ك.‏`; EN `TRY 1,250,000.00` · `KWD 12,500.750`. Bölgeli
+kültür (`ar-KW`) ise Arap ayraçları (`12٬500٫750`) üretir. **Kural:** sayı kısmı
+`CultureInfo(<dil>).NumberFormat` ile (`N<üs>`; ayraçlar ve rakamlar nötr kültürden), para
+ekleri `Intl` çıktısından türetilmiş **(dil × para birimi)** tablosundan; tabloda olmayan
+para birimi için dilin genel kalıbı (TR/EN `KOD` + U+00A0 + sayı, AR U+200F + sayı + U+00A0 +
+`KOD`). İki taraf aynı fikstür dosyasını ölçer (`frontend/src/shared/i18n/format.fixtures.json`):
+Vitest `Intl` çıktısını, xUnit bülten biçimini — ön yüz değişirse önce Vitest, fikstür
+güncellenince backend testi kırmızıya döner (**D24**'ün bedeli). *Açık konu (PR):* tablo
+TRY ve KWD'yi taşır; başka bir para birimi kurulduğunda ön yüzle aynı simgeyi garanti etmez.
+*Takım Yöneticisi (ajan) onayı, 2026-11-19:* kural onaylandı; yeni para birimi ekleyen kart
+tabloya satır ve fikstüre vaka ekler.
+
+**D33 — HTTP sözleşmesi.** `POST /api/notifications/newsletter/subscriptions`
+(`{ email, locale }`) → `202` + sabit gövde (**D5**); biçim/dil hatası `422` (AC-7, AC-10 —
+`docs/conventions.md` § 5; kriter Revizyon 1 ile 400'den 422'ye çekildi). `POST …/confirmations` ve
+`POST …/unsubscriptions` (`{ token }`) → `200`; geçersiz bağlantı `404` +
+`notification.subscription_link_invalid` (AC-35, AC-44). Çıkış sayfası açılır açılmaz isteği
+gönderir (**D6**); teyit sayfası yalnız düğmeyle.
+
+**D34 — İzin olayı her istekte yazılır.** **D27**'nin "her istek" cümlesi etkin aboneliğe
+gelen isteği de kapsar (durum değişmez, olay eklenir); adres sınırına takılan istek olay
+yazmaz. Kaydın "yalnız eklenir" kuralı veritabanında bir tetikleyiciyle korunur
+(`UPDATE`/`DELETE` reddedilir).
+
+**D35 — `noindex` ve `Referrer-Policy` Host'tan.** İki sayfanın belgesi `IndexHtmlRenderer`'dan
+geçer; Host `<meta name="robots" content="noindex">` basar ve `Referrer-Policy: no-referrer`
+başlığını yazar (**D26**). Uç ayrıca bir şey yapmaz.
+
+**D36 — Ana sayfada KVKK bağlantısı tek okumayla.** Altlığın kurumsal bağlantıları ile bülten
+notunun `privacy` bağlantısı aynı okumadan gelir (`HomeRoute`); ana sayfaya ikinci bir
+`Content` isteği eklenmez (LCP payı — C13).
+
+**D37 — Teyit ve çıkış sayfaları ayrı (lazy) pakette.** Metinleri vitrin kataloğundadır
+(AC-94, ADR `0013`); bileşenleri ilk pakete girmez (**D17**'nin bedeli).
+
+**D38 — Yapılandırma anahtarları.** `Notifications:Newsletter:` altında `SendDayOfWeek`,
+`SendTimeUtc` (`HH:mm`), `ConfirmationLinkHours`, `RequestLimit`/`RequestWindowMinutes`,
+`ValidRequestLimit`/`ValidRequestWindowMinutes`, `AddressConfirmationLimit`/`AddressWindowHours`
+ve sır `UnsubscribeSigningKey` (ortam değişkeni; Base64, en az 32 bayt). Hiçbirinin koda
+gömülü varsayılanı yok (C14).
+
+### Uygulama planı
+
+| Adım | İş | Modül | Kriter |
+|---|---|---|---|
+| **P1** | Plan kararları ve bu tablo | spec | — |
+| **P2** | `newsletter` ayrılmış ad | `Content.Contracts` | AC-52 |
+| **P3** | İlan özeti okuması (model kimliği döner, tek atlama) | `VehicleCatalog(.Contracts)` | AC-55, AC-74, AC-83 |
+| **P4** | Şema: abonelik, izin olayı, aday, dönem, dönem↔ilan; gönderim kaydı CHECK + tekil; şablon seed | `Notifications` | AC-84, AC-85, AC-93, AC-96, AC-99 |
+| **P5** | Abone olma, teyit, çıkış; üç hız sınırı; yapılandırma | `Notifications` | AC-7–AC-25, AC-27–AC-35, AC-38–AC-44, AC-47–AC-50, AC-89–AC-93, AC-97, AC-98 |
+| **P6** | Aday işleyicisi, dönem işleyicisi, zamanlı servis | `Notifications` | AC-29, AC-39, AC-55–AC-73 |
+| **P7** | Dağıtım: teyit ve bülten iletisi, D21/D22, biçim (D24/D32) | `Notifications` | AC-26, AC-37, AC-46, AC-65, AC-66, AC-74–AC-82, AC-86–AC-88 |
+| **P8** | Host bağlantısı, `noindex`/`Referrer-Policy`, boru hattı testleri | `Host` | AC-12–AC-15, AC-50, AC-53, AC-54, AC-97 |
+| **P9** | Mimari kapılar: zincir (dinamik), log yüzeyi, olay yayınlamama | `Architecture.Tests` | AC-83, AC-90, AC-99 |
+| **P10** | Uç: bülten bölümü, teyit ve çıkış sayfaları, katalog | `frontend` | AC-1–AC-6, AC-11, AC-27, AC-36, AC-43–AC-45, AC-51, AC-94 |
+| **P11** | e2e + görsel kanıt (Arapça dâhil) | `frontend/e2e` | AC-2, AC-5, AC-6, AC-12, AC-28, AC-38, AC-95 |
+| **P12** | Sözlük, mimari, dağıtım, `dev-up.sh`, iş akışları (sır) | `docs`, `scripts`, `ci` | D19, D20, D25 |
+| **P13** | Performans ölçümü (gzip toplamı + C3) PR'da | — | AC-100, AC-101 |
+| **P14** | Takım Yöneticisi kararları (PR #122): AC-7/AC-10 422 (Revizyon 1), D28 deterministik anahtar, D32 onayı | spec, `Notifications`, `frontend` | AC-7, AC-10, AC-34, AC-48, AC-49 |
+
 ---
 
 ## Sahibe sorular
@@ -608,7 +720,8 @@ bu cevaplardan bağımsız yazıldı; cevaplar canlıya çıkışı etkileyebili
 **teyit** ve **çıkış** için zamanıyla (UTC), yalnız eklenen ve silinmeyen bir **izin olay
 kaydı** (**D27** — aynı adresin yeniden aboneliği eski olayları ezmez); teyitsiz adrese bülten
 gitmemesi; her bültende tek adımlı çıkış bağlantısı; çıkıştan sonra — kuyrukta bekleyen dâhil —
-gönderim olmaması (**D22**); çıkış kaydının silinmemesi; adresin ve bağlantı anahtarlarının loga
+**dağıtım anında okunan duruma göre** gönderim olmaması (**D22**; durum okunduktan sonra
+gelen çıkış o gönderimi durdurmaz — Bilinen tuzak 13); çıkış kaydının silinmemesi; adresin ve bağlantı anahtarlarının loga
 ve gönderim geçmişine girmemesi. **Garanti etmediği:** dış bir sisteme (İYS) bildirim, saklama
 süresi uygulaması, yasal gönderici kimliği metni, izin anındaki metnin sürümü.
 
@@ -648,13 +761,15 @@ süresi uygulaması, yasal gönderici kimliği metni, izin anındaki metnin sür
   devre dışıdır; bu sürede ikinci basış ikinci istek göndermez.
 - **AC-6.** Geçerli bir adresle gönderimden sonra form yerinde başarı mesajını gösterir: teyit
   bağlantısının gönderildiği ve gelmezse istenmeyen e-posta klasörüne bakılması.
-- **AC-7.** `ali@` ve boş adres alan hatasıyla reddedilir; API `400` ve
+- **AC-7.** `ali@` ve boş adres alan hatasıyla reddedilir; API `422` ve
   `notification.subscription_email_invalid` döner; kayıt oluşmaz ve ileti kuyruğa girmez.
+  *Revizyon 1 (2026-11-19, AP-08): kriter 400 diyordu; depo kuralı 422 (`docs/conventions.md`), `0020` AC-30 emsali — Takım Yöneticisi (ajan) kararı.*
 - **AC-8.** `Ali <ali@ornek.com>`, `"x y" <ali@ornek.com>`, `ali` ve `ali@ornek` AC-7 gibi
   reddedilir (D10).
 - **AC-9.** 255 karakterlik adres AC-7 gibi reddedilir; 254 karakterlik geçerli adres kabul edilir.
-- **AC-10.** Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `400` ve
+- **AC-10.** Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `422` ve
   `notification.subscription_invalid_locale` alır; kayıt oluşmaz (D14).
+  *Revizyon 1 (2026-11-19, AP-08): kriter 400 diyordu; depo kuralı 422 (`docs/conventions.md`), `0020` AC-30 emsali — Takım Yöneticisi (ajan) kararı.*
 - **AC-11.** Sunucu `500` döndüğünde ya da ağ koptuğunda form teknik ayrıntı içermeyen bir hata ve
   yeniden deneme yolu gösterir; yazılan adres alanda kalır.
 - **AC-12.** Aynı IP'den yapılandırılan pencerede geçerli istek eşiği kadar istekten sonraki geçerli

@@ -14,6 +14,15 @@ internal sealed class NotificationMessageConfiguration : IEntityTypeConfiguratio
         builder.Property(message => message.Id).HasColumnName("id");
 
         builder.Property(message => message.LeadId).HasColumnName("lead_id");
+        builder.Property(message => message.SubscriptionId).HasColumnName("subscription_id");
+        builder.Property(message => message.PeriodId).HasColumnName("period_id");
+
+        // `0018` D23 — kayıt ya talebe, ya abonelik + döneme, ya da yalnız aboneliğe bağlı.
+        // Kural kod yoluna değil KISITA dayanır (AC-84).
+        builder.ToTable(table => table.HasCheckConstraint(
+            "ck_messages_single_target",
+            "(lead_id IS NOT NULL AND subscription_id IS NULL AND period_id IS NULL) "
+            + "OR (lead_id IS NULL AND subscription_id IS NOT NULL)"));
         builder.Property(message => message.TemplateKey).HasColumnName("template_key").HasMaxLength(100);
         builder.Property(message => message.Locale).HasColumnName("locale").HasMaxLength(3);
 
@@ -33,6 +42,17 @@ internal sealed class NotificationMessageConfiguration : IEntityTypeConfiguratio
 
         // "Bu talebe ne gönderildi" sorusu kayıttan cevaplanır (R12).
         builder.HasIndex(message => message.LeadId).HasDatabaseName("ix_messages_lead_id");
+
+        // `0018` D23 — bir aboneye bir dönem için en çok BİR bülten kaydı; ikinci işlenme —
+        // ardışık ya da eşzamanlı — ikinci kayıt üretemez (AC-69, AC-70).
+        builder.HasIndex(message => new { message.SubscriptionId, message.PeriodId })
+            .HasDatabaseName("ux_messages_subscription_period")
+            .IsUnique()
+            .HasFilter("period_id IS NOT NULL");
+
+        // `0018` D29 — adres sınırı aboneliğin teyit iletilerinden sayılır.
+        builder.HasIndex(message => new { message.SubscriptionId, message.QueuedAt })
+            .HasDatabaseName("ix_messages_subscription_queued_at");
     }
 }
 

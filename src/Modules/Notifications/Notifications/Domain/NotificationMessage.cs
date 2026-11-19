@@ -25,8 +25,21 @@ internal sealed class NotificationMessage
 {
     internal Guid Id { get; init; }
 
-    /// <summary>Hangi talebin bildirimi (R12). Kişisel veri değil, kimliktir.</summary>
-    internal Guid LeadId { get; init; }
+    /// <summary>
+    /// Hangi talebin bildirimi (R12). Kişisel veri değil, kimliktir.
+    ///
+    /// <para>`0018` **D23** — kayıt ya bir talebe, ya bir abonelik + döneme (bülten), ya da
+    /// yalnız bir aboneliğe (teyit iletisi) bağlıdır; birden fazlasına birden değil. Kural
+    /// veritabanında CHECK kısıtıyla korunur; buradaki üç fabrika yalnız geçerli biçimleri
+    /// üretir.</para>
+    /// </summary>
+    internal Guid? LeadId { get; init; }
+
+    /// <summary>`0018` — teyit iletisinin ve bültenin aboneliği. Adres burada da yok (C5).</summary>
+    internal Guid? SubscriptionId { get; init; }
+
+    /// <summary>`0018` **D23** — bültenin dönemi; `(abonelik, dönem)` çifti tekildir (AC-69, AC-70).</summary>
+    internal Guid? PeriodId { get; init; }
 
     internal required string TemplateKey { get; init; }
 
@@ -69,6 +82,39 @@ internal sealed class NotificationMessage
             TemplateKey = templateKey,
             Locale = locale,
             Channel = channel,
+            Status = NotificationStatus.Queued,
+            NextAttemptAt = now,
+            QueuedAt = now,
+        };
+
+    /// <summary>`0018` R2 — teyit iletisi: yalnız aboneliğe bağlı, işlemsel (L7).</summary>
+    internal static NotificationMessage QueueConfirmation(Guid subscriptionId, string locale, DateTimeOffset now) =>
+        new()
+        {
+            Id = Guid.CreateVersion7(),
+            SubscriptionId = subscriptionId,
+            TemplateKey = TemplateKeys.NewsletterConfirmation,
+            Locale = locale,
+            Channel = NotificationChannel.Email,
+            Status = NotificationStatus.Queued,
+            NextAttemptAt = now,
+            QueuedAt = now,
+        };
+
+    /// <summary>`0018` R8 — bülten: abonelik + dönem, pazarlama (L7, C3).</summary>
+    internal static NotificationMessage QueueNewsletter(
+        Guid subscriptionId,
+        Guid periodId,
+        string locale,
+        DateTimeOffset now) =>
+        new()
+        {
+            Id = Guid.CreateVersion7(),
+            SubscriptionId = subscriptionId,
+            PeriodId = periodId,
+            TemplateKey = TemplateKeys.NewsletterHeader,
+            Locale = locale,
+            Channel = NotificationChannel.Email,
             Status = NotificationStatus.Queued,
             NextAttemptAt = now,
             QueuedAt = now,

@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { HomeFooter } from '../../app/HomeFooter'
+import { useCorporateLinks } from '../../app/useCorporateLinks'
 import { LocaleProvider } from '../../app/LocaleProvider'
 import { LocaleSwitcher } from '../../app/LocaleSwitcher'
 import type {
@@ -219,11 +220,16 @@ describe('0017 — dil değiştirici', () => {
   })
 })
 
+/** `0018` D36 — altlık bağlantıları çağırandan alır; ana sayfadaki gibi aynı okumayla. */
+function AltlikOkumasiyla() {
+  return <HomeFooter branches={null} corporate={useCorporateLinks()} />
+}
+
 describe('0017 — altlığın Kurumsal kolonu', () => {
   async function altlik(locale: AppLocale = 'tr') {
     render(
       <LocaleProvider locale={locale}>
-        <HomeFooter branches={null} />
+        <AltlikOkumasiyla />
       </LocaleProvider>,
     )
     await act(async () => {})

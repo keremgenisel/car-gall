@@ -99,6 +99,18 @@ public sealed class AdresVeSssTests(ContentDatabase database) : IAsyncLifetime
         await icerik.SerbestAsync(new PageTextInput(locale, "x", "x", "cars-ve-biz"));
     }
 
+    [Theory(DisplayName = "0018/AC-52: Slug'ı `newsletter` olan bir içerik sayfası kaydı reddedilir")]
+    [InlineData("tr")]
+    [InlineData("ar")]
+    [InlineData("en")]
+    public async Task Reddeder_NewsletterSlugunu(string locale)
+    {
+        Result<(Guid, int)> sonuc = await icerik.KomutAsync(k => k.CreatePageAsync([new PageTextInput(locale, "x", "x", "newsletter")], CancellationToken.None));
+
+        Assert.True(sonuc.IsFailure);
+        Assert.Equal(ContentErrors.SlugReserved, Icerik.Alanlar(sonuc.Error)[$"{locale}.slug"]);
+    }
+
     // ── Eski slug (okuma tarafı; 301'in kendisi Host testinde) ──────────────
 
     [Fact(DisplayName = "0017/AC-51 (okuma yarısı): yayındaki tr slug'ı kvkk → kvkk-aydinlatma değişince kvkk güncele çözülür")]

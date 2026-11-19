@@ -1,3 +1,4 @@
+using CarGallery.Modules.Notifications.Contracts.Setup;
 using Microsoft.AspNetCore.Hosting;
 
 namespace CarGallery.Host.Tests;
@@ -19,5 +20,28 @@ internal static class NotificationsTestSettings
         builder.UseSetting("Notifications:Smtp:Port", "1025");
         builder.UseSetting("Notifications:Smtp:User", "test");
         builder.UseSetting("Notifications:Smtp:Password", "test");
+
+        // `0018` D25/AC-50 — imza sırrı olmadan uygulama başlamaz. Test sırrı koşu başına
+        // üretilir: depoda sabit bir anahtar, sızdığında her çıkış bağlantısını üretebilen
+        // bir dize olurdu (ADR 0011'in deseni).
+        builder.UseSetting("Notifications:Newsletter:UnsubscribeSigningKey", SigningKey);
     }
+
+    /// <summary>Koşu başına üretilen imza sırrı (Base64, 32 bayt).</summary>
+    internal static readonly string SigningKey =
+        Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+
+    /// <summary>Kurulum adımının bülten ayarları: `appsettings.json`'daki değerlerle aynı.</summary>
+    internal static NewsletterSetup Newsletter() => new(
+        ["tr", "ar", "en"],
+        SendDayOfWeek: "Monday",
+        SendTimeUtc: "07:00",
+        ConfirmationLinkHours: 72,
+        RequestLimit: 30,
+        RequestWindowMinutes: 10,
+        ValidRequestLimit: 5,
+        ValidRequestWindowMinutes: 10,
+        AddressConfirmationLimit: 3,
+        AddressWindowHours: 24,
+        UnsubscribeSigningKey: SigningKey);
 }

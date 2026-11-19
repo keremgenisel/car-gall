@@ -46,8 +46,11 @@ public interface IContentPublicQueries
 /// </summary>
 public static class ContentReservedSlugs
 {
-    /// <summary>Ayrılmış adlar.</summary>
-    public static IReadOnlyList<string> All { get; } = ["cars", "admin", "api", "assets"];
+    /// <summary>
+    /// Ayrılmış adlar. `newsletter` `0018` **D26** ile eklendi: bülten teyit ve çıkış sayfaları
+    /// `/{locale}/newsletter/…` altında yaşar ve aynı adda bir içerik sayfası onları gölgelerdi.
+    /// </summary>
+    public static IReadOnlyList<string> All { get; } = ["cars", "admin", "api", "assets", "newsletter"];
 
     /// <summary>Ad ayrılmış mı (büyük-küçük harfe duyarlı; slug zaten küçük harftir).</summary>
     public static bool Contains(string slug) => All.Contains(slug, StringComparer.Ordinal);

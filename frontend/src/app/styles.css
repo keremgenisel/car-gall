@@ -1122,6 +1122,53 @@ a.top-bar__brand:hover {
   margin-block-end: var(--space-7);
 }
 
+/* --- Bülten bölümü ve sayfaları (0018) --- */
+
+.newsletter {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-6);
+}
+
+.newsletter__body,
+.newsletter__note {
+  margin-block: var(--space-0) var(--space-5);
+  color: var(--color-ink-muted);
+}
+
+.newsletter__note {
+  margin-block: var(--space-5) var(--space-0);
+  font-size: var(--font-size-sm);
+}
+
+.newsletter__form {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+}
+
+.newsletter__form .admin-form__field {
+  inline-size: 100%;
+}
+
+.newsletter__status {
+  margin: var(--space-0);
+  font-weight: var(--font-weight-semibold);
+}
+
+.newsletter__error {
+  margin: var(--space-0);
+  color: var(--color-danger);
+}
+
+/* AC-95 — sayfa metni dilin başına hizalı (RTL'de sağa); `ui-state`'in ortalaması burada kalkar. */
+.newsletter-page {
+  margin-block: var(--space-8);
+  text-align: start;
+  justify-items: start;
+}
+
 .home-section__title,
 .narrowing-form__title {
   font-size: var(--font-size-md);

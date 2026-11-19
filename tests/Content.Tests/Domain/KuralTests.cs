@@ -43,9 +43,21 @@ public sealed class KuralTests
         Assert.Null(ContentRules.SlugError("cars-ve-biz"));
     }
 
+    /// <summary>
+    /// Kriter "içerir" diyor; liste `0018` **D26** ile `newsletter`'ı da taşıyor. Eşitlik
+    /// iddiası her yeni vitrin bölümünde bu testi yanlış bir gerekçeyle kırıyordu.
+    /// </summary>
     [Fact(DisplayName = "0017/AC-50: Ayrılmış slug listesi cars, admin, api, assets'i içerir")]
     public void Icerir_AyrilmisListe() =>
-        Assert.Equal(["cars", "admin", "api", "assets"], ContentReservedSlugs.All);
+        Assert.All(["cars", "admin", "api", "assets"], slug => Assert.Contains(slug, ContentReservedSlugs.All));
+
+    [Fact(DisplayName = "0018/AC-52: Slug'ı `newsletter` olan bir içerik sayfası kaydı reddedilir")]
+    public void Reddeder_NewsletterSlugunu()
+    {
+        Assert.Contains("newsletter", ContentReservedSlugs.All);
+        Assert.Equal(ContentErrors.SlugReserved, ContentRules.SlugError("newsletter"));
+        Assert.Null(ContentRules.SlugError("newsletter-arsivi"));
+    }
 
     [Fact(DisplayName = "0017/AC-10 (kural yarısı): yalnız boşluktan oluşan değer boştur (S9)")]
     public void Bostur_YalnizBosluk()

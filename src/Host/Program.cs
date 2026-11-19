@@ -149,7 +149,23 @@ builder.Services.AddNotifications(new NotificationsSetup(
     builder.Configuration.GetValue<bool?>("Notifications:Smtp:UseStartTls") ?? true,
     builder.Configuration.GetValue<int?>("Notifications:MaximumAttempts") ?? 0,
     builder.Configuration.GetValue<int?>("Notifications:RetryBaseSeconds") ?? 0,
-    builder.Configuration.GetValue<int?>("Notifications:SendTimeoutSeconds") ?? 0));
+    builder.Configuration.GetValue<int?>("Notifications:SendTimeoutSeconds") ?? 0),
+    // `0018` — bülten aboneliği. Yine hiçbir alanın `??` ile üretilmiş varsayılanı YOK
+    // (C14, AC-97): dönem anı, bağlantı süresi, üç sınır ya da imza sırrı eksikse uygulama
+    // ayağa kalkmaz. İmza sırrı appsettings'te DEĞİL, ortam değişkenindedir (D25) —
+    // değişirse eski bütün çıkış bağlantıları geçersiz olur (`docs/deploy.md`).
+    new NewsletterSetup(
+        localization.EnabledLocales,
+        builder.Configuration["Notifications:Newsletter:SendDayOfWeek"] ?? string.Empty,
+        builder.Configuration["Notifications:Newsletter:SendTimeUtc"] ?? string.Empty,
+        builder.Configuration.GetValue<int?>("Notifications:Newsletter:ConfirmationLinkHours") ?? 0,
+        builder.Configuration.GetValue<int?>("Notifications:Newsletter:RequestLimit") ?? 0,
+        builder.Configuration.GetValue<int?>("Notifications:Newsletter:RequestWindowMinutes") ?? 0,
+        builder.Configuration.GetValue<int?>("Notifications:Newsletter:ValidRequestLimit") ?? 0,
+        builder.Configuration.GetValue<int?>("Notifications:Newsletter:ValidRequestWindowMinutes") ?? 0,
+        builder.Configuration.GetValue<int?>("Notifications:Newsletter:AddressConfirmationLimit") ?? 0,
+        builder.Configuration.GetValue<int?>("Notifications:Newsletter:AddressWindowHours") ?? 0,
+        builder.Configuration["Notifications:Newsletter:UnsubscribeSigningKey"] ?? string.Empty));
 
 // 0011 — medya hattı. R2 kovası ve CDN taban adresi DAĞITIM YAPILANDIRMASINDAN gelir
 // (C6) ve hiçbirinin `??` ile üretilmiş varsayılanı YOK: filigran kaynağı
@@ -271,6 +287,7 @@ app.MapVehicleReference();
 app.MapIdentity();
 app.MapLeads();
 app.MapMedia();
+app.MapNotifications();
 
 // Geliştirme ve görsel kanıt üretimi yolu. Bayrak kapalıyken hiçbir şey kaydedilmez
 // ve bu uç noktalar hiç tanımlanmaz; üretimde erişilebilir bir yüzeyi yoktur.

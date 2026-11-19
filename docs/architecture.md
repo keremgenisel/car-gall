@@ -109,7 +109,7 @@ BuildingBlocks   ← herkes (yalnızca primitive)
 
 ANA VERİ
   Dealership          ◄──── VehicleCatalog, Identity, Notifications
-  VehicleReference    ◄──── VehicleCatalog, Leads
+  VehicleReference    ◄──── VehicleCatalog, Leads, Notifications
 
 ÇEKİRDEK
   VehicleCatalog  ──►  Dealership, VehicleReference, Media
@@ -120,7 +120,7 @@ SENKRON OKUNAN DESTEK
 
 YAPRAK (hiçbir modül onlara senkron bağımlı değil)
   Notifications · Audit · Engagement
-  Notifications   ──►  Leads, Dealership, VehicleCatalog   (yalnız OKUMA, tek atlama)
+  Notifications   ──►  Leads, Dealership, VehicleCatalog, VehicleReference   (yalnız OKUMA, tek atlama)
 ```
 
 `Content` **2026-11-19'da yapraktan çıktı** (spec `0019` / D8, Takım Yöneticisi (ajan)
@@ -133,8 +133,15 @@ sapma da kapandı (D27): `Leads` `Dealership.Contracts`'a hiç referans vermiyor
 referanslarına karşı bir mimari testle korunur (0019/AC-55).
 
 `Notifications` yaprak olmaya devam eder: ok **ondan dışarı** çıkar, ona doğru gelmez.
-Okuduğu üç yüzeyin hiçbiri kendisi başka bir modüle uzanmaz — zincir tek atlamadır ve
-bunu bir mimari test koruyor (0009/AC-31). Gönderilecek mesajın kişisel verisi olayın
+Okuduğu yüzeylerin hiçbiri kendisi başka bir modüle uzanmaz — zincir tek atlamadır ve
+bunu bir mimari test koruyor (0009/AC-31, `0018`/AC-83). `0009`'un üç yüzeyine (`Leads`
+talep bildirimi, `Dealership` şube iletişimi, `VehicleCatalog` ilan adresi) `0018` ile
+üçü eklendi: `VehicleCatalog` **ilan özeti** (`IListingSummaryQueries` — model **kimliği**
+döner, adı değil), `VehicleReference` **model adı** (`IVehicleModelQueries`) ve `Dealership`
+**galerinin görünen adı** (`IGalleryDisplayNameQueries`). Model adını `VehicleCatalog`'un
+çözmesi üç modüllü bir zincir kurardı (`Notifications`, `VehicleCatalog`, `VehicleReference` — Yasak 13); ad
+bu yüzden `Notifications`'ın kendi tek atlamasıyla okunur (`0018` D11). Zincir testi
+tüketilen arayüzleri artık koddan türetiyor — sabit bir ad listesi yeni yüzeyi görmüyordu. Gönderilecek mesajın kişisel verisi olayın
 gövdesinden değil kaynaktan okunur: olay gövdesinde taşınan kişisel veri, silinme
 talebinden sonra outbox'ta yaşamaya devam ederdi.
 
@@ -144,7 +151,8 @@ Olay akışı (outbox, tek yön):
 VehicleCatalog → VehiclePublished / VehicleUnpublished / VehicleReserved /
                  VehicleReturnedToShowcase / VehicleSold / VehicleSaleReverted /
                  VehicleArchived / VehiclePriceChanged / VehicleRelocated
-                   → Engagement, Audit, Content(slot geçersizleme), sitemap(host)
+                   → Engagement, Audit, Content(slot geçersizleme), sitemap(host),
+                     Notifications (yalnız VehiclePublished — bülten adayı, 0018 D4)
 Dealership     → BranchOpened / BranchDetailsChanged / BranchDeactivated
                    → VehicleCatalog, Audit, sitemap(host)
 Media          → MediaAssetReady / MediaAssetFailed        → VehicleCatalog
@@ -181,6 +189,13 @@ sayar.
 1. Salt okuma (query) veya çağıranın işlemi için zorunlu bir doğrulama,
 2. Sonuç aynı HTTP isteği içinde gerekiyor,
 3. **Tek atlama.** `A → B → C` yasaktır.
+
+**Koşul 2'nin istisnası — zamanlı iş ve kuyruk** (`0018` D20). Arka plan servisinin
+okuması bir HTTP isteğine bağlı değildir ama aynı gerekçeyle meşrudur: sonuç o turun
+kendisinde gerekiyor ve değişken veri kaynaktan okunur (gönderim anındaki fiyat, durum,
+ad). Emsal `0009`'un `NotificationDispatcher`'ı (kuyruğu işlerken talep, şube ve ilan
+adresi okuması); `0018`'in haftalık dönem işleyicisi ve bülten dağıtımı aynı istisnadan
+yararlanır. Koşul 1 ve 3 aynen geçerlidir: salt okuma, tek atlama.
 
 Örnekler: `Leads → VehicleCatalog` (araç var ve yayında mı, özet al),
 `VehicleCatalog → Media` (görseller hazır mı, URL çöz),
@@ -555,6 +570,7 @@ altındaki ADR'lerdedir.
 | Opsiyonel alan tipleri | Kapalı tip kümesi; alan → tip eşlemesi KODDA, değer tipli kolonlarda (tutar `numeric(19,4)` + kod + üs); parça haritası `PartMap` — yazma ve okuma modelinde `jsonb`, yalnız kod (ADR 0007 Ek 1, `0016a` D26) |
 | Panel sayfa boyutu | Varsayılan 25, üst sınır 100; dağıtım yapılandırmasından, vitrinin 24'ünden ayrı eksen |
 | Bildirim gönderimi | Veritabanı kuyruğu + arka plan servisi; gönderici port arkasında (V1: SMTP/MailKit) |
+| Bülten aboneliği | `Notifications`'ın ilk public ucu ve ilk zamanlı işi; çift onay, haftalık dönem (dağıtım yapılandırmasından, UTC), tek adımlı çıkış (HMAC imzalı, saklanmayan bağlantı); "yeni araç" = ilan kimliğinde tekil aday, pencere olay zamanına değil devreye giriş anına bağlı; izin olayları yalnız eklenir (`0018` D4, D13, D20, D25, D27) |
 | Tema (renk) | Dağıtım yapılandırmasından, **ya tam ya hiç**; panelden düzenlenmez |
 | Kontrast güvencesi | Başlangıçta doğrulanır — karşılanmazsa uygulama ayağa kalkmaz; varsayılan palet için ayrıca CI testi |
 | Tipografi | V1'de yapılandırılamaz; yazı tipleri kendi kaynağımızdan servis edilir |

@@ -2,6 +2,7 @@ using System.Globalization;
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Dealership.Contracts.Branches;
 using CarGallery.Modules.Leads.Contracts.Notifications;
+using CarGallery.Modules.Notifications.Application.Newsletter;
 using CarGallery.Modules.Notifications.Domain;
 using CarGallery.Modules.Notifications.Infrastructure;
 using CarGallery.Modules.VehicleCatalog.Contracts.Listings;
@@ -32,6 +33,7 @@ internal sealed class NotificationDispatcher(
     ILeadNotificationQueries leads,
     IBranchContactQueries branches,
     IListingSlugQueries listings,
+    NewsletterMessageComposer newsletter,
     NotificationsOptions options,
     IClock clock,
     ILogger<NotificationDispatcher> logger)
@@ -93,7 +95,24 @@ internal sealed class NotificationDispatcher(
 
     private async Task DispatchOneAsync(NotificationMessage message, CancellationToken cancellationToken)
     {
-        LeadNotificationDto? lead = await leads.FindAsync(message.LeadId, cancellationToken);
+        if (message.LeadId is not Guid leadId)
+        {
+            // `0018` D23 — talebe bağlı olmayan kayıt bir aboneliğe bağlıdır: teyit iletisi ya
+            // da bülten. Gövde başka yerde kurulur; gönderim, zaman aşımı, tekrar deneme ve
+            // işaretleme AYNI yoldan geçer (R10 — ikinci bir gönderim mekanizması yok).
+            Composition composition = await newsletter.ComposeAsync(message, cancellationToken);
+
+            if (composition.Message is null)
+            {
+                Finish(message, composition.Failure ?? SendFailureKind.Permanent, composition.FailureCode ?? NotificationErrors.SendFailed);
+                return;
+            }
+
+            await SendAndMarkAsync(message, composition.Message, cancellationToken);
+            return;
+        }
+
+        LeadNotificationDto? lead = await leads.FindAsync(leadId, cancellationToken);
 
         if (lead is null)
         {
@@ -139,6 +158,11 @@ internal sealed class NotificationDispatcher(
             TemplateRenderer.Render(template.Value.Subject, values),
             TemplateRenderer.Render(template.Value.Body, values));
 
+        await SendAndMarkAsync(message, outbound, cancellationToken);
+    }
+
+    private async Task SendAndMarkAsync(NotificationMessage message, OutboundMessage outbound, CancellationToken cancellationToken)
+    {
         SendResult result = await SendAsync(outbound, cancellationToken);
 
         if (result.Succeeded)
