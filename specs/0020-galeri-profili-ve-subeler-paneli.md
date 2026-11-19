@@ -336,8 +336,8 @@ ekranın adresini doğrudan açtığında "erişim yok" ekranını görür (`Adm
 > değişikliğidir ve SCORECARD'da **revizyon 1** sayılır. Hata spec'in kendisindeydi:
 > `docs/conventions.md` § 5 doğrulama hatasını `422` sayıyor ve kriter turu bunu okumadı.
 
-**Developer (ajan) önerisi; Takım Yöneticisi onayı PR'da bekleniyor.** D1–D23'ü değiştirmez,
-nasıl uygulanacaklarını sabitler. Her biri PR'ın "Açık konular" bölümünde de listelidir.
+**Developer (ajan) önerisi; Takım Yöneticisi (ajan) 2026-11-19'da onayladı (yukarıdaki not).**
+D1–D23'ü değiştirmez, nasıl uygulanacaklarını sabitler.
 
 **P1 — Görünen ad sunucunun bastığı bir `<meta>` ile taşınır (D6, D16).** Host `index.html`'i
 basarken `<meta name="gallery-display-name" content="…">` yazar (`0014` D22'nin
@@ -354,12 +354,11 @@ varsayılan dildeki adı ticari unvandan doldurur (`DealershipSchema`, idempoten
 varsayılan dilde adı olmayan satır). *Gerekçe:* varsayılan dil yapılandırmadır (Bilinen tuzak
 4); SQL'e bir dil kodu yazmak Arapça varsayılanlı bir kurulumda adı yanlış dile koyardı.
 
-**P3 — Alan hataları `422` döner; AC-30'daki `400` değil.** `docs/conventions.md` § 5
+**P3 — Alan hataları `422` döner; AC-30'un ilk metnindeki `400` değil.** `docs/conventions.md` § 5
 doğrulama hatasını `422` sayar ve depoda `400` dönen tek bir uç yok; tekillik ihlali öteki alan
 hatalarıyla aynı gövdeyle (`dealership.validation_failed`, `fields`, alan başına kod) döner.
 Eski sürüm, geçersiz geçiş, son aktif şube ve kapatılmış şubenin düzenlenmesi `409`.
-*Öneri:* AC-30'un metni `422` olarak düzeltilir (sayılan bir revizyon); karar Takım
-Yöneticisinin.
+*Karar:* AC-30'un metni `422` olarak düzeltildi (revizyon 1; Takım Yöneticisi, 2026-11-19).
 
 **P4 — Durum eylemleri de okunan sürümü taşır.** Geçici kapatma, yeniden açma ve kalıcı
 kapatma gövdede `version` alır; eski sürümde `409`. Kalıcı kapatmada sürüm kilitten sonra
@@ -508,7 +507,7 @@ Uygulama dalı kriterler `main`'e girdikten (#103) sonra açıldı.
 ## Definition of Done
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B11 → D13–D23, 2026-11-18.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0020-ac<n>.png`),
       boş ve hata durumları dâhil; Arapça görüntü de var (AC-12, AC-73). *(51 görsel; `evidence-0020.spec.ts`.)*
 - [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(PR'da: `dotnet test` çözüm geneli yeşil.)*
@@ -521,7 +520,7 @@ Uygulama dalı kriterler `main`'e girdikten (#103) sonra açıldı.
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
