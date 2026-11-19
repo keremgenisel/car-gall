@@ -34,6 +34,7 @@ internal sealed class LeadConfiguration : IEntityTypeConfiguration<Lead>
             .HasConversion(locale => locale.Code, value => Locale.Create(value).Value);
 
         builder.Property(lead => lead.ConsentGiven).HasColumnName("consent_given");
+        builder.Property(lead => lead.CapturedAt).HasColumnName("captured_at");
 
         // `0019` D15 — veritabanı varsayılanı "kayıt tutulmuyordu": var olan talepler ve eski
         // uygulamanın dağıtım penceresinde yazabileceği talep dürüst değeri alır. Yeni kod
@@ -56,7 +57,6 @@ internal sealed class LeadConfiguration : IEntityTypeConfiguration<Lead>
             "ck_leads_privacy_notice",
             "(privacy_notice_status = 'published' AND privacy_notice_version_id IS NOT NULL) "
             + "OR (privacy_notice_status IN ('not_published', 'not_recorded') AND privacy_notice_version_id IS NULL)"));
-        builder.Property(lead => lead.CapturedAt).HasColumnName("captured_at");
 
         builder.Property(lead => lead.IdempotencyKey)
             .HasColumnName("idempotency_key")
