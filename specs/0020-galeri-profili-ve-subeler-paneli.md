@@ -504,13 +504,13 @@ Uygulama dalı kriterler `main`'e girdikten (#103) sonra açıldı.
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B11 → D13–D23, 2026-11-18.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0020-ac<n>.png`),
-      boş ve hata durumları dâhil; Arapça görüntü de var (AC-12, AC-73).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `dealership` şemasına dokunuyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**görünen ad** — D4).
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0020-ac<n>.png`),
+      boş ve hata durumları dâhil; Arapça görüntü de var (AC-12, AC-73). *(51 görsel; `evidence-0020.spec.ts`.)*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). *(PR'da: `dotnet test` çözüm geneli yeşil.)*
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok. *(`0007`/AC-8'in kapısı P5'e göre daraltıldı.)*
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `dealership` şemasına dokunuyor. *(`AddGalleryDisplayNameAndVersions`.)*
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**görünen ad** — D4). *(Ticari Unvan, Görünen Ad.)*
 - [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); performans kapısı ana sayfa ve listede yeşil (AC-15).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
@@ -520,7 +520,7 @@ Uygulama dalı kriterler `main`'e girdikten (#103) sonra açıldı.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
-- [ ] `docs/deploy.md` § 5 ve ADR `0012` § Açık engeller 1, bu kartın ekranlarına göre güncellendi (**D10**).
+- [x] `docs/deploy.md` § 5 ve ADR `0012` § Açık engeller 1, bu kartın ekranlarına göre güncellendi (**D10**).
 
 ---
 
