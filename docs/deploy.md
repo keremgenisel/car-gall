@@ -149,9 +149,17 @@ galeri-alanadi.com {
      şubenin adresini düzenleyip gerçek şube olarak kullanmak da mümkündür; adres
      kısaltması (`kadikoy-subesi`) kapatılan şubede de kullanılmış sayılır.
    - Bu adım atlanırsa ana sayfanın altlığında başkasının adresi ve telefonu görünür.
-2. **İlk Yönetici girişi.** `https://<alan-adı>/admin` → `Identity__SeedAdmin__LoginId`
+2. **Bülten — hukuki sorular (`0018` SS1–SS5).** Bülten aboneliği ana sayfada açık gelir ve
+   teyit eden aboneye haftalık bülten gönderilir; kodda ayrı bir açma/kapama anahtarı yoktur.
+   Site ziyaretçiye açılmadan önce galeri sahibi (gerekirse hukukçu) şunları cevaplar:
+   ticari elektronik ileti / İYS kaydı yükümlülüğü, iletide zorunlu gönderici kimliği
+   (unvan, adres, MERSİS), teyit etmemiş ve çıkmış adreslerin saklama süresi ve KVKK silme
+   talebi, "üçüncü kişilerle paylaşılmaz" cümlesinin e-posta sağlayıcısıyla uyumu, bülten
+   izninde metin sürümü kaydı. Kod izni, teyidi ve çıkışı zaman damgasıyla kaydeder; İYS'ye
+   bildirim, saklama süresi ve yasal kimlik metni kodda YOKTUR.
+3. **İlk Yönetici girişi.** `https://<alan-adı>/admin` → `Identity__SeedAdmin__LoginId`
    ve parola → parola değişikliği zorunlu → ikinci adım kurulumu zorunlu.
-3. **Duman testi:**
+4. **Duman testi:**
 
    | İstek | Beklenen |
    |---|---|

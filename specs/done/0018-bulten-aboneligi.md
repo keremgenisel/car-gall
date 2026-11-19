@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-19 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B20 → **D4**, **D9–D11**, **D13**, **D14**, **D16**, **D17**, **D20** yeniden yazıldı · **D21–D27** eklendi) |
+| **Durum** | Tamamlandı (2026-11-19) — kararlar ve kriterler #120 → `ed54d6c`, uygulama #122 → `4f8edb4` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Notifications` (abonelik kaydı, izin olay kaydı, aday ve dönem kayıtları, teyit, çıkış, şablonlar, migration) · `Content.Contracts` (yalnız ayrılmış ad listesine `newsletter` — **D26**) · `VehicleCatalog.Contracts` (ilan özeti okuması — **D11**) · `frontend/` public vitrin (ana sayfadaki bülten bölümü, teyit ve çıkış sayfaları) · `docs/domain.md` (sözlük önerisi — **D19**) |
@@ -993,38 +993,38 @@ süresi uygulaması, yasal gönderici kimliği metni, izin anındaki metnin sür
       (2026-11-19); sahip kararları **D1–D3** işlendi.
 - [x] QA CLARIFY turu yapıldı ve yirmi bulgusu (B1–B20) **D4**, **D9–D11**, **D13**, **D14**,
       **D16**, **D17**, **D20** ve **D21–D27** ile kriterlere işlendi (2026-11-19).
-- [ ] **SS1–SS5** sahibe iletildi; cevaplar ya bu karta ya da açılan ayrı karta işlendi.
+- [x] **SS1–SS5** sahibe iletildi; cevaplar ya bu karta ya da açılan ayrı karta işlendi. *(Kısmen: 2026-11-19'da sahibe iletildi, cevap GELMEDİ. Kod cevaplardan bağımsız; bülten ziyaretçiye açılmadan önce cevaplanması `docs/deploy.md` § 5 madde 2'de canlıya çıkış adımı olarak yazıldı. Cevaplar kod değişikliği gerektirirse ayrı kart açılır.)*
 - [x] `0012b`, `0017` ve `0020` tamamlandı (2026-11-19 ölçüldü — Context).
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0018-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. *(101/101; eşleme PR #122'de. AC-61 dört durumu tek okuma üzerinden dört vakayla, AC-38 e2e başarı yolu sahte yanıtla (sunucu yarısı Host.Tests'te) — PR'da açıkça yazılı.)*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0018-ac<n>.png`),
       yükleniyor, hata, hız sınırı, boş vitrin ve geçersiz bağlantı durumları dâhil; Arapça
       görüntü de var.
-- [ ] Teyit edilmemiş adrese bülten gönderilmediği testle gösterildi (R2 · AC-29).
-- [ ] Çıkış bağlantısının **tek adımda** ve oturumsuz çalıştığı testle gösterildi (R5 · AC-38).
-- [ ] Kişisel verinin logda, gönderim geçmişinde ve izin olay kaydında bulunmadığı testle
+- [x] Teyit edilmemiş adrese bülten gönderilmediği testle gösterildi (R2 · AC-29).
+- [x] Çıkış bağlantısının **tek adımda** ve oturumsuz çalıştığı testle gösterildi (R5 · AC-38).
+- [x] Kişisel verinin logda, gönderim geçmişinde ve izin olay kaydında bulunmadığı testle
       gösterildi (C5 · AC-89–93).
-- [ ] **Zincir testinin negatif kanıtı:** yeni tüketilen bir arayüzün gerçekleştirimine geçici
+- [x] **Zincir testinin negatif kanıtı:** yeni tüketilen bir arayüzün gerçekleştirimine geçici
       olarak başka bir modülün `Contracts` çağrısı eklendiğinde AC-83'nin testinin kırmızı verdiği
       çıktısıyla PR'da gösterildi; ekleme geri alındı.
-- [ ] `0009`'un kabul kriterleri regresyon olarak hâlâ yeşil (R10 · AC-88).
-- [ ] Şablonlar TR/AR/EN üçünde de seed edildi; eksik şablon kontrolü yeşil (C6 · AC-96).
-- [ ] `docs/deploy.md` çıkış bağlantısı sırrını zorunlu ortam değişkeni olarak ve "değişirse eski
+- [x] `0009`'un kabul kriterleri regresyon olarak hâlâ yeşil (R10 · AC-88).
+- [x] Şablonlar TR/AR/EN üçünde de seed edildi; eksik şablon kontrolü yeşil (C6 · AC-96).
+- [x] `docs/deploy.md` çıkış bağlantısı sırrını zorunlu ortam değişkeni olarak ve "değişirse eski
       çıkış bağlantıları geçersiz olur" uyarısıyla listeliyor; `dev-up.sh` sırrı üretiyor (D25).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration yalnızca `notifications` şemasına dokunuyor.
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimleri (**D19**) `docs/domain.md` sözlüğüne eklendi.
-- [ ] <!-- DoD:T8 --> `docs/architecture.md` güncellendi: Karar Defteri satırı, bağımlılık haritası
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] <!-- DoD:T5 --> Yeni migration yalnızca `notifications` şemasına dokunuyor.
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimleri (**D19**) `docs/domain.md` sözlüğüne eklendi.
+- [x] <!-- DoD:T8 --> `docs/architecture.md` güncellendi: Karar Defteri satırı, bağımlılık haritası
       ("Okuduğu üç yüzey"), `VehiclePublished` tüketicisi ve § 2.A koşul 2 istisnası (**D20** —
       koşulsuz).
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); C3 eşikleri dâhil (AC-100).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4); C3 eşikleri dâhil (AC-100). *(`2903793`: Backend, Frontend, E2E, C3 yeşil — ana sayfa 2279, liste 2134, detay 2411 ms; ilk paket +2508 B / 3072.)*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+      bunun yerine geçmez. *(2026-11-19, merge'den önce: 0/0/4 — dördü de `074cf10`…`2903793`'te işlendi.)*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(Takım Yöneticisi (ajan), `4f8edb4`, 2026-11-19.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı; taşımadan sonra `tests/Architecture.Tests`'in
       tamamı koşturuldu.
 
@@ -1044,13 +1044,21 @@ tanımın netleştirilmesini öner.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. `0009`'u bozup bozmadığı burada görünür. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e 4f8edb4^:specs/0018-bulten-aboneligi.md` → var. Kararlar ve 101 kriter #120 ile (`ed54d6c`) uygulamadan önce girdi. |
+| **Kriter sayısı: önce → bugün** | **101 → 101** | Analistin ilk önerisi 72 kriterdi; CLARIFY turu onaydan önce 100'e, TM'nin "bekleyen aday elenir" kararı 101'e çıkardı. |
+| **Spec revizyon sayısı** | **2** | (1) Onay anındaki CLARIFY turu (ADR 0008 / K3 gereği sayılır): QA'nin 20 bulgusu (2 engelleyici) → D4, D9–D11, D13, D14, D16, D17, D20 yeniden yazıldı, D21–D27 eklendi; 72 → 101. (2) `main`'den sonra AP-08: AC-7 ve AC-10 `400` diyordu, depo kuralı `422` (`0020` AC-30 emsali) — kriter metni değişti. Uygulama Context'e D28–D38 plan kararlarını ekledi. |
+| **Düzeltme turu sayısı** | **2** | (1) Takım Yöneticisi açık konu kararları: 422 ve deterministik teyit anahtarı (D28'in bedeli kabul edilmedi). (2) QA'nin dört küçük bulgusu. T10 `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **4 / 0** | BULGU-1: zincir kapısı tam nitelikli adı görmüyordu (negatif denemeyle gösterildi) · BULGU-2: çıkış ile SMTP gönderimi arasında en çok `SendTimeout` süren yarış — garanti cümlesi daraltıldı, davranış bilerek değişmedi · BULGU-3: PR başlığı 72 karakteri aşıyordu · BULGU-4: süresi dolmuş teyit anahtarıyla ileti gidebiliyordu. CLARIFY'ın 20 bulgusu spec turuna aittir. |
+| **Uygulama içi bulgu** | **7** | Mimari belge cümlesi olay akışı işaretçisine denk gelip `0012b/AC-34`'ü kırdı · dinamikleşen zincir kapısı kurucu parametrelerini gerçekleştirim sandı · elle yazılan `FOR UPDATE` `0007/AC-9`'u kırdı · iki sayfa Arapçada ortalıydı (AC-95) · `dev-up.sh` imza sırrını konsola basıyordu · sahte saatin 100 ns hassasiyeti Linux'ta `timestamptz` ile uyuşmadı (yalnız CI'da kırmızı) · negatif kanıttan sonra `cp` ile geri yükleme eski mtime getirdi, MSBuild bayat derlemeyi kullandı. |
+| **Regresyon sayısı** | **0** | `0009` testlerinin doğrulamaları değişmeden yeşil; migration öncesi kuyruktaki talep iletisi sonra gönderiliyor (AC-85). |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-19 (`4f8edb4`). |
 
 **Bu spec'ten çıkarılan ders:**
+
+**Var olan bir olayı ilk kez tüketen kart, olayın sözleşmesini koddan yeniden ölçmeli.**
+`0012b` D31'in "yeniden yayını ayırma" formülü (`OccurredAt > FirstPublishedAt`) iki ayrı saat
+okumasını karşılaştırdığı için her ilk yayını da yeniden yayın sayıyordu; sahte saatli testte
+değerler eşit çıktığından hiçbir test göremedi ve olayın tüketicisi olmadığı için kusur yalnız
+kâğıt üstünde kaldı. Analist bunu koddan okuyarak yakaladı. İkinci ders: olayın tüketicisi
+yokken outbox onu işlenmiş sayıyor — tüketiciyi ilk kez ekleyen kart geçmişi alamaz; bunu
+kriter olarak yazmak (AC-48) sürprizi önledi.
