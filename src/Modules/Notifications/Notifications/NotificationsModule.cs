@@ -85,6 +85,17 @@ public static class NotificationsModule
         services.AddScoped<ConfirmSubscription>();
         services.AddScoped<UnsubscribeFromNewsletter>();
 
+        // D13 — haftalık dönem: doğrudan çağrılabilen işleyici + onu tetikleyen zamanlı servis.
+        services.AddScoped<NewsletterPeriodProcessor>();
+        services.AddHostedService(provider => new NewsletterPeriodHostedService(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILogger<NewsletterPeriodHostedService>>()));
+
+        // D4 — `VehiclePublished`'ın alıcısı. Dağıtıcı alıcıları DI'dan çözer: bu kayıt
+        // olmadan işleyici yazılmış ama KABLOLANMAMIŞ kalır ve `VehicleCatalog`'un dağıtıcısı
+        // alıcısı olmayan duyuruyu sessizce işlenmiş sayar (`0003`'ün kaçan hatası).
+        services.AddScoped<IIntegrationEventDispatchTarget, VehiclePublishedCandidateHandler>();
+
         // D9 — kaba istek sınırı boru hattında; politika DI'dan kurulur.
         services.AddRateLimiter(limiter => limiter.AddPolicy<string, NewsletterRateLimitPolicy>(
             NewsletterEndpoints.RateLimitPolicy));
