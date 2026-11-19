@@ -64,10 +64,17 @@ internal static class Bulten
         public DateTimeOffset UtcNow { get; } = an;
     }
 
-    /// <summary>Elle ilerletilen saat; testin ölçtüğü şey geçen süredir.</summary>
+    /// <summary>
+    /// Elle ilerletilen saat; testin ölçtüğü şey geçen süredir.
+    ///
+    /// <para>Başlangıç MİKROSANİYEYE kırpılır: PostgreSQL <c>timestamptz</c> mikrosaniye
+    /// tutar, Linux'ta <c>DateTimeOffset.UtcNow</c> 100 ns adım verir. Kırpılmasaydı yazılan
+    /// zaman okunan zamana eşit çıkmaz — macOS'un saati zaten mikrosaniye adımlı olduğu için
+    /// kusur yalnız CI'da göründü.</para>
+    /// </summary>
     internal sealed class IleriSaat(DateTimeOffset baslangic) : IClock
     {
-        private DateTimeOffset an = baslangic;
+        private DateTimeOffset an = baslangic.AddTicks(-(baslangic.Ticks % TimeSpan.TicksPerMicrosecond));
 
         public DateTimeOffset UtcNow => an;
 
