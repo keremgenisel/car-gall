@@ -31,6 +31,12 @@ export SEED_ADMIN_PASSWORD
 TWO_FACTOR_KEY="${TWO_FACTOR_KEY:-$(openssl rand -base64 32)}"
 export TWO_FACTOR_KEY
 
+# 0018 D25 — bülten çıkış bağlantılarını imzalayan sır; aynı disiplin (ADR 0011). Anahtar
+# yoksa uygulama hiç başlamaz. Değişirse eski bütün çıkış bağlantıları geçersiz olur:
+# geliştirmede her koşuda yeni üretilir, üretimde yedeklenir ve döndürülmez (docs/deploy.md).
+NEWSLETTER_SIGNING_KEY="${NEWSLETTER_SIGNING_KEY:-$(openssl rand -base64 32)}"
+export NEWSLETTER_SIGNING_KEY
+
 echo "==> PostgreSQL ($CONTAINER, port $PORT)"
 docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 docker run -d --name "$CONTAINER" \
@@ -118,6 +124,7 @@ Notifications__Smtp__Host=localhost \
 Notifications__Smtp__Port="$MAIL_SMTP_PORT" \
 Notifications__Smtp__User=gelistirme \
 Notifications__Smtp__Password=gelistirme \
+Notifications__Newsletter__UnsubscribeSigningKey="$NEWSLETTER_SIGNING_KEY" \
 Media__Storage__ServiceUrl="http://localhost:$S3_PORT" \
 Media__Storage__Bucket="$S3_BUCKET" \
 Media__Storage__AccessKey=test \
@@ -138,6 +145,7 @@ echo "==> Kurulum hesabı"
 echo "    kimlik : yonetici@cargallery.local"
 echo "    parola : $SEED_ADMIN_PASSWORD"
 echo "    e2e için: export E2E_SEED_ADMIN_PASSWORD='$SEED_ADMIN_PASSWORD'"
+echo "    bülten e2e için: export E2E_NEWSLETTER_SIGNING_KEY='$NEWSLETTER_SIGNING_KEY' E2E_MAILPIT_URL='http://localhost:$MAIL_UI_PORT'"
 
 echo "==> Host ($SEED_COUNT ilanla seed edilerek)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
@@ -155,6 +163,10 @@ Notifications__Smtp__Host=localhost \
 Notifications__Smtp__Port="$MAIL_SMTP_PORT" \
 Notifications__Smtp__User=gelistirme \
 Notifications__Smtp__Password=gelistirme \
+Notifications__Newsletter__UnsubscribeSigningKey="$NEWSLETTER_SIGNING_KEY" \
+Notifications__Newsletter__RequestLimit="${NEWSLETTER_REQUEST_LIMIT:-500}" \
+Notifications__Newsletter__ValidRequestLimit="${NEWSLETTER_VALID_REQUEST_LIMIT:-500}" \
+Notifications__Newsletter__AddressConfirmationLimit="${NEWSLETTER_ADDRESS_LIMIT:-50}" \
 Media__Storage__ServiceUrl="http://localhost:$S3_PORT" \
 Media__Storage__Bucket="$S3_BUCKET" \
 Media__Storage__AccessKey=test \

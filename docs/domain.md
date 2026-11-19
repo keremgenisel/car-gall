@@ -94,6 +94,14 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Kalıcı Hata** | `Permanent` | Yeniden denemenin düzeltemeyeceği hata: adres reddedildi, şablon yok, sağlayıcının `5xx`'i. |
 | **Taşıyıcı** | `INotificationTransport` | Sağlayıcıyla konuşan port. Tekrar denemez; hatanın SINIFINI söyler. |
 | **Kurulum Bildirim Adresi** | `SetupNotificationAddress` | Şubenin e-postası yokken galeri bildiriminin gittiği adres. Yapılandırmadan gelir. |
+| **Bülten** | `newsletter.*` şablonları | Haftalık yeni araç özeti — **pazarlama** iletisi (L7): yalnız teyit etmiş, etkin aboneye gider; yeni araç yoksa o hafta gitmez (`0018`). |
+| **Bülten Aboneliği** | `NewsletterSubscription` | Adres + dil + son durum. Aynı adresin ikinci aboneliği aynı kaydı kullanır; geçmiş İzin Olayı'ndadır. Talep formundaki iletişim izni bülten aboneliği **değildir** (`0018` D3). |
+| **Abonelik Durumu** | `SubscriptionStatus` | `Teyit bekliyor` · `Etkin` · `Çıkmış`. Çıkmış kayıt silinmez. |
+| **Teyit Bağlantısı** | `ConfirmationTokens` | Süreli, tek kullanımlık; yalnız en son gönderilen geçerli. Açılması teyit değildir — teyit sayfadaki düğmeyle (`0018` D6, D7). |
+| **Çıkış Bağlantısı** | `UnsubscribeTokens` | Süresiz, aboneye bağlı, saklanmaz (imzalı); açıldığı anda çıkarır (`0018` D6, D8, D25). |
+| **Bülten Dönemi** | `NewsletterPeriod` | Haftanın günü + saat (UTC) olan kesim anı ve o anda işlenen pencere; kaçırılan dönemler tek bültende birleşir. Başlangıç kaydı devreye giriş anıdır (`0018` D13). |
+| **Bülten Adayı** | `NewsletterCandidate` | Henüz bir döneme atanmamış, ilk kez yayınlanmış ilan; ilan başına bir kez. Dönem anında Yayında değilse elenir (`0018` D4, D21). |
+| **İzin Olayı** | `ConsentEvent` | Bülten aboneliğinin istek, teyit ve çıkış kaydı — zamanı (UTC) ve abonelik kimliği; adres taşımaz, yalnız eklenir (`0018` D27). |
 
 ### Teknik ortak terimler
 

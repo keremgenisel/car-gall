@@ -292,6 +292,11 @@ jobs:
           ANAHTAR=$(openssl rand -base64 32)
           echo "::add-mask::$ANAHTAR"
           echo "TWO_FACTOR_KEY=$ANAHTAR" >> "$GITHUB_ENV"
+          # 0018 D25 — bülten çıkış bağlantılarının imza sırrı; aynı disiplin, aynı gerekçe.
+          # Anahtar olmadan uygulama hiç başlamaz (AC-50).
+          BULTEN=$(openssl rand -base64 32)
+          echo "::add-mask::$BULTEN"
+          echo "NEWSLETTER_SIGNING_KEY=$BULTEN" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v4
 
@@ -355,6 +360,14 @@ jobs:
           Identity__PasswordIterations: '1000'
           # 0013 D3/AC-49 — anahtar olmadan uygulama hiç başlamaz.
           Identity__TwoFactor__EncryptionKey: ${{ env.TWO_FACTOR_KEY }}
+          # 0018 D25/AC-50 — imza sırrı olmadan uygulama hiç başlamaz.
+          Notifications__Newsletter__UnsubscribeSigningKey: ${{ env.NEWSLETTER_SIGNING_KEY }}
+          # 0018 D9 — üç sınırın üretim değeri `appsettings.json`'da ve Host.Tests onu sınıyor.
+          # E2E ve kanıt üretimi aynı IP'den çok sayıda abonelik isteği gönderir; sınırın
+          # KENDİSİ burada değil, Host.Tests'te (`BultenZinciriTests`) sınanıyor.
+          Notifications__Newsletter__RequestLimit: '500'
+          Notifications__Newsletter__ValidRequestLimit: '500'
+          Notifications__Newsletter__AddressConfirmationLimit: '50'
           # D2'nin ölçümü: on kodu üretim değeriyle özetlemek her kurulumda saniyeler ekler.
           Identity__TwoFactor__RecoveryCodeIterations: '1000'
           # Kanıt üretimi ve E2E akışları çok sayıda giriş yapar; giriş ucunun

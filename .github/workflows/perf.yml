@@ -58,6 +58,11 @@ jobs:
           ANAHTAR=$(openssl rand -base64 32)
           echo "::add-mask::$ANAHTAR"
           echo "TWO_FACTOR_KEY=$ANAHTAR" >> "$GITHUB_ENV"
+          # 0018 D25 — bülten çıkış bağlantılarının imza sırrı; aynı disiplin, aynı gerekçe.
+          # Anahtar olmadan uygulama hiç başlamaz (AC-50).
+          BULTEN=$(openssl rand -base64 32)
+          echo "::add-mask::$BULTEN"
+          echo "NEWSLETTER_SIGNING_KEY=$BULTEN" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v4
 
@@ -96,6 +101,8 @@ jobs:
           Identity__PasswordIterations: '1000'
           # 0013 D3/AC-49 — anahtar olmadan uygulama hiç başlamaz.
           Identity__TwoFactor__EncryptionKey: ${{ env.TWO_FACTOR_KEY }}
+          # 0018 D25/AC-50 — imza sırrı olmadan uygulama hiç başlamaz.
+          Notifications__Newsletter__UnsubscribeSigningKey: ${{ env.NEWSLETTER_SIGNING_KEY }}
           # 0009 — uygulama sağlayıcı kimlik bilgileri olmadan HİÇ başlamaz (AC-28).
           # Bu değerler mailpit servisinin kabul ettiği tek kullanımlık değerlerdir.
           Notifications__Smtp__Host: localhost
