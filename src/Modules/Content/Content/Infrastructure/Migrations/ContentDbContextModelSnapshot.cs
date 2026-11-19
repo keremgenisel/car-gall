@@ -105,6 +105,29 @@ namespace CarGallery.Modules.Content.Infrastructure.Migrations
                     b.ToTable("faq_entries", "content");
                 });
 
+            modelBuilder.Entity("CarGallery.Modules.Content.Domain.HomeTexts", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("home_texts", "content");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0192c000-0000-7000-8000-0000c0a70100"),
+                            Version = 1
+                        });
+                });
+
             modelBuilder.Entity("CarGallery.Modules.Content.Domain.ContentPage", b =>
                 {
                     b.OwnsMany("CarGallery.Modules.Content.Domain.PageLocalization", "Localizations", b1 =>
@@ -221,6 +244,60 @@ namespace CarGallery.Modules.Content.Infrastructure.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("EntryId");
+                        });
+
+                    b.Navigation("Localizations");
+                });
+
+            modelBuilder.Entity("CarGallery.Modules.Content.Domain.HomeTexts", b =>
+                {
+                    b.OwnsMany("CarGallery.Modules.Content.Domain.HomeTextLocalization", "Localizations", b1 =>
+                        {
+                            b1.Property<Guid>("HomeTextsId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("home_texts_id");
+
+                            b1.Property<string>("Locale")
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)")
+                                .HasColumnName("locale");
+
+                            b1.Property<string>("EmptyBody")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("empty_body");
+
+                            b1.Property<string>("EmptyTitle")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("empty_title");
+
+                            b1.Property<string>("FeaturedTitle")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("featured_title");
+
+                            b1.Property<string>("FormTitle")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("form_title");
+
+                            b1.Property<string>("IntroBody")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("intro_body");
+
+                            b1.Property<string>("IntroTitle")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("intro_title");
+
+                            b1.HasKey("HomeTextsId", "Locale");
+
+                            b1.ToTable("home_text_localizations", "content");
+
+                            b1.WithOwner()
+                                .HasForeignKey("HomeTextsId");
                         });
 
                     b.Navigation("Localizations");

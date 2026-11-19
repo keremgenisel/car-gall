@@ -17,6 +17,10 @@ internal static partial class ContentRules
     internal const int QuestionMax = 200;
     internal const int AnswerMax = 2_000;
 
+    // `0022` R4 · D5 — ana sayfa metinlerinin sınırları; sayım aynı kural (Length, D15).
+    internal const int HomeTitleMax = 120;
+    internal const int HomeDescriptionMax = 500;
+
     /// <summary>D32 — yalnız boşluktan oluşan değer boştur; <c>null</c> da boştur.</summary>
     internal static string Normalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? string.Empty : value;

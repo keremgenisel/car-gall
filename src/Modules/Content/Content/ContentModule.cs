@@ -1,6 +1,7 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Content.Application;
+using CarGallery.Modules.Content.Contracts.Home;
 using CarGallery.Modules.Content.Contracts.Pages;
 using CarGallery.Modules.Content.Endpoints;
 using CarGallery.Modules.Content.Infrastructure;
@@ -36,7 +37,36 @@ public static class ContentModule
         services.AddScoped<ContentAdminQueries>();
         services.AddScoped<IContentPublicQueries, ContentPublicQueries>();
 
+        // `0022` — ana sayfa metinleri: panelin okuması ve Host'un okuduğu public yüzey aynı sınıf.
+        services.AddScoped<HomeTextCommands>();
+        services.AddScoped<HomeTextQueries>();
+        services.AddScoped<IHomeTextQueries>(provider => provider.GetRequiredService<HomeTextQueries>());
+
         return services;
+    }
+
+    /// <summary>
+    /// `0022` D11 — ana sayfa metinlerini etkin her dilde, her alan sınırında doldurur.
+    /// YALNIZ geliştirme ve performans ölçümü içindir (<c>Development:SeedHomeTexts</c>);
+    /// üretim yolunda çağrılmaz. Şemayı kurulum adımı uygular, bu yalnız veridir.
+    /// </summary>
+    public static async Task SeedHomeTextsForDevelopmentAsync(
+        this IServiceProvider services,
+        CancellationToken cancellationToken = default)
+    {
+        using IServiceScope scope = services.CreateScope();
+        HomeTextQueries queries = scope.ServiceProvider.GetRequiredService<HomeTextQueries>();
+        ContentLocaleOptions locales = scope.ServiceProvider.GetRequiredService<ContentLocaleOptions>();
+        AdminHomeTextsDto mevcut = await queries.GetForAdminAsync(cancellationToken);
+
+        Result<int> sonuc = await scope.ServiceProvider
+            .GetRequiredService<HomeTextCommands>()
+            .SaveAsync(mevcut.Version, HomeTextDevelopmentSeed.Inputs(locales.Enabled), cancellationToken);
+
+        if (sonuc.IsFailure)
+        {
+            throw new InvalidOperationException($"Ana sayfa metinleri tohumlanamadı: {sonuc.Error.Code}.");
+        }
     }
 
     /// <summary>Uçları bağlar.</summary>

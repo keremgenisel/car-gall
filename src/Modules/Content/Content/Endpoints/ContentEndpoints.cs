@@ -53,6 +53,12 @@ internal static class ContentEndpoints
             NoContentAsync(commands.DeleteFaqEntryAsync(id, version, ct)));
         panel.MapPost("/faq/{id:guid}/move", (Guid id, MoveFaqBody body, ContentCommands commands, CancellationToken ct) =>
             NoContentAsync(commands.MoveFaqEntryAsync(id, string.Equals(body.Direction, "up", StringComparison.Ordinal), ct)));
+
+        // `0022` R9 · D8 — ana sayfa metinleri aynı politikada: Yönetici + İçerik Editörü.
+        panel.MapGet("/home", async (HomeTextQueries queries, CancellationToken ct) =>
+            TypedResults.Ok(await queries.GetForAdminAsync(ct)));
+        panel.MapPut("/home", (SaveHomeTextsBody body, HomeTextCommands commands, CancellationToken ct) =>
+            VersionAsync(commands.SaveAsync(body.Version, HomeTextInputs(body.Locales), ct)));
     }
 
     private static async Task<Results<Ok<ContentPagePublicDto>, NotFound>> FindPageAsync(
@@ -116,6 +122,21 @@ internal static class ContentEndpoints
     private static List<PageTextInput> PageTexts(List<PageTextBody>? locales) =>
         [.. (locales ?? []).Select(item => new PageTextInput(item.Locale ?? string.Empty, item.Title, item.Body, item.Slug))];
 
+    private static List<HomeTextInput> HomeTextInputs(List<HomeTextBody>? locales) =>
+    [
+        .. (locales ?? []).Select(item => new HomeTextInput(
+            item.Locale ?? string.Empty,
+            new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                [HomeTextField.IntroTitleKey] = item.IntroTitle,
+                [HomeTextField.IntroBodyKey] = item.IntroBody,
+                [HomeTextField.FormTitleKey] = item.FormTitle,
+                [HomeTextField.FeaturedTitleKey] = item.FeaturedTitle,
+                [HomeTextField.EmptyTitleKey] = item.EmptyTitle,
+                [HomeTextField.EmptyBodyKey] = item.EmptyBody,
+            })),
+    ];
+
     private static List<FaqTextInput> FaqTexts(List<FaqTextBody>? locales) =>
         [.. (locales ?? []).Select(item => new FaqTextInput(item.Locale ?? string.Empty, item.Question, item.Answer))];
 }
@@ -143,6 +164,19 @@ internal sealed record SaveFaqBody(int Version, List<FaqTextBody>? Locales);
 
 /// <summary>SSS sırası: <c>up</c> ya da <c>down</c>.</summary>
 internal sealed record MoveFaqBody(string? Direction);
+
+/// <summary>`0022` — bir dilin ana sayfa metinleri; <c>null</c> ve boşluk = boş (varsayılana düşer).</summary>
+internal sealed record HomeTextBody(
+    string? Locale,
+    string? IntroTitle,
+    string? IntroBody,
+    string? FormTitle,
+    string? FeaturedTitle,
+    string? EmptyTitle,
+    string? EmptyBody);
+
+/// <summary>`0022` — ana sayfa metinlerini kaydetme gövdesi; <c>Version</c> okunan sürümdür (R8).</summary>
+internal sealed record SaveHomeTextsBody(int Version, List<HomeTextBody>? Locales);
 
 /// <summary>Yazmanın yeni sürümü.</summary>
 internal sealed record VersionBody(int Version);
