@@ -223,7 +223,8 @@ Başarı ölçütü: **bir hukuki metnin veya SSS girdisinin değişmesi bir da�
   yapı kararıdır (**D4**).
 - **X8.** **İzin anında hangi aydınlatma metni sürümünün gösterildiğinin kaydı** — *neden:*
   bugün izin yalnız `ConsentGiven` `bool`'u (K1); metnin sürümüyle bağlamak bir `Leads`
-  kararıdır, `Content` kararı değil. **Ayrı kart olarak önerildi** (**D5**).
+  kararıdır, `Content` kararı değil. **Ayrı kart olarak önerildi** (**D5**). → `0019`
+  (`specs/0019-izin-metni-surumu.md`).
 - **X9.** **Ana sayfa giriş metninin `Content`'e taşınması** — *neden:* giriş metni bir sayfa
   değil bir **alan**dır; X2'nin kampanya alanlarıyla birlikte ele alınır. Bugün çeviri
   kataloğundan geliyor (`0014`'ün giriş metni kararı) (**D7**).

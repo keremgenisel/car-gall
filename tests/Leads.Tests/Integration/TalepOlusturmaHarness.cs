@@ -59,6 +59,36 @@ internal sealed class FakeCanonicalModelNameSource : ICanonicalModelNameSource
     internal void Kaybet() => name = null;
 }
 
+/// <summary>
+/// `0019` — `Content` bu test projesinin sınırının ötesindedir; sürüm okuması sahtelenir.
+/// Bu sahtenin YAPAMAYACAĞI şey "metin değişti, eski talep eski metni gösteriyor"u kanıtlamaktır
+/// (Bilinen tuzak 1): o kriterler `Host.Tests`'te gerçek `Content` ile koşar. Burada sınanan
+/// `Leads`'in kendi davranışı: çağrı sayısı, sıra, hata yolunda yazmama.
+/// </summary>
+internal sealed class FakePrivacyNoticeSource : IPrivacyNoticeSource
+{
+    private PrivacyNoticeLink current = PrivacyNoticeLink.NotPublished();
+    private Exception? failure;
+
+    /// <summary>Kaç kez çağrıldı (AC-51).</summary>
+    internal int CallCount { get; private set; }
+
+    public Task<PrivacyNoticeLink> FindPublishedAsync(Locale locale, CancellationToken cancellationToken)
+    {
+        CallCount++;
+
+        return failure is null ? Task.FromResult(current) : Task.FromException<PrivacyNoticeLink>(failure);
+    }
+
+    internal void Yayinda(Guid versionId) => current = PrivacyNoticeLink.Published(versionId);
+
+    internal void YayindaDegil() => current = PrivacyNoticeLink.NotPublished();
+
+    internal void Bozuk(Exception exception) => failure = exception;
+
+    internal void Onar() => failure = null;
+}
+
 internal sealed class TalepOlusturmaHarness
 {
     private readonly LeadsDatabase database;
@@ -78,6 +108,8 @@ internal sealed class TalepOlusturmaHarness
     internal FakeListingSnapshotSource Ilanlar { get; } = new();
 
     internal FakeCanonicalModelNameSource ModelAdlari { get; } = new();
+
+    internal FakePrivacyNoticeSource AydinlatmaMetni { get; } = new();
 
     internal FixedClock Saat { get; } = new(LeadBuilder.VarsayilanAn);
 
@@ -111,6 +143,7 @@ internal sealed class TalepOlusturmaHarness
             database.CreateUnitOfWork(context, Saat),
             Ilanlar,
             ModelAdlari,
+            AydinlatmaMetni,
             Kota,
             new LeadLocaleOptions(
             [

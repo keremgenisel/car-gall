@@ -24,6 +24,7 @@ internal sealed class LeadBuilder
     private bool izin = true;
     private string anahtar = "0192c000-0000-7000-8000-00000000aaaa";
     private VehicleSnapshot? anlikGoruntu;
+    private PrivacyNoticeLink aydinlatmaMetni = PrivacyNoticeLink.NotPublished();
 
     internal LeadBuilder Tip(LeadType value)
     {
@@ -85,6 +86,13 @@ internal sealed class LeadBuilder
         return this;
     }
 
+    /// <summary>`0019` — talep anındaki aydınlatma metni bağı; verilmezse "yayında değildi".</summary>
+    internal LeadBuilder AydinlatmaMetni(PrivacyNoticeLink value)
+    {
+        aydinlatmaMetni = value;
+        return this;
+    }
+
     internal Result<ContactDetails> Iletisim() => ContactDetails.Create(ad, telefon, eposta, mesaj);
 
     internal Result<Lead> Olustur()
@@ -103,6 +111,7 @@ internal sealed class LeadBuilder
             subeId,
             BuildingBlocks.Locale.Create(locale).Value,
             izin,
+            aydinlatmaMetni,
             anahtar,
             VarsayilanAn);
     }

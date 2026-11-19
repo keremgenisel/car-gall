@@ -52,6 +52,10 @@ internal sealed class ContentPageConfiguration : IEntityTypeConfiguration<Conten
             satir.Property(item => item.Body).HasColumnName("body");
             satir.Property(item => item.Slug).HasColumnName("slug").HasMaxLength(80);
             satir.Property(item => item.Status).HasColumnName("status").HasMaxLength(10).HasConversion(StatusConverter);
+
+            // `0019` P2 — işaretçi; sürüm tablosuna FK yok: sürüm silinemez (tetikleyici) ve
+            // testlerin `TRUNCATE` temizliği bir FK ile kilitlenirdi.
+            satir.Property(item => item.PublishedVersionId).HasColumnName("published_version_id");
             satir.Ignore(item => item.IsComplete);
 
             // R13/D30 — dil başına tekil; taslaklar dahil. Girilmemiş (boş) slug tekillik dışı.

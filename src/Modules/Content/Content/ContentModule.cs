@@ -3,6 +3,7 @@ using CarGallery.BuildingBlocks.Schema;
 using CarGallery.Modules.Content.Application;
 using CarGallery.Modules.Content.Contracts.Home;
 using CarGallery.Modules.Content.Contracts.Pages;
+using CarGallery.Modules.Content.Contracts.PrivacyNotice;
 using CarGallery.Modules.Content.Endpoints;
 using CarGallery.Modules.Content.Infrastructure;
 using Microsoft.AspNetCore.Routing;
@@ -36,6 +37,10 @@ public static class ContentModule
         services.AddScoped<ContentCommands>();
         services.AddScoped<ContentAdminQueries>();
         services.AddScoped<IContentPublicQueries, ContentPublicQueries>();
+
+        // `0019` — `Leads`'in talep anında okuduğu sürüm yüzeyi. Kaydı BURADA, sahibinde:
+        // `Leads` bunun için bir varsayılan kaydetmez (AC-49).
+        services.AddScoped<IPrivacyNoticeQueries, PrivacyNoticeQueries>();
 
         // `0022` — ana sayfa metinleri: panelin okuması ve Host'un okuduğu public yüzey aynı sınıf.
         services.AddScoped<HomeTextCommands>();

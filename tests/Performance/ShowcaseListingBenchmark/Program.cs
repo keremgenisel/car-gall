@@ -16,6 +16,12 @@ const int ThresholdMilliseconds = 400;
 
 string baseUrl = Environment.GetEnvironmentVariable("PERF_BASE_URL") ?? "http://localhost:5080";
 
+// `0019` P11 — talep yazma profili yalnız açıkça istendiğinde koşar; C3 profilleri koşmaz.
+if (Environment.GetEnvironmentVariable("PERF_PROFILE") == "lead-capture")
+{
+    return await LeadCaptureProfile.RunAsync(baseUrl);
+}
+
 Profile[] profiles =
 [
     new("0001", "iki kasa tipiyle daraltılmış", "/api/catalog/showcase-listings?bodyType=suv&bodyType=sedan&locale=tr", RequireResults: true),
