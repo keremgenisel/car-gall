@@ -198,6 +198,16 @@ temizler; `null` "bilinmiyor" demektir (D3).
 
 ## Acceptance Criteria
 
+
+### Verilen kararlar — uygulama gözden geçirmesi, 2026-11-19
+
+**D20 — AC-27 serileşmeyi ölçer, "yalnız biri"ni değil (QA BULGU-1, PR #108; Takım Yöneticisi
+(ajan) kararı).** Geri alma önce kazanırsa ilan `Yayında`/`Taslak`'a döner ve ardından gelen
+arşivleme o durumdan meşru bir A3 geçişidir; ikisi de başarılı olur ve ikisi de kayda geçer.
+Kriterin eski metni ("yalnız biri başarılı olur") yalnız `Rezerve`'ye dönen ilanda doğruydu.
+Kriter düzeltildi — `main`'e girdikten sonraki ilk Acceptance Criteria değişikliği, SCORECARD'da
+**revizyon 1**. *Neden (b) değil:* arşivlemenin de beklenen durumu taşıması (`409`) `0012b`'nin
+bütün geçişlerini ilgilendiren genel bir desen değişikliği; ayrı kart olarak önerildi.
 ### Geri alma ve dönülen durum (R1, R3, R4 · D2, D3, D5)
 
 - **AC-1.** Yayındayken satıldı işaretlenen ilanın satışı Yönetici tarafından geri alındığında ilan **Yayında** olur ve vitrinde yeniden görünür.
@@ -238,7 +248,7 @@ temizler; `null` "bilinmiyor" demektir (D3).
 - **AC-24.** Arşivdeki ilan için geri alma reddedilir.
 - **AC-25.** Yayında, Rezerve ya da Taslak bir ilan için geri alma reddedilir.
 - **AC-26.** Aynı ilan için eşzamanlı iki geri alma isteğinden yalnız biri başarılı olur ve yalnız bir kayıt yazılır.
-- **AC-27.** Geri alma ile arşivleme eşzamanlı istendiğinde yalnız biri başarılı olur.
+- **AC-27.** Geri alma ile arşivleme eşzamanlı istendiğinde istekler aynı kilitte sırayla işlenir: hiçbir değişiklik kaybolmaz, geri alma kaydı yalnız geri alma başarılıysa yazılır ve ilanın son durumu iki isteğin bir sıralamasının sonucudur.
 
 ### Erişim (R12, R13 · D9)
 

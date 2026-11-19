@@ -459,9 +459,9 @@ public sealed class SatisGeriAlmaTests(ShowcaseDatabase database)
     /// iddiası yalnız bu hâlde sözlük anlamıyla doğru. `Yayında`ya ya da `Taslak`'a dönen
     /// ilanda geri alma önce kazanırsa arşivleme ARDINDAN yeni durumdan meşru bir A3
     /// geçişi olarak başarılı olur (`Yayında → Arşiv`, `Taslak → Arşiv`). O hâl aşağıdaki
-    /// ayrı testte ölçülüyor ve PR'da "kısmen karşılanmadı" diye yazıldı.</para>
+    /// ayrı testte ölçülüyor; kriter **D20** ile serileşmeyi ölçecek biçimde düzeltildi.</para>
     /// </summary>
-    [Fact(DisplayName = "0023/AC-27: Geri alma ile arşivleme eşzamanlı istendiğinde yalnız biri başarılı olur")]
+    [Fact(DisplayName = "0023/AC-27: Geri alma ile arşivleme eşzamanlı istendiğinde istekler aynı kilitte sırayla işlenir: hiçbir değişiklik kaybolmaz, geri alma kaydı yalnız geri alma başarılıysa yazılır ve ilanın son durumu iki isteğin bir sıralamasının sonucudur")]
     public async Task Basarili_Olur_YalnizBiri_GeriAlmaVeArsivde()
     {
         Arac arac = await SatilmisAracAsync(rezerveden: true);
@@ -488,9 +488,9 @@ public sealed class SatisGeriAlmaTests(ShowcaseDatabase database)
     /// ilanda iki istek serileşir ve sıra hangisi olursa olsun "satılmış ilan" üzerinde
     /// yalnız biri etkili olur — ama geri alma önce kazanırsa arşivleme `Yayında → Arşiv`
     /// olarak da başarılıdır. Kilit kayıp güncellemeyi önlüyor; "yalnız biri" iddiasını
-    /// önlemiyor. Spec'e öneri PR'da.
+    /// önlemiyor. Kriter bu davranışa göre düzeltildi (**D20**).
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "0023/AC-27: Geri alma ile arşivleme eşzamanlı istendiğinde istekler aynı kilitte sırayla işlenir: hiçbir değişiklik kaybolmaz, geri alma kaydı yalnız geri alma başarılıysa yazılır ve ilanın son durumu iki isteğin bir sıralamasının sonucudur")]
     public async Task Serilesir_GeriAlmaVeArsiv_YayindayaDonenIlanda()
     {
         Arac arac = await SatilmisAracAsync(rezerveden: false);
