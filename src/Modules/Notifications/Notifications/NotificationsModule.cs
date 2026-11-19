@@ -103,6 +103,7 @@ public static class NotificationsModule
         // D4 — gönderici soyutlamanın arkasında. Bugün SMTP; sağlayıcıya geçiş bu tek
         // satırı değiştirir, kuyruk ve tekrar deneme hiç dokunulmadan kalır.
         services.AddScoped<INotificationTransport, SmtpNotificationTransport>();
+        services.AddScoped<NewsletterMessageComposer>();
         services.AddScoped<NotificationDispatcher>();
 
         // R10/AC-14 — kuyruğu işleyen arka plan servisi. Kayıt veritabanında durduğu için

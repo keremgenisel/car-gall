@@ -174,6 +174,7 @@ public sealed class BultenSemaTests(NotificationsDatabase database)
             new TekTalep(talepId),
             new TekSube(),
             new TekSlug(),
+            Besteci.Kur(context, new Bulten.SabitSaat(An)),
             Bulten.Secenekler(),
             new Bulten.SabitSaat(An),
             NullLogger<NotificationDispatcher>.Instance).DispatchDueAsync(CancellationToken.None);

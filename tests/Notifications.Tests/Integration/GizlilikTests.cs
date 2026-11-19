@@ -106,6 +106,7 @@ public sealed class GizlilikTests(NotificationsDatabase database)
             new SahteTalepSorgusu(),
             new SahteSubeSorgusu(),
             new SahteSlugSorgusu(),
+            Besteci.Kur(context, new SabitSaat(An)),
             Secenekler(),
             new SabitSaat(An),
             NullLogger<NotificationDispatcher>.Instance);

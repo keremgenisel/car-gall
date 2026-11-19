@@ -37,6 +37,53 @@ internal sealed class DonemDuzeni
 
     internal SahteIlanOzeti Ilanlar { get; } = new();
 
+    internal SahteModelAdlari Modeller { get; } = new();
+
+    internal SahteSubeler Subeler { get; } = new();
+
+    internal SahteGaleri Galeri { get; } = new();
+
+    /// <summary>
+    /// Kuyruğu `0009`'un dağıtıcısıyla işler — bülten ve teyit iletisi İKİNCİ bir mekanizmadan
+    /// değil, aynı döngüden geçer (R10).
+    /// </summary>
+    internal async Task<int> DagitAsync(
+        INotificationTransport tasiyici,
+        Microsoft.Extensions.Logging.ILogger<TemplateResolver>? sablonLogu = null)
+    {
+        await using NotificationsDbContext context = database.CreateContext();
+
+        return await new NotificationDispatcher(
+            context,
+            tasiyici,
+            new TemplateResolver(context, NullLogger<TemplateResolver>.Instance),
+            new BosTalep(),
+            Subeler,
+            new BosSlug(),
+            Besteci.Kur(context, Saat, Ilanlar, Secenekler, Modeller, Subeler, Galeri, sablonLogu),
+            Bulten.Secenekler(),
+            Saat,
+            NullLogger<NotificationDispatcher>.Instance).DispatchDueAsync(CancellationToken.None);
+    }
+
+    internal async Task<List<NotificationMessage>> IletilerAsync()
+    {
+        await using NotificationsDbContext context = database.CreateContext();
+
+        return await context.Messages.AsNoTracking().OrderBy(message => message.QueuedAt).ToListAsync();
+    }
+
+    private sealed class BosTalep : CarGallery.Modules.Leads.Contracts.Notifications.ILeadNotificationQueries
+    {
+        public Task<CarGallery.Modules.Leads.Contracts.Notifications.LeadNotificationDto?> FindAsync(Guid leadId, CancellationToken cancellationToken) =>
+            Task.FromResult<CarGallery.Modules.Leads.Contracts.Notifications.LeadNotificationDto?>(null);
+    }
+
+    private sealed class BosSlug : CarGallery.Modules.VehicleCatalog.Contracts.Listings.IListingSlugQueries
+    {
+        public Task<string?> FindSlugAsync(Guid listingId, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+    }
+
     /// <summary>Başlangıç dönemi kaydını ŞİMDİ yazar (kartın ilk açılışı).</summary>
     internal async Task<DateTimeOffset> DevreyeGirAsync()
     {

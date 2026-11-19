@@ -15,6 +15,11 @@
     <ProjectReference Include="../../Leads/Leads.Contracts/Leads.Contracts.csproj" />
     <ProjectReference Include="../../Dealership/Dealership.Contracts/Dealership.Contracts.csproj" />
     <ProjectReference Include="../../VehicleCatalog/VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
+    <!--
+      0018 D11 — bülten satırının model ADI. İlan özeti model KİMLİĞİ döner; ad burada,
+      tek atlamayla çözülür (C12: `Notifications → VehicleCatalog → VehicleReference` yasak).
+    -->
+    <ProjectReference Include="../../VehicleReference/VehicleReference.Contracts/VehicleReference.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

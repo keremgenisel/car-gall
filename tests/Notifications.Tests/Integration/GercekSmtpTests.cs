@@ -121,6 +121,7 @@ public sealed class GercekSmtpTests(NotificationsDatabase database) : IAsyncLife
             new SahteTalepSorgusu(),
             new SahteSubeSorgusu(),
             new SahteSlugSorgusu(),
+            Besteci.Kur(context, new SabitSaat(An)),
             secenekler,
             new SabitSaat(An),
             NullLogger<NotificationDispatcher>.Instance);
