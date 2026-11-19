@@ -190,7 +190,16 @@
        ≥ 22.5rem → 1 sütun → 1390 (400px, en)
        ≥ 35.5rem → 2 sütun → 1161 (576px, tr)
        ≥ 51.5rem → 3 sütun → 950 (840px, tr)
-       ≥ 67.5rem → 4 sütun → 751 (1104px, tr) — yedinci eksen 3 ve 4 sütunu ayrıştırdı */
+       ≥ 67.5rem → 4 sütun → 751 (1104px, tr) — yedinci eksen 3 ve 4 sütunu ayrıştırdı
+     2026-11-19 (fix/0015-filtre-paneli-boslugu) — beş bant BOŞLUK üretiyordu: içerik bandın
+     başında en uzun, sonuna doğru kısalıyor ve bant genişken altta 130–250px boş kalıyordu
+     (1280px'te 199px). Aynı yöntemle (tohum + bir marka, tr/ar/en, 320–1600px, 8px adım)
+     yeniden tarandı ve bant sayısı, hiçbir genişlikte boşluk ~100px'i aşmayacak biçimde
+     artırıldı. Tarama ayrıca 360–367px'te on markalı panelin 1433px olduğunu, eski 1400'ün
+     33px KAYMA ürettiğini gösterdi; 22.5rem bandı 1443 oldu. Bant başına en uzun hâl + 10px:
+       < 21rem → 1618 · ≥ 21rem → 1466 · ≥ 22.5rem → 1433 · ≥ 26rem → 1314 · ≥ 32rem → 1185
+       ≥ 35.5rem → 1161 · ≥ 38rem → 1032 · ≥ 41rem → 933 · ≥ 51.5rem → 950 · ≥ 55rem → 821
+       ≥ 63rem → 730 · ≥ 67.5rem → 751 · ≥ 72.5rem → 622 */
   --list-filters-min-block-size: 1628px;
   --form-control-min-block-size: 44px;
 
@@ -209,9 +218,27 @@
   }
 }
 
+@media (width >= 21rem) {
+  :root {
+    --list-filters-min-block-size: 1476px;
+  }
+}
+
 @media (width >= 22.5rem) {
   :root {
-    --list-filters-min-block-size: 1400px;
+    --list-filters-min-block-size: 1443px;
+  }
+}
+
+@media (width >= 26rem) {
+  :root {
+    --list-filters-min-block-size: 1324px;
+  }
+}
+
+@media (width >= 32rem) {
+  :root {
+    --list-filters-min-block-size: 1195px;
   }
 }
 
@@ -221,15 +248,45 @@
   }
 }
 
+@media (width >= 38rem) {
+  :root {
+    --list-filters-min-block-size: 1042px;
+  }
+}
+
+@media (width >= 41rem) {
+  :root {
+    --list-filters-min-block-size: 943px;
+  }
+}
+
 @media (width >= 51.5rem) {
   :root {
     --list-filters-min-block-size: 960px;
   }
 }
 
+@media (width >= 55rem) {
+  :root {
+    --list-filters-min-block-size: 831px;
+  }
+}
+
+@media (width >= 63rem) {
+  :root {
+    --list-filters-min-block-size: 740px;
+  }
+}
+
 @media (width >= 67.5rem) {
   :root {
     --list-filters-min-block-size: 761px;
+  }
+}
+
+@media (width >= 72.5rem) {
+  :root {
+    --list-filters-min-block-size: 632px;
   }
 }
 
