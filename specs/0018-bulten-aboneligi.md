@@ -300,6 +300,12 @@ Her madde dosyasıyla birlikte; **koşturulmadan, koddan okunanlar** öyle işar
 12. **"Gönderim anı" iki şey.** Dönemin işlenmesi ile iletinin dağıtılması saatler
     ayrışabilir (tekrar deneme). İçerik dağıtımda baştan hesaplanırsa aynı dönemin iletileri
     farklı listeler taşır ve satışlar boş bülten doğurabilir (QA B3 → **D21**).
+13. **Çıkış ile gönderim arasındaki pencere.** Dağıtıcı aboneliğin durumunu iletiyi kurarken
+    okur (**D22**); okuma ile SMTP teslimi arasında — en çok yapılandırılan gönderim zaman aşımı
+    (`SendTimeout`) kadar — gelen çıkış o iletiyi durdurmaz ve tek bir bülten çıkıştan hemen
+    sonra ulaşabilir. Davranış bilerek değiştirilmedi (QA BULGU-2, PR #122 —
+    Takım Yöneticisi (ajan) kararı, 2026-11-19): pencereyi kapatmak gönderimi aboneliğin
+    kilidi altında yapmak, yani SMTP beklemesini veritabanı kilidine bağlamak demekti.
 
 ### Verilen kararlar — sahip, 2026-11-19
 
@@ -714,7 +720,8 @@ bu cevaplardan bağımsız yazıldı; cevaplar canlıya çıkışı etkileyebili
 **teyit** ve **çıkış** için zamanıyla (UTC), yalnız eklenen ve silinmeyen bir **izin olay
 kaydı** (**D27** — aynı adresin yeniden aboneliği eski olayları ezmez); teyitsiz adrese bülten
 gitmemesi; her bültende tek adımlı çıkış bağlantısı; çıkıştan sonra — kuyrukta bekleyen dâhil —
-gönderim olmaması (**D22**); çıkış kaydının silinmemesi; adresin ve bağlantı anahtarlarının loga
+**dağıtım anında okunan duruma göre** gönderim olmaması (**D22**; durum okunduktan sonra
+gelen çıkış o gönderimi durdurmaz — Bilinen tuzak 13); çıkış kaydının silinmemesi; adresin ve bağlantı anahtarlarının loga
 ve gönderim geçmişine girmemesi. **Garanti etmediği:** dış bir sisteme (İYS) bildirim, saklama
 süresi uygulaması, yasal gönderici kimliği metni, izin anındaki metnin sürümü.
 
