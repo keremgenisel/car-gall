@@ -76,7 +76,8 @@ public sealed class DuyuruTests(ShowcaseDatabase database)
                 .Order()
         ];
 
-        Assert.Equal(8, uretilen.Count);
+        // `0023` **D17** dokuzuncuyu ekledi (`VehicleSaleReverted`) ve belge aynı PR'da güncellendi (C3).
+        Assert.Equal(9, uretilen.Count);
         Assert.Equal(belgedeki.Order(), uretilen);
     }
 
@@ -198,7 +199,7 @@ public sealed class DuyuruTests(ShowcaseDatabase database)
             .Select(match => match.Value)
             .Where(ad => ad != "VehicleCatalog")];
 
-        Assert.Equal(8, adlar.Count);
+        Assert.Equal(9, adlar.Count);
 
         return adlar;
     }

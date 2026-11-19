@@ -280,6 +280,38 @@ export const LISTING_ACTIONS = [
 export type ListingAction = (typeof LISTING_ACTIONS)[number]
 
 /**
+ * 0023 — satışı geri almanın dönebileceği üç durum. Değerler sunucunun durum KODLARIDIR
+ * (`listingStatus` ile aynı sözlük); ekran onları `vehicle.status.*` anahtarlarından çevirir.
+ */
+export const SALE_REVERT_TARGETS = ['Published', 'Reserved', 'Draft'] as const
+
+export type SaleRevertTarget = (typeof SALE_REVERT_TARGETS)[number]
+
+/** 0023 **R6** — tek bir geri alma kaydı. Kayıt salt okunurdur (AC-21). */
+export interface SaleReversalRecord {
+  readonly id: string
+  readonly staffDisplayName: string
+  readonly revertedAt: string
+  readonly reason: string
+  readonly restoredStatus: string
+}
+
+/**
+ * 0023 — geri alma penceresinin önizlemesi ve ilanın kayıtları (**R7**, **R9**).
+ *
+ * <p>`targetStatus` yalnız satılmış ilanda dolu. `draftReasons` hedef Taslak olduğunda
+ * NEDENİ taşır ve yayın reddinin kodlarıdır (`vehicle.cannot_publish.*`); ekran onları
+ * aynı anahtarlardan çevirir.</p>
+ */
+export interface SaleReversalOverview {
+  readonly listingStatus: string
+  readonly targetStatus: string | null
+  readonly draftReasons: readonly string[]
+  readonly missingFields: readonly string[]
+  readonly records: readonly SaleReversalRecord[]
+}
+
+/**
  * 0012c — öne çıkarmanın iki yönü. `ListingAction`'dan **AYRI** tutuldu ve bu kararın
  * kendisi: öne çıkarma bir durum geçişi değil, bir **sıralama** eylemidir. Aynı listeye
  * konsaydı `listingActionState`'in A3 tablosu onu bir geçiş gibi göstermeye çalışırdı.

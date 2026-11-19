@@ -56,8 +56,8 @@ public sealed class GecisTablosuTests
     {
         Listing listing = Durumda(ListingStatus.Sold);
 
-        // A4 — yanlış işaretleme YENİ KAYIT açılarak düzeltilir; arayüzde "geri al"
-        // düğmesi kuralı delerdi.
+        // A4 — satılmış ilan YAYINA ALMA yoluyla geri gelmez. Yanlış işaretlemenin tek
+        // düzeltmesi Yöneticinin gerekçeli geri almasıdır (`0023`, `Listing.RevertSale`).
         Result sonuc = listing.Publish(Adres(listing), new FixedClock(Simdi));
 
         Assert.True(sonuc.IsFailure);

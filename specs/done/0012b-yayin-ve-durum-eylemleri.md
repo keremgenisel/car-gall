@@ -58,6 +58,8 @@ değil galerinin kendi kararından geliyor.**
   alan reddi **hangi alanların** eksik olduğunu da taşır. → **D2**, **D23**, **D24**, **D42**
 - **R3.** Yayın durumu geçişleri yalnızca **A3**'te yazılı olanlardır; başka geçiş yoktur.
 - **R4.** `Satıldı` **terminaldir**: araç yeniden yayına alınamaz. → **A4**
+  *(→ `0023`, 2026-11-18: yanlış işaretleme Yöneticinin gerekçeli "satışı geri al" geçişiyle
+  düzeltilir; yayına alma yolu yine kapalı.)*
 - **R5.** Personel bir ilanı **rezerve** edebilir; rezerve ilan vitrinde rozetiyle görünmeye
   devam eder. → **R6** (domain)
 - **R6.** Personel bir rezervasyonu **kaldırabilir** ve ilan `Yayında` durumuna döner.
@@ -330,6 +332,8 @@ A2'yi karşılar).
    personeli tek tek denemeye zorlar; "hepsi başarılı" demek yalan söyler. → **D3**
 4. **`Satıldı`dan geri dönüş.** A4 terminal diyor; arayüzde "geri al" düğmesi koymak kuralı
    deler. Yanlış işaretleme **yeni kayıt** açılarak düzeltilir.
+   *(→ `0023`, 2026-11-18: sahip geri almayı istedi; Yöneticiye özel, gerekçeli ve kayıtlı
+   bir geçiş olarak eklendi. Panelin "geri al düğmesi kuralı delerdi" yorumu kaldırıldı.)*
 5. **Arşivin şase tekilliğini serbest bırakmasını unutmak.** A5 muafiyeti arşivleme
    eyleminin yan etkisidir ve ADR 0006 bunu `0012`'nin borcu olarak yazdı; bayrak ayrı bir
    işlemde yazılırsa tekillik indeksi **yanlış kararı sessizce** verir. → **D9**

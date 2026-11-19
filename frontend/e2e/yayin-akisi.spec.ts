@@ -141,7 +141,8 @@ test('0012b/AC-11, 0012b/AC-13: yayındaki ilan rezerve edilir ve satıldı işa
   await page.getByTestId('vehicle-action-sold').click()
   await expect(page.getByTestId('vehicle-action-done')).toBeVisible()
 
-  // A4 — `Satıldı` terminaldir: yayına alma düğmesi HİÇ basılmıyor.
+  // A4 — `Satıldı` ticari olarak terminaldir: yayına alma düğmesi HİÇ basılmıyor. Tek geri
+  // dönüş `0023`'ün gerekçeli "Satışı geri al"ıdır ve oturum Yöneticinin (R12).
   await expect(page.getByTestId('vehicle-action-publish')).toHaveCount(0)
-  await expect(page.getByTestId('vehicle-sold-terminal')).toBeVisible()
+  await expect(page.getByTestId('vehicle-action-revert-sale')).toBeVisible()
 })

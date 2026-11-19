@@ -1,5 +1,7 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.VehicleCatalog.Domain;
+using CarGallery.Modules.VehicleCatalog.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 namespace CarGallery.Modules.VehicleCatalog.Application.Listings;
 
@@ -95,4 +97,20 @@ internal static class PublishEligibility
 
         return [.. requiredFieldKeys.Where(key => !dolu.Contains(key)).OrderBy(key => key, StringComparer.Ordinal)];
     }
+
+    /// <summary>
+    /// O an **zorunlu** işaretli opsiyonel alanların anahtarları. Yayına alma ve satışı geri
+    /// alma (`0023` **D13**) aynı kümeyi okuyor; sorgu iki komutta ayrı yazılsaydı aynı
+    /// koşul iki yerde iki farklı şey olabilirdi.
+    /// </summary>
+    internal static async Task<IReadOnlySet<string>> RequiredFieldKeysAsync(
+        VehicleCatalogDbContext context,
+        CancellationToken cancellationToken) =>
+        new HashSet<string>(
+            await context.VehicleFieldSettings
+                .AsNoTracking()
+                .Where(setting => !setting.IsCore && setting.FormState == FieldFormState.Required)
+                .Select(setting => setting.FieldKey)
+                .ToListAsync(cancellationToken),
+            StringComparer.Ordinal);
 }

@@ -3,7 +3,8 @@ using CarGallery.BuildingBlocks.Outbox;
 namespace CarGallery.Modules.VehicleCatalog.Contracts.Events;
 
 /// <summary>
-/// `VehicleCatalog`'un sekiz entegrasyon olayı (`0012b` **D11**). Adlar
+/// `VehicleCatalog`'un entegrasyon olayları: `0012b` **D11**'in sekizi ve `0023`'ün
+/// `VehicleSaleReverted`'ı. Adlar
 /// `docs/architecture.md` § 1'deki adlarla **birebir** aynıdır ve hepsi `Vehicle*`
 /// öneklidir — önek § 1'in 2026-10-11 düzeltmesiyle kararlı hâle geldi.
 ///
@@ -54,7 +55,10 @@ public sealed record VehicleReturnedToShowcase(
     Guid ListingId,
     string Slug) : IIntegrationEvent;
 
-/// <summary>Araç satıldı. **A4**: bu durum terminaldir.</summary>
+/// <summary>
+/// Araç satıldı. **A4**: ticari olarak terminaldir; yanlış işaretleme yalnız Yöneticinin
+/// gerekçeli geri almasıyla düzeltilir (`0023`, <see cref="VehicleSaleReverted"/>).
+/// </summary>
 public sealed record VehicleSold(
     Guid EventId,
     DateTimeOffset OccurredAt,
@@ -92,3 +96,24 @@ public sealed record VehicleRelocated(
     Guid VehicleId,
     Guid ListingId,
     string Slug) : IIntegrationEvent;
+
+/// <summary>
+/// `0023` **D8**/**D17** — yanlışlıkla satıldı işaretlenen ilanın satışı geri alındı.
+/// `VehicleSold`'u sayan bir tüketici (rapor) geri almayı görmezse yanlış sayar.
+///
+/// <para><b>Dönülen durum gövdede</b> ve bu, **D30**'un "yeni durumu tip söyler" kuralından
+/// bilinçli bir ayrılıktır (**D17**): bu tek olayın üç olası sonucu var (`Published`,
+/// `Reserved`, `Draft`) ve tip onları ayırt edemez. Değer, panel sözleşmesinin kullandığı
+/// durum KODUDUR; çevrilmiş ad değildir.</para>
+///
+/// <para><b>Gerekçe ve geri alan personel gövdede DEĞİL</b> (**C5**): gerekçe kişisel veri
+/// taşıyabilir ve olay gövdesinde taşınan veri outbox'ta yaşamaya devam eder. İkisi
+/// `VehicleCatalog`'un kendi kaydında durur (**D7**).</para>
+/// </summary>
+public sealed record VehicleSaleReverted(
+    Guid EventId,
+    DateTimeOffset OccurredAt,
+    Guid VehicleId,
+    Guid ListingId,
+    string Slug,
+    string RestoredStatus) : IIntegrationEvent;

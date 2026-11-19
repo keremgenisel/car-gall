@@ -23,6 +23,13 @@ internal sealed class ListingConfiguration : IEntityTypeConfiguration<Listing>
         // Enum'un sayısal değeri kodun kendisidir.
         builder.Property(listing => listing.Status).HasColumnName("status").HasConversion<int>();
 
+        // 0023 D2/D18 — satış öncesi durum; `null` = bilinmiyor (D3). Bu kart gelmeden
+        // önce satılmış ilanların kolonu migration'la NULL kalır ve geri alma onları
+        // `Yayında`ya döndürür — değer uydurulmaz.
+        builder.Property(listing => listing.StatusBeforeSale)
+            .HasColumnName("status_before_sale")
+            .HasConversion<int?>();
+
         builder.Property(listing => listing.ShowcaseSortWeight).HasColumnName("showcase_sort_weight");
         builder.Property(listing => listing.PublishedAt).HasColumnName("published_at");
 

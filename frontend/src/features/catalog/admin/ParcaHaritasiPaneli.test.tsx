@@ -74,7 +74,7 @@ async function ekran(detay: VehicleAdminDetail, locale: AppLocale = 'tr') {
   vi.mocked(fetchVehicle).mockResolvedValue(detay)
   render(
     <LocaleProvider locale={locale}>
-      <VehicleEditPage vehicleId={detay.vehicleId} />
+      <VehicleEditPage vehicleId={detay.vehicleId} staffRole="sales_advisor" />
     </LocaleProvider>,
   )
   return screen.findByTestId('paint-change-map-input')
@@ -160,7 +160,7 @@ describe('0016a — panelde parça haritası (R12)', () => {
     vi.mocked(fetchVehicle).mockResolvedValue(kayit(null))
     render(
       <LocaleProvider locale="tr">
-        <VehicleEditPage vehicleId={kayit(null).vehicleId} />
+        <VehicleEditPage vehicleId={kayit(null).vehicleId} staffRole="sales_advisor" />
       </LocaleProvider>,
     )
 
