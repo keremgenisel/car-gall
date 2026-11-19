@@ -30,6 +30,11 @@ internal sealed class BodyTypeQueries(VehicleReferenceDbContext context) : IBody
         context.BodyTypes.AsNoTracking().AnyAsync(type => type.Slug == slug, cancellationToken);
 }
 
+/// <summary>
+/// `0021` — modelin adı iki parçadır: marka ve model, ikisi de dil başına görünen ad ya da
+/// kanonik ada düşüş (R3). Tam ad bu iki parçanın birleşimidir ve vitrinin bugünkü görünümü
+/// ("Toyota Corolla") böyle korunur (D12, AC-5).
+/// </summary>
 internal sealed class VehicleModelQueries(VehicleReferenceDbContext context) : IVehicleModelQueries
 {
     public async Task<IReadOnlyDictionary<Guid, string>> ResolveNamesAsync(
@@ -37,26 +42,15 @@ internal sealed class VehicleModelQueries(VehicleReferenceDbContext context) : I
         string locale,
         CancellationToken cancellationToken)
     {
-        if (vehicleModelIds.Count == 0)
-        {
-            return new Dictionary<Guid, string>();
-        }
+        IReadOnlyDictionary<Guid, VehicleModelPartsDto> parts =
+            await ResolvePartsAsync(vehicleModelIds, locale, cancellationToken);
 
-        List<VehicleModel> models = await context.VehicleModels
-            .AsNoTracking()
-            .Include(model => model.Translations)
-            .Where(model => vehicleModelIds.Contains(model.Id))
-            .ToListAsync(cancellationToken);
-
-        return models.ToDictionary(
-            model => model.Id,
-            model => model.Translations.FirstOrDefault(translation => translation.Locale == locale)?.Name
-                ?? model.CanonicalName);
+        return parts.ToDictionary(pair => pair.Key, pair => FullName(pair.Value.BrandLabel, pair.Value.ModelLabel));
     }
 
     /// <summary>
-    /// Çevirilere HİÇ bakmaz. `Include` da yapmaz: kanonik ad modelin kendi kolonundadır
-    /// ve çeviri satırlarını okumak burada yalnız maliyet olurdu.
+    /// Çevirilere HİÇ bakmaz: kanonik adlar markanın ve modelin kendi kolonlarındadır ve çeviri
+    /// satırlarını okumak burada yalnız maliyet olurdu.
     /// </summary>
     public async Task<IReadOnlyDictionary<Guid, string>> ResolveCanonicalNamesAsync(
         IReadOnlyCollection<Guid> vehicleModelIds,
@@ -67,19 +61,54 @@ internal sealed class VehicleModelQueries(VehicleReferenceDbContext context) : I
             return new Dictionary<Guid, string>();
         }
 
+        var rows = await context.VehicleModels
+            .AsNoTracking()
+            .Where(model => vehicleModelIds.Contains(model.Id))
+            .Join(
+                context.VehicleBrands,
+                model => model.BrandId,
+                brand => brand.Id,
+                (model, brand) => new { model.Id, Brand = brand.CanonicalName, Model = model.CanonicalName })
+            .ToListAsync(cancellationToken);
+
+        return rows.ToDictionary(row => row.Id, row => FullName(row.Brand, row.Model));
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, VehicleModelPartsDto>> ResolvePartsAsync(
+        IReadOnlyCollection<Guid> vehicleModelIds,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (vehicleModelIds.Count == 0)
+        {
+            return new Dictionary<Guid, VehicleModelPartsDto>();
+        }
+
         List<VehicleModel> models = await context.VehicleModels
             .AsNoTracking()
+            .Include(model => model.Translations)
             .Where(model => vehicleModelIds.Contains(model.Id))
             .ToListAsync(cancellationToken);
 
-        return models.ToDictionary(model => model.Id, model => model.CanonicalName);
+        List<Guid> brandIds = [.. models.Select(model => model.BrandId).Distinct()];
+
+        Dictionary<Guid, VehicleBrand> brands = await context.VehicleBrands
+            .AsNoTracking()
+            .Include(brand => brand.Translations)
+            .Where(brand => brandIds.Contains(brand.Id))
+            .ToDictionaryAsync(brand => brand.Id, cancellationToken);
+
+        return models
+            .Where(model => brands.ContainsKey(model.BrandId))
+            .ToDictionary(
+                model => model.Id,
+                model => new VehicleModelPartsDto(
+                    model.Id,
+                    model.BrandId,
+                    BrandLabel(brands[model.BrandId], locale),
+                    ModelLabel(model, locale)));
     }
 
-    /// <summary>
-    /// Sıralama KANONİK ada göre, etikete göre değil: etiket locale'e göre değişir ve
-    /// personelin dili değiştiğinde listenin sırası da değişirdi. Kanonik ad dilden
-    /// bağımsızdır (docs/domain.md, Kanonik Ad).
-    /// </summary>
     public async Task<IReadOnlyList<VehicleModelDto>> GetAllAsync(
         string locale,
         CancellationToken cancellationToken)
@@ -87,20 +116,135 @@ internal sealed class VehicleModelQueries(VehicleReferenceDbContext context) : I
         List<VehicleModel> models = await context.VehicleModels
             .AsNoTracking()
             .Include(model => model.Translations)
+            .Where(model => model.IsActive
+                && context.VehicleBrands.Any(brand => brand.Id == model.BrandId && brand.IsActive))
             .OrderBy(model => model.CanonicalName)
             .ToListAsync(cancellationToken);
 
-        return
-        [
-            .. models.Select(model => new VehicleModelDto(
-                model.Id,
-                model.Translations.FirstOrDefault(translation => translation.Locale == locale)?.Name
-                    ?? model.CanonicalName))
-        ];
+        return [.. models.Select(model => new VehicleModelDto(model.Id, model.BrandId, ModelLabel(model, locale)))];
     }
 
-    public Task<bool> ExistsAsync(Guid vehicleModelId, CancellationToken cancellationToken) =>
-        context.VehicleModels.AsNoTracking().AnyAsync(model => model.Id == vehicleModelId, cancellationToken);
+    public async Task<bool?> FindSelectableAsync(Guid vehicleModelId, CancellationToken cancellationToken)
+    {
+        var row = await context.VehicleModels
+            .AsNoTracking()
+            .Where(model => model.Id == vehicleModelId)
+            .Join(
+                context.VehicleBrands,
+                model => model.BrandId,
+                brand => brand.Id,
+                (model, brand) => new { Selectable = model.IsActive && brand.IsActive })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return row?.Selectable;
+    }
+
+    /// <summary>
+    /// Tam ad marka ve model parçasının boşlukla birleşimidir. Bu bir cümle değil, bir özel
+    /// addır ve bölünmüş kayıtların her dilde eski tam adı birebir üretmesi bu kurala bağlıdır
+    /// (`0021` C4: sabit eşleme her dili "marka + boşluk + model" diye böldü).
+    /// </summary>
+    internal static string FullName(string brand, string model) => $"{brand} {model}";
+
+    internal static string BrandLabel(VehicleBrand brand, string locale) =>
+        brand.Translations.FirstOrDefault(translation => translation.Locale == locale)?.Name ?? brand.CanonicalName;
+
+    internal static string ModelLabel(VehicleModel model, string locale) =>
+        model.Translations.FirstOrDefault(translation => translation.Locale == locale)?.Name ?? model.CanonicalName;
+}
+
+internal sealed class VehicleBrandQueries(VehicleReferenceDbContext context) : IVehicleBrandQueries
+{
+    public async Task<IReadOnlyList<VehicleBrandDto>> GetActiveAsync(string locale, CancellationToken cancellationToken)
+    {
+        List<VehicleBrand> brands = await context.VehicleBrands
+            .AsNoTracking()
+            .Include(brand => brand.Translations)
+            .Where(brand => brand.IsActive)
+            .ToListAsync(cancellationToken);
+
+        return [.. Alphabetical(brands).Select(brand => new VehicleBrandDto(brand.Id, brand.Slug, VehicleModelQueries.BrandLabel(brand, locale)))];
+    }
+
+    public async Task<IReadOnlyList<ShowcaseBrandDto>> GetBrandsOfModelsAsync(
+        IReadOnlyCollection<Guid> vehicleModelIds,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (vehicleModelIds.Count == 0)
+        {
+            return [];
+        }
+
+        List<VehicleBrand> brands = await context.VehicleBrands
+            .AsNoTracking()
+            .Include(brand => brand.Translations)
+            .Where(brand => context.VehicleModels.Any(model =>
+                model.BrandId == brand.Id && vehicleModelIds.Contains(model.Id)))
+            .ToListAsync(cancellationToken);
+
+        return [.. Alphabetical(brands).Select(brand => Showcase(brand, locale))];
+    }
+
+    public async Task<IReadOnlyList<ShowcaseBrandDto>> FindBySlugsAsync(
+        IReadOnlyCollection<string> slugs,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (slugs.Count == 0)
+        {
+            return [];
+        }
+
+        // Eşleşme tam ve harfe duyarlı (D20): `Toyota` bilinmeyen değerdir.
+        List<VehicleBrand> brands = await context.VehicleBrands
+            .AsNoTracking()
+            .Include(brand => brand.Translations)
+            .Where(brand => slugs.Contains(brand.Slug))
+            .ToListAsync(cancellationToken);
+
+        return [.. Alphabetical(brands).Select(brand => Showcase(brand, locale))];
+    }
+
+    public async Task<BrandModelSetDto> GetModelSetAsync(
+        IReadOnlyCollection<string> slugs,
+        CancellationToken cancellationToken)
+    {
+        if (slugs.Count == 0)
+        {
+            return new BrandModelSetDto([], []);
+        }
+
+        List<(Guid Id, string Slug)> brands = await context.VehicleBrands
+            .AsNoTracking()
+            .Where(brand => slugs.Contains(brand.Slug))
+            .Select(brand => new ValueTuple<Guid, string>(brand.Id, brand.Slug))
+            .ToListAsync(cancellationToken);
+
+        List<Guid> brandIds = [.. brands.Select(brand => brand.Id)];
+
+        List<Guid> modelIds = brandIds.Count == 0
+            ? []
+            : await context.VehicleModels
+                .AsNoTracking()
+                .Where(model => brandIds.Contains(model.BrandId))
+                .Select(model => model.Id)
+                .ToListAsync(cancellationToken);
+
+        return new BrandModelSetDto([.. brands.Select(brand => brand.Slug)], modelIds);
+    }
+
+    /// <summary>
+    /// D7 — kanonik ada göre alfabetik. Sıralama bellekte ve sıra-duyarsız ordinal: veritabanı
+    /// harmanlaması kuruluma göre değişir (Türkçe harmanlamada "I" ile "i" farklı yere düşer)
+    /// ve kanonik ad zaten ASCII'dir (C3).
+    /// </summary>
+    internal static IEnumerable<VehicleBrand> Alphabetical(IEnumerable<VehicleBrand> brands) =>
+        brands.OrderBy(brand => brand.CanonicalName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(brand => brand.CanonicalName, StringComparer.Ordinal);
+
+    private static ShowcaseBrandDto Showcase(VehicleBrand brand, string locale) =>
+        new(brand.Slug, VehicleModelQueries.BrandLabel(brand, locale), brand.CanonicalName, brand.ShowOnHome);
 }
 
 internal sealed class ReferenceTermQueries(VehicleReferenceDbContext context) : IReferenceTermQueries

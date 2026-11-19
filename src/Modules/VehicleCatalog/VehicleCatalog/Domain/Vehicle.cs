@@ -71,8 +71,11 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// <summary>Başka modülün (Dealership) kimliği: kısıtsız Guid, foreign key yok (Yasak Listesi 2).</summary>
     internal Guid BranchId { get; private set; }
 
-    /// <summary>Referans verinin (VehicleReference) kimliği; model adı orada yaşar.</summary>
-    internal Guid VehicleModelId { get; }
+    /// <summary>
+    /// Referans verinin (VehicleReference) kimliği; model ve marka adı orada yaşar. Aracın
+    /// markası modelden türer (`0021` D2) — araçta ayrı bir marka alanı yoktur.
+    /// </summary>
+    internal Guid VehicleModelId { get; private set; }
 
     internal VehicleSpecification Specification { get; private set; }
 
@@ -205,6 +208,19 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
         Touch(at);
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// `0021` R8 · D23 — düzenlemede model değiştirilebilir. Seçilebilirlik (pasif model) ve
+    /// varlık denetimi `Application`'da, `VehicleReference.Contracts` üzerinden yapılır;
+    /// burada yalnız kimliğin boş olmaması korunur.
+    /// </summary>
+    internal void ChangeModel(Guid vehicleModelId)
+    {
+        if (vehicleModelId != Guid.Empty)
+        {
+            VehicleModelId = vehicleModelId;
+        }
     }
 
     /// <summary>Her yazma yolundan sonra çağrılır; `UpdatedAt` tek kapıdan geçer (D25).</summary>

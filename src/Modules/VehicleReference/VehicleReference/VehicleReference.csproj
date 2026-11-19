@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="../VehicleReference.Contracts/VehicleReference.Contracts.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/BuildingBlocks.csproj" />
+    <ProjectReference Include="../../Identity/Identity.Contracts/Identity.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

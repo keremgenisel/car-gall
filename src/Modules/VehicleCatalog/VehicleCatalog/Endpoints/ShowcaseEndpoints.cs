@@ -30,6 +30,26 @@ internal static class ShowcaseEndpoints
         builder.MapGet("/api/catalog/featured-listings", GetFeaturedListingsAsync)
             .WithName("GetFeaturedListings")
             .Produces<IReadOnlyList<ShowcaseListingDto>>(StatusCodes.Status200OK);
+
+        // `0021` — marka ekseninin seçenekleri. `scope=home` ana sayfa formunun süzgecidir
+        // (R13); diğer her değer listenin eksenidir ve adresle gelen `brand` değerleri D21
+        // gereği eksende tutulur.
+        builder.MapGet("/api/catalog/showcase-brands", GetShowcaseBrandsAsync)
+            .WithName("GetShowcaseBrands")
+            .Produces<IReadOnlyList<ShowcaseBrandOptionDto>>(StatusCodes.Status200OK);
+    }
+
+    private static async Task<Ok<IReadOnlyList<ShowcaseBrandOptionDto>>> GetShowcaseBrandsAsync(
+        HttpContext httpContext,
+        IShowcaseBrandQueries queries,
+        CancellationToken cancellationToken)
+    {
+        IQueryCollection query = httpContext.Request.Query;
+        string locale = ResolveLocale(httpContext);
+
+        return TypedResults.Ok(string.Equals(query["scope"].FirstOrDefault(), "home", StringComparison.Ordinal)
+            ? await queries.GetForHomeAsync(locale, cancellationToken)
+            : await queries.GetForListAsync(locale, Values(query, "brand"), cancellationToken));
     }
 
     private static async Task<Ok<IReadOnlyList<ShowcaseListingDto>>> GetFeaturedListingsAsync(
@@ -62,6 +82,7 @@ internal static class ShowcaseEndpoints
             Mileage = Range(query, "mileageMin", "mileageMax"),
             Price = Range(query, "priceMin", "priceMax"),
             Sort = query["sort"].FirstOrDefault(),
+            Brands = Values(query, "brand"),
         };
 
         PagedResult<ShowcaseListingDto> page = await queries.GetAsync(filter, cancellationToken);

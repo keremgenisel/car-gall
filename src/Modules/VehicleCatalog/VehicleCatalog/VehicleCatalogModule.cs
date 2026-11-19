@@ -80,6 +80,7 @@ public static class VehicleCatalogModule
         services.AddScoped<IShowcaseListingQueries, ShowcaseListingQueries>();
         // 0014 D3 — ana sayfanın öne çıkan bölümü.
         services.AddScoped<IFeaturedListingQueries, FeaturedListingQueries>();
+        services.AddScoped<IShowcaseBrandQueries, ShowcaseBrandQueries>();
         services.AddScoped<IShowcaseListingDetailQueries, ShowcaseListingDetailQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
 
@@ -155,10 +156,22 @@ public static class VehicleCatalogModule
     public static async Task SeedVehicleCatalogForDevelopmentAsync(
         this IServiceProvider services,
         int listingCount,
-        Guid vehicleModelId,
+        IReadOnlyList<Guid> vehicleModelIds,
         CancellationToken cancellationToken = default)
     {
         using IServiceScope scope = services.CreateScope();
+
+        // `0021` D24 — ilanlar birden çok markaya yayılır. İlan adresi kanonik TAM addan
+        // üretildiği için (marka + model, D17) adlar sözleşmeden okunur.
+        IReadOnlyDictionary<Guid, string> canonicalNames = await scope.ServiceProvider
+            .GetRequiredService<IVehicleModelNameResolver>()
+            .ResolveCanonicalNamesAsync(vehicleModelIds, cancellationToken);
+        List<(Guid Id, string CanonicalName)> models =
+        [
+            .. vehicleModelIds
+                .Where(canonicalNames.ContainsKey)
+                .Select(id => (id, canonicalNames[id]))
+        ];
 
         VehicleCatalogDbContext context = scope.ServiceProvider.GetRequiredService<VehicleCatalogDbContext>();
         CatalogCurrencyOptions currency = scope.ServiceProvider.GetRequiredService<CatalogCurrencyOptions>();
@@ -166,7 +179,7 @@ public static class VehicleCatalogModule
             context,
             scope.ServiceProvider.GetRequiredService<IClock>(),
             new CatalogCurrency(currency.Code, currency.MinorUnitExponent));
-        await seeder.SeedAsync(listingCount, vehicleModelId, cancellationToken);
+        await seeder.SeedAsync(listingCount, models, cancellationToken);
     }
 
     /// <summary>

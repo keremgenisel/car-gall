@@ -154,6 +154,11 @@ internal sealed class VehicleWriteRules(
     /// AC-5 — altı küme. Terimler TEK sorguda, model ve kasa tipi ayrı: üçü farklı
     /// tablolarda ve tek bir sorguya sığmıyor. Terim sorgusu eksik olanları döndüğü için
     /// hangi alanın düştüğü doğrudan okunuyor.
+    ///
+    /// <para>`0021` **D23** — pasif model (ya da pasif markanın modeli) YENİ seçim olarak
+    /// reddedilir (AC-27). <paramref name="currentModelId"/> aracın KAYITLI modelidir: istek onu
+    /// değiştirmiyorsa kural uygulanmaz ve araç pasif modeliyle kaydedilebilir (AC-26) —
+    /// kapatılmış şubenin `0020` D14 deseni.</para>
     /// </summary>
     internal async Task<Result> ValidateReferencesAsync(
         Guid vehicleModelId,
@@ -162,11 +167,19 @@ internal sealed class VehicleWriteRules(
         string transmissionType,
         string drivetrainType,
         string trimLevel,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? currentModelId = null)
     {
-        if (!await models.ExistsAsync(vehicleModelId, cancellationToken))
+        bool? selectable = await models.FindSelectableAsync(vehicleModelId, cancellationToken);
+
+        if (selectable is null)
         {
             return Failure(VehicleErrors.ReferenceNotFound, VehicleFieldNames.VehicleModelId);
+        }
+
+        if (selectable is false && currentModelId != vehicleModelId)
+        {
+            return Failure(VehicleErrors.ModelInactive, VehicleFieldNames.VehicleModelId);
         }
 
         if (!await bodyTypes.ExistsAsync(bodyType, cancellationToken))

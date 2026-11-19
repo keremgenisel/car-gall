@@ -54,8 +54,8 @@ public sealed class TalepHizSiniriTests : IAsyncLifetime
             MediaTestSettings.Apply(builder);
         });
 
-        await factory.Services.SeedVehicleReferenceForDevelopmentAsync(ModelId);
-        await factory.Services.SeedVehicleCatalogForDevelopmentAsync(0, ModelId);
+        await factory.Services.SeedVehicleReferenceForDevelopmentAsync();
+        await factory.Services.SeedVehicleCatalogForDevelopmentAsync(0, [ModelId]);
 
         await SeedShowcaseAsync();
     }

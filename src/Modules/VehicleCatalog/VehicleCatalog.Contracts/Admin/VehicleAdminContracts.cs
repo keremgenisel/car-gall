@@ -92,7 +92,15 @@ public sealed record VehicleAdminDetailDto(
     /// **düğmeye basılmadan** söylüyor: sunucu da reddediyor, ama personeli boşuna
     /// denemekten kurtarmak eylem yüzeyinin işi.
     /// </summary>
-    bool AwaitingBranchAssignment = false);
+    bool AwaitingBranchAssignment = false,
+    /// <summary>
+    /// `0021` D24 — aracın kayıtlı modelinin marka ve model adı, personelin dilinde. Düzenleme
+    /// formu marka ve modeli bunlardan seçili gösterir; ikisi pasif olsa bile (AC-26).
+    /// </summary>
+    VehicleAdminModelDto? Model = null);
+
+/// <summary>`0021` — aracın modelinin marka kimliği ve iki parçanın görünen adı.</summary>
+public sealed record VehicleAdminModelDto(Guid BrandId, string BrandLabel, string ModelLabel);
 
 /// <summary>
 /// Opsiyonel alanın değeri, TİPİYLE birlikte. Biçimlendirme UÇTA yapılır
@@ -174,7 +182,7 @@ public interface IVehicleAdminQueries
         CancellationToken cancellationToken);
 
     /// <summary>Bulunamayan araç için <c>null</c> döner; çağıran `404`'e çevirir (AC-4).</summary>
-    Task<VehicleAdminDetailDto?> FindAsync(Guid vehicleId, CancellationToken cancellationToken);
+    Task<VehicleAdminDetailDto?> FindAsync(Guid vehicleId, CancellationToken cancellationToken, string? locale = null);
 
     /// <summary>Formun kurabilmesi için AÇIK opsiyonel alanlar (R7).</summary>
     Task<IReadOnlyList<VehicleAdminFieldDto>> GetFormFieldsAsync(CancellationToken cancellationToken);

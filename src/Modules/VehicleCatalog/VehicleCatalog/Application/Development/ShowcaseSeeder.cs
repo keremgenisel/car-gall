@@ -61,9 +61,18 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
         ("Gri", "رمادي", "Grey"),
     ];
 
-    internal async Task SeedAsync(int listingCount, Guid vehicleModelId, CancellationToken cancellationToken)
+    /// <summary>
+    /// `0021` D24 — ilanlar verilen modellere altılı bloklar hâlinde dağılır: ardışık altı ilan
+    /// aynı modeli taşır ve altı kasa tipinin hepsini gezer. Model sırası `index % 12` olsaydı
+    /// on iki altının katı olduğu için her model hep aynı kasa tipine düşerdi ve marka + kasa
+    /// daraltması (AC-38) tohumda tek bir kombinasyona indirgenirdi.
+    /// </summary>
+    internal async Task SeedAsync(
+        int listingCount,
+        IReadOnlyList<(Guid Id, string CanonicalName)> models,
+        CancellationToken cancellationToken)
     {
-        if (await context.ShowcaseListings.AnyAsync(cancellationToken))
+        if (models.Count == 0 || await context.ShowcaseListings.AnyAsync(cancellationToken))
         {
             return;
         }
@@ -96,6 +105,7 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
         for (int index = 0; index < listingCount; index++)
         {
             string bodyType = BodyTypes[index % BodyTypes.Length];
+            (Guid vehicleModelId, string modelName) = models[(index / BodyTypes.Length) % models.Count];
 
             // Her altıncı araç "fiyat sorunuz" (P4), her yedincisi rezerve (R6).
             ListingPrice price = index % 6 == 5
@@ -177,12 +187,12 @@ internal sealed class ShowcaseSeeder(VehicleCatalogDbContext context, IClock clo
             // eksik: "eksik dil" göstergesinin (R12) geliştirme verisinde görülebilir bir
             // karşılığı olmasa, kanıt üretimi sahte veriye muhtaç kalırdı.
             listing.SetText(
-                LocalizedText.From(SeedText("Toyota Corolla", index, baslik: true)),
-                LocalizedText.From(SeedText("Toyota Corolla", index, baslik: false)));
+                LocalizedText.From(SeedText(modelName, index, baslik: true)),
+                LocalizedText.From(SeedText(modelName, index, baslik: false)));
 
             // 0012b D13 — adres artık YAZMA modelinde ve ilk yayında bir kez yazılıyor;
             // seed de o yoldan geçiyor. Projeksiyon onu kopyalıyor.
-            ListingSlug slug = ListingSlug.Create("Toyota Corolla", vehicle.ModelYear, listing.Id).Value;
+            ListingSlug slug = ListingSlug.Create(modelName, vehicle.ModelYear, listing.Id).Value;
 
             listing.Publish(slug, clock);
 

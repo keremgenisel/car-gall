@@ -88,8 +88,8 @@ public sealed class SubeKapatmaZinciriTests : IAsyncLifetime
         // ikinci kez uygulamak, testi kurulum adımının kendisine karşı kör ederdi.
         // Geriye vitrin tarafının bağımlılıkları kalıyor: VehicleReference liste
         // sorgusunun, VehicleCatalog ise alıcının kendisi.
-        await factory!.Services.SeedVehicleReferenceForDevelopmentAsync(Guid.CreateVersion7());
-        await factory.Services.SeedVehicleCatalogForDevelopmentAsync(0, Guid.CreateVersion7());
+        await factory!.Services.SeedVehicleReferenceForDevelopmentAsync();
+        await factory.Services.SeedVehicleCatalogForDevelopmentAsync(0, [Guid.CreateVersion7()]);
     }
 
     private async Task SeedShowcaseAsync()

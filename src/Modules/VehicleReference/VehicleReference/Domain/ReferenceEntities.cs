@@ -22,11 +22,27 @@ internal sealed class BodyTypeTranslation
     internal required string Name { get; set; }
 }
 
+/// <summary>
+/// `0021` — model tam olarak bir markaya aittir (R2, D2) ve marka ondan hiç değişmez (D14):
+/// <see cref="BrandId"/> yalnız kurulurken yazılır. Kanonik ad markasızdır ("Corolla") ve
+/// marka içinde tekildir (D11) — tekillik <see cref="CanonicalKey"/> üzerinde, veritabanı
+/// indeksiyle dayatılır. Silinmez, pasif yapılır (D5).
+/// </summary>
 internal sealed class VehicleModel
 {
     internal required Guid Id { get; init; }
 
-    internal required string CanonicalName { get; init; }
+    internal required Guid BrandId { get; init; }
+
+    internal required string CanonicalName { get; set; }
+
+    /// <summary>Tekillik anahtarı: kanonik adın değişmez kültürle büyük harfi (C3).</summary>
+    internal required string CanonicalKey { get; set; }
+
+    internal bool IsActive { get; set; } = true;
+
+    /// <summary>İyimser eşzamanlılık; her yazma bir artırır (`0020` deseni).</summary>
+    internal int Version { get; set; } = 1;
 
     internal List<VehicleModelTranslation> Translations { get; init; } = [];
 }

@@ -44,7 +44,7 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
         await using (VehicleCatalogDbContext yazma = CreateContext())
         {
             await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 10, 5, 12, 0, 0, TimeSpan.Zero)), Para)
-                .SeedAsync(sayi, Guid.Parse("0192c000-0000-7000-8000-00000000000a"), CancellationToken.None);
+                .SeedAsync(sayi, [(Guid.Parse("0192c000-0000-7000-8000-00000000000a"), "Toyota Corolla")], CancellationToken.None);
         }
 
         await using VehicleCatalogDbContext okuma = CreateContext();
@@ -74,7 +74,7 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
         await using (VehicleCatalogDbContext yazma = CreateContext())
         {
             await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 10, 5, 12, 0, 0, TimeSpan.Zero)), Para)
-                .SeedAsync(sayi, Guid.Parse("0192c000-0000-7000-8000-00000000000a"), CancellationToken.None);
+                .SeedAsync(sayi, [(Guid.Parse("0192c000-0000-7000-8000-00000000000a"), "Toyota Corolla")], CancellationToken.None);
         }
 
         await using VehicleCatalogDbContext okuma = CreateContext();
@@ -104,7 +104,7 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
         await using (VehicleCatalogDbContext yazma = CreateContext())
         {
             await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 11, 18, 12, 0, 0, TimeSpan.Zero)), Para)
-                .SeedAsync(12, Guid.Parse("0192c000-0000-7000-8000-00000000000a"), CancellationToken.None);
+                .SeedAsync(12, [(Guid.Parse("0192c000-0000-7000-8000-00000000000a"), "Toyota Corolla")], CancellationToken.None);
         }
 
         await using VehicleCatalogDbContext okuma = CreateContext();
@@ -132,7 +132,7 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
         await using (VehicleCatalogDbContext yazma = CreateContext())
         {
             await new ShowcaseSeeder(yazma, new FixedClock(new DateTimeOffset(2026, 11, 18, 12, 0, 0, TimeSpan.Zero)), Para)
-                .SeedAsync(6, Guid.Parse("0192c000-0000-7000-8000-00000000000a"), CancellationToken.None);
+                .SeedAsync(6, [(Guid.Parse("0192c000-0000-7000-8000-00000000000a"), "Toyota Corolla")], CancellationToken.None);
         }
 
         Guid ilan;
@@ -191,7 +191,7 @@ public sealed class SeedYazmaModeliTests : IAsyncLifetime
         await using (VehicleCatalogDbContext yazma = CreateContext())
         {
             await new ShowcaseSeeder(yazma, new FixedClock(DateTimeOffset.UnixEpoch), Para)
-                .SeedAsync(30, Guid.CreateVersion7(), CancellationToken.None);
+                .SeedAsync(30, [(Guid.CreateVersion7(), "Toyota Corolla")], CancellationToken.None);
         }
 
         await using VehicleCatalogDbContext okuma = CreateContext();

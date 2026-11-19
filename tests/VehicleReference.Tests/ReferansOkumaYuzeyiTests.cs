@@ -140,8 +140,8 @@ public sealed class ReferansOkumaYuzeyiTests(ReferenceDatabase database)
         IReadOnlyList<VehicleModelDto> modeller =
             await new VehicleModelQueries(context).GetAllAsync("tr", CancellationToken.None);
 
-        Assert.True(await new VehicleModelQueries(context).ExistsAsync(modeller[0].Id, CancellationToken.None));
-        Assert.False(await new VehicleModelQueries(context).ExistsAsync(Guid.NewGuid(), CancellationToken.None));
+        Assert.True(await new VehicleModelQueries(context).FindSelectableAsync(modeller[0].Id, CancellationToken.None));
+        Assert.Null(await new VehicleModelQueries(context).FindSelectableAsync(Guid.NewGuid(), CancellationToken.None));
 
         IReadOnlyList<BodyTypeDto> kasalar =
             await new BodyTypeQueries(context).GetAllAsync("tr", CancellationToken.None);
