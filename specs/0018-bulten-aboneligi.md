@@ -597,6 +597,101 @@ entegrasyonu (X8) bu kayda dayanır.
 *Bedel:* yeni bir tablo; KVKK silme talebinde (SS3) adresin aboneliği silinse bile olaylar
 kimlikle kalır — sahibin cevabı bunu değiştirebilir.
 
+### Verilen kararlar — plan turu, 2026-11-19
+
+**Developer (ajan) plan kararları**, Takım Yöneticisi görevlendirmesi kapsamında (R/C/AC'ye
+dokunmaz; QA turunda gözden geçirilir). Her biri, kriterin bıraktığı bir uygulama boşluğunu
+kapatır.
+
+**D28 — Teyit anahtarı iletinin DAĞITIMINDA üretilir.** Kuyruk gövdeyi dağıtım anında kurar
+(`0009` C10) ve **D25** veritabanında yalnız özeti istiyor: istek anında üretilen düz anahtarın
+dağıtıma kadar yaşayacağı bir yer yok. Dağıtıcı, teyit iletisini kurarken anahtarı CSPRNG ile
+üretir, özetini ve son geçerlilik zamanını aboneliğe **göndermeden önce** yazar, sonra gönderir.
+*Sonuç:* süre gönderimden başlar; "en son gönderilen geçerli" (**D7**) dağıtım sırasıdır.
+*Bedel:* geçici hatayla tekrar denenen teyit iletisi yeni bir anahtar taşır; ilk deneme
+aslında teslim edildiyse onun bağlantısı geçersizdir. *Elenen:* anahtarı iletide şifreli
+saklamak — **D25**'in "yalnız özet" cümlesiyle çelişir.
+
+**D29 — Adres sınırı (D9) gönderim kaydından sayılır.** Pencere içindeki teyit iletileri,
+aboneliğin `messages` satırlarından sayılır; sayım ve yazma aboneliğin satır kilidi altında
+yapılır (eşzamanlı iki istek sınırı birlikte aşamaz). *Gerekçe:* yeni bir sayaç durumu yok
+ve sayım süreç yeniden başlasa da kaybolmaz. *Bedel:* her abonelik isteğinde bir sayım
+sorgusu.
+
+**D30 — "Yayında" = vitrin okuma modelinde rezerve olmayan satır.** Yeni ilan özeti okuması
+(`IListingSummaryQueries`, **D11**) vitrin okuma modelinden okur: model yalnız Yayında ve
+Rezerve ilanları taşır ve durum geçişiyle aynı transaction'da yazılır (`0012b` D12). Okuma
+`VehicleReference`'a uzanmaz (C12). *Bedel:* yok — vitrinde görünmeyen bir ilan bültende de
+görünmez.
+
+**D31 — İletinin dili bir kez seçilir.** Teyit iletisinde teyit şablonu, bültende başlık
+şablonu abonenin dilinde (kurulumda etkin değilse varsayılanda — AC-82) çözülür; o dilde yoksa
+varsayılana düşülür ve **çözülen dil** satır, altlık ve "Fiyat sorunuz"/"Diğer yeni araçlar…"
+parçalarında da kullanılır. *Gerekçe:* parça parça düşüş tek iletide iki dil üretirdi.
+
+**D32 — D24'ün ölçümü ve biçim kuralı (ön yüz otoritedir).** Ölçüldü (2026-11-19; .NET 10
+`CultureInfo`, Node 24.22 ICU 78.3 `Intl`): km ve yıl **birebir aynı** (`N0`/`D` ↔
+`formatMileage`/`formatYear`: TR `125.000`, AR/EN `125,000`, yıl `2019`). **Para birebir
+DEĞİL:** nötr kültürün para simgesi `¤`'dır (`1250000m.ToString("C2", tr)` → `¤1.250.000,00`),
+`CultureInfo` para birimini kodla seçemez ve `Intl`'in boşlukları (U+00A0) ile Arapça yön
+işaretlerini (U+200F) üretmez. `Intl`: TR `₺1.250.000,00` · `KWD 12.500,750`; AR
+`‏1,250,000.00 TRY` · `‏12,500.750 د.ك.‏`; EN `TRY 1,250,000.00` · `KWD 12,500.750`. Bölgeli
+kültür (`ar-KW`) ise Arap ayraçları (`12٬500٫750`) üretir. **Kural:** sayı kısmı
+`CultureInfo(<dil>).NumberFormat` ile (`N<üs>`; ayraçlar ve rakamlar nötr kültürden), para
+ekleri `Intl` çıktısından türetilmiş **(dil × para birimi)** tablosundan; tabloda olmayan
+para birimi için dilin genel kalıbı (TR/EN `KOD` + U+00A0 + sayı, AR U+200F + sayı + U+00A0 +
+`KOD`). İki taraf aynı fikstür dosyasını ölçer (`frontend/src/shared/i18n/format.fixtures.json`):
+Vitest `Intl` çıktısını, xUnit bülten biçimini — ön yüz değişirse önce Vitest, fikstür
+güncellenince backend testi kırmızıya döner (**D24**'ün bedeli). *Açık konu (PR):* tablo
+TRY ve KWD'yi taşır; başka bir para birimi kurulduğunda ön yüzle aynı simgeyi garanti etmez.
+
+**D33 — HTTP sözleşmesi.** `POST /api/notifications/newsletter/subscriptions`
+(`{ email, locale }`) → `202` + sabit gövde (**D5**); biçim/dil hatası `400` (AC-7, AC-10 —
+`docs/conventions.md` § 5'in `422`'si yerine kriterin `400`'ü). `POST …/confirmations` ve
+`POST …/unsubscriptions` (`{ token }`) → `200`; geçersiz bağlantı `404` +
+`notification.subscription_link_invalid` (AC-35, AC-44). Çıkış sayfası açılır açılmaz isteği
+gönderir (**D6**); teyit sayfası yalnız düğmeyle.
+
+**D34 — İzin olayı her istekte yazılır.** **D27**'nin "her istek" cümlesi etkin aboneliğe
+gelen isteği de kapsar (durum değişmez, olay eklenir); adres sınırına takılan istek olay
+yazmaz. Kaydın "yalnız eklenir" kuralı veritabanında bir tetikleyiciyle korunur
+(`UPDATE`/`DELETE` reddedilir).
+
+**D35 — `noindex` ve `Referrer-Policy` Host'tan.** İki sayfanın belgesi `IndexHtmlRenderer`'dan
+geçer; Host `<meta name="robots" content="noindex">` basar ve `Referrer-Policy: no-referrer`
+başlığını yazar (**D26**). Uç ayrıca bir şey yapmaz.
+
+**D36 — Ana sayfada KVKK bağlantısı tek okumayla.** Altlığın kurumsal bağlantıları ile bülten
+notunun `privacy` bağlantısı aynı okumadan gelir (`HomeRoute`); ana sayfaya ikinci bir
+`Content` isteği eklenmez (LCP payı — C13).
+
+**D37 — Teyit ve çıkış sayfaları ayrı (lazy) pakette.** Metinleri vitrin kataloğundadır
+(AC-94, ADR `0013`); bileşenleri ilk pakete girmez (**D17**'nin bedeli).
+
+**D38 — Yapılandırma anahtarları.** `Notifications:Newsletter:` altında `SendDayOfWeek`,
+`SendTimeUtc` (`HH:mm`), `ConfirmationLinkHours`, `RequestLimit`/`RequestWindowMinutes`,
+`ValidRequestLimit`/`ValidRequestWindowMinutes`, `AddressConfirmationLimit`/`AddressWindowHours`
+ve sır `UnsubscribeSigningKey` (ortam değişkeni; Base64, en az 32 bayt). Hiçbirinin koda
+gömülü varsayılanı yok (C14).
+
+### Uygulama planı
+
+| Adım | İş | Modül | Kriter |
+|---|---|---|---|
+| **P1** | Plan kararları ve bu tablo | spec | — |
+| **P2** | `newsletter` ayrılmış ad | `Content.Contracts` | AC-52 |
+| **P3** | İlan özeti okuması (model kimliği döner, tek atlama) | `VehicleCatalog(.Contracts)` | AC-55, AC-74, AC-83 |
+| **P4** | Şema: abonelik, izin olayı, aday, dönem, dönem↔ilan; gönderim kaydı CHECK + tekil; şablon seed | `Notifications` | AC-84, AC-85, AC-93, AC-96, AC-99 |
+| **P5** | Abone olma, teyit, çıkış; üç hız sınırı; yapılandırma | `Notifications` | AC-7–AC-25, AC-27–AC-35, AC-38–AC-44, AC-47–AC-50, AC-89–AC-93, AC-97, AC-98 |
+| **P6** | Aday işleyicisi, dönem işleyicisi, zamanlı servis | `Notifications` | AC-29, AC-39, AC-55–AC-73 |
+| **P7** | Dağıtım: teyit ve bülten iletisi, D21/D22, biçim (D24/D32) | `Notifications` | AC-26, AC-37, AC-46, AC-65, AC-66, AC-74–AC-82, AC-86–AC-88 |
+| **P8** | Host bağlantısı, `noindex`/`Referrer-Policy`, boru hattı testleri | `Host` | AC-12–AC-15, AC-50, AC-53, AC-54, AC-97 |
+| **P9** | Mimari kapılar: zincir (dinamik), log yüzeyi, olay yayınlamama | `Architecture.Tests` | AC-83, AC-90, AC-99 |
+| **P10** | Uç: bülten bölümü, teyit ve çıkış sayfaları, katalog | `frontend` | AC-1–AC-6, AC-11, AC-27, AC-36, AC-43–AC-45, AC-51, AC-94 |
+| **P11** | e2e + görsel kanıt (Arapça dâhil) | `frontend/e2e` | AC-2, AC-5, AC-6, AC-12, AC-28, AC-38, AC-95 |
+| **P12** | Sözlük, mimari, dağıtım, `dev-up.sh`, iş akışları (sır) | `docs`, `scripts`, `ci` | D19, D20, D25 |
+| **P13** | Performans ölçümü (gzip toplamı + C3) PR'da | — | AC-100, AC-101 |
+
 ---
 
 ## Sahibe sorular
