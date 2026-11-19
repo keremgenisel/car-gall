@@ -134,6 +134,13 @@ internal sealed class PageLocalization(string locale, string title, string body,
     /// <summary>Yayın durumu.</summary>
     internal PublicationStatus Status { get; set; } = status;
 
+    /// <summary>
+    /// `0019` P2 — bu dilin yayındaki metnini kopyalayan sürüm. Yalnız `privacy`'nin
+    /// YAYINDAKİ dilinde doludur ve metinle aynı işlemde yazılır: canlı metin ile en son
+    /// sürüm tek satırda birlikte durur (R13). Diğer sayfalarda hep boştur (R12).
+    /// </summary>
+    internal Guid? PublishedVersionId { get; set; }
+
     /// <summary>R6 — üç alanın da dolu olup olmadığı.</summary>
     internal bool IsComplete => Title.Length > 0 && Body.Length > 0 && Slug.Length > 0;
 }

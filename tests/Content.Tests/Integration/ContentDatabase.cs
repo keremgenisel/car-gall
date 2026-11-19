@@ -51,7 +51,10 @@ public sealed class ContentDatabase : IAsyncLifetime
         return new ContentDbContext(builder.Options);
     }
 
-    /// <summary>Migration'ın kurduğu hâle döner.</summary>
+    /// <summary>
+    /// Migration'ın kurduğu hâle döner. `0019` — sürüm tablosu `TRUNCATE` ile boşalır:
+    /// `DELETE` C5'in tetikleyicisine takılır (P5) — kuralın çalıştığının ilk işareti.
+    /// </summary>
     internal async Task ResetAsync()
     {
         await using ContentDbContext context = CreateContext();
@@ -65,6 +68,7 @@ public sealed class ContentDatabase : IAsyncLifetime
             UPDATE content.pages SET version = 1;
             DELETE FROM content.home_text_localizations;
             UPDATE content.home_texts SET version = 1;
+            TRUNCATE content.privacy_notice_versions;
             """);
     }
 }

@@ -128,6 +128,42 @@ namespace CarGallery.Modules.Content.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CarGallery.Modules.Content.Domain.PrivacyNoticeVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("body");
+
+                    b.Property<bool>("IsInitial")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_initial");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("locale");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("privacy_notice_versions", "content");
+                });
+
             modelBuilder.Entity("CarGallery.Modules.Content.Domain.ContentPage", b =>
                 {
                     b.OwnsMany("CarGallery.Modules.Content.Domain.PageLocalization", "Localizations", b1 =>
@@ -145,6 +181,10 @@ namespace CarGallery.Modules.Content.Infrastructure.Migrations
                                 .IsRequired()
                                 .HasColumnType("text")
                                 .HasColumnName("body");
+
+                            b1.Property<Guid?>("PublishedVersionId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("published_version_id");
 
                             b1.Property<string>("Slug")
                                 .IsRequired()
