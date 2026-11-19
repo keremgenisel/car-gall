@@ -6,7 +6,23 @@ import { intlLocale, type AppLocale } from '../lib/locale'
 
 type Catalog = Record<string, string>
 
-const CATALOGS: Record<AppLocale, Catalog> = { tr, ar, en }
+/**
+ * Vitrin kataloğu ilk pakete girer; panel kataloğu (`./panel.ts`) panelin lazy paketiyle
+ * iner ve buraya EKLENİR (ADR `0013`). Kopyalar değiştirilebilir olsun diye: JSON modülünün
+ * kendi nesnesine yazılmaz.
+ */
+const CATALOGS: Record<AppLocale, Catalog> = { tr: { ...tr }, ar: { ...ar }, en: { ...en } }
+
+/**
+ * Panel kataloğunu vitrin kataloğunun üstüne ekler. Çevirmenler kataloğu ÇAĞRI ANINDA
+ * okuduğu için kayıttan önce kurulmuş bir çevirmen (`App`'in `LocaleProvider`'ı) panel
+ * anahtarlarını da görür. Aynı anahtarın iki katalogda birden olması `check:locales`'te kırılır.
+ */
+export function registerCatalogs(extra: Readonly<Record<AppLocale, Catalog>>): void {
+  for (const locale of Object.keys(CATALOGS) as AppLocale[]) {
+    Object.assign(CATALOGS[locale], extra[locale])
+  }
+}
 
 export type TranslationValues = Record<string, string | number>
 

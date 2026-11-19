@@ -191,7 +191,8 @@ silindiğinde `check:locales` *"3 katalog, 274 anahtar — hepsi eşit"* dedi ve
 Böyle bir anahtar kümesi kodda tanımlıysa kapısı **backend tarafındadır** ve kayıt
 defterinin kendisini okur — ara bir temsil (düzenli ifadeyle kaynak tarama) kurulmaz.
 Emsal: `VehicleCatalog.Tests/Domain/AlanEtiketiKapisiTests` — `VehicleFieldDefinitions`
-üzerinden geçip her katalogda `vehicle.field.<anahtar>` arar.
+üzerinden geçip her dilin kataloğunda (vitrin + panel dosyasının birleşimi, ADR `0013`)
+`vehicle.field.<anahtar>` arar.
 
 > **Bir testin `frontend/` altındaki bir dosyayı okuması bu durumda meşrudur.** Kuralın bir
 > yanı kodda, bir yanı katalogta olduğunda tek taraftan ölçmek mümkün değildir. Koşulu:
