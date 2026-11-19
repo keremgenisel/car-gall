@@ -68,8 +68,10 @@ internal sealed class ContentCommands(ContentDbContext context, ContentLocaleOpt
             return Result.Failure<int>(errors.ToError());
         }
 
+        IReadOnlyDictionary<string, (string Title, string Body)>? once = PrivacyNoticeVersioning.Capture(page);
         Apply(page, texts);
         page.Touch();
+        PrivacyNoticeVersioning.Record(context, page, once, clock.UtcNow);
 
         Result kayit = await SaveAsync(texts.Select(item => $"{item.Locale}.slug"), cancellationToken);
 
@@ -110,8 +112,10 @@ internal sealed class ContentCommands(ContentDbContext context, ContentLocaleOpt
             return Result.Failure<int>(errors.ToError());
         }
 
+        IReadOnlyDictionary<string, (string Title, string Body)>? once = PrivacyNoticeVersioning.Capture(page);
         page.Publish(locale);
         page.Touch();
+        PrivacyNoticeVersioning.Record(context, page, once, clock.UtcNow);
 
         Result kayit = await SaveAsync([], cancellationToken);
 
@@ -129,8 +133,10 @@ internal sealed class ContentCommands(ContentDbContext context, ContentLocaleOpt
             return Result.Failure<int>(hata);
         }
 
+        IReadOnlyDictionary<string, (string Title, string Body)>? once = PrivacyNoticeVersioning.Capture(page!);
         page!.Unpublish(locale);
         page.Touch();
+        PrivacyNoticeVersioning.Record(context, page, once, clock.UtcNow);
 
         Result kayit = await SaveAsync([], cancellationToken);
 

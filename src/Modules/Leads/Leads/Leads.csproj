@@ -14,6 +14,11 @@
     -->
     <ProjectReference Include="../../VehicleCatalog/VehicleCatalog.Contracts/VehicleCatalog.Contracts.csproj" />
     <ProjectReference Include="../../VehicleReference/VehicleReference.Contracts/VehicleReference.Contracts.csproj" />
+    <!--
+      `0019` D8 — talep anında yayındaki KVKK aydınlatma metni sürümü. Aynı üç koşul: salt
+      okuma, aynı istek, tek atlama (`Content` bu okumada kimseye uzanmaz — AC-46).
+    -->
+    <ProjectReference Include="../../Content/Content.Contracts/Content.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

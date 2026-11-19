@@ -57,6 +57,10 @@ public static class LeadsModule
         services.AddScoped<LeadsUnitOfWork>();
         services.AddScoped<IListingSnapshotSource, ListingSnapshotSource>();
         services.AddScoped<ICanonicalModelNameSource, CanonicalModelNameSource>();
+
+        // `0019` — adaptör `Content`'in kaydettiği `IPrivacyNoticeQueries`'e dayanır. Burada
+        // onun için bir varsayılan KAYDEDİLMEZ (AC-49, Bilinen tuzak 2).
+        services.AddScoped<IPrivacyNoticeSource, PrivacyNoticeSource>();
         services.AddScoped<CaptureLead>();
 
         // Dağıtıcı modülün kendi kaydıdır: outbox tablosu bu modülün şemasındadır ve onu

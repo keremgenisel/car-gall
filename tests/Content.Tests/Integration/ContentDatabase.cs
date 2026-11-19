@@ -51,7 +51,10 @@ public sealed class ContentDatabase : IAsyncLifetime
         return new ContentDbContext(builder.Options);
     }
 
-    /// <summary>Migration'ın kurduğu hâle döner.</summary>
+    /// <summary>
+    /// Migration'ın kurduğu hâle döner. `0019` — sürüm tablosu `TRUNCATE` ile boşalır:
+    /// `DELETE` C5'in tetikleyicisine takılır (P5) — kuralın çalıştığının ilk işareti.
+    /// </summary>
     internal async Task ResetAsync()
     {
         await using ContentDbContext context = CreateContext();
@@ -65,6 +68,7 @@ public sealed class ContentDatabase : IAsyncLifetime
             UPDATE content.pages SET version = 1;
             DELETE FROM content.home_text_localizations;
             UPDATE content.home_texts SET version = 1;
+            TRUNCATE content.privacy_notice_versions;
             """);
     }
 }
@@ -80,10 +84,18 @@ public sealed class ContentDatabaseCollection : ICollectionFixture<ContentDataba
 /// <summary>Testlerin ortak yardımcıları: her işlem kendi bağlamında, gerçek komut ve sorguyla.</summary>
 internal sealed class Icerik(ContentDatabase database, params string[] locales)
 {
-    private static readonly DateTimeOffset Simdi = new(2026, 11, 18, 12, 0, 0, TimeSpan.Zero);
-
     /// <summary>Etkin diller; verilmezse tr, ar, en.</summary>
     internal ContentLocaleOptions Locales { get; } = new("tr", locales.Length == 0 ? ["tr", "ar", "en"] : locales);
+
+    /// <summary>
+    /// Komutların sabit saati: komut boyunca değişmez, testin istediği anda ilerletilir
+    /// (`0019` AC-1 — kayda geçen an bu değerdir). Yalnız veritabanına yazılan domain
+    /// anları üretir; gerçek saatle karşılaştırılmaz (`docs/testing.md` § 4).
+    /// </summary>
+    internal DateTimeOffset Simdi { get; set; } = new(2026, 11, 18, 12, 0, 0, TimeSpan.Zero);
+
+    /// <summary>Saati bir dakika ilerletir ve yeni değeri döner.</summary>
+    internal DateTimeOffset Ilerlet() => Simdi = Simdi.AddMinutes(1);
 
     /// <summary>Sistem sayfasının sabit kimliği.</summary>
     internal static Guid Sistem(string key) => ContentPageConfiguration.SystemPageIds[key];

@@ -98,6 +98,18 @@ namespace CarGallery.Modules.Leads.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("idempotency_key");
 
+                    b.Property<string>("PrivacyNoticeStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("not_recorded")
+                        .HasColumnName("privacy_notice_status");
+
+                    b.Property<Guid?>("PrivacyNoticeVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("privacy_notice_version_id");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");
@@ -179,7 +191,10 @@ namespace CarGallery.Modules.Leads.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ux_leads_idempotency_key");
 
-                    b.ToTable("leads", "leads");
+                    b.ToTable("leads", "leads", t =>
+                        {
+                            t.HasCheckConstraint("ck_leads_privacy_notice", "(privacy_notice_status = 'published' AND privacy_notice_version_id IS NOT NULL) OR (privacy_notice_status IN ('not_published', 'not_recorded') AND privacy_notice_version_id IS NULL)");
+                        });
                 });
 #pragma warning restore 612, 618
         }

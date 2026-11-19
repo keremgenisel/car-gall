@@ -36,6 +36,28 @@ internal sealed class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(lead => lead.ConsentGiven).HasColumnName("consent_given");
         builder.Property(lead => lead.CapturedAt).HasColumnName("captured_at");
 
+        // `0019` D15 — veritabanı varsayılanı "kayıt tutulmuyordu": var olan talepler ve eski
+        // uygulamanın dağıtım penceresinde yazabileceği talep dürüst değeri alır. Yeni kod
+        // değeri HER eklemede açıkça yazar (AC-23): gözcü değeri hiçbir gerçek durumla
+        // eşleşmeyen bir sayıdır, yani EF değeri hiçbir zaman "varsayılana bırak" diye atlamaz.
+        // Tanımsız bir değer dönüştürücüde patlar; sessizce varsayılana düşmez.
+        builder.Property(lead => lead.PrivacyNoticeStatus)
+            .HasColumnName("privacy_notice_status")
+            .HasMaxLength(20)
+            .HasConversion(
+                status => PrivacyNoticeStatusCodes.ToCode(status),
+                code => PrivacyNoticeStatusCodes.FromCode(code))
+            .HasDefaultValue(PrivacyNoticeStatus.NotRecorded)
+            .HasSentinel((PrivacyNoticeStatus)int.MinValue);
+
+        builder.Property(lead => lead.PrivacyNoticeVersionId).HasColumnName("privacy_notice_version_id");
+
+        // `0019` D27/AC-43 — durum ↔ kimlik tutarlılığı veritabanında dayatılır.
+        builder.ToTable(table => table.HasCheckConstraint(
+            "ck_leads_privacy_notice",
+            "(privacy_notice_status = 'published' AND privacy_notice_version_id IS NOT NULL) "
+            + "OR (privacy_notice_status IN ('not_published', 'not_recorded') AND privacy_notice_version_id IS NULL)"));
+
         builder.Property(lead => lead.IdempotencyKey)
             .HasColumnName("idempotency_key")
             .HasMaxLength(Lead.MaximumIdempotencyKeyLength);

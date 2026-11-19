@@ -17,6 +17,9 @@ internal sealed class ContentDbContext(DbContextOptions<ContentDbContext> option
     /// <summary>`0022` — ana sayfa metinleri (tek kayıt).</summary>
     internal DbSet<HomeTexts> HomeTexts => Set<HomeTexts>();
 
+    /// <summary>`0019` — KVKK aydınlatma metninin yayınlanmış sürümleri; yalnız eklenir (C5).</summary>
+    internal DbSet<PrivacyNoticeVersion> PrivacyNoticeVersions => Set<PrivacyNoticeVersion>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

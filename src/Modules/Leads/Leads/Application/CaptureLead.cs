@@ -38,6 +38,7 @@ internal sealed class CaptureLead(
     LeadsUnitOfWork unitOfWork,
     IListingSnapshotSource listings,
     ICanonicalModelNameSource modelNames,
+    IPrivacyNoticeSource privacyNotices,
     ILeadCaptureQuota quota,
     LeadLocaleOptions locales,
     IClock clock)
@@ -139,6 +140,11 @@ internal sealed class CaptureLead(
             return Result.Failure<Guid>(new Error(LeadErrors.ListingUnavailable));
         }
 
+        // `0019` D3/D25 — talebin dilinde ŞU AN yayındaki sürüm. Tekrar anahtarı okumasından
+        // SONRA (aynı talep ilk bağını korur — R9) ve hız bütçesinden ÖNCE: okuma hata verirse
+        // istisna yukarı çıkar, talep yazılmaz ve bütçe hiç tüketilmemiştir (R10, AC-44).
+        PrivacyNoticeLink privacyNotice = await privacyNotices.FindPublishedAsync(locale, cancellationToken);
+
         Result<Lead> lead = Lead.Capture(
             type,
             contact.Value,
@@ -146,6 +152,7 @@ internal sealed class CaptureLead(
             listing.BranchId,
             locale,
             command.ConsentGiven,
+            privacyNotice,
             idempotencyKey,
             clock.UtcNow);
 

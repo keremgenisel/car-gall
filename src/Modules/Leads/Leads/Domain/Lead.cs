@@ -32,6 +32,7 @@ internal sealed class Lead : AggregateRoot<LeadId>
         Guid branchId,
         Locale submittedLocale,
         bool consentGiven,
+        PrivacyNoticeLink privacyNotice,
         string idempotencyKey,
         DateTimeOffset capturedAt)
         : base(id)
@@ -42,6 +43,8 @@ internal sealed class Lead : AggregateRoot<LeadId>
         BranchId = branchId;
         SubmittedLocale = submittedLocale;
         ConsentGiven = consentGiven;
+        PrivacyNoticeStatus = privacyNotice.Status;
+        PrivacyNoticeVersionId = privacyNotice.VersionId;
         IdempotencyKey = idempotencyKey;
         CapturedAt = capturedAt;
         Status = LeadStatus.New;
@@ -79,6 +82,18 @@ internal sealed class Lead : AggregateRoot<LeadId>
     internal bool ConsentGiven { get; private set; }
 
     /// <summary>
+    /// `0019` **L8** — talep anında, bırakıldığı dilde KVKK aydınlatma metni yayında mıydı.
+    /// İzinden bağımsızdır (D4), sonradan değişmez ve anonimleştirmede korunur (R11).
+    /// </summary>
+    internal PrivacyNoticeStatus PrivacyNoticeStatus { get; private set; }
+
+    /// <summary>
+    /// `0019` — talep anında yayındaki sürümün kimliği (`Content`'te). Modüller arası SOFT
+    /// referans: foreign key yoktur (C2, Yasak Listesi 2).
+    /// </summary>
+    internal Guid? PrivacyNoticeVersionId { get; private set; }
+
+    /// <summary>
     /// R17 — aynı anahtarla gelen ikinci istek yeni kayıt üretmez. Ağ hatası isteğin
     /// sunucuya ulaşmasından SONRA olduysa hız sınırı bunu yakalamaz: iki istek eşiğin
     /// çok altındadır (Bilinen tuzak 8).
@@ -99,6 +114,7 @@ internal sealed class Lead : AggregateRoot<LeadId>
         Guid branchId,
         Locale submittedLocale,
         bool consentGiven,
+        PrivacyNoticeLink privacyNotice,
         string idempotencyKey,
         DateTimeOffset capturedAt)
     {
@@ -125,6 +141,7 @@ internal sealed class Lead : AggregateRoot<LeadId>
             branchId,
             submittedLocale,
             consentGiven,
+            privacyNotice,
             idempotencyKey.Trim(),
             capturedAt);
 
