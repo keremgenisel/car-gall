@@ -463,7 +463,7 @@ kapalı birleşimi kimlik taşımıyor; `parseRoute`'un panel dalı üçüncü p
 | **Dış bulgu (gerçek/gürültü)** | 3 / 0 | QA triyajı üç bulgu verdi, üçü de gerçek çıktı ve düzeltildi. Aşağıda sayıldı. |
 | **Uygulama içi bulgu** | 11 | Aşağıda sayıldı. **Kapanışta 10'dan 11'e düzeltildi:** 11. bulgu (slug eşlemesi) SCORECARD commit'inden SONRA düzeltildi ve listeye hiç girmemişti. |
 | **Regresyon sayısı** | 0 | Sözleşme kırılması **bilerek** yapıldı ve DoD'da yazılı; `0010a`'nın kriterleri aynı şeyi ölçmeye devam ediyor. Kırılan bir davranış yok. |
-| **Kaçan hata** | izleniyor | Merge 2026-10-10. Bilinen bir kaçan hata yok; X20 (kaybolan güncelleme) ve X21 (alan ayarı ucu) **kabul edilmiş riskler**, kaçan hata değil — ikisi de DoD'da adıyla yazılı. |
+| **Kaçan hata** | 1 | Merge 2026-10-10. **2026-11-19 (`0021` P6):** düzenlemede model değişikliği sessizce düşüyordu — `UpdateVehicleCommand` istekteki modeli doğruluyor ama araca yazmıyordu; formda değiştirilen model eskisinde kalıyordu. `0021` ile (`d89976c`, `Vehicle.ChangeModel`) düzeltildi. Bunun dışında bilinen kaçan hata yok; X20 (kaybolan güncelleme) ve X21 (alan ayarı ucu) **kabul edilmiş riskler**, kaçan hata değil — ikisi de DoD'da adıyla yazılı. |
 
 **Dış bulgular (3/0):**
 

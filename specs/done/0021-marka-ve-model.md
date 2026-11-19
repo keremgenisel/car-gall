@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-18 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B11 → **D15–D24**) |
+| **Durum** | Tamamlandı (2026-11-19) — kararlar ve kriterler #104 → `273eb22`, uygulama #113 → `d89976c` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `VehicleReference` (marka varlığı, model→marka bağı, yazma uçları, migration) · `VehicleCatalog` (liste marka ekseni ve ana sayfa form markaları — okuma modeli **değişmez**, **D15**) · `Leads`/`Notifications` (yalnız davranış korunur: talep kopyası ve e-posta tam adı taşır — **D17**) · `frontend/` panel (marka/model ekranı, araç formunda marka → model) ve vitrin (kart, detay, liste filtresi, ana sayfa formu) |
@@ -272,7 +272,7 @@ Geliştirme ve performans tohumu birden çok markaya yayılır.
 ### Verilen kararlar — plan turu, 2026-11-19
 
 **Developer (ajan) önerisi**, uygulama sırasında; R/C/AC'ye dokunmaz, nasıl uygulandıklarını
-sabitler. Takım Yöneticisi onayı PR'da bekleniyor.
+sabitler. Takım Yöneticisi (ajan) P1–P11'i PR #113'te onayladı (2026-11-19).
 
 **P1 — Yönetim uçları `VehicleReference`'ta, Yönetici politikalı tek grupta.**
 `/api/admin/reference/{brands,models}…` `AdminSurface.ManagerPolicy` taşır (`0020` D2 deseni);
@@ -434,7 +434,7 @@ tam adın güncelleme öncesiyle aynı olduğunu ölçer. Var olan `YayinZinciri
 ## Definition of Done
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B11 → D15–D24, 2026-11-18.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0021-ac<n>.png`),
       boş ve hata durumları dâhil; Arapça görüntü de var.
 - [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
@@ -444,12 +444,12 @@ tam adın güncelleme öncesiyle aynı olduğunu ölçer. Var olan `YayinZinciri
 - [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**marka**, **pasif** referans kaydı).
 - [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi; § 1'in `VehicleReference` tanımı **D4**'e, § 3'ün "zorunlu çeviri" satırı **D24**'e göre düzeltildi.
 - [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
+      bunun yerine geçmez. *(2026-11-19, merge'den önce: 0/0/3 — üçü de işlendi, BULGU-3'ün testleri negatif kanıtla doğrulandı.)*
 - [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(Takım Yöneticisi (ajan), `d89976c`, 2026-11-19.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
 - [x] `0010a` X14, `0015` X8 ve `0014` X13'e "→ `0021`" notu düşüldü.
 - [x] Geliştirme ve performans tohumu birden çok markaya yayılıyor (**D24**).
@@ -470,14 +470,19 @@ tanımın netleştirilmesini öner.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e d89976c^:specs/0021-marka-ve-model.md` → var. Kararlar ve 59 kriter #104 ile (`273eb22`) uygulamadan önce girdi. |
+| **Kriter sayısı: önce → bugün** | **59 → 59** |  |
+| **Spec revizyon sayısı** | **0** | R, C ve AC `273eb22` ile `d89976c` arasında aynı; uygulama yalnız Context'e plan kararları (P1–P11) ve planı ekledi. CLARIFY turu (B1–B11 → D15–D24) onaydan önceydi ve #104'e dâhildi. |
+| **Düzeltme turu sayısı** | **1** | QA üç bulgu getirdi; tek turda işlendi (`plan 0021/7`). T10 `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **3 / 0** | BULGU-1: marka okumaları `0014` D3 yorumu ile sahibi arasına eklenmişti (yorum/üye arası ekleme kusurunun dördüncü tekrarı, ilk kez `.ts`'te) · BULGU-2: P6'nın okuma modeli yarısı test edilmemişti (Corolla → Civic: vitrin satırı, marka ekseni, adres) · BULGU-3: P5'in durması ve P2'nin yarış kodları test edilmemişti. |
+| **Uygulama içi bulgu** | **1** | P6: düzenlemede model değişikliği sessizce düşüyordu — `0010b`'den kaçmış hata; D23'ün önkoşulu olarak burada düzeltildi ve `0010b`'nin SCORECARD'ına kaçan hata olarak işlendi. Geliştiricinin kendi kırmızılarından başkası kayda geçmedi. |
+| **Regresyon sayısı** | **0** | `main`'e ulaşan yok; C3 birleşik hâlde (0022 ile) yeşil, ana sayfa 2310 ms. |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-19 (`d89976c`). |
 
 **Bu spec'ten çıkarılan ders:**
-<!-- 1-2 cümle. Bir sonraki spec'i nasıl daha iyi yazarız? -->
+
+**Bir kararın önkoşulunu ölçmek, eski bir kartın kaçan hatasını buldu.** D23 "model değiştiren
+düzenleme"yi varsayıyordu; geliştirici bunu varsaymak yerine ölçtü (P6) ve `0010b`'den beri formda
+değiştirilen modelin sessizce düştüğünü gördü. Spec'te başka bir davranışa dayanan her karar, o
+davranışın bugün gerçekten var olduğunu ölçen bir kriterle yazılmalı.
+
