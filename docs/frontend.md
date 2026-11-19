@@ -158,8 +158,18 @@ içinde kalır.
 
 - **Kullanıcıya görünen hiçbir metin bileşene gömülmez.** İstisna yok — `placeholder`,
   `aria-label`, `title`, `alt`, boş durum metni, buton etiketi dâhil. Lint bunu kırar (§ 8).
-- Çeviri katalogları: `src/shared/i18n/locales/{tr,ar,en}.json`. Üçü **anahtar bazında eşittir**;
-  CI eksik anahtarı kırar.
+- Çeviri katalogları **iki kümedir** (ADR `0013`), her kümenin üç dili **anahtar bazında
+  eşittir** ve CI eksik anahtarı kırar:
+  - **Vitrin** — `src/shared/i18n/locales/{tr,ar,en}.json`. İlk pakete girer; ziyaretçinin
+    gördüğü her anahtar buradadır (panelin de kullandıkları dâhil).
+  - **Panel** — `src/shared/i18n/locales/panel/{tr,ar,en}.json`. Yalnız panelin kullandığı
+    anahtarlar; panelin lazy paketiyle iner (`shared/i18n/panel.ts`, `AdminApp` içe aktarır).
+
+  **Yeni anahtar varsayılan olarak panel kümesine girer; vitrin onu kullanacaksa vitrin
+  kümesine.** Bir anahtar tek kümede yaşar. Vitrinin panel anahtarı kullanması ziyaretçiye
+  boş metin basar ve birim testi bunu görmez (testler birleşik kataloğu yükler) —
+  `check:locales` vitrinin statik import ağacını tarayıp kırar. Neden: panel metinleri
+  ilk pakete girdikçe ana sayfanın LCP payı tükeniyordu (ölçüm ADR `0013`'te).
 - **ICU mesaj formatı zorunludur.** Dize birleştirmeyle cümle kurulmaz: Arapça'da **altı çoğul
   biçimi** vardır ve `count > 1` mantığı sessizce yanlış cümle üretir.
 - **Arapça bir `plural` mesajı `one`, `two`, `few`, `many` ve `other` biçimlerinin hepsini
@@ -227,8 +237,9 @@ komutu olmayan kapı, kapı değildir.
 | Biçim | `npm run format:check` | Prettier — biçim farkı yok |
 | Lint (CSS) | `npm run lint:css` | Fiziksel yön özellikleri (§ 6) ve gömülü hex/px (§ 4.1) |
 | Sert kodlanmış metin | `npm run check:text` | Bileşene gömülü kullanıcı metni (§ 5) |
-| Eksik çeviri anahtarı | `npm run check:locales` | `tr`/`ar`/`en` anahtar bazında eşit değilse. **Üçünde de eksik olan anahtarı yakalamaz** — o kapı backend'de, `docs/testing.md` § 3 |
+| Eksik çeviri anahtarı | `npm run check:locales` | `tr`/`ar`/`en` anahtar bazında eşit değilse — vitrin ve panel kümesi **ayrı ayrı**; bir anahtar iki kümede birden varsa. **Üçünde de eksik olan anahtarı yakalamaz** — o kapı backend'de, `docs/testing.md` § 3 |
 | Arapça çoğul biçimleri | `npm run check:locales` | Arapça bir `plural` mesajı `one`/`two`/`few`/`many`/`other` biçimlerinden birini tanımlamıyorsa (§ 5) |
+| Vitrin sınırı | `npm run check:locales` | Vitrinin statik import ağacı (`src/main.tsx`'ten) panel kataloğunu içe aktarıyor ya da bir panel anahtarı kullanıyorsa (§ 5, ADR `0013`) |
 | Blok yorumu ayracı | `npm run check:comments` | Blok yorumunun içinde `**/` varsa — yorumu erken kapatır (§ 5) |
 | Birim + smoke test | `npm run test` | Vitest + Testing Library |
 | Production build | `npm run build` | Build başarısız olursa |
