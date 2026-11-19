@@ -359,7 +359,7 @@ aksi hâlde DoD'deki "yeni domain terimi yok" maddesi dürüstçe işaretlenemez
 | **Dış bulgu (gerçek/gürültü)** | **— (dış gözden geçirme yok)** | Bu spec triyajdan geçmedi. |
 | **Uygulama içi bulgu** | **3** | Uygulama sırasında kendi bulduklarım: (1) AC-2'nin backend testi kriteri karşılamıyordu — yalnız yanıtta `slug` var mı diye bakıyordu, kartın bağlantı taşıdığını doğrulamıyordu; (2) AC-23'ün kanıt görseli vardı ama testi yoktu, `dir="auto"` kaldırılsa hiçbir şey kırılmazdı; (3) `ApiError` durum kodu taşımadığı için 404 ile 500 ayırt edilemiyordu ve "bulunamadı" ekranı hiç gösterilemezdi. |
 | **Regresyon sayısı** | **1** | `ShowcaseListing` tipine `slug` eklenince `ShowcaseListPage.test.tsx`'in fixture'ı derlenmedi. Tip kontrolü yakaladı, commit öncesi kapandı. |
-| **Kaçan hata** | **0** | *2026-09-22 itibarıyla* — **izleniyor**. Merge sonrası bulunan her kusur buraya tarihiyle eklenir. |
+| **Kaçan hata** | **1** | **2026-11-19:** nitelik satırlarının başlık sütunu alanın adı yerine değeri basıyordu ("Hatchback \| Hatchback", "Benzin \| Benzin") — AC-10 ve AC-21'e aykırı. Sunucunun `label`'ı değerin etiketiydi; ekran onu alan adı sandı ve birim testinin sahte verisi `label`'a alan adını yazdığı için kusur hiç görünmedi. `fix/0002-detay-alan-adlari` ile düzeltildi: alan adı vitrin kataloğundan, test sunucunun gerçek biçimiyle. Merge sonrası bulunan her kusur buraya tarihiyle eklenir. |
 
 **Bu spec'ten çıkarılan ders:**
 Kriteri karşılayan test ile kriterin geçtiği test aynı şey değil. AC-2'nin backend testi

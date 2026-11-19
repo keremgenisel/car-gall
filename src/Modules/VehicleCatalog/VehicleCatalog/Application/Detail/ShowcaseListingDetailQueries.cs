@@ -160,7 +160,9 @@ internal sealed class ShowcaseListingDetailQueries(
             }
         }
 
-        // Renk taksonomi değil, serbest metin: etiketi çeviri kataloğundan, değeri veriden.
+        // Renk taksonomi değil, serbest metin: değeri veriden. `Label` her satırda DEĞERİN
+        // etiketidir, alanın adı değil — alanın adı vitrinin çeviri kataloğundadır
+        // (`ListingDetailPage.attributeName`). Bu ikisini karıştırmak 0002'nin kaçan hatasıydı.
         string color = ResolveLocalized(row.ColorNames, locale);
         if (color.Length > 0)
         {
