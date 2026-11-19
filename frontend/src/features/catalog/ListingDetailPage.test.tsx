@@ -35,7 +35,10 @@ const detay: ShowcaseListingDetail = {
   mileageKilometers: 125000,
   price: { onRequest: false, amount: 750000, currencyCode: 'TRY', minorUnitExponent: 2 },
   branchName: 'Merkez Şube',
-  attributes: [{ key: 'fuel_type', label: 'Yakıt', value: 'Dizel' }],
+  // Sunucunun GERÇEK biçimi: `label` değerin etiketidir, alan adı değil
+  // (ShowcaseListingDetailQueries). Eski sahte veri buraya 'Yakıt' yazıyordu ve tablo
+  // başlığının değeri tekrar ettiğini ("Dizel | Dizel") hiçbir test görmüyordu.
+  attributes: [{ key: 'fuel_type', label: 'Dizel', value: 'Dizel' }],
 }
 
 function ekran(locale: AppLocale = 'tr') {
@@ -80,6 +83,48 @@ describe('AC-17, AC-18, AC-19: İlan detayı ekranının smoke testi', () => {
 
     await waitFor(() => expect(screen.getByText('Yakıt')).toBeTruthy())
     expect(screen.getByText('Dizel')).toBeTruthy()
+  })
+
+  it('AC-10, AC-21: nitelik satırının başlığı alanın adıdır, değeri tekrar etmez — üç dilde', async () => {
+    const adlar = { tr: 'Kasa tipi', ar: 'نوع الهيكل', en: 'Body type' } as const
+    for (const locale of ['tr', 'ar', 'en'] as const) {
+      vi.mocked(fetchListingDetail).mockResolvedValue({
+        ...detay,
+        attributes: [{ key: 'body_type', label: 'Hatchback', value: 'Hatchback' }],
+      })
+
+      const { container } = ekran(locale)
+
+      await waitFor(() => expect(container.querySelector('.listing-detail__attribute')).toBeTruthy())
+      const satirlar = [...container.querySelectorAll('.listing-detail__attribute')]
+      const satir = satirlar.find((el) => el.querySelector('dd')?.textContent === 'Hatchback')
+      expect(satir?.querySelector('dt')?.textContent).toBe(adlar[locale])
+      cleanup()
+    }
+  })
+
+  it('sunucunun yazdığı her nitelik anahtarının vitrinde bir adı vardır', async () => {
+    const anahtarlar = [
+      'body_type',
+      'fuel_type',
+      'transmission_type',
+      'drivetrain_type',
+      'trim_level',
+      'color',
+      'damage_record_amount',
+      'warranty_status',
+    ]
+    vi.mocked(fetchListingDetail).mockResolvedValue({
+      ...detay,
+      attributes: anahtarlar.map((key) => ({ key, label: `deger-${key}`, value: `deger-${key}` })),
+    })
+
+    const { container } = ekran()
+
+    await waitFor(() => expect(screen.getByText('deger-body_type')).toBeTruthy())
+    for (const satir of container.querySelectorAll('.listing-detail__attribute')) {
+      expect(satir.querySelector('dt')?.textContent).not.toBe(satir.querySelector('dd')?.textContent)
+    }
   })
 
   it('AC-12, AC-13: sunucu göndermeyen alan ekranda hiç bulunmaz', async () => {

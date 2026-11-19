@@ -3,6 +3,7 @@ import { useLocale } from '../../app/localeContext'
 import { fetchListingDetail } from '../../shared/api/catalog'
 import type { ShowcaseListingDetail } from '../../shared/api/types'
 import { formatMoney, formatYear } from '../../shared/i18n/format'
+import type { Translator } from '../../shared/i18n/i18n'
 import { listPath } from '../../shared/lib/route'
 import { Badge, Card } from '../../shared/ui'
 import { Gallery } from './detail/Gallery'
@@ -138,10 +139,16 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
               Sunucu yalnız açık ve public alanları gönderir; kapalı veya gizli alan
               yanıtta HİÇ bulunmaz (F3, AC-12, AC-13). Uç burada süzme yapmaz — yapsaydı
               gizleme sunum katmanına kaymış olurdu (Yasak Listesi 41).
-              Etiket sunucudan çözülmüş gelir: ziyaretçi ham slug görmez.
+              DEĞER sunucudan çözülmüş gelir (ziyaretçi ham slug görmez); alanın ADI vitrinin
+              çeviri kataloğundandır. Sunucunun `label` alanı değerin etiketidir, alan adı
+              değil — başlık sütununa o basılınca "Hatchback | Hatchback" görünüyordu.
             */}
             {detail.attributes.map((attribute) => (
-              <Attribute key={attribute.key} label={attribute.label} value={attribute.value} />
+              <Attribute
+                key={attribute.key}
+                label={attributeName(attribute.key, t) ?? attribute.label}
+                value={attribute.value}
+              />
             ))}
           </dl>
 
@@ -155,6 +162,35 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
       {renderLead === undefined ? null : renderLead(detail)}
     </div>
   )
+}
+
+/**
+ * Nitelik anahtarının ziyaretçinin dilindeki ADI. Anahtarlar sunucunun yazdığı kümedir
+ * (`ShowcaseListingDetailQueries.BuildAttributesAsync`): beş referans alanı, renk ve
+ * opsiyonel alanlar. Bilinmeyen bir anahtar `null` döner ve satır sunucunun etiketiyle
+ * basılır — yeni bir opsiyonel alan bu listeye eklenene kadar satır kaybolmaz.
+ */
+function attributeName(key: string, t: Translator): string | null {
+  switch (key) {
+    case 'body_type':
+      return t('detail.field.bodyType')
+    case 'fuel_type':
+      return t('detail.field.fuelType')
+    case 'transmission_type':
+      return t('detail.field.transmissionType')
+    case 'drivetrain_type':
+      return t('detail.field.drivetrainType')
+    case 'trim_level':
+      return t('detail.field.trimLevel')
+    case 'color':
+      return t('detail.field.color')
+    case 'damage_record_amount':
+      return t('detail.field.damageRecordAmount')
+    case 'warranty_status':
+      return t('detail.field.warrantyStatus')
+    default:
+      return null
+  }
 }
 
 function Attribute({ label, value }: { readonly label: string; readonly value: string }) {
