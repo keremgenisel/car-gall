@@ -435,14 +435,14 @@ tam adın güncelleme öncesiyle aynı olduğunu ölçer. Var olan `YayinZinciri
 
 - [x] Kriterler QA CLARIFY turundan geçti ve bulgular karara bağlandı. *(B1–B11 → D15–D24, 2026-11-18.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0021-ac<n>.png`),
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0021-ac<n>.png`),
       boş ve hata durumları dâhil; Arapça görüntü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration'lar yalnızca kendi şemasına dokunuyor (`vehicle_reference`, `catalog`).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**marka**, **pasif** referans kaydı).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi; § 1'in `VehicleReference` tanımı **D4**'e, § 3'ün "zorunlu çeviri" satırı **D24**'e göre düzeltildi.
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] <!-- DoD:T5 --> Yeni migration'lar yalnızca kendi şemasına dokunuyor (`vehicle_reference`, `catalog`).
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (**marka**, **pasif** referans kaydı).
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi; § 1'in `VehicleReference` tanımı **D4**'e, § 3'ün "zorunlu çeviri" satırı **D24**'e göre düzeltildi.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
 - [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
@@ -451,8 +451,8 @@ tam adın güncelleme öncesiyle aynı olduğunu ölçer. Var olan `YayinZinciri
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı.
-- [ ] `0010a` X14, `0015` X8 ve `0014` X13'e "→ `0021`" notu düşüldü.
-- [ ] Geliştirme ve performans tohumu birden çok markaya yayılıyor (**D24**).
+- [x] `0010a` X14, `0015` X8 ve `0014` X13'e "→ `0021`" notu düşüldü.
+- [x] Geliştirme ve performans tohumu birden çok markaya yayılıyor (**D24**).
 
 ---
 

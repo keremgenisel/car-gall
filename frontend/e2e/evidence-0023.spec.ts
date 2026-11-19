@@ -3,6 +3,7 @@ import { kanit } from './kanit'
 import { YONETICI_PAROLA } from './global-setup'
 import { girisYap, ikinciAdimKurAsync, yoneticiOlarakGirAsync } from './giris'
 import { pngUret } from './gorsel'
+import { modeliOlanMarkayiSecAsync } from './marka'
 
 /**
  * `0023` — satışı geri almanın görsel kanıtı. Yazma AÇIKÇA istenir (`npm run evidence`,
@@ -36,7 +37,22 @@ async function aracKaydetAsync(page: Page, sase: string, kilometre: number): Pro
   await page.goto('/admin/vehicle-new')
   await expect(page.getByTestId('vehicle-form')).toBeVisible()
 
-  for (const alan of ['Şube', 'Model', 'Kasa tipi', 'Donanım paketi', 'Yakıt', 'Vites', 'Çekiş']) {
+  for (const alan of [
+    'Şube',
+    'Marka',
+    'Model',
+    'Kasa tipi',
+    'Donanım paketi',
+    'Yakıt',
+    'Vites',
+    'Çekiş',
+  ]) {
+    if (alan === 'Marka') {
+      await modeliOlanMarkayiSecAsync(page)
+
+      continue
+    }
+
     const secim = page.getByLabel(alan, { exact: true })
     const deger = await secim.locator('option').nth(1).getAttribute('value')
 

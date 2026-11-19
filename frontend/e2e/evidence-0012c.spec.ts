@@ -6,6 +6,7 @@ import {
   yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync,
   oturumuBirakAsync,
 } from './giris'
+import { modeliOlanMarkayiSecAsync } from './marka'
 
 /**
  * `0013` D28/D46 — giriş yolu ORTAK yardımcıya taşındı (`e2e/giris.ts`): D30 Yönetici'de
@@ -57,7 +58,22 @@ async function aracKaydetAsync(page: Page, sase: string) {
   await page.goto('/admin/vehicle-new')
   await expect(page.getByTestId('vehicle-form')).toBeVisible()
 
-  for (const alan of ['Şube', 'Model', 'Kasa tipi', 'Donanım paketi', 'Yakıt', 'Vites', 'Çekiş']) {
+  for (const alan of [
+    'Şube',
+    'Marka',
+    'Model',
+    'Kasa tipi',
+    'Donanım paketi',
+    'Yakıt',
+    'Vites',
+    'Çekiş',
+  ]) {
+    if (alan === 'Marka') {
+      await modeliOlanMarkayiSecAsync(page)
+
+      continue
+    }
+
     const secim = page.getByLabel(alan, { exact: true })
     const deger = await secim.locator('option').nth(1).getAttribute('value')
 

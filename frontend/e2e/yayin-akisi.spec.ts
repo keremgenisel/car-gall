@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { YONETICI_PAROLA } from './global-setup'
 import { pngUret } from './gorsel'
 import { yoneticiOlarakGirAsync as ortakYoneticiOlarakGirAsync } from './giris'
+import { modeliOlanMarkayiSecAsync } from './marka'
 
 /**
  * `0012b`'nin kritik akışı — `docs/testing.md` § 3'ün **üçüncü** akışı:
@@ -29,7 +30,22 @@ async function aracKaydetAsync(page: Page, sase: string) {
   await page.goto('/admin/vehicle-new')
   await expect(page.getByTestId('vehicle-form')).toBeVisible()
 
-  for (const alan of ['Şube', 'Model', 'Kasa tipi', 'Donanım paketi', 'Yakıt', 'Vites', 'Çekiş']) {
+  for (const alan of [
+    'Şube',
+    'Marka',
+    'Model',
+    'Kasa tipi',
+    'Donanım paketi',
+    'Yakıt',
+    'Vites',
+    'Çekiş',
+  ]) {
+    if (alan === 'Marka') {
+      await modeliOlanMarkayiSecAsync(page)
+
+      continue
+    }
+
     const secim = page.getByLabel(alan, { exact: true })
     const deger = await secim.locator('option').nth(1).getAttribute('value')
 
@@ -117,7 +133,10 @@ test('0012b/AC-1, 0012b/AC-41: araç yayına alınır ve vitrinde görünür', a
 
   const sayfa = (await vitrin.json()) as { items: { slug: string }[] }
 
-  expect(sayfa.items.some((item) => item.slug.startsWith('toyota-corolla-2021-'))).toBe(true)
+  // `0021` — form seçenekleri SIRAYLA seçiyor: ilk marka (alfabetik) BMW, ilk modeli 3 Serisi.
+  // Adres marka + model kanonik adından üretilir (C2). Önceki hâli tek markalı tohumun 2021
+  // model yıllı bir Corolla'sına yaslanıyordu ve yayınlanan aracı ölçmüyordu.
+  expect(sayfa.items.some((item) => item.slug.startsWith('bmw-3-serisi-2021-'))).toBe(true)
 })
 
 test('0012b/AC-11, 0012b/AC-13: yayındaki ilan rezerve edilir ve satıldı işaretlenir', async ({

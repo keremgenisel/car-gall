@@ -107,6 +107,29 @@ public sealed class ModelYonetimiTests(ReferenceDatabase database)
         Assert.False(await sorgu.FindSelectableAsync(MarkaYonetimiTests.Corolla, CancellationToken.None));
     }
 
+    /// <summary>
+    /// Kart, detay ve öne çıkanlar adı AYNI sözleşme üyesinden çözer (`IVehicleModelNameResolver`
+    /// → <see cref="VehicleModelQueries.ResolveNamesAsync"/>); üç yüzeyin görüntüsü e2e kanıtında.
+    /// </summary>
+    [Fact(DisplayName = "0021/AC-29: İlan kartı, ilan detayı ve öne çıkan araçlar aracı \"Toyota Corolla\" biçiminde, marka ve model görünen adlarıyla gösterir.")]
+    public async Task Cozer_MarkaVeModelGorunenAdlariyla()
+    {
+        string db = await database.NewDatabaseAsync();
+        Guid toyota = await KimlikAsync(db, "toyota");
+        Assert.True((await Komut(db).UpdateAsync(
+            toyota,
+            1,
+            new ReferenceNameInput("Toyota", new Dictionary<string, string?> { ["en"] = "Toyota Motors" }),
+            CancellationToken.None)).IsSuccess);
+
+        await using VehicleReferenceDbContext context = ReferenceDatabase.CreateContext(db);
+        VehicleModelQueries sorgu = new(context);
+
+        Assert.Equal("Toyota Corolla", (await sorgu.ResolveNamesAsync([MarkaYonetimiTests.Corolla], "tr", CancellationToken.None))[MarkaYonetimiTests.Corolla]);
+        Assert.Equal("تويوتا كورولا", (await sorgu.ResolveNamesAsync([MarkaYonetimiTests.Corolla], "ar", CancellationToken.None))[MarkaYonetimiTests.Corolla]);
+        Assert.Equal("Toyota Motors Corolla", (await sorgu.ResolveNamesAsync([MarkaYonetimiTests.Corolla], "en", CancellationToken.None))[MarkaYonetimiTests.Corolla]);
+    }
+
     [Fact(DisplayName = "0021/AC-30: Görünen adı olmayan bir dilde marka ve model kanonik adlarıyla gösterilir.")]
     public async Task Gosterir_KanonikAdlari_GorunenAdYoksa()
     {
