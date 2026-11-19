@@ -404,7 +404,7 @@ yenilemek, ileti gitmediği hâlde geçerli tek bağlantıyı sessizce öldürü
 
 **D10 — Adresin biçimi ve kimliği (B7).** Girdi ayrıştırılır ve **ayrıştırılmış adres**
 (MimeKit `MailboxAddress.Address`) kullanılır; ham metin hiçbir yerde kimlik olmaz.
-- Reddedilen biçimler (`400` + `notification.subscription_email_invalid`): boş; 254
+- Reddedilen biçimler (`422` + `notification.subscription_email_invalid`): boş; 254
   karakterden uzun; **görünen adlı** biçim (`Ali <ali@ornek.com>`, `"x y" <ali@ornek.com>`);
   **alan adsız** ya da alan adında nokta olmayan biçim (`ali`, `ali@ornek`); `ali@`.
 - Baştaki ve sondaki boşluk atılır. Adresler büyük/küçük harf farkı gözetmeden **aynı adres**
@@ -465,7 +465,7 @@ bir kayda ve doğrudan çağrılabilir bir birime bağlamak kriterleri test edil
 *Bedel:* yaz saati uygulanan ülkelerde yerel gönderim saati yılda iki kez bir saat kayar.
 
 **D14 — Dil (B14).** Dil, isteğin gövdesinde `0005`'teki gibi taşınır; kurulumda etkin olmayan
-ya da tanınmayan bir dil `400` + `notification.subscription_invalid_locale` ile reddedilir
+ya da tanınmayan bir dil `422` + `notification.subscription_invalid_locale` ile reddedilir
 (`0005`'in `lead.invalid_locale` cevabının karşılığı) ve kayıt oluşmaz. Teyit bekleyen adrese
 başka bir dilden yeni istek gelirse dil güncellenir (yeni teyit iletisi o dilde; adres sınırı
 aşılmışsa **D9** gereği güncellenmez); **etkin** aboneliğin dili yeni istekle değişmez (D5).
@@ -743,13 +743,15 @@ süresi uygulaması, yasal gönderici kimliği metni, izin anındaki metnin sür
   devre dışıdır; bu sürede ikinci basış ikinci istek göndermez.
 - **AC-6.** Geçerli bir adresle gönderimden sonra form yerinde başarı mesajını gösterir: teyit
   bağlantısının gönderildiği ve gelmezse istenmeyen e-posta klasörüne bakılması.
-- **AC-7.** `ali@` ve boş adres alan hatasıyla reddedilir; API `400` ve
+- **AC-7.** `ali@` ve boş adres alan hatasıyla reddedilir; API `422` ve
   `notification.subscription_email_invalid` döner; kayıt oluşmaz ve ileti kuyruğa girmez.
+  *Revizyon 1 (2026-11-19, AP-08): kriter 400 diyordu; depo kuralı 422 (`docs/conventions.md`), `0020` AC-30 emsali — Takım Yöneticisi (ajan) kararı.*
 - **AC-8.** `Ali <ali@ornek.com>`, `"x y" <ali@ornek.com>`, `ali` ve `ali@ornek` AC-7 gibi
   reddedilir (D10).
 - **AC-9.** 255 karakterlik adres AC-7 gibi reddedilir; 254 karakterlik geçerli adres kabul edilir.
-- **AC-10.** Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `400` ve
+- **AC-10.** Kurulumda etkin olmayan ya da tanınmayan bir dille gelen istek `422` ve
   `notification.subscription_invalid_locale` alır; kayıt oluşmaz (D14).
+  *Revizyon 1 (2026-11-19, AP-08): kriter 400 diyordu; depo kuralı 422 (`docs/conventions.md`), `0020` AC-30 emsali — Takım Yöneticisi (ajan) kararı.*
 - **AC-11.** Sunucu `500` döndüğünde ya da ağ koptuğunda form teknik ayrıntı içermeyen bir hata ve
   yeniden deneme yolu gösterir; yazılan adres alanda kalır.
 - **AC-12.** Aynı IP'den yapılandırılan pencerede geçerli istek eşiği kadar istekten sonraki geçerli
