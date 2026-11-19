@@ -170,7 +170,7 @@ uyan araçları tek adımda görebiliyor.**
 - **X8.** **Marka ekseni ve marka arama kutusu** (eski R9, S3). *neden:* veride **marka
   kavramı yok** (§ Context, K1); `0014` X13 aynı ölçümle ana sayfanın marka bölümünü
   çıkardı. Marka taksonomisi (`VehicleReference`) ayrı bir kart olarak önerilir; bu eksen,
-  `0014` X11'in marka bağlantısı ve X13'ün marka bölümü ona bağlanır. → **D6**.
+  `0014` X11'in marka bağlantısı ve X13'ün marka bölümü ona bağlanır. → **D6**. *(Marka ekseni → `0021`, 2026-11-19; arama kutusu kapsam dışında kalır.)*
 - **X9.** **Opsiyonel alan eksenleri** ("Tramersiz" vb.) ve onların alan ayarlarından
   türetilmesi. *neden:* R1'in eksenleri çekirdek; "tramersiz"in anlamı (alan boş mu, `0` mı)
   tanımsız. Bu eksen geldiğinde türetme kuralı (`docs/architecture.md` § 4) onunla gelir.

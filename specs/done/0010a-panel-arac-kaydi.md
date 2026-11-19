@@ -173,7 +173,7 @@ sadedir: sayfalama, sıralama ve göstergeler `0010b`'nin işidir.
   seed demektir ve bu spec'in kapsamını belirgin biçimde büyütür. `VehicleReference`
   *"galeri yazmaz, sistem besler"* modülüdür; marka taksonomisi onun kendi spec'ine aittir.
   → Karar **D6**. **Sonucu:** model **düz bir listeden** seçilir ve bu, model sayısı
-  büyüdüğünde kullanılabilirliği düşürür.
+  büyüdüğünde kullanılabilirliği düşürür. *(→ `0021`, 2026-11-19.)*
 - **X15.** **Model verisinin içe aktarılması ve yönetimi** (dış kaynaktan besleme, panelden
   model ekleme) — *neden:* `VehicleReference` sistem tarafından beslenir. Bu spec
   **başlangıç model kümesini kurulum verisiyle** getirir (D7), besleme yolunu kurmaz.

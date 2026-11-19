@@ -47,11 +47,14 @@ istemci tarafında hesaplanır. *Tetikleyici:* stok coğrafi olarak anlamlı bi�
 #### `VehicleReference` — Araç Referans Verisi
 Marka / model / kasa tipi / donanım paketi / motor-şanzıman sözlüğü.
 
-Sahip olduğu: taksonomi ağacı, kanonik Latin ad + locale başına görünen ad,
-eşanlamlılar, dış kaynaktan içe aktarma kayıtları.
+Sahip olduğu: taksonomi ağacı (marka → model; kasa ve terimler), kanonik Latin ad +
+locale başına görünen ad, eşanlamlılar, dış kaynaktan içe aktarma kayıtları.
 
 Ayrı modül olmasının nedeni: üç tüketicisi var (`VehicleCatalog`, `Leads` takas formu,
-vitrin filtreleri) ve yaşam döngüsü tamamen farklı — iş kuralı yok, dışarıdan beslenir.
+vitrin filtreleri) ve yaşam döngüsü tamamen farklı — iş kuralı azdır; **panelden ve kurulum
+verisiyle beslenir**. Marka ve modeli Yönetici panelden ekler, adlarını düzenler ve pasif
+yapar (silinmez); kasa tipi ve terimler kurulum verisidir. *(spec `0021` D4, 2026-11-19.
+Önceki metin: "iş kuralı yok, dışarıdan beslenir".)*
 
 ### Çekirdek modüller
 
@@ -247,7 +250,7 @@ metinlerini kendi düzenlemek isterse.
 | Katman | Sahibi | Saklama | Fallback |
 |---|---|---|---|
 | Arayüz metinleri | **frontend deposu** | `locales/{tr,ar,en}.json` (vitrin) + `locales/panel/{tr,ar,en}.json` (panel, ADR `0013`) | Varsayılan dil; CI'da eksik anahtar testi |
-| Referans veri (marka, model, kasa, yakıt…) | `VehicleReference` | Locale başına satır + kanonik Latin ad | Zorunlu çeviri; eksikse admin uyarısı |
+| Referans veri (marka, model, kasa, yakıt…) | `VehicleReference` | Locale başına satır + kanonik Latin ad | Çeviri **opsiyoneldir**; locale'de görünen ad yoksa kanonik Latin ada düşülür, ham anahtar gösterilmez (`0021` D24 — belge koddan geride kalmıştı) |
 | Araç serbest metni | `VehicleCatalog` | Locale başına satır | **Sessiz fallback** |
 | CMS içeriği | `Content` | Locale başına satır + **locale başına yayın durumu** | Yayınlanmamışsa o dilde menüden düşer |
 | Bildirim şablonları | `Notifications` | (anahtar, locale) | Varsayılan dil + log uyarısı |
@@ -512,6 +515,7 @@ altındaki ADR'lerdedir.
 | Sistem tepkisiyle gelen toplu geçiş | Şube kapanması (A8) personelin seçim üst sınırına tabi değil; şube olayı başına tek işlem, geçişleri duyurulur |
 | Çok kayıtlı eylemde çapraz modül okuması | **Aynı yanıtı veren** okumalar istek başına bir kez (yapılandırma, ad haritaları); **tazeliği gereken** okuma kayıt başına ve kilidin altında |
 | Oturum öncesi ara durum | "Parola doğru, ikinci adım bekleniyor" hâli **oturum DEĞİLDİR**: kendi adı olan kısa ömürlü bir çerez + `identity` satırı taşır ve hiçbir yönetim isteği onunla çalışmaz. Kurulumu **olmayan** hesapta ise gerçek oturum verilir ve ikinci bir **kapı** yüzeyi üç yola daraltır — orada parola zaten tek faktördür |
+| Marka ve model | `VehicleReference`'ta; model tam olarak bir markaya aittir ve başka markaya taşınamaz, aracın markası modelinden türer. Silme yok, pasif var. Vitrin okuma modeli markayı **taşımaz**: marka ekseni seçilen markaları sözleşmeden model kimliği kümesine çevirir; tam ad (marka + model) okuma anında çözülür ve talep kopyası, e-posta, panel listesi ve yeni ilan adresi onu kullanır (`0021` D2, D14, D15, D17) |
 | Proje sayısı | Modül başına 2 (`X`, `X.Contracts`) |
 | Syndication | V1 dışı, V1.1'de ayrı modül |
 | SSR | Yok; sunucu tarafı meta + JSON-LD enjeksiyonu |
