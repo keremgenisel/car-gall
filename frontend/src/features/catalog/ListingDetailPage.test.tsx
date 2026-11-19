@@ -93,13 +93,24 @@ describe('AC-17, AC-18, AC-19: İlan detayı ekranının smoke testi', () => {
       ar: ['نوع الهيكل', 'الوقود', 'ناقل الحركة', 'نظام الدفع', 'فئة التجهيز', 'اللون'],
       en: ['Body type', 'Fuel', 'Transmission', 'Drivetrain', 'Trim level', 'Colour'],
     } as const
-    const anahtarlar = ['body_type', 'fuel_type', 'transmission_type', 'drivetrain_type', 'trim_level', 'color']
+    const anahtarlar = [
+      'body_type',
+      'fuel_type',
+      'transmission_type',
+      'drivetrain_type',
+      'trim_level',
+      'color',
+    ]
 
     for (const locale of ['tr', 'ar', 'en'] as const) {
       // Gerçek biçim: `label` değerin etiketidir, `value` ile aynı.
       vi.mocked(fetchListingDetail).mockResolvedValue({
         ...detay,
-        attributes: anahtarlar.map((key) => ({ key, label: `deger-${key}`, value: `deger-${key}` })),
+        attributes: anahtarlar.map((key) => ({
+          key,
+          label: `deger-${key}`,
+          value: `deger-${key}`,
+        })),
       })
 
       const { container } = ekran(locale)
@@ -109,7 +120,9 @@ describe('AC-17, AC-18, AC-19: İlan detayı ekranının smoke testi', () => {
         const satir = [...container.querySelectorAll('.listing-detail__attribute')].find(
           (el) => el.querySelector('dd')?.textContent === `deger-${key}`,
         )
-        expect(satir?.querySelector('dt')?.textContent, `${locale}/${key}`).toBe(adlar[locale][index])
+        expect(satir?.querySelector('dt')?.textContent, `${locale}/${key}`).toBe(
+          adlar[locale][index],
+        )
       }
       cleanup()
     }
