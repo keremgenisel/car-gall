@@ -13,7 +13,7 @@ import {
   type AdminPage,
   type FaqTextInput,
 } from '../../../shared/api/contentAdmin'
-import { contentEditPath } from '../../../shared/lib/route'
+import { adminPath, contentEditPath } from '../../../shared/lib/route'
 import { Badge, Button, Dialog, EmptyState, ErrorState, Skeleton } from '../../../shared/ui'
 import { fieldErrorKey, fieldErrorsOf, isConflict } from './contentErrors'
 
@@ -60,6 +60,25 @@ export function ContentAdminPage() {
           {t('content.action.newPage')}
         </Button>
       </div>
+
+      {/* `0022` D9 — ana sayfa metinleri sayfaların ve SSS'nin yanında bir girdi. */}
+      <section className="content-admin__section" aria-labelledby="content-home-heading">
+        <h2 className="content-admin__heading" id="content-home-heading">
+          {t('content.home.section')}
+        </h2>
+        <ul className="content-admin__list">
+          <li className="content-admin__row">
+            <a
+              className="content-admin__name"
+              href={adminPath('content-home')}
+              data-testid="content-home-link"
+            >
+              {t('content.home.entry')}
+            </a>
+            <span className="admin-form__hint">{t('content.home.entryHint')}</span>
+          </li>
+        </ul>
+      </section>
 
       <PageList load={pages} onRetry={() => setReload((value) => value + 1)} />
       <FaqEditor />
