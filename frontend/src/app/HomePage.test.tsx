@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../shared/api/client'
 import type { PublicGallery } from '../shared/api/types'
 import { catalogKeys, createTranslator } from '../shared/i18n/i18n'
+import vitrinKatalogu from '../shared/i18n/locales/tr.json'
 import type { AppLocale } from '../shared/lib/locale'
 import { App } from './App'
 
@@ -99,11 +100,13 @@ describe('0014 — adres ve giriş (R10, R1, R2)', () => {
 
     // Ad bir sonraki yüklemede yeni değeri gösterir; çeviri kataloğundan gelmez.
     expect((await screen.findByTestId('gallery-name')).textContent).toBe('Başka Ad')
-    // `0014`/AC-13'ten taşındı (QA BULGU-5): katalogdaki marka adı ("Oto Galeri") ana
-    // sayfanın adı DEĞİLDİR — ad sunucudan gelir, çeviri kataloğundan değil.
-    expect(screen.getByTestId('gallery-name').textContent).not.toBe(
-      createTranslator('tr')('app.brandName'),
-    )
+    // `0014`/AC-13'ten taşındı (QA BULGU-5): ad sunucudan gelir, çeviri kataloğundan değil.
+    // Katalogdaki marka adı anahtarı (`app.brandName`, "Oto Galeri") bu kartta kaldırıldı —
+    // ona karşı karşılaştırmak boşa geçerdi; iddia, kataloğun eski değeriyle ve hiçbir
+    // vitrin kataloğu değerinin basılmadığıyla kurulur.
+    const ad = screen.getByTestId('gallery-name').textContent
+    expect(ad).not.toBe('Oto Galeri')
+    expect(Object.values(vitrinKatalogu)).not.toContain(ad)
   })
 
   it('0020/AC-18: `\u003cb>Galeri & "Oto"\u003c/b>` görünen adı üst çubukta ve giriş satırında bu karakterlerle **metin olarak** görünür; işaretleme olarak yorumlanmaz (R5a, D16).', async () => {

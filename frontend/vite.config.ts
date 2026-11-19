@@ -18,5 +18,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
+    // Testler panelin gördüğü birleşik kataloğu görür (ADR 0013). Vitrinin panel anahtarı
+    // kullanmadığını birim testi değil `check:locales` ölçer.
+    setupFiles: ['src/shared/i18n/panel.ts'],
   },
 })

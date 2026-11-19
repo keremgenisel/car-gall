@@ -1,3 +1,5 @@
+// İLK import: panel kataloğu panelin herhangi bir modülü değerlendirilmeden kaydedilir (ADR 0013).
+import '../../shared/i18n/panel'
 import { useEffect, useState } from 'react'
 import { useLocale } from '../localeContext'
 import { ApiError } from '../../shared/api/client'
