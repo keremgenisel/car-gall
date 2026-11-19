@@ -1162,8 +1162,11 @@ a.top-bar__brand:hover {
   color: var(--color-danger);
 }
 
+/* AC-95 — sayfa metni dilin başına hizalı (RTL'de sağa); `ui-state`'in ortalaması burada kalkar. */
 .newsletter-page {
   margin-block: var(--space-8);
+  text-align: start;
+  justify-items: start;
 }
 
 .home-section__title,
