@@ -145,7 +145,7 @@ echo "==> Kurulum hesabı"
 echo "    kimlik : yonetici@cargallery.local"
 echo "    parola : $SEED_ADMIN_PASSWORD"
 echo "    e2e için: export E2E_SEED_ADMIN_PASSWORD='$SEED_ADMIN_PASSWORD'"
-echo "    bülten e2e için: export E2E_NEWSLETTER_SIGNING_KEY='$NEWSLETTER_SIGNING_KEY' E2E_MAILPIT_URL='http://localhost:$MAIL_UI_PORT'"
+echo "    bülten e2e için: export E2E_MAILPIT_URL='http://localhost:$MAIL_UI_PORT'"
 
 echo "==> Host ($SEED_COUNT ilanla seed edilerek)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \
