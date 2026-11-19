@@ -45,6 +45,8 @@ internal sealed class GalleryCommands(DealershipDbContext context, DealershipLoc
             return Result.Failure<int>(dilHatalari.ToError());
         }
 
+        locales.KeepDisabled(adlar, gallery.DisplayNames);
+
         Result sonuc = gallery.UpdateProfile(
             input.CommercialName,
             input.TaxNumber,

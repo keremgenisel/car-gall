@@ -38,4 +38,28 @@ internal sealed record DealershipLocales(Locale Default, IReadOnlyList<Locale> E
 
         return result;
     }
+
+    /// <summary>
+    /// `0020` — kayıtlı metnin ETKİN OLMAYAN dillerdeki değerlerini süzülmüş girdiye geri
+    /// koyar. Panel yalnız etkin dilleri gösterir ve gönderir; bir dil yapılandırmadan
+    /// kaldırıldığında o dildeki ad bir kaydetmeyle sessizce silinmemeli ve "ad değişti"
+    /// sayılıp sahte bir duyuru doğurmamalıdır (dil yeniden açılınca ad geri gelir).
+    /// </summary>
+    internal void KeepDisabled(Dictionary<Locale, string?> values, LocalizedText stored)
+    {
+        foreach ((string code, string value) in stored.ToDictionary())
+        {
+            if (Enabled.Any(item => item.Code == code))
+            {
+                continue;
+            }
+
+            Result<Locale> locale = Locale.Create(code);
+
+            if (locale.IsSuccess)
+            {
+                values[locale.Value] = value;
+            }
+        }
+    }
 }

@@ -89,7 +89,7 @@ internal sealed class BranchCommands(
             return Result.Failure<int>(new Error(Branch.ClosedReadOnly));
         }
 
-        Result<BranchDraft> draft = await ParseAsync(input, branchId, cancellationToken);
+        Result<BranchDraft> draft = await ParseAsync(input, branch, cancellationToken);
 
         if (draft.IsFailure)
         {
@@ -219,7 +219,7 @@ internal sealed class BranchCommands(
     /// </summary>
     private async Task<Result<BranchDraft>> ParseAsync(
         BranchFormInput input,
-        Guid? self,
+        Branch? self,
         CancellationToken cancellationToken)
     {
         FieldErrors dilHatalari = new();
@@ -229,6 +229,12 @@ internal sealed class BranchCommands(
         if (dilHatalari.Any)
         {
             return Result.Failure<BranchDraft>(dilHatalari.ToError());
+        }
+
+        if (self is not null)
+        {
+            locales.KeepDisabled(adlar, self.Names);
+            locales.KeepDisabled(adresler, self.Addresses);
         }
 
         Result<BranchDraft> draft = BranchDraft.Parse(
@@ -255,7 +261,7 @@ internal sealed class BranchCommands(
         if (self is not null)
         {
             // AC-40 — şubenin kendi kısaltması tekillik hatası değildir.
-            BranchId kendisi = new(self.Value);
+            BranchId kendisi = self.Id;
             ayniKisaltma = ayniKisaltma.Where(item => item.Id != kendisi);
         }
 

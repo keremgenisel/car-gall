@@ -405,6 +405,151 @@ public sealed class SubeYonetimiKomutTests : IAsyncLifetime
         Assert.Equal(ConcurrencyErrors.Lost, sonuc.Error.Code);
     }
 
+    // ----- QA BULGU-1 — P4: durum eylemleri de okunan sürümü taşır -----
+    // Her test sürümü bir kaydetmeyle ilerletir ve eylemi ESKİ sürümle ister. Sürüm denetimi
+    // kaldırılırsa (ya da kilitten sonra okunan sürümle karşılaştırılırsa) eylem geçer ve
+    // test kırmızıya döner — PR #107'de mutasyonla ölçüldü.
+
+    [Fact(DisplayName = "0020/AC-60: Aynı kural şube düzenlemesi için de geçerlidir.")]
+    public async Task Reddedilir_EskiSurumleGeciciKapatma()
+    {
+        Guid sube = await AcikSubeAsync("eski-gecici");
+        int okunan = await SurumAsync(sube);
+        await KaydetAsync(sube, Form("eski-gecici") with { Phone = "+902161112233" });
+
+        Result<int> sonuc = await KomutAsync(komut => komut.CloseTemporarilyAsync(sube, okunan, CancellationToken.None));
+
+        Assert.Equal(ConcurrencyErrors.Lost, sonuc.Error.Code);
+        await DegismediAsync(sube, BranchStatus.Active, okunan + 1);
+    }
+
+    [Fact(DisplayName = "0020/AC-60: Aynı kural şube düzenlemesi için de geçerlidir.")]
+    public async Task Reddedilir_EskiSurumleYenidenAcma()
+    {
+        Guid sube = await AcikSubeAsync("eski-yeniden");
+        Assert.True((await KomutAsync(async komut =>
+            await komut.CloseTemporarilyAsync(sube, await SurumAsync(sube), CancellationToken.None))).IsSuccess);
+        int okunan = await SurumAsync(sube);
+        await KaydetAsync(sube, Form("eski-yeniden") with { Phone = "+902161112233" });
+
+        Result<int> sonuc = await KomutAsync(komut => komut.ReopenAsync(sube, okunan, CancellationToken.None));
+
+        Assert.Equal(ConcurrencyErrors.Lost, sonuc.Error.Code);
+        await DegismediAsync(sube, BranchStatus.TemporarilyClosed, okunan + 1);
+    }
+
+    [Fact(DisplayName = "0020/AC-60: Aynı kural şube düzenlemesi için de geçerlidir.")]
+    public async Task Reddedilir_EskiSurumleKaliciKapatma()
+    {
+        // Başka bir aktif şube var: B5 reddetmez, reddin TEK nedeni sürüm olur.
+        Guid sube = await AcikSubeAsync("eski-kalici");
+        Assert.True((await KomutAsync(komut => komut.OpenAsync(Form("eski-kalici-diger"), CancellationToken.None))).IsSuccess);
+        await DuyurulariSilAsync();
+        int okunan = await SurumAsync(sube);
+        await KaydetAsync(sube, Form("eski-kalici") with { Phone = "+902161112233" });
+
+        Result<int> sonuc = await KomutAsync(komut => komut.CloseAsync(sube, okunan, CancellationToken.None));
+
+        Assert.Equal(ConcurrencyErrors.Lost, sonuc.Error.Code);
+        await DegismediAsync(sube, BranchStatus.Active, okunan + 1);
+        Assert.DoesNotContain(await DuyurularAsync(), mesaj => mesaj.Type == typeof(BranchDeactivated).FullName);
+    }
+
+    // ----- QA BULGU-2 — etkin olmayan dildeki kayıtlı metin -----
+    // Kurulum `en`'i dil listesinden çıkardığında panel yalnız tr/ar gönderir. Kayıtlı `en`
+    // değeri ne silinir ne de "ad değişti" sayılıp sahte bir duyuru doğurur.
+
+    [Fact(DisplayName = "0020/AC-37: Adı değişmeden yalnız adresi, telefonu, saat dilimi ya da kısaltması değiştirilen kaydetme **hiçbir** duyuru yazmaz.")]
+    public async Task DuyuruYokVeKorunur_EtkinOlmayanDildekiSubeAdi()
+    {
+        Guid sube = await UcDilliSubeAsync("uc-dilli-ad");
+
+        Result<int> sonuc = await KomutAsync(
+            async komut => await komut.UpdateAsync(
+                sube,
+                await SurumAsync(sube),
+                Form("uc-dilli-ad") with { Phone = "+902169998877" },
+                CancellationToken.None),
+            IkiDil);
+
+        Assert.True(sonuc.IsSuccess);
+        Assert.Empty(await DuyurularAsync());
+        Branch kayit = await SubeAsync(sube);
+        Assert.Equal("Kadikoy Branch", kayit.Names.ToDictionary()["en"]);
+        Assert.Equal("+902169998877", kayit.Phone.Value);
+    }
+
+    [Fact(DisplayName = "0020/AC-37: Adı değişmeden yalnız adresi, telefonu, saat dilimi ya da kısaltması değiştirilen kaydetme **hiçbir** duyuru yazmaz.")]
+    public async Task Korunur_EtkinOlmayanDildekiSubeAdresi()
+    {
+        Guid sube = await UcDilliSubeAsync("uc-dilli-adres");
+
+        Result<int> sonuc = await KomutAsync(
+            async komut => await komut.UpdateAsync(
+                sube,
+                await SurumAsync(sube),
+                Form("uc-dilli-adres") with { Addresses = Adlar(("tr", "Moda Caddesi 2")) },
+                CancellationToken.None),
+            IkiDil);
+
+        Assert.True(sonuc.IsSuccess);
+        Assert.Empty(await DuyurularAsync());
+        Dictionary<string, string> adresler = (await SubeAsync(sube)).Addresses.ToDictionary();
+        Assert.Equal("Moda Caddesi 2", adresler["tr"]);
+        Assert.Equal("Bagdat Street 1", adresler["en"]);
+    }
+
+    [Fact(DisplayName = "0020/AC-6: Varsayılan olmayan bir dildeki görünen ad boş bırakılarak kaydedilebilir.")]
+    public async Task Korunur_EtkinOlmayanDildekiGorunenAd()
+    {
+        await using (DealershipDbContext hazirlik = database.CreateContext())
+        {
+            await hazirlik.Database.ExecuteSqlRawAsync(
+                "UPDATE dealership.galleries SET display_names = {0}::jsonb",
+                ["""{"tr":"Oto","en":"Oto Gallery"}"""]);
+        }
+
+        await using DealershipDbContext context = database.CreateContext();
+        Result<int> sonuc = await new GalleryCommands(context, IkiDil).UpdateProfileAsync(
+            await GaleriSurumuAsync(),
+            new GalleryProfileInput("Oto Galeri", null, null, new Dictionary<string, string?> { ["tr"] = "Oto", ["ar"] = "" }),
+            CancellationToken.None);
+
+        Assert.True(sonuc.IsSuccess);
+        await using DealershipDbContext okuma = database.CreateContext();
+        Dictionary<string, string> adlar = (await okuma.Galleries.AsNoTracking().SingleAsync()).DisplayNames.ToDictionary();
+        Assert.Equal("Oto Gallery", adlar["en"]);
+        Assert.Equal("Oto", adlar["tr"]);
+    }
+
+    private async Task<Guid> UcDilliSubeAsync(string kisaltma)
+    {
+        await TemizleAsync();
+        Result<(Guid Id, int Version)> acilis = await KomutAsync(komut => komut.OpenAsync(
+            Form(kisaltma) with
+            {
+                Names = Adlar(("tr", "Kadıköy Şubesi"), ("ar", "فرع كاديكوي"), ("en", "Kadikoy Branch")),
+                Addresses = Adlar(("tr", "Bağdat Caddesi 1"), ("en", "Bagdat Street 1")),
+            },
+            CancellationToken.None));
+        Assert.True(acilis.IsSuccess);
+        await DuyurulariSilAsync();
+        return acilis.Value.Id;
+    }
+
+    private async Task<Branch> SubeAsync(Guid sube)
+    {
+        await using DealershipDbContext context = database.CreateContext();
+        return await context.Branches.AsNoTracking().SingleAsync(item => item.Id == new BranchId(sube));
+    }
+
+    private async Task DegismediAsync(Guid sube, BranchStatus durum, int surum)
+    {
+        Branch kayit = await SubeAsync(sube);
+        Assert.Equal(durum, kayit.Status);
+        Assert.Equal(surum, kayit.Version);
+    }
+
     private async Task<Guid> AcikSubeAsync(string kisaltma, bool temizle = true)
     {
         if (temizle)
@@ -426,7 +571,7 @@ public sealed class SubeYonetimiKomutTests : IAsyncLifetime
         Assert.True(sonuc.IsSuccess, sonuc.IsFailure ? sonuc.Error.Code : null);
     }
 
-    private async Task<T> KomutAsync<T>(Func<BranchCommands, Task<T>> islem)
+    private async Task<T> KomutAsync<T>(Func<BranchCommands, Task<T>> islem, DealershipLocales? diller = null)
     {
         await using DealershipDbContext context = database.CreateContext();
         TestSaati saat = new(DateTimeOffset.UtcNow);
@@ -435,7 +580,7 @@ public sealed class SubeYonetimiKomutTests : IAsyncLifetime
             context,
             new DealershipUnitOfWork(context, new OutboxWriter<DealershipDbContext>(context, saat), saat),
             InvariantGuardOptions<DealershipDbContext>.Default,
-            Diller);
+            diller ?? Diller);
 
         return await islem(komutlar);
     }
@@ -482,6 +627,9 @@ public sealed class SubeYonetimiKomutTests : IAsyncLifetime
     }
 
     private static readonly DealershipLocales Diller = new(Tr, [Tr, Ar, En]);
+
+    /// <summary>BULGU-2 — `en` yapılandırmadan çıkarılmış bir kurulum.</summary>
+    private static readonly DealershipLocales IkiDil = new(Tr, [Tr, Ar]);
 
     private static BranchFormInput Form(string kisaltma) => new(
         Adlar(("tr", "Kadıköy Şubesi"), ("ar", "فرع كاديكوي")),
