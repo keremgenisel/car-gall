@@ -467,6 +467,62 @@ public sealed class GaleriYonetimiZinciriTests : IAsyncLifetime
         }
     }
 
+    // QA BULGU-3 — D14'ün sözleşmesi iki modülün arasında: `VehicleCatalog` durumu
+    // `BranchStatusCodes.Closed`'a karşı karşılaştırır, `Dealership` onu enum adından üretir.
+    // Birim testleri sahte bir okuyucuyla sabiti kullandığı için bu bağı görmüyordu; burada
+    // GERÇEKTEN kapatılmış bir şube var — enum ya da sabit yeniden adlandırılırsa bu test düşer.
+    [Fact(DisplayName = "0020/AC-55: Kapatılmış bir şubeyle yeni araç kaydı bir alan hata koduyla reddedilir ve araç oluşmaz.")]
+    public async Task Reddedilir_GercektenKapatilmisSubeyleAracKaydi()
+    {
+        (Guid sube, int surum) = await SubeAcAsync();
+        Assert.Equal(HttpStatusCode.OK, (await yonetici.PostAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/branches/{sube}/close", new { version = surum })).StatusCode);
+
+        HttpResponseMessage yanit = await yonetici.PostAsJsonAsync($"{AdminSurface.RoutePrefix}/vehicles", AracGovdesi(sube, "D14KAPALI0000001"));
+
+        JsonElement govde = await ProblemAsync(yanit, HttpStatusCode.UnprocessableEntity);
+        Assert.Contains("vehicle.branch_closed", govde.GetRawText(), StringComparison.Ordinal);
+        Assert.Equal(0, await SayAsync("SELECT count(*) FROM vehicle_catalog.vehicles WHERE branch_id = @id", sube));
+    }
+
+    [Fact(DisplayName = "0020/AC-56: Bir aracın şubesini kapatılmış bir şubeye değiştiren kaydetme reddedilir.")]
+    public async Task Reddedilir_GercektenKapatilmisSubeyeTasima()
+    {
+        (Guid acik, _) = await SubeAcAsync();
+        (Guid kapali, int surum) = await SubeAcAsync();
+        Guid arac = await AracOlusturAsync(acik, "D14TASIMA0000001");
+        Assert.Equal(HttpStatusCode.OK, (await yonetici.PostAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/branches/{kapali}/close", new { version = surum })).StatusCode);
+
+        HttpResponseMessage yanit = await yonetici.PutAsJsonAsync(
+            $"{AdminSurface.RoutePrefix}/vehicles/{arac}",
+            AracGovdesi(kapali, "D14TASIMA0000001"));
+
+        JsonElement govde = await ProblemAsync(yanit, HttpStatusCode.UnprocessableEntity);
+        Assert.Contains("vehicle.branch_closed", govde.GetRawText(), StringComparison.Ordinal);
+        Assert.Equal(1, await SayAsync("SELECT count(*) FROM vehicle_catalog.vehicles WHERE branch_id = @id", acik));
+    }
+
+    private static Dictionary<string, object> AracGovdesi(Guid sube, string vin) => new()
+    {
+        ["branchId"] = sube,
+        ["vehicleModelId"] = SeedModel,
+        ["bodyType"] = "suv",
+        ["fuelType"] = "diesel",
+        ["transmissionType"] = "automatic",
+        ["drivetrainType"] = "front-wheel-drive",
+        ["trimLevel"] = "comfort",
+        ["color"] = new Dictionary<string, string> { ["tr"] = "Beyaz" },
+        ["modelYear"] = 2019,
+        ["mileageKilometers"] = 45_000,
+        ["priceAmount"] = 750_000m,
+        ["priceOnRequest"] = false,
+        ["vin"] = vin,
+        ["listingTitle"] = new Dictionary<string, string>(),
+        ["listingDescription"] = new Dictionary<string, string>(),
+        ["optionalValues"] = Array.Empty<object>(),
+    };
+
     // ----- Yardımcılar -----
 
     private IEnumerable<(HttpMethod Yontem, string Yol, object? Govde)> YazmaUclari(Guid sube)
