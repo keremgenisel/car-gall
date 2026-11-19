@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
+import ts from 'typescript'
 
 /**
  * CI kapısı: tr/ar/en katalogları anahtar bazında EŞİT olmalı (docs/testing.md § 3).
@@ -176,7 +177,13 @@ const arapca = { ...kumeler.get('vitrin').get('ar'), ...kumeler.get('panel').get
  *    ilk pakete geri döner ve ölçülen LCP payı sessizce kaybolur.
  * 2. Vitrin bir panel anahtarı KULLANMAZ. Kullanırsa anahtar ziyaretçinin çevirmeninde yoktur
  *    ve `t()` BOŞ DİZE döner — hiçbir birim testi bunu görmez, çünkü testler birleşik
- *    kataloğu yükler. Şablon anahtarlar (`lead.type.${type}`) sabit önekleriyle ölçülür.
+ *    kataloğu yükler. Şablon anahtarlar (`lead.type.${type}`) sabit önekleriyle, `.` ile
+ *    biten dizgeler (`'paintChange.input.' + part`) önek olarak ölçülür.
+ *
+ * Kaynak `typescript`'in ayrıştırıcısıyla okunur, düzenli ifadeyle DEĞİL: proje noktalı
+ * virgül kullanmıyor ve ifade bir yan etki importunu (`import './panel'`) sonraki satırın
+ * `from`'uyla birleştirip kaçırıyordu (QA BULGU-1, #109). Yorumlar ayrıştırıcıda zaten
+ * düğüm değildir. Kapının hâlâ görmediği biçimler ADR `0013` § Kapı'da.
  */
 const girdi = join(srcDir, 'main.tsx')
 const panelModulu = join(srcDir, 'shared/i18n/panel.ts')
@@ -201,34 +208,58 @@ while (yigin.length > 0) {
 
   vitrinModulleri.add(dosya)
 
-  // Yorumlar atılır: gerekçe metnindeki bir anahtar adı kullanım değildir.
-  const kod = readFileSync(dosya, 'utf8')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
-
-  for (const eslesme of kod.matchAll(
-    /(?:^|\n)\s*(?:import|export)\s(?:[^;]*?\sfrom\s)?['"](\.[^'"]+)['"]/g,
-  )) {
-    const hedef = coz(dosya, eslesme[1])
-
-    if (hedef !== undefined) {
-      yigin.push(hedef)
-    }
-  }
-
+  const kaynak = ts.createSourceFile(
+    dosya,
+    readFileSync(dosya, 'utf8'),
+    ts.ScriptTarget.Latest,
+    true,
+    dosya.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  )
   const goreli = dosya.slice(srcDir.length)
 
-  for (const eslesme of kod.matchAll(/['"`]([A-Za-z][\w-]*(?:\.[\w-]+)*\.?)(['"`]|\$\{)/g)) {
-    const [, metin, son] = eslesme
-    const ihlal =
-      son === '${'
-        ? metin.includes('.') && [...panelAnahtarlari].find((key) => key.startsWith(metin))
-        : panelAnahtarlari.has(metin) && metin
+  const onekIhlali = (onek) =>
+    onek.includes('.') && [...panelAnahtarlari].find((key) => key.startsWith(onek))
 
-    if (ihlal) {
-      vitrinIhlalleri.push(`src/${goreli} → ${son === '${' ? `${metin}\${…}` : metin}`)
+  const dolas = (dugum) => {
+    // Statik import/export: `import x from`, `import './yan-etki'`, `export … from`.
+    // `import type` çalışma zamanında silinir; `import()` bir çağrıdır, bu dala girmez.
+    if (
+      (ts.isImportDeclaration(dugum) || ts.isExportDeclaration(dugum)) &&
+      dugum.moduleSpecifier !== undefined &&
+      ts.isStringLiteral(dugum.moduleSpecifier) &&
+      !(ts.isImportDeclaration(dugum) && dugum.importClause?.isTypeOnly) &&
+      !(ts.isExportDeclaration(dugum) && dugum.isTypeOnly)
+    ) {
+      const belirtec = dugum.moduleSpecifier.text
+
+      if (belirtec.startsWith('.')) {
+        const hedef = coz(dosya, belirtec)
+
+        if (hedef !== undefined) {
+          yigin.push(hedef)
+        }
+      }
+
+      return
     }
+
+    if (ts.isStringLiteral(dugum) || ts.isNoSubstitutionTemplateLiteral(dugum)) {
+      const metin = dugum.text
+      const ihlal = metin.endsWith('.') ? onekIhlali(metin) : panelAnahtarlari.has(metin)
+
+      if (ihlal) {
+        vitrinIhlalleri.push(`src/${goreli} → ${metin.endsWith('.') ? `${metin}…` : metin}`)
+      }
+    } else if (ts.isTemplateExpression(dugum)) {
+      if (onekIhlali(dugum.head.text)) {
+        vitrinIhlalleri.push(`src/${goreli} → ${dugum.head.text}\${…}`)
+      }
+    }
+
+    ts.forEachChild(dugum, dolas)
   }
+
+  dolas(kaynak)
 }
 
 if (vitrinModulleri.has(panelModulu)) {

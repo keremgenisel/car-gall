@@ -63,8 +63,25 @@ eşitliği; bir anahtarın iki kümede birden olmaması; **vitrin sınırı** �
 statik import ile ulaşılan modüller `panel.ts`'i içe aktarmaz ve hiçbir panel anahtarını
 (şablon anahtarlarda sabit önekiyle) kullanmaz. Son kapı zorunlu, çünkü birim testleri
 birleşik kataloğu yükler (`vite.config.ts` `setupFiles`) ve vitrinde boş kalan bir metni
-göremez. Kapının kırıldığı dört hâl elle denendi: vitrinde panel anahtarı, vitrinde panel
-şablon öneki, vitrinden `panel.ts` importu, panel kümesinde eksik anahtar.
+göremez. Kaynak `typescript` ayrıştırıcısıyla okunur: ilk sürüm düzenli ifade kullanıyordu
+ve noktalı virgülsüz kodda bir yan etki importunu (`import '…/panel'`) sonraki satırın
+`from`'uyla birleştirip **kaçırıyordu** (QA BULGU-1, #109) — `panel.ts` hiçbir şey dışa
+aktarmadığı için sızmanın en gerçekçi yolu tam oydu.
+
+Kapı şu biçimlerde kırılıyor (elle denendi, `exit 1`): yan etki importu ilk satırda ve bir
+import satırının altında; `export … from`; düz panel anahtarı; şablon öneki
+(`` `vehicle.list.${x}` ``); `.` ile biten dizge (`'paintChange.input.' + part`); panel
+kümesinde eksik anahtar. Kırılmaması gerekenler: yorumdaki anahtar adı, `import()`.
+
+**Kapının görmediği** (bugün vitrinde örneği yok):
+
+- Değişkenle kurulan önek: `` `${prefix}.generic` ``, `prefix + '.x'` (`prefix` başka bir
+  satırda tanımlıysa ve `.` ile bitmiyorsa).
+- `.` ile bitmeyen parçalardan birleştirme: `'login' + '.field.' + ad` yalnız `.field.`'ı,
+  yani önek olmayan bir parçayı görür.
+- Anahtarın vitrin dışından (API yanıtı, `localStorage`) gelmesi.
+- `src/` dışındaki ya da `@/` gibi göreli olmayan yollarla içe aktarılan modüller (proje
+  bugün yalnız göreli yol kullanıyor).
 
 `AlanEtiketiKapisiTests` (backend) bir dilin kataloğunu artık iki dosyanın birleşimi olarak
 okur; `vehicle.field.*` panel kümesine taşındı.
@@ -85,5 +102,4 @@ CI `C3 eşikleri` medyanları bu ADR'nin PR'ında raporlanır.
 - Yeni anahtar yazan herkes kümeyi seçmek zorunda. Yanlış seçimin bir yönü (vitrinde panel
   anahtarı) kapıda kırılır; diğer yönü (panelin anahtarı vitrin kümesinde) yalnız paket
   boyutunu büyütür ve **kapı onu görmez**.
-- Vitrin sınırı kaynak metni düzenli ifadeyle tarıyor: anahtarı bir değişkende birleştiren
-  (`prefix + '.x'`) vitrin kodu kapıdan kaçar. Bugün vitrinde böyle bir kullanım yok.
+- Vitrin sınırı statik bir taramadır; görmediği biçimler § Kapı'da listeli.
