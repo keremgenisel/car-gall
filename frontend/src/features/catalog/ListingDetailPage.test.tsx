@@ -76,7 +76,7 @@ describe('AC-17, AC-18, AC-19: İlan detayı ekranının smoke testi', () => {
     expect(screen.getByText('125.000 km')).toBeTruthy()
   })
 
-  it('AC-11: sunucudan gelen opsiyonel alan, çözülmüş etiketiyle görünür', async () => {
+  it('sunucudan gelen nitelik, alan adı ve çözülmüş değeriyle görünür', async () => {
     vi.mocked(fetchListingDetail).mockResolvedValue(detay)
 
     ekran()
@@ -85,45 +85,33 @@ describe('AC-17, AC-18, AC-19: İlan detayı ekranının smoke testi', () => {
     expect(screen.getByText('Dizel')).toBeTruthy()
   })
 
-  it('AC-10, AC-21: nitelik satırının başlığı alanın adıdır, değeri tekrar etmez — üç dilde', async () => {
-    const adlar = { tr: 'Kasa tipi', ar: 'نوع الهيكل', en: 'Body type' } as const
+  it('AC-10, AC-21: her nitelik satırının başlığı alanın adıdır, değeri tekrar etmez — üç dilde', async () => {
+    // Sunucunun yazabildiği altı anahtar (BuildAttributesAsync). Beklenen ad, panelin aynı
+    // alan için kullandığı adla aynıdır (vehicle.form.field.*).
+    const adlar = {
+      tr: ['Kasa tipi', 'Yakıt', 'Vites', 'Çekiş', 'Donanım paketi', 'Renk'],
+      ar: ['نوع الهيكل', 'الوقود', 'ناقل الحركة', 'نظام الدفع', 'فئة التجهيز', 'اللون'],
+      en: ['Body type', 'Fuel', 'Transmission', 'Drivetrain', 'Trim level', 'Colour'],
+    } as const
+    const anahtarlar = ['body_type', 'fuel_type', 'transmission_type', 'drivetrain_type', 'trim_level', 'color']
+
     for (const locale of ['tr', 'ar', 'en'] as const) {
+      // Gerçek biçim: `label` değerin etiketidir, `value` ile aynı.
       vi.mocked(fetchListingDetail).mockResolvedValue({
         ...detay,
-        attributes: [{ key: 'body_type', label: 'Hatchback', value: 'Hatchback' }],
+        attributes: anahtarlar.map((key) => ({ key, label: `deger-${key}`, value: `deger-${key}` })),
       })
 
       const { container } = ekran(locale)
 
-      await waitFor(() => expect(container.querySelector('.listing-detail__attribute')).toBeTruthy())
-      const satirlar = [...container.querySelectorAll('.listing-detail__attribute')]
-      const satir = satirlar.find((el) => el.querySelector('dd')?.textContent === 'Hatchback')
-      expect(satir?.querySelector('dt')?.textContent).toBe(adlar[locale])
+      await waitFor(() => expect(screen.getByText('deger-body_type')).toBeTruthy())
+      for (const [index, key] of anahtarlar.entries()) {
+        const satir = [...container.querySelectorAll('.listing-detail__attribute')].find(
+          (el) => el.querySelector('dd')?.textContent === `deger-${key}`,
+        )
+        expect(satir?.querySelector('dt')?.textContent, `${locale}/${key}`).toBe(adlar[locale][index])
+      }
       cleanup()
-    }
-  })
-
-  it('sunucunun yazdığı her nitelik anahtarının vitrinde bir adı vardır', async () => {
-    const anahtarlar = [
-      'body_type',
-      'fuel_type',
-      'transmission_type',
-      'drivetrain_type',
-      'trim_level',
-      'color',
-      'damage_record_amount',
-      'warranty_status',
-    ]
-    vi.mocked(fetchListingDetail).mockResolvedValue({
-      ...detay,
-      attributes: anahtarlar.map((key) => ({ key, label: `deger-${key}`, value: `deger-${key}` })),
-    })
-
-    const { container } = ekran()
-
-    await waitFor(() => expect(screen.getByText('deger-body_type')).toBeTruthy())
-    for (const satir of container.querySelectorAll('.listing-detail__attribute')) {
-      expect(satir.querySelector('dt')?.textContent).not.toBe(satir.querySelector('dd')?.textContent)
     }
   })
 

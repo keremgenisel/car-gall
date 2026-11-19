@@ -39,8 +39,6 @@
   "detail.field.drivetrainType": "نظام الدفع",
   "detail.field.trimLevel": "فئة التجهيز",
   "detail.field.color": "اللون",
-  "detail.field.damageRecordAmount": "قيمة سجل الأضرار",
-  "detail.field.warrantyStatus": "حالة الضمان",
   "detail.notFound.title": "هذه السيارة ليست في المعرض",
   "detail.notFound.body": "قد يكون الإعلان الذي تبحث عنه قد أُزيل. يمكنك تصفّح السيارات الأخرى في المعرض.",
   "detail.notFound.action": "العودة إلى المعرض",

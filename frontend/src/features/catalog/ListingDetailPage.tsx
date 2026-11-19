@@ -165,10 +165,11 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
 }
 
 /**
- * Nitelik anahtarının ziyaretçinin dilindeki ADI. Anahtarlar sunucunun yazdığı kümedir
- * (`ShowcaseListingDetailQueries.BuildAttributesAsync`): beş referans alanı, renk ve
- * opsiyonel alanlar. Bilinmeyen bir anahtar `null` döner ve satır sunucunun etiketiyle
- * basılır — yeni bir opsiyonel alan bu listeye eklenene kadar satır kaybolmaz.
+ * Nitelik anahtarının ziyaretçinin dilindeki ADI. Anahtarlar sunucunun yazabildiği kümedir
+ * (`ShowcaseListingDetailQueries.BuildAttributesAsync`): beş referans alanı ve renk. Opsiyonel
+ * alanlardan bugün hiçbiri buraya inmez — projektör yalnız `LocalizedText` taşır ve öyle bir
+ * alan tanımlı değil; biri tanımlanırsa `VitrindeAdiOlanAlanlarTests` kırılır ve adı buraya
+ * eklenir. Bilinmeyen anahtar `null` döner ve satır sunucunun etiketiyle basılır.
  */
 function attributeName(key: string, t: Translator): string | null {
   switch (key) {
@@ -184,10 +185,6 @@ function attributeName(key: string, t: Translator): string | null {
       return t('detail.field.trimLevel')
     case 'color':
       return t('detail.field.color')
-    case 'damage_record_amount':
-      return t('detail.field.damageRecordAmount')
-    case 'warranty_status':
-      return t('detail.field.warrantyStatus')
     default:
       return null
   }

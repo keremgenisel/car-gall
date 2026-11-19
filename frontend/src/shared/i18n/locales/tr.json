@@ -39,8 +39,6 @@
   "detail.field.drivetrainType": "Çekiş",
   "detail.field.trimLevel": "Donanım paketi",
   "detail.field.color": "Renk",
-  "detail.field.damageRecordAmount": "Tramer tutarı",
-  "detail.field.warrantyStatus": "Garanti durumu",
   "detail.notFound.title": "Bu araç vitrinde değil",
   "detail.notFound.body": "Aradığınız ilan yayından kalkmış olabilir. Vitrindeki diğer araçlara göz atabilirsiniz.",
   "detail.notFound.action": "Vitrine dön",

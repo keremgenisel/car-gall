@@ -39,8 +39,6 @@
   "detail.field.drivetrainType": "Drivetrain",
   "detail.field.trimLevel": "Trim level",
   "detail.field.color": "Colour",
-  "detail.field.damageRecordAmount": "Damage record amount",
-  "detail.field.warrantyStatus": "Warranty status",
   "detail.notFound.title": "This car is not in the showroom",
   "detail.notFound.body": "The listing you are looking for may have been taken down. You can browse the other cars in the showroom.",
   "detail.notFound.action": "Back to showroom",
