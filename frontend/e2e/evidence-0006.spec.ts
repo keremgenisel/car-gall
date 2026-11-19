@@ -164,8 +164,8 @@ test('0006/AC-55, 0006/AC-61: Arapça tercih eden personel için panel RTL (AR)'
   await expect(page.getByTestId('admin-shell')).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
 
-  // R8/R9 — Satış Danışmanının açabileceği bir yönetim ekranı henüz yok (X5). Ekran
-  // bunu SÖYLER; "getirilemedi, tekrar dene" demez.
+  // R8/R9 — Personel ekranı Satış Danışmanına kapalı. Ekran bunu SÖYLER; "getirilemedi,
+  // tekrar dene" demez. (Kart yazıldığında danışmanın hiç ekranı yoktu; bugün Araçlar var.)
   await expect(page.getByTestId('admin-no-access')).toBeVisible()
 
   await kanit(page, '[data-testid="admin-shell"]', '0006-ac55.png')
