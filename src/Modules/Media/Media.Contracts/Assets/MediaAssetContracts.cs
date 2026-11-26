@@ -40,10 +40,9 @@ public sealed record MediaDerivativeDto(string Variant, int Width, int Height, s
 /// Varlığın dar okuma yüzeyi. <b>Orijinalin yolu burada YOK</b> ve bu bilinçli (D16):
 /// orijinal ham saklanıyor, yani konum bilgisini taşıyor; R5'in garantisi dışarı çıkanı
 /// temizlemek olduğu için orijinalin yolu hiçbir yanıtta dönmez.
-/// </summary>
-///
 /// <para>`0026` AC-9 — <c>Kind</c> varlığın işleme türüdür; var olan kurucular değişmeden
 /// derlensin diye son parametre ve varsayılanı <c>Photo</c>.</para>
+/// </summary>
 public sealed record MediaAssetDto(
     Guid Id,
     MediaProcessingStatus Status,
