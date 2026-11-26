@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaya sunuldu (2026-11-26)** · D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26) · sahibin SS1–SS2 cevapları işlendi · QA 1 CLARIFY turu bekliyor |
+| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1–B6, kartlar arası X1–X3 → D1, D3, D4, D5, D11 güncellendi, **D16**, **D17** eklendi; AC-69–AC-79) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `Media` (logo işleme türü) · `Dealership` (galeri profilinin logo bağı) · `Host` (belge: üst çubuk logosu, `og:image`, `AutoDealer.logo`) · Frontend (panel Galeri ekranı, vitrin üst çubuğu) |
+| **Modül(ler)** | `Media` (logo işleme türü) · `Dealership` (galeri profilinin logo bağı) · `VehicleCatalog` (araca yalnız fotoğraf türü bağlanır, **D16** — CLARIFY B1) · `Host` (belge: üst çubuk logosu, `og:image`, `AutoDealer.logo`) · Frontend (panel Galeri ekranı, vitrin üst çubuğu) |
 | **Bağımlı spec'ler** | `0011` (yükleme, türev, filigran) · `0012a` (panelin medya yüzeyi) · `0004` (**D2**, **D13**, **D15**, **D16**, **D17**, **AC-32**, **AC-33**, **AC-52**, **AC-80**, **AC-83**) · `0020` (galeri profili, **R16** sürüm, **C6** üst çubuk) · **`0024`** (profil formunun sürümü) · **`0025`** (`AC-52` zinciri). |
-| **Karar bekliyor** | yok — D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26). SS1–SS2 cevaplandı (sahip kararı, 2026-11-26). |
+| **Karar bekliyor** | yok — D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26), CLARIFY turu işlendi. SS1–SS2 cevaplandı (sahip kararı, 2026-11-26). |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26):** `0004` **SS5**'e "evet": logo panelden yüklensin,
 > paylaşım önizlemesinde ve galerinin yapısal verisinde görünsün; `0004`'ten sonra **ayrı küçük
@@ -17,6 +17,12 @@
 > farklı).** SS2 → adın yanında, ad metin olarak kalır (öneri kabul). SS1'in cevabıyla **R4a**
 > eklendi, **D5** altlığı kapsayacak biçimde genişledi, **X2** ve **D11** değişti, **AC-58** yerinde
 > değişti. Yeni kriterler numara **eklenerek** geldi (**AC-62–AC-68**), var olan numaralar değişmedi.
+>
+> **QA CLARIFY turu (QA 1, 2026-11-26; Proje Yöneticisi kararları):** B1–B6 ve kartlar arası X1–X3
+> işlendi. **D1**, **D3**, **D4**, **D5**, **D11** yerinde güncellendi ve "CLARIFY" diye işaretlendi.
+> **D16** (araca yalnız fotoğraf türü) ve **D17** (ayrı marka okuma arayüzü) eklendi. Kart artık
+> `VehicleCatalog`'a da dokunuyor. **AC-3**, **AC-42**, **AC-58** düzeltildi. Yeni kriterler
+> **AC-69–AC-79**. Var olan numaralar değişmedi.
 
 ---
 
@@ -180,6 +186,8 @@ altında kalır.
 
 | Test | Bugün ölçtüğü | Bu kartla |
 |---|---|---|
+| `tests/Notifications.Tests/Integration/SahteKaynaklar.cs:63`, `tests/Architecture.Tests/BildirimSinirTests.cs:189` | `IGalleryDisplayNameQueries`'in tüketimi | **değişmez** (**D17**, **AC-75**). Yeni arayüz kapıya eklenir (**AC-76**) |
+| `VehicleCatalog`'un araç medyası testleri (`UpdateVehicleMediaCommand`) | var olan varlık bağlanır | fotoğraf türünde değişmez. Logo türü reddi yeni testle ölçülür (**AC-69**) |
 | `tests/Host.Tests/SeoBelgeTests.cs:373` (`0004/AC-32`) | görselsiz ilanda `og:image` yok | logolu kurulumda logo (**AC-47**). Logosuz kurulumda değişmez (**AC-48**) |
 | `tests/Host.Tests/SeoBelgeTests.cs:381` (`0004/AC-33`) | ana sayfa, liste, içerikte `og:image` yok | logolu kurulumda logo (**AC-44**, **AC-45**). Logosuz kurulumda değişmez (**AC-48**) |
 | `tests/Host.Tests/SeoBelgeTests.cs:561-573` (`0004/AC-52`, `0025` AC-55 hâli) | `geo`, `logo` yok | `logo` listeden çıkar (**AC-52**) |
@@ -196,9 +204,20 @@ altında kalır.
 3. **Fotoğraf türündeki varlığın logo diye atanması.** El yapımı bir istekle filigranlı bir araç
    fotoğrafının kimliği atanabilir. Host türü kontrol eder (**D3**, **AC-36**).
 4. **Logoyu ön yüklemek detayın LCP'sini geciktirir.** Detayın LCP öğesi ilk görseldir ve keşfi
-   bayt sırasına bağlıdır (`0004` **D17**). Logo ön yüklenmez ve düşük öncelikle istenir (**D5**).
+   bayt sırasına bağlıdır (`0004` **D17**). Logo ön yüklenmez (**D5**). *(CLARIFY B2:)* Tersi de
+   tuzaktır: listenin LCP öğesi bugün küçük bir metin düğmesi (perf koşusu 45787830373). 160×40'a
+   kadar basılan ama geç inen, düşük öncelikli bir logo listede LCP öğesi olup LCP'yi geciktirebilir.
+   Bu yüzden üst çubuk logosu düşük öncelik ve tembel yükleme **taşımaz**.
 5. **Kapsayıcısı ölçüsüz görsel yer kaydırır.** Logo `width`/`height` özniteliği olmadan basılırsa
    görsel geldiğinde ad yana kayar. CLS her sayfada ölçülür (`0014` performans kapısı).
+6. **Logo türündeki varlık araca bağlanabiliyor** *(CLARIFY B1)*. `UpdateVehicleMediaCommand.cs:45-72`
+   varlığın yalnız var olup olmadığına, yayın kapısı (`ListingTransitionCommands.cs:166-168`) yalnız
+   `ReadyAmongAsync`'e bakıyor. Logo türündeki hazır bir varlık "en az bir hazır görsel" şartını
+   (`0001` AC-3) geçer ve vitrinde fotoğrafsız ilan yayına çıkar → **D16**.
+7. **`IGalleryDisplayNameQueries`'in başka tüketicisi var** *(CLARIFY B3)*: `Notifications`
+   (`NewsletterMessageComposer`; testlerde `tests/Notifications.Tests/Integration/SahteKaynaklar.cs:63`,
+   `tests/Architecture.Tests/BildirimSinirTests.cs:189`). Dönüş tipini değiştirmek bülteni de
+   değiştirir → **D17**.
 
 ---
 
@@ -215,6 +234,10 @@ Biçim: **karar** · *gerekçe* · *bedel*.
   Konum ve metadata temizliği de fotoğrafla aynıdır (`0011` **R5**).
 - Tür varlıkla saklanır: `media` şemasında migration.
 - Tür okuma sözleşmesinde (`MediaAssetDto`) ve panelin durum okumasında görünür.
+- *(CLARIFY B5:)* Türler `photo` ve `logo`'dur. Migration'dan önce yüklenmiş varlıklar okumada
+  `photo` döner. Bilinmeyen bir tür değeri (ör. `banner`) yüklemede `422` `media.kind_unknown` ile
+  reddedilir ve varlık oluşmaz (Media'nın hata kodu deseni: `MediaErrors.cs`, `media.<ad>`).
+- *(CLARIFY B1:)* Logo türü araca bağlanamaz (**D16**).
 
 *Gerekçe:* Context: bugünkü hat logoyu siyah kutuya koyup üzerine filigran basıyor. Tür,
 varlığın sahibini değil nasıl işleneceğini söyler, yani `Media` sahipsiz kalır (C4). 320,
@@ -232,7 +255,8 @@ Host'ta yapılır (D3). `Dealership`'te migration yoktur.
 
 **D3 — Vitrinde logoyu Host çözer.** (R4–R7, C2, tuzak 2, tuzak 3)
 - Belge isteğinde Host, galerinin logo kimliğini `Dealership.Contracts`'tan, görünen adla **aynı
-  okumada** alır. Türevleri `Media.Contracts`'tan (`IMediaAssetQueries.FindAsync`) okur. İki okuma
+  okumada** alır. *(CLARIFY B3:)* Bu okuma **ayrı bir arayüzdür** (**D17**); `IGalleryDisplayNameQueries`
+  değişmez. Türevleri `Media.Contracts`'tan (`IMediaAssetQueries.FindAsync`) okur. İki okuma
   da tek atlamalıdır.
 - Logo yalnız varlık **Hazır** ve türü **logo** ise kullanılır. Aksi hâlde logo yoktur.
 - `Media` okuması hata verirse belge 200 ile logosuz basılır ve hata loglanır (`0020` **R5a** deseni).
@@ -249,7 +273,9 @@ yönetim grubundadır (Yönetici politikası, `0020` **D2**). Satış Danışman
 oturumsuz istek `401` alır.
 *Gerekçe:* varlık sahipsizdir ve bağlanmadıkça vitrinde görünmez. Yükleme ucuna türe göre ikinci
 bir politika eklemek `Media`'ya "kim için" bilgisini sokar (C4).
-*Bedel:* Satış Danışmanı logo türünde bir varlık yükleyebilir ama atayamaz (**AC-18**).
+*Bedel:* Satış Danışmanı logo türünde bir varlık yükleyebilir ama atayamaz (**AC-18**). *(CLARIFY
+B1:)* Logo türündeki bir varlık araca da bağlanamaz (**D16**). Yani yüklenen ama atanmayan logo
+hiçbir vitrin yüzeyinde görünmez.
 
 **D5 — Üst çubuk: logo adın yanında, yer ayrılmış ve düşük öncelikli.** (R4, R10, C6, C7,
 tuzak 4, tuzak 5, **SS1**, **SS2**)
@@ -257,7 +283,9 @@ tuzak 4, tuzak 5, **SS1**, **SS2**)
 - Logo dekoratiftir (boş `alt`). Bağlantının erişilebilir adı görünen addır.
 - Logo `logo-small` türevidir. `width` ve `height` öznitelikleri türevin gerçek boyutudur. Görünen
   boyut oran korunarak **en çok 40 CSS piksel yükseklik ve 160 CSS piksel genişlik**tir.
-- Logo ön yüklenmez. Düşük getirme önceliği ve eşzamansız çözümleme taşır.
+- Logo ön yüklenmez. *(CLARIFY B2, önceki hâli "düşük getirme önceliği" idi:)* Üst çubuk logosu
+  **`loading="lazy"` ve `fetchpriority="low"` taşımaz**: normal öncelikle istenir. Eşzamansız
+  çözümleme taşır ve `width`/`height` yer ayırır. Altlık logosu `loading="lazy"` kalır (aşağıda).
 - Bilgi (adres, genişlik, yükseklik) belgeye sunucudan, görünen adın etiketi gibi basılır. Ayrı
   istek yoktur.
 - **Ad okunamazsa logo da gösterilmez:** üst çubuk bugünkü boş hâliyle kalır (`0020` AC-17).
@@ -280,10 +308,15 @@ tuzak 4, tuzak 5, **SS1**, **SS2**)
     diğer blokları değişmez.
 
 *Gerekçe:* ad Arapça ziyaretçi, ekran okuyucu ve arama motoru için metin olarak kalmalı. Öznitelik
-yer ayırır, yani CLS olmaz. Düşük öncelik LCP görseliyle bant genişliği yarışını önler. Altlıkta aynı
+yer ayırır, yani CLS olmaz. Ön yükleme yok, çünkü detayın LCP görseliyle yarışırdı. Düşük öncelik de
+yok, çünkü listede LCP öğesi küçük bir metin olduğundan logo LCP öğesi olabilir ve geç inmemeli
+(tuzak 4, CLARIFY B2). Altlıkta aynı
 türevi kullanmak ikinci bir indirmeyi önler. `alt` kuralı WCAG'nin "bilgi taşıyan görsel /
 dekoratif görsel" ayrımıdır: üst çubukta ad hemen yanında yazılı, altlıkta değil.
 *Bedel:* çok geniş bir logo 160 pikselde küçük görünür. Panelin yardım metni oranı önerir (D12).
+*(CLARIFY B2:)* Normal öncelikli logo detayda ilk görselle bant genişliği paylaşır (detayın payı
+92 ms, Context). Listede logo LCP öğesi olabilir, yani listenin LCP'si logonun inme süresine bağlanır.
+İkisi de C3 ile ölçülür (AC-58).
 
 **D6 — `og:image` yedeği logodur.** (R5, X9) `logo-large`'ın mutlak adresi şu belgelerde
 `og:image` olur:
@@ -347,11 +380,16 @@ kalır (`SeoHeadBuilder.cs:373-376`).
 - **(d)** C3 ana sayfa, liste ve detayda **logolu kurulumda** yeşildir (LCP < 2500 ms, CLS < 0,1).
   Perf koşusu bir logo tohumlar. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşu istenir ve
   LCP öğesi PR'a yazılır.
-- **(e)** Üç sayfanın hiçbirinde LCP öğesi logo değildir: ne üst çubuk logosu ne altlık logosu.
+- **(e)** *(CLARIFY B2 ile değişti:)* Hiçbir sayfada LCP öğesi **altlık logosu** değildir. Üst
+  çubuk logosu LCP öğesi **olabilir**; o durumda da her sayfada LCP < 2500 ms'dir (C3, logolu tohum).
+- **(g)** *(CLARIFY X2:)* Perf koşusu önceki kartların tohumunu korur (`0024` AC-56: altı hesap,
+  `0025` AC-62: iki aktif şubede en kötü program) ve bir logo ekler. Bu birleşik kurulumda `/ar/`
+  ana sayfa C3'te yeşildir ve belgenin `main` tabanına göre büyümesi bayt olarak PR'a yazılır.
 - **(f)** Logolu ana sayfa, logonun ağ isteğini bir kez yapar. Altlık logosu ikinci bir istek üretmez.
 
-*Gerekçe:* logo her sayfaya giriyor ve detayın payı 92 ms (Context). (e) logonun LCP adayını
-değiştirmediğini doğrudan ölçer.
+*Gerekçe:* logo her sayfaya giriyor ve detayın payı 92 ms (Context). (e) LCP öğesinin ne olduğuna
+değil, LCP'nin eşiğin altında kalmasına bakar (CLARIFY B2). (g) üç kartın birlikte ölçülmediği bir
+koşunun her kartı ayrı ayrı yeşil gösterip birleşik hâli ölçmemesini önler.
 *Bedel:* yok.
 
 **D12 — Dosya kuralları `Media`'nın bugünkü yapılandırmasıdır.** (C3) Kabul edilen türler, en
@@ -377,6 +415,25 @@ işlenmiş medya varlığı. Filigransızdır ve saydam zemini korunur. Vitrinin
 paylaşım önizlemesinde kullanılır.
 *Gerekçe:* sözlükte yok.
 *Bedel:* yok.
+
+**D16 — `VehicleCatalog` araca yalnız `photo` türündeki varlığı bağlar. (CLARIFY B1, Proje
+Yöneticisi kararı, 2026-11-26)** (D1, tuzak 6) Araç medyası kaydetmesi logo türündeki bir varlığı
+`422` `vehicle.media_asset_wrong_kind` ile reddeder ve aracın medyası değişmez. Yayın kapısı logo
+türündeki varlığı "hazır görsel" saymaz. Tür `Media`'nın okuma sözleşmesinden gelir (D1). Bu
+kontrol `VehicleCatalog → Media` okumasıdır ve § 2.A'nın örneklerinde zaten var.
+*Gerekçe:* tuzak 6: aksi hâlde logo, `0001` AC-3'ün "en az bir hazır görsel" kapısını geçer ve
+vitrinde fotoğrafsız ilan doğar.
+*Bedel:* kart `VehicleCatalog`'a dokunur. Kapı iki yerde uygulanır: bağlamada ve yayında.
+
+**D17 — Ad ve logo kimliği ayrı bir okuma arayüzünden gelir. (CLARIFY B3, Proje Yöneticisi
+kararı, 2026-11-26)** (D3, C2) `IGalleryDisplayNameQueries`'in dönüş tipi **değişmez**. Aynı sınıfın
+(`PublicGalleryQueries`) gerçeklediği **ayrı** bir arayüz açılır (ör. `IGalleryBrandingQueries`). Bu
+arayüz görünen adı ve logo kimliğini **tek sorguda** döner. Host belgeyi bu arayüzle kurar. Yeni
+arayüz, `0018` AC-83'ün tüketilen sorgu gerçeklemeleri kapısına (`ConsumedQueryImplementations`,
+`BildirimSinirTests.cs:375`) girer.
+*Gerekçe:* tuzak 7: `Notifications` aynı arayüzü tüketiyor. Dar bir arayüzü genişletmek bülteni
+ilgisiz bir değişikliğe bağlar.
+*Bedel:* `Dealership.Contracts`'ta bir arayüz daha.
 
 ---
 
@@ -408,8 +465,11 @@ paylaşım önizlemesinde kullanılır.
   ve `logo-large`.
 - **AC-2.** 2000 piksel genişlikteki kaynaktan `logo-small` 320, `logo-large` 1200 piksel
   genişliktedir. 200 piksel genişlikteki kaynaktan ikisi de 200 piksel genişliktedir. Oran korunur.
-- **AC-3.** Logo türevlerinde filigran yoktur. Türev, aynı kaynağın filigransız ölçeklenmiş hâline
-  kayıplı sıkıştırma toleransı içinde eşittir.
+- **AC-3.** Logo türevlerinde filigran yoktur. Ölçüm `0011` AC-21'in yöntemidir
+  (`tests/Media.Tests/Infrastructure/GorselIslemeTests.cs:55-78`: sağ-alt köşe ortalamasının parlaklığı
+  ile merkez pikselin parlaklığı karşılaştırılır; `0011` filigranın varlığını farkın 40'tan büyük
+  olmasıyla ölçüyor). Düz renkli, opak bir kaynağın iki logo türevinde bu fark **en çok 5**'tir.
+  *(CLARIFY B4.)*
 - **AC-4.** Kaynakta saydam (alfa 0) olan köşe pikseli iki türevde de saydamdır.
 - **AC-5.** Logo türevleri WebP'dir.
 - **AC-6.** Tür verilmeden yüklenen bir görsel bugünkü gibi işlenir: üç türev (`large`, `display`,
@@ -475,8 +535,8 @@ paylaşım önizlemesinde kullanılır.
 - **AC-40.** Ana sayfa, liste, detay, içerik ve 404 belgelerinin hepsi logo bilgisini taşır.
 - **AC-41.** Logo değiştirildikten ve yeni varlık hazır olduktan sonra istenen ilk belge yeni
   logoyu taşır.
-- **AC-42.** Hiçbir belge logo için ön yükleme bağlantısı taşımaz. Logo görseli düşük getirme
-  önceliği taşır. Detay belgesinde ilk görselin ön yüklemesi bütün etiketlerden önce kalır
+- **AC-42.** Hiçbir belge logo için ön yükleme bağlantısı taşımaz. Üst çubuk logosu `loading` ve
+  `fetchpriority` özniteliği taşımaz (CLARIFY B2). Detay belgesinde ilk görselin ön yüklemesi bütün etiketlerden önce kalır
   (`0004` AC-80).
 - **AC-43.** Logo atanmamış kurulumda belge başına `Media`'ya hiç okuma yapılmaz. Logolu kurulumda
   belge başına tam olarak bir okuma yapılır.
@@ -515,8 +575,9 @@ paylaşım önizlemesinde kullanılır.
 - **AC-57.** Perf koşusu bir logo tohumlar. C3 ana sayfa, liste ve detayda yeşildir: LCP < 2500 ms
   ve CLS < 0,1. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi PR'da
   yazılıdır.
-- **AC-58.** Logolu perf koşusunda ana sayfa, liste ve detayın LCP öğesi ne üst çubuk logosu ne
-  altlık logosudur.
+- **AC-58.** Logolu perf koşusunda ana sayfa, liste ve detayın LCP öğesi altlık logosu değildir.
+  Üst çubuk logosu LCP öğesi olabilir. Üç sayfada da LCP < 2500 ms'dir. LCP öğesi her sayfa için
+  PR'da yazılıdır. *(CLARIFY B2.)*
 - **AC-59.** Perf koşusunun logosu üst çubukta görünür. Koşunun belgesi logo bilgisini taşır ve
   ölçüm logosuz bir belgeyle yapılmamıştır.
 
@@ -542,10 +603,35 @@ paylaşım önizlemesinde kullanılır.
 - **AC-68.** Hazır logolu `/ar/` ana sayfa belgesi, altlık logosu eklendikten sonra da AC-54'ün
   sınırındadır. Belge altlık için ayrı bir logo bilgisi taşımaz.
 
+### QA CLARIFY turuyla eklenenler (2026-11-26)
+
+- **AC-69.** Logo türündeki bir varlıkla yapılan araç medyası kaydetmesi `422` ve
+  `vehicle.media_asset_wrong_kind` döner. Aracın medyası değişmez (**D16**).
+- **AC-70.** Medyasında yalnız logo türünde hazır bir varlık olan bir araç yayına alınamaz. Yanıt
+  "en az bir hazır görsel" eksikliğini taşır ve ilan vitrinde görünmez (**D16**).
+- **AC-71.** Migration'dan önce yüklenmiş bir varlığın okuma yanıtında türü `photo`'dur.
+- **AC-72.** `banner` türüyle yükleme `422` ve `media.kind_unknown` döner. Varlık oluşmaz.
+- **AC-73.** Aynı ekranda profil (görünen ad ve `0024`'ün sosyal hesapları) kaydedildikten sonra
+  yapılan logo ataması `409` vermez.
+- **AC-74.** Aynı ekranda profil kaydedildikten sonra yapılan logo kaldırması `409` vermez.
+- **AC-75.** `IGalleryDisplayNameQueries.FindDisplayNameAsync`'in dönüş tipi bu karttan önceki
+  hâlindedir. Bülten (`Notifications`) testleri değişmeden yeşildir.
+- **AC-76.** Görünen adı ve logo kimliğini döndüren ayrı arayüz tek bir veritabanı sorgusuyla
+  çalışır ve tüketilen sorgu gerçeklemeleri kapısında (`0018` AC-83) yer alır (**D17**).
+- **AC-77.** Perf koşusu önceki kartların tohumunu korur: koşunun ana sayfa belgesi altı hesabı
+  (`0024` AC-56) ve iki aktif şubenin en kötü programını (`0025` AC-62) taşır.
+- **AC-78.** Altı hesap, iki şube, en kötü program ve logo ile birleşik kurulumda `/ar/` ana sayfa
+  C3'te yeşildir (LCP < 2500 ms, CLS < 0,1). Belgenin `main` tabanına göre büyümesi bayt olarak
+  PR'da yazılıdır.
+- **AC-79.** Altlık logosu `loading="lazy"` taşır ve hiçbir perf koşusunda LCP öğesi değildir.
+
 ---
 
 ## Definition of Done
 
+- [x] Önerilen kararlar (**D1–D15**) onaylandı (Proje Yöneticisi kararı, 2026-11-26) ve QA CLARIFY
+      turu (B1–B6, kartlar arası X1–X3 → **D16**, **D17** ve kriter düzeltmeleri, AC-69–AC-79)
+      işlendi. *(Takım Yöneticisi (ajan) kararı, 2026-11-26.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0026-ac<n>.png`),
       boş, işleniyor ve hata durumları dâhil; üst çubuğun ve panel bölümünün Arapça görüntüsü de var.
@@ -562,6 +648,9 @@ paylaşım önizlemesinde kullanılır.
       bunun yerine geçmez.
 - [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu ve uygulamada bulunan ekler) PR'da listelendi.
+      *(CLARIFY X3:)* Etiketi değişen eski testler **çok etiketli** kalır ve eski etiketini
+      kaybetmez: `0004/AC-52, 0024/AC-45, 0025/AC-55, 0026/AC-52: …`, `0004/AC-32, 0026/AC-47, AC-48: …`,
+      `0004/AC-33, 0026/AC-44, AC-45, AC-48: …` (mevcut desen `0017/AC-51, AC-52, AC-56`).
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in
