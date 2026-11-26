@@ -11,7 +11,7 @@ namespace CarGallery.Host.Tests;
 /// </summary>
 public sealed class GaleriPublicUcTests(HostFactory factory) : IClassFixture<HostFactory>
 {
-    [Fact(DisplayName = "0014/AC-14: Galerinin ziyaretçiye dönük okuma yanıtı yalnız galerinin adını ve aktif şubelerin adını, adresini ve telefonunu taşır; başka alan yanıtta bulunmaz (null olarak da gelmez)")]
+    [Fact(DisplayName = "0014/AC-14, 0024/AC-33: Galerinin ziyaretçiye dönük okuma yanıtı yalnız galerinin adını ve aktif şubelerin adını, adresini ve telefonunu taşır; başka alan yanıtta bulunmaz (null olarak da gelmez)")]
     public async Task Tasir_YalnizIzinListesindekiAlanlari()
     {
         using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
@@ -21,7 +21,9 @@ public sealed class GaleriPublicUcTests(HostFactory factory) : IClassFixture<Hos
         // İzin listesi ANAHTAR KÜMESİYLE ölçülür, yasak alanların yokluğuyla değil: yarın
         // eklenen bir alan da bu testi kırar (D15). `0020` D15 — galerinin adı artık görünen
         // addır (`commercialName` → `displayName`); beklenen değişiklik, gerileme değil.
-        Assert.Equal(["branches", "displayName"], AnahtarlarSirali(belge.RootElement));
+        // `0024` D7 — `socialLinks` bilerek eklendi (Context tablosu); öğeleri ayrıca ölçülür.
+        Assert.Equal(["branches", "displayName", "socialLinks"], AnahtarlarSirali(belge.RootElement));
+        Assert.Equal(JsonValueKind.Array, belge.RootElement.GetProperty("socialLinks").ValueKind);
 
         JsonElement subeler = belge.RootElement.GetProperty("branches");
         Assert.True(subeler.GetArrayLength() > 0, "seed en az bir aktif şube taşıyor");

@@ -26,9 +26,10 @@ internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale d
     public async Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken)
     {
         // `0020` D15 — ticari unvan DEĞİL görünen ad (AC-13, AC-16).
+        // `0024` D7 — sosyal hesaplar aynı okumada; vergi ve sicil numarası yine okunmaz.
         var gallery = await context.Galleries
             .AsNoTracking()
-            .Select(item => new { item.DisplayNames })
+            .Select(item => new { item.DisplayNames, item.SocialLinks })
             .SingleOrDefaultAsync(cancellationToken);
 
         if (gallery is null)
@@ -65,7 +66,13 @@ internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale d
                     row.Phone.Value))
         ];
 
-        return new PublicGalleryDto(displayName, branches);
+        // D3 — D1'de olmayan kodla saklanmış satır düşer; sıra D1'inkidir, girilme sırası değil.
+        List<PublicSocialLinkDto> socialLinks =
+        [
+            .. SocialPlatform.InOrder(gallery.SocialLinks).Select(link => new PublicSocialLinkDto(link.Platform, link.Url)),
+        ];
+
+        return new PublicGalleryDto(displayName, branches, socialLinks);
     }
 
     private Locale Resolve(string locale)

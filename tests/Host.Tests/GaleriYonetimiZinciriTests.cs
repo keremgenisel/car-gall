@@ -302,7 +302,7 @@ public sealed class GaleriYonetimiZinciriTests : IAsyncLifetime
 
     // ----- Vitrin (R4–R7, R14 · D15, P1) -----
 
-    [Fact(DisplayName = "0020/AC-16: Ticari unvan, vergi numarası ve ticaret sicil numarası hiçbir vitrin sayfasında ve vitrinin okuduğu hiçbir public yanıtta yer almaz; public galeri yanıtının anahtar kümesi `displayName` ve `branches`'tır (D15).")]
+    [Fact(DisplayName = "0020/AC-16, 0024/AC-33: Ticari unvan, vergi numarası ve ticaret sicil numarası hiçbir vitrin sayfasında ve vitrinin okuduğu hiçbir public yanıtta yer almaz; public galeri yanıtının anahtar kümesi `displayName`, `branches` ve (`0024` D7) `socialLinks`'tir (D15).")]
     public async Task Tasimaz_UnvanVeSicil_VitrinYanitlarinda()
     {
         Assert.Equal(HttpStatusCode.OK, (await yonetici.PutAsJsonAsync($"{AdminSurface.RoutePrefix}/gallery", new
@@ -318,7 +318,8 @@ public sealed class GaleriYonetimiZinciriTests : IAsyncLifetime
         string yanit = await ziyaretci.GetStringAsync("/api/dealership/gallery?locale=tr");
         using JsonDocument belge = JsonDocument.Parse(yanit);
 
-        Assert.Equal(["branches", "displayName"], belge.RootElement.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
+        // `0024` D7 — `socialLinks` bilerek eklendi (0024 Context tablosu, CLARIFY B2).
+        Assert.Equal(["branches", "displayName", "socialLinks"], belge.RootElement.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
 
         // `0004` D7 ile bilerek değişti: yayında olmayan `/tr/hakkimizda` belgesi artık 404; gövde yine okunur.
         foreach (string adres in new[] { "/tr/", "/tr/cars", "/tr/hakkimizda", "/api/dealership/gallery?locale=ar" })

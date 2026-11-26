@@ -548,7 +548,8 @@ public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFacto
         [
             new PublicBranchDto("Kadıköy Şubesi", "Bağdat Cad. 1, İstanbul", "+902160000001"),
             new PublicBranchDto("Ataşehir Şubesi", "Barbaros Mah. 7, İstanbul", "+902160000002"),
-        ]);
+        ],
+        []);
 
         JsonElement[] subeler = [.. Assert.Single((await GetAsync("/tr/")).Belge.JsonLd()).GetProperty("department").EnumerateArray()];
 
@@ -558,14 +559,16 @@ public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFacto
         Assert.Equal(("Ataşehir Şubesi", "Barbaros Mah. 7, İstanbul", "+902160000002"), (subeler[1].GetProperty("name").GetString(), subeler[1].GetProperty("address").GetString(), subeler[1].GetProperty("telephone").GetString()));
     }
 
-    [Fact(DisplayName = "0004/AC-52: `AutoDealer` bloğunda `openingHoursSpecification`, `geo`, `sameAs` ve `logo` anahtarları yoktur.")]
+    [Fact(DisplayName = "0004/AC-52, 0024/AC-45: `AutoDealer` bloğunda (kökte ve `department` öğelerinde) `openingHoursSpecification`, `geo` ve `logo` anahtarları yoktur (`0024` D8: `sameAs` listeden çıktı).")]
     public async Task AutoDealer_KapsamDisiAnahtarlarYok()
     {
+        // `0024` — hesaplı kurulumda ölçülür: `sameAs` artık beklenen bir anahtar, kalan üçü yine yok.
+        ortam.Galeri = ortam.Galeri! with { SocialLinks = [new PublicSocialLinkDto("instagram", "https://www.instagram.com/otogaleri")] };
         JsonElement dealer = Assert.Single((await GetAsync("/tr/")).Belge.JsonLd());
         IEnumerable<string> butunAnahtarlar = dealer.Anahtarlar()
             .Concat(dealer.GetProperty("department").EnumerateArray().SelectMany(sube => sube.Anahtarlar()));
 
-        foreach (string yasak in new[] { "openingHoursSpecification", "geo", "sameAs", "logo" })
+        foreach (string yasak in new[] { "openingHoursSpecification", "geo", "logo" })
         {
             Assert.DoesNotContain(yasak, butunAnahtarlar);
         }

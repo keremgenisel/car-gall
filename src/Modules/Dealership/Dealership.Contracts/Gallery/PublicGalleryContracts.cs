@@ -3,15 +3,25 @@ namespace CarGallery.Modules.Dealership.Contracts.Gallery;
 /// <summary>
 /// `0014` **D15** — galerinin ziyaretçiye dönük okuması bir İZİN LİSTESİDİR: yanıt yalnız
 /// galerinin GÖRÜNEN adını ve aktif şubelerin adını, adresini ve telefonunu taşır. Vergi ve sicil
-/// numarası, sosyal bağlantılar, logo kimliği; şubenin e-postası, WhatsApp'ı, koordinatı,
-/// slug'ı ve durumu burada YOKTUR — null olarak da yoktur (AC-14). Yasak listesi sonradan
-/// eklenen bir alanı yakalamaz; izin listesi yakalar.
+/// numarası, logo kimliği; şubenin e-postası, WhatsApp'ı, koordinatı, slug'ı ve durumu burada
+/// YOKTUR — null olarak da yoktur (AC-14). Yasak listesi sonradan eklenen bir alanı yakalamaz;
+/// izin listesi yakalar.
 ///
 /// <para>`0020` **D15** — `commercialName` yerine `displayName`: ziyaretçinin dilindeki
 /// görünen ad, yoksa varsayılan dildeki (D4, AC-13, AC-16). Ticari unvan yasal addır ve hiçbir
 /// public yanıtta yer almaz. Görünen ad okunamazsa boş metindir (R5a).</para>
+///
+/// <para>`0024` **D7** — izin listesi bilerek genişledi: <c>SocialLinks</c> her hesap için YALNIZ
+/// platform kodunu ve adresi taşır, `0024` D1'in sırasıyla. Hiç hesap yoksa dizi boştur,
+/// <c>null</c> değildir. Dilden bağımsızdır.</para>
 /// </summary>
-public sealed record PublicGalleryDto(string DisplayName, IReadOnlyList<PublicBranchDto> Branches);
+public sealed record PublicGalleryDto(
+    string DisplayName,
+    IReadOnlyList<PublicBranchDto> Branches,
+    IReadOnlyList<PublicSocialLinkDto> SocialLinks);
+
+/// <summary>`0024` R6 — platform KODU (<c>instagram</c>; çevrilmiş ad değil, C8) ve kayıtlı adres.</summary>
+public sealed record PublicSocialLinkDto(string Platform, string Url);
 
 /// <summary>Telefon E.164 biçimindedir; uç onu bir <c>tel:</c> bağlantısına çevirir (AC-45).</summary>
 public sealed record PublicBranchDto(string Name, string Address, string Phone);
