@@ -8,7 +8,7 @@
 | **Modül(ler)** | `frontend/` public vitrin (favori düğmesi, sayaç, favoriler ve karşılaştırma ekranları, tembel katalog kümesi) · `Host` (iki yeni sayfa türü, belge etiketleri, `Referrer-Policy` — **D2**) · `Content.Contracts` (yalnız ayrılmış ad listesine `favorites` ve `compare` — **D1**) · `tests/VehicleCatalog.Tests` (alan adı kapısının okuduğu dosya ve "tek yerde" ölçüsü — **D11**) · `frontend/scripts/check-locale-keys.mjs` (üçüncü küme **D13**, anahtar varlığı kapısı **D19**) · `docs/` (sözlük **D16**, karar defteri, ADR `0013` eki ve `deploy.md` günlük notu **D17**). **Backend sözleşmesi değişmez** (**D14**; S5 koddan doğrulandı). |
 | **Bağımlı spec'ler** | `0001` (tamamlandı; **X5**'i bu kart açar) · `0002` (tamamlandı; R7/R8 alan kümesi ve alan adı eşlemesi) · `0004` (tamamlandı; D7 gerçek 404, D8 tanınmayan yol, D23 liste parametreleri) · `0024` (tamamlandı; AC-55'in ilk paket tanımı) · `0026` (tamamlandı; üst çubuk yerleşimi) · `frontend-002` (token katmanı) |
 | **Dayanak** | ADR 0003 Ek 1, sıra #12 · sahibin sırası (2026-11-26): son iş |
-| **Karar bekliyor** | **Proje Yöneticisi:** **D18** — ilk paket bütçesi: B5 ölçümü favori düğmesi + sayacın kodunu ~1,2 KB gzip buluyor, bütçe +512 B (Context § Paket). D1–D17 ve D19 onaylandı. **Sahip:** yok — S1–S3, D5, D6 sahip kararı (2026-11-26). |
+| **Karar bekliyor** | yok — D1–D19 Proje Yöneticisi kararı (D18: +1280 B, 2026-11-26); S1–S3, D5, D6 sahip kararı (2026-11-26). |
 
 ---
 
@@ -244,7 +244,7 @@ ekranda karşılaştırabiliyor.**
   4. Kayıt doğrulaması yalnız slug biçimi + tip.
   5. Detay düğmesinin metni sayaç anahtarlarıyla ortak.
 
-  Tahmini kazanç 200–300 B; **bütçe yine aşılır** → **D18**.
+  Tahmini kazanç 200–300 B; **+512 B yine aşılır** → **D18** (+1280 B).
 - `0024` dersi: tembel parça giriş ile modül paylaşırsa paketleyici ortak modülü kritik yolda
   ayrı bir dosyaya çıkarabiliyor ve `modulepreload` ediyordu (`docs/frontend.md` § 7,
   `0024` QA 2 BULGU-1). Panel ve bülten sayfaları tembel `lazy(() => import(…))` ile iner
@@ -329,8 +329,8 @@ ekranda karşılaştırabiliyor.**
 
 D1–D17 onaylandı (Proje Yöneticisi kararı, 2026-11-26); **D5** ve **D6** ayrıca sahibe soruldu
 (sahip kararı, 2026-11-26). QA CLARIFY turunun bulguları (B1–B17) kararların içine işlendi;
-her değişiklik ilgili kararda `(Bn)` ile işaretli. **D19** turda eklendi ve onaylı; **D18**
-karar bekliyor.
+her değişiklik ilgili kararda `(Bn)` ile işaretli. **D18** ve **D19** turda eklendi ve
+onaylandı.
 
 Biçim: **karar** · *gerekçe* · *bedel*.
 
@@ -539,21 +539,20 @@ tarayıcıda işaretlediği ilan; sunucuda yoktur, slug ile tutulur · **Karşı
 
 *Gerekçe:* DoD T8. *Bedel:* yok.
 
-**D18 — İlk paket bütçesi (karar bekliyor — Proje Yöneticisi; B5).** Context ölçümü favori
-düğmesi + sayaç + depo kodunu ~1,2 KB gzip buluyor; düşürme sırası uygulansa da ~900 B'ın altına
-inmesi beklenmiyor. Seçenekler:
-- **(a) Önerim — bu kart için sınır +1280 B; C3 asıl bekçi kalır.** Düşürme sırası (Context)
-  zorunludur. Ölçüm head commit'te yapılır. Ana sayfa, liste ve detay medyanları PR'da `main`
-  ile yan yana yazılır.
-  *Gerekçe:* düğme kartın ve detayın ilk boyamasındadır; tembel inerse yer ayırsa da sayaç
-  yanlış sayıyla başlar (AC-29) ve ilk etkileşim gecikir. 1,2 KB, yavaşlatılmış 4G'de birkaç
-  ms'lik aktarımdır. Asıl risk LCP payıdır ve onu C3 ölçer.
-  *Bedel:* `0024`'ün +512 B ilkesi bu kartta gevşer.
-- **(b) +512 B kalır; düğme ve sayaç kodu ilk boyamadan sonra tembel iner.** Yer ayrılır, sayı
-  ilk karede boştur. AC-29 "ilk karede 3"ten "yerleşince 3, kayma yok"a döner.
-  *Bedel:* ilk etkileşim gecikir ve kod karmaşıklaşır.
-- **(c) +512 B kalır; kapsam daralır** (ör. ana sayfa kartında düğme yok).
-  *Bedel:* R1 daralır.
+**D18 — İlk paket bütçesi: bu kart için +1280 B (Proje Yöneticisi kararı, 2026-11-26; B5).**
+Ölçü `0024` AC-55'in tanımıdır ve PR'ın head commit'inde alınır. Context ölçümü favori düğmesi +
+sayaç + depo kodunu ~1,2 KB gzip buluyor; +512 B ile karşılanamaz. Koşullar:
+1. **Düşürme sırası zorunludur** (Context § Paket). Her adımın kazancı ölçülür ve PR'da yazılır.
+2. **C3 medyanları** (ana sayfa, liste, detay) PR'da `main` ile yan yana yazılır.
+3. **Geri düşme kuralı:** ana sayfanın medyan LCP'si **iki C3 koşusunda da 2450 ms'yi aşarsa**,
+   ana sayfa kartlarındaki favori düğmesi tembel parçaya taşınır. O kartlarda düğme ilk
+   boyamadan sonra gelir ve yeri önceden ayrılır (CLS). Sayaç ilk pakette kalır; AC-29 yalnız
+   sayaç için geçerlidir. Liste ve detay sayfaları etkilenmez.
+
+*Gerekçe:* düğme ve sayaç "ilk karede doğru" (AC-29) olmak için ilk pakette olmak zorunda;
+LCP'yi koruyan asıl kapı C3'tür. *Değerlendirilip seçilmeyenler:* +512 B'ı koruyup düğmeyi ve
+sayacı her sayfada tembel indirmek (ilk etkileşim gecikir, sayaç ilk karede boş kalır) · kapsamı
+daraltmak (R1 daralır). *Bedel:* `0024`'ün +512 B ilkesi bu kartta gevşer.
 
 **D19 — Anahtar varlığı kapısı (B4).** `check-locale-keys.mjs`, bütün `frontend/src` altında
 her sabit `t('…')` anahtarının en az bir kümede bulunduğunu ölçer. Şablonlu anahtarlar
@@ -786,8 +785,8 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 - **AC-67.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
   `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **D18'in sınırı**
-  kadar büyür (önerilen: 1280 B). Ölçüm PR'ın **head** commit'inde yapılır. Context'teki
-  düşürme sırasının her adımı uygulanmış ya da neden uygulanmadığı PR'da yazılıdır.
+  kadar büyür: **1280 B**. Ölçüm PR'ın **head** commit'inde yapılır. Context'teki
+  düşürme sırasının her adımı uygulanmıştır ve her adımın ölçülen kazancı PR'da yazılıdır (D18).
 - **AC-68.** `index.html`'in `modulepreload` listesi ve girişin statik içe aktardığı JS dosyası
   sayısı `main` ile aynıdır; favoriler ve karşılaştırma ekranlarının kodu yalnız tembel
   parça(lar)dadır (derleme çıktısı denetimi CI'da).
@@ -802,7 +801,9 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 - **AC-70.** Favoriler ve karşılaştırma ekranlarının stilleri giriş CSS'inde yoktur.
 - **AC-71.** C3 ana sayfa, liste ve detayda yeşildir (LCP < 2500 ms, CLS < 0.1); perf tohumunda
   favori yoktur ve favori düğmesi basılır. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşu ve
-  LCP öğesi PR'da yazılıdır. Favori düğmesi hiçbir sayfada LCP öğesi değildir.
+  LCP öğesi PR'da yazılıdır. Favori düğmesi hiçbir sayfada LCP öğesi değildir. Ana sayfa, liste ve
+  detay medyanları PR'da `main` ile yan yana yazılır. Ana sayfa medyanı iki koşuda da 2450 ms'yi
+  aşarsa D18'in geri düşme kuralı uygulanır ve sonrasındaki ölçüm PR'da yazılır.
 
 ### Çeviri, RTL ve regresyon (C6, C7, C10 · R13)
 
@@ -840,7 +841,7 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 - [x] Açık sorular karara bağlandı; **S5 kodda doğrulandı** ve sonucu Context'e yazıldı.
 - [x] Proje Yöneticisi D1–D17'yi onayladı; QA CLARIFY turu işlendi (B1–B17, 2026-11-26).
-- [ ] D18 (ilk paket bütçesi) karara bağlandı.
+- [x] D18 (ilk paket bütçesi) karara bağlandı: +1280 B (Proje Yöneticisi kararı, 2026-11-26).
 - [ ] `docs/deploy.md`'ye ters vekil/CDN erişim günlüğü notu düşüldü (D17, B2).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/frontend-003-ac<n>.png`); iki boş durum, mobil
