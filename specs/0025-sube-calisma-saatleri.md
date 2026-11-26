@@ -201,6 +201,61 @@ yedi günün saatleri görünür ve aynı saatler şubenin yapısal verisinde de
 5. **Uç uca değen iki aralık** (09:00–13:00 ve 13:00–18:00) tek bir aralıktır. Kabul edilirse
    yapısal veri iki öğe basar ve özet okunmaz hâle gelir (**D3**).
 
+### Verilen kararlar — plan turu (DEV, 2026-11-26)
+
+> R/C/AC'ye dokunmaz. `main` @ `ff8f7d2` (`0024` merge edilmiş) üzerinde ölçüldü. `0024`'ün plan
+> kararları (P1, P6, P9) ve QA 2 dersleri devralındı.
+
+- **P1 — "Alan yok = açık `null` = değişmez": düz nullable harita (D11, X1; `0024` P1).**
+  `SaveBranchBody`/`OpenBranchBody.OpeningHours` `Dictionary<string, List<OpeningIntervalBody>?>?`.
+  `null` (alan yok ya da açık `null`) → kayıtlı program değişmez; açmada program yok. Harita →
+  bütünüyle yerine koyar; yedi boş gün siler (D4, AC-72). Bir günün değeri `null` ise o gün boş
+  dizi sayılır (anahtar var, aralık yok): D11'in "yedi anahtarın hepsi" kuralı anahtarı sayar.
+- **P2 — Değer nesnesi `OpeningHours` domain'de; doğrulama `BranchDraft.Parse`'ta (D3, D12, R5).**
+  Gün kodları ve sırası (`monday` … `sunday`) tek yerde. Program hataları şubenin diğer alan
+  hatalarıyla AYNI `FieldErrors`'a toplanır: hata varsa hiçbir alan yazılmaz (AC-20), iki günün
+  hatası tek yanıtta (AC-21). Saat `TimeOnly`, metin biçimi `^([01]\d|2[0-3]):[0-5]\d$`. Sıra:
+  bilinmeyen/eksik gün → aralık biçimi → bitiş > başlangıç → günde ≤ 3 → sıralayıp çakışma/uç uca.
+- **P3 — Saklama: `dealership.branches.opening_hours jsonb NULL` (D13, C6).** Tek kolon, D8'in
+  biçimi; `NULL` = girilmemiş (D4). Ayrı tablo yerine kolon: program şubenin sürüm korumasıyla
+  aynı satırda yazılır (R6), birleşik okuma yok. Migration `AddBranchOpeningHours`, yalnız `dealership`.
+- **P4 — `Branch.Update` ve `Open` programı taşıyan taslakla çalışır.** Taslakta `OpeningHours?`
+  `null` → dokunma; `IsEmpty` → sil; aksi hâlde yaz. Duyuru üretmez (C7, AC-31).
+- **P5 — Okumalar (D8, D14, R9).** `AdminBranchDto.OpeningHours` ve `PublicBranchDto.OpeningHours`
+  (`Contracts`: `PublicOpeningIntervalDto(Start, End)`), D6 sırasıyla yedi anahtar ya da `null`.
+  Şube listesi (`GET /api/admin/branches`) değişmez (AC-36).
+- **P6 — Yapısal veri (D9).** `SeoHeadBuilder` aynı galeri okumasından gruplar: (opens, closes)
+  çiftinin ilk göründüğü gün/aralık sırasıyla. Kapalı günler tek `00:00–00:00` öğesinde ve o öğe
+  de aynı kurala uyar: ilk kapalı günün yerinde durur (Pazartesi kapalıysa ilk öğedir).
+- **P7 — Vitrin (D6, D7).** `BranchList` her programlı şubenin altına yedi satırlık `<dl>` basar.
+  Gün adı `Intl.DateTimeFormat(intlLocale, { weekday: 'long' })` ile sabit bir Pazartesi'den (UTC)
+  türetilir; saatler sunucunun `HH:mm` metnidir, biçimlendirilmez (C9: Latin rakam, saat dilimi
+  dönüşümü yok, AC-49). Aralık `dir="ltr"`. İlk paket bütçesi (0024 AC-55'in revize tanımıyla
+  ölçülür) aşılırsa liste `0024`'teki gibi tembel parçaya alınır.
+- **P8 — Panel (D5).** Şube formuna "Çalışma saatleri" `fieldset`'i; saf mantık
+  `openingHoursForm.ts`'te (gün ekle/kaldır, önceki günle aynı, gövdeye çevirme), birim testli.
+  Saat alanı `type="time"` (değer her zaman `HH:mm`, tuzak 4). Kaydetme yedi günün hepsini
+  gönderir; hiç aralık yoksa yedi boş gün (programı siler ya da yoksa yok bırakır).
+- **P9 — Perf tohumu (D10(c), AC-62, AC-71).** `SeedGalleryProfileForDevelopmentAsync` aynı
+  yöntemde, `0024`'ün hesaplarından sonra her AKTİF şubeye AC-60'ın programını gerçek yazma
+  yolundan (`BranchCommands.UpdateAsync`) yazar.
+- **P10 — Testler (X3).** Çok etiketli: `0014/AC-14, 0025/AC-41`, `0004/AC-52, 0024/AC-45,
+  0025/AC-55`. e2e ikizi arandı: şube öğesinin anahtar kümesini ölçen e2e testi yok
+  (`evidence-0020.spec.ts:292` yalnız kökü ölçüyor, bu kart kökü değiştirmiyor).
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Domain + migration + komut + uç + panel okuması; domain ve Host zincir testleri (AC-3…AC-36,
+   AC-40, AC-66–AC-70, AC-72).
+3. Ziyaretçi okuması ve eski testlerin çok etiketli hâli (AC-41–AC-43).
+4. Yapısal veri ve bütçe testi (AC-52–AC-60).
+5. Vitrin altlığı ve katalog (AC-44–AC-51, AC-63); ilk paket ölçümü (AC-61).
+6. Panel bölümü (AC-1–AC-8, AC-22, AC-35, AC-37–AC-39, AC-65).
+7. Perf tohumu (AC-62, AC-71).
+8. e2e ve görsel kanıt.
+9. Belgeler: `docs/domain.md` (D15), karar defteri, `deploy.md` tohum cümlesi.
+
 ---
 
 ## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-26)
