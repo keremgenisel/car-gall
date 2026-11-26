@@ -56,7 +56,7 @@ Bütün değerler ortam değişkenidir. `__` iki nokta yerine geçer
 | Değişken | Örnek |
 |---|---|
 | `Identity__SeedAdmin__LoginId` | `yonetici@galeri-alanadi.com` (giriş kimliği bir e-postadır) |
-| `Notifications__PublicBaseUrl` | `https://galeri-alanadi.com` — e-postalardaki bağlantıların kökü |
+| `Notifications__PublicBaseUrl` | `https://galeri-alanadi.com` — **sitenin kökü** (`0004` D2): kanonik adres, dil alternatifleri, paylaşım önizlemesi, sitemap, robots.txt ve e-postalardaki bağlantılar. Yalnız `http`/`https`, **yol bölümü yok** (sondaki `/` önemsiz); geçersizse uygulama başlamaz. Site alan adının kökünde yaşar; alt dizinde barındırma desteklenmez |
 | `Notifications__SetupNotificationAddress` | Yeni taleplerin bildirileceği adres |
 | `Notifications__SenderAddress` | Gönderen adres; SMTP sağlayıcısında doğrulanmış olmalı |
 | `Notifications__Smtp__Host`, `Notifications__Smtp__Port` | Sağlayıcının STARTTLS portu, genelde **587**. **Örtük TLS (465) desteklenmez** — uygulama yalnız STARTTLS ya da şifresiz bağlanır; 465 verilirse bağlantı kurulamaz ve bildirimler denemeleri tükenene kadar kuyrukta bekler |
