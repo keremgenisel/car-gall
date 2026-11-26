@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using AngleSharp.Html.Parser;
+using CarGallery.Modules.Dealership;
 using CarGallery.Modules.Identity.Contracts;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -388,6 +389,29 @@ public sealed class SosyalHesapZinciriTests : IAsyncLifetime
         // Bir sonraki kaydetme kümeyi bütünüyle yerine koyar (D3): yabancı satır da gider.
         await KumeAsync([]);
         Assert.Empty(await PanelHaritasiAsync());
+    }
+
+    // ----- Perf tohumu (D9(c)) -----
+
+    [Fact(DisplayName = "0024/AC-56, AC-54: Perf tohumu altı hesabı AC-54'ün kurgusuyla gerçek yazma yolundan yazar: her adres tam 200 bayt, Arapça yollu, `&` yok; görünen ad korunur.")]
+    public async Task Tohumlar_AltiHesabi_SinirUzunlukta()
+    {
+        await KumeAsync([]);
+        string onceAd = JsonDocument.Parse(await yonetici.GetStringAsync(Galeri)).RootElement.GetProperty("displayNames").GetRawText();
+
+        await factory!.Services.SeedGalleryProfileForDevelopmentAsync();
+
+        List<JsonElement> hesaplar = await PublicHesaplarAsync("ar");
+        Assert.Equal(["instagram", "facebook", "youtube", "tiktok", "x", "linkedin"], hesaplar.Select(oge => oge.GetProperty("platform").GetString()));
+        Assert.All(hesaplar, oge =>
+        {
+            string adres = oge.GetProperty("url").GetString()!;
+            Assert.Equal(200, Encoding.UTF8.GetByteCount(adres));
+            Assert.DoesNotContain('&', adres);
+            Assert.Contains('ع', adres);
+        });
+        Assert.Equal(onceAd, JsonDocument.Parse(await yonetici.GetStringAsync(Galeri)).RootElement.GetProperty("displayNames").GetRawText());
+        Assert.Equal(6, Assert.Single(await JsonLdAsync(Istemci())).GetProperty("sameAs").GetArrayLength());
     }
 
     // ----- Yardımcılar -----

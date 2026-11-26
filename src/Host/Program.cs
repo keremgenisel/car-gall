@@ -358,6 +358,13 @@ if (builder.Configuration.GetValue<bool>("Development:SeedHomeTexts"))
     await app.Services.SeedHomeTextsForDevelopmentAsync();
 }
 
+// `0024` D9(c) · P9 — galeri profilinin en kötü hâli (bugün altı sınır uzunlukta sosyal hesap;
+// `0025` program, `0026` logo aynı bayrağa eklenir). `perf.yml` açar, e2e ortamı açmaz.
+if (builder.Configuration.GetValue<bool>("Development:SeedGalleryProfile"))
+{
+    await app.Services.SeedGalleryProfileForDevelopmentAsync();
+}
+
 // Kurulum Yönetici hesabı olmadan hiç kimse giriş yapamaz ve sistem kalıcı olarak
 // kapalı kalır (0006/D2, Tuzak 1). İdempotenttir: hesap varsa dokunulmaz.
 //

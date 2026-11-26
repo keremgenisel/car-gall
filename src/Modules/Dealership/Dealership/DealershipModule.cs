@@ -113,6 +113,35 @@ public static class DealershipModule
     }
 
     /// <summary>
+    /// `0024` D9(c) · P9 — galeri profilini performans ölçümünün en kötü hâline getirir: bugün altı
+    /// sosyal hesap, her biri sınırında. YALNIZ geliştirme ve performans ölçümü içindir
+    /// (<c>Development:SeedGalleryProfile</c>); üretim yolunda çağrılmaz. Gerçek yazma yolundan
+    /// (<see cref="GalleryCommands"/>) geçer: tohum, kuralları atlayan bir SQL değildir.
+    /// </summary>
+    public static async Task SeedGalleryProfileForDevelopmentAsync(
+        this IServiceProvider services,
+        CancellationToken cancellationToken = default)
+    {
+        using IServiceScope scope = services.CreateScope();
+        AdminGalleryDto galeri = await scope.ServiceProvider.GetRequiredService<DealershipAdminQueries>().GetGalleryAsync(cancellationToken)
+            ?? throw new InvalidOperationException("Galeri profili yok; kurulum adımı uygulanmamış.");
+        DealershipLocales locales = scope.ServiceProvider.GetRequiredService<DealershipLocales>();
+
+        Dictionary<string, string?> adlar = galeri.DisplayNames.ToDictionary(pair => pair.Key, pair => (string?)pair.Value, StringComparer.Ordinal);
+        adlar.TryAdd(locales.Default.Code, galeri.CommercialName);
+
+        Result<int> sonuc = await scope.ServiceProvider.GetRequiredService<GalleryCommands>().UpdateProfileAsync(
+            galeri.Version,
+            new GalleryProfileInput(galeri.CommercialName, galeri.TaxNumber, galeri.TradeRegistryNumber, adlar, GalleryProfileDevelopmentSeed.SocialLinks()),
+            cancellationToken);
+
+        if (sonuc.IsFailure)
+        {
+            throw new InvalidOperationException($"Galeri profili tohumlanamadı: {sonuc.Error.Code}.");
+        }
+    }
+
+    /// <summary>
     /// 0010a — modülün İLK uç kaydı. `0003` bilinçli olarak hiç uç açmamıştı; araç kaydı
     /// formu şube seçimi istediği için açıldı. `0014` ziyaretçinin galeri okumasını ekledi.
     /// `0020` galeri profilinin ve şubelerin yazma uçlarını yalnız Yönetici için açtı (D2).
