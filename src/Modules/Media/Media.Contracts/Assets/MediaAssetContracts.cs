@@ -15,6 +15,17 @@ public enum MediaProcessingStatus
     Failed = 4,
 }
 
+/// <summary>
+/// `0026` **D1** — varlığın NASIL işlendiği; kime ait olduğu değil (Media sahipsizdir, C4).
+/// `Photo`: üç türev, filigran, siyah zemin (`0011`). `Logo`: iki türev, filigransız, saydamlık
+/// korunur. Migration'dan önce yüklenmiş varlıklar `Photo`'dur (AC-71).
+/// </summary>
+public enum MediaAssetKind
+{
+    Photo = 1,
+    Logo = 2,
+}
+
 /// <summary>Bir türevin dışarıya görünen hâli: boyutu ve erişim yolu.</summary>
 public sealed record MediaDerivativeDto(string Variant, int Width, int Height, string Url);
 
@@ -23,12 +34,16 @@ public sealed record MediaDerivativeDto(string Variant, int Width, int Height, s
 /// orijinal ham saklanıyor, yani konum bilgisini taşıyor; R5'in garantisi dışarı çıkanı
 /// temizlemek olduğu için orijinalin yolu hiçbir yanıtta dönmez.
 /// </summary>
+///
+/// <para>`0026` AC-9 — <c>Kind</c> varlığın işleme türüdür; var olan kurucular değişmeden
+/// derlensin diye son parametre ve varsayılanı <c>Photo</c>.</para>
 public sealed record MediaAssetDto(
     Guid Id,
     MediaProcessingStatus Status,
     MediaFailureReason? FailureReason,
     IReadOnlyDictionary<string, string> AltText,
-    IReadOnlyList<MediaDerivativeDto> Derivatives);
+    IReadOnlyList<MediaDerivativeDto> Derivatives,
+    MediaAssetKind Kind = MediaAssetKind.Photo);
 
 /// <summary>
 /// D11 — türev boyutlarına ihtiyaç duyan tüketici buradan çözer, olaydan değil.

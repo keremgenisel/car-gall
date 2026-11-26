@@ -38,6 +38,11 @@ internal sealed class MediaAssetConfiguration : IEntityTypeConfiguration<MediaAs
 
         builder.Property(asset => asset.AttemptCount).HasColumnName("attempt_count");
 
+        // `0026` D1 · AC-71 — işleme türü KOD olarak; migration'dan önceki satırlar 1 (photo).
+        builder.Property(asset => asset.Kind)
+            .HasColumnName("kind")
+            .HasConversion<short>();
+
         // AC-33 — sebep kapalı bir kümeden; `int` olarak saklanıyor. Veritabanında
         // çevrilmiş ad değil KOD saklanır (Yasak Listesi 22).
         builder.Property(asset => asset.FailureReason)

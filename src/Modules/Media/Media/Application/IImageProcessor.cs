@@ -33,4 +33,10 @@ internal interface IImageProcessor
     /// dikey çekilmiş fotoğrafın dikeyliği piksellerde değil EXIF etiketindedir.</para>
     /// </summary>
     Result<IReadOnlyList<RenderedDerivative>> Render(byte[] source, byte[] watermark);
+
+    /// <summary>
+    /// `0026` D1 — logo türü: yönlendirme ve ölçekleme fotoğrafla aynı, ama tuval SAYDAM ve
+    /// filigran YOK; alfa kanallı WebP, iki türev (<c>logo-large</c>, <c>logo-small</c>).
+    /// </summary>
+    Result<IReadOnlyList<RenderedDerivative>> RenderLogo(byte[] source);
 }

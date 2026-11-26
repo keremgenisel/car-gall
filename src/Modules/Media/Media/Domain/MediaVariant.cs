@@ -1,3 +1,5 @@
+using CarGallery.Modules.Media.Contracts.Assets;
+
 namespace CarGallery.Modules.Media.Domain;
 
 /// <summary>
@@ -27,6 +29,19 @@ internal sealed record MediaVariant(string Code, int TargetWidth)
     /// </summary>
     internal static readonly IReadOnlyList<MediaVariant> All = [Large, Display, Thumbnail];
 
+    /// <summary>`0026` D1 — paylaşım önizlemesi ve <c>AutoDealer.logo</c>.</summary>
+    internal static readonly MediaVariant LogoLarge = new("logo-large", 1200);
+
+    /// <summary>`0026` D1 · D5 — üst çubuk ve altlık (160 CSS piksel × 2 yoğunluk).</summary>
+    internal static readonly MediaVariant LogoSmall = new("logo-small", 320);
+
+    /// <summary>`0026` D1 — logo türünün iki türevi; filigransız, saydam.</summary>
+    internal static readonly IReadOnlyList<MediaVariant> Logo = [LogoLarge, LogoSmall];
+
+    /// <summary>Türün türev kümesi.</summary>
+    internal static IReadOnlyList<MediaVariant> For(MediaAssetKind kind) =>
+        kind == MediaAssetKind.Logo ? Logo : All;
+
     internal static MediaVariant? Find(string code) =>
-        All.FirstOrDefault(variant => variant.Code == code);
+        All.Concat(Logo).FirstOrDefault(variant => variant.Code == code);
 }

@@ -113,5 +113,6 @@ internal sealed class MediaAssetQueries(MediaDbContext context, MediaUrlResolver
             turev.VariantCode,
             turev.Width,
             turev.Height,
-            urls.Resolve(turev.ObjectKey).ToString()))]);
+            urls.Resolve(turev.ObjectKey).ToString()))],
+        asset.Kind);
 }
