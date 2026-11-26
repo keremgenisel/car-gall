@@ -148,7 +148,11 @@ public sealed class IcerikZinciriTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Conflict, ikinci.StatusCode);
     }
 
-    [Fact(DisplayName = "0017/AC-35 (uç yarısı), AC-41: olmayan slug için içerik ucu 404 döner; belge isteği bugünkü gibi 200'dür")]
+    /// <summary>
+    /// `0004` **D7** ile bilerek değişti (DoD T11): AC-41'in "belge isteği 200" yarısı artık 404'tür
+    /// ve onu `0004/AC-74` ölçer (`SeoBelgeTests`). Burada yalnız içerik ucunun 404'ü kaldı.
+    /// </summary>
+    [Fact(DisplayName = "0017/AC-35 (uç yarısı): olmayan slug için içerik ucu 404 döner")]
     public async Task Doner_404Uc_200Belge()
     {
         HttpClient ziyaretci = Istemci();
@@ -156,7 +160,7 @@ public sealed class IcerikZinciriTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await ziyaretci.GetAsync("/api/content/pages/hic-olmayan?locale=tr")).StatusCode);
 
         HttpResponseMessage belge = await ziyaretci.GetAsync("/tr/hic-olmayan");
-        Assert.Equal(HttpStatusCode.OK, belge.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, belge.StatusCode);
         Assert.Null(belge.Headers.Location);
     }
 
@@ -171,8 +175,10 @@ public sealed class IcerikZinciriTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.MovedPermanently, eski.StatusCode);
         Assert.Equal("/tr/kvkk-aydinlatma", eski.Headers.Location?.OriginalString);
 
+        // `0004` D7 ile bilerek değişti (DoD T11): en'de yayında olmayan adresin belgesi 200 değil 404.
+        // Bu kriterin iddiası — başka dilde yönlendirme yok — aynen duruyor.
         HttpResponseMessage baskaDil = await ziyaretci.GetAsync("/en/kvkk");
-        Assert.Equal(HttpStatusCode.OK, baskaDil.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, baskaDil.StatusCode);
         Assert.Null(baskaDil.Headers.Location);
 
         // D33 — a-1 → a-2 → a-3 sonrası a-1 de a-2 de DOĞRUDAN a-3'e.
@@ -228,7 +234,9 @@ public sealed class IcerikZinciriTests : IAsyncLifetime
 
         HttpResponseMessage yanit = await Istemci().SendAsync(istek);
 
-        Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
+        // `0004` D7 ile bilerek değişti (Proje Yöneticisi kararı, 2026-11-26): yayında olmayan sayfanın
+        // belgesi artık 404. Senaryo aynı; iddia: başka dile yönlendirme yok, tr kabuğu basılır.
+        Assert.Equal(HttpStatusCode.NotFound, yanit.StatusCode);
         Assert.Null(yanit.Headers.Location);
         Assert.Contains("<html lang=\"tr\"", await yanit.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }

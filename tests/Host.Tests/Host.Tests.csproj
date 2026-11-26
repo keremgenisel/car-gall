@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- `0004` D22 (a) — belge kriterleri HTML ayrıştırıcısıyla ölçülür; yalnız test projesine. -->
+    <PackageReference Include="AngleSharp" Version="1.10.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />

@@ -233,6 +233,7 @@ builder.Services.AddSingleton(theme.Value);
 
 builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocale, localization.EnabledLocales));
 builder.Services.AddSingleton<IndexHtmlRenderer>();
+builder.Services.AddSingleton<SeoHeadBuilder>();
 builder.Services.AddSingleton<AdminShellRenderer>();
 
 // `0016b` (triyaj BULGU-3) — tohumun medya varlıkları `Media`'da kayıtlı değil; tohum
