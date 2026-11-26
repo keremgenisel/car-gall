@@ -208,22 +208,23 @@ body {
   /* `0020` R5 — ad bir bağlantıdır ama marka gibi görünür; uzun ad satırı taşırmaz (D22). */
   color: var(--color-ink);
   text-decoration: none;
-  overflow-wrap: anywhere;
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: 0;
 }
 
 /* `0026` D5 — logo adın satır başı tarafında; oran korunarak en çok 40 × 160 CSS piksel. Logosuz
    üst çubuk bu karttan önceki hâlinde kalır (AC-34): esnek kutu yalnız logoluda. */
 .top-bar__brand--logo {
-  display: inline-flex;
-  align-items: center;
   gap: var(--space-4);
-  min-inline-size: 0;
 }
 
-/* Dar ekranda logo adı sıkıştırır; ad birden çok satıra kırılırsa web fontu gelince satır sayısı
-   değişir ve üst çubuğun yüksekliği oynar (C3'te `main` kayıyordu, CLS 0.041). Logoluda ad TEK
-   satırdır ve taşarsa kısalır; logo büzülmez (aşağıda `flex-shrink`). Logosuz üst çubuk önceki hâlinde (AC-34). */
-.top-bar__brand--logo bdi {
+/* Ad TEK satırdır ve taşarsa kısalır (sonda "…"); logo büzülmez (aşağıda `flex-shrink`). Ad birden
+   çok satıra kırılırsa web fontu gelince satır sayısı değişir ve üst çubuk oynar: logoluda `0026` C3
+   (CLS 0.041), logosuzda `frontend-003` QA 2 (font bekletilince CLS 0.24'e kadar) — `0026` AC-34'ün
+   "logosuz ad kırılabilir" kısmı AP-08 ile kalktı. Görünen metin kısalsa da bağlantının erişilebilir
+   adı tam addır (metin düğümü tamdır). */
+.top-bar__brand bdi {
   min-inline-size: 0;
   overflow: hidden;
   white-space: nowrap;

@@ -412,14 +412,44 @@ for (const genislik of [320, 360, 639, 640]) {
                   }),
                 )
               }
-              ;(window as unknown as { cls: number }).cls = 0
+              // Üst çubuğun CLS'i (AC-32 i): kaynaklarından biri üst çubuğun içinde olan kaymalar.
+              // Sayfanın geri kalanının font kayması bu kriterin konusu değil; ayrıca sayılır.
+              const w = window as unknown as { cls: number; sayfaCls: number }
+              w.cls = 0
+              w.sayfaCls = 0
+              const ustte = (dugum: Node | null | undefined) =>
+                (dugum instanceof Element ? dugum : dugum?.parentElement)?.closest(
+                  'header.top-bar',
+                ) != null
               new PerformanceObserver((liste) => {
                 for (const kayit of liste.getEntries() as unknown as {
                   value: number
                   hadRecentInput: boolean
+                  sources: {
+                    node?: Node | null
+                    previousRect: DOMRectReadOnly
+                    currentRect: DOMRectReadOnly
+                  }[]
                 }[]) {
-                  if (!kayit.hadRecentInput) {
-                    ;(window as unknown as { cls: number }).cls += kayit.value
+                  if (kayit.hadRecentInput) {
+                    continue
+                  }
+                  w.sayfaCls += kayit.value
+                  // Yalnız üst çubuğun öğelerinin payı: CLS'in tanımı (etki alanı × uzaklık oranı),
+                  // aynı karede kayan sayfa içeriği bu paya girmez.
+                  const alan = innerWidth * innerHeight
+                  const enUzun = Math.max(innerWidth, innerHeight)
+                  for (const { node, previousRect: a, currentRect: b } of kayit.sources) {
+                    if (!ustte(node)) {
+                      continue
+                    }
+                    const birlesim =
+                      a.width * a.height +
+                      b.width * b.height -
+                      Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) *
+                        Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top))
+                    const uzaklik = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))
+                    w.cls += (birlesim / alan) * (uzaklik / enUzun)
                   }
                 }
               }).observe({ type: 'layout-shift', buffered: true })
@@ -507,6 +537,152 @@ for (const genislik of [320, 360, 639, 640]) {
           await context.close()
         }
       }
+    })
+  }
+}
+
+for (const dil of ['tr', 'ar', 'en']) {
+  for (const logolu of [false, true]) {
+    test(`frontend-003/AC-32, 0026/AC-34: ${dil}, ${logolu ? 'logolu' : 'logosuz'} — 320→1280 px (16 px adım), sayaç yok ve 24, fontlar bekletilerek: CLS ≤ 0.1, üst çubuk yüksekliği font öncesi = sonrası, yatay taşma yok; 320 px'te adın ≥ 6 karakteri görünür ve "…" adın sonunda`, async ({
+      browser,
+    }) => {
+      test.setTimeout(600_000)
+      const sorunlar: string[] = []
+
+      for (let genislik = 320; genislik <= 1280; genislik += 16) {
+        for (const sayi of [-1, 24]) {
+          const { context, page } = await genislikAsync(browser, genislik)
+          await page.addInitScript(
+            ([n]) => {
+              if (n < 0) {
+                Storage.prototype.setItem = () => {
+                  throw new DOMException('dolu', 'QuotaExceededError')
+                }
+              } else {
+                localStorage.setItem(
+                  'cargallery.favorites',
+                  JSON.stringify({
+                    v: 1,
+                    items: Array.from({ length: n }, (_, i) => ({
+                      slug: `a-2020-${String(i).padStart(6, '0')}`,
+                      addedAt: 'x',
+                      modelName: 'A',
+                      modelYear: 2020,
+                    })),
+                  }),
+                )
+              }
+              // Üst çubuğun CLS'i (AC-32 i): kaynaklarından biri üst çubuğun içinde olan kaymalar.
+              // Sayfanın geri kalanının font kayması bu kriterin konusu değil; ayrıca sayılır.
+              const w = window as unknown as { cls: number; sayfaCls: number }
+              w.cls = 0
+              w.sayfaCls = 0
+              const ustte = (dugum: Node | null | undefined) =>
+                (dugum instanceof Element ? dugum : dugum?.parentElement)?.closest(
+                  'header.top-bar',
+                ) != null
+              new PerformanceObserver((liste) => {
+                for (const kayit of liste.getEntries() as unknown as {
+                  value: number
+                  hadRecentInput: boolean
+                  sources: {
+                    node?: Node | null
+                    previousRect: DOMRectReadOnly
+                    currentRect: DOMRectReadOnly
+                  }[]
+                }[]) {
+                  if (kayit.hadRecentInput) {
+                    continue
+                  }
+                  w.sayfaCls += kayit.value
+                  // Yalnız üst çubuğun öğelerinin payı: CLS'in tanımı (etki alanı × uzaklık oranı),
+                  // aynı karede kayan sayfa içeriği bu paya girmez.
+                  const alan = innerWidth * innerHeight
+                  const enUzun = Math.max(innerWidth, innerHeight)
+                  for (const { node, previousRect: a, currentRect: b } of kayit.sources) {
+                    if (!ustte(node)) {
+                      continue
+                    }
+                    const birlesim =
+                      a.width * a.height +
+                      b.width * b.height -
+                      Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) *
+                        Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top))
+                    const uzaklik = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))
+                    w.cls += (birlesim / alan) * (uzaklik / enUzun)
+                  }
+                }
+              }).observe({ type: 'layout-shift', buffered: true })
+            },
+            [sayi] as const,
+          )
+          await ustCubukFiksturu(page, logolu)
+          let fontuBirak: () => void = () => {}
+          const font = new Promise<void>((resolve) => (fontuBirak = resolve))
+          await page.route('**/*.woff2', async (route) => {
+            await font
+            await route.continue()
+          })
+          await page.goto(`/${dil}/cars`, { waitUntil: 'domcontentloaded' })
+          await page.locator('.top-bar__end').waitFor()
+          const etiket = `${genislik} px, sayaç ${sayi < 0 ? 'yok' : sayi}`
+          const once = await page
+            .locator('header.top-bar')
+            .evaluate((el) => el.getBoundingClientRect().height)
+          fontuBirak()
+          await page.evaluate(() => document.fonts.ready)
+          await page.waitForLoadState('networkidle')
+          const sonra = await page
+            .locator('header.top-bar')
+            .evaluate((el) => el.getBoundingClientRect().height)
+          const olcu = await page.evaluate(() => ({
+            cls: (window as unknown as { cls: number }).cls,
+            tasma: document.scrollingElement!.scrollWidth - document.scrollingElement!.clientWidth,
+          }))
+
+          if (olcu.cls > 0.1) sorunlar.push(`${etiket}: CLS ${olcu.cls.toFixed(3)}`)
+          if (Math.abs(once - sonra) > 0.5) sorunlar.push(`${etiket}: yükseklik ${once} → ${sonra}`)
+          if (olcu.tasma > 0) sorunlar.push(`${etiket}: yatay taşma ${olcu.tasma}`)
+
+          if (genislik === 320) {
+            // Görünen karakterler adın BAŞINDAN başlar (kesilme sonda) ve en az 6'dır.
+            const gorunen = await page
+              .locator('[data-testid="top-bar-brand"] bdi')
+              .evaluate((bdi) => {
+                const kutu = bdi.getBoundingClientRect()
+                const metin = bdi.firstChild!
+                const tam: number[] = []
+                for (let i = 0; i < (metin.textContent ?? '').length; i++) {
+                  const range = document.createRange()
+                  range.setStart(metin, i)
+                  range.setEnd(metin, i + 1)
+                  const r = range.getBoundingClientRect()
+                  if (r.width > 0 && r.left >= kutu.left - 0.5 && r.right <= kutu.right + 0.5) {
+                    tam.push(i)
+                  }
+                }
+                return { sayi: tam.length, ilk: tam[0] ?? -1, metin: metin.textContent }
+              })
+            if (gorunen.sayi - 1 < 6) sorunlar.push(`${etiket}: görünen karakter ${gorunen.sayi}`)
+            if (gorunen.ilk !== 0)
+              sorunlar.push(`${etiket}: kesilme baştan (ilk görünen ${gorunen.ilk})`)
+            // Erişilebilir ad tam addır (görünen metin kesik olsa da).
+            await expect(page.getByTestId('top-bar-brand')).toHaveAccessibleName(
+              'Kırk Karakterlik Uzun Galeri Adı Otomotiv',
+            )
+            if (sayi === 24) {
+              await kanit(
+                page,
+                'header.top-bar',
+                `frontend-003-ac32-320-${dil}-${logolu ? 'logolu' : 'logosuz'}-font.png`,
+              )
+            }
+          }
+          await context.close()
+        }
+      }
+
+      expect(sorunlar).toEqual([])
     })
   }
 }

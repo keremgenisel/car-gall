@@ -755,8 +755,11 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 - **AC-31.** Ekleme ve çıkarma sayacı sayfa yenilenmeden günceller.
 - **AC-32.** Üst çubuk iki fikstürle, üç dilde, 320 px ve 360 px'te ölçülür. Her ikisinde de
   sayfada yatay kaydırma yoktur (görsel kanıt, tr ve ar).
-  (i) **Logosuz, 40 karakterlik ad:** ad kırılabilir (`0026` AC-34 değişmez); web fontu gelirken
-  üst çubuğun CLS'i ≤ 0.1.
+  (i) **Logosuz, 40 karakterlik ad:** ad tek satırdır ve taşarsa "…" ile kısalır; web fontu gelirken
+  üst çubuğun CLS'i ≤ 0.1 ve yüksekliği değişmez. *Revizyon (2026-11-27, AP-08): önceki metin "ad
+  kırılabilir (`0026` AC-34 değişmez)" diyordu; font bekletilince (QA 2 BULGU-6) adın satır sayısı
+  font değişiminde değişip CLS 0.24'e kadar çıkıyordu — `0026` AC-34'ün "logosuz ad kırılabilir"
+  kısmı kalktı, Takım Yöneticisi kararı (sahibin logolu ad için verdiği "…" kararının uzatılması).*
   (ii) **Logolu (160×40), 40 karakterlik ad, 320 px:** sayaç ve dil değiştirici görünür ve
   tıklanabilirdir; adın görünen kısmı en az 6 karakterdir.
 
