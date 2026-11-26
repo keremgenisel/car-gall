@@ -293,6 +293,13 @@ altında kalır.
 
 ---
 
+### Uygulamada ortaya çıkan davranış notu
+
+- **Dar ekranda adın kısalması.** Logolu üst çubukta uzun ad dar ekranda `…` ile kısalır;
+  erişilebilir ad tamdır. Ad birden çok satıra kırılınca web fontu gelince satır sayısı değişip
+  sayfa kayıyordu (C3, `0026/12`). Sahibe ayrıca sorulacak; cevap davranışı değiştirirse ayrı iş
+  olur (Proje Yöneticisi, 2026-11-26).
+
 ## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-26)
 
 Biçim: **karar** · *gerekçe* · *bedel*.
@@ -642,8 +649,9 @@ ilgisiz bir değişikliğe bağlar.
 - **AC-54.** Hazır logolu `/ar/` ana sayfa belgesi, test yapılandırmasının medya köküyle, aynı
   kurulumun logosuz `/ar/` belgesinden en çok **768 B** büyüktür.
 - **AC-55.** `0004` AC-83'ün kurgusu hazır logolu kurulumda da en çok **6144 B**'tır.
-- **AC-56.** İlk paket (giriş JS + giriş CSS, `gzip -9`, ADR 0013) `main` tabanına göre en çok
-  **512 B** büyür.
+- **AC-56.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
+  `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **512 B** büyür.
+  *Revizyon (2026-11-26, AP-08): 0024 AC-55 tanımıyla hizalandı — Proje Yöneticisi kararı.*
 - **AC-57.** Perf koşusu bir logo tohumlar. C3 ana sayfa, liste ve detayda yeşildir: LCP < 2500 ms
   ve CLS < 0,1. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi PR'da
   yazılıdır.
