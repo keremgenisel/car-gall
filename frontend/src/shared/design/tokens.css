@@ -149,6 +149,9 @@
   /* `0024` D6 — dokunma hedefi (WCAG 2.5.5). */
   --touch-target-min-size: 44px;
 
+  /* `frontend-003` P4 — favori düğmesinin ve sayacın kalp simgesi. */
+  --favorite-icon-size: 24px;
+
   /* `0026` D5 — logonun görünen en büyük boyutu (oran korunur); `logo-small` 320 = 160 × 2. */
   --logo-max-block-size: 40px;
   --logo-max-inline-size: 160px;

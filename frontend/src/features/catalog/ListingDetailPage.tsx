@@ -7,6 +7,7 @@ import type { Translator } from '../../shared/i18n/i18n'
 import { listPath } from '../../shared/lib/route'
 import { Badge, Card } from '../../shared/ui'
 import { Gallery } from './detail/Gallery'
+import { FavoriteButton } from './FavoriteButton'
 import { PaintChangeMapSection } from './detail/PaintChangeMapSection'
 import { DetailError } from './states/DetailError'
 import { DetailNotFound } from './states/DetailNotFound'
@@ -119,6 +120,9 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
           <h1 className="listing-detail__model" dir="auto">
             {detail.modelName}
           </h1>
+
+          {/* `frontend-003` D7 · P7 — görünür metinli düğme; "Karşılaştır" düğmesi yok (X7). */}
+          <FavoriteButton listing={detail} labelled />
 
           <p className="listing-detail__price" data-testid="detail-price">
             {price ?? t('detail.priceOnRequest')}

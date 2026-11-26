@@ -203,5 +203,8 @@
   "newsletter.error.body": "We could not complete your request. Please try again in a little while.",
   "newsletter.retry": "Try again",
   "newsletter.unsubscribed.title": "You have unsubscribed",
-  "newsletter.unsubscribed.body": "You will not receive the newsletter again. If you change your mind, you can subscribe again."
+  "newsletter.unsubscribed.body": "You will not receive the newsletter again. If you change your mind, you can subscribe again.",
+  "favorites.card": "Favourite: {model} {year}",
+  "favorites.counter": "{count, plural, one {My favourites, # car} other {My favourites, # cars}}",
+  "favorites.outcome": "{state, select, added {Added to favourites} removed {Removed from favourites} limit {Favourites limit: {count, number}} on {In favourites} off {Add to favourites} other {Could not save the favourite}}"
 }

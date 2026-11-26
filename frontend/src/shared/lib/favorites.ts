@@ -29,7 +29,7 @@ const SLUG = /^[a-z0-9-]{1,160}$/
 
 let store: Storage | null | undefined
 let items: readonly Favorite[] | undefined
-let outcome: { readonly kind: FavoriteOutcome; readonly at: number } | null = null
+let outcome: FavoriteOutcome | null = null
 const listeners = new Set<() => void>()
 
 function storage(): Storage | null {
@@ -48,15 +48,14 @@ function storage(): Storage | null {
 }
 
 function valid(item: unknown): item is Favorite {
+  // Düşürme adımı 4 (D18): yalnız slug biçimi ve alan tipleri.
   const value = item as Favorite | null
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.slug === 'string' &&
+    typeof value?.slug === 'string' &&
     SLUG.test(value.slug) &&
     typeof value.addedAt === 'string' &&
     typeof value.modelName === 'string' &&
-    Number.isInteger(value.modelYear)
+    typeof value.modelYear === 'number'
   )
 }
 
@@ -105,11 +104,11 @@ export function useFavorites(): readonly Favorite[] {
   return useSyncExternalStore(subscribe, snapshot)
 }
 
-/** Son eylemin sonucu; canlı bölge söyler. `at` aynı sonucun ikinci kez duyurulmasını sağlar. */
-export function useFavoriteOutcome(): {
-  readonly kind: FavoriteOutcome
-  readonly at: number
-} | null {
+/**
+ * Son eylemin sonucu; canlı bölge söyler. Aynı sonuç art arda gelirse metin değişmez ve ikinci kez
+ * duyurulmaz (ör. sınırda iki kez basmak) — ilk paket bütçesi için kabul edilen bedel (D18).
+ */
+export function useFavoriteOutcome(): FavoriteOutcome | null {
   return useSyncExternalStore(subscribe, () => outcome)
 }
 
@@ -164,7 +163,7 @@ function write(
   }
 
   items = kind === 'failed' ? current : (next ?? current)
-  outcome = { kind, at: (outcome?.at ?? 0) + 1 }
+  outcome = kind
   emit()
   return kind
 }

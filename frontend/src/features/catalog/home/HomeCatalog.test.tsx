@@ -82,6 +82,8 @@ describe('0014 — öne çıkan araçlar (R3)', () => {
 
     const bolum = await screen.findByTestId('featured-section')
     expect(within(bolum).getAllByTestId('listing-card')).toHaveLength(6)
+    // frontend-003 AC-21 — her kartta favori düğmesi (tablodaki satır: yalnız varlığı eklenir).
+    expect(within(bolum).getAllByRole('button', { name: /^Favori: / })).toHaveLength(6)
   })
 
   it('0014/AC-18: kartlar sunucunun verdiği sırada basılır (uç sırayı değiştirmez)', async () => {

@@ -109,6 +109,14 @@ body {
   margin: 0;
 }
 
+/* `frontend-003` P6 — model adı ve favori düğmesi aynı satırda; düğme satır sonu tarafında. */
+.listing-card__head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
 .listing-card__media {
   position: relative;
   background: var(--color-surface-muted);
@@ -240,6 +248,53 @@ body {
 
 a.top-bar__brand:hover {
   text-decoration: underline;
+}
+
+/* `frontend-003` D8 — sayaç ve dil değiştirici satır sonunda; ikisi de büzülmez, ad kısalır. */
+.top-bar__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+.top-bar__favorites,
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-inline-size: var(--touch-target-min-size);
+  min-block-size: var(--touch-target-min-size);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+/* `frontend-003` D7 · P4 — tek kalp: çizgili, basılı düğmede dolgulu (renk dışı fark, AC-26). */
+.heart {
+  inline-size: var(--favorite-icon-size);
+  block-size: var(--favorite-icon-size);
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+}
+
+[aria-pressed='true'] > .heart {
+  fill: currentcolor;
+}
+
+.favorite-button {
+  padding-inline: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.listing-detail__body .favorite-button {
+  border: var(--border-width) solid var(--color-border);
+  padding-inline: var(--space-5);
 }
 
 .top-bar__locales {

@@ -39,6 +39,16 @@ const NewsletterUnsubscribePage = lazy(() =>
 )
 
 /**
+ * `frontend-003` **D13** — favoriler ve karşılaştırma ekranları, metinleri ve stilleri tek tembel
+ * parçada; ilk pakete yalnız düğme, sayaç ve depo girer.
+ */
+const favoritePages = () => import('../features/catalog/favoritePages')
+const FavoritesPage = lazy(() =>
+  favoritePages().then((module) => ({ default: module.FavoritesPage })),
+)
+const ComparePage = lazy(() => favoritePages().then((module) => ({ default: module.ComparePage })))
+
+/**
  * Rota adresten okunur; router kütüphanesi yoktur. Detay adresine gidiş tam sayfa
  * gezinmedir, bu yüzden rota bir kez render anında çözülür — istemci tarafı geçiş
  * olmadığı için popstate dinlemesine gerek yok.
@@ -104,6 +114,10 @@ export function App({ locale }: { readonly locale: AppLocale }) {
               <LeadForm listingSlug={detail.slug} isReserved={detail.isReserved} />
             )}
           />
+        ) : route.kind === 'favorites' || route.kind === 'compare' ? (
+          <Suspense fallback={<div className="page" />}>
+            {route.kind === 'favorites' ? <FavoritesPage /> : <ComparePage />}
+          </Suspense>
         ) : route.kind === 'content' ? (
           /* `0017` R11 — tek parçalı adres bir içerik sayfası adayıdır (D9). */
           <ContentPage slug={route.slug} />

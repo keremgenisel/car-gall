@@ -286,6 +286,11 @@ export function newsletterTokenOf(search: string): string {
   return new URLSearchParams(search).get('token') ?? ''
 }
 
+/** `frontend-003` **D1** — favoriler ekranı; sayaç buraya götürür (D8). */
+export function favoritesPath(locale: AppLocale): string {
+  return `/${locale}/${FAVORITES_SEGMENT}`
+}
+
 /** 0014 — ana sayfanın adresi; altlığın dil bağlantıları (AC-46). */
 export function homePath(locale: AppLocale): string {
   return `/${locale}/`

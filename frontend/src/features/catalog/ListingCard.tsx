@@ -3,6 +3,7 @@ import type { ShowcaseListing } from '../../shared/api/types'
 import { formatMoney } from '../../shared/i18n/format'
 import { listingPath } from '../../shared/lib/route'
 import { Badge, Card } from '../../shared/ui'
+import { FavoriteButton } from './FavoriteButton'
 
 interface Props {
   readonly listing: ShowcaseListing
@@ -35,17 +36,24 @@ export function ListingCard({ listing, aboveTheFold }: Props) {
       </div>
 
       <div className="listing-card__body">
-        {/* Arapça metin içinde Latin model adı karışık yönlüdür (docs/frontend.md § 6). */}
-        <p className="listing-card__model" dir="auto">
-          {/*
+        {/*
+          `frontend-003` D7 · P6 — favori düğmesi model adının satırında, bağlantının DIŞINDA:
+          kartta iç içe etkileşim yoktur (AC-22).
+        */}
+        <div className="listing-card__head">
+          {/* Arapça metin içinde Latin model adı karışık yönlüdür (docs/frontend.md § 6). */}
+          <p className="listing-card__model" dir="auto">
+            {/*
             Bağlantı model adını sarar: erişilebilir adı ilanın kendisidir, "devamını
             oku" değil. Kartın tamamını sarmak, kart içinde ileride başka bir eylem
             çıktığında iç içe etkileşim üretirdi (docs/frontend.md § 8).
           */}
-          <a className="listing-card__link" href={listingPath(locale, listing.slug)}>
-            {listing.modelName}
-          </a>
-        </p>
+            <a className="listing-card__link" href={listingPath(locale, listing.slug)}>
+              {listing.modelName}
+            </a>
+          </p>
+          <FavoriteButton listing={listing} />
+        </div>
         <p className="listing-card__meta">
           {t('showcase.card.year', { year: listing.modelYear })}
           {' · '}
