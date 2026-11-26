@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { StrictMode } from 'react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../../app/LocaleProvider'
 import { ApiError } from '../../shared/api/client'
@@ -261,5 +262,62 @@ describe('karşılaştırma ekranı', () => {
     await tablo()
     expect(screen.getAllByRole('columnheader')).toHaveLength(2)
     expect(screen.queryAllByRole('button')).toHaveLength(0)
+  })
+  it("frontend-003 QA 2 BULGU-1: StrictMode'da (iptale saygılı okuma) karşılaştırma tablosu gelir", async () => {
+    vi.mocked(fetchListingDetail).mockImplementation(
+      (slug, _locale, signal) =>
+        new Promise((resolve, reject) => {
+          const zaman = setTimeout(() => resolve(slug === A ? AUDI : BMW), 5)
+          signal?.addEventListener('abort', () => {
+            clearTimeout(zaman)
+            reject(new DOMException('iptal', 'AbortError'))
+          })
+        }),
+    )
+    adres(`?listing=${A}&listing=${B}`)
+    render(
+      <StrictMode>
+        <LocaleProvider locale="tr">
+          <ComparePage />
+        </LocaleProvider>
+      </StrictMode>,
+    )
+
+    expect(await screen.findByRole('table')).toBeTruthy()
+    expect(screen.getAllByRole('columnheader')).toHaveLength(2)
+  })
+
+  it('frontend-003 QA 2 BULGU-5: Bir sütunun "tekrar dene"si tabloyu iskelete düşürmez; çözülünce odak o sütunun model bağlantısına', async () => {
+    vi.mocked(fetchListingDetail).mockImplementation((slug) =>
+      slug === B
+        ? Promise.reject(new ApiError('api.unavailable', null, 500))
+        : Promise.resolve(AUDI),
+    )
+    adres(`?listing=${A}&listing=${B}`)
+    ekran()
+
+    await tablo()
+    const dugme = within(screen.getAllByRole('columnheader')[1]!).getByRole('button', {
+      name: 'Tekrar dene',
+    })
+    dugme.focus()
+    let coz: (deger: ShowcaseListingDetail) => void = () => {}
+    vi.mocked(fetchListingDetail).mockImplementation(() => new Promise((c) => (coz = c)))
+    fireEvent.click(dugme)
+
+    expect(screen.getByRole('table')).toBeTruthy()
+    expect(screen.queryByTestId('compare-loading')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Audi A3' })).toBeTruthy()
+    await act(async () => coz(BMW))
+
+    await waitFor(() => expect(document.activeElement?.getAttribute('href')).toBe(`/tr/cars/${B}`))
+  })
+
+  it('frontend-003 D3.4: `listing` değerleri zaten okunan kümeyse adrese dokunulmaz; öbür parametrelerin sırası kalır', async () => {
+    adres(`?utm_source=z&listing=${A}&listing=${B}`)
+    ekran()
+
+    await tablo()
+    expect(window.location.search).toBe(`?utm_source=z&listing=${A}&listing=${B}`)
   })
 })

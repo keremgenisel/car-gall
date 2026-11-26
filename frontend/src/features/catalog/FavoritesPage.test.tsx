@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { StrictMode } from 'react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../../app/LocaleProvider'
 import { ApiError } from '../../shared/api/client'
@@ -299,5 +300,79 @@ describe('favoriler ekranı', () => {
       within(screen.getByTestId('favorites-unavailable')).getByRole('heading').textContent,
     ).toBe('Bu tarayıcı favori saklamaya izin vermiyor')
     expect(screen.queryByText(NOT)).toBeNull()
+  })
+  it("frontend-003 QA 2 BULGU-1: StrictMode'da (çift etki, iptale saygılı okuma) iskelet kalmaz, kartlar gelir", async () => {
+    favoriler([A, 'Audi A3', 2020], [B, 'BMW 320i', 2021])
+    vi.mocked(fetchListingDetail).mockImplementation(
+      (slug, _locale, signal) =>
+        new Promise((resolve, reject) => {
+          const zaman = setTimeout(
+            () => resolve(detay(slug, { modelName: slug.split('-')[0]! })),
+            5,
+          )
+          signal?.addEventListener('abort', () => {
+            clearTimeout(zaman)
+            reject(new DOMException('iptal', 'AbortError'))
+          })
+        }),
+    )
+    render(
+      <StrictMode>
+        <LocaleProvider locale="tr">
+          <FavoritesPage />
+        </LocaleProvider>
+      </StrictMode>,
+    )
+
+    expect(await screen.findByTestId('favorites-list')).toBeTruthy()
+    expect(screen.queryByTestId('favorites-skeleton')).toBeNull()
+    expect(
+      within(screen.getByTestId('favorites-list')).getAllByTestId('listing-card'),
+    ).toHaveLength(2)
+  })
+
+  it('frontend-003 QA 2 BULGU-5: Bir satırın "tekrar dene"si ekranı iskelete düşürmez; öbür kartlar yerinde; çözülünce odak o kartın bağlantısına, yine hatada düğmede kalır', async () => {
+    favoriler([A, 'Audi A3', 2020], [B, 'BMW 320i', 2021])
+    vi.mocked(fetchListingDetail).mockImplementation((slug) =>
+      slug === A
+        ? Promise.reject(new ApiError('api.unavailable', null, 500))
+        : Promise.resolve(detay(B, { modelName: 'BMW 320i' })),
+    )
+    ekran()
+
+    const hatalar = await screen.findByTestId('favorites-failed')
+    const dugme = within(hatalar).getByRole('button', { name: 'Tekrar dene' })
+    dugme.focus()
+
+    // 1) Yine hata: satır yerinde, odak aynı düğmede.
+    let reddet: (sebep: unknown) => void = () => {}
+    vi.mocked(fetchListingDetail).mockImplementation(
+      () => new Promise((_coz, red) => (reddet = red)),
+    )
+    fireEvent.click(dugme)
+    expect(screen.queryByTestId('favorites-skeleton')).toBeNull()
+    expect(
+      within(screen.getByTestId('favorites-list')).getAllByTestId('listing-card'),
+    ).toHaveLength(1)
+    expect(within(hatalar).getByRole('alert').getAttribute('aria-busy')).toBe('true')
+    await act(async () => reddet(new ApiError('api.unavailable', null, 500)))
+    expect(document.activeElement).toBe(
+      within(screen.getByTestId('favorites-failed')).getByRole('button', { name: 'Tekrar dene' }),
+    )
+
+    // 2) Bu kez çözülür: kart gelir, odak onun model bağlantısına taşınır.
+    let coz: (deger: ShowcaseListingDetail) => void = () => {}
+    vi.mocked(fetchListingDetail).mockImplementation(() => new Promise((c) => (coz = c)))
+    fireEvent.click(
+      within(screen.getByTestId('favorites-failed')).getByRole('button', { name: 'Tekrar dene' }),
+    )
+    await act(async () => coz(detay(A, { modelName: 'Audi A3' })))
+
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId('favorites-list')).getAllByTestId('listing-card'),
+      ).toHaveLength(2),
+    )
+    expect((document.activeElement as HTMLAnchorElement).getAttribute('href')).toBe(`/tr/cars/${A}`)
   })
 })

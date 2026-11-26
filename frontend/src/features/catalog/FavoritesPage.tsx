@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useLocale } from '../../app/localeContext'
-import { fetchListingDetail } from '../../shared/api/catalog'
 import type { ShowcaseListingDetail } from '../../shared/api/types'
 import {
   favoritesAvailable,
@@ -12,9 +11,7 @@ import { listPath } from '../../shared/lib/route'
 import { Card, EmptyState, ErrorState, Skeleton } from '../../shared/ui'
 import { ListingCard } from './ListingCard'
 import { comparePath, MAX_COMPARED } from './compareAddress'
-
-/** Bir favorinin bugünkü okuması: görünür ilan, vitrinden düşmüş (404) ya da okunamamış. */
-type Result = ShowcaseListingDetail | 'gone' | 'error'
+import { useDetailReads, useRetryFocus } from './detailReads'
 
 /**
  * `frontend-003` **D10** · **D6** — favoriler ekranı. Her favori mevcut detay okumasıyla, YALNIZ
@@ -26,38 +23,14 @@ export function FavoritesPage() {
   const { locale, t } = useLocale()
   const favorites = useFavorites()
   const ordered = [...favorites].reverse()
-  const slugsKey = ordered.map((item) => item.slug).join(' ')
-  const [results, setResults] = useState<Readonly<Record<string, Result>>>({})
-  const [reload, setReload] = useState(0)
   const [selected, setSelected] = useState<readonly string[]>([])
   const [limitNotice, setLimitNotice] = useState(false)
-  // İstenmiş slug'lar: favori çıkarılınca öbürleri yeniden okunmaz (AC-35, slug başına tek okuma).
-  const requested = useRef(new Set<string>())
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    for (const slug of slugsKey === '' ? [] : slugsKey.split(' ')) {
-      if (requested.current.has(slug)) {
-        continue
-      }
-
-      requested.current.add(slug)
-      fetchListingDetail(slug, locale, controller.signal).then(
-        (detail) => setResults((current) => ({ ...current, [slug]: detail ?? 'gone' })),
-        (cause: unknown) => {
-          if (cause instanceof DOMException && cause.name === 'AbortError') {
-            requested.current.delete(slug)
-            return
-          }
-
-          setResults((current) => ({ ...current, [slug]: 'error' }))
-        },
-      )
-    }
-
-    return () => controller.abort()
-  }, [locale, slugsKey, reload])
+  const { results, retry, readers } = useDetailReads(ordered.map((item) => item.slug))
+  const focusAfterRetry = useRetryFocus(
+    results,
+    () => document.querySelector('[data-testid="favorites-list"]'),
+    () => document.getElementById('favorites-remove-all'),
+  )
 
   const title = <h1 className="page__title">{t('favoritesPage.title')}</h1>
 
@@ -77,15 +50,9 @@ export function FavoritesPage() {
   /** `frontend-003` S2 — kalıcı tek satır; uyarı kutusu değil (AC-44). */
   const note = <p className="favorites-page__note">{t('favoritesPage.note')}</p>
 
-  function retry(slugs: readonly string[]) {
-    for (const slug of slugs) {
-      requested.current.delete(slug)
-    }
-
-    setResults((current) =>
-      Object.fromEntries(Object.entries(current).filter(([slug]) => !slugs.includes(slug))),
-    )
-    setReload((value) => value + 1)
+  function retryRows(slugs: readonly string[]) {
+    focusAfterRetry(slugs)
+    retry(slugs)
   }
 
   if (ordered.length === 0) {
@@ -113,6 +80,7 @@ export function FavoritesPage() {
       <div className="page favorites-page">
         {title}
         {note}
+        {readers}
         <FavoritesSkeleton count={ordered.length} />
       </div>
     )
@@ -120,18 +88,22 @@ export function FavoritesPage() {
 
   const visible = ordered.filter((item) => typeof results[item.slug] === 'object')
   const gone = ordered.filter((item) => results[item.slug] === 'gone')
-  const failed = ordered.filter((item) => results[item.slug] === 'error')
+  // Yeniden denenen satır hatalı satırların arasında kalır (aria-busy): ekran iskelete düşmez.
+  const failed = ordered.filter(
+    (item) => results[item.slug] === 'error' || results[item.slug] === 'retrying',
+  )
 
   if (failed.length === ordered.length) {
     return (
       <div className="page favorites-page">
         {title}
         {note}
+        {readers}
         <ErrorState
           title={t('favoritesPage.error.title')}
           description={t('favoritesPage.error.body')}
           retryLabel={t('favoritesPage.retry')}
-          onRetry={() => retry(failed.map((item) => item.slug))}
+          onRetry={() => retryRows(failed.map((item) => item.slug))}
           testId="favorites-error"
         />
       </div>
@@ -155,6 +127,7 @@ export function FavoritesPage() {
     <div className="page favorites-page">
       {title}
       {note}
+      {readers}
 
       {visible.length === 0 ? (
         <EmptyState
@@ -219,12 +192,17 @@ export function FavoritesPage() {
       {failed.length === 0 ? null : (
         <ul className="favorites-page__rows" data-testid="favorites-failed">
           {failed.map((item) => (
-            <li key={item.slug} className="favorites-page__row" role="alert">
+            <li
+              key={item.slug}
+              className="favorites-page__row"
+              role="alert"
+              aria-busy={results[item.slug] === 'retrying'}
+            >
               <span>{t('favoritesPage.rowError', label(item))}</span>
               <button
                 type="button"
                 className="ui-button ui-button--secondary"
-                onClick={() => retry([item.slug])}
+                onClick={() => retryRows([item.slug])}
               >
                 {t('favoritesPage.retry')}
               </button>
@@ -239,6 +217,7 @@ export function FavoritesPage() {
             <h2 id="favorites-gone-title">{t('favoritesPage.goneSection')}</h2>
             <button
               type="button"
+              id="favorites-remove-all"
               className="ui-button ui-button--secondary"
               onClick={() => {
                 for (const item of gone) {

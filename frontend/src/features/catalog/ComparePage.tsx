@@ -1,15 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocale } from '../../app/localeContext'
-import { fetchListingDetail } from '../../shared/api/catalog'
 import type { ShowcaseListingDetail } from '../../shared/api/types'
 import { formatMoney } from '../../shared/i18n/format'
 import { favoritesPath, listingPath, listPath } from '../../shared/lib/route'
 import { Badge, EmptyState, ErrorState, Skeleton } from '../../shared/ui'
 import { attributeName } from './attributeName'
 import { compareSearch, comparedSlugs } from './compareAddress'
+import { useDetailReads, useRetryFocus, type DetailResult } from './detailReads'
 import { FavoriteButton } from './FavoriteButton'
 
-type Result = ShowcaseListingDetail | 'gone' | 'error'
+type Result = DetailResult
 
 /** Tablonun bir satırı: başlık ve sütun başına değer (`null` = o ilanda yok). */
 interface Row {
@@ -28,53 +28,30 @@ export function ComparePage() {
   const { locale, t } = useLocale()
   // Adres bir kez okunur; değişmez (karşılaştırmadaki favori düğmesi adresi değiştirmez, AC-64).
   const [slugs] = useState(() => comparedSlugs(window.location.search))
-  const [results, setResults] = useState<Readonly<Record<string, Result>>>({})
-  const [reload, setReload] = useState<Readonly<Record<string, number>>>({})
+  const { results, retry, readers } = useDetailReads(slugs.length < 2 ? [] : slugs)
+  const focusAfterRetry = useRetryFocus(
+    results,
+    () => document.querySelector('.compare-table'),
+    () => document.querySelector('.compare-table'),
+  )
 
   // D3 madde 4 — okunan küme adresle aynı değilse adres geçmişe kayıt eklemeden düzeltilir.
+  // `listing` değerleri zaten okunan kümeyse adrese dokunulmaz: öbür parametrelerin sırası da kalır.
   useEffect(() => {
     const { pathname, search, hash } = window.location
-    const normalized = compareSearch(search, slugs)
+    const adresteki = new URLSearchParams(search).getAll('listing')
+    const ayni =
+      adresteki.length === slugs.length && adresteki.every((slug, index) => slug === slugs[index])
 
-    if (normalized !== search) {
+    if (!ayni) {
+      const normalized = compareSearch(search, slugs)
       window.history.replaceState(window.history.state, '', `${pathname}${normalized}${hash}`)
     }
   }, [slugs])
 
-  const reloadKey = JSON.stringify(reload)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    const tokens = JSON.parse(reloadKey) as Record<string, number>
-
-    for (const slug of slugs.length < 2 ? [] : slugs) {
-      // Yeniden denemede yalnız o sütun okunur; öbürlerinin sonucu kalır (AC-60).
-      if (tokens[slug] === -1) {
-        continue
-      }
-
-      fetchListingDetail(slug, locale, controller.signal).then(
-        (detail) => setResults((current) => ({ ...current, [slug]: detail ?? 'gone' })),
-        (cause: unknown) => {
-          if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
-            setResults((current) => ({ ...current, [slug]: 'error' }))
-          }
-        },
-      )
-    }
-
-    return () => controller.abort()
-  }, [locale, slugs, reloadKey])
-
-  function retry(retried: readonly string[]) {
-    setResults((current) =>
-      Object.fromEntries(Object.entries(current).filter(([slug]) => !retried.includes(slug))),
-    )
-    setReload(
-      Object.fromEntries(
-        slugs.map((slug) => [slug, retried.includes(slug) ? (reload[slug] ?? 0) + 1 : -1]),
-      ),
-    )
+  function retryColumns(retried: readonly string[]) {
+    focusAfterRetry(retried)
+    retry(retried)
   }
 
   const title = <h1 className="page__title">{t('compare.title')}</h1>
@@ -101,6 +78,7 @@ export function ComparePage() {
     return (
       <div className="page compare-page">
         {title}
+        {readers}
         <div className="ui-state" role="status" aria-busy="true" data-testid="compare-loading">
           <Skeleton shape="media" />
           <Skeleton shape="line" />
@@ -130,15 +108,16 @@ export function ComparePage() {
     )
   }
 
-  if (columns.every((column) => column === 'error')) {
+  if (columns.every((column) => column === 'error' || column === 'retrying')) {
     return (
       <div className="page compare-page">
         {title}
+        {readers}
         <ErrorState
           title={t('compare.error.title')}
           description={t('favoritesPage.error.body')}
           retryLabel={t('favoritesPage.retry')}
-          onRetry={() => retry(slugs)}
+          onRetry={() => retryColumns(slugs)}
           testId="compare-error"
         />
       </div>
@@ -195,6 +174,7 @@ export function ComparePage() {
   return (
     <div className="page compare-page">
       {title}
+      {readers}
       {/* D12 · B17 — dar ekranda kendi içinde kayabilen kap: klavyeyle odaklanır, adı vardır. */}
       <div className="compare-table" role="region" aria-label={t('compare.table')} tabIndex={0}>
         <table>
@@ -203,7 +183,7 @@ export function ComparePage() {
               <td />
               {columns.map((column, index) => (
                 <th key={slugs[index]} scope="col">
-                  <Head column={column} onRetry={() => retry([slugs[index]!])} />
+                  <Head column={column} onRetry={() => retryColumns([slugs[index]!])} />
                 </th>
               ))}
             </tr>
@@ -234,9 +214,10 @@ function Head({ column, onRetry }: { readonly column: Result; readonly onRetry: 
 
   if (column === 'gone') {
     content = <p className="compare-table__note">{t('compare.gone')}</p>
-  } else if (column === 'error') {
+  } else if (column === 'error' || column === 'retrying') {
+    // Yeniden denenirken sütun yerinde kalır; düğme aynı öğedir, odak kaybolmaz (BULGU-5).
     content = (
-      <div role="alert">
+      <div role="alert" aria-busy={column === 'retrying'}>
         <p className="compare-table__note">{t('compare.columnError')}</p>
         <button type="button" className="ui-button ui-button--secondary" onClick={onRetry}>
           {t('favoritesPage.retry')}
