@@ -8,7 +8,7 @@
 | **Modül(ler)** | `frontend/` public vitrin (favori düğmesi, sayaç, favoriler ve karşılaştırma ekranları, tembel katalog kümesi) · `Host` (iki yeni sayfa türü, belge etiketleri, `Referrer-Policy` — **D2**) · `Content.Contracts` (yalnız ayrılmış ad listesine `favorites` ve `compare` — **D1**) · `tests/VehicleCatalog.Tests` (alan adı kapısının okuduğu dosya ve "tek yerde" ölçüsü — **D11**) · `frontend/scripts/check-locale-keys.mjs` (üçüncü küme **D13**, anahtar varlığı kapısı **D19**) · `docs/` (sözlük **D16**, karar defteri, ADR `0013` eki ve `deploy.md` günlük notu **D17**). **Backend sözleşmesi değişmez** (**D14**; S5 koddan doğrulandı). |
 | **Bağımlı spec'ler** | `0001` (tamamlandı; **X5**'i bu kart açar) · `0002` (tamamlandı; R7/R8 alan kümesi ve alan adı eşlemesi) · `0004` (tamamlandı; D7 gerçek 404, D8 tanınmayan yol, D23 liste parametreleri) · `0024` (tamamlandı; AC-55'in ilk paket tanımı) · `0026` (tamamlandı; üst çubuk yerleşimi) · `frontend-002` (token katmanı) |
 | **Dayanak** | ADR 0003 Ek 1, sıra #12 · sahibin sırası (2026-11-26): son iş |
-| **Karar bekliyor** | yok — D1–D19 Proje Yöneticisi kararı (D18: +1280 B, 2026-11-26); S1–S3, D5, D6 sahip kararı (2026-11-26). |
+| **Karar bekliyor** | yok — D1–D19 Proje Yöneticisi kararı (D18: +1280 B, 2026-11-26; AP-08 revizyonuyla +1450 B); S1–S3, D5, D6 sahip kararı (2026-11-26). |
 
 ---
 
@@ -602,7 +602,8 @@ tarayıcıda işaretlediği ilan; sunucuda yoktur, slug ile tutulur · **Karşı
 
 *Gerekçe:* DoD T8. *Bedel:* yok.
 
-**D18 — İlk paket bütçesi: bu kart için +1280 B (Proje Yöneticisi kararı, 2026-11-26; B5).**
+**D18 — İlk paket bütçesi: bu kart için +1450 B (Proje Yöneticisi kararı, 2026-11-26; B5).**
+*Revizyon (2026-11-26, AP-08): +1280 B → +1450 B — Takım Yöneticisi kararı; gerekçe: beş düşürme adımından sonra ölçülen +1396 B, ekran entegrasyonuyla ~+1430 B. Sınır serttir; head'de aşılırsa Proje Yöneticisine dönülür.*
 Ölçü `0024` AC-55'in tanımıdır ve PR'ın head commit'inde alınır. Context ölçümü favori düğmesi +
 sayaç + depo kodunu ~1,2 KB gzip buluyor; +512 B ile karşılanamaz. Koşullar:
 1. **Düşürme sırası zorunludur** (Context § Paket). Her adımın kazancı ölçülür ve PR'da yazılır.
@@ -848,8 +849,9 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 - **AC-67.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
   `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **D18'in sınırı**
-  kadar büyür: **1280 B**. Ölçüm PR'ın **head** commit'inde yapılır. Context'teki
+  kadar büyür: **1450 B**. Ölçüm PR'ın **head** commit'inde yapılır. Context'teki
   düşürme sırasının her adımı uygulanmıştır ve her adımın ölçülen kazancı PR'da yazılıdır (D18).
+  *Revizyon (2026-11-26, AP-08): 1280 → 1450 B, D18 ile birlikte — Takım Yöneticisi kararı.*
 - **AC-68.** `index.html`'in `modulepreload` listesi ve girişin statik içe aktardığı JS dosyası
   sayısı `main` ile aynıdır; favoriler ve karşılaştırma ekranlarının kodu yalnız tembel
   parça(lar)dadır (derleme çıktısı denetimi CI'da).
@@ -904,7 +906,7 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 - [x] Açık sorular karara bağlandı; **S5 kodda doğrulandı** ve sonucu Context'e yazıldı.
 - [x] Proje Yöneticisi D1–D17'yi onayladı; QA CLARIFY turu işlendi (B1–B17, 2026-11-26).
-- [x] D18 (ilk paket bütçesi) karara bağlandı: +1280 B (Proje Yöneticisi kararı, 2026-11-26).
+- [x] D18 (ilk paket bütçesi) karara bağlandı: +1280 B (Proje Yöneticisi kararı, 2026-11-26); AP-08 revizyonuyla +1450 B (Takım Yöneticisi kararı, 2026-11-26).
 - [ ] `docs/deploy.md`'ye ters vekil/CDN erişim günlüğü notu düşüldü (D17, B2).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/frontend-003-ac<n>.png`); iki boş durum, mobil
