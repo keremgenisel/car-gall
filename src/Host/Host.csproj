@@ -20,4 +20,16 @@
     <InternalsVisibleTo Include="Host.Tests" />
   </ItemGroup>
 
+  <!--
+    `0004` D12 · P2 — belgenin sabit metinleri ön yüz deposunun çeviri dosyalarından gelir
+    (Host'ta metin tutulmaz). Vitrin kataloğu, SEO kümesi ve listenin parametre adları (P3)
+    derleme ve yayın çıktısına `i18n/` altında bağlanır. Panel kümesi bağlanmaz: belgeye girmez.
+    `Dockerfile`'ın arka yüz aşaması aynı dosyaları kopyalar.
+  -->
+  <ItemGroup>
+    <Content Include="..\..\frontend\src\shared\i18n\locales\*.json" Link="i18n\vitrin\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\frontend\src\shared\i18n\locales\seo\*.json" Link="i18n\seo\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\frontend\src\features\catalog\listQueryParams.json" Link="i18n\listQueryParams.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

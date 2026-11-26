@@ -144,6 +144,9 @@ builder.Services.AddLeads(
 SiteRoot siteRoot = SiteRoot.Parse(builder.Configuration[SiteRoot.ConfigurationKey]);
 builder.Services.AddSingleton(siteRoot);
 
+// `0004` D12 · P2 — belge metinleri (vitrin kataloğu + SEO kümesi); eksik anahtarla başlamaz.
+builder.Services.AddSingleton(SeoCatalog.Load(AppContext.BaseDirectory, localization.EnabledLocales));
+
 builder.Services.AddNotifications(new NotificationsSetup(
     connectionString,
     localization.DefaultLocale,

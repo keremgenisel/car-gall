@@ -21,6 +21,10 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend
 WORKDIR /repo
 COPY Directory.Build.props CarGallery.slnx ./
 COPY src/ src/
+# `0004` D12 · P2 — Host belge metinlerini ön yüz deposunun çeviri dosyalarından okur
+# (`Host.csproj` onları `i18n/` altına bağlar); listenin parametre adları da aynı yoldan (P3).
+COPY frontend/src/shared/i18n/locales/ frontend/src/shared/i18n/locales/
+COPY frontend/src/features/catalog/listQueryParams.json frontend/src/features/catalog/
 # wwwroot .gitignore'da ve .dockerignore'da; yerel bir derlemenin artığı imaja sızmasın
 # diye yalnız 1. aşamanın çıktısı kopyalanır.
 COPY --from=frontend /repo/src/Host/wwwroot/ src/Host/wwwroot/
