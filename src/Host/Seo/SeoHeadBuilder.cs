@@ -110,12 +110,23 @@ internal sealed class SeoHeadBuilder(
 
             if (gallery.Branches.Count > 0)
             {
-                dealer["department"] = new JsonArray([.. gallery.Branches.Select(branch => (JsonNode)new JsonObject
+                dealer["department"] = new JsonArray([.. gallery.Branches.Select(branch =>
                 {
-                    ["@type"] = "AutoDealer",
-                    ["name"] = branch.Name,
-                    ["address"] = branch.Address,
-                    ["telephone"] = branch.Phone,
+                    JsonObject department = new()
+                    {
+                        ["@type"] = "AutoDealer",
+                        ["name"] = branch.Name,
+                        ["address"] = branch.Address,
+                        ["telephone"] = branch.Phone,
+                    };
+
+                    // `0025` D9 — yalnız programı girilmiş şubede; kök `AutoDealer`'da hiç yok (AC-56).
+                    if (branch.OpeningHours is { } hours)
+                    {
+                        department["openingHoursSpecification"] = OpeningHoursSpecification(hours);
+                    }
+
+                    return (JsonNode)department;
                 })]);
             }
 
@@ -130,6 +141,51 @@ internal sealed class SeoHeadBuilder(
         }
 
         return new SeoHead(StatusCodes.Status200OK, tags.ToString());
+    }
+
+    /// <summary>
+    /// `0025` **D9** · P6 — (opens, closes) çiftini taşıyan günler tek öğede birleşir; öğeler çiftin
+    /// İLK göründüğü güne (D6 sırası), aynı günde aralık sırasına göre dizilir. Program girilmişken
+    /// kapalı günler <c>00:00–00:00</c>'lık tek öğededir ve aynı kurala uyar (Pazartesi kapalıysa
+    /// ilk öğedir). Saatler şubenin yerel duvar saatidir; fark taşımaz (`0025` D2).
+    /// </summary>
+    private static JsonArray OpeningHoursSpecification(IReadOnlyDictionary<string, IReadOnlyList<PublicOpeningIntervalDto>> hours)
+    {
+        // schema.org'nun "bütün gün kapalı" gösterimi: opens = closes = gece yarısı. Bir mesai
+        // VARSAYIMI değil, veriden okunan kapalı günün kodlaması (D9); `TimeOnly.MinValue`'dan
+        // türetilir, metin sabiti olarak yazılmaz (Yasak Listesi 34'ün kapısı `"HH:mm"` sabitini arar).
+        string midnight = TimeOnly.MinValue.ToString("HH:mm", CultureInfo.InvariantCulture);
+        List<(string Opens, string Closes, List<string> Days)> groups = [];
+
+        foreach ((string day, IReadOnlyList<PublicOpeningIntervalDto> intervals) in hours)
+        {
+            string schemaDay = char.ToUpperInvariant(day[0]) + day[1..];
+            IEnumerable<(string, string)> pairs = intervals.Count == 0
+                ? [(midnight, midnight)]
+                : intervals.Select(interval => (interval.Start, interval.End));
+
+            foreach ((string opens, string closes) in pairs)
+            {
+                int index = groups.FindIndex(group => group.Opens == opens && group.Closes == closes);
+
+                if (index < 0)
+                {
+                    groups.Add((opens, closes, [schemaDay]));
+                }
+                else
+                {
+                    groups[index].Days.Add(schemaDay);
+                }
+            }
+        }
+
+        return new JsonArray([.. groups.Select(group => (JsonNode)new JsonObject
+        {
+            ["@type"] = "OpeningHoursSpecification",
+            ["dayOfWeek"] = new JsonArray([.. group.Days.Select(day => (JsonNode)JsonValue.Create(day))]),
+            ["opens"] = group.Opens,
+            ["closes"] = group.Closes,
+        })]);
     }
 
     /// <summary>
