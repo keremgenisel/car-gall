@@ -30,10 +30,15 @@ export function OpeningHoursFieldset({
   readonly onChange: (schedule: Schedule) => void
 }) {
   const { locale, t } = useLocale()
+  // Hata metninin kimliği; alan onu `aria-describedby` ile açıklama olarak taşır (`0020`
+  // `DealershipField` deseni, QA 2 BULGU-2). Noktalar kimlikte sorun değil ama seçicide kaçış
+  // ister; kimlik alan anahtarından türetilir ve tirelidir.
+  const errorId = (field: string) => `error-${field.replace(/\./g, '-')}`
+  const describedBy = (field: string) => (errors[field] === undefined ? undefined : errorId(field))
   const error = (field: string) => {
     const code = errors[field]
     return code === undefined ? null : (
-      <span className="admin-form__field-error" data-testid={`error-${field}`}>
+      <span className="admin-form__field-error" id={errorId(field)} data-testid={`error-${field}`}>
         {t(fieldErrorKey(code, locale))}
       </span>
     )
@@ -78,6 +83,7 @@ export function OpeningHoursFieldset({
                       value={interval.start}
                       disabled={disabled}
                       aria-invalid={errors[`${field}.start`] === undefined ? undefined : true}
+                      aria-describedby={describedBy(`${field}.start`)}
                       onChange={(event) =>
                         onChange(
                           changeInterval(schedule, day, index, { start: event.target.value }),
@@ -91,17 +97,18 @@ export function OpeningHoursFieldset({
                       value={interval.end}
                       disabled={disabled}
                       aria-invalid={errors[`${field}.end`] === undefined ? undefined : true}
+                      aria-describedby={describedBy(`${field}.end`)}
                       onChange={(event) =>
                         onChange(changeInterval(schedule, day, index, { end: event.target.value }))
                       }
                     />
                     {disabled ? null : (
+                      // QA 2 BULGU-2 — ad parametresiz parçalardan: düğmenin kendi metni ("Kaldır"),
+                      // gün adı ve aralık sırası. 21 düğme 21 ayrı ad taşır.
                       <Button
                         variant="secondary"
-                        aria-label={t('dealership.branch.hours.removeOf', {
-                          day: name,
-                          n: index + 1,
-                        })}
+                        id={`${id}-remove`}
+                        aria-labelledby={`${id}-remove hours-${day}-name ${id}-n`}
                         onClick={() => onChange(removeInterval(schedule, day, index))}
                       >
                         {t('dealership.branch.hours.remove')}

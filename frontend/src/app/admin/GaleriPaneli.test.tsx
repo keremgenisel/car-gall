@@ -950,6 +950,46 @@ describe('0025/AC-22: Alan hatası ilgili aralığın ya da günün yanında, ek
   })
 })
 
+describe('0025 QA 2 BULGU-2: "Kaldır" düğmesinin erişilebilir adı gün ve sırayı taşır; aralık hatası input\'un açıklamasıdır', () => {
+  it('ad ve açıklama', async () => {
+    vi.mocked(api.saveBranch).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'openingHours.monday.1.end',
+        'openingHours.monday.1.end': 'opening_hours.end_not_after_start',
+      }),
+    )
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-opening-hours')
+
+    fireEvent.click(screen.getByTestId('hours-add-monday'))
+    fireEvent.click(screen.getByTestId('hours-add-monday'))
+    fireEvent.click(screen.getByTestId('hours-add-tuesday'))
+
+    expect(screen.getByRole('button', { name: 'Kaldır Pazartesi 1' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Kaldır Pazartesi 2' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Kaldır Salı 1' })).toBeTruthy()
+    expect(
+      saatler()
+        .getAllByRole('button', { name: /^Kaldır/ })
+        .map((dugme) => dugme.getAttribute('aria-label')),
+    ).toEqual([null, null, null])
+
+    fireEvent.click(screen.getByTestId('branch-save'))
+    const hata = await screen.findByTestId('error-openingHours.monday.1.end')
+    const kapanis = screen
+      .getByTestId('hours-monday')
+      .querySelectorAll<HTMLInputElement>('input[aria-labelledby$="-end"]')[1]!
+    expect(kapanis.getAttribute('aria-describedby')).toBe(hata.id)
+    expect(hata.textContent).toBe('Kapanış açılıştan sonra olmalı.')
+    expect(
+      screen
+        .getByTestId('hours-monday')
+        .querySelectorAll<HTMLInputElement>('input[aria-labelledby$="-end"]')[0]!
+        .hasAttribute('aria-describedby'),
+    ).toBe(false)
+  })
+})
+
 describe('0025/AC-35, AC-37, AC-38: Erişim yok, yükleniyor ve hata durumlarında çalışma saatleri bölümü basılmaz', () => {
   it('Satış Danışmanı', async () => {
     await panel('branch-edit', 'sales_advisor', 'tr', 'b-1')
