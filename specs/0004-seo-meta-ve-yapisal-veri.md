@@ -530,9 +530,12 @@ kullanılır.
 
 **D17 — Performans bütçesi.** (R11, C12)
 (a) Detay belgesinde bu kartın eklediği etiketlerin (başlık, açıklama, kanonik, alternatifler,
-Open Graph, JSON-LD) toplam boyutu, sıkıştırmasız, **en çok 4096 bayt**tır. Ölçüm *(CLARIFY
+Open Graph, JSON-LD) toplam boyutu, sıkıştırmasız, **en çok 6144 bayt**tır. Ölçüm *(CLARIFY
 B12)* kurgulanmış en kötü durumda, **ar** belgesinde yapılır: alan sınırındaki uzunlukta model
-adı, ilanın görsel üst sınırı kadar görsel, en uzun şube adı.
+adı, ilanın görsel üst sınırı kadar görsel, en uzun şube adı, alan sınırındaki uzunlukta görünen
+ad ve en uzun slug. *Revizyon (2026-11-26, AP-08): kurgu en kötü durum değildi (QA 2 BULGU-1) —
+Proje Yöneticisi kararı. Bütçe 4096 → 6144 B: aşan baytlar etiket sayısından değil verinin izin
+verilen uzunluğundan geliyor; LCP'yi koruyan asıl kapı C3. P10'un üç görsel sınırı kalır.*
 (b) ADR 0013'ün protokolüyle (giriş JS + giriş CSS, `gzip -9`) ilk paket `main` tabanına göre
 **en çok 512 B** büyür.
 (c) C3 ana sayfa, liste ve detayda yeşil kalır. Bir sayfanın medyanı **2450 ms**'yi aşarsa ikinci
@@ -909,9 +912,11 @@ belirler.
 ### Performans (R11 · C12 · D17)
 
 - **AC-83.** Kurgulanmış en kötü durumdaki bir ilanın **ar** detay belgesinde — model adı alan
-  sınırındaki uzunlukta, görsel sayısı ilanın üst sınırında, şube adı en uzun — bu kartın eklediği
-  etiketlerin (`<title>`, açıklama, kanonik, dil alternatifleri, `og:*`, JSON-LD) sıkıştırmasız
-  toplam boyutu en çok 4096 bayttır.
+  sınırındaki uzunlukta, görsel sayısı ilanın üst sınırında, şube adı en uzun, galerinin görünen
+  adı alan sınırındaki uzunlukta (Arapça), slug en uzun — bu kartın eklediği etiketlerin
+  (`<title>`, açıklama, kanonik, dil alternatifleri, `og:*`, JSON-LD) sıkıştırmasız toplam boyutu
+  en çok 6144 bayttır.
+  *Revizyon (2026-11-26, AP-08): kurgu en kötü durum değildi (QA 2 BULGU-1) — Proje Yöneticisi kararı.*
 - **AC-84.** ADR 0013 protokolüyle ölçülen ilk paket (giriş JS + giriş CSS, `gzip -9`), `main`
   tabanına göre en çok 512 B büyür. İki sayı ve fark PR'da yazılır.
 - **AC-85.** C3 ölçümünde ana sayfa, liste ve detayın medyan LCP'si 2500 ms'nin altındadır.
