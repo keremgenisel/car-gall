@@ -175,6 +175,32 @@ test('0026/AC-30, AC-33, AC-42, AC-62, AC-63, AC-64, AC-65, AC-67: Üst çubukta
   expect(kutu.x + kutu.width).toBeGreaterThan(ic.x + ic.width - 40)
 })
 
+test('0026 (C6, C7): Logo inmeden önce de üst çubuk logosunun kutusu son boyutundadır (40 px yükseklik); gelince üst çubuk kaymaz', async ({
+  page,
+}) => {
+  await logoYukle(page)
+  let birak: () => void = () => {}
+  const bekle = new Promise<void>((resolve) => {
+    birak = resolve
+  })
+  await page.route('**/*logo-small*', async (route) => {
+    await bekle
+    await route.continue()
+  })
+
+  await page.goto('/tr/cars')
+  const logo = page.getByTestId('top-bar-logo')
+  await expect(logo).toBeAttached()
+  const once = (await logo.boundingBox())!
+  const cubukOnce = (await page.locator('header.top-bar').boundingBox())!
+  expect(once.height).toBe(40)
+
+  birak()
+  await expect.poll(() => logo.evaluate((el) => (el as HTMLImageElement).complete)).toBe(true)
+  expect(await logo.boundingBox()).toEqual(once)
+  expect(await page.locator('header.top-bar').boundingBox()).toEqual(cubukOnce)
+})
+
 test('0026/AC-22, AC-29: Başarısız logoda çevrilmiş neden ve "Tekrar dene"; ar panelinde bölüm Arapça ve sağdan sola', async ({
   page,
 }) => {
