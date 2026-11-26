@@ -7,12 +7,16 @@ namespace CarGallery.Modules.Dealership.Application;
 /// <summary>
 /// `0020` R1 — panelin galeri profili. Görünen ad dil → metin haritasıdır: panel her etkin
 /// dil için bir alan gösterir ve eksik dili BOŞ gösterir, varsayılana düşmez (AC-1, AC-7).
+///
+/// <para>`0024` AC-32 — <c>SocialLinks</c> platform kodundan adrese haritadır, D1'in sırasıyla;
+/// hiç hesap yoksa boştur.</para>
 /// </summary>
 internal sealed record AdminGalleryDto(
     string CommercialName,
     string? TaxNumber,
     string? TradeRegistryNumber,
     IReadOnlyDictionary<string, string> DisplayNames,
+    IReadOnlyDictionary<string, string> SocialLinks,
     int Version);
 
 /// <summary>`0020` R10 — panelin şube düzenleme formu; bütün alanlar ham hâliyle.</summary>
@@ -47,6 +51,8 @@ internal sealed class DealershipAdminQueries(DealershipDbContext context)
                 gallery.TaxNumber,
                 gallery.TradeRegistryNumber,
                 gallery.DisplayNames.ToDictionary(),
+                SocialPlatform.InOrder(gallery.SocialLinks)
+                    .ToDictionary(link => link.Platform, link => link.Url, StringComparer.Ordinal),
                 gallery.Version);
     }
 

@@ -87,9 +87,13 @@ Bülten değerlerinin hepsi `appsettings.json`'da durur; biri **boşaltılırsa*
 kalkmaz (koda gömülü varsayılan yok — `0018` C14).
 
 **Asla verilmeyecekler:** `Development__SeedShowcase`, `Development__SeedListingCount`,
-`Development__SeedHomeTexts`. İlk ikisi demo ilan ve `/seed-media` uçlarını açar;
-`Development__SeedHomeTexts` her başlangıçta galerinin panelden yazdığı ana sayfa
-metinlerini her dilde 120/500 karakterlik ölçüm dolgusuyla EZER (`0022` D11, yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
+`Development__SeedHomeTexts`, `Development__SeedGalleryProfile`. İlk ikisi demo ilan ve
+`/seed-media` uçlarını açar; `Development__SeedHomeTexts` her başlangıçta galerinin panelden
+yazdığı ana sayfa metinlerini her dilde 120/500 karakterlik ölçüm dolgusuyla EZER (`0022` D11,
+yalnız `perf.yml`). `Development__SeedGalleryProfile` (galeri profili tohumu) her başlangıçta
+galerinin panelden girilen profil verisini ölçüm dolgusuyla EZER: bugün gerçek sosyal hesapları
+sınır uzunlukta dolgu adreslerle değiştirir; `0025` ve `0026` aynı bayrağa şube programını ve
+logoyu ekler (`0024` P9, yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
 düşürmeyin; geliştirme betiği bunu hız için 1000'e çeker, üretim değeri 210.000'dir.
 
 ## 4. Sıra: önce kurulum adımı, sonra uygulama

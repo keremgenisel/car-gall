@@ -6,6 +6,7 @@ import {
   type AdminGallery,
 } from '../../../shared/api/dealershipAdmin'
 import { enabledLocales } from '../../../shared/lib/locale'
+import { SOCIAL_PLATFORM_NAMES } from '../socialPlatforms'
 import { Button, ErrorState, Skeleton } from '../../../shared/ui'
 import { DealershipField } from './DealershipField'
 import { fieldErrorsOf, isConflict, localizedPayload } from './dealershipForm'
@@ -26,6 +27,7 @@ interface Values {
   readonly taxNumber: string
   readonly tradeRegistryNumber: string
   readonly displayNames: Readonly<Record<string, string>>
+  readonly socialLinks: Readonly<Record<string, string>>
 }
 
 function valuesOf(gallery: AdminGallery, locales: readonly string[]): Values {
@@ -35,6 +37,10 @@ function valuesOf(gallery: AdminGallery, locales: readonly string[]): Values {
     tradeRegistryNumber: gallery.tradeRegistryNumber ?? '',
     displayNames: Object.fromEntries(
       locales.map((code) => [code, gallery.displayNames[code] ?? '']),
+    ),
+    // `0024` AC-2 — kayıtlı hesap dolu, olmayan boş gelir; altı alan her zaman var (D5).
+    socialLinks: Object.fromEntries(
+      Object.keys(SOCIAL_PLATFORM_NAMES).map((code) => [code, gallery.socialLinks[code] ?? '']),
     ),
   }
 }
@@ -116,6 +122,7 @@ export function GalleryProfilePage() {
           taxNumber: current.taxNumber,
           tradeRegistryNumber: current.tradeRegistryNumber,
           displayNames: localizedPayload(current.displayNames),
+          socialLinks: current.socialLinks,
         },
         locale,
       )
@@ -228,6 +235,42 @@ export function GalleryProfilePage() {
                     setValues({
                       ...current,
                       displayNames: { ...current.displayNames, [code]: event.target.value },
+                    })
+                  }
+                />
+              )}
+            </DealershipField>
+          ))}
+        </fieldset>
+
+        {/*
+          `0024` R1 · D5 — sosyal hesaplar: D1'in sırasıyla altı alan, etiket platformun adı
+          (çevrilmez). "Ekle"/"kaldır" yok: alanı boşaltmak siler. Adres soldan sağa yazılır ve
+          adres klavyesi açar; hata alanın altında, çevrilmiş metinle (AC-19).
+        */}
+        <fieldset className="admin-form__group" data-testid="gallery-social-links">
+          <legend className="admin-form__label">{t('dealership.gallery.social.title')}</legend>
+          <p className="admin-form__hint">{t('dealership.gallery.social.hint')}</p>
+          {Object.entries(SOCIAL_PLATFORM_NAMES).map(([code, name]) => (
+            <DealershipField
+              key={code}
+              id={`gallery-social-${code}`}
+              label={name}
+              error={errors[`socialLinks.${code}`]}
+            >
+              {(props) => (
+                <input
+                  {...props}
+                  className="admin-form__control"
+                  type="url"
+                  inputMode="url"
+                  dir="ltr"
+                  autoComplete="url"
+                  value={current.socialLinks[code] ?? ''}
+                  onChange={(event) =>
+                    setValues({
+                      ...current,
+                      socialLinks: { ...current.socialLinks, [code]: event.target.value },
                     })
                   }
                 />

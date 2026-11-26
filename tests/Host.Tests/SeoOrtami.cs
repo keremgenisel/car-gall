@@ -41,7 +41,7 @@ internal sealed class SeoOrtami : IDisposable
 
     internal Dictionary<string, HomeTextsDto> AnaSayfaMetinleri { get; } = [];
 
-    internal PublicGalleryDto? Galeri { get; set; } = new("Oto Galeri", [new("Kadıköy", "Bağdat Cad. 1, İstanbul", "+902160000001")]);
+    internal PublicGalleryDto? Galeri { get; set; } = new("Oto Galeri", [new("Kadıköy", "Bağdat Cad. 1, İstanbul", "+902160000001")], []);
 
     internal int DetayOkumasi { get; private set; }
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1–B5, kartlar arası X1–X3 → D2, D4, D6, D9 güncellendi, **D13** eklendi; AC-71–AC-82) |
+| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1–B5, kartlar arası X1–X3 → D2, D4, D6, D9 güncellendi, **D13** eklendi; AC-71–AC-82) · **QA 2 revizyonu (2026-11-26, AP-08, Proje Yöneticisi kararı):** D2, D6, D9(b), D11, AC-55, AC-70 değişti; **AC-83** eklendi |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (galeri profili) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel Galeri ekranı, vitrin altlığı) |
@@ -219,6 +219,81 @@ yapısal verisinde de yer alır.
 4. **Kapalı küme, yasak listesinden güçlüdür** (`0014` **D15**). Yanıtın anahtar kümesi birebir
    ölçülür, yalnız "yeni alan var mı" diye bakılmaz.
 
+### Verilen kararlar — plan turu (DEV, 2026-11-26)
+
+> R/C/AC'ye dokunmaz. `main` @ `12c2043` üzerinde ölçüldü. `0025` ve `0026` aynı yapıları
+> kullanacak biçimde seçildi (Proje Yöneticisi görevlendirmesi).
+
+- **P1 — "Alan yok = açık `null` = değişmez" mekanizması: düz nullable koleksiyon (D4, X1).**
+  `SaveGalleryBody.SocialLinks` `Dictionary<string, string?>?`'dir. D4 açık `null`'u alanın
+  yokluğuyla **aynı** anlama bağladığı için ayrılması gereken iki durum kalıyor: `null` (değişmez)
+  ve harita (bütünüyle yerine koy; boş harita hepsini siler). İkisini düz nullable tip zaten
+  ayırıyor. `Optional<T>` ya da `JsonElement` yalnız "yok" ile "`null`"un **farklı** anlam taşıdığı
+  bir kural için gerekirdi; üç kartta da böyle bir kural yok. Komut katmanında kural tek yerdedir:
+  `null` koleksiyon domain'e "dokunma" olarak geçer. `0025`'in programı aynı deseni kullanır
+  (`null` = değişmez, yedi boş gün = sil). Haritadaki `null` ya da boşluktan ibaret değer D2'nin
+  "bu platformda hesap yok"udur.
+- **P2 — Platform listesi domain'de tek kaynaktır (D1, D2, D3).** `SocialPlatform` (kod, sıra,
+  ana makine listesi) `Dealership/Domain`'dedir. Doğrulama `SocialLink.Validate`'tedir ve
+  `Gallery.UpdateProfile` aynı `FieldErrors`'a toplar: sosyal hata da görünen ad hatası da tek
+  yanıtta gelir ve hiçbir alan yazılmaz (AC-17, AC-18). Sıra: önce bayt sınırı (`too_long`), sonra
+  biçim (`invalid`). Port, ayrıştırılmış adres yerine **yazılan otoritenin** içinde `:` aranarak
+  bulunur: `Uri.Port` varsayılan `:443`'ü yazılmamışla aynı gösterir (AC-76).
+- **P3 — Değiştirme yerinde yapılır; `AddSocialLink` kaldırılır (tuzak 1, D3).**
+  `Gallery.ReplaceSocialLinks` kümede olmayanı siler, var olanın adresini günceller, yeniyi ekler.
+  `SocialLink` bu yüzden değiştirilebilir adresli bir sınıf olur: sahip olunan koleksiyonda aynı
+  anahtarla sil-ve-ekle, EF'in izleyicisinde anahtar çakışmasıdır. Çağıranı olmayan
+  `AddSocialLink` silinir: "varsa yok say" yolu kodda kalmaz.
+- **P4 — Okumalar (D7, AC-32).** Panel: `AdminGalleryDto.SocialLinks` (kod → adres, D1 sırası).
+  Ziyaretçi: `PublicGalleryDto(DisplayName, Branches, SocialLinks)` ve `PublicSocialLinkDto(Platform, Url)`.
+  Sorgu D1'de olmayan kodu düşürür ve D1'e göre sıralar. `0025` aynı DTO'nun şube öğesini
+  genişletir, kök değişmez.
+- **P5 — `sameAs` aynı okumadan (D8).** `SeoHeadBuilder.Home` `gallery.SocialLinks`'in adreslerini
+  sırasıyla yazar; boşsa anahtar yoktur. İkinci okuma yok.
+- **P6 — Simgeler (D6, D9(b), D13).** `frontend/src/features/dealership/socialIcons.ts` beş yolu,
+  kaynak/lisans/sürüm/marka kuralı notunu taşır. `SocialLinks.tsx` onu dinamik `import()` ile
+  ister; modül düzeyinde tek bir söz (promise) tutulur, yani sayfa başına tam bir istek (AC-78).
+  Parçanın adını `vite.config.ts`'in `manualChunks`'ı sabitler (`social-icons`). Durumlar:
+  `pending` (44×44 kutu, simgesiz, erişilebilir ad `aria-label`), `ready` (simge), `failed`
+  (görünür ad). Red yakalanır (AC-79). Platform adları ve sırası `socialPlatforms.ts`'te koddadır
+  (D1: çevrilmez). Ölçüm: `scripts/check-social-icons.mjs` derleme çıktısında parçanın tekliğini,
+  3072 B sınırını ve giriş JS'inde yolların yokluğunu denetler; CI'ın frontend işine eklenir.
+  *(QA 2 BULGU-1 ile değişti, Proje Yöneticisi kararı:)* `manualChunks` yerine `chunkFileNames`;
+  parça (`socialIconLinks.ts`) bloğun simgeli bağlantılarını kuran işlevi ve yolları taşır, girişle
+  hiçbir modül paylaşmaz. Girişte `SocialLinksSlot` (yükleme kararı, kabuk, red yedeği) ve
+  `socialLinksLoader.ts` kalır; parça gelene kadar blok yoktur (AC-70'in revize metni). Kapı
+  `modulepreload` ve girişin statik içe aktarmasını da reddeder.
+- **P7 — Altlık yuvası.** `HomeFooter` şube bloğu gibi bir `social` yuvası alır; blok "Kurumsal"dan
+  sonra, "Diller"den önce basılır. `HomeRoute` aynı `useGallery` okumasını verir (D7: ikinci istek
+  yok). `0025`'in saatleri şube bloğunun içinde kalır, `0026`'nın altlık logosu yuvaların önündedir.
+- **P8 — Panel (D5).** `GalleryProfilePage`'e "Sosyal hesaplar" `fieldset`'i; altı alan
+  `type="url"`, `inputMode="url"`, `dir="ltr"`. Kaydetme altı kodun hepsini gönderir (boş alan = sil),
+  yani panel her zaman "bütünüyle yerine koy"u kullanır; `null` yolu `0020` istemcisi ve testleri
+  içindir. Hata metni `fieldErrorKey` ile (`dealership.fieldError.gallery_social_link_invalid` …).
+- **P9 — Perf tohumu tek bayrakta, üç kart için (D9(c), X2).** `Development:SeedGalleryProfile`
+  → `SeedGalleryProfileForDevelopmentAsync` (`DealershipModule`), gerçek yazma yolundan
+  (`GalleryCommands.UpdateProfileAsync`) altı hesabı AC-54'ün kurgusuyla yazar. `0025` programı,
+  `0026` logoyu aynı yönteme ekler; `perf.yml` tek bayrağı açar. e2e ortamı açmaz.
+- **P10 — Testler (X3).** Etiketi değişen eski testler çok etiketli kalır
+  (`0014/AC-14, 0024/AC-33: …`, `0004/AC-52, 0024/AC-45: …`, `0020/AC-16, 0024/AC-33: …`).
+  HTTP kriterleri `tests/Host.Tests/SosyalHesapZinciriTests.cs`'te gerçek PostgreSQL ile; biçim
+  kuralları ayrıca `Dealership.Tests`'te domain düzeyinde. Belge kriterleri `SeoOrtami` ile. Her
+  fabrika `Dispose` edilir (0004 inotify dersi).
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Domain + komut + uç: `SocialPlatform`, `SocialLink` doğrulaması, `ReplaceSocialLinks`, gövde,
+   panel okuması. Domain testleri ve Host zincir testleri (AC-3–AC-26, AC-32, AC-71–AC-77).
+3. Ziyaretçi okuması: DTO, sorgu, eski testlerin çok etiketli hâli (AC-33–AC-36).
+4. Yapısal veri: `sameAs` ve belge testleri (AC-45–AC-53), bütçe testi (AC-54).
+5. Ön yüz vitrin: tipler, `socialPlatforms.ts`, `socialIcons.ts`, `SocialLinks.tsx`, altlık,
+   `manualChunks`, katalog, birim testleri (AC-37–AC-44, AC-60–AC-70, AC-79, AC-81, AC-82).
+6. Ön yüz panel: bölüm, katalog, testler (AC-1, AC-2, AC-19, AC-28–AC-31, AC-57, AC-59).
+7. Paket denetimi (`check-social-icons.mjs`, CI) ve perf tohumu (AC-55, AC-56, AC-66, AC-67).
+8. e2e ve görsel kanıt (AC-3, AC-27, AC-43, AC-62, AC-64, AC-68, AC-70, AC-78, AC-80).
+9. Belgeler: `docs/domain.md` (D12), `docs/architecture.md` karar defteri, `docs/frontend.md`.
+
 ---
 
 ## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-26)
@@ -249,6 +324,12 @@ yönlendirme olur (oltalama) ve `sameAs` spam'e açılır. Sabit sıra saklama g
 - Kullanıcı bilgisi taşımaz. **Yazılmış her port reddedilir**, varsayılan `:443` dâhil *(CLARIFY B1)*.
 - Kırpıldıktan sonra **UTF-8 olarak en çok 200 bayttır** *(CLARIFY B3; önce "200 karakter" idi)*.
 - Boş ya da yalnız boşluk olan değer "bu platformda hesap yok" demektir.
+- *(QA 2 BULGU-2:)* RFC 3986'nın bir adreste izin vermediği karakterleri **taşımaz**: kontrol
+  karakterleri (NUL dâhil), her türlü boşluk, `"` `<` `>` `\` `^` `` ` `` `{` `|` `}` ve yön
+  denetimleri (U+200E, U+200F, U+202A–U+202E, U+2066–U+2069). Bunlar `gallery.social_link_invalid`
+  (`422`) alır. *Revizyon (2026-11-26, AP-08): ilk metin bu karakterleri saymıyordu; `Uri` onları
+  kaçırıp kabul ediyor, değer ise ham saklanıyordu ve NUL veritabanında `500`'e dönüşüyordu (QA 2
+  BULGU-2) — Proje Yöneticisi kararı.*
 
 Sorgu dizesi serbesttir: Facebook'un adsız sayfaları `profile.php?id=…` biçimindedir. Değer
 kırpılarak, başka bir değişiklik yapılmadan saklanır.
@@ -306,8 +387,9 @@ cevabıyla yeniden yazıldı, sahip kararı, 2026-11-26.)*
 - Simge temanın metin rengiyle (`currentColor`) basılır ve SVG'de sabit renk yoktur. Görünen boyutu
   24 CSS pikseldir. **Dokunma hedefi en az 44×44 CSS pikseldir.** Klavye odağı görünür.
 - Hedef kayıtlı adrestir. Bağlantı `rel="me"` taşır ve `target` taşımaz (aynı sekmede açılır).
-- Simgeler ayrı bir parçadan gelir (D9(b)). Parça gelene kadar bağlantı kutusu son boyutundadır,
-  yani simge geldiğinde yer kaymaz. **Parça yüklenemezse** (*CLARIFY B5:* parçanın dinamik içe
+- Simgeler ayrı bir parçadan gelir (D9(b)). *(QA 2 revizyonu:)* Parça gelene kadar blok **hiç
+  basılmaz**; parça geldiğinde simgeli bağlantılar son boyutlarıyla (44×44) bir kez basılır ve
+  sonra yer değiştirmez. **Parça yüklenemezse** (*CLARIFY B5:* parçanın dinamik içe
   aktarması reddedilirse) her bağlantı platformun adını görünür metin olarak gösterir ve hedefi
   değişmez. Bu durumda kutu metne göre genişleyebilir. Altlık C3'ün mobil görüntü alanında ilk
   ekranın altında olduğu için bu kayma C3'ün ölçtüğü ilk ekran CLS'ine girmez (**AC-80** bunu ölçer).
@@ -323,7 +405,12 @@ simge istedi. Erişilebilir ad, ekran okuyucunun simgeyi "Instagram" diye okumas
 renk, marka kullanım kurallarına takılmamak içindir. 44 piksel dokunma hedefi WCAG 2.5.5'in
 değeridir. Yeni sekme açmamak erişilebilirlik varsayılanıdır.
 *Bedel:* liste, detay ve içerik sayfalarında hesaplar görünmez (X4). Simgeler marka renginde
-değildir. Simge parçası hesaplı ana sayfaya bir istek ekler.
+değildir. Simge parçası hesaplı ana sayfaya bir istek ekler. *(QA 2 revizyonu:)* Blok parça gelene
+kadar hiç basılmadığı için ziyaretçi parça gelmeden altlığa kaydırırsa "Diller" bölümü aşağı kayar.
+Bu ekranın altında kaldığından C3'ün CLS'ine girmez (AC-80); görüntü alanı yaklaşık 2271 px'ten
+uzun ekranlarda ilk ekranda görünebilir — kabul edilmiş risk. *Revizyon (2026-11-26, AP-08): blok
+bütünüyle tembel parçaya taşındı, bekleyen kutuları girişte çizmek ilk paket bütçesini aşıyordu
+(QA 2 BULGU-1) — Proje Yöneticisi kararı.*
 
 **D7 — Ziyaretçiye dönük okuma `socialLinks` dizisini taşır.** (R6, C2) Her öğe yalnız `platform`
 (kod) ve `url` taşır ve öğeler D1'in sırasıyla dizilir. Hiç hesap yoksa dizi **boştur**, `null`
@@ -345,8 +432,9 @@ yoktur. Görünen ad okunamazsa blok hiç basılmaz (`0004` **D15**), `sameAs` d
   `&` yok.
 - **(b)** *(SS3'ün cevabıyla yeniden yazıldı.)* **Simgeler ne ilk pakete ne belgeye girer: ayrı,
   tembel yüklenen bir parçadadırlar.**
-  - İlk paket ADR 0013'ün protokolüyle (giriş JS + giriş CSS, `gzip -9`) `main` tabanına göre **en
-    çok 512 B** büyür. Giriş JS'i simge yollarını taşımaz.
+  - İlk paket `main` tabanına göre **en çok 512 B** büyür. *(QA 2 revizyonu:)* "İlk paket" = giriş
+    JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in `modulepreload` ettiği her
+    JS, `gzip -9`. Giriş JS'i simge yollarını taşımaz. *Revizyon (2026-11-26, AP-08): protokol tek dosyalı girişe göre yazılmıştı; ikinci kritik dosya sayılmıyordu (QA 2 BULGU-1) — Proje Yöneticisi kararı.*
   - Simge parçası **sabit adlı tek bir dosyadır** (`social-icons`): dinamik içe aktarmayla yüklenir ve
     adı derleme yapılandırmasında belirlenir *(CLARIFY B4)*. `gzip -9` ile **en çok 3072 B**'tır.
     Beş yolun ölçülen modül boyutu 1750 B (Context).
@@ -372,7 +460,8 @@ gelene kadar bağlantılar simgesizdir.
 
 **D11 — Hata kodları ve alan anahtarları.** (C9) Alan anahtarı `socialLinks.<kod>`.
 - `gallery.social_link_invalid`: D2'nin biçim kuralları.
-- `gallery.social_link_too_long`: 200 karakteri aşan adres.
+- `gallery.social_link_too_long`: kırpıldıktan sonra UTF-8 olarak 200 baytı aşan adres *(QA 2: metin
+  "200 karakter" diyordu, D2 ve kod bayt sayıyor)*.
 - `gallery.social_platform_unknown`: D1'de olmayan kod. Bu kodun alan anahtarı gövdedeki kodu taşır.
 
 Panel üçünü de çevirir. Alan hatası `422`'dir (`DealershipProblems`, `DealershipAdminEndpoints.cs:160-168`).
@@ -546,8 +635,9 @@ düşer, (b) ayrı kullanım şartları getirir. İkisi de "marka kurallarına t
 - **AC-54.** Kurgulanmış en kötü durumda (altı platformun hepsi, her adres **tam 200 bayt** ve yolu
   Arapça harflerle doldurulmuş, hiçbirinde `&` yok; CLARIFY B3) `/ar/` ana sayfa belgesi, aynı kurulumun hesapsız `/ar/` belgesinden
   en çok **1536 B** büyüktür.
-- **AC-55.** İlk paket (giriş JS + giriş CSS, `gzip -9`, ADR 0013) `main` tabanına göre en çok
-  **512 B** büyür.
+- **AC-55.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
+  `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **512 B** büyür.
+  *Revizyon (2026-11-26, AP-08): protokol tek dosyalı girişe göre yazılmıştı; ikinci kritik dosya sayılmıyordu (QA 2 BULGU-1) — Proje Yöneticisi kararı.*
 - **AC-56.** Perf koşusu altı hesabı AC-54'ün kurgusuyla tohumlar. C3 ana sayfa, liste ve detayda
   yeşildir. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi PR'da yazılıdır.
 - **AC-57.** Bu kartla vitrin kataloğuna yalnız blok başlığının anahtarı eklenir. Panelin metinleri
@@ -578,8 +668,12 @@ düşer, (b) ayrı kullanım şartları getirir. İkisi de "marka kurallarına t
   ana sayfada ve liste, detay, içerik sayfalarında istenmez.
 - **AC-69.** Simge parçasının dinamik içe aktarması reddedildiğinde her hesap bağlantısı platformun adını görünür metin
   olarak gösterir ve hedefi kayıtlı adres olarak kalır.
-- **AC-70.** Simge parçası başarıyla geldiğinde, gelmeden önceki ve sonraki hesap bağlantılarının
-  konumu ve boyutu aynıdır. (Parça reddedildiğinde kutu metne göre genişleyebilir; AC-80.)
+- **AC-70.** Simge parçası gelene kadar "Bizi takip edin" bloğu basılmaz. Parça geldiğinde simgeli
+  bağlantılar son boyutlarıyla (44×44) basılır ve sayfa yüklemesi bitene kadar konumları ve
+  boyutları değişmez. (Parça reddedildiğinde kutu metne göre genişleyebilir; AC-80.)
+  *Revizyon (2026-11-26, AP-08): ilk metin "gelmeden önceki ve sonraki bağlantıların konumu aynıdır"
+  diyordu; blok bütünüyle tembel parçaya taşınınca (QA 2 BULGU-1) "önce" bağlantı yok — Proje
+  Yöneticisi kararı.*
 
 ### QA CLARIFY turuyla eklenenler (2026-11-26)
 
@@ -606,6 +700,11 @@ düşer, (b) ayrı kullanım şartları getirir. İkisi de "marka kurallarına t
   Dokunma hedefi diğer bağlantılarla aynı, en az 44×44 CSS pikseldir (**D13**).
 - **AC-82.** Simge kaynak dosyasının notu Simple Icons'ın sürümünü (`16.38.1`) ve beş simgenin
   marka kuralı bağlantılarını anar.
+
+### QA 2 revizyonuyla eklenenler (2026-11-26, AP-08, Proje Yöneticisi kararı)
+
+- **AC-83.** NUL, satır sonu, U+202E ya da `"><script>` içeren bir adresle kaydetme `422` ve
+  `gallery.social_link_invalid` döner; hiçbir hesap değişmez (D2, QA 2 BULGU-2).
 
 
 ---

@@ -14,6 +14,7 @@ import { useLocale } from './localeContext'
 export function HomeFooter({
   branches,
   corporate,
+  social,
 }: {
   readonly branches: ReactNode
   /**
@@ -21,6 +22,11 @@ export function HomeFooter({
    * aynı okumadan beslenir ve ana sayfaya ikinci bir `Content` isteği eklenmez.
    */
   readonly corporate: readonly ContentNavigationLink[]
+  /**
+   * `0024` D6 — "Bizi takip edin" bloğu; şube bloğu gibi ÇAĞIRANDAN gelir ve aynı galeri
+   * okumasından beslenir (D7: ikinci istek yok). "Kurumsal"dan sonra, "Diller"den önce.
+   */
+  readonly social?: ReactNode
 }) {
   const { locale: current, t } = useLocale()
 
@@ -62,6 +68,8 @@ export function HomeFooter({
             ))}
           </nav>
         )}
+
+        {social}
 
         <nav className="home-footer__nav" aria-label={t('home.footer.languages')}>
           <h2 className="home-footer__heading">{t('home.footer.languages')}</h2>

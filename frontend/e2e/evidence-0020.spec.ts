@@ -278,7 +278,7 @@ test('0020/AC-11, AC-12: Arapça sayfada ad Arapça ve satırın başında (sağ
   }
 })
 
-test('0020/AC-13, AC-16: Türkçe giriş satırı görünen adı gösterir; unvan ve sicil hiçbir vitrin yanıtında yok', async ({
+test('0020/AC-13, AC-16, 0024/AC-33: Türkçe giriş satırı görünen adı gösterir; unvan ve sicil hiçbir vitrin yanıtında yok', async ({
   page,
 }) => {
   await page.goto('/tr/')
@@ -288,7 +288,8 @@ test('0020/AC-13, AC-16: Türkçe giriş satırı görünen adı gösterir; unva
   const yanit = (await (
     await page.request.get('/api/dealership/gallery?locale=tr')
   ).json()) as Record<string, unknown>
-  expect(Object.keys(yanit).sort()).toEqual(['branches', 'displayName'])
+  // `0024` D7 — `socialLinks` bilerek eklendi (Host ikizi `GaleriYonetimiZinciriTests`, 0020/AC-16).
+  expect(Object.keys(yanit).sort()).toEqual(['branches', 'displayName', 'socialLinks'])
   const { taxNumber } = await galeri(page.request)
   if (taxNumber !== null) {
     expect(await page.content()).not.toContain(taxNumber)

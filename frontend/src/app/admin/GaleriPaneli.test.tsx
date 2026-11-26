@@ -8,6 +8,11 @@ import { catalogKeys, createTranslator } from '../../shared/i18n/i18n'
 import type { AppLocale } from '../../shared/lib/locale'
 import type { AdminView } from '../../shared/lib/route'
 import { AdminApp } from './AdminApp'
+import vitrinAr from '../../shared/i18n/locales/ar.json'
+import vitrinEn from '../../shared/i18n/locales/en.json'
+import vitrinTr from '../../shared/i18n/locales/tr.json'
+
+const vitrin = { tr: vitrinTr, ar: vitrinAr, en: vitrinEn } as const
 
 /**
  * `0020` — panelin galeri ve şubeler ekranları gerçek kabuğun içinde; yalnız API istemcileri
@@ -72,6 +77,8 @@ const GALERI: AdminGallery = {
   taxNumber: '1234567890',
   tradeRegistryNumber: 'TR-123456',
   displayNames: { tr: 'Oto Galeri', ar: 'أوتو غاليري' },
+  // `0024` — panel okumasının yeni alanı; hesapsız kurulum, 0020'nin beklentileri değişmez.
+  socialLinks: {},
   version: 4,
 }
 
@@ -618,6 +625,178 @@ describe('0020/AC-73: Arapça panelde galeri ve şube formları sağdan sola dü
 
     for (const field of screen.getAllByLabelText('العربية')) {
       expect(field.getAttribute('dir')).toBe('auto')
+    }
+  })
+})
+
+// ── 0024 — sosyal hesaplar bölümü (R1, R8 · D5) ──────────────────────────────
+
+const PLATFORMLAR = ['Instagram', 'Facebook', 'YouTube', 'TikTok', 'X', 'LinkedIn']
+
+function sosyal() {
+  return within(screen.getByTestId('gallery-social-links'))
+}
+
+describe('0024/AC-1, AC-2: "Sosyal hesaplar" bölümü D1 sırasıyla altı adres alanı gösterir; etiket platform adıdır, kayıtlı hesap dolu, olmayan boş gelir', () => {
+  it('altı alan, sıra ve değerler', async () => {
+    vi.mocked(api.fetchGalleryProfile).mockResolvedValue({
+      ...GALERI,
+      socialLinks: {
+        youtube: 'https://www.youtube.com/@oto',
+        instagram: 'https://www.instagram.com/oto',
+      },
+    })
+    await panel('gallery')
+    await screen.findByTestId('gallery-social-links')
+
+    const alanlar = sosyal().getAllByRole('textbox')
+    expect(
+      alanlar.map((alan) => document.querySelector(`label[for="${alan.id}"]`)?.textContent),
+    ).toEqual(PLATFORMLAR)
+    expect(alanlar.map((alan) => (alan as HTMLInputElement).value)).toEqual([
+      'https://www.instagram.com/oto',
+      '',
+      'https://www.youtube.com/@oto',
+      '',
+      '',
+      '',
+    ])
+    for (const alan of alanlar) {
+      expect(alan.getAttribute('type')).toBe('url')
+      expect(alan.getAttribute('inputmode')).toBe('url')
+    }
+  })
+})
+
+describe('0024/AC-3, AC-5: Kaydetme altı kodun hepsini gönderir; yazılan adres gider, boşaltılan alan boş değer olarak gider (sunucu siler)', () => {
+  it('küme bütünüyle gönderilir', async () => {
+    vi.mocked(api.saveGalleryProfile).mockResolvedValue(5)
+    vi.mocked(api.fetchGalleryProfile).mockResolvedValue({
+      ...GALERI,
+      socialLinks: { youtube: 'https://www.youtube.com/@silinecek' },
+    })
+    await panel('gallery')
+    await screen.findByTestId('gallery-social-links')
+
+    fireEvent.change(sosyal().getByLabelText('Instagram'), {
+      target: { value: 'https://www.instagram.com/yeni' },
+    })
+    fireEvent.change(sosyal().getByLabelText('YouTube'), { target: { value: '' } })
+    fireEvent.click(screen.getByTestId('gallery-save'))
+
+    await screen.findByTestId('dealership-saved')
+    expect(vi.mocked(api.saveGalleryProfile).mock.calls[0][1].socialLinks).toEqual({
+      instagram: 'https://www.instagram.com/yeni',
+      facebook: '',
+      youtube: '',
+      tiktok: '',
+      x: '',
+      linkedin: '',
+    })
+  })
+})
+
+describe('0024/AC-19, AC-18: Alan hatası ilgili adres alanının altında, ekranın dilinde görünür; yazılan değer alanda kalır', () => {
+  it.each<[AppLocale, string, string]>([
+    ['tr', 'Instagram', 'Adres bu platforma ait bir hesap adresi değil.'],
+    ['ar', 'Instagram', 'العنوان ليس عنوان حساب على هذه المنصة.'],
+  ])('%s', async (locale, etiket, baslangic) => {
+    vi.mocked(api.saveGalleryProfile).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'socialLinks.instagram,socialLinks.x',
+        'socialLinks.instagram': 'gallery.social_link_invalid',
+        'socialLinks.x': 'gallery.social_link_too_long',
+      }),
+    )
+    await panel('gallery', 'manager', locale)
+    await screen.findByTestId('gallery-social-links')
+
+    fireEvent.change(sosyal().getByLabelText(etiket), {
+      target: { value: 'http://www.instagram.com/x' },
+    })
+    fireEvent.click(screen.getByTestId('gallery-save'))
+
+    const hata = await screen.findByTestId('gallery-social-instagram-error')
+    expect(hata.textContent?.startsWith(baslangic)).toBe(true)
+    expect(screen.getByTestId('gallery-social-x-error').textContent).toBe(
+      createTranslator(locale)('dealership.fieldError.gallery_social_link_too_long'),
+    )
+    expect(sosyal().getByLabelText(etiket)).toHaveProperty('value', 'http://www.instagram.com/x')
+    expect(sosyal().getByLabelText(etiket).getAttribute('aria-invalid')).toBe('true')
+  })
+})
+
+describe('0024/AC-27, AC-28, AC-29: Erişim yok, yükleniyor ve hata durumlarında sosyal hesap alanları basılmaz', () => {
+  it('Satış Danışmanı "erişim yok" görür', async () => {
+    await panel('gallery', 'sales_advisor')
+
+    expect(await screen.findByTestId('admin-no-access')).toBeTruthy()
+    expect(screen.queryByTestId('gallery-social-links')).toBeNull()
+  })
+
+  it('okunurken yükleniyor durumu', async () => {
+    vi.mocked(api.fetchGalleryProfile).mockReturnValue(new Promise(() => {}))
+    await panel('gallery')
+
+    expect(await screen.findByTestId('gallery-loading')).toBeTruthy()
+    expect(screen.queryByTestId('gallery-social-links')).toBeNull()
+  })
+
+  it('okuma hata verince hata ve yeniden deneme', async () => {
+    vi.mocked(api.fetchGalleryProfile).mockRejectedValueOnce(
+      new ApiError('api.unavailable', null, 500),
+    )
+    await panel('gallery')
+
+    const hata = await screen.findByTestId('gallery-error')
+    expect(within(hata).getByRole('button')).toBeTruthy()
+    expect(screen.queryByTestId('gallery-social-links')).toBeNull()
+  })
+})
+
+describe('0024/AC-30, AC-31: Hesapsız galeride altı boş alan ve yardım metni; ar panelinde başlık ve yardım Arapça, adres alanları soldan sağa', () => {
+  it.each<AppLocale>(['tr', 'ar', 'en'])('%s', async (locale) => {
+    await panel('gallery', 'manager', locale)
+    await screen.findByTestId('gallery-social-links')
+    const t = createTranslator(locale)
+
+    expect(sosyal().getByText(t('dealership.gallery.social.title')).tagName).toBe('LEGEND')
+    expect(sosyal().getByText(t('dealership.gallery.social.hint'))).toBeTruthy()
+    const alanlar = sosyal().getAllByRole('textbox')
+    expect(alanlar).toHaveLength(6)
+    expect(alanlar.every((alan) => (alan as HTMLInputElement).value === '')).toBe(true)
+    expect(alanlar.every((alan) => alan.getAttribute('dir') === 'ltr')).toBe(true)
+  })
+
+  it("tr yardım metni AC-30'un cümlesidir, ar metni Arapçadır", () => {
+    expect(createTranslator('tr')('dealership.gallery.social.hint')).toContain(
+      'Boş bırakılan platform vitrinde görünmez',
+    )
+    expect(createTranslator('ar')('dealership.gallery.social.title')).toMatch(/\p{Script=Arabic}/u)
+    expect(createTranslator('ar')('dealership.gallery.social.hint')).toMatch(/\p{Script=Arabic}/u)
+  })
+})
+
+describe('0024/AC-57, AC-59: Panel metinleri panel kataloğunda ve üç dilde; vitrin kataloğuna yalnız blok başlığı eklendi', () => {
+  it('anahtarlar', () => {
+    const panelAnahtarlari = [
+      'dealership.gallery.social.title',
+      'dealership.gallery.social.hint',
+      'dealership.fieldError.gallery_social_link_invalid',
+      'dealership.fieldError.gallery_social_link_too_long',
+      'dealership.fieldError.gallery_social_platform_unknown',
+    ]
+    for (const locale of ['tr', 'ar', 'en'] as const) {
+      for (const anahtar of [...panelAnahtarlari, 'home.footer.follow']) {
+        expect(catalogKeys(locale)).toContain(anahtar)
+      }
+      // ADR 0013 — vitrin kataloğu panel metni taşımaz; vitrine eklenen tek anahtar blok başlığı.
+      for (const anahtar of panelAnahtarlari) {
+        expect(Object.keys(vitrin[locale])).not.toContain(anahtar)
+      }
+      expect(
+        Object.keys(vitrin[locale]).filter((anahtar) => /social|follow/.test(anahtar)),
+      ).toEqual(['home.footer.follow'])
     }
   })
 })

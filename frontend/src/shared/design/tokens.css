@@ -146,6 +146,9 @@
   --card-min-inline-size: 240px;
   --media-aspect-ratio: 4 / 3;
 
+  /* `0024` D6 — dokunma hedefi (WCAG 2.5.5). */
+  --touch-target-min-size: 44px;
+
   /* Daraltma çubuğunun ölçülmüş yüksekliği: legend + seçenek satırı + özet satırı.
      Hem İSKELET hem GERÇEK çubuk bu yüksekliği tutar (styles.css `.filter-bar`), yoksa
      çubuk belirdiğinde altındaki her şey kayar (CLS).

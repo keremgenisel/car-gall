@@ -9,6 +9,20 @@ export default defineConfig({
   build: {
     outDir: '../src/Host/wwwroot',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // `0024` D9(b) — tembel blok parçasının (bileşen + simge yolları) adı SABİT (`social-icons-<hash>.js`). `manualChunks`
+        // DEĞİL: o, paylaşılan bir çalışma zamanı parçası üretip girişe statik bağlıyordu ve
+        // kritik yola ikinci bir JS dosyası ekliyordu (QA 2 BULGU-1).
+        chunkFileNames(chunk) {
+          return /\/features\/dealership\/socialIconLinks\.[jt]sx?$/.test(
+            chunk.facadeModuleId ?? '',
+          )
+            ? 'assets/social-icons-[hash].js'
+            : 'assets/[name]-[hash].js'
+        },
+      },
+    },
   },
   server: {
     proxy: {

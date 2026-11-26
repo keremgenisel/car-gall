@@ -40,7 +40,11 @@ beforeEach(() => {
   vi.mocked(catalog.fetchBodyTypes).mockResolvedValue([{ slug: 'suv', label: 'SUV' }])
   vi.mocked(catalog.fetchShowcaseTotal).mockResolvedValue(12)
   vi.mocked(catalog.fetchFeaturedListings).mockResolvedValue([])
-  vi.mocked(fetchGallery).mockResolvedValue({ displayName: 'Örnek Otomotiv', branches: [] })
+  vi.mocked(fetchGallery).mockResolvedValue({
+    displayName: 'Örnek Otomotiv',
+    branches: [],
+    socialLinks: [],
+  })
   vi.mocked(fetchContentNavigation).mockResolvedValue([])
 })
 

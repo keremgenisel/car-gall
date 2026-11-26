@@ -542,8 +542,16 @@ export interface PublicBranch {
   readonly phone: string
 }
 
+/** `0024` R6 · D7 — platform KODU ve kayıtlı adres; başka alan yok. */
+export interface PublicSocialLink {
+  readonly platform: string
+  readonly url: string
+}
+
 export interface PublicGallery {
   /** `0020` D15 — ziyaretçinin dilindeki görünen ad; ticari unvan public yanıtta YOKTUR. */
   readonly displayName: string
   readonly branches: readonly PublicBranch[]
+  /** `0024` D7 — D1'in sırasıyla; hiç hesap yoksa boş dizi (null değil). */
+  readonly socialLinks: readonly PublicSocialLink[]
 }

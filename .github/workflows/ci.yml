@@ -230,6 +230,11 @@ jobs:
       - name: Production build
         run: npm run build
 
+      # 0024 D9(b) · AC-66, AC-67 — simgeler tek, tembel, sabit adlı parçada (≤ 3072 B gzip -9);
+      # giriş JS'i yol verisi taşımaz ve parçayı statik içe aktarmaz.
+      - name: Simge parçası denetimi
+        run: npm run check:social-icons
+
   e2e:
     name: E2E — kritik akışlar, üç durum ve RTL
     runs-on: ubuntu-latest
