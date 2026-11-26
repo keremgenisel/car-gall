@@ -20,16 +20,13 @@ internal static class SeedMediaAssets
     /// <summary>Tohum kimliğinin ilk dört baytı; gerçek UUIDv7'nin zaman damgasıyla çakışmaz.</summary>
     private static readonly byte[] Marker = [0x5E, 0xED, 0x00, 0x16];
 
-    /// <summary>Tohum yuvasının kimliği; aynı girdiler her kurulumda aynı kimliği verir.</summary>
-    private static Guid Logo()
-    {
-        byte[] bytes = new byte[16];
-        Marker.CopyTo(bytes, 0);
-        bytes[8] = 0xFF;
-        bytes[9] = (byte)MediaProcessingStatus.Ready;
-        return new Guid(bytes);
-    }
+    /// <summary>
+    /// `0026` P9 · AC-59 — perf koşusunun galeri logosu: aynı işaretli kimlik alanında, konum baytı
+    /// 0xFF. Türü <c>Logo</c>, hazır; türevleri `/seed-media/` çerçeveleri (320×80, 1200×300).
+    /// </summary>
+    internal static readonly Guid LogoId = Logo();
 
+    /// <summary>Tohum yuvasının kimliği; aynı girdiler her kurulumda aynı kimliği verir.</summary>
     internal static Guid Id(int listingIndex, int position, MediaProcessingStatus status, int frame, int aspectWidth, int aspectHeight)
     {
         byte[] bytes = new byte[16];
@@ -44,13 +41,17 @@ internal static class SeedMediaAssets
         return new Guid(bytes);
     }
 
-    /// <summary>Tohum kimliğiyse `Media`'nın vereceği varlık; değilse <c>null</c>.</summary>
-    /// <summary>
-    /// `0026` P9 · AC-59 — perf koşusunun galeri logosu: aynı işaretli kimlik alanında, konum baytı
-    /// 0xFF. Türü <c>Logo</c>, hazır; türevleri `/seed-media/` çerçeveleri (320×80, 1200×300).
-    /// </summary>
-    internal static readonly Guid LogoId = Logo();
+    /// <summary>`0026` — tohum logosunun kimliği; fotoğraf kimliklerinin konum baytı 0xFF'e ulaşmaz.</summary>
+    private static Guid Logo()
+    {
+        byte[] bytes = new byte[16];
+        Marker.CopyTo(bytes, 0);
+        bytes[8] = 0xFF;
+        bytes[9] = (byte)MediaProcessingStatus.Ready;
+        return new Guid(bytes);
+    }
 
+    /// <summary>Tohum kimliğiyse `Media`'nın vereceği varlık; değilse <c>null</c>.</summary>
     internal static MediaAssetDto? Describe(Guid id)
     {
         Span<byte> bytes = stackalloc byte[16];
