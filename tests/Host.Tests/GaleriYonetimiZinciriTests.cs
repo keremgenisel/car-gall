@@ -320,9 +320,10 @@ public sealed class GaleriYonetimiZinciriTests : IAsyncLifetime
 
         Assert.Equal(["branches", "displayName"], belge.RootElement.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
 
+        // `0004` D7 ile bilerek değişti: yayında olmayan `/tr/hakkimizda` belgesi artık 404; gövde yine okunur.
         foreach (string adres in new[] { "/tr/", "/tr/cars", "/tr/hakkimizda", "/api/dealership/gallery?locale=ar" })
         {
-            string metin = await ziyaretci.GetStringAsync(adres);
+            string metin = await (await ziyaretci.GetAsync(adres)).Content.ReadAsStringAsync();
             Assert.DoesNotContain("Gizli Unvan", metin, StringComparison.Ordinal);
             Assert.DoesNotContain("9876543210", metin, StringComparison.Ordinal);
             Assert.DoesNotContain("SICIL-777", metin, StringComparison.Ordinal);
@@ -347,9 +348,11 @@ public sealed class GaleriYonetimiZinciriTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, (await GaleriKaydetAsync(await GaleriSurumuAsync(), "Oto Galeri", "Dört Sayfa Adı")).StatusCode);
         HttpClient ziyaretci = Istemci();
 
+        // `0004` D7 ile bilerek değişti: olmayan ilanın ve yayında olmayan sayfanın belgesi artık 404;
+        // görünen ad o belgede de basılır, gövde yine okunur.
         foreach (string adres in new[] { "/tr/", "/tr/cars", "/tr/cars/toyota-corolla-2019-abc123", "/tr/hakkimizda" })
         {
-            Assert.Contains("<meta name=\"gallery-display-name\" content=\"Dört Sayfa Adı\" />", await ziyaretci.GetStringAsync(adres), StringComparison.Ordinal);
+            Assert.Contains("<meta name=\"gallery-display-name\" content=\"Dört Sayfa Adı\" />", await (await ziyaretci.GetAsync(adres)).Content.ReadAsStringAsync(), StringComparison.Ordinal);
         }
     }
 

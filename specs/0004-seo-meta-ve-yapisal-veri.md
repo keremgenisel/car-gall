@@ -530,9 +530,12 @@ kullanılır.
 
 **D17 — Performans bütçesi.** (R11, C12)
 (a) Detay belgesinde bu kartın eklediği etiketlerin (başlık, açıklama, kanonik, alternatifler,
-Open Graph, JSON-LD) toplam boyutu, sıkıştırmasız, **en çok 4096 bayt**tır. Ölçüm *(CLARIFY
+Open Graph, JSON-LD) toplam boyutu, sıkıştırmasız, **en çok 6144 bayt**tır. Ölçüm *(CLARIFY
 B12)* kurgulanmış en kötü durumda, **ar** belgesinde yapılır: alan sınırındaki uzunlukta model
-adı, ilanın görsel üst sınırı kadar görsel, en uzun şube adı.
+adı, ilanın görsel üst sınırı kadar görsel, en uzun şube adı, alan sınırındaki uzunlukta görünen
+ad ve en uzun slug. *Revizyon (2026-11-26, AP-08): kurgu en kötü durum değildi (QA 2 BULGU-1) —
+Proje Yöneticisi kararı. Bütçe 4096 → 6144 B: aşan baytlar etiket sayısından değil verinin izin
+verilen uzunluğundan geliyor; LCP'yi koruyan asıl kapı C3. P10'un üç görsel sınırı kalır.*
 (b) ADR 0013'ün protokolüyle (giriş JS + giriş CSS, `gzip -9`) ilk paket `main` tabanına göre
 **en çok 512 B** büyür.
 (c) C3 ana sayfa, liste ve detayda yeşil kalır. Bir sayfanın medyanı **2450 ms**'yi aşarsa ikinci
@@ -607,6 +610,76 @@ listenin varsayılanlarını Host'a kopyalamak olurdu (C3). Kanoniği olmayan bi
 ve `og:url`'i de tutarsız sinyal verir.
 *Bedel:* küme ön yüzde yaşıyor; yeni bir liste ekseni eklendiğinde Host'un kümesi de güncellenmeli.
 Kriter (AC-68) bunu yakalamaz, uygulama ikisini tek kaynaktan türetmeli.
+
+### Verilen kararlar — plan turu, 2026-11-26 (P1–P10)
+
+Developer'ın uygulama kararları (Proje Yöneticisi görevlendirmesi, 2026-11-26). R/C/AC'ye
+dokunmaz; her biri spec'in Developer'a bıraktığı bir noktayı kapatır. Ek iki onay görevlendirmeden:
+404 başlığı tek metin `content.notFound.title`; ön yükleme bağlantısı SEO etiketlerinden **önce**.
+
+**P1 — Kök adresin anahtarı değişmez: `Notifications:PublicBaseUrl`. Doğrulaması ve sahipliği
+Host'a geçer.** (D2) Host başlangıçta değeri **D2**'nin kuralıyla doğrular (yalnız `http`/`https`,
+yol yok, sondaki `/` normalize) ve hata mesajı anahtarın adını söyler (AC-22). Normalize edilmiş
+değer hem SEO'ya hem `Notifications`'a gider. *Gerekçe:* anahtarı yeniden adlandırmak `dev-up.sh`,
+iki CI iş akışını, dağıtım ortam değişkenlerini ve `BildirimYapilandirmasiTests`'in iki satırını
+değiştirirdi; tek değer kuralı (D2) adla değil sahiplikle sağlanır. `docs/deploy.md` satırı
+"sitenin kökü" olarak yeniden yazılır. *Bedel:* ad yanıltıcı kalır; yeniden adlandırma ayrı bir öneri.
+
+**P2 — Sabit metinler Host'a dosya olarak gider: vitrin kataloğu + yeni SEO kümesi.** (D12) SEO
+kümesi `frontend/src/shared/i18n/locales/seo/{tr,ar,en}.json` (`seo.*` anahtarları); hiçbir
+ön yüz modülü onu içe aktarmaz, yani vitrin paketine girmez (D17 b). `Host.csproj` vitrin ve SEO
+katalog dosyalarını çıktıya `i18n/` altında bağlar; `Dockerfile`'ın arka yüz aşaması o dizini
+kopyalar. Host başlangıçta okur; kullandığı bir anahtar herhangi bir dilde eksikse **başlamaz**.
+`check:locales` SEO kümesini de ölçer (dil eşitliği, kümeler arası tekrar yok).
+
+**P3 — Listenin okuduğu parametreler tek kaynakta: `frontend/src/features/catalog/listQueryParams.json`.**
+(D23) `listUrlState.ts` adları oradan alır, Host aynı dosyayı P2'nin yoluyla okur. *Gerekçe:* D23'ün
+bedeli ("uygulama ikisini tek kaynaktan türetmeli").
+
+**P4 — Sayı ve para biçimi `BuildingBlocks`'a taşınır.** (AC-7, AC-9) `NewsletterFormat`
+(`0018` D24/D32, `Notifications` içinde internal) `BuildingBlocks/Formatting/ShowcaseFormat`
+olur; `Notifications` ve Host aynı kodu kullanır, Host testi aynı fikstürü ölçer. *Gerekçe:* Host
+başka modülün internal tipine erişemez (C4); kopya iki kaynak olurdu.
+
+**P5 — Detay belgesi TEK okuma yapar: `FindAsync`.** (D7, D17, AC-87) Ön yükleme görseli onun
+`Images[0]`'ıdır: `FindFirstImageAsync` ile aynı kural (yalnız hazır yuvalar, medya sırası,
+`display`'i olmayan düşer — `ShowcaseListingDetailQueries`). Gizli ve olmayan ilan ikisinde de
+aynı yoldan `null` döner (E7). `FindAsync` hata verirse belge bugünkü gibi 200 ile basılır, ön
+yükleme `FindFirstImageAsync`'ten gelir, detaya özgü etiketler basılmaz ve hata loglanır (`0020`
+R5a deseni). *(Proje Yöneticisi şartı, 2026-11-26: tek okuma mümkünse tek okuma; `0016b`'nin ön
+yükleme testi tam yolda ölçülür, yedek yolun ayrı testi var.)*
+
+**P6 — 404 kararı ve etiketler tek yerde: `SeoDocument` (Host).** Kabuk çizici belgeyi yazmadan
+önce sayfa türünü, durum kodunu ve etiketleri ondan alır; ara katman yalnız yönlendirmeleri yapar.
+
+**P7 — Ön yüzde tek bir "bulunamadı" rotası.** (D8, AC-76) `parseRoute` iki ve daha çok parçalı
+tanınmayan yolu, `/{l}/cars/{slug}/…`'yi ve `/{l}/newsletter/…`'nün confirm/unsubscribe dışını
+`not-found` rotasına çevirir; ekran `content.notFound.*` metinli `EmptyState`'tir (404 başlığıyla
+aynı metin, C6).
+
+**P8 — `<title>` yalnız Host'tan.** `frontend/index.html`'deki `<title>CarGallery</title>` kaldırılır
+(D11, AC-15); Host her belgeye tam bir `<title>` yazar.
+
+**P9 — Sitemap ve robots.txt Host'un uç noktaları** (`/sitemap.xml`, `/sitemap-{locale}.xml`,
+`/robots.txt`). Veri yeni üç sözleşmeden gelir: `VehicleCatalog` görünür ilan slug'ları,
+`Content` bir dilde görünen sayfa slug'ları (`FindBySlugAsync`'in kuralıyla, girdisiz SSS dâhil),
+`Dealership` galerinin public okuması (bugün internal olan `IPublicGalleryQueries` sözleşmeye taşınır).
+
+**P10 — Bütçe aşılırsa `image` dizisi sınırlanır** (D17 Bedel). Ölçüm AC-83'ün kurgusuyla; sonuç PR'da.
+
+### Uygulama planı (2026-11-26)
+
+1. Plan ve kararlar (bu bölüm).
+2. Kök adres: `SiteRoot` + başlangıç doğrulaması — AC-22, AC-86 (P1).
+3. Sözleşmeler: `Dealership` public galeri, `VehicleCatalog` görünür slug'lar, `Content` görünen
+   sayfalar — modül başına commit (P9).
+4. Biçim `BuildingBlocks`'a (P4) — AC-7, AC-9'un dayanağı.
+5. SEO kümesi, liste parametrelerinin tek kaynağı, Host'un katalog okuması, `check:locales` (P2, P3).
+6. Belge etiketleri ve 404 kararı (P5, P6, P8) — AC-1–54, AC-67–82, AC-86–88, AC-90–92.
+7. Sitemap ve robots.txt (P9) — AC-55–66, AC-89.
+8. Ön yüz "bulunamadı" rotası (P7), e2e ve görsel kanıt — AC-76, DoD T2.
+9. Belgeler: `docs/architecture.md` § 3 ve Karar Defteri, `docs/deploy.md` — DoD T8.
+10. Ölçüm: AC-83, AC-84, AC-85 (C3); PR.
 
 ---
 
@@ -839,9 +912,11 @@ belirler.
 ### Performans (R11 · C12 · D17)
 
 - **AC-83.** Kurgulanmış en kötü durumdaki bir ilanın **ar** detay belgesinde — model adı alan
-  sınırındaki uzunlukta, görsel sayısı ilanın üst sınırında, şube adı en uzun — bu kartın eklediği
-  etiketlerin (`<title>`, açıklama, kanonik, dil alternatifleri, `og:*`, JSON-LD) sıkıştırmasız
-  toplam boyutu en çok 4096 bayttır.
+  sınırındaki uzunlukta, görsel sayısı ilanın üst sınırında, şube adı en uzun, galerinin görünen
+  adı alan sınırındaki uzunlukta (Arapça), slug en uzun — bu kartın eklediği etiketlerin
+  (`<title>`, açıklama, kanonik, dil alternatifleri, `og:*`, JSON-LD) sıkıştırmasız toplam boyutu
+  en çok 6144 bayttır.
+  *Revizyon (2026-11-26, AP-08): kurgu en kötü durum değildi (QA 2 BULGU-1) — Proje Yöneticisi kararı.*
 - **AC-84.** ADR 0013 protokolüyle ölçülen ilk paket (giriş JS + giriş CSS, `gzip -9`), `main`
   tabanına göre en çok 512 B büyür. İki sayı ve fark PR'da yazılır.
 - **AC-85.** C3 ölçümünde ana sayfa, liste ve detayın medyan LCP'si 2500 ms'nin altındadır.

@@ -12,6 +12,8 @@
  * Yeni alanlar OPSİYONELDİR ve boşken nesnede hiç bulunmaz: bir eksen yoksa durumun şekli
  * `0001`'deki `{ bodyTypes, page }` ile aynıdır.
  */
+
+import LIST_QUERY_PARAMS from './listQueryParams.json'
 export interface ListRange {
   readonly min: number | null
   readonly max: number | null
@@ -50,23 +52,28 @@ export interface ListState {
   readonly sort?: ListSort
 }
 
-export const BODY_TYPE_PARAM = 'bodyType'
-export const PAGE_PARAM = 'page'
+/*
+ * `0004` **D23** · **P3** — listenin okuduğu parametre adlarının TEK kaynağı. Host aynı dosyayı
+ * okur ve bu adlardan biri adreste varsa belgeyi `noindex, follow` yapar; yeni bir eksen yalnız
+ * bu dosyaya eklenirse iki taraf birlikte değişir.
+ */
+export const BODY_TYPE_PARAM = LIST_QUERY_PARAMS.bodyType
+export const PAGE_PARAM = LIST_QUERY_PARAMS.page
 
 const MULTI_PARAMS: Record<MultiAxis, string> = {
   bodyTypes: BODY_TYPE_PARAM,
-  fuels: 'fuel',
-  transmissions: 'transmission',
-  brands: 'brand',
+  fuels: LIST_QUERY_PARAMS.fuel,
+  transmissions: LIST_QUERY_PARAMS.transmission,
+  brands: LIST_QUERY_PARAMS.brand,
 }
 
 const RANGE_PARAMS: Record<RangeAxis, readonly [string, string]> = {
-  year: ['yearMin', 'yearMax'],
-  mileage: ['mileageMin', 'mileageMax'],
-  price: ['priceMin', 'priceMax'],
+  year: [LIST_QUERY_PARAMS.yearMin, LIST_QUERY_PARAMS.yearMax],
+  mileage: [LIST_QUERY_PARAMS.mileageMin, LIST_QUERY_PARAMS.mileageMax],
+  price: [LIST_QUERY_PARAMS.priceMin, LIST_QUERY_PARAMS.priceMax],
 }
 
-const SORT_PARAM = 'sort'
+const SORT_PARAM = LIST_QUERY_PARAMS.sort
 
 export function parseListState(search: string): ListState {
   const params = new URLSearchParams(search)

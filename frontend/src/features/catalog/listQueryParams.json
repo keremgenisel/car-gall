@@ -1,0 +1,14 @@
+{
+  "bodyType": "bodyType",
+  "fuel": "fuel",
+  "transmission": "transmission",
+  "brand": "brand",
+  "yearMin": "yearMin",
+  "yearMax": "yearMax",
+  "mileageMin": "mileageMin",
+  "mileageMax": "mileageMax",
+  "priceMin": "priceMin",
+  "priceMax": "priceMax",
+  "sort": "sort",
+  "page": "page"
+}

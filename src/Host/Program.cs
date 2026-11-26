@@ -1,6 +1,7 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Host;
 using CarGallery.Host.Localization;
+using CarGallery.Host.Seo;
 using CarGallery.Host.Schema;
 using CarGallery.Host.Theme;
 using CarGallery.Modules.Content;
@@ -136,11 +137,21 @@ builder.Services.AddLeads(
 //
 // SMTP kullanıcı adı ve parolası appsettings'te DEĞİL, ortam değişkenindedir — sır repoda
 // durmaz (docs/conventions.md § 11). Geliştirmede user-secrets.
+//
+// `0004` D2 · P1 — `Notifications:PublicBaseUrl` artık SİTENİN köküdür: e-posta bağlantıları,
+// kanonik, sitemap ve robots.txt aynı değeri kullanır. Doğrulama burada, D2'nin kuralıyla
+// (yol yok, yalnız http/https); geçersizse uygulama başlamaz ve mesaj anahtarı söyler.
+SiteRoot siteRoot = SiteRoot.Parse(builder.Configuration[SiteRoot.ConfigurationKey]);
+builder.Services.AddSingleton(siteRoot);
+
+// `0004` D12 · P2 — belge metinleri (vitrin kataloğu + SEO kümesi); eksik anahtarla başlamaz.
+builder.Services.AddSingleton(SeoCatalog.Load(AppContext.BaseDirectory, localization.EnabledLocales));
+
 builder.Services.AddNotifications(new NotificationsSetup(
     connectionString,
     localization.DefaultLocale,
     builder.Configuration["Notifications:SetupNotificationAddress"] ?? string.Empty,
-    builder.Configuration["Notifications:PublicBaseUrl"] ?? string.Empty,
+    siteRoot.Value,
     builder.Configuration["Notifications:SenderAddress"] ?? string.Empty,
     builder.Configuration["Notifications:Smtp:Host"] ?? string.Empty,
     builder.Configuration.GetValue<int?>("Notifications:Smtp:Port") ?? 0,
@@ -222,6 +233,7 @@ builder.Services.AddSingleton(theme.Value);
 
 builder.Services.AddSingleton(new LocalePrefixResolver(localization.DefaultLocale, localization.EnabledLocales));
 builder.Services.AddSingleton<IndexHtmlRenderer>();
+builder.Services.AddSingleton<SeoHeadBuilder>();
 builder.Services.AddSingleton<AdminShellRenderer>();
 
 // `0016b` (triyaj BULGU-3) — tohumun medya varlıkları `Media`'da kayıtlı değil; tohum
@@ -288,6 +300,9 @@ app.MapIdentity();
 app.MapLeads();
 app.MapMedia();
 app.MapNotifications();
+
+// `0004` R7 · R8 — sitemap dizini, dil başına sitemap ve robots.txt (D3–D5).
+app.MapSeo();
 
 // Geliştirme ve görsel kanıt üretimi yolu. Bayrak kapalıyken hiçbir şey kaydedilmez
 // ve bu uç noktalar hiç tanımlanmaz; üretimde erişilebilir bir yüzeyi yoktur.

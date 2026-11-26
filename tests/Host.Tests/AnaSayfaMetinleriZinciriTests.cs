@@ -112,8 +112,9 @@ public sealed class AnaSayfaMetinleriZinciriTests : IAsyncLifetime
         Assert.Contains("<meta name=\"home-text-empty-body\" content=\"Bir&#10;İki\" />", liste, StringComparison.Ordinal);
 
         // D21 — okuma yalnız ana sayfa ve listede: detay ve içerik adresi bu okumayı ödemez.
-        Assert.DoesNotContain("home-text-", await ziyaretci.GetStringAsync("/tr/cars/olmayan-ilan-abc123"), StringComparison.Ordinal);
-        Assert.DoesNotContain("home-text-", await ziyaretci.GetStringAsync("/tr/hakkimizda"), StringComparison.Ordinal);
+        // `0004` D7 ile bilerek değişti: bu iki adresin belgesi artık 404; gövde yine okunur.
+        Assert.DoesNotContain("home-text-", await (await ziyaretci.GetAsync("/tr/cars/olmayan-ilan-abc123")).Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        Assert.DoesNotContain("home-text-", await (await ziyaretci.GetAsync("/tr/hakkimizda")).Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 
     [Fact(DisplayName = "0022/AC-12: `<b>Kalın</b> & \"tırnak\"` olarak kaydedilen giriş başlığı ana sayfada bu karakterlerle metin olarak görünür; kalın yazılmaz ve sayfada yeni bir öğe oluşmaz.")]

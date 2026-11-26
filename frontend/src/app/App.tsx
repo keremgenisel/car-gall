@@ -8,7 +8,7 @@ import { useGallery } from '../features/dealership/useGallery'
 import { LocaleProvider } from './LocaleProvider'
 import { useLocale } from './localeContext'
 import { ListingDetailPage } from '../features/catalog/ListingDetailPage'
-import { ContentPage } from '../features/content/ContentPage'
+import { ContentNotFound, ContentPage } from '../features/content/ContentPage'
 import { ShowcaseListPage } from '../features/catalog/ShowcaseListPage'
 import { LeadForm } from '../features/leads/LeadForm'
 import type { AppLocale } from '../shared/lib/locale'
@@ -106,6 +106,9 @@ export function App({ locale }: { readonly locale: AppLocale }) {
         ) : route.kind === 'content' ? (
           /* `0017` R11 — tek parçalı adres bir içerik sayfası adayıdır (D9). */
           <ContentPage slug={route.slug} />
+        ) : route.kind === 'not-found' ? (
+          /* `0004` D8 — sunucu 404 verir; uç liste değil "bulunamadı" basar. */
+          <ContentNotFound />
         ) : (
           <ShowcaseListPage />
         )}

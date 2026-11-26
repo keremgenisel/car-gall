@@ -82,6 +82,9 @@ public static class VehicleCatalogModule
         services.AddScoped<IFeaturedListingQueries, FeaturedListingQueries>();
         services.AddScoped<IShowcaseBrandQueries, ShowcaseBrandQueries>();
         services.AddScoped<IShowcaseListingDetailQueries, ShowcaseListingDetailQueries>();
+
+        // `0004` P9 — sitemap'in görünür ilan adresleri; aynı okuma modeli.
+        services.AddScoped<IShowcaseSitemapQueries, ShowcaseSitemapQueries>();
         services.AddScoped<IFieldSettingsQueries, FieldSettingsQueries>();
 
         // 0005 R7/R8 — talep anlık görüntüsünün kaynağı. Locale almaz, çeviri çözmez.

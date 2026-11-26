@@ -151,10 +151,10 @@ Olay akışı (outbox, tek yön):
 VehicleCatalog → VehiclePublished / VehicleUnpublished / VehicleReserved /
                  VehicleReturnedToShowcase / VehicleSold / VehicleSaleReverted /
                  VehicleArchived / VehiclePriceChanged / VehicleRelocated
-                   → Engagement, Audit, Content(slot geçersizleme), sitemap(host),
+                   → Engagement, Audit, Content(slot geçersizleme),
                      Notifications (yalnız VehiclePublished — bülten adayı, 0018 D4)
 Dealership     → BranchOpened / BranchDetailsChanged / BranchDeactivated
-                   → VehicleCatalog, Audit, sitemap(host)
+                   → VehicleCatalog, Audit
 Media          → MediaAssetReady / MediaAssetFailed        → VehicleCatalog
 Leads          → LeadCaptured / Assigned / StatusChanged   → Notifications, Audit
 Identity       → StaffDeactivated                          → Leads (açık talepleri yeniden ata), Audit
@@ -324,11 +324,15 @@ Arapça yazmasa bile sayfa Arapça görünür; yalnızca serbest metin fallback'
 
 ### SEO
 - Her sayfa etkin her locale için `hreflang` + `x-default` yayar. Diller birbirinin
-  kanoniği değildir; kanonik URL her zaman kendi locale'inin URL'idir.
-- Locale başına sitemap; `VehiclePublished` / `BranchDetailsChanged` olayları günceller.
-- JSON-LD locale'e göre üretilir: araç sayfalarında `Car` + `Offer`,
-  şube sayfalarında `AutoDealer` + `LocalBusiness` (`openingHoursSpecification` çoklu aralık,
-  `geo`, `telephone`, `sameAs`).
+  kanoniği değildir; kanonik URL her zaman kendi locale'inin URL'idir. İçerik sayfası yalnız
+  yayında olduğu dillerin alternatifini taşır (`0004` D10).
+- Locale başına sitemap ve bir sitemap dizini; **istek anında**, vitrinin o anki hâlinden
+  üretilir. Olaylarla beslenen bir depo yoktur: kaldırma olaylarının tüketicisi yoktu ve
+  olayla beslenen depo ilk açılışta geçmişi alamazdı (`0004` D3, D4).
+- JSON-LD locale'e göre üretilir: araç sayfalarında `Car` + `Offer` (kapalı alan listesi,
+  `0004` D14), ana sayfada galeri düzeyinde `AutoDealer` ve vitrinde görünen şubeleri
+  (`0004` D1, D15). Şube sayfası yok; `openingHoursSpecification`, `geo`, `sameAs`, `logo`
+  ayrı kartlarda (`0004` X3, X4, X9).
 - **Tam SSR yok.** Host `index.html`'i servis ederken rota bazlı `<title>`, meta,
   Open Graph ve JSON-LD enjekte eder.
 
@@ -534,7 +538,7 @@ altındaki ADR'lerdedir.
 | `VehicleCatalog` olaylarının gövdesi | `(EventId, OccurredAt, VehicleId, ListingId, Slug)`; **durum alanı yok** — durumu olayın tipi söyler |
 | Vitrin okuma modeline yazma | **Görünürlük kararı** yalnız yansıtmada; kopyalanmış kolonları (kapak URL'i, şube adları, galeri yuvalarının durumu ve türevleri) besleyen işleyiciler bunun dışında |
 | Vitrin galerisi | Okuma modelinde ayrı tablo (`showcase_listing_media`): konum, durum, türevlerin gerçek boyutu; `MediaAssetReady`/`MediaAssetFailed` günceller, detay isteği `Media`'yı çağırmaz (`0016b` D25) |
-| İçerik sayfası adresi | `/{locale}/{slug}`; slug dil başına ve Latin. Tek parçalı tanınmayan yol içerik adayıdır (listeye düşmez), iki parçalı tanınmayan yol listeye düşer. Ayrılmış adlar (`cars`, `admin`, `api`, `assets`) `Content.Contracts`'ta tek yerde (`0017` D9, D11) |
+| İçerik sayfası adresi | `/{locale}/{slug}`; slug dil başına ve Latin. Tek parçalı tanınmayan yol içerik adayıdır (listeye düşmez); iki ve daha çok parçalı tanınmayan yol `404` ve "bulunamadı" (`0004` D8 — `0017` D9'un "listeye düşer" yarısı kalktı). Ayrılmış adlar (`cars`, `admin`, `api`, `assets`) `Content.Contracts`'ta tek yerde (`0017` D9, D11) |
 | Eski içerik slug'ı | Kabuk, ayrılmamış tek parçalı yolda `Content`'e "eski slug mu" diye sorar; eşleşirse tek `301` ile güncel adrese (zincir yok); diğer adresler okuma yapmaz (`0017` D13, D27, D33) |
 | İçerik gövdesi | CommonMark alt kümesi ham saklanır; ziyaretçi tarafı doğrudan arayüz öğelerine çizer, hiçbir aşamada HTML üretmez. Sunucu yalnız izinsiz bağlantı şemasını reddeder; ham HTML metin olarak basılır (`0017` D19, D26) |
 | İçerik yazma yetkisi | `AdminSurface.ContentPolicy`: Yönetici + İçerik Editörü; rol kontrolü `Identity`'nin politikasında, `Content` rol kodu karşılaştırmaz (`0017` D25) |
@@ -575,4 +579,9 @@ altındaki ADR'lerdedir.
 | Kontrast güvencesi | Başlangıçta doğrulanır — karşılanmazsa uygulama ayağa kalkmaz; varsayılan palet için ayrıca CI testi |
 | Tipografi | V1'de yapılandırılamaz; yazı tipleri kendi kaynağımızdan servis edilir |
 | İzin anındaki aydınlatma metni | `Content`, `privacy`'nin bir dili taslaktan yayına geçtiğinde ya da yayındaki dilin başlığı/gövdesi değiştiğinde **değişmez bir sürüm** yazar (yalnız eklenir; `UPDATE`/`DELETE` veritabanında deyim düzeyinde reddedilir). Talep kaydedilirken `Leads`, `Content.Contracts`'tan o dilde yayındaki sürümü **tek atlamayla** okur ve kimliğini + durumunu (`published` · `not_published` · `not_recorded`) tutar; okuma hata verirse talep yazılmaz. `Content` yaprak değildir (`0019` D1, D8, D9, D14) |
+| Sitemap | İstek anında, vitrinin o anki hâlinden: `/sitemap.xml` dizini + `/sitemap-{locale}.xml`; olayla beslenen depo yok, `lastmod` yok (`0004` D3, D4) |
+| Belge etiketleri (SEO) | Host kabuğu yazarken sayfa türünü, durum kodunu ve başlık/açıklama/kanonik/alternatif/Open Graph/JSON-LD'yi tek yerde kurar (`SeoHeadBuilder`); `<title>` yalnız Host'tan. Detay tek okuma (`FindAsync`), ön yükleme etiketlerden önce. Metinler ön yüzün vitrin kataloğundan ve SEO kümesinden (`locales/seo/`), Host'ta metin yok (`0004` D11–D13, D17, P2, P5, P6) |
+| Gerçek 404 | Görünmeyen/olmayan ilan, o dilde görünmeyen içerik sayfası ve tanınmayan vitrin yolu `404` + `noindex`; gizli ile olmayan aynı yanıtı ve aynı okumayı alır. Eski içerik slug'ının `301`'i önce gelir (`0004` D7, D8) |
+| Sitenin kökü | Tek dağıtım değeri (`Notifications:PublicBaseUrl`): kanonik, sitemap, robots.txt ve e-posta bağlantıları; yalnız `http`/`https`, yolsuz; istek başlıklarından türetilmez (`0004` D2, C10, P1) |
+| robots.txt | Her şeye izin, yalnız `/api/` kapalı; panel ve bülten sayfaları `noindex` ile dışarıda (`0004` D5, D6) |
 | Galerinin yazdığı vitrin metni (ilk boyama) | Host belgeye `<meta>` olarak basar (öznitelik kodlamalı), uç senkron okur; ayrı istek yok. Belge `Cache-Control: no-store` — önbellek/geçersizleme yerine her istekte okuma (`0022` D6, D20, D21; emsal `0020` P1) |

@@ -1,5 +1,6 @@
 using System.Net;
 using CarGallery.BuildingBlocks;
+using CarGallery.Host.Seo;
 using CarGallery.Host.Theme;
 using CarGallery.Modules.Content.Contracts.Home;
 using CarGallery.Modules.Dealership.Contracts.Gallery;
@@ -23,7 +24,7 @@ namespace CarGallery.Host.Localization;
 /// sessizce olur. Inline `style` özniteliği `:root` kuralını her zaman yener ve sıraya hiç
 /// bakmaz.</para>
 /// </summary>
-internal sealed class IndexHtmlRenderer(
+internal sealed partial class IndexHtmlRenderer(
     IWebHostEnvironment environment,
     ThemeOptions theme,
     LocalePrefixResolver locales,
@@ -84,18 +85,21 @@ internal sealed class IndexHtmlRenderer(
             $"<meta name=\"enabled-locales\" content=\"{string.Join(' ', locales.Enabled)}\" />{HeadEnd}",
             StringComparison.Ordinal);
 
-        string ad = await GorunenAdEtiketiAsync(context, locale);
+        string? gorunenAd = await GorunenAdAsync(context, locale);
 
-        if (ad.Length > 0)
+        if (!string.IsNullOrWhiteSpace(gorunenAd))
         {
-            html = html.Replace(HeadEnd, ad + HeadEnd, StringComparison.Ordinal);
+            html = html.Replace(
+                HeadEnd,
+                $"<meta name=\"{DisplayNameMeta}\" content=\"{AttributeEncode(gorunenAd)}\" />{HeadEnd}",
+                StringComparison.Ordinal);
         }
 
-        string metinler = await AnaSayfaMetinleriAsync(context, locale);
+        HomeTextsDto? anaSayfaMetinleri = await AnaSayfaMetinleriAsync(context, locale);
 
-        if (metinler.Length > 0)
+        if (anaSayfaMetinleri is not null)
         {
-            html = html.Replace(HeadEnd, metinler + HeadEnd, StringComparison.Ordinal);
+            html = html.Replace(HeadEnd, AnaSayfaMetinEtiketleri(anaSayfaMetinleri) + HeadEnd, StringComparison.Ordinal);
         }
 
         // `0018` D26 · D35 — teyit ve çıkış sayfaları: anahtar adreste taşınır. Sayfa arama
@@ -106,11 +110,15 @@ internal sealed class IndexHtmlRenderer(
             context.Response.Headers["Referrer-Policy"] = "no-referrer";
         }
 
-        string onYukleme = await IlkGorselOnYuklemesiAsync(context);
+        // `0004` D11 · P8 — `<title>` yalnız buradan: kabuğun taşıdığı başlık (yazılımın adı) sökülür.
+        html = TitleElement().Replace(html, string.Empty, 1);
 
-        if (onYukleme.Length > 0)
+        SeoHead seo = await SeoAsync(context, locale, gorunenAd, anaSayfaMetinleri);
+        context.Response.StatusCode = seo.StatusCode;
+
+        if (seo.Tags.Length > 0)
         {
-            html = html.Replace(HeadEnd, onYukleme + HeadEnd, StringComparison.Ordinal);
+            html = html.Replace(HeadEnd, seo.Tags + HeadEnd, StringComparison.Ordinal);
         }
 
         // `0022` **D20** · **R5** — belge her istekte veritabanından okunan değerler taşıyor
@@ -136,25 +144,19 @@ internal sealed class IndexHtmlRenderer(
     /// istisna burada yakalanır — global işleyiciye gitseydi ziyaretçi bir ad yüzünden boş bir
     /// hata sayfası görürdü. İstisna yutulmaz, loga yazılır.</para>
     /// </summary>
-    private async Task<string> GorunenAdEtiketiAsync(HttpContext context, Locale locale)
+    private async Task<string?> GorunenAdAsync(HttpContext context, Locale locale)
     {
-        string? ad;
-
         try
         {
-            ad = await context.RequestServices
+            return await context.RequestServices
                 .GetRequiredService<IGalleryDisplayNameQueries>()
                 .FindDisplayNameAsync(locale.Code, context.RequestAborted);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogWarning(exception, "Galerinin görünen adı okunamadı; üst çubuk adsız basılıyor.");
-            return string.Empty;
+            return null;
         }
-
-        return string.IsNullOrWhiteSpace(ad)
-            ? string.Empty
-            : $"<meta name=\"{DisplayNameMeta}\" content=\"{AttributeEncode(ad)}\" />";
     }
 
     /// <summary>
@@ -175,7 +177,7 @@ internal sealed class IndexHtmlRenderer(
     /// <para><b>Okunamazsa etiket basılmaz</b> ve sayfa varsayılan metinlerle açılır — görünen
     /// adın deseni (`0020` R5a): ziyaretçi bir metin yüzünden boş bir hata sayfası görmez.</para>
     /// </summary>
-    private async Task<string> AnaSayfaMetinleriAsync(HttpContext context, Locale locale)
+    private async Task<HomeTextsDto?> AnaSayfaMetinleriAsync(HttpContext context, Locale locale)
     {
         string[] parcalar = (context.Request.Path.Value ?? string.Empty)
             .Split('/', StringSplitOptions.RemoveEmptyEntries);
@@ -187,35 +189,34 @@ internal sealed class IndexHtmlRenderer(
 
         if (!anaSayfa && !liste)
         {
-            return string.Empty;
+            return null;
         }
-
-        HomeTextsDto metinler;
 
         try
         {
-            metinler = await context.RequestServices
+            return await context.RequestServices
                 .GetRequiredService<IHomeTextQueries>()
                 .FindAsync(locale.Code, context.RequestAborted);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogWarning(exception, "Ana sayfa metinleri okunamadı; varsayılan metinlerle basılıyor.");
-            return string.Empty;
+            return null;
         }
+    }
 
-        return string.Concat(HomeTextMetas
+    private static string AnaSayfaMetinEtiketleri(HomeTextsDto metinler) =>
+        string.Concat(HomeTextMetas
             .Select(meta => (meta.Meta, Deger: meta.Value(metinler)))
             .Where(meta => !string.IsNullOrWhiteSpace(meta.Deger))
             .Select(meta => $"<meta name=\"{meta.Meta}\" content=\"{AttributeEncode(meta.Deger!)}\" />"));
-    }
 
     /// <summary>
     /// Öznitelik değeri için YALNIZ işaretleme karakterleri kodlanır. <c>WebUtility.HtmlEncode</c>
     /// Latin-1 harflerini de (<c>ü</c>, <c>ö</c>) sayısal varlığa çeviriyordu: tarayıcı onları
     /// çözer ama belgeyi okuyan her araç (test, arama motoru önizlemesi) bozuk bir ad görürdü.
     /// </summary>
-    private static string AttributeEncode(string value) => value
+    internal static string AttributeEncode(string value) => value
         .Replace("&", "&amp;", StringComparison.Ordinal)
         .Replace("<", "&lt;", StringComparison.Ordinal)
         .Replace(">", "&gt;", StringComparison.Ordinal)
@@ -227,48 +228,33 @@ internal sealed class IndexHtmlRenderer(
         .Replace("\n", "&#10;", StringComparison.Ordinal);
 
     /// <summary>
-    /// `0016b` C13 — ilan detayının adresiyse galerinin İLK hazır görseli için bir ön yükleme
-    /// bağlantısı; değilse boş metin. Ölçüldü: görsel JS paketi yüklenip detay isteği
-    /// döndükten SONRA keşfediliyordu (HTML → JS → API → görsel zinciri) ve detayın mobil
-    /// LCP medyanı 2552 ms ile eşiği aşıyordu. Ön yükleme görseli zincirin dışına alır.
+    /// `0004` **P6** — sayfa türü, durum kodu ve bu kartın etiketleri <see cref="SeoHeadBuilder"/>'dan;
+    /// ilan detayının ön yüklemesi (`0016b` C13) de artık onun içinde, etiketlerden ÖNCE.
     ///
-    /// <para><b><c>imagesrcset</c> ve <c>imagesizes</c> uçtakiyle BİREBİR aynı</b>
-    /// (`frontend/src/features/catalog/detail/Gallery.tsx`, <c>srcSet</c> ve <c>sizes</c>):
-    /// farklı olursa tarayıcı iki ayrı aday seçer ve görsel İKİ KEZ indirilir. Bu sapmayı
-    /// `e2e/galeri.spec.ts`'in AC-64'ü yakalar — etkileşimden önce galeriden tek istek.</para>
-    ///
-    /// <para>Görünmeyen ilan ile hiç olmayan ilan aynı yoldan geçer ve ikisi de bağlantı
-    /// üretmez (`0002` C13'ün "ayırt edilemezlik" kuralı).</para>
+    /// <para><b>Bileşim düşerse belge düşmez:</b> 200 ile, yalnız görünen adı başlık yaparak basılır
+    /// ve hata loglanır (`0020` R5a deseni). Kurulu bir uygulamada bileşimin kendi okumaları
+    /// zaten kendi yedeklerini taşır; bu dal beklenmeyen bir hata içindir.</para>
     /// </summary>
-    private static async Task<string> IlkGorselOnYuklemesiAsync(HttpContext context)
+    private async Task<SeoHead> SeoAsync(HttpContext context, Locale locale, string? gorunenAd, HomeTextsDto? anaSayfaMetinleri)
     {
-        string[] parcalar = (context.Request.Path.Value ?? string.Empty)
-            .Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-        if (parcalar.Length != 3 || parcalar[1] != LocalePrefixMiddleware.ListSegment)
+        try
         {
-            return string.Empty;
+            return await context.RequestServices
+                .GetRequiredService<SeoHeadBuilder>()
+                .BuildAsync(context, locale, gorunenAd, anaSayfaMetinleri);
         }
-
-        ShowcaseImageDto? gorsel = await context.RequestServices
-            .GetRequiredService<IShowcaseListingDetailQueries>()
-            .FindFirstImageAsync(Uri.UnescapeDataString(parcalar[2]), context.RequestAborted);
-
-        if (gorsel is null)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            return string.Empty;
+            logger.LogError(exception, "Belge etiketleri kurulamadı; belge etiketsiz basılıyor.");
+
+            return new SeoHead(
+                StatusCodes.Status200OK,
+                string.IsNullOrWhiteSpace(gorunenAd) ? string.Empty : $"<title>{AttributeEncode(gorunenAd)}</title>");
         }
-
-        HashSet<int> gorulen = [];
-        string srcset = string.Join(
-            ", ",
-            new[] { gorsel.Thumbnail, gorsel.Display, gorsel.Large }
-                .Where(turev => gorulen.Add(turev.Width))
-                .Select(turev => $"{turev.Url} {turev.Width.ToString(System.Globalization.CultureInfo.InvariantCulture)}w"));
-
-        return $"<link rel=\"preload\" as=\"image\" href=\"{WebUtility.HtmlEncode(gorsel.Display.Url)}\" "
-            + $"imagesrcset=\"{WebUtility.HtmlEncode(srcset)}\" imagesizes=\"{GallerySizes}\" fetchpriority=\"high\" />";
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex("<title>.*?</title>\\s*", System.Text.RegularExpressions.RegexOptions.Singleline | System.Text.RegularExpressions.RegexOptions.CultureInvariant)]
+    private static partial System.Text.RegularExpressions.Regex TitleElement();
 
     /// <summary>
     /// `0018` **D26** — <c>/{locale}/newsletter/confirm</c> ve <c>/{locale}/newsletter/unsubscribe</c>.

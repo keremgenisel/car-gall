@@ -6,13 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarGallery.Modules.Dealership.Application;
 
-/// <summary>`0014` — ana sayfanın galeri adı (`0020`'den beri görünen ad) ve altlığın şube bloğu (R1, R7).</summary>
-internal interface IPublicGalleryQueries
-{
-    /// <summary>Galeri profili yoksa <c>null</c>.</summary>
-    Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken);
-}
-
 internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale defaultLocale)
     : IPublicGalleryQueries, IGalleryDisplayNameQueries
 {

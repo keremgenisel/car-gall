@@ -139,18 +139,20 @@ test.afterAll(async ({ browser }, testInfo) => {
   await page.close()
 })
 
-test('0017/AC-37, AC-38, AC-40, AC-41: /tr/foo listeyi değil bulunamadı ekranını gösterir; /tr/foo/bar listeye düşer; belge isteği 200', async ({
+// `0004` D7 · D8 ile bilerek değişti (DoD T11): AC-41'in belge isteği artık 404 (0004 AC-74) ve
+// AC-38'in `/tr/foo/bar`'ı listeye değil "bulunamadı"ya düşer (0004 AC-76). AC-37 ve AC-40 aynı.
+test('0017/AC-37, AC-38, AC-40, AC-41 (0004 D7 · D8 ile değişti): /tr/foo listeyi değil bulunamadı ekranını gösterir; /tr/foo/bar da bulunamadı; belge isteği 404', async ({
   page,
 }) => {
   const belge = await page.goto('/tr/foo')
-  expect(belge?.status()).toBe(200)
+  expect(belge?.status()).toBe(404)
   await expect(page.getByTestId('content-not-found')).toBeVisible()
   await expect(page.getByTestId('result-count')).toHaveCount(0)
   await kanit(page, '[data-testid="content-not-found"]', '0017-ac40.png')
 
   await page.goto('/tr/foo/bar')
-  await expect(page.getByTestId('result-count')).toBeVisible()
-  await expect(page.getByTestId('content-not-found')).toHaveCount(0)
+  await expect(page.getByTestId('content-not-found')).toBeVisible()
+  await expect(page.getByTestId('result-count')).toHaveCount(0)
 })
 
 test('0017/AC-34, AC-58, AC-59, AC-60: yayındaki sayfa basılır; dil değiştirici yayındaki dile slug ile, yayında olmayana ana sayfaya gider', async ({

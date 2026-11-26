@@ -164,6 +164,10 @@ içinde kalır.
     gördüğü her anahtar buradadır (panelin de kullandıkları dâhil).
   - **Panel** — `src/shared/i18n/locales/panel/{tr,ar,en}.json`. Yalnız panelin kullandığı
     anahtarlar; panelin lazy paketiyle iner (`shared/i18n/panel.ts`, `AdminApp` içe aktarır).
+  - **SEO** — `src/shared/i18n/locales/seo/{tr,ar,en}.json` (`0004` D12). Yalnız `seo.` önekli,
+    belge başlığı ve açıklamasına özgü metinler; **hiçbir ön yüz modülü içe aktarmaz**, Host
+    dağıtım paketinde okur. Ekranda zaten görünen metin buraya kopyalanmaz, vitrin anahtarından
+    okunur. `check:locales` üçünü de ölçer ve SEO kümesinin içe aktarılmasını kırar.
 
   **Yeni anahtar varsayılan olarak panel kümesine girer; vitrin onu kullanacaksa vitrin
   kümesine.** Bir anahtar tek kümede yaşar. Vitrinin panel anahtarı kullanması ziyaretçiye
