@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1–B5, kartlar arası X1–X3 → D2, D4, D6, D9 güncellendi, **D13** eklendi; AC-71–AC-82) · **QA 2 revizyonu (2026-11-26, AP-08, Proje Yöneticisi kararı):** D2, D6, D9(b), D11, AC-55, AC-70 değişti; **AC-83** eklendi |
+| **Durum** | Tamamlandı (2026-11-26) — kararlar ve kriterler #128 → `f12f565`, uygulama #131 → `ff8f7d2` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (galeri profili) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel Galeri ekranı, vitrin altlığı) |
@@ -714,26 +714,26 @@ düşer, (b) ayrı kullanım şartları getirir. İkisi de "marka kurallarına t
 - [x] Önerilen kararlar (**D1–D12**) onaylandı (Proje Yöneticisi kararı, 2026-11-26) ve QA CLARIFY
       turu (B1–B5, kartlar arası X1–X3 → **D13** ve kriter düzeltmeleri, AC-71–AC-82) işlendi.
       *(Takım Yöneticisi (ajan) kararı, 2026-11-26.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0024-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. *(83/83; eşleme PR #131'de.)*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0024-ac<n>.png`),
       boş ve hata durumları dâhil; panel bölümünün ve altlık bloğunun Arapça görüntüsü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. (Beklenen: **yok**, D3.)
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi ("Sosyal Hesap", D12).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. (Beklenen: **yok**, D3.) *(Migration yok — D3 doğrulandı.)*
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi ("Sosyal Hesap", D12).
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *(`642d468`: Backend, Frontend, E2E, C3 yeşil — ana sayfa 2288, liste 2127, detay 2406 ms. E2E'de 0024 dışı kırılgan `0012c/AC-38` testi bir kez kırmızı, yeniden koşuda yeşil; ayrı iş.)*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
+      bunun yerine geçmez. *(2026-11-26, merge'den önce, QA 2: 0/1/3 — dördü de `03b34c9`…`642d468`'te işlendi.)*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu ve uygulamada bulunan ekler) PR'da listelendi.
       *(CLARIFY X3:)* Etiketi değişen eski testler **çok etiketli** kalır ve eski etiketini
       kaybetmez: `0004/AC-52, 0024/AC-45: …`, `0014/AC-14, 0024/AC-33: …` (mevcut desen
-      `0017/AC-51, AC-52, AC-56`).
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+      `0017/AC-51, AC-52, AC-56`). *(Uygulamada bulunan ek: `evidence-0020.spec.ts:281` — `GaleriYonetimiZinciriTests:320`'nin e2e ikizi, kapalı küme `socialLinks` ile genişledi; Takım Yöneticisi kararı. 0025 ve 0026 bu yanıta alan eklediğinde İKİ ikiz de güncellenir.)*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(Takım Yöneticisi (ajan), `ff8f7d2`, 2026-11-26.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in
       TAMAMI koşturuldu.
 
@@ -743,13 +743,20 @@ düşer, (b) ayrı kullanım şartları getirir. İkisi de "marka kurallarına t
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | | `git cat-file -e <impl>^:specs/0024-galerinin-sosyal-hesaplari.md` |
-| **Kriter sayısı: önce → bugün** | → | |
-| **Spec revizyon sayısı** | | Onay anındaki CLARIFY turu sayılır (ADR 0008 / K3). |
-| **Düzeltme turu sayısı** | | `0` yalnız T10 `[x]` ise. |
-| **Dış bulgu (gerçek/gürültü)** | / | |
-| **Uygulama içi bulgu** | | |
-| **Regresyon sayısı** | | |
-| **Kaçan hata** | | Arşive taşınırken `izleniyor`. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e ff8f7d2^:specs/0024-galerinin-sosyal-hesaplari.md` → var; kararlar ve 82 kriter #128 ile (`f12f565`) uygulamadan önce girdi. |
+| **Kriter sayısı: önce → bugün** | **82 → 83** | İlk öneri 59; sahip cevapları (simge) 70'e, CLARIFY 82'ye çıkardı — üçü de onaydan önce. `main`'den sonra AC-83 eklendi. |
+| **Spec revizyon sayısı** | **2** | (1) Onay anındaki CLARIFY turu (K3): QA 1'in 0024 ve kartlar arası bulguları → D2, D4, D6, D9 yeniden yazıldı, D13 eklendi. (2) `main`'den sonra AP-08 (QA 2): AC-55'in "ilk paket" tanımı ikinci kritik dosyayı saymıyordu; AC-70 tembel blokla "önce" hâlini kaybetti; D2'ye RFC 3986 dışı karakter kuralı ve AC-83. |
+| **Düzeltme turu sayısı** | **1** | QA 2'nin dört bulgusu tek turda işlendi. T10 `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **4 / 0** | BULGU-1 (önemli): `manualChunks` paylaşılan bir runtime parçasını `modulepreload` ile kritik yola soktu; ölçüm protokolü onu saymadığı için +445 B görünen artış gerçekte +904 B'tı → bileşen tembel parçaya, `chunkFileNames`, +440 B ve kritik yolda tek JS · BULGU-2: RFC 3986 dışı karakterler kabul ediliyordu, NUL 500 döndürüyordu · BULGU-3: tohum bayrağı `deploy.md`'nin "asla verilmeyecekler" listesinde yoktu · BULGU-4: CSS'te yorum/üye arası ekleme. |
+| **Uygulama içi bulgu** | **3** | `check:social-icons` kapısının ilk sürümü simge modülünün statik içe aktarılmasını geçiriyordu · bir negatif kanıt betiği commit'lenmemiş işin üstüne `git checkout -- src` koşturacaktı (izin denetimi durdurdu, iş kaybolmadı) · spec revizyon commit'i önceden stage'lenmiş ön yüz silmelerini içine almıştı (push'tan önce ayrıldı). |
+| **Regresyon sayısı** | **0** |  |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-26 (`ff8f7d2`). |
 
 **Bu spec'ten çıkarılan ders:**
+
+**Bütçe protokolü ölçtüğü dosya kümesini adıyla tanımlamalı.** ADR 0013'ün "giriş JS + CSS"
+tanımı girişin tek dosya olduğu döneme aitti; bir derleme ayarı (`manualChunks`) paylaşılan bir
+parçayı kritik yola soktuğunda baytlar sayılmayan dosyaya kaydı ve kapı "geçti" dedi. QA 2 bunu
+iki ayrı derlemeyi karşılaştırarak yakaladı. "İlk paket" artık giriş + statik içe aktarılan +
+`modulepreload` edilen her JS'tir ve kapı (`check:social-icons`) kritik yola yeni dosya girmesini
+reddeder.

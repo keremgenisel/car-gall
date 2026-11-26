@@ -186,6 +186,9 @@ yedi günün saatleri görünür ve aynı saatler şubenin yapısal verisinde de
 | `frontend/src/app/HomePage.test.tsx`, `BultenBolumu.test.tsx`, `AnaSayfaMetinleri.test.tsx` | `PublicGallery` sahte şubeleri | şube tipi değişir. Programsız şubede altlık beklentileri değişmez |
 | `0020`'nin şube kaydetme/açma testleri (`tests/Host.Tests/GaleriYonetimiZinciriTests.cs` ve `tests/Dealership.Tests`) | programsız gövde | **değişmez** (**D11**, **AC-25**) |
 
+> **Kapanışta eklendi (0024, 2026-11-26 — Takım Yöneticisi):** kapalı anahtar kümesi ölçen her Host testinin bir **e2e ikizi** olabilir. 0024'te `GaleriYonetimiZinciriTests:320`'nin ikizi `frontend/e2e/evidence-0020.spec.ts:281` tabloda yoktu ve uygulamada kırıldı. Bu kart public galeri yanıtına ya da şube öğesine alan eklerken, yukarıdaki her Host satırı için `frontend/e2e/` altında aynı kümeyi ölçen ikiz de aranır ve birlikte güncellenir.
+
+
 ### Bilinen tuzaklar
 
 1. **UTC'ye çevrilmiş çalışma saati yaz saatinde kayar.** 09:00'u bir an gibi saklamak, yaz saati
