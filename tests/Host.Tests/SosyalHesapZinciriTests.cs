@@ -155,6 +155,25 @@ public sealed class SosyalHesapZinciriTests : IAsyncLifetime
         Assert.Equal("https://www.instagram.com/onceki", (await PanelHaritasiAsync())["instagram"]);
     }
 
+    [Theory(DisplayName = "0024/AC-83: NUL, satır sonu, U+202E ya da `\"><script>` içeren adres `422` ve `gallery.social_link_invalid` alır (500 değil); hiçbir hesap değişmez.")]
+    [InlineData("https://www.instagram.com/oto\0galeri")]
+    [InlineData("https://www.instagram.com/oto\ngaleri")]
+    [InlineData("https://www.instagram.com/oto\u202Egaleri")]
+    [InlineData("https://www.instagram.com/\"><script>alert(1)</script>")]
+    public async Task Doner422_IzinsizKarakter(string adres)
+    {
+        await KumeAsync(new() { ["instagram"] = "https://www.instagram.com/onceki", ["x"] = "https://x.com/onceki" });
+
+        JsonElement hata = await ProblemAsync(
+            await KaydetAsync(new() { ["instagram"] = adres, ["x"] = "https://x.com/yeni" }),
+            HttpStatusCode.UnprocessableEntity);
+
+        Assert.Equal("gallery.social_link_invalid", hata.GetProperty("socialLinks.instagram").GetString());
+        Assert.Equal(
+            new Dictionary<string, string> { ["instagram"] = "https://www.instagram.com/onceki", ["x"] = "https://x.com/onceki" },
+            await PanelHaritasiAsync());
+    }
+
     [Fact(DisplayName = "0024/AC-14: UTF-8 olarak 200 baytlık ASCII adres kabul edilir; 201 bayt `422` ve `gallery.social_link_too_long` döner.")]
     public async Task Sinirlar_AsciiAdresi()
     {

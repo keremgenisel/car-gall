@@ -101,6 +101,11 @@ internal sealed class SocialLink
 
     private static bool IsAccountAddress(SocialPlatform platform, string value)
     {
+        if (value.Any(IsForbidden))
+        {
+            return false;
+        }
+
         if (!Uri.TryCreate(value, UriKind.Absolute, out Uri? uri)
             || !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal))
         {
@@ -123,6 +128,18 @@ internal sealed class SocialLink
 
         return !string.Equals(uri.AbsolutePath, "/", StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// QA 2 BULGU-2 · D2 — RFC 3986'nın bir adreste izin vermediği karakterler: kontrol karakterleri
+    /// (NUL dâhil; Postgres onu `22021` ile reddeder ve kaydetme 500 olurdu), her türlü boşluk,
+    /// <c>" &lt; &gt; \ ^ ` { | }</c> ve yön denetimleri (U+200E/200F, U+202A–202E, U+2066–2069).
+    /// <c>Uri</c> bunların çoğunu kaçırıp kabul ediyor; değer ise HAM saklanıyor.
+    /// </summary>
+    private static bool IsForbidden(char c) =>
+        char.IsControl(c)
+        || char.IsWhiteSpace(c)
+        || c is '"' or '<' or '>' or '\\' or '^' or '`' or '{' or '|' or '}'
+        || c is '\u200E' or '\u200F' or (>= '\u202A' and <= '\u202E') or (>= '\u2066' and <= '\u2069');
 
     /// <summary>Şemadan sonraki, ilk <c>/</c>, <c>\</c>, <c>?</c> ya da <c>#</c>'e kadar olan bölüm.</summary>
     private static string WrittenAuthority(string value)

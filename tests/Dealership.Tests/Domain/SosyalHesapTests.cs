@@ -39,6 +39,34 @@ public sealed class SosyalHesapTests
         Assert.Equal(2, galeri.Version);
     }
 
+    [Theory(DisplayName = "0024/AC-83: RFC 3986'nın izin vermediği karakter (kontrol, boşluk, `\"<>\\^`{|}`, yön denetimi) taşıyan adres `gallery.social_link_invalid` ile reddedilir.")]
+    [InlineData("https://www.instagram.com/oto\0galeri")]
+    [InlineData("https://www.instagram.com/oto\ngaleri")]
+    [InlineData("https://www.instagram.com/oto\rgaleri")]
+    [InlineData("https://www.instagram.com/oto\tgaleri")]
+    [InlineData("https://www.instagram.com/oto galeri")]
+    [InlineData("https://www.instagram.com/oto\u00A0galeri")]
+    [InlineData("https://www.instagram.com/oto\u202Egaleri")]
+    [InlineData("https://www.instagram.com/oto\u202Agaleri")]
+    [InlineData("https://www.instagram.com/oto\u2066galeri")]
+    [InlineData("https://www.instagram.com/oto\u200Fgaleri")]
+    [InlineData("https://www.instagram.com/\"><script>alert(1)</script>")]
+    [InlineData("https://www.instagram.com/oto^galeri")]
+    [InlineData("https://www.instagram.com/oto`galeri")]
+    [InlineData("https://www.instagram.com/oto{galeri}")]
+    [InlineData("https://www.instagram.com/oto|galeri")]
+    [InlineData("https://www.instagram.com/oto\\galeri")]
+    public void Reddedilir_IzinsizKarakter(string adres)
+    {
+        Gallery galeri = Galeri();
+        Assert.True(Kaydet(galeri, new() { ["youtube"] = "https://www.youtube.com/@kalir" }).IsSuccess);
+
+        Result sonuc = Kaydet(galeri, new() { ["instagram"] = adres, ["youtube"] = "https://www.youtube.com/@degisecekti" });
+
+        Assert.Equal(SocialLink.Invalid, sonuc.Error.Parameters!["socialLinks.instagram"]);
+        Assert.Equal(("youtube", "https://www.youtube.com/@kalir"), (Assert.Single(galeri.SocialLinks).Platform, galeri.SocialLinks[0].Url));
+    }
+
     [Theory(DisplayName = "0024/AC-13, AC-15: Harf büyüklüğü farklı ana makine ve sorgu dizeli Facebook adresi kabul edilir ve girildiği gibi saklanır.")]
     [InlineData("instagram", "https://WWW.Instagram.COM/otogaleri")]
     [InlineData("facebook", "https://www.facebook.com/profile.php?id=100012345")]
