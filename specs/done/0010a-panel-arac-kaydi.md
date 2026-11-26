@@ -152,7 +152,7 @@ sadedir: sayfalama, sıralama ve göstergeler `0010b`'nin işidir.
   ADR 0003 unsur 3 bunu ayrı bir karara bağladı; § 6'nın izin motoru tetikleyicisiyle
   birlikte ele alınır. Bu spec'te fiyat alanı **role göre kilitlenmez**.
 - **X7.** **SEO önizlemesi, `hreflang` listesi ve `Vehicle` JSON-LD** — *neden:*
-  `specs/0004-seo-meta-ve-yapisal-veri.md` (Taslak) bu konunun sahibidir; iki spec aynı
+  `specs/done/0004-seo-meta-ve-yapisal-veri.md` bu konunun sahibidir; iki spec aynı
   şeyi iki kez tanımlamaz.
 - **X8.** **İşlem kaydı / değişiklik geçmişi paneli** — *neden:* `Audit` modülü yoktur.
   *(Fiyat geçmişi bunun dışındadır: o bir domain kuralıdır — R8.)*

@@ -315,7 +315,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 5 | Yayın ve durum eylemleri + toplu eylemler | `0012a` ✅ tamamlandı · `0012b` ✅ tamamlandı · `0012c` ✅ tamamlandı |
 | 6 | İki adımlı doğrulama (unsur 2) | `0013` ✅ tamamlandı |
 | 7 | Ana sayfa | `0014` ✅ tamamlandı |
-| 8 | SEO meta ve yapısal veri | `0004` (**Beklemede** — sırası 7'den sonra) |
+| 8 | SEO meta ve yapısal veri | `0004` ✅ tamamlandı |
 | 9 | Liste: sıralama + filtre eksenleri | `0015` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 10 | Medya galerisi + parça haritası şeması | `0016a` ✅ tamamlandı · `0016b` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 11 | `Content` sayfaları | `0017` ✅ tamamlandı *(#8'den önce — § Sapma)* |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı** (2026-11-26 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B13 → **D22**, **D23** ve D2, D4, D7, D11, D12, D15, C13 ile on üç kriterin düzeltmesi, yedi yeni kriter) |
+| **Durum** | Tamamlandı (2026-11-26) — kararlar ve kriterler #125 → `3cebe2e`, uygulama #126 → `f0fc3be` |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Host` (belge etiketleri, durum kodu, sitemap, robots) · `VehicleCatalog.Contracts` (detay okuması; görünür ilanların adresleri) · `Content.Contracts` (sayfa okuması; bir dilde yayındaki sayfaların adresleri) · `Dealership.Contracts` (görünen ad; ana sayfanın yapısal verisi için şube adı, adresi, telefonu) · `frontend/` (yalnız çeviri anahtarları ve iki parçalı tanınmayan yolun "bulunamadı" ekranı — **D8**) |
@@ -929,27 +929,32 @@ belirler.
 - [x] Önerilen kararlar (**D1–D21**) Takım Yöneticisi tarafından onaylandı ve "Verilen kararlar"
       olarak işaretlendi; QA CLARIFY turu (B1–B13 → **D22**, **D23** ve kriter düzeltmeleri)
       işlendi. *(Takım Yöneticisi (ajan) kararı, 2026-11-26.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok; Host yalnız `*.Contracts` kullanıyor (C3, C4).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. *(92/92; eşleme PR #126'da. AC-39 kısmi: P10 gereği JSON-LD `image` en çok 3 görsel — Takım Yöneticisi onayı.)*
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok; Host yalnız `*.Contracts` kullanıyor (C3, C4).
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil
       ve **D12**'nin SEO kümesini de kapsıyor. Ekrandaki metinler mevcut vitrin anahtarından okunuyor.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4), C3 dâhil.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0004-ac<n>.png`):
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4), C3 dâhil. *(`f4a089d`: Backend, Frontend, E2E, C3 yeşil — ana sayfa 2053, liste 1810, detay 2408 ms.)*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0004-ac<n>.png`):
       AC-72 ve AC-76'nın "bulunamadı" ekranı, tr ve ar.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi yok (kanonik, sitemap, yapısal veri teknik terimlerdir).
-- [ ] <!-- DoD:T8 --> `docs/architecture.md` § 3'ün sitemap cümlesi **D3**'e göre güncellendi ve
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor.
+- [x] <!-- DoD:T7 --> Yeni domain terimi yok (kanonik, sitemap, yapısal veri teknik terimlerdir).
+- [x] <!-- DoD:T8 --> `docs/architecture.md` § 3'ün sitemap cümlesi **D3**'e göre güncellendi ve
       § 7 Karar Defteri'ne işlendi. `docs/deploy.md` kök adres ayarı **D2**'ye göre güncellendi.
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
+      bunun yerine geçmez. *(2026-11-26, merge'den önce, QA 2: 0/1/2 — üçü de `f12512b`…`f4a089d`'te işlendi.)*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
       Tamamlanmış kartların değişen davranışları açıkça yazıldı: `0017` **AC-38** (**D8**),
       `0017` **AC-41** ve **AC-51**'in `/en/kvkk` satırı (200 → 404, **D7**), `0016b`'nin ön
-      yükleme konumu (**AC-80**).
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
+      yükleme konumu (**AC-80**). *Kapanışta eklendi (2026-11-26): uygulama listede olmayan altı
+      eski testi daha değiştirdi — kök neden aynı (var olmayan sayfa artık 404), regresyon değil:
+      `0022` AC-10, `0020` AC-9 ve AC-16 (`GetStringAsync` → `GetAsync`; iddia aynı), `0017`
+      AC-128 (yayında olmayan sayfa: 200 → 404, `Location` yok — Takım Yöneticisi kararı),
+      `route.test.ts` "tanınmayan bölüm liste rotasıdır" (`0014` **D28** tersine döndü, **D8**),
+      `newsletterRoute.test.ts` tanınmayan bülten alt yolu (**AC-76**).*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(Takım Yöneticisi (ajan), `f0fc3be`, 2026-11-26.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
 ---
 
@@ -967,13 +972,20 @@ tanımın netleştirilmesini öner.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e f0fc3be^:specs/0004-seo-meta-ve-yapisal-veri.md` → var. Kararlar ve 92 kriter #125 ile (`3cebe2e`) uygulamadan önce girdi. |
+| **Kriter sayısı: önce → bugün** | **92 → 92** | Kart 2026-10-05'ten 2026-11-26'ya kadar kriter olmadan Beklemede kaldı. Analistin ilk önerisi 85 kriterdi; CLARIFY turu onaydan önce 92'ye çıkardı. |
+| **Spec revizyon sayısı** | **2** | (1) Onay anındaki CLARIFY turu (ADR 0008 / K3 gereği sayılır): QA 1'in 13 bulgusu → D22, D23 ve yerinde değişen yedi karar; 85 → 92. (2) `main`'den sonra AP-08: AC-83'ün kurgusu en kötü durum değildi (QA 2 BULGU-1) — değişken listesine görünen ad (120) ve slug (160) girdi, bütçe 4096 → 6144 B. |
+| **Düzeltme turu sayısı** | **1** | QA 2'nin üç bulgusu tek turda işlendi. Uygulama sırasındaki dört AP-08 bildirimi (listede olmayan eski testler, P5 şartları) PR'ı geri döndürmedi. T10 `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **3 / 0** | BULGU-1 (önemli): AC-83 kurgusu gerçek en kötü durumu ölçmüyordu (ölçülen 5647 B > eski 4096 B) · BULGU-2: yüzde kodlu bölüm adında sunucu ile uç farklı rotayı seçiyordu · BULGU-3: P5 yedek yolunda ikinci okumanın da düşmesi test edilmemişti. CLARIFY'ın 13 bulgusu spec turuna aittir. |
+| **Uygulama içi bulgu** | **4** | AC-9 testi NBSP'yi beklemiyordu · AC-51 testi şube adını yanlış eşleştiriyordu · ilk JSON-LD kaçış sondası yetersizdi (yalnız `<` kaldırılınca yeşil kalıyordu) · testler her istekte türetilmiş fabrika kurup kapatmıyordu, Linux inotify sınırı (128) yüzünden yalnız CI'da 24 test kırmızıydı. |
+| **Regresyon sayısı** | **0** | Değişen on eski testin hepsi D7/D8'in bilinçli bedeli (DoD T11); davranış kaybı yok. |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-26 (`f0fc3be`). |
 
 **Bu spec'ten çıkarılan ders:**
+
+**"Bilerek değişecek eski testler" listesini spec yazarken değil, kodu tarayarak çıkar.** D7
+"var olmayan sayfa artık 404" dedi ve spec dört testi saydı; uygulama on testin değiştiğini
+buldu, çünkü başka kartların testleri de var olmayan sayfaları `GetStringAsync` ile okuyordu.
+Davranışı genişçe değiştiren bir karar için liste, kodda o davranışa dayanan testlerin aranmasıyla
+(ör. "olmayan" adresleri okuyan istekler) yazılmalı. İkinci ders: "en kötü durum" diyen bir
+bütçe kriteri, her değişkenin sınırını ve basılma sayısını adıyla saymalı (AC-83).
