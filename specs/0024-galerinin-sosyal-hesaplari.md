@@ -7,7 +7,7 @@
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (galeri profili) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel Galeri ekranı, vitrin altlığı) |
 | **Bağımlı spec'ler** | `0004` (**D1**, **D15**, **D16**, **D17**, **AC-52**) · `0014` (altlık, **AC-14**, **AC-46**) · `0020` (galeri profili formu, **R16** sürüm, **D2** yetki). **Sonra gelenler:** `0025` → `0026` aynı dosyalara dokunur (§ Context › Sıradaki kartlarla kesişme). |
-| **Karar bekliyor** | **Proje Yöneticisi:** **D13** (LinkedIn simgesi — Simple Icons'ta yok; öneri uygulanmış hâlde yazıldı). Başka bekleyen karar yok. SS1–SS3 cevaplandı (sahip kararı, 2026-11-26). |
+| **Karar bekliyor** | yok — D1–D12 onaylandı (Proje Yöneticisi kararı, 2026-11-26), D13 onaylandı (Proje Yöneticisi kararı, 2026-11-26). SS1–SS3 cevaplandı (sahip kararı, 2026-11-26). |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26):** `0004` **SS2**'ye "evet": sosyal hesaplar panelden
 > girilsin, yapısal veride (`sameAs`) ve vitrinde görünsün; `0004`'ten sonra **ayrı küçük kart**.
@@ -384,8 +384,8 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 *Gerekçe:* sözlükte yok.
 *Bedel:* yok.
 
-**D13 — LinkedIn simgesiz gösterilir. (CLARIFY B4 ölçümüyle bulundu — öneri, Proje Yöneticisi
-onayı bekliyor.)** (D1, D6) Simple Icons LinkedIn simgesini 14.0.0'da kaldırdı ve güncel pakette
+**D13 — LinkedIn simgesiz gösterilir. (CLARIFY B4 ölçümüyle bulundu — Proje Yöneticisi kararı,
+2026-11-26: öneri kabul, alternatifler reddedildi.)** (D1, D6) Simple Icons LinkedIn simgesini 14.0.0'da kaldırdı ve güncel pakette
 yok (Context). LinkedIn bağlantısı diğerleriyle aynı 44 px kutuda **platformun adını görünür metin
 olarak** gösterir. Erişilebilir adı bu metindir. Diğer beş platform simgelidir. D1'in listesi
 değişmez (sahip kararı, SS1).
@@ -395,7 +395,9 @@ gerekçesine ters düşer. Başka bir simge kümesi (ör. MIT lisanslı) ikinci 
 getirir, marka sorununu da çözmez.
 *Bedel:* altlıkta simgeler arasında bir metin bağlantısı durur. *Alternatifler (Proje Yöneticisi
 seçerse):* (a) 13.21.0'daki yol; altı yol 2003 B gzip ölçüldü, 3072 B'ın içinde kalır.
-(b) LinkedIn'in kendi marka kitindeki simge, LinkedIn'in kurallarıyla. İkisinde de AC-81 değişir.
+(b) LinkedIn'in kendi marka kitindeki simge, LinkedIn'in kurallarıyla. **İkisi de reddedildi**
+(Proje Yöneticisi kararı, 2026-11-26): (a) kaldırılmanın muhtemel nedeni olan marka talebine ters
+düşer, (b) ayrı kullanım şartları getirir. İkisi de "marka kurallarına takılmamak" gerekçesine aykırı.
 
 ---
 
