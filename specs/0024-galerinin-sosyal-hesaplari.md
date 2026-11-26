@@ -219,6 +219,76 @@ yapısal verisinde de yer alır.
 4. **Kapalı küme, yasak listesinden güçlüdür** (`0014` **D15**). Yanıtın anahtar kümesi birebir
    ölçülür, yalnız "yeni alan var mı" diye bakılmaz.
 
+### Verilen kararlar — plan turu (DEV, 2026-11-26)
+
+> R/C/AC'ye dokunmaz. `main` @ `12c2043` üzerinde ölçüldü. `0025` ve `0026` aynı yapıları
+> kullanacak biçimde seçildi (Proje Yöneticisi görevlendirmesi).
+
+- **P1 — "Alan yok = açık `null` = değişmez" mekanizması: düz nullable koleksiyon (D4, X1).**
+  `SaveGalleryBody.SocialLinks` `Dictionary<string, string?>?`'dir. D4 açık `null`'u alanın
+  yokluğuyla **aynı** anlama bağladığı için ayrılması gereken iki durum kalıyor: `null` (değişmez)
+  ve harita (bütünüyle yerine koy; boş harita hepsini siler). İkisini düz nullable tip zaten
+  ayırıyor. `Optional<T>` ya da `JsonElement` yalnız "yok" ile "`null`"un **farklı** anlam taşıdığı
+  bir kural için gerekirdi; üç kartta da böyle bir kural yok. Komut katmanında kural tek yerdedir:
+  `null` koleksiyon domain'e "dokunma" olarak geçer. `0025`'in programı aynı deseni kullanır
+  (`null` = değişmez, yedi boş gün = sil). Haritadaki `null` ya da boşluktan ibaret değer D2'nin
+  "bu platformda hesap yok"udur.
+- **P2 — Platform listesi domain'de tek kaynaktır (D1, D2, D3).** `SocialPlatform` (kod, sıra,
+  ana makine listesi) `Dealership/Domain`'dedir. Doğrulama `SocialLink.Validate`'tedir ve
+  `Gallery.UpdateProfile` aynı `FieldErrors`'a toplar: sosyal hata da görünen ad hatası da tek
+  yanıtta gelir ve hiçbir alan yazılmaz (AC-17, AC-18). Sıra: önce bayt sınırı (`too_long`), sonra
+  biçim (`invalid`). Port, ayrıştırılmış adres yerine **yazılan otoritenin** içinde `:` aranarak
+  bulunur: `Uri.Port` varsayılan `:443`'ü yazılmamışla aynı gösterir (AC-76).
+- **P3 — Değiştirme yerinde yapılır; `AddSocialLink` kaldırılır (tuzak 1, D3).**
+  `Gallery.ReplaceSocialLinks` kümede olmayanı siler, var olanın adresini günceller, yeniyi ekler.
+  `SocialLink` bu yüzden değiştirilebilir adresli bir sınıf olur: sahip olunan koleksiyonda aynı
+  anahtarla sil-ve-ekle, EF'in izleyicisinde anahtar çakışmasıdır. Çağıranı olmayan
+  `AddSocialLink` silinir: "varsa yok say" yolu kodda kalmaz.
+- **P4 — Okumalar (D7, AC-32).** Panel: `AdminGalleryDto.SocialLinks` (kod → adres, D1 sırası).
+  Ziyaretçi: `PublicGalleryDto(DisplayName, Branches, SocialLinks)` ve `PublicSocialLinkDto(Platform, Url)`.
+  Sorgu D1'de olmayan kodu düşürür ve D1'e göre sıralar. `0025` aynı DTO'nun şube öğesini
+  genişletir, kök değişmez.
+- **P5 — `sameAs` aynı okumadan (D8).** `SeoHeadBuilder.Home` `gallery.SocialLinks`'in adreslerini
+  sırasıyla yazar; boşsa anahtar yoktur. İkinci okuma yok.
+- **P6 — Simgeler (D6, D9(b), D13).** `frontend/src/features/dealership/socialIcons.ts` beş yolu,
+  kaynak/lisans/sürüm/marka kuralı notunu taşır. `SocialLinks.tsx` onu dinamik `import()` ile
+  ister; modül düzeyinde tek bir söz (promise) tutulur, yani sayfa başına tam bir istek (AC-78).
+  Parçanın adını `vite.config.ts`'in `manualChunks`'ı sabitler (`social-icons`). Durumlar:
+  `pending` (44×44 kutu, simgesiz, erişilebilir ad `aria-label`), `ready` (simge), `failed`
+  (görünür ad). Red yakalanır (AC-79). Platform adları ve sırası `socialPlatforms.ts`'te koddadır
+  (D1: çevrilmez). Ölçüm: `scripts/check-social-icons.mjs` derleme çıktısında parçanın tekliğini,
+  3072 B sınırını ve giriş JS'inde yolların yokluğunu denetler; CI'ın frontend işine eklenir.
+- **P7 — Altlık yuvası.** `HomeFooter` şube bloğu gibi bir `social` yuvası alır; blok "Kurumsal"dan
+  sonra, "Diller"den önce basılır. `HomeRoute` aynı `useGallery` okumasını verir (D7: ikinci istek
+  yok). `0025`'in saatleri şube bloğunun içinde kalır, `0026`'nın altlık logosu yuvaların önündedir.
+- **P8 — Panel (D5).** `GalleryProfilePage`'e "Sosyal hesaplar" `fieldset`'i; altı alan
+  `type="url"`, `inputMode="url"`, `dir="ltr"`. Kaydetme altı kodun hepsini gönderir (boş alan = sil),
+  yani panel her zaman "bütünüyle yerine koy"u kullanır; `null` yolu `0020` istemcisi ve testleri
+  içindir. Hata metni `fieldErrorKey` ile (`dealership.fieldError.gallery_social_link_invalid` …).
+- **P9 — Perf tohumu tek bayrakta, üç kart için (D9(c), X2).** `Development:SeedGalleryProfile`
+  → `SeedGalleryProfileForDevelopmentAsync` (`DealershipModule`), gerçek yazma yolundan
+  (`GalleryCommands.UpdateProfileAsync`) altı hesabı AC-54'ün kurgusuyla yazar. `0025` programı,
+  `0026` logoyu aynı yönteme ekler; `perf.yml` tek bayrağı açar. e2e ortamı açmaz.
+- **P10 — Testler (X3).** Etiketi değişen eski testler çok etiketli kalır
+  (`0014/AC-14, 0024/AC-33: …`, `0004/AC-52, 0024/AC-45: …`, `0020/AC-16, 0024/AC-33: …`).
+  HTTP kriterleri `tests/Host.Tests/SosyalHesapZinciriTests.cs`'te gerçek PostgreSQL ile; biçim
+  kuralları ayrıca `Dealership.Tests`'te domain düzeyinde. Belge kriterleri `SeoOrtami` ile. Her
+  fabrika `Dispose` edilir (0004 inotify dersi).
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Domain + komut + uç: `SocialPlatform`, `SocialLink` doğrulaması, `ReplaceSocialLinks`, gövde,
+   panel okuması. Domain testleri ve Host zincir testleri (AC-3–AC-26, AC-32, AC-71–AC-77).
+3. Ziyaretçi okuması: DTO, sorgu, eski testlerin çok etiketli hâli (AC-33–AC-36).
+4. Yapısal veri: `sameAs` ve belge testleri (AC-45–AC-53), bütçe testi (AC-54).
+5. Ön yüz vitrin: tipler, `socialPlatforms.ts`, `socialIcons.ts`, `SocialLinks.tsx`, altlık,
+   `manualChunks`, katalog, birim testleri (AC-37–AC-44, AC-60–AC-70, AC-79, AC-81, AC-82).
+6. Ön yüz panel: bölüm, katalog, testler (AC-1, AC-2, AC-19, AC-28–AC-31, AC-57, AC-59).
+7. Paket denetimi (`check-social-icons.mjs`, CI) ve perf tohumu (AC-55, AC-56, AC-66, AC-67).
+8. e2e ve görsel kanıt (AC-3, AC-27, AC-43, AC-62, AC-64, AC-68, AC-70, AC-78, AC-80).
+9. Belgeler: `docs/domain.md` (D12), `docs/architecture.md` karar defteri, `docs/frontend.md`.
+
 ---
 
 ## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-26)
