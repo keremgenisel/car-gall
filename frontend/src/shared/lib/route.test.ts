@@ -118,6 +118,16 @@ describe('0004 — "bulunamadı" rotası (D8)', () => {
     }
   })
 
+  it('QA 2 BULGU-2: bölüm adı çözülmüş hâliyle karşılaştırılır — /tr/c%61rs liste, /tr/c%61rs/{slug} detay (sunucuyla aynı)', () => {
+    expect(parseRoute('/tr/c%61rs')).toEqual({ kind: 'list' })
+    expect(parseRoute('/tr/c%61rs/toyota-corolla-2019-abc123')).toEqual({
+      kind: 'detail',
+      slug: 'toyota-corolla-2019-abc123',
+    })
+    expect(parseRoute('/tr/newsletter/c%6Fnfirm')).toEqual({ kind: 'newsletter-confirm' })
+    expect(parseRoute('/tr/%61dmin')).toEqual({ kind: 'not-found' })
+  })
+
   it('görünür rotalar değişmez: ana sayfa, liste, detay, içerik, bülten teyit/çıkış', () => {
     expect(parseRoute('/tr/')).toEqual({ kind: 'home' })
     expect(parseRoute('/tr/cars')).toEqual({ kind: 'list' })

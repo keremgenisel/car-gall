@@ -190,18 +190,23 @@ export function parseRoute(pathname: string): Route {
     return { kind: 'home' }
   }
 
+  // QA 2 BULGU-2 — bölüm ve alt parça adları ÇÖZÜLMÜŞ hâlleriyle karşılaştırılır: sunucu
+  // (`SeoPage`) çözülmüş yolu görür; `/tr/c%61rs/{slug}` iki tarafta da ilan detayıdır.
+  const section = decodeSegment(sectionSegment)
+  const slug = slugSegment === undefined ? undefined : decodeSegment(slugSegment)
+
   // `0018` D26 — `newsletter` ayrılmış addır (`ContentReservedSlugs`); içerik sayfası olamaz.
-  if (sectionSegment === NEWSLETTER_SEGMENT && tailSegment === undefined) {
-    if (slugSegment === 'confirm') {
+  if (section === NEWSLETTER_SEGMENT && tailSegment === undefined) {
+    if (slug === 'confirm') {
       return { kind: 'newsletter-confirm' }
     }
 
-    if (slugSegment === 'unsubscribe') {
+    if (slug === 'unsubscribe') {
       return { kind: 'newsletter-unsubscribe' }
     }
   }
 
-  if (sectionSegment === LISTING_SEGMENT) {
+  if (section === LISTING_SEGMENT) {
     if (slugSegment === undefined) {
       return { kind: 'list' }
     }
@@ -215,8 +220,8 @@ export function parseRoute(pathname: string): Route {
   // `0017` D9 — tek parçalı yol bir içerik sayfası adayıdır (AC-37); ayrılmış ad değilse.
   // `0004` D8 — `0017` AC-38'in "iki parçalı tanınmayan yol listeye düşer" davranışı kalktı:
   // `/tr/foo/bar`, `/tr/newsletter`, `/tr/newsletter/foo`, `/tr/admin` "bulunamadı"dır.
-  if (slugSegment === undefined && !RESERVED_SEGMENTS.has(sectionSegment)) {
-    return { kind: 'content', slug: decodeSegment(sectionSegment) }
+  if (slugSegment === undefined && !RESERVED_SEGMENTS.has(section)) {
+    return { kind: 'content', slug: section }
   }
 
   return { kind: 'not-found' }
