@@ -14,6 +14,8 @@ export interface AdminGallery {
   readonly taxNumber: string | null
   readonly tradeRegistryNumber: string | null
   readonly displayNames: Readonly<Record<string, string>>
+  /** `0024` AC-32 — platform kodundan adrese; hiç hesap yoksa boş. */
+  readonly socialLinks: Readonly<Record<string, string>>
   readonly version: number
 }
 
@@ -23,6 +25,11 @@ export interface GalleryProfileInput {
   readonly taxNumber: string
   readonly tradeRegistryNumber: string
   readonly displayNames: Readonly<Record<string, string>>
+  /**
+   * `0024` D4 · P8 — panel kümeyi HER ZAMAN bütünüyle gönderir: altı kodun hepsi, boş değer
+   * "bu platformda hesap yok" (sunucu siler). Alanın yokluğu (`0020` istemcisi) değişmez demektir.
+   */
+  readonly socialLinks: Readonly<Record<string, string>>
 }
 
 /** `0020` R10 — panelin şube düzenleme formu; durum bir KOD'dur (`Active`, `TemporarilyClosed`, `Closed`). */
