@@ -1,4 +1,5 @@
 using CarGallery.BuildingBlocks;
+using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Domain;
 using CarGallery.Modules.VehicleCatalog.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,36 @@ internal static class PublishEligibility
     /// değişiyor; **F2** gereği geriye dönük doğrulama yapılmıyor ama **A2 yayın anında
     /// bağlayıcı**.
     /// </param>
+    /// <summary>
+    /// `0026` D16 · AC-70 — "hazır görsel" = hazır FOTOĞRAF. Hazır kümesi `ReadyAmongAsync`'ten,
+    /// tür aynı varlıkların toplu okumasından: logo türündeki hazır varlık sayılmaz. Media'nın
+    /// `ReadyAmongAsync` anlamı değişmez; süzgeç `VehicleCatalog`'un kuralıdır.
+    /// </summary>
+    internal static async Task<IReadOnlySet<Guid>> ReadyPhotosAsync(
+        IMediaAssetQueries mediaAssets,
+        IReadOnlyCollection<Guid> mediaAssetIds,
+        CancellationToken cancellationToken)
+    {
+        if (mediaAssetIds.Count == 0)
+        {
+            return new HashSet<Guid>();
+        }
+
+        IReadOnlySet<Guid> hazir = await mediaAssets.ReadyAmongAsync(mediaAssetIds, cancellationToken);
+
+        if (hazir.Count == 0)
+        {
+            return hazir;
+        }
+
+        IReadOnlyList<MediaAssetDto> okunan = await mediaAssets.FindManyAsync(hazir, cancellationToken);
+
+        return okunan
+            .Where(dto => dto.Kind == MediaAssetKind.Photo && hazir.Contains(dto.Id))
+            .Select(dto => dto.Id)
+            .ToHashSet();
+    }
+
     internal static IReadOnlyList<Error> Evaluate(
         Vehicle vehicle,
         IReadOnlySet<Guid> readyMediaAssetIds,

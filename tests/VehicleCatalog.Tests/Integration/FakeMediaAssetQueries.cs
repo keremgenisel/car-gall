@@ -39,6 +39,23 @@ internal sealed class FakeMediaAssetQueries : IMediaAssetQueries
     /// <paramref name="boy"/>, türevler en uzun kenarda 400 / 800 / min(kaynak, 1600).
     /// Hazır değilse türevsiz.
     /// </summary>
+    /// <summary>`0026` D16 — logo türünde, hazır ve logo türevli bir varlık.</summary>
+    internal Guid EkleLogo()
+    {
+        Guid kimlik = Guid.CreateVersion7();
+        varliklar[kimlik] = new MediaAssetDto(
+            kimlik,
+            MediaProcessingStatus.Ready,
+            null,
+            new Dictionary<string, string>(),
+            [
+                new MediaDerivativeDto("logo-large", 1200, 300, $"https://cdn.test/{kimlik:D}/logo-large.webp"),
+                new MediaDerivativeDto("logo-small", 320, 80, $"https://cdn.test/{kimlik:D}/logo-small.webp"),
+            ],
+            MediaAssetKind.Logo);
+        return kimlik;
+    }
+
     internal Guid EkleTurevli(MediaProcessingStatus status, int en = 1200, int boy = 900)
     {
         Guid kimlik = Guid.CreateVersion7();
