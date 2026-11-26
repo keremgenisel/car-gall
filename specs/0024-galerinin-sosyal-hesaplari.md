@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaya sunuldu (2026-11-26)** · D1–D12 onaylandı (Proje Yöneticisi kararı, 2026-11-26) · sahibin SS1–SS3 cevapları işlendi · QA 1 CLARIFY turu bekliyor |
+| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1–B5, kartlar arası X1–X3 → D2, D4, D6, D9 güncellendi, **D13** eklendi; AC-71–AC-82) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (galeri profili) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel Galeri ekranı, vitrin altlığı) |
 | **Bağımlı spec'ler** | `0004` (**D1**, **D15**, **D16**, **D17**, **AC-52**) · `0014` (altlık, **AC-14**, **AC-46**) · `0020` (galeri profili formu, **R16** sürüm, **D2** yetki). **Sonra gelenler:** `0025` → `0026` aynı dosyalara dokunur (§ Context › Sıradaki kartlarla kesişme). |
-| **Karar bekliyor** | yok — D1–D12 onaylandı (Proje Yöneticisi kararı, 2026-11-26). SS1–SS3 cevaplandı (sahip kararı, 2026-11-26). |
+| **Karar bekliyor** | **Proje Yöneticisi:** **D13** (LinkedIn simgesi — Simple Icons'ta yok; öneri uygulanmış hâlde yazıldı). Başka bekleyen karar yok. SS1–SS3 cevaplandı (sahip kararı, 2026-11-26). |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26):** `0004` **SS2**'ye "evet": sosyal hesaplar panelden
 > girilsin, yapısal veride (`sameAs`) ve vitrinde görünsün; `0004`'ten sonra **ayrı küçük kart**.
@@ -18,6 +18,12 @@
 > **D9** yeniden yazıldı, **X2** değişti ve simge kaynağı Context'e girdi (Proje Yöneticisi kararı:
 > Simple Icons, CC0). **AC-37** ve **AC-43** yerinde değişti; yeni kriterler numara **eklenerek**
 > geldi (**AC-60–AC-70**), var olan numaralar değişmedi.
+>
+> **QA CLARIFY turu (QA 1, 2026-11-26; Proje Yöneticisi kararları):** B1–B5 ve kartlar arası X1–X3
+> işlendi. **D2**, **D4**, **D6**, **D9** yerinde güncellendi ve "CLARIFY" diye işaretlendi. **D13**
+> eklendi (ölçümle bulundu: LinkedIn simgesi Simple Icons'ta yok). **AC-14**, **AC-54**, **AC-61**,
+> **AC-66**, **AC-67**, **AC-69**, **AC-70** düzeltildi. Yeni kriterler **AC-71–AC-82**. Var olan
+> numaralar değişmedi.
 
 ---
 
@@ -159,15 +165,24 @@ yapısal verisinde de yer alır.
 
 ### Simge kaynağı (Proje Yöneticisi kararı, 2026-11-26)
 
-- Altı simge **Simple Icons**'tan (simpleicons.org) alınır: `instagram`, `facebook`, `youtube`,
-  `tiktok`, `x`, `linkedin`. Lisans **CC0 1.0**. Yalnız SVG yolları kaynağa kopyalanır.
+- Simgeler **Simple Icons**'tan (simpleicons.org) alınır: `instagram`, `facebook`, `youtube`,
+  `tiktok`, `x` — **beş simge**; LinkedIn pakette yok (aşağıda, **D13**). Lisans **CC0 1.0**. Yalnız SVG yolları kaynağa kopyalanır.
   **Yeni çalışma zamanı bağımlılığı yoktur** (`package.json`'a paket eklenmez). Kaynak ve lisans
   notu simgelerin durduğu dosyada yorum olarak yazılır.
 - CC0 telif hakkından vazgeçmedir, marka hakkını kapsamaz: simgeler markaların ticari markasıdır.
   Bu yüzden biçimleri değiştirilmez ve marka renkleri kullanılmaz (`currentColor`, **D6**, X2).
-- **Boyut ölçülmedi, tahmin:** altı yolun toplamı sıkıştırmasız yaklaşık 4 kB'tır. Instagram'ın
-  yolu en uzunudur. Sayısal veri iyi sıkışmadığı için `gzip` sonrası yaklaşık 2 kB olur. Bu, ADR
-  0013'ün +512 B'lık giriş paketi payını tek başına aşar → **D9**(b).
+- **Ölçüldü (CLARIFY B4, 2026-11-26), `simple-icons@16.38.1` (npm'deki son sürüm):**
+  - Yol uzunlukları (karakter): instagram 1988, tiktok 597, facebook 430, youtube 348, x 194.
+  - Beş yolun toplamı 3557 karakter, `gzip -9` ile **1671 B**. Yolları taşıyan tek bir JS modülü olarak
+    3628 karakter ve **1750 B**. Simge bileşeninin kendi kodu bunun üstüne eklenir.
+  - **LinkedIn simgesi pakette YOK.** `icons/linkedin.svg` 13.x'te var (13.21.0'da yol 498 karakter),
+    **14.0.0'dan beri yok** (`slugs.md`'de de yok). LinkedIn dahil altı yol modül olarak **2003 B** gzip
+    olurdu. → **D13**.
+  - Paketin veri dosyasında (`data/simple-icons.json`) beş simgenin `license` alanı boş, yani paketin
+    CC0 1.0'ı geçerli. Paketin `DISCLAIMER.md`'si "her simgenin CC0 olduğu anlamına gelmez, simge
+    başına lisansa bakın" diyor. Facebook, Instagram, X ve YouTube için bir marka kuralı bağlantısı
+    var, TikTok için yok. Bu bağlantılar simgenin kaynak notunda anılır.
+  - Sonuç: 1750 B, ADR 0013'ün +512 B'lık giriş paketi payını tek başına aşar → **D9**(b).
 
 ### Bilerek değişecek eski testler (kod taranarak çıkarıldı)
 
@@ -179,6 +194,7 @@ yapısal verisinde de yer alır.
 | `tests/Host.Tests/SeoBelgeTests.cs:561-573` (`0004/AC-52`) | `openingHoursSpecification, geo, sameAs, logo` yok | `sameAs` listeden çıkar (**AC-45**) |
 | `tests/Host.Tests/SeoBelgeTests.cs:547` (`0004/AC-50`) ve aynı dosyada `PublicGalleryDto` kuran diğer testler | iki parametreli kurucu | kurucu değişir, beklenen değer değişmez |
 | `frontend/src/app/HomePage.test.tsx:177-187` (`0014/AC-46`), `BultenBolumu.test.tsx`, `AnaSayfaMetinleri.test.tsx` | `PublicGallery` sahte yanıtı | sahte yanıtın tipi değişir. Hesapsız yanıtta beklenen bağlantı dizisi **değişmez** (**AC-38** hesaplı durumu ayrıca ölçer) |
+| `tests/Host.Tests/GaleriYonetimiZinciriTests.cs:320` (`0020/AC-16`, gizlilik testi) | public yanıtın kök anahtarları `branches, displayName` | `branches, displayName, socialLinks` (**AC-33**). *(CLARIFY B2: tablo bu dosya için yalnız "değişmez" diyordu.)* |
 | `0020`'nin `PUT /api/admin/gallery` testleri (`tests/Host.Tests/GaleriYonetimiZinciriTests.cs`) | sosyal alansız gövde | **değişmez** (**D4**, **AC-22**) |
 
 ### Sıradaki kartlarla kesişme (uygulama sırası 0024 → 0025 → 0026)
@@ -220,7 +236,9 @@ yönlendirme olur (oltalama) ve `sameAs` spam'e açılır. Sabit sıra saklama g
 
 **D2 — Adres biçimsel olarak doğrulanır.** (R2, X7)
 - Şema `https`'tir.
-- Ana makine platformun alan adı listesindedir; harf büyüklüğüne duyarsızdır:
+- Ana makine platformun alan adı listesindedir. *(CLARIFY B1:)* Karşılaştırma ayrıştırılmış adresin
+  ana makinesiyle (`System.Uri.Host`, `IdnHost` değil) **ordinal, harf büyüklüğüne duyarsız ve
+  birebir** yapılır: alt alan adı, son ek ya da benzer harf eşleşmez. Liste:
   - instagram: `instagram.com`, `www.instagram.com`
   - facebook: `facebook.com`, `www.facebook.com`, `m.facebook.com`
   - youtube: `youtube.com`, `www.youtube.com`, `m.youtube.com`
@@ -228,14 +246,17 @@ yönlendirme olur (oltalama) ve `sameAs` spam'e açılır. Sabit sıra saklama g
   - x: `x.com`, `www.x.com`, `twitter.com`, `www.twitter.com`
   - linkedin: `linkedin.com`, `www.linkedin.com`
 - Yol `/`'dan ibaret değildir.
-- Kullanıcı bilgisi ve port taşımaz.
-- Kırpıldıktan sonra en çok **200** karakterdir.
+- Kullanıcı bilgisi taşımaz. **Yazılmış her port reddedilir**, varsayılan `:443` dâhil *(CLARIFY B1)*.
+- Kırpıldıktan sonra **UTF-8 olarak en çok 200 bayttır** *(CLARIFY B3; önce "200 karakter" idi)*.
 - Boş ya da yalnız boşluk olan değer "bu platformda hesap yok" demektir.
 
 Sorgu dizesi serbesttir: Facebook'un adsız sayfaları `profile.php?id=…` biçimindedir. Değer
 kırpılarak, başka bir değişiklik yapılmadan saklanır.
-*Gerekçe:* D1'in gerekçesi. 200 sınırı kolonun 400'ünün içinde kalır ve bütçeyi (D9) sınırlar.
-Gerçek profil adresleri 100 karakterin altındadır.
+*Gerekçe:* D1'in gerekçesi. 200 bayt kolonun 400 karakterinin içinde kalır ve bütçeyi (D9)
+sınırlar. Bayt, karakter değil: Arapça harf UTF-8'de 2 bayttır ve JSON-LD kaçışsız UTF-8 yazılıyor
+(`SeoHeadBuilder.cs:60`), yani 200 karakterlik Arapça yollu adres D9(a)'yı aşardı. Birebir ana
+makine karşılaştırması `instagram.com.kotu.site`, kodlanmış `@` ve Kiril homografı gibi
+yanıltmaları ayrıştırma düzeyinde düşürür. Gerçek profil adresleri 100 karakterin altındadır.
 *Bedel:* kısa alan adları (`fb.com`, `youtu.be`, `instagr.am`) reddedilir. Bir platform alan adı
 değiştirirse kod değişir.
 
@@ -253,7 +274,11 @@ sayılır.
   taşır. Aynı sürüm geçerlidir: eski sürüm `409` döner (`0020` **D17**).
 - Hata varsa **profilin hiçbir alanı** değişmez; aynı kaydetmedeki görünen ad değişikliği de yazılmaz.
 - Değişiklik sürümü bir artırır.
-- Gövdede alan **yoksa** kayıtlı hesaplar değişmez. **Boş harita** kayıtlı hesapların hepsini siler.
+- Gövdede alan **yoksa** kayıtlı hesaplar değişmez. *(CLARIFY X1:)* **Açık `null`, alanın yokluğuyla
+  aynıdır: değişmez. Silmenin tek yolu boş haritadır.** Gövdeler bugün nullable kayıtlar
+  (`DealershipAdminEndpoints.cs:111-142`), yani ikisi kodda zaten ayrışmıyor. Ayrımı nasıl
+  kuracağı (ör. `JsonElement`, `Optional<T>`) DEV'in plan kararıdır. **Boş harita** kayıtlı
+  hesapların hepsini siler.
 - Haritada D1'de olmayan bir kod alan hatasıdır.
 
 *Gerekçe:* yönetici profil ekranında tek "Kaydet" görür. İki ayrı kaydetme, aynı sürüm üzerinde
@@ -282,8 +307,12 @@ cevabıyla yeniden yazıldı, sahip kararı, 2026-11-26.)*
   24 CSS pikseldir. **Dokunma hedefi en az 44×44 CSS pikseldir.** Klavye odağı görünür.
 - Hedef kayıtlı adrestir. Bağlantı `rel="me"` taşır ve `target` taşımaz (aynı sekmede açılır).
 - Simgeler ayrı bir parçadan gelir (D9(b)). Parça gelene kadar bağlantı kutusu son boyutundadır,
-  yani simge geldiğinde yer kaymaz. **Parça yüklenemezse** her bağlantı platformun adını görünür
-  metin olarak gösterir ve hedefi değişmez.
+  yani simge geldiğinde yer kaymaz. **Parça yüklenemezse** (*CLARIFY B5:* parçanın dinamik içe
+  aktarması reddedilirse) her bağlantı platformun adını görünür metin olarak gösterir ve hedefi
+  değişmez. Bu durumda kutu metne göre genişleyebilir. Altlık C3'ün mobil görüntü alanında ilk
+  ekranın altında olduğu için bu kayma C3'ün ölçtüğü ilk ekran CLS'ine girmez (**AC-80** bunu ölçer).
+- **LinkedIn** için simge yoktur (**D13**). Bağlantı aynı kutuda platformun adını görünür metin
+  olarak gösterir.
 - Hiç hesap yoksa blok, başlığıyla birlikte hiç basılmaz.
 - Okuma sürerken ve okuma hata verdiğinde de blok basılmaz, hata metni yoktur. Altlık bir hata
   ekranının yeri değildir (`0014` AC-54).
@@ -318,15 +347,17 @@ yoktur. Görünen ad okunamazsa blok hiç basılmaz (`0004` **D15**), `sameAs` d
   tembel yüklenen bir parçadadırlar.**
   - İlk paket ADR 0013'ün protokolüyle (giriş JS + giriş CSS, `gzip -9`) `main` tabanına göre **en
     çok 512 B** büyür. Giriş JS'i simge yollarını taşımaz.
-  - Simge parçası (`gzip -9`) **en çok 3072 B**'tır.
+  - Simge parçası **sabit adlı tek bir dosyadır** (`social-icons`): dinamik içe aktarmayla yüklenir ve
+    adı derleme yapılandırmasında belirlenir *(CLARIFY B4)*. `gzip -9` ile **en çok 3072 B**'tır.
+    Beş yolun ölçülen modül boyutu 1750 B (Context).
   - Parça yalnız **en az bir hesabı olan galerinin ana sayfasında** istenir. Hesapsız ana sayfa ile
     liste, detay ve içerik sayfaları onu hiç istemez.
 - **(c)** C3 ana sayfa, liste ve detayda yeşil kalır. Perf koşusu (a)'nın altı hesabını sınır
   uzunlukta tohumlar (`0022` **D11** deseni). Bir sayfanın medyanı **2450 ms**'yi aşarsa ikinci
   koşu istenir ve LCP öğesi PR'a yazılır (`0004` **D17**(c)).
 
-*Gerekçe:* altı adresin kodlanmış hâli yaklaşık 1230 B'tır. Simgeler yaklaşık 2 kB gzip
-(Context, tahmin) ve +512 B'lık payı tek başına aşar. Belgeye basmak, arayüzü Host'a taşımak demek
+*Gerekçe:* altı adresin kodlanmış hâli yaklaşık 1230 B'tır (CLARIFY B3: her adres en çok 200
+bayt). Simgelerin yolları ölçüldü: 1750 B gzip (Context), +512 B'lık payı tek başına aşar. Belgeye basmak, arayüzü Host'a taşımak demek
 (tam SSR yok, `0004` **C1**; altlık uçta, galeri okumasından basılıyor) ve her ana sayfa belgesini
 hesap olsa da olmasa da büyütür. Tembel parça yalnız simge gösterecek sayfada iner. Blok altlıkta,
 ilk ekranın altında ve galeri okumasından sonra basılır, yani LCP öğesine dokunmaz.
@@ -352,6 +383,19 @@ Panel üçünü de çevirir. Alan hatası `422`'dir (`DealershipProblems`, `Deal
 vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir tane.
 *Gerekçe:* sözlükte yok.
 *Bedel:* yok.
+
+**D13 — LinkedIn simgesiz gösterilir. (CLARIFY B4 ölçümüyle bulundu — öneri, Proje Yöneticisi
+onayı bekliyor.)** (D1, D6) Simple Icons LinkedIn simgesini 14.0.0'da kaldırdı ve güncel pakette
+yok (Context). LinkedIn bağlantısı diğerleriyle aynı 44 px kutuda **platformun adını görünür metin
+olarak** gösterir. Erişilebilir adı bu metindir. Diğer beş platform simgelidir. D1'in listesi
+değişmez (sahip kararı, SS1).
+*Gerekçe:* eski bir sürümden (13.x) yol kopyalamak CC0 açısından mümkün, ama simgenin kaldırılması
+marka sahibinin talebiyle ilişkili olabilir ve Proje Yöneticisi'nin "marka kurallarına takılmamak"
+gerekçesine ters düşer. Başka bir simge kümesi (ör. MIT lisanslı) ikinci bir kaynak ve lisans notu
+getirir, marka sorununu da çözmez.
+*Bedel:* altlıkta simgeler arasında bir metin bağlantısı durur. *Alternatifler (Proje Yöneticisi
+seçerse):* (a) 13.21.0'daki yol; altı yol 2003 B gzip ölçüldü, 3072 B'ın içinde kalır.
+(b) LinkedIn'in kendi marka kitindeki simge, LinkedIn'in kurallarıyla. İkisinde de AC-81 değişir.
 
 ---
 
@@ -409,8 +453,8 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 - **AC-12.** `https://www.instagram.com:8443/otogaleri` ile kaydetme `422` ve
   `gallery.social_link_invalid` döner.
 - **AC-13.** `https://WWW.Instagram.COM/otogaleri` kabul edilir ve girildiği gibi saklanır.
-- **AC-14.** Kırpıldıktan sonra 200 karakter olan geçerli bir adres kabul edilir. 201 karakterlik
-  adres `422` ve `socialLinks.instagram` alanında `gallery.social_link_too_long` döner.
+- **AC-14.** Kırpıldıktan sonra UTF-8 olarak 200 bayt olan geçerli bir ASCII adres kabul edilir.
+  201 baytlık adres `422` ve `socialLinks.instagram` alanında `gallery.social_link_too_long` döner.
 - **AC-15.** `https://www.facebook.com/profile.php?id=100012345` Facebook alanında kabul edilir.
 - **AC-16.** Gövdede `myspace` koduyla kaydetme `422` döner. Yanıt `socialLinks.myspace` alanında
   `gallery.social_platform_unknown` taşır.
@@ -497,8 +541,8 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 
 ### Performans ve paket (C5 · D9)
 
-- **AC-54.** Kurgulanmış en kötü durumda (altı platformun hepsi, her adres kırpıldıktan sonra 200
-  karakter, hiçbirinde `&` yok) `/ar/` ana sayfa belgesi, aynı kurulumun hesapsız `/ar/` belgesinden
+- **AC-54.** Kurgulanmış en kötü durumda (altı platformun hepsi, her adres **tam 200 bayt** ve yolu
+  Arapça harflerle doldurulmuş, hiçbirinde `&` yok; CLARIFY B3) `/ar/` ana sayfa belgesi, aynı kurulumun hesapsız `/ar/` belgesinden
   en çok **1536 B** büyüktür.
 - **AC-55.** İlk paket (giriş JS + giriş CSS, `gzip -9`, ADR 0013) `main` tabanına göre en çok
   **512 B** büyür.
@@ -517,7 +561,7 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 
 - **AC-60.** Her hesap bağlantısının erişilebilir adı platformun adıdır ("Instagram", "Facebook",
   "YouTube", "TikTok", "X", "LinkedIn"). Ad `/tr/`, `/ar/` ve `/en/`'de aynıdır.
-- **AC-61.** Simge parçası yüklendikten sonra bağlantının görünür metni yoktur. Simge SVG'si
+- **AC-61.** Simge parçası yüklendikten sonra LinkedIn dışındaki bağlantıların görünür metni yoktur. Simge SVG'si
   `aria-hidden="true"` taşır ve odaklanamaz.
 - **AC-62.** Her hesap bağlantısının dokunma hedefi en az 44×44 CSS pikseldir.
 - **AC-63.** Simge bağlantının metin rengiyle (`currentColor`) boyanır. SVG'nin hiçbir öğesi sabit
@@ -525,20 +569,50 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 - **AC-64.** Hesap bağlantısına klavyeyle odaklanıldığında görünür bir odak göstergesi vardır.
 - **AC-65.** Simgelerin bulunduğu kaynak dosya Simple Icons'ı ve CC0 1.0 lisansını adıyla anan bir
   not taşır. Bu kart `package.json`'a çalışma zamanı bağımlılığı eklemez.
-- **AC-66.** Giriş JS'i altı simgenin hiçbirinin yol verisini taşımaz.
-- **AC-67.** Simge parçası `gzip -9` ile en çok **3072 B**'tır.
+- **AC-66.** Giriş JS'i beş simgenin hiçbirinin yol verisini taşımaz.
+- **AC-67.** Derleme çıktısında simgeler adı `social-icons` ile başlayan tek bir JS dosyasındadır ve
+  o dosya `gzip -9` ile en çok **3072 B**'tır.
 - **AC-68.** Simge parçası yalnız en az bir hesabı olan galerinin ana sayfasında istenir. Hesapsız
   ana sayfada ve liste, detay, içerik sayfalarında istenmez.
-- **AC-69.** Simge parçası yüklenemediğinde her hesap bağlantısı platformun adını görünür metin
+- **AC-69.** Simge parçasının dinamik içe aktarması reddedildiğinde her hesap bağlantısı platformun adını görünür metin
   olarak gösterir ve hedefi kayıtlı adres olarak kalır.
-- **AC-70.** Simge parçası gelmeden önce ve geldikten sonra hesap bağlantılarının konumu ve boyutu
-  aynıdır.
+- **AC-70.** Simge parçası başarıyla geldiğinde, gelmeden önceki ve sonraki hesap bağlantılarının
+  konumu ve boyutu aynıdır. (Parça reddedildiğinde kutu metne göre genişleyebilir; AC-80.)
+
+### QA CLARIFY turuyla eklenenler (2026-11-26)
+
+- **AC-71.** `"socialLinks": null` taşıyan bir profil kaydetmesi kayıtlı hesapları değiştirmez (CLARIFY X1).
+- **AC-72.** Instagram alanına `https://instagram.com.kotu.site/x` ile kaydetme `422` ve
+  `gallery.social_link_invalid` döner.
+- **AC-73.** Instagram alanına `https://www.instagram.com%2F@kotu.site/x` ile kaydetme `422` ve
+  `gallery.social_link_invalid` döner.
+- **AC-74.** Instagram alanına Kiril `а` (U+0430) içeren `https://www.instagrаm.com/x` ile kaydetme
+  `422` ve `gallery.social_link_invalid` döner.
+- **AC-75.** Instagram alanına `javascript:alert(1)` ile kaydetme `422` ve `gallery.social_link_invalid` döner.
+- **AC-76.** Instagram alanına `https://www.instagram.com:443/x` ile kaydetme `422` ve
+  `gallery.social_link_invalid` döner.
+- **AC-77.** `https://www.instagram.com/` ve ardından 87 Arapça harf (UTF-8 olarak 200 bayt) kabul
+  edilir. 88 Arapça harfli adres (202 bayt) `422` ve `gallery.social_link_too_long` döner.
+- **AC-78.** Hesapsız galerinin ana sayfasında `social-icons` dosyası istenmez. En az bir hesabı olan
+  galerinin ana sayfasında tam olarak bir kez istenir.
+- **AC-79.** Simge parçasının dinamik içe aktarması reddedildiğinde konsola yakalanmamış hata
+  düşmez ve altlığın diğer blokları görünür kalır.
+- **AC-80.** C3'ün mobil profilinde (Lighthouse mobil görüntü alanı) altı hesaplı `/tr/` ana sayfanın
+  altlığı ilk ekranın altındadır: ilk boyamada altlığın üst kenarı görüntü alanının yüksekliğinden
+  aşağıdadır.
+- **AC-81.** LinkedIn bağlantısı simge taşımaz. Görünür metni ve erişilebilir adı "LinkedIn"dir.
+  Dokunma hedefi diğer bağlantılarla aynı, en az 44×44 CSS pikseldir (**D13**).
+- **AC-82.** Simge kaynak dosyasının notu Simple Icons'ın sürümünü (`16.38.1`) ve beş simgenin
+  marka kuralı bağlantılarını anar.
 
 
 ---
 
 ## Definition of Done
 
+- [x] Önerilen kararlar (**D1–D12**) onaylandı (Proje Yöneticisi kararı, 2026-11-26) ve QA CLARIFY
+      turu (B1–B5, kartlar arası X1–X3 → **D13** ve kriter düzeltmeleri, AC-71–AC-82) işlendi.
+      *(Takım Yöneticisi (ajan) kararı, 2026-11-26.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0024-ac<n>.png`),
       boş ve hata durumları dâhil; panel bölümünün ve altlık bloğunun Arapça görüntüsü de var.
@@ -554,6 +628,9 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
       bunun yerine geçmez.
 - [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu ve uygulamada bulunan ekler) PR'da listelendi.
+      *(CLARIFY X3:)* Etiketi değişen eski testler **çok etiketli** kalır ve eski etiketini
+      kaybetmez: `0004/AC-52, 0024/AC-45: …`, `0014/AC-14, 0024/AC-33: …` (mevcut desen
+      `0017/AC-51, AC-52, AC-56`).
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in
