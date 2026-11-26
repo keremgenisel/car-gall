@@ -1,0 +1,27 @@
+/* `0026` D8 — panelin "Logo" bölümü. Bu dosyayı yalnız panel bileşeni içe aktarır: stiller
+   panelin tembel parçasıyla iner, vitrinin giriş CSS'ine girmez (ilk paket, AC-56). */
+.gallery-logo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.gallery-logo__preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.gallery-logo__image {
+  block-size: auto;
+  inline-size: auto;
+  max-block-size: var(--logo-max-block-size);
+  max-inline-size: var(--logo-max-inline-size);
+  background: var(--color-surface-muted);
+}
+
+.gallery-logo__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}

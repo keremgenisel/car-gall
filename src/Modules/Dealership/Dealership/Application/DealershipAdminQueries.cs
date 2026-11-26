@@ -17,7 +17,8 @@ internal sealed record AdminGalleryDto(
     string? TradeRegistryNumber,
     IReadOnlyDictionary<string, string> DisplayNames,
     IReadOnlyDictionary<string, string> SocialLinks,
-    int Version);
+    int Version,
+    Guid? LogoMediaAssetId = null);
 
 /// <summary>`0020` R10 — panelin şube düzenleme formu; bütün alanlar ham hâliyle.</summary>
 internal sealed record AdminBranchDto(
@@ -54,7 +55,9 @@ internal sealed class DealershipAdminQueries(DealershipDbContext context)
                 gallery.DisplayNames.ToDictionary(),
                 SocialPlatform.InOrder(gallery.SocialLinks)
                     .ToDictionary(link => link.Platform, link => link.Url, StringComparer.Ordinal),
-                gallery.Version);
+                gallery.Version,
+                // `0026` D9 — panelin profil okuması logo kimliğini taşır; yoksa null.
+                gallery.LogoMediaAssetId);
     }
 
     internal async Task<AdminBranchDto?> FindBranchAsync(Guid branchId, CancellationToken cancellationToken)

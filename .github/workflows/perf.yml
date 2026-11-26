@@ -95,7 +95,9 @@ jobs:
           # 0024 D9(c) · AC-56 — galeri profilinin en kötü hâli: altı sosyal hesap, her adres
           # 200 bayt Arapça yollu. Altlık simge parçasını ister; C3 bu hâli ölçer.
           # 0025 D10(c) · AC-62 — aynı bayrak her aktif şubeye (perf'te iki) en kötü haftalık
-          # programı yazar: yedi günde üçer aralık, 21 farklı çift. `0026` logoyu ekler.
+          # programı yazar: yedi günde üçer aralık, 21 farklı çift.
+          # 0026 AC-57, AC-59 — aynı bayrak tohum medyasının logosunu atar (SeedShowcase açıkken):
+          # üst çubukta ve altlıkta logo, `og:image` ve `AutoDealer.logo` ile ölçülür.
           Development__SeedGalleryProfile: 'true'
           # D2/AC-53 — uygulama bu parola olmadan HİÇ başlamaz. Ölçüm işi giriş
           # yapmaz ama Host'u ayağa kaldırmak zorunda. ADR 0011 — değer SABİT DEĞİL:

@@ -66,3 +66,21 @@ public interface IPublicGalleryQueries
     /// <summary>Galeri profili yoksa <c>null</c>.</summary>
     Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken);
 }
+
+/// <summary>`0026` D17 — görünen ad (yoksa <c>null</c>) ve atanmış logonun kimliği (yoksa <c>null</c>).</summary>
+public sealed record GalleryBrandingDto(string? DisplayName, Guid? LogoMediaAssetId);
+
+/// <summary>
+/// `0026` **D17** · AC-75, AC-76 — Host'un belgeyi kurduğu marka okuması: görünen ad ve logo kimliği
+/// TEK sorguda. <see cref="IGalleryDisplayNameQueries"/> değişmez; onun tüketicisi bülten
+/// (`Notifications`) ve dar bir arayüzü genişletmek bülteni ilgisiz bir değişikliğe bağlardı.
+/// Logonun türevleri burada YOK: `Dealership` `Media`'yı okumaz (C1); Host çözer (D3).
+/// </summary>
+public interface IGalleryBrandingQueries
+{
+    /// <summary>
+    /// Ziyaretçinin dilindeki görünen ad (yoksa varsayılan dildeki) ve logo kimliği. Galeri profili
+    /// yoksa <c>null</c>.
+    /// </summary>
+    Task<GalleryBrandingDto?> FindBrandingAsync(string locale, CancellationToken cancellationToken);
+}

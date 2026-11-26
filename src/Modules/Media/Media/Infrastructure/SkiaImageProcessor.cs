@@ -125,6 +125,59 @@ internal sealed class SkiaImageProcessor : IImageProcessor
         return Result.Success<IReadOnlyList<RenderedDerivative>>(uretilen);
     }
 
+    public Result<IReadOnlyList<RenderedDerivative>> RenderLogo(byte[] source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        using MemoryStream akis = new(source, writable: false);
+        using SKCodec? kodek = SKCodec.Create(akis);
+
+        if (kodek is null)
+        {
+            return Result.Failure<IReadOnlyList<RenderedDerivative>>(new Error(MediaErrors.Undecodable));
+        }
+
+        using SKBitmap? cozulen = SKBitmap.Decode(kodek);
+
+        if (cozulen is null)
+        {
+            return Result.Failure<IReadOnlyList<RenderedDerivative>>(new Error(MediaErrors.Undecodable));
+        }
+
+        using SKBitmap yonlendirilmis = ApplyOrientation(cozulen, kodek.EncodedOrigin);
+
+        List<RenderedDerivative> uretilen = [];
+
+        foreach (MediaVariant variant in MediaVariant.Logo)
+        {
+            // Büyütme fotoğrafla aynı kural: kaynak hedeften küçükse büyütülmez (AC-2).
+            int genislik = Math.Min(variant.TargetWidth, yonlendirilmis.Width);
+            int yukseklik = Math.Max(
+                1,
+                (int)Math.Round(yonlendirilmis.Height * (genislik / (double)yonlendirilmis.Width)));
+
+            // `0026` D1 — alfa kanallı tuval: saydam piksel saydam kalır (AC-4); filigran yok (AC-3).
+            using SKBitmap turev = new(new SKImageInfo(genislik, yukseklik, SKColorType.Rgba8888, SKAlphaType.Unpremul));
+
+            using (SKCanvas tuval = new(turev))
+            {
+                tuval.Clear(SKColors.Transparent);
+                tuval.DrawBitmap(yonlendirilmis, new SKRect(0, 0, genislik, yukseklik), Sampling);
+            }
+
+            using SKData webp = turev.Encode(SKEncodedImageFormat.Webp, WebpQuality);
+
+            if (webp is null || webp.Size == 0)
+            {
+                return Result.Failure<IReadOnlyList<RenderedDerivative>>(new Error(MediaErrors.Undecodable));
+            }
+
+            uretilen.Add(new RenderedDerivative(variant.Code, genislik, yukseklik, webp.ToArray()));
+        }
+
+        return Result.Success<IReadOnlyList<RenderedDerivative>>(uretilen);
+    }
+
     /// <summary>R4/AC-16 — filigran ÜÇ türevin hepsine basılır, yalnız büyüklere değil.</summary>
     private static void DrawWatermark(SKCanvas canvas, SKBitmap watermark, int width, int height)
     {

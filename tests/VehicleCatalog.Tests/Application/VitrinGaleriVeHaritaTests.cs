@@ -347,6 +347,33 @@ public sealed class VitrinGaleriVeHaritaTests(ShowcaseDatabase database)
         Assert.DoesNotContain("9900", json, StringComparison.Ordinal);
     }
 
+    [Fact(DisplayName = "0026/AC-8: Logo türündeki bir varlığın hazır duyurusu işlendikten sonra hiçbir vitrin ilanının görsel satırı ve kapağı değişmez")]
+    public async Task Degistirmez_LogoHazirDuyurusu()
+    {
+        FakeMediaAssetQueries medya = new();
+        Guid[] s = Ac1Sirasi(medya);
+        await YayindaIlanAsync(medya, s);
+        string once = await GorselSatirlariAsync();
+
+        // Logo araca bağlanamaz (AC-69): kimliği hiçbir yuvada yok. Duyuru yine de gider.
+        Guid logo = Guid.CreateVersion7();
+        await using (VehicleCatalogDbContext context = database.CreateContext())
+        {
+            await new MediaAssetReadyHandler(context, new FixedClock(Simdi)).HandleAsync(
+                new MediaAssetReady(
+                    Guid.CreateVersion7(),
+                    Simdi,
+                    logo,
+                    [
+                        new MediaDerivativePayload("logo-small", $"https://cdn.test/{logo}/logo-small.webp", 320, 80),
+                        new MediaDerivativePayload("logo-large", $"https://cdn.test/{logo}/logo-large.webp", 1200, 300),
+                    ]),
+                CancellationToken.None);
+        }
+
+        Assert.Equal(once, await GorselSatirlariAsync());
+    }
+
     // ── Yardımcılar ───────────────────────────────────────────────────────────
 
     /// <summary>AC-1'in sırası: A hazır, B işleniyor, C hazır, D başarısız, E hazır.</summary>
@@ -379,6 +406,22 @@ public sealed class VitrinGaleriVeHaritaTests(ShowcaseDatabase database)
 
     private static IEnumerable<(string, string)> Beklenen(IReadOnlyDictionary<string, string> farklar) =>
         Tam(farklar).Select(entry => (entry.Part, entry.State));
+
+    /// <summary>Bütün vitrin görsel satırları ve kapaklar, karşılaştırılabilir tek metin olarak.</summary>
+    private async Task<string> GorselSatirlariAsync()
+    {
+        await using VehicleCatalogDbContext read = database.CreateContext();
+        var yuvalar = await read.ShowcaseListingMedia.AsNoTracking()
+            .OrderBy(yuva => yuva.MediaAssetId)
+            .Select(yuva => new { yuva.MediaAssetId, yuva.Status, yuva.Variants })
+            .ToListAsync();
+        var kapaklar = await read.ShowcaseListings.AsNoTracking()
+            .OrderBy(ilan => ilan.ListingId)
+            .Select(ilan => new { ilan.ListingId, ilan.CoverAssetId, ilan.CoverMediaUrl })
+            .ToListAsync();
+        Assert.NotEmpty(yuvalar);
+        return JsonSerializer.Serialize(new { yuvalar, kapaklar }, Web);
+    }
 
     /// <summary>`MediaAssetReady`'yi gerçek işleyiciden geçirir; küme `Media`'nın üç türevi.</summary>
     private async Task HazirAsync(Guid varlik)

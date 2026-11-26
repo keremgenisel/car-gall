@@ -254,8 +254,15 @@ export async function sendFile<TResponse>(
   file: File,
   locale: AppLocale,
   signal?: AbortSignal,
+  fields: Readonly<Record<string, string>> = {},
 ): Promise<TResponse> {
   const body = new FormData()
+
+  // `0026` D1 — ek form alanları (ör. `kind=logo`) dosyadan ÖNCE: sunucu türü dosyaya bakmadan okur.
+  for (const [name, value] of Object.entries(fields)) {
+    body.append(name, value)
+  }
+
   body.append('file', file)
 
   let response: Response

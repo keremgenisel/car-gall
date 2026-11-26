@@ -71,6 +71,17 @@ internal sealed class UpdateVehicleMediaCommand(
                 return Result.Failure(Error.With(
                     Vehicle.MediaAssetNotFound, "mediaAssetId", eksik.Value.ToString()));
             }
+
+            // `0026` D16 · AC-69 — logo türündeki bir varlık araca BAĞLANAMAZ: yayın kapısının
+            // "en az bir hazır görsel" şartını geçip vitrine fotoğrafsız ilan çıkarırdı (tuzak 6).
+            // Tür `Media`'nın okuma sözleşmesinden, aynı toplu okumadan gelir.
+            MediaAssetDto? logo = bulunan.FirstOrDefault(dto => dto.Kind != MediaAssetKind.Photo);
+
+            if (logo is not null)
+            {
+                return Result.Failure(Error.With(
+                    Vehicle.MediaAssetWrongKind, "mediaAssetId", logo.Id.ToString()));
+            }
         }
 
         // D14 — DURUM ön koşulu yok: `işleniyor` ve `başarısız` varlıklar da bağlanabilir.

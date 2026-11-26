@@ -1,6 +1,6 @@
 import { useLocale } from './localeContext'
 import { LocaleSwitcher } from './LocaleSwitcher'
-import { galleryDisplayName } from '../shared/lib/galleryName'
+import { galleryDisplayName, galleryLogo } from '../shared/lib/galleryName'
 import { homePath } from '../shared/lib/route'
 
 /**
@@ -19,6 +19,7 @@ import { homePath } from '../shared/lib/route'
 export function TopBar() {
   const { locale } = useLocale()
   const name = galleryDisplayName()
+  const logo = galleryLogo()
 
   return (
     <header className="top-bar">
@@ -26,7 +27,28 @@ export function TopBar() {
         {name === null ? (
           <span className="top-bar__brand" data-testid="top-bar-brand" />
         ) : (
-          <a className="top-bar__brand" href={homePath(locale)} data-testid="top-bar-brand">
+          <a
+            className={logo === null ? 'top-bar__brand' : 'top-bar__brand top-bar__brand--logo'}
+            href={homePath(locale)}
+            data-testid="top-bar-brand"
+          >
+            {/*
+              `0026` D5 — logo adın satır başı tarafında (ar'da sağda), dekoratif (`alt=""`):
+              bağlantının adı görünen addır. `width`/`height` türevin gerçek boyutu ve yeri ayırır
+              (CLS yok). Ön yükleme, `loading` ve `fetchpriority` YOK: listede LCP öğesi olabilir
+              ve geç inmemeli (CLARIFY B2).
+            */}
+            {logo === null ? null : (
+              <img
+                className="top-bar__logo"
+                src={logo.url}
+                width={logo.width}
+                height={logo.height}
+                alt=""
+                decoding="async"
+                data-testid="top-bar-logo"
+              />
+            )}
             <bdi>{name}</bdi>
           </a>
         )}

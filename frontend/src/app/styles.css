@@ -203,6 +203,41 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* `0026` D5 — logo adın satır başı tarafında; oran korunarak en çok 40 × 160 CSS piksel. Logosuz
+   üst çubuk bu karttan önceki hâlinde kalır (AC-34): esnek kutu yalnız logoluda. */
+.top-bar__brand--logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+/* Dar ekranda logo adı sıkıştırır; ad birden çok satıra kırılırsa web fontu gelince satır sayısı
+   değişir ve üst çubuğun yüksekliği oynar (C3'te `main` kayıyordu, CLS 0.041). Logoluda ad TEK
+   satırdır ve taşarsa kısalır; logo büzülmez (aşağıda `flex-shrink`). Logosuz üst çubuk önceki hâlinde (AC-34). */
+.top-bar__brand--logo bdi {
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Yükseklik SABİT, genişlik `width`/`height`'ın oranından: görsel inmeden önce de kutu son
+   boyutunda (CLS yok). İlk sürüm iki ekseni de `auto` bırakmıştı; kutu inene kadar 0×0 kaldı ve
+   C3'te detayın CLS'i 0.22'ye çıktı. Çok geniş logo 160'ta kırpılmaz, `contain` ile sığdırılır. */
+.top-bar__logo,
+.home-footer__logo {
+  block-size: var(--logo-max-block-size);
+  inline-size: auto;
+  max-inline-size: var(--logo-max-inline-size);
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.home-footer__logo {
+  grid-column: 1 / -1;
+}
+
 a.top-bar__brand:hover {
   text-decoration: underline;
 }

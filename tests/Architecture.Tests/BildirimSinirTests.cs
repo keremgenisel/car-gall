@@ -372,6 +372,17 @@ public sealed partial class BildirimSinirTests
     /// `Notifications`'ın tükettiği sorguların GERÇEKLEŞTİRİMLERİ — `0018` AC-83 ile arayüz
     /// listesi de koddan türetilir (<see cref="ConsumedInterfaces"/>).
     /// </summary>
+    [Fact(DisplayName = "0026/AC-76: Görünen adı ve logo kimliğini döndüren ayrı arayüzün gerçeklemesi tüketilen sorgu gerçeklemeleri kapısında yer alır (`0018` AC-83).")]
+    public void Kapsar_MarkaOkumasininGerceklemesi()
+    {
+        string? gercekleme = ConsumedQueryImplementations().SingleOrDefault(file =>
+            ImplementationDeclaration(File.ReadAllText(file), "IGalleryBrandingQueries"));
+
+        Assert.NotNull(gercekleme);
+        Assert.EndsWith("PublicGalleryQueries.cs", gercekleme, StringComparison.Ordinal);
+        Assert.True(ImplementationDeclaration(File.ReadAllText(gercekleme), "IGalleryDisplayNameQueries"));
+    }
+
     private static IEnumerable<string> ConsumedQueryImplementations()
     {
         IReadOnlyList<string> interfaces = ConsumedInterfaces();

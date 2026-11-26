@@ -46,6 +46,26 @@ public sealed class GaleriProfiliTohumuTests : IAsyncLifetime
         await container.DisposeAsync();
     }
 
+    [Fact(DisplayName = "0026/AC-77, AC-59: Perf tohumu logo kimliğini atar ve önceki kartların tohumunu korur: altı hesap ve iki aktif şubenin en kötü programı yerinde.")]
+    public async Task Tohumlar_Logo_OncekileriKorur()
+    {
+        Guid logo = CarGallery.Modules.VehicleCatalog.VehicleCatalogModule.SeedLogoMediaAssetId;
+
+        await factory!.Services.SeedGalleryProfileForDevelopmentAsync(logo);
+
+        HttpClient ziyaretci = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        JsonElement galeri = JsonDocument.Parse(await ziyaretci.GetStringAsync("/api/dealership/gallery?locale=ar")).RootElement;
+        Assert.Equal(6, galeri.GetProperty("socialLinks").GetArrayLength());
+        Assert.All(galeri.GetProperty("branches").EnumerateArray(), sube =>
+            Assert.All(sube.GetProperty("openingHours").EnumerateObject(), gun => Assert.Equal(3, gun.Value.GetArrayLength())));
+
+        await using Npgsql.NpgsqlConnection baglanti = new(container.GetConnectionString());
+        await baglanti.OpenAsync();
+        await using Npgsql.NpgsqlCommand komut = baglanti.CreateCommand();
+        komut.CommandText = "SELECT logo_media_asset_id FROM dealership.galleries";
+        Assert.Equal(logo, (Guid)(await komut.ExecuteScalarAsync())!);
+    }
+
     [Fact(DisplayName = "0025/AC-62, AC-71: Perf tohumu her aktif şubeye AC-60'ın programını (yedi günde üçer, 21 farklı çift) yazar ve `0024`'ün tohumunu korur: `sameAs` altı adres.")]
     public async Task Tohumlar_ProgramVeHesaplar()
     {

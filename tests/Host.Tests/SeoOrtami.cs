@@ -3,6 +3,7 @@ using AngleSharp.Html.Parser;
 using CarGallery.Modules.Content.Contracts.Home;
 using CarGallery.Modules.Content.Contracts.Pages;
 using CarGallery.Modules.Dealership.Contracts.Gallery;
+using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 using CarGallery.Modules.VehicleCatalog.Contracts.Showcase;
 using Microsoft.AspNetCore.Hosting;
@@ -43,6 +44,18 @@ internal sealed class SeoOrtami : IDisposable
 
     internal PublicGalleryDto? Galeri { get; set; } = new("Oto Galeri", [new("Kadıköy", "Bağdat Cad. 1, İstanbul", "+902160000001")], []);
 
+    /// <summary>`0026` — galeriye atanmış logo kimliği (marka okumasının ikinci alanı).</summary>
+    internal Guid? LogoKimligi { get; set; }
+
+    /// <summary>`0026` — `Media`'nın o kimlik için döndürdüğü varlık; <c>null</c> = `Media`'da yok.</summary>
+    internal MediaAssetDto? LogoVarligi { get; set; }
+
+    /// <summary>`0026` AC-38 — `Media` okuması istisna fırlatır.</summary>
+    internal bool MedyaOkunamaz { get; set; }
+
+    /// <summary>`0026` AC-43 — belge başına `Media` okuma sayısı.</summary>
+    internal int MedyaOkumasi { get; private set; }
+
     internal int DetayOkumasi { get; private set; }
 
     internal int IlkGorselOkumasi { get; private set; }
@@ -61,6 +74,9 @@ internal sealed class SeoOrtami : IDisposable
             builder.ConfigureTestServices(services =>
             {
                 services.AddScoped<IGalleryDisplayNameQueries>(_ => new SahteAd(this));
+                // `0026` D17 — Host belgeyi marka okumasıyla kurar; aynı sahte, logo kimliğiyle.
+                services.AddScoped<IGalleryBrandingQueries>(_ => new SahteAd(this));
+                services.AddScoped<IMediaAssetQueries>(_ => new SahteMedya(this));
                 services.AddScoped<IPublicGalleryQueries>(_ => new SahteGaleri(this));
                 services.AddScoped<IShowcaseListingDetailQueries>(_ => new SahteDetay(this));
                 services.AddScoped<IContentPublicQueries>(_ => new SahteIcerik(this));
@@ -127,13 +143,53 @@ internal sealed class SeoOrtami : IDisposable
         return (yanit, new HtmlParser().ParseDocument(html), html);
     }
 
-    private sealed class SahteAd(SeoOrtami ortam) : IGalleryDisplayNameQueries
+    private sealed class SahteAd(SeoOrtami ortam) : IGalleryDisplayNameQueries, IGalleryBrandingQueries
     {
         public Task<string?> FindDisplayNameAsync(string locale, CancellationToken cancellationToken) =>
             ortam.AdOkunamaz
                 ? throw new InvalidOperationException("görünen ad okunamadı")
                 : Task.FromResult(ortam.Adlar.GetValueOrDefault(locale));
+
+        public Task<GalleryBrandingDto?> FindBrandingAsync(string locale, CancellationToken cancellationToken) =>
+            ortam.AdOkunamaz
+                ? throw new InvalidOperationException("görünen ad okunamadı")
+                : Task.FromResult<GalleryBrandingDto?>(new GalleryBrandingDto(ortam.Adlar.GetValueOrDefault(locale), ortam.LogoKimligi));
     }
+
+    /// <summary>`0026` — Host'un logo çözümünün `Media` okuması; yalnız <c>FindAsync</c> kullanılır.</summary>
+    private sealed class SahteMedya(SeoOrtami ortam) : IMediaAssetQueries
+    {
+        public Task<MediaAssetDto?> FindAsync(Guid mediaAssetId, CancellationToken cancellationToken)
+        {
+            ortam.MedyaOkumasi++;
+
+            return ortam.MedyaOkunamaz
+                ? throw new InvalidOperationException("medya okunamadı")
+                : Task.FromResult(ortam.LogoVarligi?.Id == mediaAssetId ? ortam.LogoVarligi : null);
+        }
+
+        public Task<bool> AreAllReadyAsync(IReadOnlyCollection<Guid> mediaAssetIds, CancellationToken cancellationToken) => Task.FromResult(false);
+
+        public Task<IReadOnlySet<Guid>> ReadyAmongAsync(IReadOnlyCollection<Guid> mediaAssetIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlySet<Guid>>(new HashSet<Guid>());
+
+        public Task<IReadOnlyList<MediaAssetDto>> FindManyAsync(IReadOnlyCollection<Guid> mediaAssetIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<MediaAssetDto>>([]);
+    }
+
+    /// <summary>`0026` — gerçek biçimli hazır logo: `logo-small` 320×80, `logo-large` 1200×300.</summary>
+    internal static MediaAssetDto LogoDto(Guid kimlik, string kok = "https://cdn.galeri.test/media/", MediaProcessingStatus durum = MediaProcessingStatus.Ready, MediaAssetKind tur = MediaAssetKind.Logo) => new(
+        kimlik,
+        durum,
+        null,
+        new Dictionary<string, string>(),
+        durum == MediaProcessingStatus.Ready
+            ? [
+                new MediaDerivativeDto("logo-large", 1200, 300, $"{kok}public/assets/{kimlik:D}/logo-large.webp"),
+                new MediaDerivativeDto("logo-small", 320, 80, $"{kok}public/assets/{kimlik:D}/logo-small.webp"),
+            ]
+            : [],
+        tur);
 
     private sealed class SahteGaleri(SeoOrtami ortam) : IPublicGalleryQueries
     {

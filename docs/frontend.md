@@ -235,6 +235,10 @@ içinde kalır.
   `createElement` parametre olarak gelir): paylaşsaydı rolldown ortak modülleri kritik yolda ayrı
   bir dosyaya çıkarıyordu. `npm run check:social-icons` ikisini de derleme çıktısında denetler
   (`0024` QA 2 BULGU-1). Parça gelmezse ad görünür metin olur.
+- **Panel stilleri** (`0026`): yalnız panelin kullandığı bir bölümün stilleri bileşenin kendi
+  `.css` dosyasında durur ve bileşen onu içe aktarır (`features/dealership/admin/galleryLogo.css`):
+  Vite onu panelin tembel parçasının CSS'ine koyar, vitrinin giriş CSS'ine (ilk paket) girmez.
+  `app/styles.css`'e yazılan her kural her vitrin sayfasında iner.
 
 ---
 

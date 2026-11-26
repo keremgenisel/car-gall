@@ -4,6 +4,7 @@ using CarGallery.Host.Seo;
 using CarGallery.Host.Theme;
 using CarGallery.Modules.Content.Contracts.Home;
 using CarGallery.Modules.Dealership.Contracts.Gallery;
+using CarGallery.Modules.Media.Contracts.Assets;
 using CarGallery.Modules.VehicleCatalog.Contracts.Detail;
 
 namespace CarGallery.Host.Localization;
@@ -32,6 +33,9 @@ internal sealed partial class IndexHtmlRenderer(
 {
     /// <summary>`0020` P1 — üst çubuğun okuduğu etiketin adı (`frontend/src/shared/lib/galleryName.ts`).</summary>
     internal const string DisplayNameMeta = "gallery-display-name";
+
+    /// <summary>`0026` D5 — üst çubuk ve altlık logosunun `logo-small` adresi ve gerçek boyutu.</summary>
+    internal const string LogoMeta = "gallery-logo";
 
     /// <summary>
     /// `0022` **D6** — ana sayfa metinlerinin etiket adları; uç onları ilk boyamada okur
@@ -85,13 +89,29 @@ internal sealed partial class IndexHtmlRenderer(
             $"<meta name=\"enabled-locales\" content=\"{string.Join(' ', locales.Enabled)}\" />{HeadEnd}",
             StringComparison.Ordinal);
 
-        string? gorunenAd = await GorunenAdAsync(context, locale);
+        // `0026` D17 — görünen ad ve logo kimliği TEK okumada (AC-76).
+        (string? gorunenAd, Guid? logoKimligi) = await MarkaAsync(context, locale);
 
         if (!string.IsNullOrWhiteSpace(gorunenAd))
         {
             html = html.Replace(
                 HeadEnd,
                 $"<meta name=\"{DisplayNameMeta}\" content=\"{AttributeEncode(gorunenAd)}\" />{HeadEnd}",
+                StringComparison.Ordinal);
+        }
+
+        // `0026` D3 · D5 — ad okunamazsa logo da yok (AC-39); logo atanmamışsa `Media`'ya okuma
+        // yapılmaz, atanmışsa belge başına tam bir okuma (AC-43).
+        GalleryLogo? logo = string.IsNullOrWhiteSpace(gorunenAd) || logoKimligi is null
+            ? null
+            : await LogoAsync(context, logoKimligi.Value);
+
+        if (logo is not null)
+        {
+            // Bilgi belgeye, adın etiketi gibi: üst çubuk ilk boyamada okur, ayrı istek yok (D5).
+            html = html.Replace(
+                HeadEnd,
+                $"<meta name=\"{LogoMeta}\" content=\"{AttributeEncode(logo.SmallUrl)}\" data-width=\"{logo.SmallWidth}\" data-height=\"{logo.SmallHeight}\" />{HeadEnd}",
                 StringComparison.Ordinal);
         }
 
@@ -113,7 +133,7 @@ internal sealed partial class IndexHtmlRenderer(
         // `0004` D11 · P8 — `<title>` yalnız buradan: kabuğun taşıdığı başlık (yazılımın adı) sökülür.
         html = TitleElement().Replace(html, string.Empty, 1);
 
-        SeoHead seo = await SeoAsync(context, locale, gorunenAd, anaSayfaMetinleri);
+        SeoHead seo = await SeoAsync(context, locale, gorunenAd, anaSayfaMetinleri, logo);
         context.Response.StatusCode = seo.StatusCode;
 
         if (seo.Tags.Length > 0)
@@ -144,17 +164,38 @@ internal sealed partial class IndexHtmlRenderer(
     /// istisna burada yakalanır — global işleyiciye gitseydi ziyaretçi bir ad yüzünden boş bir
     /// hata sayfası görürdü. İstisna yutulmaz, loga yazılır.</para>
     /// </summary>
-    private async Task<string?> GorunenAdAsync(HttpContext context, Locale locale)
+    private async Task<(string? DisplayName, Guid? LogoMediaAssetId)> MarkaAsync(HttpContext context, Locale locale)
     {
         try
         {
-            return await context.RequestServices
-                .GetRequiredService<IGalleryDisplayNameQueries>()
-                .FindDisplayNameAsync(locale.Code, context.RequestAborted);
+            GalleryBrandingDto? marka = await context.RequestServices
+                .GetRequiredService<IGalleryBrandingQueries>()
+                .FindBrandingAsync(locale.Code, context.RequestAborted);
+
+            return (marka?.DisplayName, marka?.LogoMediaAssetId);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogWarning(exception, "Galerinin görünen adı okunamadı; üst çubuk adsız basılıyor.");
+            return (null, null);
+        }
+    }
+
+    /// <summary>
+    /// `0026` **D3** — logonun türevleri `Media.Contracts`'tan, tek okuma. `Media` okuması düşerse
+    /// belge 200 ile LOGOSUZ basılır ve hata loglanır (`0020` R5a deseni, AC-38); ad etiketi durur.
+    /// </summary>
+    private async Task<GalleryLogo?> LogoAsync(HttpContext context, Guid logoMediaAssetId)
+    {
+        try
+        {
+            return GalleryLogo.From(await context.RequestServices
+                .GetRequiredService<IMediaAssetQueries>()
+                .FindAsync(logoMediaAssetId, context.RequestAborted));
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(exception, "Galeri logosu okunamadı; belge logosuz basılıyor.");
             return null;
         }
     }
@@ -235,13 +276,13 @@ internal sealed partial class IndexHtmlRenderer(
     /// ve hata loglanır (`0020` R5a deseni). Kurulu bir uygulamada bileşimin kendi okumaları
     /// zaten kendi yedeklerini taşır; bu dal beklenmeyen bir hata içindir.</para>
     /// </summary>
-    private async Task<SeoHead> SeoAsync(HttpContext context, Locale locale, string? gorunenAd, HomeTextsDto? anaSayfaMetinleri)
+    private async Task<SeoHead> SeoAsync(HttpContext context, Locale locale, string? gorunenAd, HomeTextsDto? anaSayfaMetinleri, GalleryLogo? logo)
     {
         try
         {
             return await context.RequestServices
                 .GetRequiredService<SeoHeadBuilder>()
-                .BuildAsync(context, locale, gorunenAd, anaSayfaMetinleri);
+                .BuildAsync(context, locale, gorunenAd, anaSayfaMetinleri, logo);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

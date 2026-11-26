@@ -28,7 +28,8 @@ internal sealed class UploadMediaAssetCommand(
 {
     internal async Task<Result<UploadMediaAssetResult>> ExecuteAsync(
         byte[] content,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        MediaAssetKind kind = MediaAssetKind.Photo)
     {
         ArgumentNullException.ThrowIfNull(content);
 
@@ -86,7 +87,8 @@ internal sealed class UploadMediaAssetCommand(
             content.Length,
             measured.Value.Width,
             measured.Value.Height,
-            clock.UtcNow);
+            clock.UtcNow,
+            kind);
 
         context.Assets.Add(asset);
         await context.SaveChangesAsync(cancellationToken);

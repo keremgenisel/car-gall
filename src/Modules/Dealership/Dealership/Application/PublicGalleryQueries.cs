@@ -7,8 +7,24 @@ using Microsoft.EntityFrameworkCore;
 namespace CarGallery.Modules.Dealership.Application;
 
 internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale defaultLocale)
-    : IPublicGalleryQueries, IGalleryDisplayNameQueries
+    : IPublicGalleryQueries, IGalleryDisplayNameQueries, IGalleryBrandingQueries
 {
+    /// <summary>
+    /// `0026` D17 · AC-76 — ad ve logo kimliği TEK projeksiyon sorgusunda; ticari unvan, vergi ve
+    /// sicil numarası süreç belleğine inmez (`0020` AC-16).
+    /// </summary>
+    public async Task<GalleryBrandingDto?> FindBrandingAsync(string locale, CancellationToken cancellationToken)
+    {
+        var row = await context.Galleries
+            .AsNoTracking()
+            .Select(gallery => new { gallery.DisplayNames, gallery.LogoMediaAssetId })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return row is null
+            ? null
+            : new GalleryBrandingDto(row.DisplayNames.Resolve(Resolve(locale), defaultLocale), row.LogoMediaAssetId);
+    }
+
     /// <summary>
     /// `0020` D16 — Host'un `index.html`'e bastığı ad. Projeksiyon sorguda: ticari unvan,
     /// vergi ve sicil numarası süreç belleğine hiç inmez (AC-16).

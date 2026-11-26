@@ -210,7 +210,10 @@ internal sealed class MediaProcessingService(
         // koyduğumda varlık zaten `hazır` olduğu için `BasarisizAsync`'in durum geçişi
         // reddediliyordu ve varlık HAZIR ama DUYURUSUZ kalıyordu — R7 sessizce
         // karşılanmaz olurdu.
-        if (!turevler.Exists(turev => turev.VariantCode == MediaVariant.Display.Code))
+        // `0026` P2 — beklenen türev türe göre: fotoğrafta gösterim, logoda küçük logo.
+        string beklenen = asset.Kind == MediaAssetKind.Logo ? MediaVariant.LogoSmall.Code : MediaVariant.Display.Code;
+
+        if (!turevler.Exists(turev => turev.VariantCode == beklenen))
         {
             logger.LogError("Gösterim türevi üretilmedi: {AssetId}", asset.Id);
             await BasarisizAsync(asset, MediaFailureReason.Undecodable, cancellationToken);
@@ -249,7 +252,9 @@ internal sealed class MediaProcessingService(
         //
         // Kontrol KAYNAĞI indirmeden önce: filigran yoksa orijinali çekmenin anlamı yok
         // ve 20'lik bir partide bu 20 gereksiz S3 GET demekti.
-        if (watermark is null)
+        //
+        // `0026` D1 — logo türü filigran KULLANMAZ: filigranın erişilemez olması logoyu düşürmez.
+        if (watermark is null && asset.Kind != MediaAssetKind.Logo)
         {
             return Result.Failure<IReadOnlyList<RenderedDerivative>>(new Error(MediaErrors.WatermarkUnavailable));
         }
@@ -261,7 +266,9 @@ internal sealed class MediaProcessingService(
             return Result.Failure<IReadOnlyList<RenderedDerivative>>(new Error(MediaErrors.StorageUnavailable));
         }
 
-        return processor.Render(kaynak, watermark);
+        return asset.Kind == MediaAssetKind.Logo
+            ? processor.RenderLogo(kaynak)
+            : processor.Render(kaynak, watermark!);
     }
 
     private async Task<byte[]?> IndirAsync(string objectKey, CancellationToken cancellationToken)

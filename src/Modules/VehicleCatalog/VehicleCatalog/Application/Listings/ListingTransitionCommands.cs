@@ -163,9 +163,7 @@ internal sealed class ListingTransitionCommands(
             eksikler.Add(new Error(PublishErrors.BranchUnassigned));
         }
 
-        IReadOnlySet<Guid> hazir = vehicle.MediaAssetIds.Count == 0
-            ? new HashSet<Guid>()
-            : await mediaAssets.ReadyAmongAsync(vehicle.MediaAssetIds, cancellationToken);
+        IReadOnlySet<Guid> hazir = await PublishEligibility.ReadyPhotosAsync(mediaAssets, vehicle.MediaAssetIds, cancellationToken);
 
         IReadOnlySet<string> zorunlu = read?.RequiredFieldKeys
             ?? await PublishEligibility.RequiredFieldKeysAsync(context, cancellationToken);

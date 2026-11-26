@@ -96,9 +96,7 @@ internal sealed class SaleRevertAssessor(
             }
         }
 
-        IReadOnlySet<Guid> hazir = vehicle.MediaAssetIds.Count == 0
-            ? new HashSet<Guid>()
-            : await mediaAssets.ReadyAmongAsync(vehicle.MediaAssetIds, cancellationToken);
+        IReadOnlySet<Guid> hazir = await PublishEligibility.ReadyPhotosAsync(mediaAssets, vehicle.MediaAssetIds, cancellationToken);
 
         IReadOnlySet<string> zorunlu = await PublishEligibility.RequiredFieldKeysAsync(context, cancellationToken);
 

@@ -196,6 +196,12 @@ public static class VehicleCatalogModule
     public static IServiceCollection AddVehicleCatalogSeedMedia(this IServiceCollection services) =>
         SeedAwareMediaAssetQueries.Register(services);
 
+    /// <summary>
+    /// `0026` P9 — perf koşusunun logosunun tohum kimliği; yalnız tohum medyası kayıtlıyken
+    /// (<see cref="AddVehicleCatalogSeedMedia"/>) çözülür. Host galeri profili tohumuna verir.
+    /// </summary>
+    public static Guid SeedLogoMediaAssetId => SeedMediaAssets.LogoId;
+
     public static void MapVehicleCatalog(this IEndpointRouteBuilder builder)
     {
         builder.MapShowcaseEndpoints();

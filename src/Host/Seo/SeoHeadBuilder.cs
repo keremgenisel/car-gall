@@ -60,17 +60,20 @@ internal sealed class SeoHeadBuilder(
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
-    internal async Task<SeoHead> BuildAsync(HttpContext context, Locale locale, string? displayName, HomeTextsDto? homeTexts)
+    internal async Task<SeoHead> BuildAsync(HttpContext context, Locale locale, string? displayName, HomeTextsDto? homeTexts, GalleryLogo? logo = null)
     {
         SeoPage page = SeoPage.Of(context.Request.Path, locale.Code);
         string? ad = string.IsNullOrWhiteSpace(displayName) ? null : displayName;
 
+        // `0026` D6 · D10 — kendi görseli olmayan belgenin `og:image`'i logonun büyük türevi, mutlak.
+        string? logoImage = logo is null ? null : Absolute(logo.LargeUrl);
+
         return page.Kind switch
         {
-            SeoPageKind.Home => Home(locale.Code, ad, homeTexts, await GalleryAsync(context, locale.Code, ad)),
-            SeoPageKind.List => List(context, locale.Code, ad),
-            SeoPageKind.Detail => await DetailAsync(context, locale.Code, ad, page.Slug!),
-            SeoPageKind.Content => await ContentAsync(context, locale.Code, ad, page.Slug!),
+            SeoPageKind.Home => Home(locale.Code, ad, homeTexts, await GalleryAsync(context, locale.Code, ad), logoImage),
+            SeoPageKind.List => List(context, locale.Code, ad, logoImage),
+            SeoPageKind.Detail => await DetailAsync(context, locale.Code, ad, page.Slug!, logoImage),
+            SeoPageKind.Content => await ContentAsync(context, locale.Code, ad, page.Slug!, logoImage),
             SeoPageKind.Newsletter => new SeoHead(StatusCodes.Status200OK, Title(ad ?? Text(locale.Code, SeoCatalog.DocumentFallbackTitle))),
             SeoPageKind.Admin => new SeoHead(StatusCodes.Status200OK, Title(ad ?? Text(locale.Code, SeoCatalog.DocumentFallbackTitle)) + Robots("noindex")),
             _ => NotFound(locale.Code, ad),
@@ -84,7 +87,7 @@ internal sealed class SeoHeadBuilder(
     private SeoHead NotFound(string locale, string? ad) =>
         new(StatusCodes.Status404NotFound, Title(WithName(Text(locale, SeoCatalog.NotFoundTitle), ad)) + Robots("noindex"));
 
-    private SeoHead Home(string locale, string? ad, HomeTextsDto? homeTexts, PublicGalleryDto? gallery)
+    private SeoHead Home(string locale, string? ad, HomeTextsDto? homeTexts, PublicGalleryDto? gallery, string? logoImage)
     {
         string title = ad ?? Text(locale, SeoCatalog.HomeFallbackTitle);
         string description = string.IsNullOrWhiteSpace(homeTexts?.IntroBody)
@@ -95,7 +98,7 @@ internal sealed class SeoHeadBuilder(
         StringBuilder tags = new();
         tags.Append(Title(title)).Append(Description(description));
         AppendLinks(tags, canonical, AllLocales(HomePath));
-        AppendOpenGraph(tags, title, description, canonical, ad, image: null);
+        AppendOpenGraph(tags, title, description, canonical, ad, image: logoImage);
 
         // D15 — galeri ad okunamazsa blok HİÇ basılmaz (AC-53).
         if (ad is not null && gallery is not null)
@@ -107,6 +110,12 @@ internal sealed class SeoHeadBuilder(
                 ["name"] = ad,
                 ["url"] = canonical,
             };
+
+            // `0026` D7 — kökte, metin adres; `department` öğelerinde yok, logo yoksa anahtar yok.
+            if (logoImage is not null)
+            {
+                dealer["logo"] = logoImage;
+            }
 
             if (gallery.Branches.Count > 0)
             {
@@ -193,7 +202,7 @@ internal sealed class SeoHeadBuilder(
     /// kanonik, alternatif ve <c>og:url</c> yok. Kümede olmayan parametre (<c>utm_source</c>) yok
     /// sayılır. Anahtar eşleşmesi ORDİNAL: uç parametreleri harfe duyarlı okur.
     /// </summary>
-    private SeoHead List(HttpContext context, string locale, string? ad)
+    private SeoHead List(HttpContext context, string locale, string? ad, string? logoImage)
     {
         string title = WithName(Text(locale, SeoCatalog.ListTitle), ad);
         string description = Text(locale, SeoCatalog.ListDescription);
@@ -205,19 +214,19 @@ internal sealed class SeoHeadBuilder(
         if (daraltilmis)
         {
             tags.Append(Robots("noindex, follow"));
-            AppendOpenGraph(tags, title, description, url: null, ad, image: null);
+            AppendOpenGraph(tags, title, description, url: null, ad, image: logoImage);
         }
         else
         {
             string canonical = root.Absolute(ListPath(locale));
             AppendLinks(tags, canonical, AllLocales(ListPath));
-            AppendOpenGraph(tags, title, description, canonical, ad, image: null);
+            AppendOpenGraph(tags, title, description, canonical, ad, image: logoImage);
         }
 
         return new SeoHead(StatusCodes.Status200OK, tags.ToString());
     }
 
-    private async Task<SeoHead> DetailAsync(HttpContext context, string locale, string? ad, string slug)
+    private async Task<SeoHead> DetailAsync(HttpContext context, string locale, string? ad, string slug, string? logoImage)
     {
         IShowcaseListingDetailQueries queries = context.RequestServices.GetRequiredService<IShowcaseListingDetailQueries>();
         ShowcaseListingDetailDto? detail;
@@ -271,7 +280,8 @@ internal sealed class SeoHeadBuilder(
 
         tags.Append(Title(title)).Append(Description(description));
         AppendLinks(tags, canonical, AllLocales(path));
-        AppendOpenGraph(tags, title, description, canonical, ad, images.FirstOrDefault());
+        // `0026` D6 — görselli ilan ilk görseli kullanır (`0004` D13); görselsiz ilan logoyu.
+        AppendOpenGraph(tags, title, description, canonical, ad, images.FirstOrDefault() ?? logoImage);
 
         // D14 — kapalı alan listesi. Görselsiz ilanda `image` yok; "fiyat sorunuz"da `offers` yok.
         JsonObject car = new()
@@ -319,7 +329,7 @@ internal sealed class SeoHeadBuilder(
     /// dâhil değil) 200 alır. Alternatifler yalnız sayfanın görünür olduğu diller;
     /// <c>x-default</c> yalnız sayfa varsayılan dilde görünürse.
     /// </summary>
-    private async Task<SeoHead> ContentAsync(HttpContext context, string locale, string? ad, string slug)
+    private async Task<SeoHead> ContentAsync(HttpContext context, string locale, string? ad, string slug, string? logoImage)
     {
         ContentPagePublicDto? sayfa = await context.RequestServices
             .GetRequiredService<IContentPublicQueries>()
@@ -349,7 +359,7 @@ internal sealed class SeoHeadBuilder(
         }
 
         AppendLinks(tags, canonical, alternatifler);
-        AppendOpenGraph(tags, title, description.Length > 0 ? description : null, canonical, ad, image: null);
+        AppendOpenGraph(tags, title, description.Length > 0 ? description : null, canonical, ad, image: logoImage);
 
         return new SeoHead(StatusCodes.Status200OK, tags.ToString());
     }

@@ -36,6 +36,12 @@ internal static class DealershipAdminEndpoints
                 new GalleryProfileInput(body.CommercialName, body.TaxNumber, body.TradeRegistryNumber, body.DisplayNames, body.SocialLinks),
                 ct)));
 
+        // `0026` D9 — logo bağı: atama ve kaldırma, okunan profil sürümüyle; yeni sürümü döner.
+        yonetim.MapPut("/gallery/logo", (LogoBody body, GalleryCommands commands, CancellationToken ct) =>
+            VersionAsync(commands.AssignLogoAsync(body.Version, body.MediaAssetId ?? Guid.Empty, ct)));
+        yonetim.MapDelete("/gallery/logo", (int version, GalleryCommands commands, CancellationToken ct) =>
+            VersionAsync(commands.RemoveLogoAsync(version, ct)));
+
         yonetim.MapGet("/branches/{id:guid}", FindBranchAsync);
         yonetim.MapPost("/branches", OpenBranchAsync);
         yonetim.MapPut("/branches/{id:guid}", (Guid id, SaveBranchBody body, BranchCommands commands, CancellationToken ct) =>
@@ -171,6 +177,9 @@ internal static class OpeningHoursBody
                 : (IReadOnlyList<OpeningIntervalInput>?)[.. pair.Value.Select(item => new OpeningIntervalInput(item?.Start, item?.End))],
             StringComparer.Ordinal);
 }
+
+/// <summary>`0026` D9 — logo ataması: varlık kimliği (`Media`'nın yükleme yanıtından) ve okunan sürüm.</summary>
+internal sealed record LogoBody(Guid? MediaAssetId, int Version);
 
 /// <summary>Durum eylemleri ve yazmaların yanıtı: okunan ya da yeni sürüm.</summary>
 internal sealed record VersionBody(int Version);

@@ -19,6 +19,9 @@ internal sealed class Vehicle : AggregateRoot<VehicleId>
     /// <summary>`0012a`/AC-9 — bağlanmak istenen varlık `Media`'da yok.</summary>
     internal const string MediaAssetNotFound = "vehicle.media_asset_not_found";
 
+    /// <summary>`0026` D16 · AC-69 — araca yalnız fotoğraf türündeki varlık bağlanır.</summary>
+    internal const string MediaAssetWrongKind = "vehicle.media_asset_wrong_kind";
+
     private readonly List<Guid> mediaAssetIds = [];
     private readonly List<VehicleOptionalFieldValue> optionalFieldValues = [];
     private readonly List<PriceChange> priceChanges = [];

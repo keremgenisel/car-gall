@@ -13,3 +13,24 @@ export function galleryDisplayName(doc: Document = document): string | null {
 
   return trimmed.length === 0 ? null : trimmed
 }
+
+/** `0026` D5 — üst çubuk ve altlığın logosu: `logo-small`'un adresi ve GERÇEK boyutu. */
+export interface GalleryLogo {
+  readonly url: string
+  readonly width: number
+  readonly height: number
+}
+
+/**
+ * `0026` **D3** · **D5** — sunucunun `<meta name="gallery-logo">` etiketinden, ilk boyamada ve ayrı
+ * istek olmadan. Sunucu etiketi yalnız hazır, logo türünde ve görünen adı okunabilen kurulumda basar;
+ * etiket yoksa ya da boyut okunamıyorsa `null` (logo yok, vitrin bu karttan önceki gibi).
+ */
+export function galleryLogo(doc: Document = document): GalleryLogo | null {
+  const meta = doc.querySelector('meta[name="gallery-logo"]')
+  const url = meta?.getAttribute('content')?.trim() ?? ''
+  const width = Number(meta?.getAttribute('data-width'))
+  const height = Number(meta?.getAttribute('data-height'))
+
+  return url.length === 0 || !(width > 0) || !(height > 0) ? null : { url, width, height }
+}

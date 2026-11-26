@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { ContentNavigationLink } from '../shared/api/content'
+import { galleryDisplayName, galleryLogo } from '../shared/lib/galleryName'
 import { enabledLocales } from '../shared/lib/locale'
 import { contentPath, homePath, listPath } from '../shared/lib/route'
 import { useLocale } from './localeContext'
@@ -29,10 +30,29 @@ export function HomeFooter({
   readonly social?: ReactNode
 }) {
   const { locale: current, t } = useLocale()
+  const name = galleryDisplayName()
+  const logo = galleryLogo()
 
   return (
     <footer className="home-footer" id="contact" data-testid="home-footer">
       <div className="home-footer__inner">
+        {/*
+          `0026` D5 · R4a — altlığın başında, şube bloğundan önce; üst çubukla AYNI `logo-small`
+          (ikinci indirme yok). Yanında ad yazmaz, bu yüzden `alt` görünen addır; bağlantı değildir.
+          Katlamanın altında: `loading="lazy"`, LCP adayı değil. Ad yoksa logo da yok.
+        */}
+        {logo === null || name === null ? null : (
+          <img
+            className="home-footer__logo"
+            src={logo.url}
+            width={logo.width}
+            height={logo.height}
+            alt={name}
+            loading="lazy"
+            decoding="async"
+            data-testid="footer-logo"
+          />
+        )}
         {branches}
 
         <nav className="home-footer__nav" aria-label={t('home.footer.label')}>

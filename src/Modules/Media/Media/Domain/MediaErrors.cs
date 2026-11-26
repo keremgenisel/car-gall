@@ -12,6 +12,9 @@ internal static class MediaErrors
     /// <summary>D10(a) — tür içerikten belirlendi ve desteklenen kümede değil (AC-3, AC-4).</summary>
     internal const string UnsupportedType = "media.unsupported_type";
 
+    /// <summary>`0026` D1 · AC-72 — <c>kind</c> alanı <c>photo</c> ya da <c>logo</c> değil.</summary>
+    internal const string KindUnknown = "media.kind_unknown";
+
     /// <summary>D10(b) — yapılandırılan bayt sınırı aşıldı (AC-5).</summary>
     internal const string TooLarge = "media.too_large";
 

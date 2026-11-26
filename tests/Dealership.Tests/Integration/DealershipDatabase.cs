@@ -28,12 +28,18 @@ public sealed class DealershipDatabase : IAsyncLifetime
 
     public Task DisposeAsync() => container.DisposeAsync().AsTask();
 
-    internal DealershipDbContext CreateContext()
+    internal DealershipDbContext CreateContext(params Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor[] interceptors)
     {
         DbContextOptionsBuilder<DealershipDbContext> builder = new();
         builder.UseNpgsql(
             container.GetConnectionString(),
             npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history", DealershipDbContext.Schema));
+
+        // `0026` AC-76 — sorgu sayan testler bir yakalayıcı verir; diğer çağıranlar boş geçer.
+        if (interceptors.Length > 0)
+        {
+            builder.AddInterceptors(interceptors);
+        }
 
         return new DealershipDbContext(builder.Options);
     }

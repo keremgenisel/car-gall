@@ -362,7 +362,9 @@ if (builder.Configuration.GetValue<bool>("Development:SeedHomeTexts"))
 // `0025` program, `0026` logo aynı bayrağa eklenir). `perf.yml` açar, e2e ortamı açmaz.
 if (builder.Configuration.GetValue<bool>("Development:SeedGalleryProfile"))
 {
-    await app.Services.SeedGalleryProfileForDevelopmentAsync();
+    // `0026` P9 — logo yalnız tohum medyası kayıtlıyken verilir; aksi hâlde kimlik çözülemezdi.
+    await app.Services.SeedGalleryProfileForDevelopmentAsync(
+        builder.Configuration.GetValue<bool>("Development:SeedShowcase") ? VehicleCatalogModule.SeedLogoMediaAssetId : null);
 }
 
 // Kurulum Yönetici hesabı olmadan hiç kimse giriş yapamaz ve sistem kalıcı olarak

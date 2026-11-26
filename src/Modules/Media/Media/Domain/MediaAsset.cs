@@ -25,9 +25,11 @@ internal sealed class MediaAsset : AggregateRoot<Guid>
         long byteSize,
         int sourceWidth,
         int sourceHeight,
-        DateTimeOffset uploadedAt)
+        DateTimeOffset uploadedAt,
+        MediaAssetKind kind)
         : base(id)
     {
+        Kind = kind;
         ContentType = contentType;
         OriginalObjectKey = originalObjectKey;
         ByteSize = byteSize;
@@ -45,6 +47,9 @@ internal sealed class MediaAsset : AggregateRoot<Guid>
         ContentType = string.Empty;
         OriginalObjectKey = string.Empty;
     }
+
+    /// <summary>`0026` D1 — işleme türü; yüklemede seçilir ve değişmez.</summary>
+    internal MediaAssetKind Kind { get; private set; } = MediaAssetKind.Photo;
 
     internal string ContentType { get; private set; }
 
@@ -89,8 +94,9 @@ internal sealed class MediaAsset : AggregateRoot<Guid>
         long byteSize,
         int sourceWidth,
         int sourceHeight,
-        DateTimeOffset uploadedAt) =>
-        new(id, contentType, originalObjectKey, byteSize, sourceWidth, sourceHeight, uploadedAt);
+        DateTimeOffset uploadedAt,
+        MediaAssetKind kind = MediaAssetKind.Photo) =>
+        new(id, contentType, originalObjectKey, byteSize, sourceWidth, sourceHeight, uploadedAt, kind);
 
     /// <summary>
     /// D14 — turun varlığı SAHİPLENMESİ. Yalnız <c>yüklendi</c> durumundan geçilir.

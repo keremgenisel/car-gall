@@ -125,6 +125,16 @@ internal static class MediaAdminEndpoints
             return MediaProblems.From(new Error(MediaErrors.TooLarge));
         }
 
+        // `0026` D1 · P1 — işleme türü, TEK kapı: alan yoksa `photo`; varsa birebir ordinal
+        // `photo` ya da `logo`. Boş, harf büyüklüğü farklı, kontrol karakterli ya da bilinmeyen her
+        // değer `422` ve dosyaya bakılmadan, depoya yazılmadan reddedilir (AC-72).
+        MediaAssetKind? kind = KindOf(form);
+
+        if (kind is null)
+        {
+            return MediaProblems.From(new Error(MediaErrors.KindUnknown));
+        }
+
         IFormFile? file = form.Files["file"];
 
         if (file is null)
@@ -140,7 +150,7 @@ internal static class MediaAdminEndpoints
         await file.CopyToAsync(tampon, cancellationToken);
 
         Result<UploadMediaAssetResult> sonuc = await command.ExecuteAsync(
-            tampon.ToArray(), cancellationToken);
+            tampon.ToArray(), cancellationToken, kind.Value);
 
         if (sonuc.IsFailure)
         {
@@ -152,6 +162,24 @@ internal static class MediaAdminEndpoints
             new UploadMediaAssetResponse(
                 sonuc.Value.Id,
                 sonuc.Value.Status.ToString().ToLowerInvariant()));
+    }
+
+    /// <summary>`0026` P1 — <c>kind</c> form alanı; tanınmayan değer için <c>null</c>.</summary>
+    private static MediaAssetKind? KindOf(IFormCollection form)
+    {
+        if (!form.TryGetValue("kind", out Microsoft.Extensions.Primitives.StringValues values))
+        {
+            return MediaAssetKind.Photo;
+        }
+
+        return values.Count == 1 && values[0] is { } value
+            ? value switch
+            {
+                "photo" => MediaAssetKind.Photo,
+                "logo" => MediaAssetKind.Logo,
+                _ => null,
+            }
+            : null;
     }
 
     /// <summary>

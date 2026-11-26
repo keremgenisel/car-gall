@@ -110,6 +110,11 @@ public static class DealershipModule
             provider.GetRequiredService<DealershipDbContext>(),
             parsed.Value));
 
+        // `0026` D17 — Host'un belgesi için ad + logo kimliği; aynı sınıf, ayrı dar yüzey.
+        services.AddScoped<IGalleryBrandingQueries>(provider => new PublicGalleryQueries(
+            provider.GetRequiredService<DealershipDbContext>(),
+            parsed.Value));
+
         return services;
     }
 
@@ -121,6 +126,7 @@ public static class DealershipModule
     /// </summary>
     public static async Task SeedGalleryProfileForDevelopmentAsync(
         this IServiceProvider services,
+        Guid? logoMediaAssetId = null,
         CancellationToken cancellationToken = default)
     {
         using IServiceScope scope = services.CreateScope();
@@ -171,6 +177,19 @@ public static class DealershipModule
             if (program.IsFailure)
             {
                 throw new InvalidOperationException($"Şube programı tohumlanamadı: {program.Error.Code}.");
+            }
+        }
+
+        // `0026` P9 · AC-59 — logo, hesaplardan ve programlardan SONRA, gerçek atama yolundan.
+        // Kimliği Host verir (tohum medyası kayıtlıyken); `Dealership` onu doğrulamaz (D2).
+        if (logoMediaAssetId is { } logo)
+        {
+            AdminGalleryDto son = (await scope.ServiceProvider.GetRequiredService<DealershipAdminQueries>().GetGalleryAsync(cancellationToken))!;
+            Result<int> atama = await scope.ServiceProvider.GetRequiredService<GalleryCommands>().AssignLogoAsync(son.Version, logo, cancellationToken);
+
+            if (atama.IsFailure)
+            {
+                throw new InvalidOperationException($"Galeri logosu tohumlanamadı: {atama.Error.Code}.");
             }
         }
     }

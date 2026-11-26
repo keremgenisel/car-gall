@@ -15,6 +15,24 @@ public enum MediaProcessingStatus
     Failed = 4,
 }
 
+/// <summary>
+/// `0026` **D1** — varlığın NASIL işlendiği; kime ait olduğu değil (Media sahipsizdir, C4).
+/// `Photo`: üç türev, filigran, siyah zemin (`0011`). `Logo`: iki türev, filigransız, saydamlık
+/// korunur. Migration'dan önce yüklenmiş varlıklar `Photo`'dur (AC-71).
+///
+/// <para>Telde KOD olarak, küçük harfle (`photo`, `logo`) — yükleme ucunun kabul ettiği değerle aynı
+/// (AC-9). Durum alanının sayı olarak serileşmesi değişmez (tüketicileri onu sayı okuyor).</para>
+/// </summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MediaAssetKind>))]
+public enum MediaAssetKind
+{
+    [System.Text.Json.Serialization.JsonStringEnumMemberName("photo")]
+    Photo = 1,
+
+    [System.Text.Json.Serialization.JsonStringEnumMemberName("logo")]
+    Logo = 2,
+}
+
 /// <summary>Bir türevin dışarıya görünen hâli: boyutu ve erişim yolu.</summary>
 public sealed record MediaDerivativeDto(string Variant, int Width, int Height, string Url);
 
@@ -22,13 +40,16 @@ public sealed record MediaDerivativeDto(string Variant, int Width, int Height, s
 /// Varlığın dar okuma yüzeyi. <b>Orijinalin yolu burada YOK</b> ve bu bilinçli (D16):
 /// orijinal ham saklanıyor, yani konum bilgisini taşıyor; R5'in garantisi dışarı çıkanı
 /// temizlemek olduğu için orijinalin yolu hiçbir yanıtta dönmez.
+/// <para>`0026` AC-9 — <c>Kind</c> varlığın işleme türüdür; var olan kurucular değişmeden
+/// derlensin diye son parametre ve varsayılanı <c>Photo</c>.</para>
 /// </summary>
 public sealed record MediaAssetDto(
     Guid Id,
     MediaProcessingStatus Status,
     MediaFailureReason? FailureReason,
     IReadOnlyDictionary<string, string> AltText,
-    IReadOnlyList<MediaDerivativeDto> Derivatives);
+    IReadOnlyList<MediaDerivativeDto> Derivatives,
+    MediaAssetKind Kind = MediaAssetKind.Photo);
 
 /// <summary>
 /// D11 — türev boyutlarına ihtiyaç duyan tüketici buradan çözer, olaydan değil.

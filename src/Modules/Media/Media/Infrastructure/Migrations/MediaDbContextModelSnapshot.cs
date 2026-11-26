@@ -103,6 +103,10 @@ namespace CarGallery.Modules.Media.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("failure_reason");
 
+                    b.Property<short>("Kind")
+                        .HasColumnType("smallint")
+                        .HasColumnName("kind");
+
                     b.Property<string>("OriginalObjectKey")
                         .IsRequired()
                         .HasMaxLength(512)
