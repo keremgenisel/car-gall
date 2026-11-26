@@ -226,6 +226,12 @@ içinde kalır.
 - Her görselin `alt` metni vardır ve locale'e göre üretilir; dekoratif görselde `alt=""`.
 - Araç görselleri `loading="lazy"`, açık `width`/`height` ile (CLS önlemi) ve responsive
   `srcset` ile gelir. **Katlama üstündeki kapak görseli hariç:** o `eager` yüklenir.
+- **Marka simgeleri** (`0024`): yalnız ikon olan bağlantının erişilebilir adı `aria-label`'dır,
+  SVG `aria-hidden="true"` ve `focusable="false"` taşır, boyası `currentColor`'dır (sabit renk
+  yok). Dokunma hedefi en az `--touch-target-min-size` (44px). Yollar ilk pakete girmez: tembel
+  içe aktarılan, `vite.config.ts`'in `manualChunks`'ıyla adı sabitlenmiş tek parçadadır ve
+  `npm run check:social-icons` bunu derleme çıktısında denetler. Parça gelmezse ad görünür metin
+  olur; kutu, parça gelmeden önce de son boyutundadır (yer kayması yok).
 
 ---
 

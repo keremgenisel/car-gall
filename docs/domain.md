@@ -22,6 +22,7 @@ kullanır. Aynı kavram için iki isim kullanılmaz.
 | **Galeri** | `Dealership` | Kurulumun ait olduğu tek işletme. Her kurulum tam bir galeriye hizmet eder. |
 | **Ticari Unvan** | `Gallery.CommercialName` | Galerinin yasal adı. Tek dildedir, zorunludur ve **vitrinde gösterilmez**; yalnız panelde ve yasal kayıtta yaşar. *(spec `0020`, 2026-11-18.)* |
 | **Görünen Ad** | `Gallery.DisplayNames` | Galerinin ziyaretçiye gösterilen adı; **dil başına** tutulur. Varsayılan dildeki karşılığı zorunludur, diğer dillerde yoksa varsayılan dildeki gösterilir. Vitrinin üst çubuğu ve ana sayfanın giriş satırı onu gösterir. Ticari unvandan ayrıdır: yasal ad çevrilmez, görünen ad çevrilir (`0020` D4). *(spec `0020`, 2026-11-18.)* |
+| **Sosyal Hesap** | `Gallery.SocialLinks` (`SocialLink`) | Galerinin sabit platform listesindeki (Instagram, Facebook, YouTube, TikTok, X, LinkedIn) bir platformda tuttuğu, vitrinde gösterilen hesap adresi. Galeri başına platform başına **en çok bir** tane; adres o platformun alan adında bir `https` adresidir. Platformun kodu saklanır, adı saklanmaz. *(spec `0024`, 2026-11-26.)* |
 | **Şube** | `Branch` | Galerinin fiziksel lokasyonu. Her aracın tam olarak bir şubesi vardır. Kalıcı olarak **kapatılmış** şubeye araç bağlanamaz (`0020` D14). |
 | **Personel** | `Staff` | Galeride çalışan kullanıcı. Rolü vardır, opsiyonel olarak bir şubeye bağlıdır. |
 | **Danışman** | `SalesAdvisor` | Talepleri yürüten personel rolü. |
