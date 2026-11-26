@@ -27,6 +27,9 @@ function kumeyiOku(dizin) {
 const kumeler = new Map([
   ['vitrin', kumeyiOku(localesDir)],
   ['panel', kumeyiOku(join(localesDir, 'panel'))],
+  // `0004` **D12** · **P2** — belge başlığı ve açıklamasının SEO'ya özgü metinleri. Ön yüz onları
+  // hiç içe aktarmaz (vitrin paketine girmez); Host dağıtım paketinde okur.
+  ['seo', kumeyiOku(join(localesDir, 'seo'))],
 ])
 
 let failed = false
@@ -62,11 +65,35 @@ for (const [kume, catalogs] of kumeler) {
 
 // İki kümenin dil listesi aynı olmalı: bir dilin panel kataloğu yoksa panel o dilde boş kalır.
 const vitrinDilleri = [...kumeler.get('vitrin').keys()].sort().join(',')
-const panelDilleri = [...kumeler.get('panel').keys()].sort().join(',')
 
-if (vitrinDilleri !== panelDilleri) {
-  failed = true
-  console.error(`dil listeleri farklı — vitrin: ${vitrinDilleri} · panel: ${panelDilleri}`)
+for (const kume of ['panel', 'seo']) {
+  const diller = [...kumeler.get(kume).keys()].sort().join(',')
+
+  if (vitrinDilleri !== diller) {
+    failed = true
+    console.error(`dil listeleri farklı — vitrin: ${vitrinDilleri} · ${kume}: ${diller}`)
+  }
+}
+
+// `0004` D12 — SEO kümesi yalnız `seo.` önekli anahtar taşır ve başka kümede tekrarlanmaz: ekranda
+// zaten görünen metin mevcut vitrin anahtarından okunur, kopyası yazılmaz.
+{
+  const seoAnahtarlari = Object.keys(kumeler.get('seo').get('tr') ?? {})
+  const digerleri = new Set([
+    ...Object.keys(kumeler.get('vitrin').get('tr') ?? {}),
+    ...Object.keys(kumeler.get('panel').get('tr') ?? {}),
+  ])
+  const onekDisi = seoAnahtarlari.filter((key) => !key.startsWith('seo.'))
+  const tekrar = seoAnahtarlari.filter((key) => digerleri.has(key))
+  const disaridaOnekli = [...digerleri].filter((key) => key.startsWith('seo.'))
+
+  if (onekDisi.length + tekrar.length + disaridaOnekli.length > 0) {
+    failed = true
+    console.error(
+      `seo kümesi — önek dışı: ${onekDisi.join(', ')} · başka kümede de var: ${tekrar.join(', ')} · ` +
+        `başka kümede seo. önekli: ${disaridaOnekli.join(', ')}`,
+    )
+  }
 }
 
 // Bir anahtar TEK kümede yaşar: ikisinde birden olursa hangisinin kazandığı kayıt sırasına
@@ -283,6 +310,42 @@ if (vitrinIhlalleri.length > 0) {
 if (vitrinModulleri.size < 10) {
   failed = true
   console.error(`[vitrin sınırı] yalnız ${vitrinModulleri.size} modül tarandı; girdi okunamadı.`)
+}
+
+// `0004` D17 (b) — SEO kümesini hiçbir ön yüz modülü içe aktarmaz; aktarırsa metinleri vitrinin
+// ilk paketine girer. Yorum dışındaki import belirteçleri ayrıştırıcıyla okunur.
+{
+  const seoIthalatlari = []
+
+  for (const dosya of readdirSync(srcDir, { recursive: true })) {
+    if (!/\.tsx?$/.test(dosya)) {
+      continue
+    }
+
+    const kaynak = ts.createSourceFile(
+      dosya,
+      readFileSync(join(srcDir, dosya), 'utf8'),
+      ts.ScriptTarget.Latest,
+    )
+
+    for (const dugum of kaynak.statements) {
+      const belirtec =
+        (ts.isImportDeclaration(dugum) || ts.isExportDeclaration(dugum)) && dugum.moduleSpecifier
+          ? dugum.moduleSpecifier.text
+          : undefined
+
+      if (belirtec?.includes('locales/seo')) {
+        seoIthalatlari.push(`src/${dosya} → ${belirtec}`)
+      }
+    }
+  }
+
+  if (seoIthalatlari.length > 0) {
+    failed = true
+    console.error(
+      `seo kümesi ön yüzde içe aktarılıyor (${seoIthalatlari.length}):\n  ${seoIthalatlari.join('\n  ')}`,
+    )
+  }
 }
 
 if (failed) {
