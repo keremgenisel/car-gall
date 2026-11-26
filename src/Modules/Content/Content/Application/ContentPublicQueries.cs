@@ -103,6 +103,30 @@ internal sealed class ContentPublicQueries(ContentDbContext context, ContentLoca
         return IsVisible(page, locale, girdiler) ? page.Localization(locale)!.Slug : null;
     }
 
+    public async Task<IReadOnlyList<string>> ListVisibleSlugsAsync(string locale, CancellationToken cancellationToken)
+    {
+        if (!locales.IsEnabled(locale))
+        {
+            return [];
+        }
+
+        // Görünürlük kuralı `FindBySlugAsync` ve altlıkla AYNI yardımcıdan (IsVisible): sitemap'te
+        // olup açılınca 404 veren ya da açılıp sitemap'te olmayan bir sayfa olmaz (CLARIFY B10).
+        List<ContentPage> sayfalar = await context.Pages
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        List<FaqEntry> girdiler = await FaqEntriesAsync(cancellationToken);
+
+        List<string> sluglar = [.. sayfalar
+            .Where(page => IsVisible(page, locale, girdiler))
+            .Select(page => page.Localization(locale)!.Slug)];
+
+        sluglar.Sort(StringComparer.Ordinal);
+
+        return sluglar;
+    }
+
     private static bool IsVisible(ContentPage page, string locale, List<FaqEntry> girdiler)
     {
         PageLocalization? satir = page.Localization(locale);

@@ -37,6 +37,13 @@ public interface IContentPublicQueries
     /// değilse <c>null</c>. Zincir yoktur: her eski slug doğrudan güncele çözülür (D33).
     /// </summary>
     Task<string?> FindCurrentSlugAsync(string locale, string oldSlug, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// `0004` **D4** · **P9** — verilen dilde ziyaretçiye GÖRÜNEN her sayfanın slug'ı: o dilde
+    /// <see cref="FindBySlugAsync"/>'in döndüreceği sayfalar, yani yayındaki dil ve girdisiz SSS
+    /// hariç (`0017` R20). Sitemap'in içerik adresleri; sıralı (ordinal). Etkin olmayan dilde boş.
+    /// </summary>
+    Task<IReadOnlyList<string>> ListVisibleSlugsAsync(string locale, CancellationToken cancellationToken);
 }
 
 /// <summary>
