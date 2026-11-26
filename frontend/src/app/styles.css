@@ -1280,6 +1280,29 @@ a.top-bar__brand:hover {
   margin-block: 0 var(--space-1);
 }
 
+/* `0025` D7 — şubenin yedi günü: gün adı satır başında, aralıklar yan yana. Rakamlar Latin ve
+   aralık soldan sağa (`dir="ltr"`); ar'da satır sağdan sola akar. */
+.home-footer__hours {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.home-footer__hours-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.home-footer__hours dt {
+  min-inline-size: 7rem;
+}
+
+.home-footer__hours dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
 .home-footer__branch-name {
   font-weight: var(--font-weight-semibold);
 }

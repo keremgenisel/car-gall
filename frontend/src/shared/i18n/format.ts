@@ -58,3 +58,14 @@ export function formatDateTime(iso: string, locale: AppLocale): string {
     timeStyle: 'short',
   }).format(value)
 }
+
+/**
+ * `0025` D6 — haftanın `index`'inci gününün adı (0 = Pazartesi), ekranın dilinde ve tarayıcının ad
+ * tablosundan: katalog anahtarı yok. Sabit bir Pazartesi'den (2024-01-01, UTC) türetilir; saat
+ * dilimi UTC'dir, yani tarayıcının saat dilimi adı kaydırmaz (`0025` AC-49).
+ */
+export function weekdayName(index: number, locale: AppLocale): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), { weekday: 'long', timeZone: 'UTC' }).format(
+    new Date(Date.UTC(2024, 0, 1 + index)),
+  )
+}
