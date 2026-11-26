@@ -638,11 +638,13 @@ bedeli ("uygulama ikisini tek kaynaktan türetmeli").
 olur; `Notifications` ve Host aynı kodu kullanır, Host testi aynı fikstürü ölçer. *Gerekçe:* Host
 başka modülün internal tipine erişemez (C4); kopya iki kaynak olurdu.
 
-**P5 — Detay belgesi iki okuma yapar: `FindFirstImageAsync` (ön yükleme, değişmez) ve `FindAsync`
-(başlık, açıklama, yapısal veri ve 404 kararı).** (D7, D17, AC-87) Gizli ve olmayan ilan ikisinde de
-aynı yoldan `null` döner (`ShowcaseListingDetailQueries`, E7). `FindAsync` hata verirse belge
-bugünkü gibi 200 ile basılır, detaya özgü etiketler basılmaz ve hata loglanır (`0020` R5a deseni).
-TTFB etkisi C3 ile ölçülür; eşik tutmazsa önerilen tek iyileştirme hafif bir okuma sözleşmesidir.
+**P5 — Detay belgesi TEK okuma yapar: `FindAsync`.** (D7, D17, AC-87) Ön yükleme görseli onun
+`Images[0]`'ıdır: `FindFirstImageAsync` ile aynı kural (yalnız hazır yuvalar, medya sırası,
+`display`'i olmayan düşer — `ShowcaseListingDetailQueries`). Gizli ve olmayan ilan ikisinde de
+aynı yoldan `null` döner (E7). `FindAsync` hata verirse belge bugünkü gibi 200 ile basılır, ön
+yükleme `FindFirstImageAsync`'ten gelir, detaya özgü etiketler basılmaz ve hata loglanır (`0020`
+R5a deseni). *(Proje Yöneticisi şartı, 2026-11-26: tek okuma mümkünse tek okuma; `0016b`'nin ön
+yükleme testi tam yolda ölçülür, yedek yolun ayrı testi var.)*
 
 **P6 — 404 kararı ve etiketler tek yerde: `SeoDocument` (Host).** Kabuk çizici belgeyi yazmadan
 önce sayfa türünü, durum kodunu ve etiketleri ondan alır; ara katman yalnız yönlendirmeleri yapar.
