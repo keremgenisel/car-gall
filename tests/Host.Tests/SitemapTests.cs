@@ -11,8 +11,10 @@ namespace CarGallery.Host.Tests;
 /// öğeler. Okumalar sahte; yayından kaldırma, satış ve açılış öncesi ilan gerçek zincirde
 /// (<see cref="SitemapZinciriTests"/>).
 /// </summary>
-public sealed class SitemapTests(HostFactory factory) : IClassFixture<HostFactory>
+public sealed class SitemapTests(HostFactory factory) : IClassFixture<HostFactory>, IDisposable
 {
+    public void Dispose() => ortam.Dispose();
+
     private const string K = SeoOrtami.Kok;
 
     private static readonly XNamespace Ns = SeoEndpoints.SitemapNamespace;

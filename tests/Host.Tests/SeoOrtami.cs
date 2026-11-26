@@ -18,8 +18,17 @@ namespace CarGallery.Host.Tests;
 /// istediği uca (KWD, "fiyat sorunuz", gizli alan, `&lt;/script&gt;`'li ad) getirmek bu yüzden mümkün.
 /// Belge JavaScript çalıştırılmadan AngleSharp ile ayrıştırılır (D22 a).
 /// </summary>
-internal sealed class SeoOrtami
+internal sealed class SeoOrtami : IDisposable
 {
+    /// <summary>
+    /// Kurulan her türetilmiş fabrika test bitince kapatılır. Kapatılmayan her fabrika bir
+    /// yapılandırma dosyası izleyicisi açık bırakıyordu; Linux'ta (CI) inotify sınırı (128)
+    /// dolunca SONRAKİ testlerin uygulaması başlamıyordu — ölçüldü, PR #126'nın ilk koşusu.
+    /// </summary>
+    private readonly List<IDisposable> fabrikalar = [];
+
+    private HttpClient? varsayilan;
+
     internal const string Kok = "http://localhost:5000";
 
     internal Dictionary<string, string?> Adlar { get; } = new() { ["tr"] = "Oto Galeri", ["ar"] = "معرض السيارات", ["en"] = "Auto Gallery" };
@@ -38,8 +47,15 @@ internal sealed class SeoOrtami
 
     internal int IlkGorselOkumasi { get; private set; }
 
-    internal HttpClient Istemci(HostFactory factory, Action<IWebHostBuilder>? ek = null) =>
-        factory.WithWebHostBuilder(builder =>
+    /// <summary>Ek ayar yoksa test boyunca TEK fabrika ve tek istemci kullanılır.</summary>
+    internal HttpClient Istemci(HostFactory factory, Action<IWebHostBuilder>? ek = null)
+    {
+        if (ek is null && varsayilan is not null)
+        {
+            return varsayilan;
+        }
+
+        WebApplicationFactory<Program> turetilmis = factory.WithWebHostBuilder(builder =>
         {
             ek?.Invoke(builder);
             builder.ConfigureTestServices(services =>
@@ -51,7 +67,29 @@ internal sealed class SeoOrtami
                 services.AddScoped<IHomeTextQueries>(_ => new SahteMetin(this));
                 services.AddScoped<IShowcaseSitemapQueries>(_ => new SahteSitemap(this));
             });
-        }).CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        });
+
+        fabrikalar.Add(turetilmis);
+        HttpClient istemci = turetilmis.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        if (ek is null)
+        {
+            varsayilan = istemci;
+        }
+
+        return istemci;
+    }
+
+    public void Dispose()
+    {
+        foreach (IDisposable fabrika in fabrikalar)
+        {
+            fabrika.Dispose();
+        }
+
+        fabrikalar.Clear();
+        varsayilan = null;
+    }
 
     internal static ShowcaseListingDetailDto Ilan(
         string slug,

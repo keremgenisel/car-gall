@@ -19,8 +19,10 @@ namespace CarGallery.Host.Tests;
 /// `0004` — belge etiketleri ve durum kodu, sunucunun yanıtının kendisi ayrıştırılarak (C13, D22).
 /// Sitemap ve robots.txt <see cref="SitemapTests"/>'te.
 /// </summary>
-public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFactory>
+public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFactory>, IDisposable
 {
+    public void Dispose() => ortam.Dispose();
+
     private const string Slug = "toyota-corolla-2019-abc123";
 
     private const string K = SeoOrtami.Kok;
