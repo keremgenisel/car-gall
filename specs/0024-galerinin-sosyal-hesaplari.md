@@ -221,7 +221,7 @@ yapısal verisinde de yer alır.
 
 ---
 
-## Verilen kararlar (öneri — Takım Yöneticisi onayı bekliyor)
+## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-26)
 
 Biçim: **karar** · *gerekçe* · *bedel*.
 
