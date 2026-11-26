@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace CarGallery.Modules.Dealership.Domain;
 
@@ -26,7 +25,7 @@ internal sealed record OpeningIntervalInput(string? Start, string? End);
 /// <para>**D4** — yedi günün hepsi boşsa program "girilmemiş"tir ve saklanmaz
 /// (<see cref="IsEmpty"/>; kolon <c>NULL</c>).</para>
 /// </summary>
-internal sealed partial class OpeningHours
+internal sealed class OpeningHours
 {
     internal const string InvalidTime = "opening_hours.invalid_time";
     internal const string EndNotAfterStart = "opening_hours.end_not_after_start";
@@ -171,14 +170,16 @@ internal sealed partial class OpeningHours
             StringComparer.Ordinal));
     }
 
+    /// <summary>
+    /// D3 — `HH:mm`: saat 00–23, dakika 00–59; `9:00`, `24:00`, Arapça rakam ve her türlü boşluk
+    /// geçersiz. QA 2 BULGU-1: önceki düzenli ifadenin `$`'ı sondaki `\n`'in önünde de eşleşiyordu;
+    /// `"09:00\n"` geçip `ParseExact`'te atıyor ve `500` dönüyordu. Tek kapı `TryParseExact`.
+    /// </summary>
     private static TimeOnly? ParseTime(string? value) =>
-        value is not null && TimeFormat().IsMatch(value)
-            ? TimeOnly.ParseExact(value, "HH:mm", CultureInfo.InvariantCulture)
+        value is not null
+        && TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly time)
+            ? time
             : null;
-
-    /// <summary>D3 — `HH:mm`: saat 00–23, dakika 00–59; `9:00` ve `24:00` geçersiz.</summary>
-    [GeneratedRegex("^([01][0-9]|2[0-3]):[0-5][0-9]$", RegexOptions.CultureInvariant)]
-    private static partial Regex TimeFormat();
 
     private sealed record Stored(string Start, string End);
 }

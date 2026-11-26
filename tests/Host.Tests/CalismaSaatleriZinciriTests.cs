@@ -134,12 +134,14 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
 
     // ----- Doğrulama (R5 · D3, D12) -----
 
-    [Theory(DisplayName = "0025/AC-10, AC-11, AC-12, AC-13, AC-14: Hatalı aralık `422` ve aralığın alanında kararlı kod döner.")]
+    [Theory(DisplayName = "0025/AC-10, AC-11, AC-12, AC-13, AC-14: Hatalı aralık (sonda satır sonu dâhil, QA 2 BULGU-1) `422` ve aralığın alanında kararlı kod döner; `500` değil.")]
     [InlineData("9:00", "18:00", "openingHours.monday.0.start", "opening_hours.invalid_time")]
     [InlineData("09:00", "24:00", "openingHours.monday.0.end", "opening_hours.invalid_time")]
     [InlineData("12:60", "18:00", "openingHours.monday.0.start", "opening_hours.invalid_time")]
     [InlineData("18:00", "09:00", "openingHours.monday.0.end", "opening_hours.end_not_after_start")]
     [InlineData("09:00", "09:00", "openingHours.monday.0.end", "opening_hours.end_not_after_start")]
+    [InlineData("09:00\n", "18:00", "openingHours.monday.0.start", "opening_hours.invalid_time")]
+    [InlineData("09:00", "18:00\r\n", "openingHours.monday.0.end", "opening_hours.invalid_time")]
     public async Task Doner422_HataliAralik(string baslangic, string bitis, string alan, string kod)
     {
         Guid sube = await SubeAcAsync();
@@ -193,6 +195,20 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
         Assert.Equal("opening_hours.invalid_time", hata.GetProperty("openingHours.monday.0.start").GetString());
         Assert.Equal("opening_hours.end_not_after_start", hata.GetProperty("openingHours.wednesday.0.end").GetString());
         Assert.Equal(once, await yonetici.GetStringAsync($"{Subeler}/{sube}"));
+    }
+
+    [Fact(DisplayName = "0025/D11 (QA 2): Bir günün değeri `null` olan yedi anahtarlı gövde 200 döner ve o gün kapalı olur.")]
+    public async Task NullGun_KapaliGundur()
+    {
+        Guid sube = await SubeAcAsync(Program(("monday", [("09:00", "18:00")]), ("tuesday", [("09:00", "18:00")])));
+        JsonObject program = Program(("tuesday", [("10:00", "12:00")]));
+        program["monday"] = null;
+
+        await ProgramYazAsync(sube, program);
+
+        JsonElement okunan = (await SubeAsync(sube)).GetProperty("openingHours");
+        Assert.Equal("[]", okunan.GetProperty("monday").GetRawText());
+        Assert.Equal("10:00", okunan.GetProperty("tuesday")[0].GetProperty("start").GetString());
     }
 
     [Fact(DisplayName = "0025/AC-23: Pazartesi 00:00–23:59 kabul edilir.")]

@@ -16,6 +16,9 @@ public sealed class CalismaProgramiTests
     [InlineData("0900", "18:00", "openingHours.monday.0.start")]
     [InlineData("09:00:00", "18:00", "openingHours.monday.0.start")]
     [InlineData("٠٩:٠٠", "18:00", "openingHours.monday.0.start")]
+    [InlineData("09:00\n", "18:00", "openingHours.monday.0.start")]
+    [InlineData("09:00", "18:00\r\n", "openingHours.monday.0.end")]
+    [InlineData(" 09:00", "18:00", "openingHours.monday.0.start")]
     public void Reddedilir_GecersizSaat(string? baslangic, string? bitis, string alan)
     {
         FieldErrors hatalar = new();
