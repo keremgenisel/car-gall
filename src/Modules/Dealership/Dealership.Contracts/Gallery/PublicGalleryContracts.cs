@@ -23,8 +23,22 @@ public sealed record PublicGalleryDto(
 /// <summary>`0024` R6 — platform KODU (<c>instagram</c>; çevrilmiş ad değil, C8) ve kayıtlı adres.</summary>
 public sealed record PublicSocialLinkDto(string Platform, string Url);
 
-/// <summary>Telefon E.164 biçimindedir; uç onu bir <c>tel:</c> bağlantısına çevirir (AC-45).</summary>
-public sealed record PublicBranchDto(string Name, string Address, string Phone);
+/// <summary>
+/// Telefon E.164 biçimindedir; uç onu bir <c>tel:</c> bağlantısına çevirir (AC-45).
+///
+/// <para>`0025` **D8** — izin listesi bilerek genişledi: <c>OpeningHours</c> programı girilmemiş
+/// şubede <c>null</c>; girilmişse TAM yedi gün kodu (<c>monday</c> … <c>sunday</c>, bu sırayla),
+/// kapalı gün boş dizi, aralıklar başlangıca göre sıralı. Saatler şubenin yerel duvar saatidir
+/// (`0025` D2) ve dilden bağımsızdır.</para>
+/// </summary>
+public sealed record PublicBranchDto(
+    string Name,
+    string Address,
+    string Phone,
+    IReadOnlyDictionary<string, IReadOnlyList<PublicOpeningIntervalDto>>? OpeningHours = null);
+
+/// <summary>`0025` D8 — bir aralık; ikisi de <c>HH:mm</c>.</summary>
+public sealed record PublicOpeningIntervalDto(string Start, string End);
 
 /// <summary>
 /// `0020` **D16** — Host'un `index.html`'e bastığı görünen ad (C6: üst çubuk ilk boyamada

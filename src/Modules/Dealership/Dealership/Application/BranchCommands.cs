@@ -17,7 +17,8 @@ internal sealed record BranchFormInput(
     string? TimeZone,
     string? Slug,
     decimal? Latitude,
-    decimal? Longitude);
+    decimal? Longitude,
+    IReadOnlyDictionary<string, IReadOnlyList<OpeningIntervalInput>?>? OpeningHours = null);
 
 /// <summary>
 /// Şubenin yazma yolu. `0007` B5 korumasını (kalıcı kapatma) yazmıştı ve "şube yönetimi
@@ -247,7 +248,8 @@ internal sealed class BranchCommands(
                 input.TimeZone,
                 input.Slug,
                 input.Latitude,
-                input.Longitude),
+                input.Longitude,
+                input.OpeningHours),
             locales.Default);
 
         if (draft.IsFailure)

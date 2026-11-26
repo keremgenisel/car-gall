@@ -1,6 +1,7 @@
 using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Dealership.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CarGallery.Modules.Dealership.Infrastructure.Configurations;
@@ -73,6 +74,19 @@ internal sealed class BranchConfiguration : IEntityTypeConfiguration<Branch>
         });
 
         builder.PrimitiveCollection<List<Guid>>("mediaAssetIds").HasColumnName("media_asset_ids");
+
+        // `0025` P3 · D13 — haftalık program tek jsonb kolonda, D8'in biçimiyle; NULL = girilmemiş
+        // (D4). Şubenin sürüm korumasıyla aynı satırda yazılır (R6).
+        builder.Property(branch => branch.OpeningHours)
+            .HasColumnName("opening_hours")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                hours => hours == null ? null : hours.ToJson(),
+                json => json == null ? null : OpeningHours.FromJson(json),
+                new ValueComparer<OpeningHours?>(
+                    (left, right) => (left == null ? null : left.ToJson()) == (right == null ? null : right.ToJson()),
+                    hours => hours == null ? 0 : hours.ToJson().GetHashCode(StringComparison.Ordinal),
+                    hours => hours == null ? null : OpeningHours.FromJson(hours.ToJson())));
 
         builder.Ignore(branch => branch.MediaAssetIds);
         builder.Ignore(branch => branch.DomainEvents);
