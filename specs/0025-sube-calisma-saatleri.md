@@ -2,16 +2,21 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaya sunuldu (2026-11-26)** |
+| **Durum** | **Onaya sunuldu (2026-11-26)** · D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26) · sahibin SS1 cevabı işlendi · QA 1 CLARIFY turu bekliyor |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (şube) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel şube formu, vitrin altlığı) |
 | **Bağımlı spec'ler** | `0003` (**X2**, **C9**, **C10**, **B4**) · `0004` (**D1**, **D15**, **D16**, **D17**, **AC-52**) · `0014` (altlık, **AC-14**) · `0020` (şube formu, **R16** sürüm, **D21** kapatılmış şube) · **`0024`** (okuma sözleşmesinin ve altlığın o kartla aldığı hâl). **Sonra gelen:** `0026`. |
-| **Karar bekliyor** | **Takım Yöneticisi:** D1–D15 (öneri). **Sahip:** SS1–SS3 (önerili). |
+| **Karar bekliyor** | yok — D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26). SS1 cevaplandı (sahip kararı, 2026-11-26). SS2 ve SS3'e sahip itiraz etmedi; öneri Proje Yöneticisi kararıyla kalır. |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26):** `0004` **SS3**'e "evet": şube çalışma saatleri
 > panelden girilsin, vitrinde ve yapısal veride (`openingHoursSpecification`) görünsün; `0004`'ten
 > sonra **ayrı küçük kart**. `0003` **X2** bu işi ayırmıştı. `0020` **X3** de açmamıştı.
+>
+> **Sahibin cevabı (sahip kararı, 2026-11-26):** SS1 → bayram/tatil istisnaları ve "şu an açık"
+> **bu kartın hemen ardından ayrı bir iş** (X1, X2). SS2 (altlıkta şube başına yedi satır) ve SS3
+> (her dilde Pazartesi) için sahip itiraz etmedi: öneriler **Proje Yöneticisi kararı** olarak
+> kalır (D6, D7). Kriter değişmedi.
 
 ---
 
@@ -78,9 +83,11 @@ yedi günün saatleri görünür ve aynı saatler şubenin yapısal verisinde de
 - **X1.** **İstisna programı** (bayram, resmî tatil, Ramazan saatleri, belirli bir günde kapanış;
   **B3**) — *neden:* tarih aralıklı ayrı bir model, haftalık programı ezme kuralı, geçmiş
   istisnanın düşmesi ve yapısal verideki geçerlilik tarihleri tek başına bir kart (**D1**, **SS1**).
+  **Sahip kararı, 2026-11-26: sonra ayrı iş, bu kartın hemen ardından.**
 - **X2.** **"Şu an açık / kapalı" göstergesi ve "bugün"ün vurgulanması** (**B4**) — *neden:*
   istisnasız bir hesap bayramda "açık" der, yani X1 ile birlikte gelmelidir. Hesap şubenin saat
   diliminde ve saat soyutlamasıyla yapılır (`0003` **B4**). Bu kart onun girdisini hazırlar (**D2**).
+  **Sahip kararı, 2026-11-26: sonra ayrı iş, X1 ile aynı kartta.**
 - **X3.** **Gece yarısını geçen aralık** (ör. 22:00–02:00) — *neden:* galerilerde yaygın değil. İki
   güne bölünerek girilebilir (**D3**).
 - **X4.** **Haftanın ilk gününün kuruluma ya da dile göre değişmesi** — *neden:* **D6**, **SS3**.
@@ -250,14 +257,16 @@ ayırmanın en küçük yolu bu ve **B2**'yi korur.
 *Gerekçe:* aynı saatli günler çoğunluktadır. Kopyalama eylemi yedi günü tek tek yazmayı önler.
 *Bedel:* yok.
 
-**D6 — Gün sırası her dilde Pazartesi → Pazar'dır.** (R7, X4, **SS3**) Panelde, vitrinde, okuma
+**D6 — Gün sırası her dilde Pazartesi → Pazar'dır.** (R7, X4, **SS3**) *(Proje Yöneticisi kararı,
+2026-11-26: sahip SS3'e itiraz etmedi.)* Panelde, vitrinde, okuma
 yanıtında ve yapısal veride aynı sıra kullanılır (ISO 8601). Gün adları ekranın dilinde,
 tarayıcının yerel ad tablosundan basılır ve çeviri kataloğuna girmez. Gün kodları `monday` …
 `sunday`'dir.
 *Gerekçe:* tek, deterministik bir sıra. Ad tablosu paket büyütmez (D10).
 *Bedel:* Körfez'de hafta çoğunlukla Cumartesi ya da Pazar başlar. İlk gün ayarı ayrı bir karar (X4).
 
-**D7 — Vitrin: altlıkta her şubenin altında yedi satır.** (R4, R7, R11, X7, X10)
+**D7 — Vitrin: altlıkta her şubenin altında yedi satır.** (R4, R7, R11, X7, X10) *(Proje Yöneticisi
+kararı, 2026-11-26: sahip SS2'ye itiraz etmedi.)*
 - Program girilmiş şubede, adres ve telefondan sonra yedi satır gelir. Her satır gün adını ve o
   günün aralıklarını birlikte taşır. Kapalı günde "Kapalı" yazar.
 - Aralık `09:00–13:00` biçimindedir: 24 saat, Latin rakam, her dilde aynı metin ve soldan sağa.
@@ -356,8 +365,9 @@ yerel saat aralığından oluşan programı. Aralıksız gün kapalıdır. İsti
 
 ## Sahibe sorular
 
-> Yalnız sahibin verebileceği kararlar. Her birinin altında öneri var. Cevap gelene kadar öneri
-> uygulanır. Cevap öneriden farklıysa ilgili D ve kriterler kart onaylanmadan güncellenir.
+> **Cevaplandı (sahip kararı, 2026-11-26):** **SS1** → öneri kabul: istisnalar ve "şu an açık" bu
+> kartın hemen ardından ayrı iş. **SS2** ve **SS3** → sahip itiraz etmedi; öneriler Proje Yöneticisi
+> kararı olarak kalır.
 
 - **SS1. Bayram ve tatil saatleri canlıya çıkıştan önce gerekli mi?** Bu kart yalnız haftalık
   programı getiriyor. Bayramda vitrin ve arama motoru haftalık saati gösterir (D1).
