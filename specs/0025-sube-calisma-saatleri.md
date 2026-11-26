@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1, kartlar arası X1–X3 → D10, D11, D12 güncellendi; AC-66–AC-72) |
+| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1, kartlar arası X1–X3 → D10, D11, D12 güncellendi; AC-66–AC-72) · **QA 2 revizyonu (2026-11-26, AP-08, Proje Yöneticisi kararı):** AC-61 ve D10(b) `0024` AC-55'in tanımıyla hizalandı; D11'e `null` gün cümlesi |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (şube) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel şube formu, vitrin altlığı) |
@@ -373,7 +373,9 @@ kararı, 2026-11-26: sahip SS2'ye itiraz etmedi.)*
 - **(a)** `/ar/` ana sayfa belgesinde **tek bir şubenin** programının eklediği bayt **en çok 2304 B**'tır
   (sıkıştırmasız). Kurgulanmış en kötü durum: yedi günün her birinde üç aralık ve 21 aralığın
   hiçbiri başka bir günle aynı (`opens`, `closes`) çiftini taşımıyor. Şube sayısıyla doğrusal büyür.
-- **(b)** İlk paket ADR 0013'ün protokolüyle `main` tabanına göre **en çok 512 B** büyür.
+- **(b)** İlk paket `main` tabanına göre **en çok 512 B** büyür. "İlk paket" = giriş JS + giriş CSS +
+  girişin statik içe aktardığı ya da `index.html`'in `modulepreload` ettiği her JS, `gzip -9`.
+  *Revizyon (2026-11-26, AP-08): 0024 AC-55 tanımıyla hizalandı — Proje Yöneticisi kararı.*
 - **(c)** C3 ana sayfa, liste ve detayda yeşil kalır. Perf koşusu her aktif şubeye (a)'nın
   programını tohumlar. *(CLARIFY X2(c), koddan ölçüldü:)* perf koşusunda **iki aktif şube** var:
   ikisi de kurulum tohumunun (`SeedInitialDealership.cs:24-37`, durum `1` = Aktif). Vitrin
@@ -398,6 +400,8 @@ kararı, 2026-11-26: sahip SS2'ye itiraz etmedi.)*
   `opening_hours.missing_day` döner. Gün kodu **harfe duyarlıdır**: `Monday`, `opening_hours.unknown_day`
   döner. Yedi günün hepsi boş dizi olan program, programı **siler** (D4). Boş nesne (`{}`) yedi günü
   eksik bir programdır, yani `missing_day` döner.
+- *(QA 2 revizyonu, 2026-11-26, AP-08, Proje Yöneticisi kararı:)* Bir günün değeri `null` ise o gün
+  **kapalıdır** (boş dizi): anahtar vardır, aralık yoktur.
 - Kapatılmış şubede değişiklik `409` `branch.closed_read_only` döner (`0020` **D21**). Geçici kapalı
   şubenin programı değiştirilebilir.
 - Program değişikliği entegrasyon olayı üretmez.
@@ -593,8 +597,9 @@ yerel saat aralığından oluşan programı. Aralıksız gün kapalıdır. İsti
 - **AC-60.** Tek şubeli kurulumda, kurgulanmış en kötü programlı şubenin `/ar/` ana sayfa belgesi,
   aynı şubenin programsız hâlinden en çok **2304 B** büyüktür. Kurgu: yedi günde üçer aralık ve
   21 aralığın hepsinin (`opens`, `closes`) çifti farklı.
-- **AC-61.** İlk paket (giriş JS + giriş CSS, `gzip -9`, ADR 0013) `main` tabanına göre en çok
-  **512 B** büyür.
+- **AC-61.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
+  `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **512 B** büyür.
+  *Revizyon (2026-11-26, AP-08): 0024 AC-55 tanımıyla hizalandı — Proje Yöneticisi kararı.*
 - **AC-62.** Perf koşusu her aktif şubeye AC-60'ın programını tohumlar. C3 ana sayfa, liste ve
   detayda yeşildir. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi
   PR'da yazılıdır.
