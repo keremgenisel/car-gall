@@ -43,10 +43,10 @@ internal sealed class SeoHeadBuilder(
     internal const string TitleSeparator = " · ";
 
     /// <summary>
-    /// `0004` **D17** · **P10** — yapısal verinin <c>image</c> dizisinin üst sınırı. Ölçüldü
-    /// (AC-83'ün kurgusu, ar): görselsiz 3444 B, ilk görsel +298 B, sonraki her görsel +126 B;
-    /// 4096 B'a en çok üç görsel sığıyor (3994 B). Ürün bugün ilan başına görsel sayısını
-    /// sınırlamıyor, yani sınır olmadan bütçe hiçbir tavanla tutmazdı. Sıra ilandaki sıradır.
+    /// `0004` **D17** · **P10** — yapısal verinin <c>image</c> dizisinin üst sınırı. Ölçüldü: ilk
+    /// görsel +298 B, sonraki her görsel +126 B. Ürün bugün ilan başına görsel sayısını
+    /// sınırlamıyor, yani sınır olmadan bütçe hiçbir tavanla tutmazdı. AC-83'ün en kötü durumu
+    /// üç görselle 5647 B (bütçe 6144 B, AP-08 revizyonu). Sıra ilandaki sıradır.
     /// </summary>
     internal const int MaxStructuredImages = 3;
 
