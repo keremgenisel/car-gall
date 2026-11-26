@@ -91,21 +91,7 @@ export function ContentPage({ slug }: { readonly slug: string }) {
   }
 
   if (load.kind === 'notFound') {
-    return (
-      <div className="page">
-        {/* AC-40 — `0002` R5'in "bulunamadı" ekranıyla AYNI bileşen (`EmptyState`) ve desen. */}
-        <EmptyState
-          testId="content-not-found"
-          title={t('content.notFound.title')}
-          description={t('content.notFound.body')}
-          action={
-            <a className="ui-button ui-button--secondary" href={homePath(locale)}>
-              {t('content.notFound.action')}
-            </a>
-          }
-        />
-      </div>
-    )
+    return <ContentNotFound />
   }
 
   if (load.kind === 'error') {
@@ -149,6 +135,31 @@ export function ContentPage({ slug }: { readonly slug: string }) {
           )}
         </div>
       </Card>
+    </div>
+  )
+}
+
+/**
+ * "Bulunamadı" ekranı. AC-40 — `0002` R5'in ekranıyla AYNI bileşen (`EmptyState`) ve desen.
+ *
+ * `0004` **D7** · **D8** · **P7** — tanınmayan vitrin yolu da bu ekranı basar; sunucunun 404
+ * belgesinin başlığıyla aynı metin (`content.notFound.title`, C6: ilan ile sayfa ayırt edilmez).
+ */
+export function ContentNotFound() {
+  const { locale, t } = useLocale()
+
+  return (
+    <div className="page">
+      <EmptyState
+        testId="content-not-found"
+        title={t('content.notFound.title')}
+        description={t('content.notFound.body')}
+        action={
+          <a className="ui-button ui-button--secondary" href={homePath(locale)}>
+            {t('content.notFound.action')}
+          </a>
+        }
+      />
     </div>
   )
 }

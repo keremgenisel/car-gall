@@ -38,8 +38,10 @@ describe('parseRoute', () => {
     expect(parseRoute('/tr/cars/')).toEqual({ kind: 'list' })
   })
 
-  it('tanınmayan bölüm liste rotasıdır — 0001 davranışı korunur (0014 D28)', () => {
-    expect(parseRoute('/tr/baska-bir-sey/x')).toEqual({ kind: 'list' })
+  // `0004` D8 ile bilerek değişti: 0014 D28'in "tanınmayan bölüm listeye düşer" davranışı kalktı;
+  // sunucu bu yolu 404 ile verir ve uç "bulunamadı" basar (AC-76).
+  it('tanınmayan bölüm "bulunamadı" rotasıdır — 0004 D8', () => {
+    expect(parseRoute('/tr/baska-bir-sey/x')).toEqual({ kind: 'not-found' })
   })
 
   it('etkin olmayan locale öneki uçta rotaya dönüşmez — sunucu zaten 404 verir', () => {
@@ -99,5 +101,31 @@ describe('0014 — liste ve ana sayfa adresleri', () => {
   it('listPath /{locale}/cars, homePath /{locale}/ üretir', () => {
     expect(listPath('ar')).toBe('/ar/cars')
     expect(homePath('en')).toBe('/en/')
+  })
+})
+
+describe('0004 — "bulunamadı" rotası (D8)', () => {
+  it('0004/AC-76 (rota yarısı): /tr/foo/bar, /tr/cars/{slug}/x, /tr/admin, /tr/newsletter ve /tr/newsletter/foo "bulunamadı" rotasıdır', () => {
+    for (const adres of [
+      '/tr/foo/bar',
+      '/tr/cars/toyota-corolla-2019-abc123/x',
+      '/tr/admin',
+      '/tr/newsletter',
+      '/tr/newsletter/foo',
+      '/ar/foo/bar',
+    ]) {
+      expect(parseRoute(adres), adres).toEqual({ kind: 'not-found' })
+    }
+  })
+
+  it('görünür rotalar değişmez: ana sayfa, liste, detay, içerik, bülten teyit/çıkış', () => {
+    expect(parseRoute('/tr/')).toEqual({ kind: 'home' })
+    expect(parseRoute('/tr/cars')).toEqual({ kind: 'list' })
+    expect(parseRoute('/tr/cars/toyota-corolla-2019-abc123')).toEqual({
+      kind: 'detail',
+      slug: 'toyota-corolla-2019-abc123',
+    })
+    expect(parseRoute('/tr/kvkk')).toEqual({ kind: 'content', slug: 'kvkk' })
+    expect(parseRoute('/tr/newsletter/confirm')).toEqual({ kind: 'newsletter-confirm' })
   })
 })

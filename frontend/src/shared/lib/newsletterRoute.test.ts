@@ -15,8 +15,9 @@ describe('0018/AC-51: Teyit bağlantısı `{PublicBaseUrl}/{locale}/newsletter/c
     expect(newsletterTokenOf('')).toBe('')
   })
 
-  it('newsletter tek parçalı yolu içerik sayfası değildir ama tanınmayan alt yol sayfa da değildir', () => {
-    expect(parseRoute('/tr/newsletter/baska')).toEqual({ kind: 'list' })
+  // `0004` D8 ile bilerek değişti: tanınmayan alt yol listeye değil "bulunamadı"ya düşer (AC-76).
+  it('newsletter tek parçalı yolu içerik sayfası değildir; tanınmayan alt yolu "bulunamadı"dır', () => {
+    expect(parseRoute('/tr/newsletter/baska')).toEqual({ kind: 'not-found' })
   })
 
   it('yeniden abone olma bağlantısı ana sayfanın bülten bölümüne', () => {

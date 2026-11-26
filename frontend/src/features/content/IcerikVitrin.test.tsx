@@ -68,8 +68,9 @@ describe('0017 — rota', () => {
     expect(parseRoute('/tr/foo')).toEqual({ kind: 'content', slug: 'foo' })
   })
 
-  it('0017/AC-38 (rota yarısı): iki parçalı tanınmayan yol /tr/foo/bar listeye düşer', () => {
-    expect(parseRoute('/tr/foo/bar')).toEqual({ kind: 'list' })
+  // `0004` D8 ile bilerek değişti (DoD T11): `0017` AC-38'in "listeye düşer" davranışı kalktı.
+  it('0017/AC-38 (rota yarısı, 0004 D8 ile değişti): iki parçalı tanınmayan yol /tr/foo/bar "bulunamadı"dır', () => {
+    expect(parseRoute('/tr/foo/bar')).toEqual({ kind: 'not-found' })
   })
 
   it('triyaj BULGU-3 (R12, AC-35 rota yarısı): bozuk kodlanmış parça fırlatmaz, ham hâliyle içerik adayı olur; detay da aynı', () => {
