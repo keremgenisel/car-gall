@@ -33,7 +33,7 @@ internal static class DealershipAdminEndpoints
         yonetim.MapPut("/gallery", (SaveGalleryBody body, GalleryCommands commands, CancellationToken ct) =>
             VersionAsync(commands.UpdateProfileAsync(
                 body.Version,
-                new GalleryProfileInput(body.CommercialName, body.TaxNumber, body.TradeRegistryNumber, body.DisplayNames),
+                new GalleryProfileInput(body.CommercialName, body.TaxNumber, body.TradeRegistryNumber, body.DisplayNames, body.SocialLinks),
                 ct)));
 
         yonetim.MapGet("/branches/{id:guid}", FindBranchAsync);
@@ -108,13 +108,20 @@ internal static class DealershipAdminEndpoints
         body.Longitude);
 }
 
-/// <summary>Galeri profili kaydetme gövdesi; <c>Version</c> okunan sürümdür (R16).</summary>
+/// <summary>
+/// Galeri profili kaydetme gövdesi; <c>Version</c> okunan sürümdür (R16).
+///
+/// <para>`0024` **D4** · P1 — <c>SocialLinks</c> platform kodundan adrese haritadır. Alan yoksa
+/// ya da açık <c>null</c>'sa kayıtlı hesaplar değişmez: D4 ikisini AYNI anlama bağladığı için
+/// düz nullable tip yeterli; <c>Optional&lt;T&gt;</c> gerekmez. Silmenin tek yolu boş haritadır.</para>
+/// </summary>
 internal sealed record SaveGalleryBody(
     int Version,
     string? CommercialName,
     string? TaxNumber,
     string? TradeRegistryNumber,
-    Dictionary<string, string?>? DisplayNames);
+    Dictionary<string, string?>? DisplayNames,
+    Dictionary<string, string?>? SocialLinks = null);
 
 /// <summary>Şube açma gövdesi.</summary>
 internal sealed record OpenBranchBody(

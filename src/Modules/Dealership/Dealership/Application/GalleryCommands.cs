@@ -6,12 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarGallery.Modules.Dealership.Application;
 
-/// <summary>`0020` R1 — panelin galeri profili girdisi; değerler ham hâliyle.</summary>
+/// <summary>
+/// `0020` R1 — panelin galeri profili girdisi; değerler ham hâliyle. `0024` **D4** · P1 —
+/// <c>SocialLinks</c> <c>null</c> ise (gövdede alan yok ya da açık <c>null</c>) kayıtlı hesaplar
+/// değişmez; harita kümeyi bütünüyle yerine koyar.
+/// </summary>
 internal sealed record GalleryProfileInput(
     string? CommercialName,
     string? TaxNumber,
     string? TradeRegistryNumber,
-    IReadOnlyDictionary<string, string?>? DisplayNames);
+    IReadOnlyDictionary<string, string?>? DisplayNames,
+    IReadOnlyDictionary<string, string?>? SocialLinks = null);
 
 /// <summary>
 /// `0020` R1–R3a, R16 — galeri profilinin yazma yolu. Eski sürümle kaydetme
@@ -52,7 +57,8 @@ internal sealed class GalleryCommands(DealershipDbContext context, DealershipLoc
             input.TaxNumber,
             input.TradeRegistryNumber,
             adlar,
-            locales.Default);
+            locales.Default,
+            input.SocialLinks);
 
         if (sonuc.IsFailure)
         {
