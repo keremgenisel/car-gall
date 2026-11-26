@@ -2,13 +2,13 @@
 
 | | |
 |---|---|
-| **Durum** | Onaya sunuldu (2026-11-26) |
+| **Durum** | Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (QA 1, PR #138 @ `8ecf9ae`: 17 bulgu — 0 engelleyici / 9 önemli / 8 küçük; B1–B17 → § Verilen kararlar) |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
-| **Modül(ler)** | `frontend/` public vitrin (favori düğmesi, sayaç, favoriler ve karşılaştırma ekranları, tembel katalog kümesi) · `Host` (iki yeni sayfa türü, belge etiketleri, `Referrer-Policy` — **D2**) · `Content.Contracts` (yalnız ayrılmış ad listesine `favorites` ve `compare` — **D1**) · `tests/VehicleCatalog.Tests` (alan adı kapısının okuduğu dosya — **D11**) · `docs/` (sözlük **D16**, karar defteri ve ADR `0013` eki **D17**). **Backend sözleşmesi değişmez** (**D14**; S5 koddan doğrulandı). |
+| **Modül(ler)** | `frontend/` public vitrin (favori düğmesi, sayaç, favoriler ve karşılaştırma ekranları, tembel katalog kümesi) · `Host` (iki yeni sayfa türü, belge etiketleri, `Referrer-Policy` — **D2**) · `Content.Contracts` (yalnız ayrılmış ad listesine `favorites` ve `compare` — **D1**) · `tests/VehicleCatalog.Tests` (alan adı kapısının okuduğu dosya ve "tek yerde" ölçüsü — **D11**) · `frontend/scripts/check-locale-keys.mjs` (üçüncü küme **D13**, anahtar varlığı kapısı **D19**) · `docs/` (sözlük **D16**, karar defteri, ADR `0013` eki ve `deploy.md` günlük notu **D17**). **Backend sözleşmesi değişmez** (**D14**; S5 koddan doğrulandı). |
 | **Bağımlı spec'ler** | `0001` (tamamlandı; **X5**'i bu kart açar) · `0002` (tamamlandı; R7/R8 alan kümesi ve alan adı eşlemesi) · `0004` (tamamlandı; D7 gerçek 404, D8 tanınmayan yol, D23 liste parametreleri) · `0024` (tamamlandı; AC-55'in ilk paket tanımı) · `0026` (tamamlandı; üst çubuk yerleşimi) · `frontend-002` (token katmanı) |
 | **Dayanak** | ADR 0003 Ek 1, sıra #12 · sahibin sırası (2026-11-26): son iş |
-| **Karar bekliyor** | **Proje Yöneticisi:** **D1–D17** onayı (öneri). **Sahip:** yok — S1–S3 cevaplandı (sahip kararı, 2026-11-26). |
+| **Karar bekliyor** | **Proje Yöneticisi:** **D18** — ilk paket bütçesi: B5 ölçümü favori düğmesi + sayacın kodunu ~1,2 KB gzip buluyor, bütçe +512 B (Context § Paket). D1–D17 ve D19 onaylandı. **Sahip:** yok — S1–S3, D5, D6 sahip kararı (2026-11-26). |
 
 ---
 
@@ -91,10 +91,11 @@ ekranda karşılaştırabiliyor.**
   gerekçesiyle önerilir.
 - **C9.** Tarayıcı deposuna erişim **hata verebilir** (gizli pencere, site verisi kapalı, kota
   dolu); her okuma ve yazma bu durumu karşılamalı ve arayüz çalışmaya devam etmeli.
-- **C10.** `0001`, `0002`, `0004`, `0014`, `0024`, `0026`'nın mevcut kabul kriterleri
-  **regresyon olarak** korunur. → ADR 0003 unsur 1.
+- **C10.** `0001`, `0002`, `0004`, `0014`, `0015`, `0017`, `0018` (bülten sayfalarında sayaç),
+  `0020`, `0024`, `0025`, `0026`'nın mevcut kabul kriterleri **regresyon olarak** korunur.
+  → ADR 0003 unsur 1.
 - **C11.** Her kabul kriteri en az bir testle karşılanır; görsel kriterler görsel kanıt taşır.
-- **C12.** Vitrinin ilk paketi `0024` AC-55'in tanımıyla en çok **+512 B** gzip büyür; C3
+- **C12.** Vitrinin ilk paketi `0024` AC-55'in tanımıyla ölçülür ve **D18**'in sınırını aşmaz; C3
   performans kapısı (LCP < 2500 ms, CLS < 0.1) ana sayfa, liste ve detayda yeşil kalır.
   → ADR `0013`, `docs/frontend.md` § 7.
 
@@ -128,6 +129,11 @@ ekranda karşılaştırabiliyor.**
 - **X10.** **Sekmeler arası canlı eşitleme** (bir sekmedeki değişikliğin öbür açık sekmeye
   yenilemeden yansıması) — *neden:* vitrin tam sayfa gezinir; bir sonraki sayfa açılışı güncel
   durumu okur. Yalnız yazma doğruluğu korunur (**D4**, AC-12).
+- **X11.** **Okuma zamanlamasının gizlenmesi** — favoriler ekranı aynı ziyaretçiden aynı anda
+  24'e kadar detay ve görsel okuması yapar; bu zamanlama ters vekil ya da CDN erişim günlüğünde
+  favori kümesini çıkarılabilir kılar (**D15**). *Neden dışarıda:* tek istekli toplu okuma
+  backend sözleşmesini büyütür (**D14**'ü bozar); okumalara yapay gecikme eklemek ekranı
+  yavaşlatır. Karşılığı günlüğün saklama süresidir (`docs/deploy.md`, **D17**).
 
 ---
 
@@ -165,6 +171,9 @@ ekranda karşılaştırabiliyor.**
   (`body_type`, `fuel_type`, `transmission_type`, `drivetrain_type`, `trim_level`, `color`);
   `LocalizedText` tipinde opsiyonel alan tanımlı değil (`:14-17`). Bu, `0002`'nin
   2026-11-19'da bulunan kaçan hatasının ("Hatchback | Hatchback") dersidir → **D11**.
+- **Yer kuralı:** `features/` altındaki klasör adları backend modül adlarıyla aynıdır
+  (`docs/frontend.md:44`) → `features/favorites` açılamaz; ekranlar `features/catalog/`'a,
+  sayfalar arası durum `shared/lib/`'e yerleşir (**D11**, **D13**).
 - Detayın parça haritası ayrı bir özelliktir, niteliklerde tekrar edilmez
   (`ShowcaseListingDetailContracts.cs:24-30`).
 - Bugün karşılaştırmada çıkabilecek satır sayısı: fiyat + model yılı + kilometre + şube + altı
@@ -193,8 +202,11 @@ ekranda karşılaştırabiliyor.**
 
 **Yerleşim (0014, 0024, 0026)**
 - Üst çubuk her vitrin sayfasında var (`AppShell.tsx:15`, bülten sayfaları dâhil); panel kendi
-  kabuğunu taşır (`App.tsx:51-66`). Üst çubukta logo + görünen ad (logoluyken tek satır,
-  taşarsa üç nokta — `styles.css:215-223`) ve dil değiştirici var (`TopBar.tsx:25-56`).
+  kabuğunu taşır (`App.tsx:51-66`). Üst çubukta logo + görünen ad ve dil değiştirici var
+  (`TopBar.tsx:25-56`). **Ad iki biçimde davranır:** logoluyken tek satır, taşarsa üç nokta
+  (`styles.css:215-223`); **logosuzken bilerek kırılır** (`overflow-wrap: anywhere`,
+  `styles.css:203`; `0026` AC-34 bunu korur). Logo dar ekranda büzülmez: yükseklik sabit,
+  genişlik en çok `--logo-max-inline-size` = 160 px (`tokens.css:154`, `styles.css:228-235`).
 - **Altlık yalnız ana sayfada** (`AppShell.tsx:10-11`, `App.tsx:133-140`) → favori sayacının
   yeri üst çubuktur (**D8**, X8).
 - Liste kartında bağlantı yalnız model adını sarar; kartın tamamını sarmak "kart içinde
@@ -206,17 +218,43 @@ ekranda karşılaştırabiliyor.**
 **Paket ve çeviri (C12)**
 - Vitrin kataloğu üç dilin tamamıyla ilk pakete girer (`shared/i18n/i18n.ts:2-14`). Tembel
   parçanın kendi kataloğunu ekleme yolu **var**: `registerCatalogs` (`i18n.ts:21-25`); panel
-  böyle iner (`shared/i18n/panel.ts`). `check:locales` küme listesi: vitrin, panel, seo
-  (`scripts/check-locale-keys.mjs:28-32`).
+  böyle iner (`shared/i18n/panel.ts`). `check:locales`'in dört denetimi **iki kümeye sabit
+  bağlıdır**: küme listesi (`scripts/check-locale-keys.mjs:28-32`), "bir anahtar iki kümede
+  birden" (`:98-104`, yalnız vitrin↔panel), Arapça çoğul birleşimi (`:170`, vitrin + panel) ve
+  vitrin sınırı (`:216`, `:292`, yalnız `panel.ts`). Üçüncü küme bu dördüne ayrı ayrı girmezse
+  kapı onu görmez (**D13**).
+- Koddaki sabit `t('…')` anahtarının bir katalogda **var olduğunu** ölçen kapı yok; `0025`'te
+  boş bir `aria-label` bu yüzden kaçtı (**D19**).
 - Ölçüm (taslak metinlerle, üç dilin JSON'u üstüne marjinal `gzip -9`): favori düğmesi + sayaç +
   sınır + depo hatası anahtarları ≈ **184 B**; favoriler ve karşılaştırma ekranlarının ~20
   metni ≈ **710 B**. Ekran metinleri ilk pakete girerse bütçe tek başına aşılır → **D13**.
+- **Kod payı ölçümü (B5).** `main`'in derlenmiş girişinin (`index-*.js` 105 449 B gzip,
+  `index-*.css` 11 907 B gzip) sonuna, küçültülmüş biçimde elle yazılmış bir taslak eklendi ve
+  marjinal `gzip -9` ölçüldü. Taslağın içeriği: depo okuma/yazma, deneme yazması, biçim doğrulaması,
+  dinleyici, düğme, sayaç, iki kez aynı kalp yolu.
+  - JS ≈ **923 B**
+  - CSS ≈ **113 B**
+  - metin anahtarları ≈ **184 B**
+  - toplam ≈ **1,2 KB**, yani **+512 B'ın iki katından fazla**.
+
+  Taslak gerçek kodun üst sınırı değil, büyüklük mertebesidir. Aşarsa sırayla düşenler:
+  1. Tek simge: dolu ve boş hâl aynı yol, dolgu CSS'ten.
+  2. Düğme ve sayaç aynı simge bileşenini kullanır.
+  3. Canlı bölge metinleri tek ICU `select` anahtarı.
+  4. Kayıt doğrulaması yalnız slug biçimi + tip.
+  5. Detay düğmesinin metni sayaç anahtarlarıyla ortak.
+
+  Tahmini kazanç 200–300 B; **bütçe yine aşılır** → **D18**.
 - `0024` dersi: tembel parça giriş ile modül paylaşırsa paketleyici ortak modülü kritik yolda
   ayrı bir dosyaya çıkarabiliyor ve `modulepreload` ediyordu (`docs/frontend.md` § 7,
   `0024` QA 2 BULGU-1). Panel ve bülten sayfaları tembel `lazy(() => import(…))` ile iner
   (`App.tsx:22-39`).
 - Ana sayfa LCP medyanı ~2270–2410 ms (eşik 2500); perf koşusu ana sayfa, liste ve detayı ölçer
   (`.github/workflows/perf.yml:159-162`).
+
+**Günlük**
+- Host istek yolu günlüğü yazmaz (`appsettings.json:5`, `Microsoft.AspNetCore: Warning`).
+  Okuma zamanlaması riski ters vekil ya da CDN erişim günlüğünde doğar (**D15**, X11).
 
 **Depo**
 - Vitrin bugün tarayıcı deposuna hiç yazmıyor (`LocaleSwitcher.tsx:8`: dil çerez veya depo
@@ -287,7 +325,12 @@ ekranda karşılaştırabiliyor.**
 - **S5 — Favori ve karşılaştırma slug tutar; karşılaştırma adresi slug listesi taşır.**
   Koddan doğrulandı: kart DTO'su slug taşıyor (Context) → **D14**.
 
-### Öneriler (Proje Yöneticisi onayı bekliyor)
+### Proje Yöneticisi kararları — D1–D19 (2026-11-26)
+
+D1–D17 onaylandı (Proje Yöneticisi kararı, 2026-11-26); **D5** ve **D6** ayrıca sahibe soruldu
+(sahip kararı, 2026-11-26). QA CLARIFY turunun bulguları (B1–B17) kararların içine işlendi;
+her değişiklik ilgili kararda `(Bn)` ile işaretli. **D19** turda eklendi ve onaylı; **D18**
+karar bekliyor.
 
 Biçim: **karar** · *gerekçe* · *bedel*.
 
@@ -308,17 +351,20 @@ D11 biçiminde ("Favorilerim — {galeri adı}", "Araç karşılaştırma — {g
 yok. Sitemap'e girmez; `robots.txt` değişmez (`noindex` okunabilsin). Yanıt
 `Referrer-Policy: no-referrer` taşır.
 *Gerekçe:* sayfa ziyaretçinin kendi seçimidir, galerinin içeriği değil (R16); karşılaştırma
-adresleri sonsuz bir küme üretir. `no-referrer`, favoriler ekranının yaptığı detay okumalarının
-"favoriler ekranından geldim" bilgisini sunucuya taşımasını önler (S3). *Bedel:* paylaşılan
+adresleri sonsuz bir küme üretir. `no-referrer`, favoriler ekranının yaptığı okumaların
+`Referer` başlığında sayfa adresini taşımasını önler (S3). Okumaların **zamanlamasını**
+gizlemez (B2 → **D15**, X11). *Bedel:* paylaşılan
 karşılaştırma bağlantısının sosyal ağ ön izlemesi galerinin genel başlığıyla sınırlı kalır.
 
 **D3 — Karşılaştırma adresi: `?listing=<slug>` tekrarlı, sıra = sütun sırası.** Örnek:
 `/tr/compare?listing=toyota-corolla-2021-a1b2c3&listing=honda-civic-2020-d4e5f6`. Uç adresi
 şöyle okur:
-1. Biçimi slug biçimine uymayan değer (`[a-z0-9-]`, 1–160) yok sayılır.
+1. Biçimi slug biçimine uymayan değer (`[a-z0-9-]`, 1–160; büyük harf de uymaz) yok sayılır.
 2. Yinelenen değer ikinci kez sayılmaz; ilk görülme sırası korunur.
 3. İlk üç değer alınır, fazlası yok sayılır.
 4. Okunan küme adresle aynı değilse adres **geçmişe kayıt eklemeden** okunan kümeye düzeltilir.
+   Yalnız `listing` değerleri normalleşir; başka parametreler (`utm_source`) olduğu gibi korunur
+   (B11).
 5. İkiden az geçerli değer kalırsa "karşılaştırmak için en az iki araç" durumu basılır.
 
 `listing` adı liste parametre kümesinde (`0004` D23) yoktur ve eklenmez.
@@ -330,26 +376,30 @@ slug, eklenme anı ve **eklendiği andaki model adı ile model yılını** taş�
 favorinin adını göstermek içindir (R10); fiyat ve rezerve hâli saklanmaz, her açılışta güncel
 okunur (R3). Kayıt tarayıcıda dilden bağımsız tek yerdedir (R13). Adı `check:session`
 kapısının yasak sözcüklerini taşımaz. Her ekleme ve çıkarma **o anki kaydı yeniden okuyarak**
-yapılır; aynı slug iki kez bulunmaz. Okunamayan kayıt (bozuk biçim, tanınmayan sürüm) boş
+yapılır; aynı slug iki kez bulunmaz. **Düğmenin eylemi ekranda gösterdiği hâldir** (B8):
+"ekle" görünüyorsa ekler, kayıtta zaten varsa hiçbir şey yapmaz; "çıkar" görünüyorsa çıkarır,
+kayıtta yoksa hiçbir şey yapmaz. Eylem yeniden okunan kayıtla birleştirilir; eylemden sonra
+düğme ve sayaç kayıttan yeniden çizilir. Okunamayan kayıt (bozuk biçim, tanınmayan sürüm) boş
 sayılır ve sayfa düşmez; tek tek geçersiz öğeler atlanır.
 *Gerekçe:* tuzak 2 ve 10. *Bedel:* bozuk bir kayıt sessizce boş görünür — kaydı bozan
 vitrin değil, tarayıcı ya da elle müdahaledir.
 
-**D5 — En çok 24 favori.** Sınırdayken ekleme yapılmaz ve ziyaretçiye nedeni söylenir (canlı
+**D5 — En çok 24 favori (sahip kararı, 2026-11-26).** Sınırdayken ekleme yapılmaz ve ziyaretçiye nedeni söylenir (canlı
 bölge); en eski favori kendiliğinden silinmez. Vitrinden düşen favoriler, ziyaretçi kaldırana
 kadar sayılır.
 *Gerekçe:* favoriler ekranı slug başına bir okuma yapar (**D10**); sınırsız liste sınırsız
 istek demek. 24, vitrinin sayfa boyutudur. *Bedel:* 24'ten fazla araç beğenen ziyaretçi önce
 birini çıkarır.
 
-**D6 — Karşılaştırma favoriler ekranından seçilir; ayrı karşılaştırma listesi yok.** Favoriler
+**D6 — Karşılaştırma favoriler ekranından seçilir; ayrı karşılaştırma listesi yok (sahip
+kararı, 2026-11-26: mockup sapması onaylandı).** Favoriler
 ekranında her görünür favorinin bir "karşılaştırmaya seç" denetimi vardır. Üçüncüden sonraki
 seçim yapılmaz ve nedeni söylenir. "Karşılaştır" eylemi iki ya da üç seçim varken çalışır ve
 seçimleri ekrandaki sırayla taşıyan adrese gider. Seçim saklanmaz: karşılaştırmanın durumu
 yalnız adrestedir (C5). Vitrinden düşmüş ya da okunamamış favori seçilemez. İlan detayında
 "Karşılaştır" düğmesi **yoktur** (X7).
 *Gerekçe:* tek yerel liste, tek kaybolma kuralı; karşılaştırma adresi zaten paylaşılabilir
-durumun tek kaynağı. *Bedel:* mockup'tan sapma; karşılaştırmak isteyen ziyaretçi önce favorilere
+durumun tek kaynağı. *Bedel:* mockup'tan sapma (sahip onayladı); karşılaştırmak isteyen ziyaretçi önce favorilere
 ekler. Favorilerden karşılaştırmaya gidip geri dönen ziyaretçinin seçimi sıfırlanır.
 
 **D7 — Favori düğmesi.** Üç yerde: kart (liste ve ana sayfa — kartın her kullanımı), ilan
@@ -369,13 +419,19 @@ girer.
 **D8 — Sayaç üst çubukta, her vitrin sayfasında, sıfırda da.** Favoriler ekranına götüren bir
 bağlantıdır; sayı ICU çoğuluyla kurulur. İlk boyamada depodan okunmuş sayıyı gösterir; sayfa
 açıldıktan sonra kendiliğinden genişleyip daralmaz (yalnız ziyaretçinin eylemiyle değişir).
-Dar ekranda yalnız simge + sayı görünür; erişilebilir ad tam cümledir. Ad satırı kırılmaz ve üst
-çubuk taşmaz. Panelde yoktur.
+Panelde yoktur. Üst çubuk taşmaz; ad iki biçimde ele alınır (B7):
+- **Logosuz:** ad bugünkü gibi kırılabilir (`0026` AC-34 değişmez); web fontu gelirken CLS ≤ 0.1.
+- **Logolu:** ad tek satırdır; 320 px'te sayaç ve dil değiştirici görünür kalır, adın görünen
+  kısmı en az 6 karakterdir.
+- **Pay yetmezse sıra:** önce dar ekranda sayaç yalnız simge + sayı olur (erişilebilir ad tam
+  cümle); bu da yetmezse dar ekranda logonun azami genişliği 160 px'ten **120 px**'e iner.
 *Gerekçe:* altlık yalnız ana sayfada (Context, X8). Sıfırda gizlemek, ilk favoride üst çubuğu
 oynatırdı. *Bedel:* üst çubukta kalıcı bir öğe daha; dar ekranda adın üç noktaya düşme ihtimali
-artar.
+artar ve dar ekranda logo küçülebilir.
 
-**D9 — Depo kullanılamazsa favori arayüzü basılmaz.** Sayfa açılışında depo erişilemezse kartta
+**D9 — Depo kullanılamazsa favori arayüzü basılmaz.** Tespit sayfa açılışında bir **deneme
+yazması + silmesi**dir. Üç biçim de "kullanılamaz" sayılır (B12): (1) depo erişicisinin kendisi
+atar; (2) okuma çalışır, yazma kota hatası atar; (3) ikisi de atar. Depo kullanılamazsa kartta
 ve detayda favori düğmesi, üst çubukta sayaç **yoktur**. Favoriler ekranı adresle açılırsa
 "bu tarayıcı favori saklamaya izin vermiyor" durumunu basar. Karşılaştırma ekranı adresle
 çalışmaya devam eder (favori düğmesi olmadan). Sayfa açıkken bir yazma başarısız olursa
@@ -407,8 +463,13 @@ backend sözleşmesini büyütürdü (D14).
 - **Satır kuralı:** bir nitelik satırı yalnız karşılaştırılan araçlardan **en az birinde**
   varsa basılır. Sıra, sütunlarda ilk görülme sırasıdır (sunucunun yazdığı sıra). Değeri
   olmayan hücre "Belirtilmemiş" yazar.
-- **Ad tek yerden:** alanın adı detayla **aynı tek eşlemeden** gelir. Eşleme iki ekranın
-  ortak kullandığı yere taşınır ve `VitrindeAdiOlanAlanlarTests` o yeri okur.
+- **Ad tek yerden:** alanın adı detayla **aynı tek eşlemeden** gelir (B6). Eşleme
+  `frontend/src/features/catalog/attributeName.ts`'e taşınır ve dışa aktarılır; detay ve
+  karşılaştırma onu içe aktarır. `VitrindeAdiOlanAlanlarTests` bu dosyayı okur. Kapıya ikinci
+  bir ölçü eklenir: `case 'body_type':` dizgesi `frontend/src` altında **tam olarak bir**
+  dosyada geçer.
+- **Yerler:** favoriler ve karşılaştırma ekranları `features/catalog/` altındadır (yer kuralı,
+  Context).
 - **Detayda kalanlar:** parça haritası karşılaştırmada yoktur (detayda kalır).
 - **Satır katlama yok.** Bugün en çok 10 satır var (Context); nitelik sayısı 15'i geçtiğinde
   katlama yeniden açılır.
@@ -419,20 +480,23 @@ durum ekler. *Bedel:* bir kapı ve bir dosya taşınır; opsiyonel alan çoğal�
 **D12 — Mobil, RTL ve semantik.** Karşılaştırma gerçek bir tablodur: sütun başlıkları araçlar,
 satır başlıkları alan adları. 360 px ve üstünde üç sütun **iç kaydırma olmadan** sığar (dar
 ekranda alan adı değerlerin üstünde durabilir). 320 px'te tablo kendi içinde kayabilir, sayfa
-kaymaz. Arapça'da ilk araç satır başı tarafında (sağda) durur. Model adı ve değerler karışık
+kaymaz. Kayabilen kap klavyeyle odaklanabilir ve adlandırılmış bir bölgedir (B17, WCAG 2.1.1).
+Kırılmaz uzun belirteçler (model adı, fiyat) hücre içinde kırılır (B10). Arapça'da ilk araç satır başı tarafında (sağda) durur. Model adı ve değerler karışık
 yönlü metin olarak basılır.
 *Gerekçe:* R13, R14. *Bedel:* dar ekranda tablo görünümü masaüstünden farklı dizilir.
 
 **D13 — Paket bölünmesi ve ölçülebilir bütçe.**
 - **İlk paket:** yalnız favori düğmesi, sayaç, depo erişimi ve bunların metinleri (ekle,
-  çıkar, durum, sayaç, sınır, yazma hatası) girer.
+  çıkar, durum, sayaç, sınır, yazma hatası) girer. Depo ve sayaç durumu
+  `frontend/src/shared/lib/favorites.ts`'tedir (iki feature ve kabuk kullanır; B6).
 - **Tembel parça:** favoriler ve karşılaştırma ekranları, onların metinleri ve stilleri
   `lazy(() => import(…))` arkasında ayrı parça(lar)dadır. Ekran metinleri **üçüncü bir katalog
-  kümesinde** yaşar ve parçayla iner (`registerCatalogs`). `check:locales` bu kümeyi de eşitlik
-  ve "vitrinin statik ağacından ulaşılmaz" diye denetler.
+  kümesinde** yaşar ve parçayla iner (`registerCatalogs`). `check:locales` bu kümeyi dört denetimin
+  **her birine** ayrı ayrı alır (B3): üç dil eşitliği · Arapça çoğul biçimleri · başka bir
+  kümede tekrar yok · küme modülü ve anahtarları vitrinin statik ağacından ulaşılmaz.
 - **Kritik yol değişmez:** `index.html`'in `modulepreload` listesi ve girişin statik içe
   aktardığı dosya sayısı `main` ile aynıdır.
-- **Bütçe:** ilk paket (`0024` AC-55 tanımı) en çok +512 B.
+- **Bütçe:** ilk paket `0024` AC-55'in tanımıyla ölçülür; sınırı **D18** belirler.
 
 *Gerekçe:* Context ölçümü (ekran metinleri tek başına ~710 B), tuzak 7–8. *Bedel:* ADR
 `0013`'e üçüncü bir küme eklenir (D17); favoriler ekranı ilk açılışta bir parça daha indirir.
@@ -447,9 +511,16 @@ dosyayı izler, D11). Değişen sunucu kodu `Host` (sayfa türü, belge, başlı
 gövdesinde, sorgusunda veya başlığında favori listesi (birden çok favori slug'ı bir arada)
 taşınmaz; detay okuması tek slug taşır — bir detay ziyaretinin taşıdığından fazlası değil.
 Sunucu bu kartla yeni bir kayıt, tablo, günlük alanı veya olay yazmaz. Karşılaştırma adresinin
-belge isteği slug'ları taşır: bu ziyaretçinin paylaşmayı seçtiği karşılaştırmadır, favori
-listesi değil.
-*Gerekçe:* sahip kararını test edilebilir yapar. *Bedel:* yok.
+belge isteği en çok üç slug taşır (B1): bu, ziyaretçinin seçip paylaşabildiği karşılaştırmadır,
+favori listesi değil. Sorgu biçimi kalır. Parça (`#`) biçimi bir şey kazandırmazdı, çünkü ekran
+her slug için detay okuması zaten yapıyor.
+*Gerekçe:* sahip kararını test edilebilir yapar.
+*Kabul edilen bedeller:*
+- Karşılaştırma adresinin belge isteği seçilen slug'ları sunucuya taşır.
+- **Okuma zamanlaması (B2):** favoriler ekranı aynı IP ve tarayıcıdan aynı anda 24'e kadar
+  detay ve görsel okur. Bu zamanlama, favori kümesini ters vekil ya da CDN erişim günlüğünden
+  çıkarılabilir kılar. Uygulama bugün istek yolu günlüğü yazmaz (Context). Karşılığı `deploy.md`
+  notudur (**D17**); zamanlamanın gizlenmesi kapsam dışıdır (X11).
 
 **D16 — Sözlük.** `docs/domain.md`'ye iki terim: **Favori** (`Favorite`) — ziyaretçinin bu
 tarayıcıda işaretlediği ilan; sunucuda yoktur, slug ile tutulur · **Karşılaştırma**
@@ -461,16 +532,56 @@ tarayıcıda işaretlediği ilan; sunucuda yoktur, slug ile tutulur · **Karşı
   satırına `newsletter`, `favorites`, `compare` (satır bugün `newsletter`'ı da saymıyor).
 - ADR `0013`'e "tembel vitrin kümesi" eki.
 - `docs/frontend.md` § 7: favori düğmesi ve depo kuralı.
+- `docs/deploy.md` (B2): ters vekil ya da CDN erişim günlüğünde
+  `/api/catalog/showcase-listings/*` yollarının saklama süresi kısa tutulur. Bu yolların
+  ziyaretçinin hangi araçlarla ilgilendiğini gösterdiği ve KVKK açısından kişisel veriyle
+  ilişkilendirilebileceği yazılır.
 
 *Gerekçe:* DoD T8. *Bedel:* yok.
+
+**D18 — İlk paket bütçesi (karar bekliyor — Proje Yöneticisi; B5).** Context ölçümü favori
+düğmesi + sayaç + depo kodunu ~1,2 KB gzip buluyor; düşürme sırası uygulansa da ~900 B'ın altına
+inmesi beklenmiyor. Seçenekler:
+- **(a) Önerim — bu kart için sınır +1280 B; C3 asıl bekçi kalır.** Düşürme sırası (Context)
+  zorunludur. Ölçüm head commit'te yapılır. Ana sayfa, liste ve detay medyanları PR'da `main`
+  ile yan yana yazılır.
+  *Gerekçe:* düğme kartın ve detayın ilk boyamasındadır; tembel inerse yer ayırsa da sayaç
+  yanlış sayıyla başlar (AC-29) ve ilk etkileşim gecikir. 1,2 KB, yavaşlatılmış 4G'de birkaç
+  ms'lik aktarımdır. Asıl risk LCP payıdır ve onu C3 ölçer.
+  *Bedel:* `0024`'ün +512 B ilkesi bu kartta gevşer.
+- **(b) +512 B kalır; düğme ve sayaç kodu ilk boyamadan sonra tembel iner.** Yer ayrılır, sayı
+  ilk karede boştur. AC-29 "ilk karede 3"ten "yerleşince 3, kayma yok"a döner.
+  *Bedel:* ilk etkileşim gecikir ve kod karmaşıklaşır.
+- **(c) +512 B kalır; kapsam daralır** (ör. ana sayfa kartında düğme yok).
+  *Bedel:* R1 daralır.
+
+**D19 — Anahtar varlığı kapısı (B4).** `check-locale-keys.mjs`, bütün `frontend/src` altında
+her sabit `t('…')` anahtarının en az bir kümede bulunduğunu ölçer. Şablonlu anahtarlar
+(`` t(`app.locale.${x}`) ``) önekleriyle ölçülür: önekle başlayan en az bir anahtar vardır.
+Mevcut kodda eksik anahtar çıkarsa gerçek bir kusurdur: kart onu düzeltir ve PR'da listeler.
+*Gerekçe:* `0025`'in boş `aria-label`'ı (Context); bu kart ~25 yeni anahtar ekliyor.
+*Bedel:* kapı yazmak; mevcut kodda bulunacak eksiklerin düzeltilmesi.
+
+---
+
+## Bilerek değişecek eski testler (B9)
+
+| Test / kapı | Neden değişir | Not |
+|---|---|---|
+| `tests/VehicleCatalog.Tests/Domain/VitrindeAdiOlanAlanlarTests.cs:56` | Okuduğu yol `attributeName.ts`'e döner; "tek dosyada" ölçüsü eklenir (D11). | Teori satırları aynı kalır. |
+| `frontend/scripts/check-locale-keys.mjs` | Üçüncü küme dört denetime girer (D13); anahtar varlığı kapısı (D19). | Negatif kanıtlar AC-69, AC-72. |
+| `frontend/src/shared/lib/route.ts:234-240` + `src/Host/Seo/SeoPage.cs` | İki yeni ayrılmış ad ve iki sayfa türü (D1, D2). | `IcerikZinciriTests.cs:213-214` ve `KuralTests.cs:52/57` `Contains` ile ölçer, kırılmaz. `AdresVeSssTests.cs:93` `All`'ı gezer, iki yeni adı da reddetmeli ve yeşil kalmalı. |
+| `frontend/e2e/galeri-logosu.spec.ts:121` | 320 px üst çubuğa sayaç girer; logo genişliği dar ekranda 120 px'e inebilir (D8). | Değişirse PR'da kriteriyle yazılır. |
+| Kart yapısını sayan testler (`ShowcaseListPage.test.tsx`, `HomePage.test.tsx`) | Kartta yeni düğme (D7). | Yalnız düğmenin varlığı eklenir; mevcut iddialar silinmez. |
+
+Her Host satırı için e2e ikizi aranır (`0024` dersi): sunucu testi yeşilken uçta aynı yol başka
+ekran basabilir.
 
 ---
 
 ## Sahibe sorular
 
-Yok. S1–S3 cevaplandı. **D6** mockup'taki ilan detayı "Karşılaştır" düğmesini düşürüyor; Proje
-Yöneticisi bunu sahibe sormak isterse önerim: **düşürülsün** (gerekçe D6'da; bedel:
-karşılaştırma için önce favori).
+Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 ---
 
@@ -494,9 +605,11 @@ karşılaştırma için önce favori).
 - **AC-7.** `sitemap-tr.xml` (ve ar, en) ne favoriler ne karşılaştırma adresini içerir;
   `robots.txt` değişmemiştir.
 - **AC-8.** Karşılaştırma adresi D3'e göre okunur:
-  `?listing=B&listing=A&listing=B&listing=C&listing=D&listing=X%20Y` → sütunlar B, A, C (bu
-  sırayla). Adres geçmişe yeni kayıt eklenmeden `?listing=B&listing=A&listing=C`'ye düzeltilir
-  (`history.length` değişmez).
+  `?listing=b-2020-bbbbbb&listing=a-2020-aaaaaa&listing=b-2020-bbbbbb&listing=Abc-2020-cccccc&listing=c-2020-cccccc&listing=d-2020-dddddd&listing=x%20y&utm_source=z`
+  → sütunlar `b-…`, `a-…`, `c-…` (bu sırayla). Yinelenen, büyük harfli, boşluklu ve dördüncü
+  geçerli değer yok sayılır. Adres geçmişe yeni kayıt eklenmeden
+  `?listing=b-2020-bbbbbb&listing=a-2020-aaaaaa&listing=c-2020-cccccc&utm_source=z`'ye düzeltilir
+  (`history.length` değişmez; `utm_source` korunur).
 - **AC-9.** Geçerli değeri ikiden az olan karşılaştırma adresi (`/tr/compare`,
   `?listing=a-2020-aaaaaa`, `?listing=%%%`) "en az iki araç seçin" durumunu ve favorilere
   götüren tek eylemi basar.
@@ -507,16 +620,21 @@ karşılaştırma için önce favori).
 
 ### Kayıt ve depo (D4, D5, D9 · R4, R13, R15, C9)
 
-- **AC-12.** İki sekme: A'da X eklenir; önceden açık B'de (yenilenmeden) Y eklenir → kayıtta X
-  ve Y vardır. B'de X çıkarılır → yalnız Y kalır. Aynı slug hiçbir koşulda iki kez bulunmaz.
+- **AC-12.** İki sekme, ikisi de boş kayıtla açılmış (D4). A'da X eklenir. B yenilenmeden Y'yi
+  ekler → kayıtta X ve Y vardır, B'nin sayacı **2**'dir. B'de X basılı görünmüyor; basılır →
+  kayıtta X **tek** kez vardır (no-op birleşme), B'de X basılı ve sayaç 2'dir. A yenilenmeden X'i
+  çıkarır → kayıtta yalnız Y kalır.
 - **AC-13.** `/tr/cars`'ta eklenen favori `/ar/` ve `/en/favorites`'ta görünür; sayaç üç dilde
   aynı sayıyı gösterir.
 - **AC-14.** Depodaki değer bozuk JSON, tanınmayan sürüm ya da yanlış biçimli öğe içerdiğinde
   sayfa düşmez: bozuk kayıt boş sayılır, geçerli öğeler korunur ve sayaç geçerli öğe sayısını
   gösterir.
-- **AC-15.** Depo okuması ve yazması hata attığında (gizli pencere taklidi: `getItem`/`setItem`
-  fırlatır) liste, ana sayfa ve detay hatasız basılır. Favori düğmesi ve sayaç **yoktur**;
-  konsolda yakalanmamış hata yoktur.
+- **AC-15.** Depo kullanılamazlığının üç biçiminde liste, ana sayfa ve detay hatasız basılır,
+  favori düğmesi ve sayaç **yoktur** ve konsolda yakalanmamış hata yoktur (D9; e2e,
+  `addInitScript` ile):
+  (1) `Object.defineProperty(window, 'localStorage', { get() { throw … } })`;
+  (2) `getItem` çalışır, `setItem` `QuotaExceededError` atar;
+  (3) `getItem` ve `setItem` ikisi de atar.
 - **AC-16.** Depo kullanılamazken `/tr/favorites` "bu tarayıcı favori saklamaya izin vermiyor"
   durumunu basar; S2 notu bu durumda yoktur. `/tr/compare?…` iki aracı karşılaştırır,
   sütunlarda favori düğmesi yoktur.
@@ -524,7 +642,9 @@ karşılaştırma için önce favori).
   nedeni söyler ve sayfa çalışmaya devam eder.
 - **AC-18.** 24 favori varken 25. ekleme yapılmaz: düğme basılı hâle geçmez, canlı bölge sınırı
   söyler (ICU, sayı metinde), kayıt 24 öğe kalır ve en eski favori silinmez.
-- **AC-19.** Depo anahtarının adı `token`, `session` ya da `auth` içermez; `check:session` yeşil.
+- **AC-19.** Depo anahtarının adı `token`, `session` ya da `auth` içermez: birim testi dışa
+  aktarılan anahtar sabitinin `/token|session|auth/i`'ye uymadığını ölçer (`check:session`
+  yalnız dizge değişmezi görür). `check:session` yeşil.
 - **AC-20.** Favori eklendiği anda kayıt slug, eklenme anı, model adı ve model yılını taşır;
   fiyat ve rezerve hâlini **taşımaz** (birim testi kayıt biçimini ölçer).
 
@@ -551,12 +671,17 @@ karşılaştırma için önce favori).
 - **AC-28.** Üst çubukta, ana sayfa, liste, detay, içerik sayfası, bülten sayfaları, favoriler
   ve karşılaştırma ekranlarında favoriler ekranına götüren sayaç vardır; panelde yoktur.
 - **AC-29.** Sayaç sıfırda da görünür. Sayı ilk boyamada doğrudur: üç favoriyle açılan liste
-  sayfasında sayaç yüklemeden sonra değişmez (ilk karede "3").
+  sayfasında, `addInitScript` ile kurulan bir `MutationObserver` sayacın aldığı her metni
+  kaydeder ve kayıt dizisi tam olarak `["3"]`'tür (0 → 3 geçişi yok).
 - **AC-30.** Sayacın erişilebilir adı ICU ile kurulur; ar'da 0, 1, 2, 3, 11 ve 100 favori için
   doğru çoğul biçimi okunur (birim testi).
 - **AC-31.** Ekleme ve çıkarma sayacı sayfa yenilenmeden günceller.
-- **AC-32.** 320 px ve 360 px genişlikte, logolu ve 40 karakterlik adlı galeride üç dilde: üst
-  çubuk tek satırdır, ad kırılmaz, sayfada yatay kaydırma yoktur (görsel kanıt, tr ve ar).
+- **AC-32.** Üst çubuk iki fikstürle, üç dilde, 320 px ve 360 px'te ölçülür. Her ikisinde de
+  sayfada yatay kaydırma yoktur (görsel kanıt, tr ve ar).
+  (i) **Logosuz, 40 karakterlik ad:** ad kırılabilir (`0026` AC-34 değişmez); web fontu gelirken
+  üst çubuğun CLS'i ≤ 0.1.
+  (ii) **Logolu (160×40), 40 karakterlik ad, 320 px:** sayaç ve dil değiştirici görünür ve
+  tıklanabilirdir; adın görünen kısmı en az 6 karakterdir.
 
 ### Favoriler ekranı (D10 · R3, R5, R10, R11)
 
@@ -581,7 +706,9 @@ karşılaştırma için önce favori).
   (başlık ve metin farklı) ve "hepsini kaldır" eylemini kullanabilir.
 - **AC-42.** Bütün okumalar 404 dışı hatayla dönerse ekran hata durumunu ve "tekrar dene"yi
   basar; teknik metin görünmez.
-- **AC-43.** Okumalar sürerken iskelet görünür; iskeletten içeriğe geçişte CLS < 0.1.
+- **AC-43.** Okumalar sürerken iskelet görünür. İskeletten içeriğe geçişte CLS < 0.1: Playwright
+  yavaşlatılmış ağla, `PerformanceObserver('layout-shift')` toplamını ölçer (`perf.yml` bu
+  ekranı ölçmez).
 - **AC-44.** S2 notu ("Favorileriniz bu tarayıcıda saklanır; tarayıcı verisi silinirse
   kaybolur." ve ar/en karşılığı) dolu, boş, hepsi düşmüş ve hata durumlarında görünür; uyarı
   kutusu, kapatma düğmesi veya açılır pencere değildir.
@@ -608,66 +735,90 @@ karşılaştırma için önce favori).
   "Fiyat sorunuz" dâhil).
 - **AC-52.** Bir ilanda olmayan nitelik o hücrede "Belirtilmemiş" yazar; hiçbir ilanda olmayan
   nitelik için satır **yoktur**.
-- **AC-53.** Alan ayarlarında kapatılan ya da gizlenen bir alan karşılaştırmada hiç görünmez —
-  ne satır ne "Belirtilmemiş" (Host/uç tümleşik testi alanı kapatıp ölçer). Uç kodunda alan
-  ayarı okuyan bir süzme yoktur.
-- **AC-54.** Satır başlıkları detay ekranındaki alan adlarıyla aynıdır; hiçbir satırda başlık
+- **AC-53.** Kapalı ya da gizli alan detay yanıtında yoktur: `0002`'nin mevcut Host testi
+  (AC-12/AC-13) değişmeden yeşildir.
+- **AC-54.** Karşılaştırma ekranı yalnız yanıttaki nitelikleri basar (vitest). Yanıtta olmayan
+  anahtar için satır yoktur. Karşılaştırma ekranının kaynağında alan ayarı okuması yoktur:
+  `field-settings` / alan ayarı tipi grep'i boştur.
+- **AC-55.** e2e: panelden bir alan kapatılır → karşılaştırmada o alanın ne satırı ne
+  "Belirtilmemiş" hücresi vardır; alan açılınca satır geri gelir.
+- **AC-56.** Satır başlıkları detay ekranındaki alan adlarıyla aynıdır; hiçbir satırda başlık
   değerle aynı metin değildir ("Hatchback | Hatchback" yok). Alan adı eşlemesi kodda **tek**
   yerdedir; detay ve karşılaştırma onu içe aktarır.
-- **AC-55.** `VitrindeAdiOlanAlanlarTests` eşlemenin yeni yerini okur ve yeşildir; eşlemeden bir
-  `case` silinince kırılır (negatif kanıt PR'da).
-- **AC-56.** Parça haritası karşılaştırmada yoktur.
-- **AC-57.** Sütunlardan biri 404 dönerse sütun "bu araç artık vitrinde değil" yazar ve hücre
+- **AC-57.** `VitrindeAdiOlanAlanlarTests` `features/catalog/attributeName.ts`'i okur ve yeşildir;
+  eşlemeden bir `case` silinince kırılır. İkinci bir `[Fact]`, `case 'body_type':` dizgesinin
+  `frontend/src` altında tam olarak **bir** dosyada geçtiğini ölçer; eşleme ikinci bir dosyaya
+  kopyalanınca kırılır (iki negatif kanıt PR'da).
+- **AC-58.** Parça haritası karşılaştırmada yoktur.
+- **AC-59.** Sütunlardan biri 404 dönerse sütun "bu araç artık vitrinde değil" yazar ve hücre
   basmaz; öbür sütunlar karşılaştırılır. Hepsi 404 dönerse "bu bağlantıdaki araçların hiçbiri
   artık vitrinde değil" durumu ve vitrine götüren eylem basılır.
-- **AC-58.** Bir sütunun okuması 404 dışı hata dönerse sütun hata ve "tekrar dene" gösterir;
+- **AC-60.** Bir sütunun okuması 404 dışı hata dönerse sütun hata ve "tekrar dene" gösterir;
   bütün okumalar hata dönerse ekran hata durumunu basar.
-- **AC-59.** Karşılaştırma bir tablodur: araç sütun başlıkları `scope="col"`, alan adları
+- **AC-61.** Karşılaştırma bir tablodur: araç sütun başlıkları `scope="col"`, alan adları
   `scope="row"`; ekran okuyucu her hücreyi satır ve sütun başlığıyla okur (erişilebilirlik ağacı
   testi).
-- **AC-60.** 360×640'ta üç sütun iç kaydırma olmadan görünür. 320×640'ta sayfada yatay kaydırma
-  yoktur (`scrollWidth ≤ clientWidth`), tablo gerekiyorsa kendi içinde kayar. Üç dilde, tr ve ar
-  için görsel kanıt.
-- **AC-61.** ar'da ilk adres değerinin aracı sağdaki (satır başı) sütundadır; Latin model adı ve
+- **AC-62.** Fikstür: en uzun fiyat (≥ 9 hane + para birimi), en uzun model adı (`#137` sonrası
+  sınırlar: ad 80 + 120 karakter, slug ≤ 160), en uzun şube adı; üç dil, tr ve ar için görsel
+  kanıt.
+  - **360×640:** üç sütun iç kaydırma olmadan görünür (`table.scrollWidth ≤ kap.clientWidth`).
+  - **320×640:** sayfada yatay kaydırma yoktur (`document.scrollingElement.scrollWidth ≤
+    clientWidth`); tablo gerekiyorsa kendi kabında kayar.
+  - **Kayabilen kap:** `tabindex="0"`, `role="region"` ve erişilebilir ad taşır (WCAG 2.1.1).
+  - **Uzun belirteçler:** kırılmaz uzun belirteç hücre içinde kırılır.
+- **AC-63.** ar'da ilk adres değerinin aracı sağdaki (satır başı) sütundadır; Latin model adı ve
   değerler doğru yönde dizilir (görsel kanıt).
-- **AC-62.** Karşılaştırma ekranında favori düğmesi favoriyi ekler/çıkarır ve sayaç güncellenir;
+- **AC-64.** Karşılaştırma ekranında favori düğmesi favoriyi ekler/çıkarır ve sayaç güncellenir;
   karşılaştırma adresi değişmez.
 
 ### Gizlilik (D15 · C2, S3)
 
-- **AC-63.** Bir e2e oturumu boyunca (favori ekle, çıkar, favoriler ekranı, karşılaştırma)
-  sunucuya giden hiçbir istek birden çok favori slug'ını birlikte taşımaz ve hiçbir yazma isteği
-  (POST/PUT/PATCH/DELETE) yapılmaz.
-- **AC-64.** Bu kartla hiçbir modülde yeni tablo, migration, olay türü veya uç nokta yoktur
-  (Architecture.Tests + diff; `VehicleCatalog`'un `src/` altı değişmez).
+- **AC-65.** Bir e2e oturumu boyunca (favori ekle, çıkar, favoriler ekranı, karşılaştırma) hiçbir
+  yazma isteği (POST/PUT/PATCH/DELETE) yapılmaz. Sunucuya giden hiçbir istek birden çok favori
+  slug'ını birlikte taşımaz. **Tek istisna** karşılaştırma ekranının belge isteğidir
+  (`/{l}/compare?listing=…`): en çok 3 slug taşır (D15, B1). API istekleri tek slug taşır.
+- **AC-66.** Bu kartla hiçbir modülde yeni tablo, migration, olay türü veya uç nokta yoktur.
+  Ölçü PR'da yazılır: `git diff --stat main...HEAD -- 'src/Modules/**'` yalnız
+  `ContentPageContracts.cs`'i (ayrılmış adlar) gösterir; `git diff --stat main...HEAD --
+  '**/Migrations/**'` boştur. Architecture.Tests yeşildir.
 
 ### Paket ve performans (D13 · C12)
 
-- **AC-65.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
-  `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **512 B** büyür.
-  Ölçüm PR'ın **head** commit'inde yapılır.
-- **AC-66.** `index.html`'in `modulepreload` listesi ve girişin statik içe aktardığı JS dosyası
+- **AC-67.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
+  `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **D18'in sınırı**
+  kadar büyür (önerilen: 1280 B). Ölçüm PR'ın **head** commit'inde yapılır. Context'teki
+  düşürme sırasının her adımı uygulanmış ya da neden uygulanmadığı PR'da yazılıdır.
+- **AC-68.** `index.html`'in `modulepreload` listesi ve girişin statik içe aktardığı JS dosyası
   sayısı `main` ile aynıdır; favoriler ve karşılaştırma ekranlarının kodu yalnız tembel
   parça(lar)dadır (derleme çıktısı denetimi CI'da).
-- **AC-67.** Favoriler ve karşılaştırma ekranlarının metinleri vitrin kataloğunda (`locales/*.json`)
-  **yoktur**; ayrı kümededir ve o küme vitrinin statik içe aktarma ağacından ulaşılamaz.
-  `check:locales` üç dil eşitliğini bu küme için de ölçer ve kümeden biri vitrin ağacına
-  bağlanınca kırılır (negatif kanıt PR'da).
-- **AC-68.** Favoriler ve karşılaştırma ekranlarının stilleri giriş CSS'inde yoktur.
-- **AC-69.** C3 ana sayfa, liste ve detayda yeşildir (LCP < 2500 ms, CLS < 0.1); perf tohumunda
+- **AC-69.** Favoriler ve karşılaştırma ekranlarının metinleri vitrin kataloğunda (`locales/*.json`)
+  **yoktur**; üçüncü kümededir. `check:locales` bu kümeyi dört denetimin her birinde ölçer.
+  Her biri için bir negatif kanıt PR'dadır:
+  (a) üç dil eşitliği — bir dilden anahtar silinince kırılır;
+  (b) Arapça çoğul biçimleri — ar mesajından `one` silinince kırılır;
+  (c) başka kümede tekrar yok — aynı anahtar vitrin kümesine de yazılınca kırılır;
+  (d) vitrin sınırı — küme modülü vitrinin statik ağacından içe aktarılınca ya da vitrin bir küme
+  anahtarını kullanınca kırılır.
+- **AC-70.** Favoriler ve karşılaştırma ekranlarının stilleri giriş CSS'inde yoktur.
+- **AC-71.** C3 ana sayfa, liste ve detayda yeşildir (LCP < 2500 ms, CLS < 0.1); perf tohumunda
   favori yoktur ve favori düğmesi basılır. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşu ve
   LCP öğesi PR'da yazılıdır. Favori düğmesi hiçbir sayfada LCP öğesi değildir.
 
 ### Çeviri, RTL ve regresyon (C6, C7, C10 · R13)
 
-- **AC-70.** Yeni her anahtar üç dilde vardır; `check:locales`, `check:text`, `check:tokens`
+- **AC-72.** Yeni her anahtar üç dilde vardır; `check:locales`, `check:text`, `check:tokens`
   yeşil. Sayı içeren her cümle ICU'dur.
-- **AC-71.** Yeni CSS'te fiziksel yön özelliği (`left`, `right`, `margin-left` …) ve ham hex/px
+  Anahtar varlığı kapısı (D19): `frontend/src` altındaki her sabit `t('…')` anahtarı en az bir
+  kümede bulunur; şablonlu anahtarın önekiyle başlayan en az bir anahtar vardır. Negatif kanıt:
+  olmayan bir anahtar kullanılınca kırılır. Mevcut kodda bulunan eksikler düzeltilir ve PR'da
+  listelenir.
+- **AC-73.** Yeni CSS'te fiziksel yön özelliği (`left`, `right`, `margin-left` …) ve ham hex/px
   yoktur.
-- **AC-72.** Favoriler ekranı ar'da RTL basılır: sıra, simgeler ve "hepsini kaldır" doğru
+- **AC-74.** Favoriler ekranı ar'da RTL basılır: sıra, simgeler ve "hepsini kaldır" doğru
   taraftadır (görsel kanıt; iki boş durum, dolu hâl, mobil).
-- **AC-73.** `0001`, `0002`, `0004`, `0014`, `0024`, `0026`'nın mevcut testleri değişmeden
-  yeşildir. Değişen test varsa PR'da hangi kriterin hangi nedenle güncellendiği yazılıdır
+- **AC-75.** `0001`, `0002`, `0004`, `0014`, `0015`, `0017`, `0018`, `0020`, `0024`, `0025`,
+  `0026`'nın mevcut testleri yeşildir. § Bilerek değişecek eski testler tablosu dışındaki
+  testler değişmez. Her Host testi satırının e2e ikizi aranır ve PR'da yazılır. Değişen test varsa PR'da hangi kriterin hangi nedenle güncellendiği yazılıdır
   (beklenen: kart yapısını sayan testler — kartta yeni düğme).
 
 ---
@@ -676,11 +827,11 @@ karşılaştırma için önce favori).
 
 1. Ayrılmış adlar, `SeoPage` türleri, belge etiketleri, `no-referrer` (AC-1–AC-7).
 2. Depo katmanı ve kayıt biçimi (AC-12–AC-20).
-3. Favori düğmesi ve sayaç; ilk paket ölçümü (AC-21–AC-32, AC-65).
-4. Tembel katalog kümesi ve kapı (AC-67).
+3. Favori düğmesi ve sayaç; ilk paket ölçümü (AC-21–AC-32, AC-67).
+4. Tembel katalog kümesi, dört denetim ve anahtar varlığı kapısı (AC-69, AC-72).
 5. Favoriler ekranı ve seçim (AC-33–AC-49).
-6. Alan adı eşlemesinin taşınması, kapı yolu; karşılaştırma ekranı (AC-50–AC-62).
-7. Gizlilik e2e, perf koşusu, görsel kanıt (AC-63, AC-64, AC-66, AC-68, AC-69, AC-72).
+6. Alan adı eşlemesinin taşınması, kapı yolu; karşılaştırma ekranı (AC-50–AC-64).
+7. Gizlilik e2e, perf koşusu, görsel kanıt (AC-65, AC-66, AC-68, AC-70, AC-71, AC-74).
 8. Belgeler (D16, D17).
 
 ---
@@ -688,17 +839,20 @@ karşılaştırma için önce favori).
 ## Definition of Done
 
 - [x] Açık sorular karara bağlandı; **S5 kodda doğrulandı** ve sonucu Context'e yazıldı.
-- [ ] Proje Yöneticisi D1–D17'yi onayladı; QA CLARIFY turu işlendi.
+- [x] Proje Yöneticisi D1–D17'yi onayladı; QA CLARIFY turu işlendi (B1–B17, 2026-11-26).
+- [ ] D18 (ilk paket bütçesi) karara bağlandı.
+- [ ] `docs/deploy.md`'ye ters vekil/CDN erişim günlüğü notu düşüldü (D17, B2).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/frontend-003-ac<n>.png`); iki boş durum, mobil
       görünüm ve Arapça (RTL) görünüm dâhil.
 - [ ] `localStorage` erişilemezken arayüzün çalıştığı testle gösterildi (C9, AC-15, AC-16).
-- [ ] Favori verisinin sunucuya **gitmediği** doğrulandı (C2, AC-27, AC-63).
+- [ ] Favori verisinin sunucuya **gitmediği** doğrulandı (C2, AC-27, AC-65).
 - [ ] Kapalı ve gizli alanların karşılaştırmada bulunmadığı testle gösterildi (R8, C3, AC-53).
-- [ ] İlk paket ölçümü head commit'te yapıldı ve PR'da yazılı (AC-65).
+- [ ] İlk paket ölçümü head commit'te yapıldı ve PR'da yazılı (AC-67).
+- [ ] Bilerek değişen eski testler tablodakilerle sınırlı; her değişiklik PR'da kriteriyle yazılı (AC-75).
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. (Bu kartta migration yok — AC-64.)
+- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. (Bu kartta migration yok — AC-66.)
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
 - [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (D16).
 - [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D17; ADR `0013` eki).
