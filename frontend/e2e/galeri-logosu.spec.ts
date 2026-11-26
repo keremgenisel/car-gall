@@ -213,8 +213,16 @@ test('0026 (C7, R4), frontend-003/AC-32: Lighthouse mobil genişliğinde (412 px
   })
   try {
     const sayfa = await mobil.newPage()
-    await sayfa.goto('/tr/cars')
+    // Web fontları bekletilir: "fonttan önce" ölçümü gerçekten yedek fontla (QA 2 BULGU-6).
+    let fontuBirak: () => void = () => {}
+    const font = new Promise<void>((resolve) => (fontuBirak = resolve))
+    await sayfa.route('**/*.woff2', async (route) => {
+      await font
+      await route.continue()
+    })
+    await sayfa.goto('/tr/cars', { waitUntil: 'domcontentloaded' })
     await expect(sayfa.getByTestId('top-bar-logo')).toBeVisible()
+    expect(await sayfa.evaluate(() => document.fonts.status)).toBe('loading')
     const ad = sayfa.getByTestId('top-bar-brand').locator('bdi')
     expect(await ad.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe('nowrap')
     // frontend-003 AC-32 (TM kararı, 2026-11-26): 40rem altında üst çubuk BİLEREK iki satır. Satırlar
@@ -228,6 +236,7 @@ test('0026 (C7, R4), frontend-003/AC-32: Lighthouse mobil genişliğinde (412 px
         return son.top >= marka.bottom - 1 ? 2 : 1
       })
     expect(await satirlar()).toBe(2)
+    fontuBirak()
     await sayfa.evaluate(() => document.fonts.ready)
     expect(await satirlar()).toBe(2)
     const cubuk = (await sayfa.locator('header.top-bar').boundingBox())!

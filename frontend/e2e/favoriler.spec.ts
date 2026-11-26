@@ -176,23 +176,28 @@ test('frontend-003/AC-12: İki sekme — bayat sekme öbürünün eklediğini si
   const x = (kart: typeof kartA) => kart.nth(0).getByRole('button', { name: /^Favori: / })
   const y = (kart: typeof kartA) => kart.nth(1).getByRole('button', { name: /^Favori: / })
 
-  // D4 — her eylemden sonra düğme ve sayaç KAYITTAN yeniden çizilir. Bu yüzden B'nin bayat
-  // "ekle"si, B Y'yi eklemeden ÖNCE basılır: Y'den sonra B X'i zaten basılı çizer (AP-08 notu).
+  // (i) AC-12'nin kendi sırası: A'da X; B bayat görüntüyle Y ekler → X SİLİNMEZ; B sayaç 2 ve
+  // X'i artık basılı çizer (D4: eylemden sonra kayıttan yeniden çizilir).
   await x(kartA).click()
-  await expect(x(kartB)).toHaveAttribute('aria-pressed', 'false')
-  await x(kartB).click()
-  expect(await kayit(b)).toHaveLength(1)
-  await expect(x(kartB)).toHaveAttribute('aria-pressed', 'true')
-  await expect(sayac(b)).toHaveText('1')
-
   await y(kartB).click()
   expect(await kayit(b)).toHaveLength(2)
   await expect(sayac(b)).toHaveText('2')
+  await expect(x(kartB)).toHaveAttribute('aria-pressed', 'true')
+  const [xslug, yslug] = await kayit(b)
 
-  const yslug = (await kayit(b))[1]
+  // (iii) A bayat görüntüyle (sayaç 1) X'i çıkarır → yalnız Y kalır.
   await expect(sayac(a)).toHaveText('1')
   await x(kartA).click()
   expect(await kayit(a)).toEqual([yslug])
+
+  // (ii) Bayat "ekle": B kayıtta X yokken yenilenir (X basılı değil); A X'i ekler; B bayat görüntüyle
+  // X'e basar → no-op birleşme, X tek kez; B X'i basılı çizer.
+  await b.reload()
+  await expect(x(kartB)).toHaveAttribute('aria-pressed', 'false')
+  await x(kartA).click()
+  await x(kartB).click()
+  expect((await kayit(b)).filter((slug) => slug === xslug)).toHaveLength(1)
+  await expect(x(kartB)).toHaveAttribute('aria-pressed', 'true')
 })
 
 for (const [ad, betik] of [
@@ -423,9 +428,19 @@ for (const genislik of [320, 360, 639, 640]) {
           )
           const ad = await ustCubukFiksturu(page, logolu)
           const etiket = `logolu=${logolu}, ${hal}`
-          await page.goto(`/${dil}/cars`)
-          // Satır sayısı ilk karede ve web fontu geldikten sonra aynı (içerikten bağımsız kırılma).
+          // Web fontları bekletilir: "fonttan önce" ölçümü gerçekten yedek fontla alınır (QA 2 BULGU-6).
+          let fontuBirak: () => void = () => {}
+          const font = new Promise<void>((resolve) => (fontuBirak = resolve))
+          await page.route('**/*.woff2', async (route) => {
+            await font
+            await route.continue()
+          })
+          await page.goto(`/${dil}/cars`, { waitUntil: 'domcontentloaded' })
+          await expect(page.locator('.top-bar__end')).toBeVisible()
+          expect(await page.evaluate(() => document.fonts.status), etiket).toBe('loading')
+          // Satır sayısı yedek fontla ve web fontu geldikten sonra aynı (içerikten bağımsız kırılma).
           expect(await satirSayisi(page), etiket).toBe(beklenenSatir)
+          fontuBirak()
           await page.evaluate(() => document.fonts.ready)
           await page.waitForLoadState('networkidle')
           expect(await satirSayisi(page), etiket).toBe(beklenenSatir)
@@ -526,6 +541,36 @@ test('frontend-003/AC-33, AC-34, AC-35, AC-44, AC-46, AC-48, AC-65: Favoriler so
   await expect(
     page.getByText('Favorileriniz bu tarayıcıda saklanır; tarayıcı verisi silinirse kaybolur.'),
   ).toBeVisible()
+  // AC-34 — gerçek Host, gerçek veri: her kart detay okumasının BUGÜNKÜ değerlerini taşır.
+  for (const slug of gorunen) {
+    const detay = (await (
+      await page.request.get(`/api/catalog/showcase-listings/${slug}?locale=tr`)
+    ).json()) as {
+      modelName: string
+      modelYear: number
+      mileageKilometers: number
+      branchName: string
+      isReserved: boolean
+      price: { onRequest: boolean; amount: number; currencyCode: string; minorUnitExponent: number }
+    }
+    const kart = liste
+      .getByTestId('listing-card')
+      .filter({ has: page.locator(`a[href="/tr/cars/${slug}"]`) })
+    const sayi = (deger: number) => new Intl.NumberFormat('tr-u-nu-latn').format(deger)
+    const fiyat = detay.price.onRequest
+      ? 'Fiyat sorunuz'
+      : new Intl.NumberFormat('tr-u-nu-latn', {
+          style: 'currency',
+          currency: detay.price.currencyCode,
+          minimumFractionDigits: detay.price.minorUnitExponent,
+          maximumFractionDigits: detay.price.minorUnitExponent,
+        }).format(detay.price.amount)
+    await expect(kart.getByRole('link', { name: detay.modelName })).toBeVisible()
+    await expect(kart).toContainText(`${detay.modelYear} · ${sayi(detay.mileageKilometers)} km`)
+    await expect(kart).toContainText(fiyat)
+    await expect(kart).toContainText(detay.branchName)
+    await expect(kart.getByText('Rezerve', { exact: true })).toHaveCount(detay.isReserved ? 1 : 0)
+  }
   await kanitSayfa(page, 'frontend-003-ac33.png')
 
   await page.getByRole('checkbox').nth(2).check()
@@ -574,6 +619,22 @@ test("frontend-003/AC-10, AC-55 (c), AC-63: Dil değişince karşılaştırma ay
   const anahtarlar = new Set([...detay.attributes, ...detay2.attributes].map((item) => item.key))
   // Fiyat, model yılı, kilometre, şube + yanıttaki nitelikler; başka satır yok.
   await expect(page.getByRole('rowheader')).toHaveCount(4 + anahtarlar.size)
+  const ADLAR: Record<string, string> = {
+    body_type: 'Kasa tipi',
+    fuel_type: 'Yakıt',
+    transmission_type: 'Vites',
+    drivetrain_type: 'Çekiş',
+    trim_level: 'Donanım paketi',
+    color: 'Renk',
+  }
+  // Satır adları da: çekirdek dört, sonra niteliklerin vitrin adları ilk görülme sırasıyla (AC-56).
+  expect(await page.getByRole('rowheader').allTextContents()).toEqual([
+    'Fiyat',
+    'Model yılı',
+    'Kilometre',
+    'Şube',
+    ...[...anahtarlar].map((anahtar) => ADLAR[anahtar] ?? anahtar),
+  ])
 
   await page.locator('nav.top-bar__locales').getByRole('link', { name: 'العربية' }).click()
   await page.waitForURL(/\/ar\/compare\?/)
@@ -615,8 +676,10 @@ test("frontend-003/AC-62: En kötü fikstürle 360 px'te üç sütun iç kaydır
   for (const [genislik, dil] of [
     [360, 'tr'],
     [360, 'ar'],
+    [360, 'en'],
     [320, 'tr'],
     [320, 'ar'],
+    [320, 'en'],
   ] as const) {
     const { context, page } = await genislikAsync(browser, genislik)
     await page.route('**/api/catalog/showcase-listings/*', (route) =>

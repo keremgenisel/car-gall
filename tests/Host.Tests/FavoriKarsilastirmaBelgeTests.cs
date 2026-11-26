@@ -120,7 +120,7 @@ public sealed partial class FavoriKarsilastirmaBelgeTests(HostFactory factory) :
         Assert.DoesNotContain("listing", parametreler.RootElement.ToString(), StringComparison.Ordinal);
     }
 
-    [Fact(DisplayName = "frontend-003/AC-3 (ayna): Uçtaki `RESERVED_SEGMENTS` (route.ts) ile `ContentReservedSlugs.All` aynı kümedir ve ikisi de `favorites` ile `compare`'i taşır")]
+    [Fact(DisplayName = "frontend-003/AC-3 (ayna): Uçtaki `RESERVED_SEGMENTS` (route.ts) ile `ContentReservedSlugs.All` aynı kümedir; ikisi de `favorites` ile `compare`'i taşır ve `SeoPage`'in iki sabiti (`FavoritesSegment`, `CompareSegment`) bu adlardır, uçtaki `FAVORITES_SEGMENT`/`COMPARE_SEGMENT` ile aynı")]
     public void AynaListe_AyniKume()
     {
         string route = File.ReadAllText(Path.Combine(CozumKoku(), "frontend", "src", "shared", "lib", "route.ts"));
@@ -135,6 +135,12 @@ public sealed partial class FavoriKarsilastirmaBelgeTests(HostFactory factory) :
         Assert.Equal(ContentReservedSlugs.All.Order(StringComparer.Ordinal), uc.Order(StringComparer.Ordinal));
         Assert.Contains("favorites", uc);
         Assert.Contains("compare", uc);
+
+        // QA 2 turu — üçüncü kol: sunucunun sayfa türü sınıflandırması aynı adları kullanır.
+        Assert.Equal(SeoPage.FavoritesSegment, sabitler["FAVORITES_SEGMENT"]);
+        Assert.Equal(SeoPage.CompareSegment, sabitler["COMPARE_SEGMENT"]);
+        Assert.Contains(SeoPage.FavoritesSegment, ContentReservedSlugs.All);
+        Assert.Contains(SeoPage.CompareSegment, ContentReservedSlugs.All);
     }
 
     [GeneratedRegex(@"const RESERVED_SEGMENTS[^=]*=\s*new Set\(\[(?<govde>[^\]]*)\]\)", RegexOptions.Singleline)]

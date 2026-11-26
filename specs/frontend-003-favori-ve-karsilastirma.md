@@ -691,10 +691,16 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 ### Kayıt ve depo (D4, D5, D9 · R4, R13, R15, C9)
 
-- **AC-12.** İki sekme, ikisi de boş kayıtla açılmış (D4). A'da X eklenir. B yenilenmeden Y'yi
-  ekler → kayıtta X ve Y vardır, B'nin sayacı **2**'dir. B'de X basılı görünmüyor; basılır →
-  kayıtta X **tek** kez vardır (no-op birleşme), B'de X basılı ve sayaç 2'dir. A yenilenmeden X'i
-  çıkarır → kayıtta yalnız Y kalır.
+- **AC-12.** İki sekme, ikisi de boş kayıtla açılmış (D4). Düğme ve sayaç her eylemden sonra
+  kayıttan yeniden çizilir.
+  (i) A'da X eklenir. B yenilenmeden Y'yi ekler → kayıtta X ve Y vardır (X silinmez); B'nin sayacı
+  **2**'dir ve B X'i artık basılı çizer.
+  (ii) Bayat "ekle": A'da X eklenir; B yenilenmeden, X'i hâlâ basılı değil gösterirken X'e basar →
+  kayıtta X **tek** kez vardır (no-op birleşme), B'de X basılı.
+  (iii) A yenilenmeden X'i çıkarır → kayıtta yalnız öbürü kalır.
+  *Revizyon (2026-11-27, AP-08): önceki metin B Y'yi ekledikten sonra X'in basılı
+  görünmemesini bekliyordu; D4 "eylemden sonra kayıttan yeniden çizilir" diyor — Takım Yöneticisi
+  kararı.*
 - **AC-13.** `/tr/cars`'ta eklenen favori `/ar/` ve `/en/favorites`'ta görünür; sayaç üç dilde
   aynı sayıyı gösterir.
 - **AC-14.** Depodaki değer bozuk JSON, tanınmayan sürüm ya da yanlış biçimli öğe içerdiğinde
