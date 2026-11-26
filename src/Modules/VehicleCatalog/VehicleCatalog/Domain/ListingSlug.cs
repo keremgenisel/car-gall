@@ -14,10 +14,18 @@ namespace CarGallery.Modules.VehicleCatalog.Domain;
 /// Slug her dilde AYNIDIR: Latin, kanonik addan türer (docs/architecture.md § 3).
 /// Türkçe karakterler ASCII karşılığına indirgenir — `lower()` ile değil, açık eşlemeyle:
 /// Türkçe collation altında `I` ve `İ` sessizce yanlış sonuç verir (Yasak Listesi 27).
+///
+/// <para><b>Uzunluk sınırı tek yerde:</b> <see cref="MaxLength"/>. Üretim, adresten okuma ve
+/// iki kolon (`listings.slug`, `showcase_listings.slug`) aynı sabiti kullanır. Kaçan hata
+/// (2026-11-26): `Create` sınır koymuyordu; en uzun marka (80) + model (120) adlı ilanın adresi
+/// 213 karaktere çıkıyor, yayın `varchar(160)` aşımıyla `500` veriyor ve ilan taslak kalıyordu.</para>
 /// </summary>
 internal readonly record struct ListingSlug
 {
     internal const string InvalidSource = "listing_slug.invalid_source";
+
+    /// <summary>Adresin en çok uzunluğu; kolonların genişliği de buradan gelir.</summary>
+    internal const int MaxLength = 160;
 
     private const int SuffixLength = 6;
 
@@ -45,6 +53,7 @@ internal readonly record struct ListingSlug
         }
 
         string yıl = modelYear.ToString(CultureInfo.InvariantCulture);
+        ad = Kisalt(ad, MaxLength - yıl.Length - SuffixLength - 2);
         // Sonek kimliğin SON altı karakterinden gelir, ilkinden değil: Guid v7'nin baş
         // baytları zaman damgasıdır ve ilk altı hex karakter ~65 saniyede bir değişir —
         // aynı dakikada yayınlanan iki ilan aynı soneki alır ve tekil adres çakışırdı.
@@ -58,7 +67,7 @@ internal readonly record struct ListingSlug
     {
         slug = default;
 
-        if (value is not { Length: > 0 and <= 160 })
+        if (value is not { Length: > 0 and <= MaxLength })
         {
             return false;
         }
@@ -82,6 +91,22 @@ internal readonly record struct ListingSlug
     }
 
     public override string ToString() => Value;
+
+    /// <summary>
+    /// Ad parçasını sığdırır: sınırı aşan ad SON KELİME SINIRINDA (tire) kesilir, yıl ve kimlik
+    /// soneki her zaman korunur — tekillik soneke dayanır, ad kısalınca bozulmaz. Tek kelimelik
+    /// ve sınırdan uzun ad sınırda kesilir. Sığan ad olduğu gibi kalır.
+    /// </summary>
+    private static string Kisalt(string ad, int sigacak)
+    {
+        if (ad.Length <= sigacak)
+        {
+            return ad;
+        }
+
+        int sinir = ad.LastIndexOf('-', sigacak);
+        return (sinir > 0 ? ad[..sinir] : ad[..sigacak]).TrimEnd('-');
+    }
 
     private static string Foldla(string source)
     {
