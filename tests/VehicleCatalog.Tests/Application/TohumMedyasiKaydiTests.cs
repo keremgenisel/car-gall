@@ -51,4 +51,17 @@ public sealed class TohumMedyasiKaydiTests
         Assert.Null(SeedMediaAssets.Describe(Guid.CreateVersion7()));
         Assert.NotEqual(SeedMediaAssets.Id(0, 1, MediaProcessingStatus.Ready, 1, 3, 4), SeedMediaAssets.Id(1, 1, MediaProcessingStatus.Ready, 1, 3, 4));
     }
+
+    [Fact(DisplayName = "0026/AC-59: Perf tohumunun logosu tohum medyasından çözülür: hazır, `logo` türünde, `logo-small` 320×80 ve `logo-large` 1200×300; fotoğraf kimlikleriyle çakışmaz.")]
+    public void Cozulur_TohumLogosu()
+    {
+        MediaAssetDto logo = SeedMediaAssets.Describe(SeedMediaAssets.LogoId)!;
+
+        Assert.Equal((MediaProcessingStatus.Ready, MediaAssetKind.Logo), (logo.Status, logo.Kind));
+        Assert.Equal(
+            [("logo-large", 1200, 300), ("logo-small", 320, 80)],
+            logo.Derivatives.Select(turev => (turev.Variant, turev.Width, turev.Height)));
+        Assert.All(logo.Derivatives, turev => Assert.StartsWith("/seed-media/frame-", turev.Url, StringComparison.Ordinal));
+        Assert.Equal(MediaAssetKind.Photo, SeedMediaAssets.Describe(SeedMediaAssets.Id(7, 2, MediaProcessingStatus.Ready, 5, 3, 4))!.Kind);
+    }
 }
