@@ -222,6 +222,75 @@ altında kalır.
    `tests/Architecture.Tests/BildirimSinirTests.cs:189`). Dönüş tipini değiştirmek bülteni de
    değiştirir → **D17**.
 
+### Verilen kararlar — plan turu (DEV, 2026-11-26)
+
+> R/C/AC'ye dokunmaz. `main` @ `0c4838f` (`0024` ve `0025` merge edilmiş) üzerinde ölçüldü.
+> `0024`/`0025`'in dersleri: tek biçim kapısı, katalog anahtarının elle doğrulanması, ilk paketin
+> revize tanımı (`0024` AC-55).
+
+- **P1 — Tür sözleşmesi (D1, AC-9, AC-71, AC-72).** `Media.Contracts`: `MediaAssetKind { Photo = 1,
+  Logo = 2 }`; `MediaAssetDto`'ya son parametre olarak `Kind` (varsayılan `Photo`, var olan
+  kurucular değişmeden derlenir). `media.assets.kind smallint NOT NULL DEFAULT 1`: migration'dan
+  önceki varlıklar `photo`. Yükleme ucu `kind` form alanını okur; **tek kapı** birebir ordinal
+  karşılaştırma (`photo`, `logo`). Alan yoksa `photo`; boş, harf büyüklüğü farklı, kontrol
+  karakterli ya da bilinmeyen her değer `422` `media.kind_unknown` ve varlık oluşmaz (dosya
+  doğrulamasından ÖNCE, depoya yazılmadan).
+- **P2 — İşleme (D1, AC-1–AC-6, AC-10).** `MediaVariant`'a `logo-small` (320) ve `logo-large`
+  (1200); türe göre türev listesi. `IImageProcessor.RenderLogo(source)`: yönlendirme fotoğrafla
+  aynı, tuval **saydam**, filigran yok, alfa kanallı WebP. Fotoğraf yolu (`Render`) değişmez.
+  İşleme servisinde "gösterim türevi var mı" kontrolü türe göre (`display` / `logo-small`).
+  Logo türünün de hazır duyurusu gider; alıcı yuvası olmayan varlığa dokunmaz (AC-8).
+- **P3 — Araca yalnız fotoğraf (D16, AC-69, AC-70).** Araç medyası kaydetmesi `FindManyAsync`'in
+  döndürdüğü türe bakar: logo → `422` `vehicle.media_asset_wrong_kind`. Yayın kapısı (yayına alma
+  ve satış geri alma) `ReadyAmongAsync`'in sonucunu `FindManyAsync` ile türe göre süzer: hazır
+  fotoğraf yoksa "en az bir hazır görsel" eksiği. Media'nın `ReadyAmongAsync` anlamı değişmez.
+- **P4 — Logo bağı (D2, D8, D9, AC-11–AC-16, AC-73, AC-74).** `Gallery.AssignLogo` / `RemoveLogo`
+  sürümü bir artırır. Uçlar: `PUT /api/admin/gallery/logo` (gövde `{ mediaAssetId, version }`) ve
+  `DELETE /api/admin/gallery/logo?version=` — ikisi de yeni sürümü döner, Yönetici grubunda.
+  `Dealership` kimliği doğrulamaz (D2). Panel okuması `logoMediaAssetId` taşır.
+- **P5 — Marka okuması (D17, AC-75, AC-76).** `Dealership.Contracts`: `IGalleryBrandingQueries`
+  (`FindBrandingAsync(locale)` → görünen ad + logo kimliği, tek projeksiyon sorgusu), aynı
+  `PublicGalleryQueries` gerçekler. `IGalleryDisplayNameQueries` değişmez. Arayüz tüketilen sorgu
+  kapısına girer.
+- **P6 — Host logo çözümü (D3, D5, AC-31–AC-43).** `IndexHtmlRenderer` markayı BİR kez okur; ad
+  varsa ve logo kimliği varsa `IMediaAssetQueries.FindAsync` BİR kez çağrılır. Logo yalnız
+  `Ready` + `Logo` türü + iki logo türevi varken kullanılır; Media okuması düşerse belge 200, ad
+  etiketi durur, logo yok, hata loglanır. Belgeye `<meta name="gallery-logo" content="adres"
+  data-width data-height>` (öznitelik kodlamalı) basılır. `SeoHeadBuilder` aynı çözülmüş logoyu
+  alır: `og:image` yedeği (D6) ve `AutoDealer.logo` (D7), kök ile mutlak (D10).
+- **P7 — Vitrin (D5, AC-30, AC-33, AC-62–AC-66).** Üst çubuk ve altlık logoyu belgedeki meta'dan
+  ilk boyamada okur (`galleryName.ts` deseni). Üst çubuk: `alt=""`, `width`/`height` türevden,
+  `decoding="async"`, `loading`/`fetchpriority` yok. Altlık: aynı adres, `alt` = görünen ad,
+  `loading="lazy"`, bağlantı değil, şube bloğundan önce. Ad yoksa ikisi de yok.
+- **P8 — Panel (D8, D12, D13, AC-19–AC-29, AC-61).** Galeri profili ekranında "Logo" bölümü:
+  dosya seçici (`accept` kabul edilen türler), yükleme `kind=logo`, 202'den hemen sonra atama,
+  durum yoklaması, önizleme `logo-small`, Değiştir/Kaldır/Tekrar dene. Atama ve kaldırma dönen
+  sürümü ekranın sürümü yapar; form değerleri dokunulmaz. Metinler panel kataloğunda; kullanılan
+  her anahtar kataloglarda elle doğrulanır. Bölümün stilleri **panel parçasındadır** (giriş CSS'ine
+  girmez).
+- **P9 — Perf tohumu (D11, AC-57, AC-59, AC-77, AC-78).** `SeedMediaAssets`'e deterministik bir
+  logo kimliği (tür `Logo`, `logo-small`/`logo-large` `/seed-media/` adresleri);
+  `SeedGalleryProfileForDevelopmentAsync` hesaplardan ve programlardan sonra o kimliği atar.
+- **P10 — Testler (X3).** Çok etiketli: `0004/AC-52, 0024/AC-45, 0025/AC-55, 0026/AC-52`,
+  `0004/AC-32, 0026/AC-47, AC-48`, `0004/AC-33, 0026/AC-44, AC-45, AC-48`. Tablodaki
+  `GorunenAdEtiketiTests` ve `SeoOrtami`'nin sahteleri `IGalleryBrandingQueries`'i gerçekler
+  (Proje Yöneticisi kararı, AP-08): iddialar ve başlıklar değişmez; "okuma düşerse belge 200,
+  ad etiketi yok" yeni arayüzle de ölçülür; "logo atanmış, Media okuması düşer → belge 200, ad
+  var, logo yok" ayrıca ölçülür.
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Media: tür, migration, yükleme kapısı, logo işleme, testler.
+3. VehicleCatalog: araca yalnız fotoğraf, yayın kapısı.
+4. Dealership: logo bağı, uçlar, marka okuması, mimari kapı.
+5. Host: logo çözümü, meta, `og:image`, `AutoDealer.logo`, belge ve bütçe testleri.
+6. Ön yüz vitrin: üst çubuk ve altlık logosu.
+7. Ön yüz panel: logo bölümü.
+8. Perf tohumu.
+9. e2e ve görsel kanıt.
+10. Belgeler.
+
 ---
 
 ## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-26)
