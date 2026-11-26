@@ -213,9 +213,10 @@ export function ComparePage() {
               <tr key={row.label}>
                 <th scope="row">{row.label}</th>
                 {row.values.map((cell, index) => (
-                  <td key={slugs[index]} dir="auto">
-                    {cell}
-                  </td>
+                  // Hücre sayfanın yönünde hizalanır; değer `<bdi>` ile yalıtılır (karışık yönlü
+                  // metin, D12). `dir="auto"` hücreye konunca rakamlı değer hücreyi LTR yapıp
+                  // ar'da hizayı bozuyordu.
+                  <td key={slugs[index]}>{cell === null ? null : <bdi>{cell}</bdi>}</td>
                 ))}
               </tr>
             ))}

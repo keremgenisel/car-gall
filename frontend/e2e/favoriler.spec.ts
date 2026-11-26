@@ -585,6 +585,11 @@ test("frontend-003/AC-10, AC-55 (c), AC-63: Dil değişince karşılaştırma ay
   const ikinci = (await sutunlar.nth(1).boundingBox())!
   expect(ilk.x).toBeGreaterThan(ikinci.x)
   await expect(sutunlar.nth(0).getByRole('link')).toHaveAttribute('href', `/ar/cars/${x!.slug}`)
+  // Hücreler sayfanın yönünde (rakamlı değer de): hiza karışmaz; değer `<bdi>` içinde yalıtılır.
+  const yonler = await page
+    .locator('td')
+    .evaluateAll((hucreler) => hucreler.map((td) => getComputedStyle(td).direction))
+  expect(new Set(yonler)).toEqual(new Set(['rtl']))
   await kanitSayfa(page, 'frontend-003-ac63-ar.png')
 })
 
