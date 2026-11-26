@@ -203,7 +203,7 @@ yedi günün saatleri görünür ve aynı saatler şubenin yapısal verisinde de
 
 ---
 
-## Verilen kararlar (öneri — Takım Yöneticisi onayı bekliyor)
+## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-26)
 
 Biçim: **karar** · *gerekçe* · *bedel*.
 
