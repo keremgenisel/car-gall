@@ -2,16 +2,21 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaya sunuldu (2026-11-26)** |
+| **Durum** | **Onaya sunuldu (2026-11-26)** · D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26) · sahibin SS1–SS2 cevapları işlendi · QA 1 CLARIFY turu bekliyor |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Media` (logo işleme türü) · `Dealership` (galeri profilinin logo bağı) · `Host` (belge: üst çubuk logosu, `og:image`, `AutoDealer.logo`) · Frontend (panel Galeri ekranı, vitrin üst çubuğu) |
 | **Bağımlı spec'ler** | `0011` (yükleme, türev, filigran) · `0012a` (panelin medya yüzeyi) · `0004` (**D2**, **D13**, **D15**, **D16**, **D17**, **AC-32**, **AC-33**, **AC-52**, **AC-80**, **AC-83**) · `0020` (galeri profili, **R16** sürüm, **C6** üst çubuk) · **`0024`** (profil formunun sürümü) · **`0025`** (`AC-52` zinciri). |
-| **Karar bekliyor** | **Takım Yöneticisi:** D1–D15 (öneri). **Sahip:** SS1–SS2 (önerili). |
+| **Karar bekliyor** | yok — D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26). SS1–SS2 cevaplandı (sahip kararı, 2026-11-26). |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26):** `0004` **SS5**'e "evet": logo panelden yüklensin,
 > paylaşım önizlemesinde ve galerinin yapısal verisinde görünsün; `0004`'ten sonra **ayrı küçük
 > kart**. `0004` **X9**, `0014` **X9** ve `0020` **X1** logoyu bu karta bırakmıştı.
+>
+> **Sahibin cevapları (sahip kararı, 2026-11-26):** **SS1 → üst çubuk + ana sayfa altlığı (öneriden
+> farklı).** SS2 → adın yanında, ad metin olarak kalır (öneri kabul). SS1'in cevabıyla **R4a**
+> eklendi, **D5** altlığı kapsayacak biçimde genişledi, **X2** ve **D11** değişti, **AC-58** yerinde
+> değişti. Yeni kriterler numara **eklenerek** geldi (**AC-62–AC-68**), var olan numaralar değişmedi.
 
 ---
 
@@ -36,6 +41,7 @@ altında kalır.
   yeniden denenebilir.
 - **R4.** Hazır logo her vitrin sayfasının üst çubuğunda, galerinin adının yanında görünür. İlk
   boyamada yerini alır ve sayfayı kaydırmaz.
+- **R4a.** Hazır logo ana sayfanın altlığında da görünür (**SS1**, sahip kararı, 2026-11-26).
 - **R5.** Hazır logo, kendi görseli olmayan belgelerin paylaşım önizlemesinde görsel olarak kullanılır.
 - **R6.** Ana sayfanın yapısal verisi hazır logoyu taşır.
 - **R7.** Logo atanmamışken, hazır değilken ya da okunamadığında vitrin bugünkü gibi davranır.
@@ -71,7 +77,9 @@ altında kalır.
 ### KAPSAM DIŞI
 
 - **X1.** **Panelin kendi üst çubuğunda logo** — *neden:* `0020` **X7**. İstek vitrin içindi.
-- **X2.** **Altlıkta logo** — *neden:* **SS1**. Altlık yalnız ana sayfada var (`0024` X4).
+- **X2.** **Altlığın, dolayısıyla altlık logosunun, ana sayfa dışındaki sayfalara taşınması** —
+  *neden:* altlık yalnız ana sayfada var (`frontend/src/app/App.tsx:133`, `0024` X4). Sahip altlıkta
+  logo istedi (**SS1**), site geneli altlık istemedi.
 - **X3.** **Site simgesi (favicon) ve uygulama simgesi üretimi** — *neden:* ayrı bir türev kümesi
   ve belge etiketleri gerektiriyor. Ham istekte yok.
 - **X4.** **Logonun filigran olarak kullanılması** — *neden:* filigran dağıtım yapılandırmasından
@@ -255,9 +263,26 @@ tuzak 4, tuzak 5, **SS1**, **SS2**)
 - **Ad okunamazsa logo da gösterilmez:** üst çubuk bugünkü boş hâliyle kalır (`0020` AC-17).
 - Logo; ana sayfa, liste, detay, içerik ve 404 belgelerinin üst çubuğunda bulunur. Bülten teyit
   ve çıkış sayfaları da aynı kabuğu kullanır.
+- **Altlık logosu** *(SS1'in cevabıyla eklendi, sahip kararı, 2026-11-26)*:
+  - **Yer:** altlık yalnız ana sayfada var (`App.tsx:133`). Logo altlığın **başında** durur,
+    şube bloğundan önce, satır başına (tr/en solda, ar sağda) yaslı.
+  - **Görsel:** üst çubukla **aynı** `logo-small` türevi ve aynı adres. Tarayıcı onu ikinci kez
+    indirmez. Boyutu üst çubukla aynıdır (oran korunarak en çok 40 × 160 CSS piksel). `width` ve
+    `height` türevin gerçek boyutudur.
+  - **`alt`:** üst çubuktakinden **farklı**: altlıktaki logonun yanında ad yazmaz, bu yüzden logo
+    bilgi taşır ve `alt`'ı **görünen addır**. Bağlantı değildir: ana sayfadadır ve üst çubuğun
+    bağlantısı zaten ana sayfaya gider.
+  - **Hız:** `loading="lazy"` ve eşzamansız çözümleme taşır. Ön yükleme ve yüksek öncelik yoktur.
+    Katlamanın altındadır ve LCP adayı değildir.
+  - **Bilgi:** altlık üst çubuğun belgeye basılmış logo bilgisini okur. Belgeye ek bayt ve ayrı
+    istek eklenmez.
+  - Üst çubukta logo yoksa (atanmamış, hazır değil, ad okunamıyor) altlıkta da yoktur. Altlığın
+    diğer blokları değişmez.
 
 *Gerekçe:* ad Arapça ziyaretçi, ekran okuyucu ve arama motoru için metin olarak kalmalı. Öznitelik
-yer ayırır, yani CLS olmaz. Düşük öncelik LCP görseliyle bant genişliği yarışını önler.
+yer ayırır, yani CLS olmaz. Düşük öncelik LCP görseliyle bant genişliği yarışını önler. Altlıkta aynı
+türevi kullanmak ikinci bir indirmeyi önler. `alt` kuralı WCAG'nin "bilgi taşıyan görsel /
+dekoratif görsel" ayrımıdır: üst çubukta ad hemen yanında yazılı, altlıkta değil.
 *Bedel:* çok geniş bir logo 160 pikselde küçük görünür. Panelin yardım metni oranı önerir (D12).
 
 **D6 — `og:image` yedeği logodur.** (R5, X9) `logo-large`'ın mutlak adresi şu belgelerde
@@ -313,14 +338,17 @@ kalır (`SeoHeadBuilder.cs:373-376`).
 
 **D11 — Bütçe ve hız.** (R9, C7)
 - **(a)** `/ar/` ana sayfa belgesinde bu kartın eklediği bayt (üst çubuk logo bilgisi, `og:image`,
-  `AutoDealer.logo`) test yapılandırmasının medya köküyle **en çok 768 B**'tır.
+  `AutoDealer.logo`) test yapılandırmasının medya köküyle **en çok 768 B**'tır. *(SS1'den sonra
+  değişmedi: altlık logosu belgeye bayt eklemez, üst çubuğun bilgisini okur.)*
 - **(b)** `0004` AC-83'ün kurgusu logolu kurulumda da en çok 6144 B'tır. Görselli detayın Open
   Graph kümesi değişmez.
-- **(c)** İlk paket ADR 0013'ün protokolüyle `main` tabanına göre **en çok 512 B** büyür.
+- **(c)** İlk paket ADR 0013'ün protokolüyle `main` tabanına göre **en çok 512 B** büyür. Üst çubuk
+  ve altlık logosunun kodu bu payın **içindedir**.
 - **(d)** C3 ana sayfa, liste ve detayda **logolu kurulumda** yeşildir (LCP < 2500 ms, CLS < 0,1).
   Perf koşusu bir logo tohumlar. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşu istenir ve
   LCP öğesi PR'a yazılır.
-- **(e)** Üç sayfanın hiçbirinde LCP öğesi logo değildir.
+- **(e)** Üç sayfanın hiçbirinde LCP öğesi logo değildir: ne üst çubuk logosu ne altlık logosu.
+- **(f)** Logolu ana sayfa, logonun ağ isteğini bir kez yapar. Altlık logosu ikinci bir istek üretmez.
 
 *Gerekçe:* logo her sayfaya giriyor ve detayın payı 92 ms (Context). (e) logonun LCP adayını
 değiştirmediğini doğrudan ölçer.
@@ -354,16 +382,17 @@ paylaşım önizlemesinde kullanılır.
 
 ## Sahibe sorular
 
-> Yalnız sahibin verebileceği kararlar. Her birinin altında öneri var. Cevap gelene kadar öneri
-> uygulanır. Cevap öneriden farklıysa ilgili D ve kriterler kart onaylanmadan güncellenir.
+> **Cevaplandı (sahip kararı, 2026-11-26).** SS1 öneriden farklı, SS2 öneriyle aynı.
 
 - **SS1. Logo vitrinde nerede görünsün?**
   **Öneri:** her sayfanın üst çubuğunda (D5). Altlıkta tekrar etmesin (X2). Altlık yalnız ana
   sayfada var ve logo zaten üstte görünüyor.
+  **Cevap (sahip kararı, 2026-11-26): üst çubuk + sayfa altı (altlık).** → R4a, D5, D11, X2.
 - **SS2. Logo adın yerine mi, yanında mı?**
   **Öneri:** yanında, ad yazı olarak kalsın (D5). Logo çoğunlukla Latin harfli. Arapça sayfada ad
   Arapça okunur, ekran okuyucu ve arama motoru adı yazıdan alır. Ad yerine yalnız logo istenirse
   logonun alternatif metni görünen ad olur ve AC-30 değişir.
+  **Cevap (sahip kararı, 2026-11-26): öneri kabul — yanında.**
 
 ---
 
@@ -472,7 +501,7 @@ paylaşım önizlemesinde kullanılır.
 - **AC-51.** `department` öğelerinin hiçbiri `logo` taşımaz. Logo yokken kök `logo` anahtarı taşımaz.
 - **AC-52.** `AutoDealer` bloğunda (kökte ve `department` öğelerinde) `geo` anahtarı yoktur.
   (`0004` AC-52'nin bu karttaki hâli.)
-- **AC-53.** Medya kökü `&` içeren bir yapılandırmada `logo` JSON-LD'nin ham metninde `&` ile
+- **AC-53.** Medya kökü `&` içeren bir yapılandırmada `logo` JSON-LD'nin ham metninde `\u0026` ile
   kodlanmıştır. Üst çubuk bilgisinin ve `og:image`'in özniteliği bozulmaz. Ayrıştırılan değerler
   kurulan adrese eşittir.
 
@@ -486,7 +515,8 @@ paylaşım önizlemesinde kullanılır.
 - **AC-57.** Perf koşusu bir logo tohumlar. C3 ana sayfa, liste ve detayda yeşildir: LCP < 2500 ms
   ve CLS < 0,1. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi PR'da
   yazılıdır.
-- **AC-58.** Logolu perf koşusunda ana sayfa, liste ve detayın LCP öğesi logo görseli değildir.
+- **AC-58.** Logolu perf koşusunda ana sayfa, liste ve detayın LCP öğesi ne üst çubuk logosu ne
+  altlık logosudur.
 - **AC-59.** Perf koşusunun logosu üst çubukta görünür. Koşunun belgesi logo bilgisini taşır ve
   ölçüm logosuz bir belgeyle yapılmamıştır.
 
@@ -497,6 +527,20 @@ paylaşım önizlemesinde kullanılır.
 - **AC-61.** Logo bölümünün metinleri (başlık, yardım metni, "Logo yükle", "işleniyor", "Değiştir",
   "Kaldır", "Tekrar dene") tr, ar ve en'de panel kataloğundadır. Vitrin kataloğuna anahtar
   eklenmez. Eksik anahtar kontrolü yeşildir.
+
+### Altlık logosu (R4a · D5, D11 — sahibin SS1 cevabıyla eklendi)
+
+- **AC-62.** Hazır logolu kurulumda `/tr/` altlığının ilk öğesi logodur ve şube bloğundan önce
+  gelir. Görselin adresi üst çubuktaki logo görseliyle aynı `logo-small` adresidir.
+- **AC-63.** Altlık logosunun `alt`'ı o dildeki görünen addır ve görsel bir bağlantının içinde değildir.
+- **AC-64.** Altlık logosu `loading="lazy"` taşır. `width` ve `height` öznitelikleri `logo-small`'un
+  gerçek boyutlarıdır.
+- **AC-65.** `/ar/` altlığında logo satırın sağ ucundadır. `/tr/` ve `/en/`'de sol ucundadır.
+- **AC-66.** Logo atanmamışken, hazır değilken ya da görünen ad okunamadığında altlıkta logo yoktur.
+  Altlığın diğer blokları bu karttan önceki hâlindedir.
+- **AC-67.** Hazır logolu ana sayfa açılışında logo adresine tam olarak bir ağ isteği yapılır.
+- **AC-68.** Hazır logolu `/ar/` ana sayfa belgesi, altlık logosu eklendikten sonra da AC-54'ün
+  sınırındadır. Belge altlık için ayrı bir logo bilgisi taşımaz.
 
 ---
 
