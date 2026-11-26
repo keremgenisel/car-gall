@@ -2,18 +2,23 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaya sunuldu** (2026-11-26) |
+| **Durum** | **Onaylandı** (2026-11-26 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (B1–B13 → **D22**, **D23** ve D2, D4, D7, D11, D12, D15, C13 ile on üç kriterin düzeltmesi, yedi yeni kriter) |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Host` (belge etiketleri, durum kodu, sitemap, robots) · `VehicleCatalog.Contracts` (detay okuması; görünür ilanların adresleri) · `Content.Contracts` (sayfa okuması; bir dilde yayındaki sayfaların adresleri) · `Dealership.Contracts` (görünen ad; ana sayfanın yapısal verisi için şube adı, adresi, telefonu) · `frontend/` (yalnız çeviri anahtarları ve iki parçalı tanınmayan yolun "bulunamadı" ekranı — **D8**) |
 | **Bağımlı spec'ler** | `0001`, `0002` (detay, **C13** ayırt edilemezlik), `0003`, `0014` (ana sayfa, **D22**), `0016b` (**C13** ön yükleme), `0017` (içerik sayfaları, **D10** gerçek 404 devri, **D13**/**D27** eski slug), `0018` (**D26**/**D35** bülten sayfaları), `0020` (görünen ad), `0022` (ana sayfa metinleri, **D20** önbellek) — hepsi tamamlandı |
 | **Dayanak** | ADR 0003 Ek 1, sıra #8 · `0002` **E11** · sahip kararı 2026-11-26 ("0004 ile başla") |
-| **Karar bekliyor** | **Takım Yöneticisi (ajan):** **D1–D21** onayı (§ Context → Önerilen kararlar). **Sahip:** § Sahibe sorular **SS1–SS5** — kriterleri değiştirmez; canlıya çıkışı ve kapsam dışı maddelerin ne zaman açılacağını etkiler. |
+| **Karar bekliyor** | **Takım Yöneticisi:** yok — D1–D21 onaylandı, CLARIFY turu D22–D23 ile işlendi (Takım Yöneticisi (ajan) kararı, 2026-11-26). **Sahip:** yalnız **SS1** (alan adı) barındırma kararıyla birlikte açık; kod D2'nin yapılandırma değerini bekler. SS2–SS5 cevaplandı (sahip kararı, 2026-11-26). |
 
 > **Analist taslağı, 2026-11-26.** Kart 2026-10-05'ten beri `Beklemede`'ydi. O tarihte
 > yalnız ham R1–R6 ve C1–C3 vardı. Bu sürüm Intent, Requirements, Constraints, Context ve
 > kabul kriterlerini yazıyor. Context'teki her iddia `main` @ `ad0c320`'a karşı ölçüldü. Ham
 > R1–R6'nın bugünkü kodla karşılaştırması § Context → *Ham R1–R6 ile bugünkü kod* başlığında.
+>
+> **Onay ve QA CLARIFY turu (2026-11-26, PR #125 @ `c92c54c`).** D1–D21 onaylandı. QA 1'in on üç
+> bulgusu (0 engelleyici, 8 önemli, 5 küçük) Takım Yöneticisi (ajan) kararlarıyla işlendi →
+> § Context → *Verilen kararlar — QA CLARIFY turu*. Kriter numaraları **eklemeyle** büyüdü
+> (AC-86–AC-92); var olan numaralar değişmedi. Sahibin SS2–SS5 cevapları § Sahibe sorular'da.
 
 ---
 
@@ -117,8 +122,9 @@ sonraki sitemap okumasında listede yer almaz ve adresi "bulunamadı" (404) yan�
 - **C12.** Performans eşiği **C3** (Lighthouse mobil, 3 koşu, medyan LCP < 2500 ms, CLS < 0,1)
   ana sayfa, liste ve detayda korunur. → **D17**, `docs/testing.md`.
 - **C13.** Her kabul kriteri en az bir testle karşılanır. Belge kriterleri, **sunucu yanıtının
-  kendisi** ayrıştırılarak doğrulanır (JavaScript çalıştırılmadan). Yapısal veri kriterleri
-  **D14**/**D15**'in anahtar ve tip listesine karşı şema doğrulamasıyla doğrulanır.
+  kendisi** ayrıştırılarak doğrulanır (JavaScript çalıştırılmadan, bir HTML ayrıştırıcısıyla —
+  **D22**). Yapısal veri kriterleri **D14**/**D15**'in kapalı anahtar listesine karşı **anahtar
+  kümesi karşılaştırmasıyla** doğrulanır. Sitemap kriterleri yapısal iddiadır (**D22**).
 
 ### KAPSAM DIŞI
 
@@ -127,11 +133,15 @@ sonraki sitemap okumasında listede yer almaz ve adresi "bulunamadı" (404) yan�
   araştırması** — *neden:* pazarlama işi, ürün işi değil.
 - **X3.** **Şube sayfaları** (`/{locale}/branches/{slug}` benzeri) — *neden:* bugün vitrinde şube
   sayfası yok ve `0003` **X3** / `0020` **X4** onu bilinçli olarak açmadı. Bir sayfa türü açmak
-  bu kartı SEO'dan ürün yüzeyine taşır (**D1**, **SS4**).
-- **X4.** **`openingHoursSpecification`, `geo`, `sameAs`** — *neden:* çalışma saati verisi yok
-  (`0003` **X2**). Koordinat vitrinde gösterilmiyor (`0020` **X4**). Sosyal hesapların giriş
-  yüzeyi yok (`0020` **X2**). Yapısal veri sayfada görünmeyen bir bilgiyi iddia etmemeli
-  (**D1**, **SS2**, **SS3**).
+  bu kartı SEO'dan ürün yüzeyine taşır (**D1**). Sahip **şimdilik istemiyor** (**SS4**, sahip
+  kararı, 2026-11-26).
+- **X4.** **`openingHoursSpecification` ve `sameAs`** — *neden:* **sahip istedi, ayrı kart**
+  (**SS2**, **SS3**, sahip kararı, 2026-11-26): sosyal hesaplar ve şube çalışma saatleri, her biri
+  panelden giriş + yapısal veri olarak **0004'ten sonra** ayrı küçük kartlarla gelir. Bugün ikisinin
+  de verisi girilemiyor (`0003` **X2**, `0020` **X2**) ve yapısal veri sayfada görünmeyen bir bilgiyi
+  iddia etmemeli (**D1**). **`geo`** ayrıca dışarıda: koordinat vitrinde gösterilmiyor (`0020`
+  **X4**) ve sahip onu istemedi. *Not:* **D15**'in kapalı anahtar listesi ve **AC-52** bu kartın
+  sınırını ölçer; o kartlar **D15**'i genişletir ve **AC-52**'yi kendi kapsamlarında değiştirir.
 - **X5.** **Daraltılmış liste açılış sayfaları** (ör. "SUV araçlar", "Toyota" için indekslenen
   adresler) — *neden:* her eksen kombinasyonu bir adres üretir. Hangilerinin açılış sayfası
   olacağı bir içerik ve SEO stratejisi kararıdır (**D8**).
@@ -143,8 +153,10 @@ sonraki sitemap okumasında listede yer almaz ve adresi "bulunamadı" (404) yan�
 - **X8.** **Sitemap'te `lastmod`, görsel sitemap'i, 50.000 adresin üstünde bölme** — *neden:*
   ilanın son değişme anı izlenmiyor; yanlış `lastmod` hiç olmamasından kötüdür. Tek galerinin
   stoku sınırın çok altında (**D4**).
-- **X9.** **Ana sayfa, liste ve içerik sayfalarında önizleme görseli** — *neden:* galeri logosu
-  yok (`0014` **X9**, `0020` **X1**). Ana sayfanın görseli logoyla gelir (**SS5**).
+- **X9.** **Logo: ana sayfa, liste ve içerik sayfalarında önizleme görseli ve `AutoDealer.logo`**
+  — *neden:* **sahip istedi, ayrı kart** (**SS5**, sahip kararı, 2026-11-26): logo panelden yükleme
+  + yapısal veri olarak 0004'ten sonra gelir. Bugün logo atanamıyor (`0014` **X9**, `0020` **X1**).
+  **D13**'ün "`og:image` yalnız detayda" kuralı ve **AC-33**/**AC-52** o kartta genişler.
 - **X10.** **`Car` üzerinde marka, yakıt, vites gibi ek alanlar** — *neden:* detay okumasında
   marka ayrı bir alan değil (model adı birleşik etiket). Opsiyonel alanlar kurulum başına
   gizlenebilir (**F3**). Her ek alan bir gizlilik kriteri getirir (**D14**).
@@ -333,9 +345,12 @@ yönlendirmesi yok, SEO alt başlığı) · § 2.F (Host yalnız birleştirir) �
     doğrulamasını geçmez. Yapısal veri dilden bağımsız sayı biçimi ister, açıklama ise dilin
     biçimini (**D14**, **D11**).
 
-### Önerilen kararlar — 2026-11-26 (Takım Yöneticisi onayı bekliyor)
+### Verilen kararlar — 2026-11-26 (D1–D21)
 
-Her karar bugünkü koda karşı ölçülerek önerildi. Biçim: **karar** · *gerekçe* · *bedel*.
+**Takım Yöneticisi (ajan) kararı, 2026-11-26: D1–D21 onaylandı.** Her karar bugünkü koda karşı
+ölçülerek önerilmişti. Biçim: **karar** · *gerekçe* · *bedel*. CLARIFY turunun değiştirdiği
+kararlar (D2, D4, D7, D11, D12, D15, D17) yerinde güncellendi ve değişiklik "CLARIFY B<n>" diye
+işaretlendi.
 
 **D1 — Şube sayfası açılmaz. Ham R2'nin yapısal verisi ana sayfaya, galeri düzeyinde taşınır.**
 (R6, X3, X4) Ana sayfa tek bir `AutoDealer` taşır. Vitrinde görünen her şube onun altında ad, adres
@@ -345,17 +360,24 @@ Bir sayfa türü açmak bu kartı ürün yüzeyine taşır. Saat verisi yok. Koo
 vitrinde görünmüyor, ve yapısal veri sayfada olmayan bilgiyi iddia etmemeli. `AutoDealer`
 schema.org'da `LocalBusiness`'ın alt tipidir, yani ham R2'nin "`AutoDealer` + `LocalBusiness`"
 isteği tek tiple karşılanır.
-*Bedel:* yerel aramada şube başına ayrı sonuç ve "şu an açık" bilgisi yok. Bu karar **SS3**/**SS4**
-cevaplanınca yeniden açılır.
+*Bedel:* yerel aramada şube başına ayrı sonuç ve "şu an açık" bilgisi yok. **SS4** cevaplandı
+(şimdilik hayır, sahip kararı 2026-11-26): karar kalıyor. Saatler **SS3** ile ayrı kartta gelir.
 
 **D2 — Mutlak adreslerin kökü tek bir dağıtım değeridir: e-postalardaki bağlantılarla aynı kök.**
 (R2, C10) Kanonik, dil alternatifleri, `og:url`, `og:image`'in göreli adresleri, sitemap ve
 robots.txt aynı kökü kullanır. Kök istek başlıklarından türetilmez. Değer eksik ya da mutlak
-değilse uygulama ayağa kalkmaz (bugünkü `Notifications:PublicBaseUrl` doğrulamasının aynısı).
+değilse uygulama ayağa kalkmaz. *(CLARIFY B5 ile kesinleşti:)* Kök yalnız **`http` ya da
+`https` şemalı mutlak** bir adrestir ve **yol bölümü taşımaz**; sondaki `/` normalize edilir
+(`https://x.test/` ile `https://x.test` aynı kökü üretir). Boş değer, `/galeri`, `galeri.com`,
+`ftp://x.test` ve `https://x.test/yol` reddedilir. Bugünkü `Notifications:PublicBaseUrl`
+doğrulaması (`Uri.TryCreate(…, UriKind.Absolute)`) Unix'te `/galeri`'yi `file:` adresi sayıp kabul
+ediyor (QA repro'su) → bu doğrulama yeterli değil.
 *Gerekçe:* bir sitenin tek bir adresi vardır. İki ayrı ayar er geç iki farklı adres olur (bülten
 bağlantısı bir alana, kanonik başka bir alana). İstekten türetmek tuzak 1'dir.
 *Bedel:* bugün `Notifications` adını taşıyan ayar artık siteye ait. Adının ve sahipliğinin nasıl
-düzenleneceği Developer'ın kararıdır, `docs/deploy.md` buna göre güncellenir.
+düzenleneceği Developer'ın kararıdır, `docs/deploy.md` buna göre güncellenir. **Alt dizinde
+barındırma** (`https://alan.com/galeri/`) desteklenmez: kök yol taşımadığı için site alan adının
+kökünde yaşamak zorundadır.
 
 **D3 — Sitemap istek anında, vitrinin o anki hâlinden üretilir. Olaylarla beslenen bir depo
 kurulmaz.** (R7) Ham R6'nın "olaylar günceller" cümlesi ve `docs/architecture.md` § 3'ün aynı
@@ -369,8 +391,9 @@ galerinin stoku birkaç yüz ilan, sorgu ucuz. Arama motorları sitemap'i seyrek
 
 **D4 — Sitemap yapısı: bir dizin ve dil başına bir dosya.** (R7, X8) Adresler `/sitemap.xml`
 (dizin) ve `/sitemap-{locale}.xml`. Bir dilin dosyası şunları taşır: o dilin ana sayfası,
-parametresiz liste, görünür her ilanın detayı (Rezerve dâhil) ve o dilde yayındaki her içerik
-sayfası. Bülten sayfaları, panel, parametreli liste ve "bulunamadı" belgeleri girmez. `lastmod`
+parametresiz liste, görünür her ilanın detayı (Rezerve dâhil) ve o dilde **görünür** her içerik
+sayfası — `FindBySlugAsync`'in o dilde döndüreceği sayfa; girdisiz SSS yayında sayılmaz (`0017`
+**R20**) ve sitemap'e girmez (CLARIFY B10). Bülten sayfaları, panel, parametreli liste ve "bulunamadı" belgeleri girmez. `lastmod`
 basılmaz. Dil alternatifleri sitemap'e yazılmaz, belgede taşınır.
 *Gerekçe:* dil başına dosya, bir dilin indekslenme durumunu ayrı izlemeyi sağlar. Alternatifler
 belgede zaten var. Aynı bilgiyi iki yerde taşımak iki yerde çelişme fırsatıdır. Satılmış ilanın
@@ -396,7 +419,14 @@ süre farkı yoktur. Eski içerik slug'ının 301'i (`0017` **D13**) önce gelir
 *Gerekçe:* `0017` **D10** kararı tüm vitrin için tek kural olarak buraya devretti. "Bulundu" diyen
 bir satılmış ilan sayfası arama sonucunda kalır (soft 404).
 *Bedel:* içerik sayfasının belgesi artık `Content`'e bir okuma yapar. Bugün yalnız eski slug
-okuması var (`0017` **D27**), detay belgesi ise tam okuma yapar (**D17**).
+okuması var (`0017` **D27**), detay belgesi ise tam okuma yapar (**D17**). *(CLARIFY B2:)* Tamamlanmış
+kartların üç testi bu kararla değişir ve davranış değişikliği PR'da yazılır (DoD T11): `0017`
+**AC-41** (`tests/Host.Tests/IcerikZinciriTests.cs:151-160`, `/tr/hic-olmayan` belgesi 200 → **404**),
+`0017` **AC-51**'in `/en/kvkk` satırı (`:174-176`, → **404**) ve `0017` **AC-38**
+(`frontend/src/features/content/IcerikVitrin.test.tsx:71`, **D8**). Ayrıca `0016b`'nin ön yükleme
+testi (`tests/Host.Tests/IlkGorselOnYuklemeTests.cs:35-39`) bağlantının hemen ardından
+`</head>` geldiğini ölçüyor; **AC-80** bağlantının SEO etiketlerinden **önce** gelmesini istediği
+için bu konum iddiası da değişir.
 
 **D8 — İki parçalı tanınmayan vitrin yolu (`/{l}/x/y`) 404 döner ve uç "bulunamadı" ekranını
 basar.** (R10) `0017` **D9**/AC-38'in "listeye düşer" davranışı bu yolda kalkar. Üç ve daha çok
@@ -431,24 +461,32 @@ dersi). Var olmayan adrese işaret eden alternatif kümeyi geçersiz kılar (tuz
 | Liste | Katalogdaki liste başlığı · görünen ad | Katalogdaki liste açıklaması |
 | Detay | `{model adı} {yıl}` · görünen ad | Yıl, kilometre, fiyat (ya da "fiyat sorunuz") ve şube adı, dilin sayı ve para biçimiyle |
 | İçerik | Sayfa başlığı · görünen ad | Gövdenin biçim işaretlerinden arındırılmış düz metninin ilk en çok 160 karakteri, kelime ortasında kesilmeden |
+| 404 (ilan ve içerik) | `{content.notFound.title}` · görünen ad — ilan ve içerik için **tek metin** (C6) | basılmaz |
+| Bülten teyit/çıkış, panel | Görünen ad; okunamazsa katalogdaki yedek başlık | basılmaz |
 
 Görünen ad okunamazsa ya da boşsa ` · görünen ad` eki düşer. Ana sayfanın başlığı o durumda
-katalogdaki ana sayfa başlığı olur. Yazılımın adı (`CarGallery`) hiçbir durumda basılmaz.
+katalogdaki ana sayfa başlığı olur. Yazılımın adı (`CarGallery`) hiçbir durumda basılmaz;
+`frontend/index.html:6`'daki `<title>CarGallery</title>` hiçbir belgede kalmaz (CLARIFY B7). 404
+başlığı için `content.notFound.title` seçildi çünkü genel bir metin: ilanın "vitrinde değil"
+metni (`detail.notFound.title`) ilan ile içerik arasında ayrım yapardı ve sayfa türünü ele verirdi.
 *Gerekçe:* başlık ziyaretçinin arama sonucunda ilk okuduğu satır. Galerinin adı her sayfada
 olmalı, sayfaya özgü kısım önce gelmeli. Ana sayfa açıklaması galerinin kendi yazdığı metin
 (`0022`). Ad okunamazken sayfanın düşmemesi `0020` **R5a**'nın deseni.
 *Bedel:* içerik sayfasının açıklamasını galeri ayrıca yazamaz (bir "meta açıklama" alanı yok).
 Gerekirse ayrı kart.
 
-**D12 — Sabit metinlerin kaynağı: ön yüz deposundaki çeviri dizini, vitrin paketine girmeyen ayrı
-bir kümede.** (C2) Liste başlığı ve açıklaması, ana sayfanın yedek başlığı, açıklama kalıpları,
-"fiyat sorunuz" ve "km" birimi bu kümede üç dilde durur. Eksik anahtar kontrolü bu kümeyi de
-kapsar. Host kodunda metin tutulmaz.
+**D12 — Sabit metinlerin kaynağı: ön yüz deposundaki çeviri dizini.** (C2) *(CLARIFY B6, seçenek
+a:)* Ekranda **zaten görünen** metinler **mevcut vitrin anahtarından** okunur: `home.intro.body`,
+`detail.priceOnRequest`, `detail.mileageValue`, `detail.notFound.*`, `content.notFound.*`. Yeni
+ve **vitrin paketine girmeyen** ayrı bir kümeye yalnız **SEO'ya özgü** metinler girer: liste
+başlığı ve açıklaması, ana sayfanın ve bülten/panel belgelerinin yedek başlığı, açıklama kalıpları.
+Eksik anahtar kontrolü bu kümeyi de kapsar. Host kodunda metin tutulmaz.
 *Gerekçe:* `docs/architecture.md` § 3: arayüz metinlerinin sahibi ön yüz deposu. İkinci bir
 katalog (Host içinde) iki kaynak demek. Vitrin paketine girmemesi ilk yüklemeyi büyütmemek için
 şart (ADR 0013, **D17**).
-*Bedel:* Host bu kümeyi dağıtım paketinde okuyabilmeli. Nasıl paketleneceği Developer'ın
-kararıdır.
+*Bedel:* Host hem vitrin kataloğunu hem bu kümeyi dağıtım paketinde okuyabilmeli. Nasıl
+paketleneceği Developer'ın kararıdır. Ekrandaki metin değişirse belgenin metni de değişir —
+bilinçli: ikisi aynı şeyi söylemeli.
 
 **D13 — Open Graph kümesi.** (R4, X7, X9, X13) `og:title` ve `og:description` başlık ve açıklamayla
 aynıdır. `og:url` kanoniktir. `og:type` her belgede `website`. `og:site_name` görünen addır ve ad
@@ -478,7 +516,10 @@ Görünen ad okunamazsa blok hiç basılmaz. Yalnız ana sayfada.
 *Gerekçe:* bugün vitrinde görünen bilgi bu: altlık şubenin adını, adresini ve telefonunu
 gösteriyor (`0014`). Adresin yapılandırılmış hâli (`PostalAddress` alanları) veride yok, metin
 olarak saklanıyor.
-*Bedel:* `address`'in yapısız metin olması zengin sonuç kalitesini düşürür.
+*Bedel:* `address`'in yapısız metin olması zengin sonuç kalitesini düşürür. *Not (sahip kararı,
+2026-11-26):* `sameAs`, `openingHoursSpecification` ve `logo` sahibin istediği ayrı kartlarla
+gelecek (X4, X9). Bu kararın kapalı listesi o kartların **kapsamında** genişler; **AC-52**'nin
+"bu anahtarlar yoktur" iddiası 0004'ün sınırını ölçer ve o kartlar onu kendi kriterleriyle değiştirir.
 
 **D16 — Yapısal veri ve etiketlerdeki serbest metin kodlanır.** (C9) JSON-LD içinde `<`, `>`, `&`
 kaçırılır. Hiçbir değer `</script>`'i kapatamaz. Özniteliklerde bugünkü öznitelik kodlaması
@@ -489,8 +530,9 @@ kullanılır.
 
 **D17 — Performans bütçesi.** (R11, C12)
 (a) Detay belgesinde bu kartın eklediği etiketlerin (başlık, açıklama, kanonik, alternatifler,
-Open Graph, JSON-LD) toplam boyutu, sıkıştırmasız, **en çok 4096 bayt**tır. Ölçüm, tohumdaki en
-uzun model adlı ve en çok görselli ilanda yapılır.
+Open Graph, JSON-LD) toplam boyutu, sıkıştırmasız, **en çok 4096 bayt**tır. Ölçüm *(CLARIFY
+B12)* kurgulanmış en kötü durumda, **ar** belgesinde yapılır: alan sınırındaki uzunlukta model
+adı, ilanın görsel üst sınırı kadar görsel, en uzun şube adı.
 (b) ADR 0013'ün protokolüyle (giriş JS + giriş CSS, `gzip -9`) ilk paket `main` tabanına göre
 **en çok 512 B** büyür.
 (c) C3 ana sayfa, liste ve detayda yeşil kalır. Bir sayfanın medyanı **2450 ms**'yi aşarsa ikinci
@@ -520,6 +562,52 @@ bayat kopyası kaldırılmış ilanı geri getirirdi.
 **D21 — Kabul kriterlerini Analist yazar. Kriterler uygulama dalı açılmadan `main`'e girer.**
 Bu PR'ın kendisi. (`0017` **D28**'in deseni, ADR 0008 / K2.)
 
+### Verilen kararlar — QA CLARIFY turu, 2026-11-26
+
+QA 1, PR #125'i `c92c54c` üzerinde okudu: **13 bulgu — 0 engelleyici, 8 önemli, 5 küçük.** Hepsi
+işlendi (Takım Yöneticisi (ajan) kararı, 2026-11-26).
+
+| Bulgu | Öz | İşlendiği yer |
+|---|---|---|
+| **B1** | Kriterlerin ölçüm aracı yok: `Contains` ile "öğe oluşmaz" ölçülemez, XSD yok, "şema doğrulaması" tanımsız | **D22**, C13, AC-16, AC-46, AC-55, AC-56 |
+| **B2** | Tamamlanmış kartların üç testi ve ön yükleme konumu değişiyor, yazılmamış | D7 Bedel, AC-80, DoD T11 |
+| **B3** | Uç üçüncü parçayı yok sayıyor (`route.ts:205-209`); `/tr/cars/{slug}/x`, `/tr/admin`, `/tr/newsletter…` için durum kodu ile ekran çelişir | AC-76, AC-90 |
+| **B4** | "Listenin okuduğu parametre" kümesi tanımsız; `sort` ve `page=1` belirsiz; alternatif ve `og:url` sayılmamış | **D23**, AC-68 |
+| **B5** | Kök adres doğrulaması `/galeri`'yi kabul ediyor; yol bölümü ve sondaki `/` tanımsız | D2, AC-22, AC-86 |
+| **B6** | Ekranda zaten olan metinler ikinci bir kümede çoğalıyor | D12, AC-3, AC-8 |
+| **B7** | 404, bülten ve panel belgelerinin başlığı tanımsız; `CarGallery` o belgelerde kalabilir | D11, AC-15, AC-91, AC-92 |
+| **B8** | AC-46'nın "ikinci `<script>` oluşmaz"ı gerçek pakette yanlış (modül script'i zaten var) | AC-46 |
+| **B9** | AC-7'nin sayı biçimi örnekle tanımlı, kaynağa bağlı değil | AC-7 |
+| **B10** | "Yayındaki" içerik sayfası `FindBySlugAsync`'le aynı şey değil (girdisiz SSS) | D4, AC-56, AC-89, AC-88 |
+| **B11** | AC-26'da `x-default` eksik | AC-26 |
+| **B12** | AC-83'ün ölçüm ilanı tohuma bağlı, en kötü durum değil | D17 (a), AC-83 |
+| **B13** | 404 kararının gizli ilanda ek okuma yapmadığının kanıtı yok (`0002` **C13**/**E7**) | AC-87 |
+
+**D22 — Ölçüm araçları.** (B1, C13)
+(a) Belge kriterleri bir HTML ayrıştırıcısıyla ölçülür: **AngleSharp yalnız `Host.Tests`'e**
+eklenir, üretim koduna girmez.
+(b) Sitemap için XSD kopyalanmaz. AC-55/AC-56 **yapısal iddiadır**: belge `System.Xml` ile iyi
+biçimli ayrıştırılır, kök öğenin adı (`sitemapindex` / `urlset`) ve ad alanı
+(`http://www.sitemaps.org/schemas/sitemap/0.9`) doğrudur, yalnız izinli alt öğeler vardır
+(`<sitemap><loc>` / `<url><loc>`).
+(c) Yapısal veri "şema doğrulaması" değil, **D14**/**D15**'in kapalı anahtar listesine karşı
+**anahtar kümesi karşılaştırmasıdır**.
+*Gerekçe:* `Contains` bir dizenin varlığını ölçer, bir öğenin oluşup oluşmadığını ölçemez
+(AC-16, AC-46). XSD kopyası bakımı olan bir ikinci kaynak. Kapalı liste zaten şemanın işini görüyor.
+*Bedel:* bir test bağımlılığı.
+
+**D23 — Listenin okuduğu parametreler belgeyi `noindex, follow` yapar.** (B4, R9, D8) Küme
+`frontend/src/features/catalog/listUrlState.ts:53-69`'dakidir: `bodyType`, `fuel`, `transmission`,
+`brand`, `yearMin`, `yearMax`, `mileageMin`, `mileageMax`, `priceMin`, `priceMax`, `sort`, `page`.
+**`sort` ve `page=1` dâhil** — değerine bakılmaz. Bu belgede kanonik, dil alternatifi ve `og:url`
+basılmaz. Kümede olmayan parametreler (`utm_source`) yok sayılır: belge indekslenir ve kanoniği
+parametresiz adrestir (AC-69).
+*Gerekçe:* `page=1` ve varsayılan `sort` parametresiz listenin kopyasıdır. Değere göre ayrım yapmak
+listenin varsayılanlarını Host'a kopyalamak olurdu (C3). Kanoniği olmayan bir belgenin alternatifleri
+ve `og:url`'i de tutarsız sinyal verir.
+*Bedel:* küme ön yüzde yaşıyor; yeni bir liste ekseni eklendiğinde Host'un kümesi de güncellenmeli.
+Kriter (AC-68) bunu yakalamaz, uygulama ikisini tek kaynaktan türetmeli.
+
 ---
 
 ## Sahibe sorular
@@ -527,6 +615,11 @@ Bu PR'ın kendisi. (`0017` **D28**'in deseni, ADR 0008 / K2.)
 Bu sorular **ürün ve iş kararıdır.** Takım Yöneticisi bunları karara bağlamaz, kabul kriterleri
 de onlara dayanmaz. Cevapları kapsam dışı maddelerin ne zaman açılacağını ve canlıya çıkışı
 belirler.
+
+> **Sahibin cevapları (sahip kararı, 2026-11-26):** **SS4** — şimdilik **hayır**, D1 kalır.
+> **SS2**, **SS3**, **SS5** — **üçü de isteniyor**: her biri panelden giriş + yapısal veri olarak
+> **0004'ten sonra ayrı küçük kartlar**. 0004'ün kapsamı değişmez (X4, X9). **SS1** barındırma
+> kararıyla birlikte açık; kod D2'nin yapılandırma değerini bekler.
 
 - **SS1. Canlı alan adı.** Kanonik, sitemap ve paylaşım önizlemesi bu adrese bağlı (**D2**).
   Barındırma ve alan adı henüz seçilmedi (ADR 0012, "Canlıya çıkış engelleri"). Kriterler yapılandırılan
@@ -556,16 +649,17 @@ belirler.
 - **AC-1.** `/tr/` belgesinde tam olarak bir `<title>` vardır ve metni galerinin tr görünen adıdır.
 - **AC-2.** Ana sayfa metinlerinde giriş açıklaması ar için kaydedilmişken `/ar/` belgesinin
   `<meta name="description">` değeri o kayıtlı metindir.
-- **AC-3.** Giriş açıklaması en için kaydedilmemişken `/en/` belgesinin açıklaması katalogdaki en
-  varsayılan giriş açıklamasıdır.
+- **AC-3.** Giriş açıklaması en için kaydedilmemişken `/en/` belgesinin açıklaması en vitrin
+  kataloğundaki `home.intro.body` anahtarının metnidir.
 - **AC-4.** `/tr/cars` belgesinin başlığı `{katalogdaki tr liste başlığı} · {görünen ad}`'dır ve
   açıklaması katalogdaki tr liste açıklamasıdır.
 - **AC-5.** Görünür bir ilanın `/tr/cars/{slug}` belgesinin başlığı `{tr model adı} {yıl} · {görünen ad}`'dır.
 - **AC-6.** Modelin ar karşılığı kayıtlıyken `/ar/cars/{slug}` belgesinin başlığı ar model adını
   taşır. Karşılık kayıtlı değilse kanonik Latin adı taşır.
-- **AC-7.** Detay açıklaması yılı, kilometreyi, fiyatı ve şube adını taşır. Kilometre ve fiyat
-  belgenin dilinin sayı ve para biçimiyle yazılır (tr'de `85.000 km`, en'de `85,000 km`).
-- **AC-8.** "Fiyat sorunuz" ilanının detay açıklaması katalogdaki "fiyat sorunuz" metnini taşır ve
+- **AC-7.** Detay açıklaması yılı, kilometreyi, fiyatı ve şube adını taşır. Kilometre ve fiyatın
+  yazımı, üç dilde de `frontend/src/shared/i18n/format.fixtures.json`'daki beklenen değerlerle
+  aynıdır (`0018` **D24**/**D32**'nin fikstürü).
+- **AC-8.** "Fiyat sorunuz" ilanının detay açıklaması vitrin kataloğundaki `detail.priceOnRequest` metnini taşır ve
   hiçbir fiyat rakamı (`0` dâhil) içermez.
 - **AC-9.** Para birimi KWD (minor unit 3) olan bir kurulumda `1250.500` KWD'lik ilanın detay
   açıklaması fiyatı üç ondalıkla yazar.
@@ -578,8 +672,9 @@ belirler.
   katalogdaki liste başlığıdır (` · ` eki yoktur).
 - **AC-14.** Görünen ad sorgusu hata verdiğinde `/tr/` belgesinin başlığı katalogdaki tr ana sayfa
   başlığıdır.
-- **AC-15.** Ana sayfa, liste, detay, içerik ve 404 belgelerinin hiçbirinin `<title>`'ında ya da
-  `og:site_name`'inde `CarGallery` dizesi geçmez (görünen ad okunamadığı durum dâhil).
+- **AC-15.** Ana sayfa, liste, detay, içerik, 404, bülten teyit/çıkış ve panel belgelerinin
+  hiçbirinin `<title>`'ında ya da `og:site_name`'inde `CarGallery` dizesi geçmez (görünen ad
+  okunamadığı durum dâhil). Hiçbir belgede birden çok `<title>` yoktur.
 - **AC-16.** Görünen adı `A <b>&"B"` olan galerinin `/tr/cars` belgesi ayrıştırıldığında
   `<title>`'ın metin değeri `{liste başlığı} · A <b>&"B"`'dir ve belgede `<b>` öğesi oluşmaz.
 
@@ -593,8 +688,10 @@ belirler.
 - **AC-20.** `/tr` ve `/tr/` isteklerinin belgeleri aynı kanoniği (`{kök}/tr/`) taşır.
 - **AC-21.** `Host: kotu.test` ve `X-Forwarded-Host: kotu.test` başlıklarıyla yapılan istekte
   kanonik, dil alternatifleri ve `og:url` yine `{kök}` ile başlar ve `kotu.test` belgede geçmez.
-- **AC-22.** Kök adres yapılandırması boş ya da göreli bir değerken uygulama başlamaz ve hata
-  anahtarın adını söyler.
+- **AC-22.** Kök adres yapılandırması boş, `/galeri`, `galeri.com`, `ftp://x.test` ya da
+  `https://x.test/yol` iken uygulama başlamaz ve hata anahtarın adını söyler.
+- **AC-86.** Kök `https://x.test/` ve `https://x.test` olarak yapılandırılmış iki kurulumda
+  `/tr/cars` belgesinin kanoniği aynıdır: `https://x.test/tr/cars`.
 
 ### Dil alternatifleri (R3 · C7 · D10, D20)
 
@@ -605,8 +702,8 @@ belirler.
   dilin (tr) aynı sayfasıdır.
 - **AC-25.** Etkin diller `tr, en` iken `/tr/cars/{slug}` belgesinde `hreflang="ar"` alternatifi yoktur.
 - **AC-26.** tr'de `kvkk`, en'de `privacy` slug'ıyla yayında, ar'da yayında olmayan bir içerik
-  sayfasının `/tr/kvkk` belgesi tam olarak iki dil alternatifi taşır: `{kök}/tr/kvkk` ve
-  `{kök}/en/privacy`.
+  sayfasının `/tr/kvkk` belgesi tam olarak iki dil alternatifi (`{kök}/tr/kvkk`, `{kök}/en/privacy`)
+  ve `x-default` = `{kök}/tr/kvkk` taşır.
 - **AC-27.** Varsayılan dil tr'de yayında olmayan, en'de yayında olan bir içerik sayfasının
   `/en/{slug}` belgesi `x-default` alternatifi taşımaz.
 - **AC-28.** `hreflang` değerleri yalnız dil kodudur (`tr`, `ar`, `en`, `x-default`). Bölge eki yoktur.
@@ -643,8 +740,9 @@ belirler.
 - **AC-44.** "Fiyat sorunuz" ilanının `Car` nesnesinde `offers` anahtarı yoktur.
 - **AC-45.** `/ar/cars/{slug}` belgesindeki `Car.name`, AC-6'daki ar model adıdır.
 - **AC-46.** Model adı `X</script><script>alert(1)</script>` olan ilanın detay belgesi
-  ayrıştırıldığında tek bir JSON-LD bloğu vardır, içeriği geçerli JSON'dur, `name`'i bu dizedir ve
-  belgede ikinci bir `<script>` öğesi oluşmaz.
+  ayrıştırıldığında tek bir JSON-LD bloğu vardır, içeriği geçerli JSON'dur ve `name`'i bu dizedir.
+  Belgedeki `<script>` öğesi sayısı, aynı belgenin bu kartın etiketleri olmadan basılmış hâlinden
+  tam bir fazladır ve `alert(1)` hiçbir `<script>` öğesinin metni değildir.
 - **AC-47.** Kurulumda gizlenmiş bir opsiyonel alanın (**F3**) değeri, detay belgesinin hiçbir
   etiketinde ve JSON-LD'sinde geçmez.
 - **AC-48.** Detay belgesi dışındaki belgelerde `@type: Car` taşıyan JSON-LD yoktur.
@@ -662,11 +760,13 @@ belirler.
 
 ### Sitemap (R7 · D3, D4, D19)
 
-- **AC-55.** `/sitemap.xml` 200 döner, `Content-Type`'ı XML'dir ve sitemaps.org 0.9 dizin şemasına
-  uyar. Etkin her dil için tam olarak bir `{kök}/sitemap-{dil}.xml` girdisi taşır.
-- **AC-56.** `/sitemap-tr.xml` sitemaps.org 0.9 `urlset` şemasına uyar. Adres kümesi tam olarak
-  şudur: `{kök}/tr/`, `{kök}/tr/cars`, görünür her ilanın `{kök}/tr/cars/{slug}`'ı ve tr'de
-  yayındaki her içerik sayfasının `{kök}/tr/{slug}`'ı.
+- **AC-55.** `/sitemap.xml` 200 döner, `Content-Type`'ı XML'dir ve iyi biçimli XML'dir. Kök öğesi
+  `http://www.sitemaps.org/schemas/sitemap/0.9` ad alanında `sitemapindex`'tir, alt öğeleri yalnız
+  `<sitemap><loc>`'tur. Etkin her dil için tam olarak bir `{kök}/sitemap-{dil}.xml` girdisi taşır.
+- **AC-56.** `/sitemap-tr.xml` iyi biçimli XML'dir. Kök öğesi aynı ad alanında `urlset`'tir, alt
+  öğeleri yalnız `<url><loc>`'tur. Adres kümesi tam olarak şudur: `{kök}/tr/`, `{kök}/tr/cars`,
+  görünür her ilanın `{kök}/tr/cars/{slug}`'ı ve tr'de görünen (`FindBySlugAsync`'in döndüreceği)
+  her içerik sayfasının `{kök}/tr/{slug}`'ı.
 - **AC-57.** Bir ilan yayından kaldırıldıktan sonraki ilk `/sitemap-tr.xml` yanıtında o ilanın adresi yoktur.
 - **AC-58.** Bir ilan satıldı olarak işaretlendikten sonraki ilk `/sitemap-tr.xml` yanıtında o
   ilanın adresi yoktur.
@@ -678,6 +778,7 @@ belirler.
 - **AC-62.** Hiçbir sitemap girdisi `/admin`, `/newsletter/` ya da `?` içermez.
 - **AC-63.** Etkin olmayan bir dilin sitemap'i (`/sitemap-de.xml`) 404 döner.
 - **AC-64.** Hiçbir sitemap girdisi `lastmod` öğesi taşımaz.
+- **AC-89.** tr'de yayına alınmış ama hiç girdisi olmayan bir SSS sayfası `/sitemap-tr.xml`'de yoktur.
 
 ### robots.txt (R8 · D5)
 
@@ -690,8 +791,11 @@ belirler.
 
 - **AC-67.** `/admin`, `/admin/vehicles` ve `/admin/content/home` belgelerinin her biri
   `<meta name="robots" content="noindex">` taşır.
-- **AC-68.** `/tr/cars?bodyType=suv` ve `/tr/cars?page=2` belgelerinin her biri
-  `<meta name="robots" content="noindex, follow">` taşır ve `<link rel="canonical">` taşımaz.
+- **AC-92.** `/admin` ve `/tr/newsletter/confirm` belgelerinin `<title>`'ı görünen addır. Görünen ad
+  okunamadığında katalogdaki yedek başlıktır.
+- **AC-68.** `/tr/cars?bodyType=suv`, `/tr/cars?page=2`, `/tr/cars?page=1`, `/tr/cars?sort=newest`
+  ve `/tr/cars?fuel=diesel` belgelerinin her biri `<meta name="robots" content="noindex, follow">`
+  taşır. Kanonik, dil alternatifi ve `og:url` taşımaz (**D23**).
 - **AC-69.** `/tr/cars?utm_source=x` belgesi robots etiketi taşımaz ve kanoniği `{kök}/tr/cars`'tır.
 - **AC-70.** `/tr/newsletter/confirm?token=…` belgesi bugünkü `noindex` etiketini ve
   `Referrer-Policy: no-referrer` başlığını taşır. Kanonik, dil alternatifi ve JSON-LD taşımaz.
@@ -704,29 +808,40 @@ belirler.
   "bulunamadı" ekranını basar.
 - **AC-73.** Yayından kaldırılmış, satılmış ve arşivlenmiş bir ilanın `/tr/cars/{slug}` istekleri
   404 döner. Gövdeleri, hiç var olmamış bir slug'ın gövdesiyle bayt bayt aynıdır.
+- **AC-87.** Detay belgesinin 404 kararı, vitrin okuma modelinin yolundan (`FindAsync` /
+  `FindFirstImageAsync`) verilir: gizli bir ilanın isteği, hiç var olmamış bir slug'ın isteğinden
+  fazla okuma yapmaz (`0002` **C13**/**E7**). Kanıt bir mimari test ya da sahte port testidir.
 - **AC-74.** ar'da yayında olmayan bir içerik sayfasının ar slug'ıyla yapılan istek ve hiç var
   olmamış bir tek parçalı yol (`/tr/yok-boyle-sayfa`) 404 döner.
 - **AC-75.** Eski bir içerik slug'ının isteği bugünkü gibi güncel adrese 301 döner (`0017` **D13**).
-- **AC-76.** `/tr/foo/bar` isteği 404 döner ve uç liste değil "bulunamadı" ekranını basar (tr ve ar
-  için görsel kanıt).
+- **AC-76.** `/tr/foo/bar`, `/tr/cars/{görünür slug}/x`, `/tr/admin`, `/tr/newsletter` ve
+  `/tr/newsletter/foo` istekleri 404 döner ve uç liste ya da detay değil "bulunamadı" ekranını basar
+  (tr ve ar için görsel kanıt).
+- **AC-90.** `/tr/newsletter/confirm` ve `/tr/newsletter/unsubscribe` belgeleri 200 döner ve
+  `noindex` taşır (AC-70).
 - **AC-77.** 404 belgeleri `<meta name="robots" content="noindex">` taşır. Kanonik, dil alternatifi,
   `og:` etiketi ve JSON-LD taşımaz.
 - **AC-78.** Etkin olmayan önekin (`/de/`) isteği bugünkü gibi boş gövdeli 404 döner.
+- **AC-91.** Hiç var olmamış bir ilanın, gizli bir ilanın ve hiç var olmamış bir içerik sayfasının
+  404 belgelerinin `<title>`'ı aynıdır: `{tr content.notFound.title} · {görünen ad}`.
+- **AC-88.** tr'de yayına alınmış ama hiç girdisi olmayan bir SSS sayfasının `/tr/{slug}` isteği 404 döner.
 - **AC-79.** `/tr/`, `/tr/cars`, görünür bir ilanın detayı ve yayındaki bir içerik sayfası 200 döner.
 
 ### Korunan davranış (C11)
 
 - **AC-80.** Görselli bir ilanın detay belgesindeki ön yükleme bağlantısı (`rel="preload"`, `href`,
-  `imagesrcset`, `imagesizes`, `fetchpriority="high"`) `0016b`'nin kriterleriyle aynıdır.
+  `imagesrcset`, `imagesizes`, `fetchpriority="high"`) `0016b`'nin kriterleriyle aynıdır ve belgede
+  bu kartın eklediği tüm etiketlerden **önce** gelir.
 - **AC-81.** `enabled-locales`, `gallery-display-name` ve `home-text-*` etiketleri bugünkü
   belgelerde bugünkü değerleriyle bulunur.
 - **AC-82.** 200 ve 404 vitrin belgelerinin her biri `Cache-Control: no-store` taşır.
 
 ### Performans (R11 · C12 · D17)
 
-- **AC-83.** Tohumdaki en uzun model adlı ve en çok görselli ilanın detay belgesinde bu kartın
-  eklediği etiketlerin (`<title>`, açıklama, kanonik, dil alternatifleri, `og:*`, JSON-LD)
-  sıkıştırmasız toplam boyutu en çok 4096 bayttır.
+- **AC-83.** Kurgulanmış en kötü durumdaki bir ilanın **ar** detay belgesinde — model adı alan
+  sınırındaki uzunlukta, görsel sayısı ilanın üst sınırında, şube adı en uzun — bu kartın eklediği
+  etiketlerin (`<title>`, açıklama, kanonik, dil alternatifleri, `og:*`, JSON-LD) sıkıştırmasız
+  toplam boyutu en çok 4096 bayttır.
 - **AC-84.** ADR 0013 protokolüyle ölçülen ilk paket (giriş JS + giriş CSS, `gzip -9`), `main`
   tabanına göre en çok 512 B büyür. İki sayı ve fark PR'da yazılır.
 - **AC-85.** C3 ölçümünde ana sayfa, liste ve detayın medyan LCP'si 2500 ms'nin altındadır.
@@ -736,13 +851,14 @@ belirler.
 
 ## Definition of Done
 
-- [ ] Önerilen kararlar (**D1–D21**) Takım Yöneticisi tarafından onaylandı ve "Verilen kararlar"
-      olarak işaretlendi.
+- [x] Önerilen kararlar (**D1–D21**) Takım Yöneticisi tarafından onaylandı ve "Verilen kararlar"
+      olarak işaretlendi; QA CLARIFY turu (B1–B13 → **D22**, **D23** ve kriter düzeltmeleri)
+      işlendi. *(Takım Yöneticisi (ajan) kararı, 2026-11-26.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
 - [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok; Host yalnız `*.Contracts` kullanıyor (C3, C4).
 - [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil
-      ve **D12**'nin kümesini de kapsıyor.
+      ve **D12**'nin SEO kümesini de kapsıyor. Ekrandaki metinler mevcut vitrin anahtarından okunuyor.
 - [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4), C3 dâhil.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0004-ac<n>.png`):
       AC-72 ve AC-76'nın "bulunamadı" ekranı, tr ve ar.
@@ -754,7 +870,9 @@ belirler.
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
       bunun yerine geçmez.
 - [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-      `0017` AC-38'in davranış değişikliği (**D8**) açıkça yazıldı.
+      Tamamlanmış kartların değişen davranışları açıkça yazıldı: `0017` **AC-38** (**D8**),
+      `0017` **AC-41** ve **AC-51**'in `/en/kvkk` satırı (200 → 404, **D7**), `0016b`'nin ön
+      yükleme konumu (**AC-80**).
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** ve spec `specs/done/` klasörüne taşındı.
 
