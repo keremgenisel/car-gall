@@ -370,20 +370,38 @@ public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFacto
     public async Task OgImage_IlkGorselinBuyukTurevi_Mutlak() =>
         Assert.Equal($"{K}/seed-media/{Slug}-0-large.webp", (await GetAsync($"/tr/cars/{Slug}")).Belge.Og("og:image"));
 
-    [Fact(DisplayName = "0004/AC-32: Görselsiz bir ilanın detay belgesinde `og:image` yoktur.")]
+    [Fact(DisplayName = "0004/AC-32, 0026/AC-47, AC-48: Logosuz kurulumda görselsiz bir ilanın detay belgesinde `og:image` yoktur; hazır logolu kurulumda `logo-large`'ın adresidir.")]
     public async Task OgImage_Yok_GorselsizIlan()
     {
         ortam.Ilanlar[("fiat-egea-2021-img000", "*")] = SeoOrtami.Ilan("fiat-egea-2021-img000", images: 0);
 
         Assert.Null((await GetAsync("/tr/cars/fiat-egea-2021-img000")).Belge.Og("og:image"));
+
+        // `0026` D6 — aynı ilan, hazır logolu kurulumda (yeni istemci: belge her istekte kurulur).
+        Guid logo = Guid.CreateVersion7();
+        ortam.LogoKimligi = logo;
+        ortam.LogoVarligi = SeoOrtami.LogoDto(logo);
+        Assert.Equal(
+            $"https://cdn.galeri.test/media/public/assets/{logo:D}/logo-large.webp",
+            (await GetAsync("/tr/cars/fiat-egea-2021-img000")).Belge.Og("og:image"));
     }
 
-    [Fact(DisplayName = "0004/AC-33: Ana sayfa, liste ve içerik belgelerinde `og:image` yoktur.")]
+    [Fact(DisplayName = "0004/AC-33, 0026/AC-44, AC-45, AC-48: Logosuz kurulumda ana sayfa, liste ve içerik belgelerinde `og:image` yoktur; hazır logolu kurulumda (süzgeçli liste dâhil) `logo-large`'ın adresidir.")]
     public async Task OgImage_Yok_DigerSayfalarda()
     {
         foreach (string adres in new[] { "/tr/", "/tr/cars", "/tr/kvkk" })
         {
             Assert.Null((await GetAsync(adres)).Belge.Og("og:image"));
+        }
+
+        // `0026` D6 — hazır logolu kurulum.
+        Guid logo = Guid.CreateVersion7();
+        ortam.LogoKimligi = logo;
+        ortam.LogoVarligi = SeoOrtami.LogoDto(logo);
+
+        foreach (string adres in new[] { "/tr/", "/tr/cars", "/tr/cars?bodyType=suv", "/tr/kvkk" })
+        {
+            Assert.Equal($"https://cdn.galeri.test/media/public/assets/{logo:D}/logo-large.webp", (await GetAsync(adres)).Belge.Og("og:image"));
         }
     }
 
@@ -559,11 +577,14 @@ public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFacto
         Assert.Equal(("Ataşehir Şubesi", "Barbaros Mah. 7, İstanbul", "+902160000002"), (subeler[1].GetProperty("name").GetString(), subeler[1].GetProperty("address").GetString(), subeler[1].GetProperty("telephone").GetString()));
     }
 
-    [Fact(DisplayName = "0004/AC-52, 0024/AC-45, 0025/AC-55: `AutoDealer` bloğunda (kökte ve `department` öğelerinde) `geo` ve `logo` anahtarları yoktur (`0024` D8: `sameAs`, `0025` D9: `openingHoursSpecification` listeden çıktı).")]
+    [Fact(DisplayName = "0004/AC-52, 0024/AC-45, 0025/AC-55, 0026/AC-52: `AutoDealer` bloğunda (kökte ve `department` öğelerinde) `geo` anahtarı yoktur (`0024` D8: `sameAs`, `0025` D9: `openingHoursSpecification`, `0026` D7: `logo` listeden çıktı).")]
     public async Task AutoDealer_KapsamDisiAnahtarlarYok()
     {
-        // `0024`, `0025` — hesaplı ve programlı kurulumda ölçülür: `sameAs` ve şube öğesindeki
-        // `openingHoursSpecification` artık beklenen anahtarlar, kalan ikisi yine yok.
+        // `0024`, `0025`, `0026` — hesaplı, programlı ve logolu kurulumda ölçülür: `sameAs`, şube
+        // öğesindeki `openingHoursSpecification` ve kökteki `logo` artık beklenen anahtarlar.
+        Guid logo = Guid.CreateVersion7();
+        ortam.LogoKimligi = logo;
+        ortam.LogoVarligi = SeoOrtami.LogoDto(logo);
         ortam.Galeri = ortam.Galeri! with
         {
             SocialLinks = [new PublicSocialLinkDto("instagram", "https://www.instagram.com/otogaleri")],
@@ -573,7 +594,9 @@ public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFacto
         IEnumerable<string> butunAnahtarlar = dealer.Anahtarlar()
             .Concat(dealer.GetProperty("department").EnumerateArray().SelectMany(sube => sube.Anahtarlar()));
 
-        foreach (string yasak in new[] { "geo", "logo" })
+        Assert.Contains("logo", dealer.Anahtarlar());
+
+        foreach (string yasak in new[] { "geo" })
         {
             Assert.DoesNotContain(yasak, butunAnahtarlar);
         }

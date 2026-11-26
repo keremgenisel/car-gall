@@ -19,10 +19,17 @@ public enum MediaProcessingStatus
 /// `0026` **D1** — varlığın NASIL işlendiği; kime ait olduğu değil (Media sahipsizdir, C4).
 /// `Photo`: üç türev, filigran, siyah zemin (`0011`). `Logo`: iki türev, filigransız, saydamlık
 /// korunur. Migration'dan önce yüklenmiş varlıklar `Photo`'dur (AC-71).
+///
+/// <para>Telde KOD olarak, küçük harfle (`photo`, `logo`) — yükleme ucunun kabul ettiği değerle aynı
+/// (AC-9). Durum alanının sayı olarak serileşmesi değişmez (tüketicileri onu sayı okuyor).</para>
 /// </summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MediaAssetKind>))]
 public enum MediaAssetKind
 {
+    [System.Text.Json.Serialization.JsonStringEnumMemberName("photo")]
     Photo = 1,
+
+    [System.Text.Json.Serialization.JsonStringEnumMemberName("logo")]
     Logo = 2,
 }
 

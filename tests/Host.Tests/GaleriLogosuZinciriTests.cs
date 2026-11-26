@@ -153,6 +153,40 @@ public sealed class GaleriLogosuZinciriTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, (await yonetici.DeleteAsync($"{Logo}?version={surum}")).StatusCode);
     }
 
+    // ----- Vitrin belgesi (D3, gerçek DB) -----
+
+    [Fact(DisplayName = "0026/AC-41: Logo değiştirildikten ve yeni varlık hazır olduktan sonra istenen ilk belge yeni logoyu taşır.")]
+    public async Task IlkBelge_YeniLogo()
+    {
+        HttpClient ziyaretci = Istemci();
+        Guid eski = await AtaAsync(await LogoVarligiAsync());
+        Assert.Contains($"{eski:D}/logo-small.webp", await LogoMetaAsync(ziyaretci), StringComparison.Ordinal);
+
+        Guid yeni = await AtaAsync(await LogoVarligiAsync());
+
+        string meta = await LogoMetaAsync(ziyaretci);
+        Assert.Contains($"{yeni:D}/logo-small.webp", meta, StringComparison.Ordinal);
+        Assert.DoesNotContain(eski.ToString("D"), meta, StringComparison.Ordinal);
+    }
+
+    [Fact(DisplayName = "0026/AC-35, AC-36: Gerçek `Media` okumasıyla işleniyor durumdaki ya da fotoğraf türündeki atanmış varlıkta belge logo taşımaz.")]
+    public async Task LogoYok_KullanilamazVarlik_GercekDb()
+    {
+        HttpClient ziyaretci = Istemci();
+
+        foreach (Guid varlik in new[] { await LogoVarligiAsync(durum: 2), await LogoVarligiAsync(tur: 1) })
+        {
+            await AtaAsync(varlik);
+            string html = await ziyaretci.GetStringAsync("/tr/");
+            Assert.DoesNotContain("gallery-logo", html, StringComparison.Ordinal);
+            Assert.Contains("gallery-display-name", html, StringComparison.Ordinal);
+        }
+    }
+
+    private static async Task<string> LogoMetaAsync(HttpClient istemci) =>
+        new AngleSharp.Html.Parser.HtmlParser().ParseDocument(await istemci.GetStringAsync("/tr/"))
+            .QuerySelector("meta[name='gallery-logo']")?.GetAttribute("content") ?? string.Empty;
+
     // ----- Yetki (R8 · D4) -----
 
     [Fact(DisplayName = "0026/AC-15, AC-16: Satış Danışmanı ve İçerik Editörü'nün logo ataması ve kaldırması `403`; oturumsuz `401`; logo değişmez.")]

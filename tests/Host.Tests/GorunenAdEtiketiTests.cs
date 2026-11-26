@@ -49,7 +49,7 @@ public sealed class GorunenAdEtiketiTests
         Assert.DoesNotContain("<b>Galeri", html, StringComparison.Ordinal);
     }
 
-    private static async Task<(int Durum, string Html)> RenderAsync(IGalleryDisplayNameQueries sorgu)
+    private static async Task<(int Durum, string Html)> RenderAsync(IGalleryBrandingQueries sorgu)
     {
         IndexHtmlRenderer renderer = new(
             new SabitWebRoot(),
@@ -59,6 +59,8 @@ public sealed class GorunenAdEtiketiTests
 
         DefaultHttpContext context = new()
         {
+            // `0026` D17 — Host belgeyi marka okumasıyla kurar (Proje Yöneticisi kararı, AP-08:
+            // yalnız sahtenin tipi değişti; iddialar ve başlıklar aynı).
             RequestServices = new ServiceCollection().AddSingleton(sorgu).BuildServiceProvider(),
         };
         context.Request.Path = "/tr/";
@@ -70,16 +72,16 @@ public sealed class GorunenAdEtiketiTests
         return (context.Response.StatusCode, Encoding.UTF8.GetString(govde.ToArray()));
     }
 
-    private sealed class DusenSorgu : IGalleryDisplayNameQueries
+    private sealed class DusenSorgu : IGalleryBrandingQueries
     {
-        public Task<string?> FindDisplayNameAsync(string locale, CancellationToken cancellationToken) =>
+        public Task<GalleryBrandingDto?> FindBrandingAsync(string locale, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("veritabanı erişilemiyor");
     }
 
-    private sealed class SabitSorgu(string? ad) : IGalleryDisplayNameQueries
+    private sealed class SabitSorgu(string? ad) : IGalleryBrandingQueries
     {
-        public Task<string?> FindDisplayNameAsync(string locale, CancellationToken cancellationToken) =>
-            Task.FromResult(ad);
+        public Task<GalleryBrandingDto?> FindBrandingAsync(string locale, CancellationToken cancellationToken) =>
+            Task.FromResult<GalleryBrandingDto?>(new GalleryBrandingDto(ad, null));
     }
 
     private sealed class SabitWebRoot : IWebHostEnvironment
