@@ -31,5 +31,6 @@
   "compare.columnError": "تعذّر تحميل هذه السيارة.",
   "compare.notSpecified": "غير محدد",
   "compare.table": "جدول مقارنة السيارات",
-  "compare.field.price": "السعر"
+  "compare.field.price": "السعر",
+  "favoritesPage.removeOne": "إزالة"
 }

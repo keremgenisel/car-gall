@@ -284,9 +284,7 @@ a.top-bar__brand:hover {
 }
 
 .favorite-button {
-  padding-inline: var(--space-3);
   border: 0;
-  border-radius: var(--radius-sm);
   background: none;
   font: inherit;
   cursor: pointer;

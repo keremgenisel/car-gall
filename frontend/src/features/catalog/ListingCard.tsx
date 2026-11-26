@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useLocale } from '../../app/localeContext'
 import type { ShowcaseListing } from '../../shared/api/types'
 import { formatMoney } from '../../shared/i18n/format'
@@ -12,9 +13,11 @@ interface Props {
    * lazy yüklemek tarayıcının onu keşfetmesini geciktirir (docs/frontend.md § 7).
    */
   readonly aboveTheFold: boolean
+  /** `frontend-003` D6 — favoriler ekranının "karşılaştırmaya seç" denetimi; kartın altında. */
+  readonly footer?: ReactNode
 }
 
-export function ListingCard({ listing, aboveTheFold }: Props) {
+export function ListingCard({ listing, aboveTheFold, footer }: Props) {
   const { locale, t } = useLocale()
   const price = formatMoney(listing.price, locale)
 
@@ -64,6 +67,7 @@ export function ListingCard({ listing, aboveTheFold }: Props) {
           {listing.branchName}
         </p>
       </div>
+      {footer}
     </Card>
   )
 }

@@ -31,5 +31,6 @@
   "compare.columnError": "Bu araç yüklenemedi.",
   "compare.notSpecified": "Belirtilmemiş",
   "compare.table": "Araç karşılaştırma tablosu",
-  "compare.field.price": "Fiyat"
+  "compare.field.price": "Fiyat",
+  "favoritesPage.removeOne": "Kaldır"
 }

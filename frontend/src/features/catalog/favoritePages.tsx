@@ -1,11 +1,10 @@
 /**
- * `frontend-003` **D13** · **P8** — favoriler ve karşılaştırma ekranları; vitrinin ilk paketine
- * girmez, `App`'ten tek `import()` ile iner.
+ * `frontend-003` **D13** · **P8** — favoriler ve karşılaştırma ekranlarının TEMBEL parçası. Ekranlar,
+ * üçüncü katalog kümesi ve stilleri yalnız buradan iner; vitrinin ilk paketine girmez (`App`'ten tek
+ * `import()`). Küme kaydı yan etkili içe aktarmadır ve ekranlardan ÖNCE değerlendirilir.
  */
-export function FavoritesPage() {
-  return <div className="page" />
-}
+import '../../shared/i18n/favoritesCatalog'
+import './favoritePages.css'
 
-export function ComparePage() {
-  return <div className="page" />
-}
+export { ComparePage } from './ComparePage'
+export { FavoritesPage } from './FavoritesPage'

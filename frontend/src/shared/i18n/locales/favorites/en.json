@@ -31,5 +31,6 @@
   "compare.columnError": "This car could not be loaded.",
   "compare.notSpecified": "Not specified",
   "compare.table": "Car comparison table",
-  "compare.field.price": "Price"
+  "compare.field.price": "Price",
+  "favoritesPage.removeOne": "Remove"
 }

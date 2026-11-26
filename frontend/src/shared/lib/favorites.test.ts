@@ -4,7 +4,6 @@ import {
   FAVORITES_KEY,
   FAVORITES_LIMIT,
   favoritesAvailable,
-  removeFavorites,
   resetFavoritesForTests,
   setFavorite,
   useFavorites,
@@ -193,12 +192,5 @@ describe('favoriler deposu', () => {
         },
       ],
     })
-  })
-
-  it('frontend-003/D10: "Hepsini kaldır" birden çok favoriyi çıkarır, öbürlerini korur', () => {
-    digerSekmeYazar([ilan('a-2020-aaaaaa'), ilan('b-2020-bbbbbb'), ilan('c-2020-cccccc')])
-
-    expect(removeFavorites(['a-2020-aaaaaa', 'c-2020-cccccc'])).toBe('removed')
-    expect(kayit().items.map((item) => item.slug)).toEqual(['b-2020-bbbbbb'])
   })
 })

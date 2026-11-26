@@ -31,7 +31,7 @@ export function FavoritesCounter() {
         aria-label={t('favorites.counter', { count })}
       >
         <HeartIcon />
-        <span>{count}</span>
+        {count}
       </a>
       <p className="visually-hidden" role="status">
         {outcome === null ? '' : t('favorites.outcome', { state: outcome, count: FAVORITES_LIMIT })}

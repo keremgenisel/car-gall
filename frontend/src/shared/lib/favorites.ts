@@ -140,11 +140,6 @@ export function setFavorite(add: boolean, listing: Omit<Favorite, 'addedAt'>): F
   })
 }
 
-/** Birden çok favoriyi çıkarır ("hepsini kaldır", D10). */
-export function removeFavorites(slugs: readonly string[]): FavoriteOutcome {
-  return write('removed', (current) => current.filter((item) => !slugs.includes(item.slug)))
-}
-
 function write(
   success: FavoriteOutcome,
   change: (current: readonly Favorite[]) => readonly Favorite[] | null,
