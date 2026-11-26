@@ -195,6 +195,9 @@ altında kalır.
 | `0011`'in işleme testleri (filigran ve türev testleri, `tests/Media.Tests`) | türsüz yükleme | **değişmez**: türsüz yükleme fotoğraftır (**D1**, **AC-6**) |
 | `frontend/src/app/TopBar.test.tsx`, `tests/Host.Tests/GorunenAdEtiketiTests.cs` | logosuz üst çubuk ve ad etiketi | **değişmez** (logosuz kurulum, **AC-34**). Logolu durum yeni testlerle ölçülür |
 
+> **Kapanışta eklendi (0024, 2026-11-26 — Takım Yöneticisi):** kapalı anahtar kümesi ölçen her Host testinin bir **e2e ikizi** olabilir. 0024'te `GaleriYonetimiZinciriTests:320`'nin ikizi `frontend/e2e/evidence-0020.spec.ts:281` tabloda yoktu ve uygulamada kırıldı. Bu kart public galeri yanıtına ya da şube öğesine alan eklerken, yukarıdaki her Host satırı için `frontend/e2e/` altında aynı kümeyi ölçen ikiz de aranır ve birlikte güncellenir.
+
+
 ### Bilinen tuzaklar
 
 1. **Siyah zemin** (`SkiaImageProcessor.cs:110`): saydamlığı ölçmeyen bir test logonun siyah
