@@ -258,6 +258,11 @@ yapısal verisinde de yer alır.
   (görünür ad). Red yakalanır (AC-79). Platform adları ve sırası `socialPlatforms.ts`'te koddadır
   (D1: çevrilmez). Ölçüm: `scripts/check-social-icons.mjs` derleme çıktısında parçanın tekliğini,
   3072 B sınırını ve giriş JS'inde yolların yokluğunu denetler; CI'ın frontend işine eklenir.
+  *(QA 2 BULGU-1 ile değişti, Proje Yöneticisi kararı:)* `manualChunks` yerine `chunkFileNames`;
+  parça (`socialIconLinks.ts`) bloğun simgeli bağlantılarını kuran işlevi ve yolları taşır, girişle
+  hiçbir modül paylaşmaz. Girişte `SocialLinksSlot` (yükleme kararı, kabuk, red yedeği) ve
+  `socialLinksLoader.ts` kalır; parça gelene kadar blok yoktur (AC-70'in revize metni). Kapı
+  `modulepreload` ve girişin statik içe aktarmasını da reddeder.
 - **P7 — Altlık yuvası.** `HomeFooter` şube bloğu gibi bir `social` yuvası alır; blok "Kurumsal"dan
   sonra, "Diller"den önce basılır. `HomeRoute` aynı `useGallery` okumasını verir (D7: ikinci istek
   yok). `0025`'in saatleri şube bloğunun içinde kalır, `0026`'nın altlık logosu yuvaların önündedir.

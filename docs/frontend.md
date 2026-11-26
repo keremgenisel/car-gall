@@ -229,9 +229,12 @@ içinde kalır.
 - **Marka simgeleri** (`0024`): yalnız ikon olan bağlantının erişilebilir adı `aria-label`'dır,
   SVG `aria-hidden="true"` ve `focusable="false"` taşır, boyası `currentColor`'dır (sabit renk
   yok). Dokunma hedefi en az `--touch-target-min-size` (44px). Yollar ilk pakete girmez: tembel
-  içe aktarılan, `vite.config.ts`'in `manualChunks`'ıyla adı sabitlenmiş tek parçadadır ve
-  `npm run check:social-icons` bunu derleme çıktısında denetler. Parça gelmezse ad görünür metin
-  olur; kutu, parça gelmeden önce de son boyutundadır (yer kayması yok).
+  içe aktarılan, adı `vite.config.ts`'in `chunkFileNames`'iyle sabitlenmiş tek parçadadır.
+  **`manualChunks` kullanılmaz:** paylaşılan bir çalışma zamanı parçası üretip girişe statik
+  bağlıyor ve `modulepreload` ediyordu. **Tembel parça girişle modül paylaşmaz** (JSX yok,
+  `createElement` parametre olarak gelir): paylaşsaydı rolldown ortak modülleri kritik yolda ayrı
+  bir dosyaya çıkarıyordu. `npm run check:social-icons` ikisini de derleme çıktısında denetler
+  (`0024` QA 2 BULGU-1). Parça gelmezse ad görünür metin olur.
 
 ---
 
