@@ -301,6 +301,9 @@ app.MapLeads();
 app.MapMedia();
 app.MapNotifications();
 
+// `0004` R7 · R8 — sitemap dizini, dil başına sitemap ve robots.txt (D3–D5).
+app.MapSeo();
+
 // Geliştirme ve görsel kanıt üretimi yolu. Bayrak kapalıyken hiçbir şey kaydedilmez
 // ve bu uç noktalar hiç tanımlanmaz; üretimde erişilebilir bir yüzeyi yoktur.
 if (builder.Configuration.GetValue<bool>("Development:SeedShowcase"))

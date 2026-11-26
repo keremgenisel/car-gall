@@ -49,6 +49,7 @@ internal sealed class SeoOrtami
                 services.AddScoped<IShowcaseListingDetailQueries>(_ => new SahteDetay(this));
                 services.AddScoped<IContentPublicQueries>(_ => new SahteIcerik(this));
                 services.AddScoped<IHomeTextQueries>(_ => new SahteMetin(this));
+                services.AddScoped<IShowcaseSitemapQueries>(_ => new SahteSitemap(this));
             });
         }).CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
@@ -129,6 +130,12 @@ internal sealed class SeoOrtami
 
         public Task<IReadOnlyList<string>> ListVisibleSlugsAsync(string locale, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<string>>([.. ortam.Sayfalar.Keys.Where(key => key.Locale == locale).Select(key => key.Slug)]);
+    }
+
+    private sealed class SahteSitemap(SeoOrtami ortam) : IShowcaseSitemapQueries
+    {
+        public Task<IReadOnlyList<string>> ListVisibleSlugsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<string>>([.. ortam.Ilanlar.Keys.Where(key => key.Locale == "*").Select(key => key.Slug).Order(StringComparer.Ordinal)]);
     }
 
     private sealed class SahteMetin(SeoOrtami ortam) : IHomeTextQueries
