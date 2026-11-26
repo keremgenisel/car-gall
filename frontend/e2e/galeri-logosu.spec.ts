@@ -201,6 +201,32 @@ test('0026 (C6, C7): Logo inmeden önce de üst çubuk logosunun kutusu son boyu
   expect(await page.locator('header.top-bar').boundingBox()).toEqual(cubukOnce)
 })
 
+test('0026 (C7, R4): Lighthouse mobil genişliğinde (412 px) logolu üst çubuk tek satırdır; ad kırılmaz, yani web fontu gelince üst çubuk yüksekliği değişmez', async ({
+  page,
+  browser,
+}) => {
+  await logoYukle(page)
+  const mobil = await browser.newContext({
+    viewport: { width: 412, height: 823 },
+    deviceScaleFactor: 1.75,
+    isMobile: true,
+  })
+  try {
+    const sayfa = await mobil.newPage()
+    await sayfa.goto('/tr/cars')
+    await expect(sayfa.getByTestId('top-bar-logo')).toBeVisible()
+    const ad = sayfa.getByTestId('top-bar-brand').locator('bdi')
+    expect(await ad.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe('nowrap')
+    const cubuk = (await sayfa.locator('header.top-bar').boundingBox())!
+    // Tek satır: 40 px logo + iki dikey dolgu + kenar. Ad kırılsaydı en az iki metin satırı (2 × 36 px).
+    expect(cubuk.height).toBeLessThan(72)
+    const logo = (await sayfa.getByTestId('top-bar-logo').boundingBox())!
+    expect(logo.height).toBe(40)
+  } finally {
+    await mobil.close()
+  }
+})
+
 test('0026/AC-22, AC-29: Başarısız logoda çevrilmiş neden ve "Tekrar dene"; ar panelinde bölüm Arapça ve sağdan sola', async ({
   page,
 }) => {

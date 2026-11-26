@@ -209,6 +209,17 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+/* Dar ekranda logo adı sıkıştırır; ad birden çok satıra kırılırsa web fontu gelince satır sayısı
+   değişir ve üst çubuğun yüksekliği oynar (C3'te `main` kayıyordu, CLS 0.041). Logoluda ad TEK
+   satırdır ve taşarsa kısalır; logo büzülmez (aşağıda `flex-shrink`). Logosuz üst çubuk önceki hâlinde (AC-34). */
+.top-bar__brand--logo bdi {
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* Yükseklik SABİT, genişlik `width`/`height`'ın oranından: görsel inmeden önce de kutu son
@@ -220,6 +231,7 @@ body {
   inline-size: auto;
   max-inline-size: var(--logo-max-inline-size);
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .home-footer__logo {
