@@ -42,6 +42,14 @@ internal sealed class SeoHeadBuilder(
     /// <summary>`0004` **D11**/**D20** — başlıktaki ayraç.</summary>
     internal const string TitleSeparator = " · ";
 
+    /// <summary>
+    /// `0004` **D17** · **P10** — yapısal verinin <c>image</c> dizisinin üst sınırı. Ölçüldü
+    /// (AC-83'ün kurgusu, ar): görselsiz 3444 B, ilk görsel +298 B, sonraki her görsel +126 B;
+    /// 4096 B'a en çok üç görsel sığıyor (3994 B). Ürün bugün ilan başına görsel sayısını
+    /// sınırlamıyor, yani sınır olmadan bütçe hiçbir tavanla tutmazdı. Sıra ilandaki sıradır.
+    /// </summary>
+    internal const int MaxStructuredImages = 3;
+
     /// <summary>`0004` **D11** — içerik açıklamasının üst sınırı.</summary>
     internal const int DescriptionLimit = 160;
 
@@ -189,7 +197,7 @@ internal sealed class SeoHeadBuilder(
 
         string path(string dil) => $"/{dil}/{LocalePrefixMiddleware.ListSegment}/{Uri.EscapeDataString(detail.Slug)}";
         string canonical = root.Absolute(path(locale));
-        string[] images = [.. detail.Images.Select(image => Absolute(image.Large.Url))];
+        string[] images = [.. detail.Images.Take(MaxStructuredImages).Select(image => Absolute(image.Large.Url))];
 
         StringBuilder tags = new();
 
