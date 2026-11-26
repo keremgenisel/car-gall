@@ -608,6 +608,74 @@ ve `og:url`'i de tutarsız sinyal verir.
 *Bedel:* küme ön yüzde yaşıyor; yeni bir liste ekseni eklendiğinde Host'un kümesi de güncellenmeli.
 Kriter (AC-68) bunu yakalamaz, uygulama ikisini tek kaynaktan türetmeli.
 
+### Verilen kararlar — plan turu, 2026-11-26 (P1–P10)
+
+Developer'ın uygulama kararları (Proje Yöneticisi görevlendirmesi, 2026-11-26). R/C/AC'ye
+dokunmaz; her biri spec'in Developer'a bıraktığı bir noktayı kapatır. Ek iki onay görevlendirmeden:
+404 başlığı tek metin `content.notFound.title`; ön yükleme bağlantısı SEO etiketlerinden **önce**.
+
+**P1 — Kök adresin anahtarı değişmez: `Notifications:PublicBaseUrl`. Doğrulaması ve sahipliği
+Host'a geçer.** (D2) Host başlangıçta değeri **D2**'nin kuralıyla doğrular (yalnız `http`/`https`,
+yol yok, sondaki `/` normalize) ve hata mesajı anahtarın adını söyler (AC-22). Normalize edilmiş
+değer hem SEO'ya hem `Notifications`'a gider. *Gerekçe:* anahtarı yeniden adlandırmak `dev-up.sh`,
+iki CI iş akışını, dağıtım ortam değişkenlerini ve `BildirimYapilandirmasiTests`'in iki satırını
+değiştirirdi; tek değer kuralı (D2) adla değil sahiplikle sağlanır. `docs/deploy.md` satırı
+"sitenin kökü" olarak yeniden yazılır. *Bedel:* ad yanıltıcı kalır; yeniden adlandırma ayrı bir öneri.
+
+**P2 — Sabit metinler Host'a dosya olarak gider: vitrin kataloğu + yeni SEO kümesi.** (D12) SEO
+kümesi `frontend/src/shared/i18n/locales/seo/{tr,ar,en}.json` (`seo.*` anahtarları); hiçbir
+ön yüz modülü onu içe aktarmaz, yani vitrin paketine girmez (D17 b). `Host.csproj` vitrin ve SEO
+katalog dosyalarını çıktıya `i18n/` altında bağlar; `Dockerfile`'ın arka yüz aşaması o dizini
+kopyalar. Host başlangıçta okur; kullandığı bir anahtar herhangi bir dilde eksikse **başlamaz**.
+`check:locales` SEO kümesini de ölçer (dil eşitliği, kümeler arası tekrar yok).
+
+**P3 — Listenin okuduğu parametreler tek kaynakta: `frontend/src/features/catalog/listQueryParams.json`.**
+(D23) `listUrlState.ts` adları oradan alır, Host aynı dosyayı P2'nin yoluyla okur. *Gerekçe:* D23'ün
+bedeli ("uygulama ikisini tek kaynaktan türetmeli").
+
+**P4 — Sayı ve para biçimi `BuildingBlocks`'a taşınır.** (AC-7, AC-9) `NewsletterFormat`
+(`0018` D24/D32, `Notifications` içinde internal) `BuildingBlocks/Formatting/ShowcaseFormat`
+olur; `Notifications` ve Host aynı kodu kullanır, Host testi aynı fikstürü ölçer. *Gerekçe:* Host
+başka modülün internal tipine erişemez (C4); kopya iki kaynak olurdu.
+
+**P5 — Detay belgesi iki okuma yapar: `FindFirstImageAsync` (ön yükleme, değişmez) ve `FindAsync`
+(başlık, açıklama, yapısal veri ve 404 kararı).** (D7, D17, AC-87) Gizli ve olmayan ilan ikisinde de
+aynı yoldan `null` döner (`ShowcaseListingDetailQueries`, E7). `FindAsync` hata verirse belge
+bugünkü gibi 200 ile basılır, detaya özgü etiketler basılmaz ve hata loglanır (`0020` R5a deseni).
+TTFB etkisi C3 ile ölçülür; eşik tutmazsa önerilen tek iyileştirme hafif bir okuma sözleşmesidir.
+
+**P6 — 404 kararı ve etiketler tek yerde: `SeoDocument` (Host).** Kabuk çizici belgeyi yazmadan
+önce sayfa türünü, durum kodunu ve etiketleri ondan alır; ara katman yalnız yönlendirmeleri yapar.
+
+**P7 — Ön yüzde tek bir "bulunamadı" rotası.** (D8, AC-76) `parseRoute` iki ve daha çok parçalı
+tanınmayan yolu, `/{l}/cars/{slug}/…`'yi ve `/{l}/newsletter/…`'nün confirm/unsubscribe dışını
+`not-found` rotasına çevirir; ekran `content.notFound.*` metinli `EmptyState`'tir (404 başlığıyla
+aynı metin, C6).
+
+**P8 — `<title>` yalnız Host'tan.** `frontend/index.html`'deki `<title>CarGallery</title>` kaldırılır
+(D11, AC-15); Host her belgeye tam bir `<title>` yazar.
+
+**P9 — Sitemap ve robots.txt Host'un uç noktaları** (`/sitemap.xml`, `/sitemap-{locale}.xml`,
+`/robots.txt`). Veri yeni üç sözleşmeden gelir: `VehicleCatalog` görünür ilan slug'ları,
+`Content` bir dilde görünen sayfa slug'ları (`FindBySlugAsync`'in kuralıyla, girdisiz SSS dâhil),
+`Dealership` galerinin public okuması (bugün internal olan `IPublicGalleryQueries` sözleşmeye taşınır).
+
+**P10 — Bütçe aşılırsa `image` dizisi sınırlanır** (D17 Bedel). Ölçüm AC-83'ün kurgusuyla; sonuç PR'da.
+
+### Uygulama planı (2026-11-26)
+
+1. Plan ve kararlar (bu bölüm).
+2. Kök adres: `SiteRoot` + başlangıç doğrulaması — AC-22, AC-86 (P1).
+3. Sözleşmeler: `Dealership` public galeri, `VehicleCatalog` görünür slug'lar, `Content` görünen
+   sayfalar — modül başına commit (P9).
+4. Biçim `BuildingBlocks`'a (P4) — AC-7, AC-9'un dayanağı.
+5. SEO kümesi, liste parametrelerinin tek kaynağı, Host'un katalog okuması, `check:locales` (P2, P3).
+6. Belge etiketleri ve 404 kararı (P5, P6, P8) — AC-1–54, AC-67–82, AC-86–88, AC-90–92.
+7. Sitemap ve robots.txt (P9) — AC-55–66, AC-89.
+8. Ön yüz "bulunamadı" rotası (P7), e2e ve görsel kanıt — AC-76, DoD T2.
+9. Belgeler: `docs/architecture.md` § 3 ve Karar Defteri, `docs/deploy.md` — DoD T8.
+10. Ölçüm: AC-83, AC-84, AC-85 (C3); PR.
+
 ---
 
 ## Sahibe sorular
