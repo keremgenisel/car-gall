@@ -32,7 +32,8 @@ internal sealed record AdminBranchDto(
     decimal? Latitude,
     decimal? Longitude,
     string Status,
-    int Version);
+    int Version,
+    IReadOnlyDictionary<string, IReadOnlyList<CarGallery.Modules.Dealership.Contracts.Gallery.PublicOpeningIntervalDto>>? OpeningHours = null);
 
 /// <summary>
 /// `0020` — panelin okumaları. Uç modülün dışına çıkmaz; `Contracts`'a girmez, çünkü başka
@@ -77,6 +78,8 @@ internal sealed class DealershipAdminQueries(DealershipDbContext context)
                 branch.Coordinate?.Longitude,
                 // C13 — durum KODU; panel çevirir.
                 branch.Status.ToString(),
-                branch.Version);
+                branch.Version,
+                // `0025` D14 · AC-40 — D8'in biçimi; programsız şubede null.
+                branch.OpeningHours?.ToDto());
     }
 }

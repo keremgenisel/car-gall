@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1, kartlar arası X1–X3 → D10, D11, D12 güncellendi; AC-66–AC-72) |
+| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1, kartlar arası X1–X3 → D10, D11, D12 güncellendi; AC-66–AC-72) · **QA 2 revizyonu (2026-11-26, AP-08, Proje Yöneticisi kararı):** AC-61 ve D10(b) `0024` AC-55'in tanımıyla hizalandı; D11'e `null` gün cümlesi |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (şube) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel şube formu, vitrin altlığı) |
@@ -204,6 +204,61 @@ yedi günün saatleri görünür ve aynı saatler şubenin yapısal verisinde de
 5. **Uç uca değen iki aralık** (09:00–13:00 ve 13:00–18:00) tek bir aralıktır. Kabul edilirse
    yapısal veri iki öğe basar ve özet okunmaz hâle gelir (**D3**).
 
+### Verilen kararlar — plan turu (DEV, 2026-11-26)
+
+> R/C/AC'ye dokunmaz. `main` @ `ff8f7d2` (`0024` merge edilmiş) üzerinde ölçüldü. `0024`'ün plan
+> kararları (P1, P6, P9) ve QA 2 dersleri devralındı.
+
+- **P1 — "Alan yok = açık `null` = değişmez": düz nullable harita (D11, X1; `0024` P1).**
+  `SaveBranchBody`/`OpenBranchBody.OpeningHours` `Dictionary<string, List<OpeningIntervalBody>?>?`.
+  `null` (alan yok ya da açık `null`) → kayıtlı program değişmez; açmada program yok. Harita →
+  bütünüyle yerine koyar; yedi boş gün siler (D4, AC-72). Bir günün değeri `null` ise o gün boş
+  dizi sayılır (anahtar var, aralık yok): D11'in "yedi anahtarın hepsi" kuralı anahtarı sayar.
+- **P2 — Değer nesnesi `OpeningHours` domain'de; doğrulama `BranchDraft.Parse`'ta (D3, D12, R5).**
+  Gün kodları ve sırası (`monday` … `sunday`) tek yerde. Program hataları şubenin diğer alan
+  hatalarıyla AYNI `FieldErrors`'a toplanır: hata varsa hiçbir alan yazılmaz (AC-20), iki günün
+  hatası tek yanıtta (AC-21). Saat `TimeOnly`, metin biçimi `^([01]\d|2[0-3]):[0-5]\d$`. Sıra:
+  bilinmeyen/eksik gün → aralık biçimi → bitiş > başlangıç → günde ≤ 3 → sıralayıp çakışma/uç uca.
+- **P3 — Saklama: `dealership.branches.opening_hours jsonb NULL` (D13, C6).** Tek kolon, D8'in
+  biçimi; `NULL` = girilmemiş (D4). Ayrı tablo yerine kolon: program şubenin sürüm korumasıyla
+  aynı satırda yazılır (R6), birleşik okuma yok. Migration `AddBranchOpeningHours`, yalnız `dealership`.
+- **P4 — `Branch.Update` ve `Open` programı taşıyan taslakla çalışır.** Taslakta `OpeningHours?`
+  `null` → dokunma; `IsEmpty` → sil; aksi hâlde yaz. Duyuru üretmez (C7, AC-31).
+- **P5 — Okumalar (D8, D14, R9).** `AdminBranchDto.OpeningHours` ve `PublicBranchDto.OpeningHours`
+  (`Contracts`: `PublicOpeningIntervalDto(Start, End)`), D6 sırasıyla yedi anahtar ya da `null`.
+  Şube listesi (`GET /api/admin/branches`) değişmez (AC-36).
+- **P6 — Yapısal veri (D9).** `SeoHeadBuilder` aynı galeri okumasından gruplar: (opens, closes)
+  çiftinin ilk göründüğü gün/aralık sırasıyla. Kapalı günler tek `00:00–00:00` öğesinde ve o öğe
+  de aynı kurala uyar: ilk kapalı günün yerinde durur (Pazartesi kapalıysa ilk öğedir).
+- **P7 — Vitrin (D6, D7).** `BranchList` her programlı şubenin altına yedi satırlık `<dl>` basar.
+  Gün adı `Intl.DateTimeFormat(intlLocale, { weekday: 'long' })` ile sabit bir Pazartesi'den (UTC)
+  türetilir; saatler sunucunun `HH:mm` metnidir, biçimlendirilmez (C9: Latin rakam, saat dilimi
+  dönüşümü yok, AC-49). Aralık `dir="ltr"`. İlk paket bütçesi (0024 AC-55'in revize tanımıyla
+  ölçülür) aşılırsa liste `0024`'teki gibi tembel parçaya alınır.
+- **P8 — Panel (D5).** Şube formuna "Çalışma saatleri" `fieldset`'i; saf mantık
+  `openingHoursForm.ts`'te (gün ekle/kaldır, önceki günle aynı, gövdeye çevirme), birim testli.
+  Saat alanı `type="time"` (değer her zaman `HH:mm`, tuzak 4). Kaydetme yedi günün hepsini
+  gönderir; hiç aralık yoksa yedi boş gün (programı siler ya da yoksa yok bırakır).
+- **P9 — Perf tohumu (D10(c), AC-62, AC-71).** `SeedGalleryProfileForDevelopmentAsync` aynı
+  yöntemde, `0024`'ün hesaplarından sonra her AKTİF şubeye AC-60'ın programını gerçek yazma
+  yolundan (`BranchCommands.UpdateAsync`) yazar.
+- **P10 — Testler (X3).** Çok etiketli: `0014/AC-14, 0025/AC-41`, `0004/AC-52, 0024/AC-45,
+  0025/AC-55`. e2e ikizi arandı: şube öğesinin anahtar kümesini ölçen e2e testi yok
+  (`evidence-0020.spec.ts:292` yalnız kökü ölçüyor, bu kart kökü değiştirmiyor).
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Domain + migration + komut + uç + panel okuması; domain ve Host zincir testleri (AC-3…AC-36,
+   AC-40, AC-66–AC-70, AC-72).
+3. Ziyaretçi okuması ve eski testlerin çok etiketli hâli (AC-41–AC-43).
+4. Yapısal veri ve bütçe testi (AC-52–AC-60).
+5. Vitrin altlığı ve katalog (AC-44–AC-51, AC-63); ilk paket ölçümü (AC-61).
+6. Panel bölümü (AC-1–AC-8, AC-22, AC-35, AC-37–AC-39, AC-65).
+7. Perf tohumu (AC-62, AC-71).
+8. e2e ve görsel kanıt.
+9. Belgeler: `docs/domain.md` (D15), karar defteri, `deploy.md` tohum cümlesi.
+
 ---
 
 ## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-26)
@@ -318,7 +373,9 @@ kararı, 2026-11-26: sahip SS2'ye itiraz etmedi.)*
 - **(a)** `/ar/` ana sayfa belgesinde **tek bir şubenin** programının eklediği bayt **en çok 2304 B**'tır
   (sıkıştırmasız). Kurgulanmış en kötü durum: yedi günün her birinde üç aralık ve 21 aralığın
   hiçbiri başka bir günle aynı (`opens`, `closes`) çiftini taşımıyor. Şube sayısıyla doğrusal büyür.
-- **(b)** İlk paket ADR 0013'ün protokolüyle `main` tabanına göre **en çok 512 B** büyür.
+- **(b)** İlk paket `main` tabanına göre **en çok 512 B** büyür. "İlk paket" = giriş JS + giriş CSS +
+  girişin statik içe aktardığı ya da `index.html`'in `modulepreload` ettiği her JS, `gzip -9`.
+  *Revizyon (2026-11-26, AP-08): 0024 AC-55 tanımıyla hizalandı — Proje Yöneticisi kararı.*
 - **(c)** C3 ana sayfa, liste ve detayda yeşil kalır. Perf koşusu her aktif şubeye (a)'nın
   programını tohumlar. *(CLARIFY X2(c), koddan ölçüldü:)* perf koşusunda **iki aktif şube** var:
   ikisi de kurulum tohumunun (`SeedInitialDealership.cs:24-37`, durum `1` = Aktif). Vitrin
@@ -343,6 +400,8 @@ kararı, 2026-11-26: sahip SS2'ye itiraz etmedi.)*
   `opening_hours.missing_day` döner. Gün kodu **harfe duyarlıdır**: `Monday`, `opening_hours.unknown_day`
   döner. Yedi günün hepsi boş dizi olan program, programı **siler** (D4). Boş nesne (`{}`) yedi günü
   eksik bir programdır, yani `missing_day` döner.
+- *(QA 2 revizyonu, 2026-11-26, AP-08, Proje Yöneticisi kararı:)* Bir günün değeri `null` ise o gün
+  **kapalıdır** (boş dizi): anahtar vardır, aralık yoktur.
 - Kapatılmış şubede değişiklik `409` `branch.closed_read_only` döner (`0020` **D21**). Geçici kapalı
   şubenin programı değiştirilebilir.
 - Program değişikliği entegrasyon olayı üretmez.
@@ -538,8 +597,9 @@ yerel saat aralığından oluşan programı. Aralıksız gün kapalıdır. İsti
 - **AC-60.** Tek şubeli kurulumda, kurgulanmış en kötü programlı şubenin `/ar/` ana sayfa belgesi,
   aynı şubenin programsız hâlinden en çok **2304 B** büyüktür. Kurgu: yedi günde üçer aralık ve
   21 aralığın hepsinin (`opens`, `closes`) çifti farklı.
-- **AC-61.** İlk paket (giriş JS + giriş CSS, `gzip -9`, ADR 0013) `main` tabanına göre en çok
-  **512 B** büyür.
+- **AC-61.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
+  `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **512 B** büyür.
+  *Revizyon (2026-11-26, AP-08): 0024 AC-55 tanımıyla hizalandı — Proje Yöneticisi kararı.*
 - **AC-62.** Perf koşusu her aktif şubeye AC-60'ın programını tohumlar. C3 ana sayfa, liste ve
   detayda yeşildir. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi
   PR'da yazılıdır.

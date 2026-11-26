@@ -534,12 +534,23 @@ export interface VehicleMedia {
   readonly items: readonly VehicleMediaItem[]
 }
 
+/** `0025` D8 — bir aralık; ikisi de şubenin yerel duvar saatiyle `HH:mm`. */
+export interface OpeningInterval {
+  readonly start: string
+  readonly end: string
+}
+
 /** 0014 **D15** — izin listesi: sunucu yalnız bu alanları gönderir (AC-14). */
 export interface PublicBranch {
   readonly name: string
   readonly address: string
   /** E.164 (`+902165550001`); `tel:` bağlantısının hedefi (AC-45). */
   readonly phone: string
+  /**
+   * `0025` D8 — program girilmemişse `null`; girilmişse yedi gün kodu (`monday` … `sunday`),
+   * kapalı gün boş dizi, aralıklar başlangıca göre sıralı.
+   */
+  readonly openingHours: Readonly<Record<string, readonly OpeningInterval[]>> | null
 }
 
 /** `0024` R6 · D7 — platform KODU ve kayıtlı adres; başka alan yok. */

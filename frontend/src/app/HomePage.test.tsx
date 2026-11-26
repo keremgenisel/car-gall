@@ -33,8 +33,18 @@ const OZEL_AD = '\u003cb>Galeri & "Oto"\u003c/b>'
 const GALERI: PublicGallery = {
   displayName: 'Örnek Otomotiv',
   branches: [
-    { name: 'Ataşehir Şubesi', address: 'Ataşehir Bulvarı 5', phone: '+902165550001' },
-    { name: 'Kadıköy Şubesi', address: 'Bağdat Caddesi 1', phone: '+902165550002' },
+    {
+      name: 'Ataşehir Şubesi',
+      address: 'Ataşehir Bulvarı 5',
+      phone: '+902165550001',
+      openingHours: null,
+    },
+    {
+      name: 'Kadıköy Şubesi',
+      address: 'Bağdat Caddesi 1',
+      phone: '+902165550002',
+      openingHours: null,
+    },
   ],
   // `0024` — hesapsız kurulum: 0014'ün altlık beklentileri değişmez (0024 Context tablosu).
   socialLinks: [],

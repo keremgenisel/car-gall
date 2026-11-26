@@ -559,16 +559,21 @@ public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFacto
         Assert.Equal(("Ataşehir Şubesi", "Barbaros Mah. 7, İstanbul", "+902160000002"), (subeler[1].GetProperty("name").GetString(), subeler[1].GetProperty("address").GetString(), subeler[1].GetProperty("telephone").GetString()));
     }
 
-    [Fact(DisplayName = "0004/AC-52, 0024/AC-45: `AutoDealer` bloğunda (kökte ve `department` öğelerinde) `openingHoursSpecification`, `geo` ve `logo` anahtarları yoktur (`0024` D8: `sameAs` listeden çıktı).")]
+    [Fact(DisplayName = "0004/AC-52, 0024/AC-45, 0025/AC-55: `AutoDealer` bloğunda (kökte ve `department` öğelerinde) `geo` ve `logo` anahtarları yoktur (`0024` D8: `sameAs`, `0025` D9: `openingHoursSpecification` listeden çıktı).")]
     public async Task AutoDealer_KapsamDisiAnahtarlarYok()
     {
-        // `0024` — hesaplı kurulumda ölçülür: `sameAs` artık beklenen bir anahtar, kalan üçü yine yok.
-        ortam.Galeri = ortam.Galeri! with { SocialLinks = [new PublicSocialLinkDto("instagram", "https://www.instagram.com/otogaleri")] };
+        // `0024`, `0025` — hesaplı ve programlı kurulumda ölçülür: `sameAs` ve şube öğesindeki
+        // `openingHoursSpecification` artık beklenen anahtarlar, kalan ikisi yine yok.
+        ortam.Galeri = ortam.Galeri! with
+        {
+            SocialLinks = [new PublicSocialLinkDto("instagram", "https://www.instagram.com/otogaleri")],
+            Branches = [ortam.Galeri.Branches[0] with { OpeningHours = CalismaSaatleriBelgeTests.Program(("monday", [("09:00", "18:00")])) }],
+        };
         JsonElement dealer = Assert.Single((await GetAsync("/tr/")).Belge.JsonLd());
         IEnumerable<string> butunAnahtarlar = dealer.Anahtarlar()
             .Concat(dealer.GetProperty("department").EnumerateArray().SelectMany(sube => sube.Anahtarlar()));
 
-        foreach (string yasak in new[] { "openingHoursSpecification", "geo", "logo" })
+        foreach (string yasak in new[] { "geo", "logo" })
         {
             Assert.DoesNotContain(yasak, butunAnahtarlar);
         }

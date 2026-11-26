@@ -95,6 +95,10 @@ namespace CarGallery.Modules.Dealership.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("names");
 
+                    b.Property<string>("OpeningHours")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("opening_hours");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(16)

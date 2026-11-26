@@ -91,9 +91,9 @@ kalkmaz (koda gömülü varsayılan yok — `0018` C14).
 `/seed-media` uçlarını açar; `Development__SeedHomeTexts` her başlangıçta galerinin panelden
 yazdığı ana sayfa metinlerini her dilde 120/500 karakterlik ölçüm dolgusuyla EZER (`0022` D11,
 yalnız `perf.yml`). `Development__SeedGalleryProfile` (galeri profili tohumu) her başlangıçta
-galerinin panelden girilen profil verisini ölçüm dolgusuyla EZER: bugün gerçek sosyal hesapları
-sınır uzunlukta dolgu adreslerle değiştirir; `0025` ve `0026` aynı bayrağa şube programını ve
-logoyu ekler (`0024` P9, yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
+galerinin panelden girilen profil verisini ölçüm dolgusuyla EZER: gerçek sosyal hesapları sınır
+uzunlukta dolgu adreslerle, her aktif şubenin çalışma programını yirmi bir aralıklı dolgu
+programla değiştirir; `0026` aynı bayrağa logoyu ekler (`0024` P9, `0025` P9, yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
 düşürmeyin; geliştirme betiği bunu hız için 1000'e çeker, üretim değeri 210.000'dir.
 
 ## 4. Sıra: önce kurulum adımı, sonra uygulama

@@ -1,5 +1,8 @@
 import { useLocale } from '../../app/localeContext'
+import type { OpeningInterval } from '../../shared/api/types'
+import { weekdayName } from '../../shared/i18n/format'
 import { Skeleton } from '../../shared/ui'
+import { OPENING_DAYS } from './openingDays'
 import type { GalleryLoad } from './useGallery'
 
 /**
@@ -56,9 +59,51 @@ export function BranchList({ load }: { readonly load: GalleryLoad }) {
             <a className="home-footer__phone" href={`tel:${branch.phone}`} dir="ltr">
               {branch.phone}
             </a>
+            {branch.openingHours === null ? null : <OpeningHoursList hours={branch.openingHours} />}
           </li>
         ))}
       </ul>
     </section>
+  )
+}
+
+/**
+ * `0025` R7 · D7 — şubenin yedi günü, D6 sırasıyla. Gün adı ekranın dilinde `Intl`'den; aralık
+ * sunucunun `HH:mm` metnidir ve biçimlendirilmez: her dilde Latin rakam, 24 saat, saat dilimi
+ * dönüşümü yok (C9, D2, AC-47–AC-49). Aralık soldan sağa okunur. Kapalı günde "Kapalı" yazar.
+ * Ayrı bir yükleme durumu yoktur: program galeri okumasıyla gelir (AC-50).
+ */
+function OpeningHoursList({
+  hours,
+}: {
+  readonly hours: Readonly<Record<string, readonly OpeningInterval[]>>
+}) {
+  const { locale, t } = useLocale()
+
+  return (
+    <dl
+      className="home-footer__hours"
+      aria-label={t('home.footer.hours')}
+      data-testid="branch-hours"
+    >
+      {OPENING_DAYS.map((day, index) => {
+        const intervals = hours[day] ?? []
+
+        return (
+          <div key={day} className="home-footer__hours-row">
+            <dt>{weekdayName(index, locale)}</dt>
+            <dd>
+              {intervals.length === 0
+                ? t('home.footer.closed')
+                : intervals.map((interval) => (
+                    <span key={interval.start} dir="ltr">
+                      {interval.start}–{interval.end}
+                    </span>
+                  ))}
+            </dd>
+          </div>
+        )
+      })}
+    </dl>
   )
 }

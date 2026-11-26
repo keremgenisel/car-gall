@@ -48,7 +48,7 @@ internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale d
         var rows = await context.Branches
             .AsNoTracking()
             .Where(branch => branch.Status == BranchStatus.Active)
-            .Select(branch => new { branch.Names, branch.Addresses, branch.Phone })
+            .Select(branch => new { branch.Names, branch.Addresses, branch.Phone, branch.OpeningHours })
             .ToListAsync(cancellationToken);
 
         List<PublicBranchDto> branches =
@@ -63,7 +63,9 @@ internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale d
                     // Varsayılan dildeki ad ve adres zorunlu (0003 AC-6), satır boş kalmaz.
                     row.Names.Resolve(resolved, defaultLocale) ?? string.Empty,
                     row.Addresses.Resolve(resolved, defaultLocale) ?? string.Empty,
-                    row.Phone.Value))
+                    row.Phone.Value,
+                    // `0025` D8 — programsız şubede null; dilden bağımsız.
+                    row.OpeningHours?.ToDto()))
         ];
 
         // D3 — D1'de olmayan kodla saklanmış satır düşer; sıra D1'inkidir, girilme sırası değil.

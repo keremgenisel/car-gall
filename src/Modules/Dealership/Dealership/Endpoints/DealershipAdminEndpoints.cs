@@ -80,7 +80,8 @@ internal static class DealershipAdminEndpoints
                 body.TimeZone,
                 body.Slug,
                 body.Latitude,
-                body.Longitude),
+                body.Longitude,
+                OpeningHoursBody.ToInput(body.OpeningHours)),
             cancellationToken);
 
         return sonuc.IsSuccess
@@ -105,7 +106,8 @@ internal static class DealershipAdminEndpoints
         body.TimeZone,
         body.Slug,
         body.Latitude,
-        body.Longitude);
+        body.Longitude,
+        OpeningHoursBody.ToInput(body.OpeningHours));
 }
 
 /// <summary>
@@ -133,7 +135,8 @@ internal sealed record OpenBranchBody(
     string? TimeZone,
     string? Slug,
     decimal? Latitude,
-    decimal? Longitude);
+    decimal? Longitude,
+    Dictionary<string, List<OpeningIntervalBody>?>? OpeningHours = null);
 
 /// <summary>Şube kaydetme gövdesi; <c>Version</c> okunan sürümdür (R16).</summary>
 internal sealed record SaveBranchBody(
@@ -146,7 +149,28 @@ internal sealed record SaveBranchBody(
     string? TimeZone,
     string? Slug,
     decimal? Latitude,
-    decimal? Longitude);
+    decimal? Longitude,
+    Dictionary<string, List<OpeningIntervalBody>?>? OpeningHours = null);
+
+/// <summary>`0025` D8 — bir aralık: <c>{ "start": "HH:mm", "end": "HH:mm" }</c>.</summary>
+internal sealed record OpeningIntervalBody(string? Start, string? End);
+
+/// <summary>
+/// `0025` **D11** · P1 — şube gövdelerinin <c>OpeningHours</c>'u gün kodundan aralık dizisine
+/// haritadır. Alan yoksa ya da açık <c>null</c>'sa kayıtlı program DEĞİŞMEZ; ikisi aynı anlama
+/// bağlı olduğu için düz nullable tip yeterli (`0024` P1). Silmenin tek yolu yedi boş gündür.
+/// </summary>
+internal static class OpeningHoursBody
+{
+    internal static IReadOnlyDictionary<string, IReadOnlyList<OpeningIntervalInput>?>? ToInput(
+        Dictionary<string, List<OpeningIntervalBody>?>? body) =>
+        body?.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value is null
+                ? null
+                : (IReadOnlyList<OpeningIntervalInput>?)[.. pair.Value.Select(item => new OpeningIntervalInput(item?.Start, item?.End))],
+            StringComparer.Ordinal);
+}
 
 /// <summary>Durum eylemleri ve yazmaların yanıtı: okunan ya da yeni sürüm.</summary>
 internal sealed record VersionBody(int Version);

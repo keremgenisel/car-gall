@@ -55,6 +55,12 @@ internal sealed class Branch : AggregateRoot<BranchId>
 
     internal BranchSlug Slug { get; private set; }
 
+    /// <summary>
+    /// `0025` **D4** · **D15** — haftalık çalışma programı; <c>null</c> = girilmemiş. Boş program
+    /// (yedi boş gün) saklanmaz, <c>null</c> olur. Değişikliği duyuru üretmez (C7, D11).
+    /// </summary>
+    internal OpeningHours? OpeningHours { get; private set; }
+
     /// <summary>D7 — yalnızca REFERANS; görselin kendisi `Media` spec'ine aittir.</summary>
     internal IReadOnlyList<Guid> MediaAssetIds => mediaAssetIds;
 
@@ -164,6 +170,13 @@ internal sealed class Branch : AggregateRoot<BranchId>
 
     private void ApplyOptionals(BranchDraft draft)
     {
+        // `0025` P1 · P4 — taslakta `null`: program DEĞİŞMEZ (alan yok ya da açık `null`, D11).
+        // Yedi boş gün: siler (D4). Açmada `null` program yok demektir.
+        if (draft.OpeningHours is { } openingHours)
+        {
+            OpeningHours = openingHours.IsEmpty ? null : openingHours;
+        }
+
         if (draft.WhatsApp is { } whatsApp)
         {
             SetWhatsApp(whatsApp);

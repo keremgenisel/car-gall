@@ -1,6 +1,6 @@
 import type { AppLocale } from '../lib/locale'
 import { getJson, sendJson } from './client'
-import type { BranchSummary } from './types'
+import type { OpeningInterval, BranchSummary } from './types'
 
 const ROOT = '/api/admin'
 
@@ -46,6 +46,8 @@ export interface AdminBranch {
   readonly longitude: number | null
   readonly status: string
   readonly version: number
+  /** `0025` D14 — D8'in biçimi; programsız şubede `null`. */
+  readonly openingHours: Readonly<Record<string, readonly OpeningInterval[]>> | null
 }
 
 /** `0020` R9 — şube açma ve kaydetme girdisi; opsiyonel alan boş metinle boşaltılır (D9). */
@@ -59,6 +61,8 @@ export interface BranchInput {
   readonly slug: string
   readonly latitude: number | null
   readonly longitude: number | null
+  /** `0025` D11 · P8 — panel yedi günün hepsini gönderir; yedi boş gün programı siler. */
+  readonly openingHours: Readonly<Record<string, readonly OpeningInterval[]>>
 }
 
 /** `0020` R11, R12 — durum eylemleri. */

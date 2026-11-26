@@ -1280,6 +1280,29 @@ a.top-bar__brand:hover {
   margin-block: 0 var(--space-1);
 }
 
+/* `0025` D7 — şubenin yedi günü: gün adı satır başında, aralıklar yan yana. Rakamlar Latin ve
+   aralık soldan sağa (`dir="ltr"`); ar'da satır sağdan sola akar. */
+.home-footer__hours {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.home-footer__hours-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.home-footer__hours dt {
+  min-inline-size: 7rem;
+}
+
+.home-footer__hours dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
 .home-footer__branch-name {
   font-weight: var(--font-weight-semibold);
 }
@@ -1884,4 +1907,36 @@ a.top-bar__brand:hover {
   margin: 0;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
+}
+
+/* `0025` D5 — şube formunun çalışma saatleri: gün başına ad, aralıklar ve eylemler. Yalnız
+   mantıksal özellikler (C6). */
+.opening-hours__day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+.opening-hours__name {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.opening-hours__closed {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+.opening-hours__interval,
+.opening-hours__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.opening-hours__interval .admin-form__control {
+  inline-size: auto;
 }

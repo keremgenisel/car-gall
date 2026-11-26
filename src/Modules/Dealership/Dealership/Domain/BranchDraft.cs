@@ -17,7 +17,8 @@ internal sealed record BranchInput(
     string? TimeZone,
     string? Slug,
     decimal? Latitude,
-    decimal? Longitude);
+    decimal? Longitude,
+    IReadOnlyDictionary<string, IReadOnlyList<OpeningIntervalInput>?>? OpeningHours = null);
 
 /// <summary>
 /// `0020` R9 · R15 — doğrulanmış şube alanları. Açma ve düzenleme AYNI çözümlemeden geçer:
@@ -32,7 +33,8 @@ internal sealed record BranchDraft(
     EmailAddress? Email,
     TimeZoneId TimeZone,
     BranchSlug Slug,
-    Coordinate? Coordinate)
+    Coordinate? Coordinate,
+    OpeningHours? OpeningHours = null)
 {
     internal const string NameTooLong = "branch.name_too_long";
     internal const string AddressTooLong = "branch.address_too_long";
@@ -90,6 +92,10 @@ internal sealed record BranchDraft(
             errors.Add("coordinate", CoordinateIncomplete);
         }
 
+        // `0025` P1 · P2 — `null` girdi: program değişmez (taslakta `null`). Harita: doğrulanır ve
+        // hataları diğer alanların hatalarıyla aynı yanıtta toplanır (AC-20, AC-21).
+        OpeningHours? openingHours = input.OpeningHours is null ? null : Domain.OpeningHours.Parse(input.OpeningHours, errors);
+
         if (errors.Any)
         {
             return Result.Failure<BranchDraft>(errors.ToError());
@@ -103,7 +109,8 @@ internal sealed record BranchDraft(
             email,
             timeZone!.Value,
             slug!.Value,
-            coordinate));
+            coordinate,
+            openingHours));
     }
 
     private static LocalizedText Texts(

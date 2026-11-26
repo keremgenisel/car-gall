@@ -95,6 +95,8 @@ const SUBE: AdminBranch = {
   longitude: 29.0667,
   status: 'Active',
   version: 2,
+  // `0025` — panel okumasının yeni alanı; programsız şube, `0020`'nin beklentileri değişmez.
+  openingHours: null,
 }
 
 const LISTE = [
@@ -797,6 +799,259 @@ describe('0024/AC-57, AC-59: Panel metinleri panel kataloğunda ve üç dilde; v
       expect(
         Object.keys(vitrin[locale]).filter((anahtar) => /social|follow/.test(anahtar)),
       ).toEqual(['home.footer.follow'])
+    }
+  })
+})
+
+// ── 0025 — şube formunun çalışma saatleri (R1, R6, R11 · D5) ─────────────────
+
+function saatler() {
+  return within(screen.getByTestId('branch-opening-hours'))
+}
+
+describe('0025/AC-1, AC-2: Bölüm yedi günü Pazartesi → Pazar ekranın dilinde gösterir; programsız şubede yedi gün "Kapalı" ve yardım metni', () => {
+  it.each<[AppLocale, string, string]>([
+    ['tr', 'Pazartesi', 'Pazar'],
+    ['en', 'Monday', 'Sunday'],
+  ])('%s', async (locale, ilk, son) => {
+    await panel('branch-edit', 'manager', locale, 'b-1')
+    await screen.findByTestId('branch-opening-hours')
+    const t = createTranslator(locale)
+
+    const adlar = saatler()
+      .getAllByText((_, el) => el?.classList.contains('opening-hours__name') === true)
+      .map((el) => el.textContent)
+    expect(adlar).toHaveLength(7)
+    expect([adlar[0], adlar[6]]).toEqual([ilk, son])
+    expect(saatler().getAllByText(t('dealership.branch.hours.closed'))).toHaveLength(7)
+    expect(saatler().getByText(t('dealership.branch.hours.hint'))).toBeTruthy()
+  })
+})
+
+describe('0025/AC-3, AC-4, AC-19: Pazartesiye aralık girip kaydetmek yedi günü gönderir; kayıtlı aralıklar sırayla görünür', () => {
+  it('gövde ve görünüm', async () => {
+    vi.mocked(api.saveBranch).mockResolvedValue(3)
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue({
+      ...SUBE,
+      openingHours: {
+        monday: [],
+        tuesday: [
+          { start: '09:00', end: '13:00' },
+          { start: '16:00', end: '21:00' },
+        ],
+        wednesday: [],
+        thursday: [],
+        friday: [],
+        saturday: [],
+        sunday: [],
+      },
+    })
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-opening-hours')
+
+    const sali = within(screen.getByTestId('hours-tuesday'))
+    expect(sali.getAllByLabelText(/Açılış/).map((el) => (el as HTMLInputElement).value)).toEqual([
+      '09:00',
+      '16:00',
+    ])
+
+    fireEvent.click(screen.getByTestId('hours-add-monday'))
+    const pazartesi = within(screen.getByTestId('hours-monday'))
+    fireEvent.change(pazartesi.getByLabelText(/Açılış/), { target: { value: '09:00' } })
+    fireEvent.change(pazartesi.getByLabelText(/Kapanış/), { target: { value: '18:00' } })
+    expect(pazartesi.getByLabelText(/Açılış/).getAttribute('type')).toBe('time')
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    await screen.findByTestId('dealership-saved')
+    const govde = vi.mocked(api.saveBranch).mock.calls[0]![2].openingHours
+    expect(Object.keys(govde)).toEqual([
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ])
+    expect(govde['monday']).toEqual([{ start: '09:00', end: '18:00' }])
+    expect(govde['tuesday']).toHaveLength(2)
+  })
+})
+
+describe('0025/AC-5, AC-7: Üç aralıklı günde "Aralık ekle" yok; Salı\'nın "Önceki günle aynı"sı Pazartesiyi formda kopyalar, kaydetme istemez', () => {
+  it('eylemler', async () => {
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-opening-hours')
+
+    for (let i = 0; i < 3; i += 1) {
+      fireEvent.click(screen.getByTestId('hours-add-monday'))
+    }
+    expect(screen.queryByTestId('hours-add-monday')).toBeNull()
+    expect(screen.queryByTestId('hours-copy-monday')).toBeNull()
+
+    fireEvent.click(screen.getByTestId('hours-copy-tuesday'))
+    expect(within(screen.getByTestId('hours-tuesday')).getAllByLabelText(/Açılış/)).toHaveLength(3)
+    expect(vi.mocked(api.saveBranch)).not.toHaveBeenCalled()
+  })
+})
+
+describe('0025/AC-8: Yeni şube formunda bölüm var ve açma gövdesi programı taşır', () => {
+  it('açma', async () => {
+    vi.mocked(api.openBranch).mockResolvedValue({ id: 'yeni', version: 1 } as never)
+    await panel('branch-new')
+    expect(await screen.findByTestId('branch-opening-hours')).toBeTruthy()
+
+    fireEvent.click(screen.getByTestId('hours-add-saturday'))
+    const cumartesi = within(screen.getByTestId('hours-saturday'))
+    fireEvent.change(cumartesi.getByLabelText(/Açılış/), { target: { value: '10:00' } })
+    fireEvent.change(cumartesi.getByLabelText(/Kapanış/), { target: { value: '14:00' } })
+    fireEvent.change(screen.getByLabelText('Türkçe', { selector: '#branch-name-tr' }), {
+      target: { value: 'Yeni Şube' },
+    })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    await waitFor(() => expect(vi.mocked(api.openBranch)).toHaveBeenCalled())
+    expect(vi.mocked(api.openBranch).mock.calls[0]![0].openingHours['saturday']).toEqual([
+      { start: '10:00', end: '14:00' },
+    ])
+  })
+})
+
+describe('0025/AC-22: Alan hatası ilgili aralığın ya da günün yanında, ekranın dilinde; girilen değer formda kalır', () => {
+  it.each<AppLocale>(['tr', 'ar'])('%s', async (locale) => {
+    vi.mocked(api.saveBranch).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'openingHours.monday.0.end,openingHours.wednesday',
+        'openingHours.monday.0.end': 'opening_hours.end_not_after_start',
+        'openingHours.wednesday': 'opening_hours.overlap',
+      }),
+    )
+    await panel('branch-edit', 'manager', locale, 'b-1')
+    await screen.findByTestId('branch-opening-hours')
+    const t = createTranslator(locale)
+
+    fireEvent.click(screen.getByTestId('hours-add-monday'))
+    // Saat alanının ARIA rolü yok (`type="time"`); alan kendi etiket bağıyla seçilir.
+    const acilis = () =>
+      screen
+        .getByTestId('hours-monday')
+        .querySelector<HTMLInputElement>('input[aria-labelledby$="-start"]')!
+    fireEvent.change(acilis(), { target: { value: '18:00' } })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    expect((await screen.findByTestId('error-openingHours.monday.0.end')).textContent).toBe(
+      t('dealership.fieldError.opening_hours_end_not_after_start'),
+    )
+    expect(
+      within(screen.getByTestId('hours-wednesday')).getByTestId('error-openingHours.wednesday')
+        .textContent,
+    ).toBe(t('dealership.fieldError.opening_hours_overlap'))
+    expect(acilis().value).toBe('18:00')
+  })
+})
+
+describe('0025 QA 2 BULGU-2: "Kaldır" düğmesinin erişilebilir adı gün ve sırayı taşır; aralık hatası input\'un açıklamasıdır', () => {
+  it('ad ve açıklama', async () => {
+    vi.mocked(api.saveBranch).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'openingHours.monday.1.end',
+        'openingHours.monday.1.end': 'opening_hours.end_not_after_start',
+      }),
+    )
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-opening-hours')
+
+    fireEvent.click(screen.getByTestId('hours-add-monday'))
+    fireEvent.click(screen.getByTestId('hours-add-monday'))
+    fireEvent.click(screen.getByTestId('hours-add-tuesday'))
+
+    expect(screen.getByRole('button', { name: 'Kaldır Pazartesi 1' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Kaldır Pazartesi 2' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Kaldır Salı 1' })).toBeTruthy()
+    expect(
+      saatler()
+        .getAllByRole('button', { name: /^Kaldır/ })
+        .map((dugme) => dugme.getAttribute('aria-label')),
+    ).toEqual([null, null, null])
+
+    fireEvent.click(screen.getByTestId('branch-save'))
+    const hata = await screen.findByTestId('error-openingHours.monday.1.end')
+    const kapanis = screen
+      .getByTestId('hours-monday')
+      .querySelectorAll<HTMLInputElement>('input[aria-labelledby$="-end"]')[1]!
+    expect(kapanis.getAttribute('aria-describedby')).toBe(hata.id)
+    expect(hata.textContent).toBe('Kapanış açılıştan sonra olmalı.')
+    expect(
+      screen
+        .getByTestId('hours-monday')
+        .querySelectorAll<HTMLInputElement>('input[aria-labelledby$="-end"]')[0]!
+        .hasAttribute('aria-describedby'),
+    ).toBe(false)
+  })
+})
+
+describe('0025/AC-35, AC-37, AC-38: Erişim yok, yükleniyor ve hata durumlarında çalışma saatleri bölümü basılmaz', () => {
+  it('Satış Danışmanı', async () => {
+    await panel('branch-edit', 'sales_advisor', 'tr', 'b-1')
+    expect(await screen.findByTestId('admin-no-access')).toBeTruthy()
+    expect(screen.queryByTestId('branch-opening-hours')).toBeNull()
+  })
+
+  it('yükleniyor', async () => {
+    vi.mocked(api.fetchAdminBranch).mockReturnValue(new Promise(() => {}))
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    expect(await screen.findByTestId('branch-loading')).toBeTruthy()
+    expect(screen.queryByTestId('branch-opening-hours')).toBeNull()
+  })
+
+  it('hata', async () => {
+    vi.mocked(api.fetchAdminBranch).mockRejectedValueOnce(
+      new ApiError('api.unavailable', null, 500),
+    )
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    expect(await screen.findByTestId('branch-error')).toBeTruthy()
+    expect(screen.queryByTestId('branch-opening-hours')).toBeNull()
+  })
+})
+
+describe('0025/AC-39, AC-63, AC-65: ar bölümü Arapça; panel metinleri panel kataloğunda üç dilde; vitrine yalnız iki metin', () => {
+  it('ar metinleri ve katalog', async () => {
+    await panel('branch-edit', 'manager', 'ar', 'b-1')
+    await screen.findByTestId('branch-opening-hours')
+    const ar = createTranslator('ar')
+    expect(saatler().getByText(ar('dealership.branch.hours.title')).textContent).toMatch(
+      /\p{Script=Arabic}/u,
+    )
+    expect(saatler().getAllByText(ar('dealership.branch.hours.closed'))).toHaveLength(7)
+    expect(
+      saatler().getAllByText((_, el) => el?.classList.contains('opening-hours__name') === true)[0]!
+        .textContent,
+    ).toMatch(/\p{Script=Arabic}/u)
+
+    const panelAnahtarlari = [
+      'dealership.branch.hours.title',
+      'dealership.branch.hours.hint',
+      'dealership.branch.hours.add',
+      'dealership.branch.hours.remove',
+      'dealership.branch.hours.copyPrevious',
+      'dealership.branch.hours.closed',
+      'dealership.fieldError.opening_hours_invalid_time',
+      'dealership.fieldError.opening_hours_end_not_after_start',
+      'dealership.fieldError.opening_hours_too_many_intervals',
+      'dealership.fieldError.opening_hours_overlap',
+      'dealership.fieldError.opening_hours_unknown_day',
+      'dealership.fieldError.opening_hours_missing_day',
+    ]
+    for (const locale of ['tr', 'ar', 'en'] as const) {
+      for (const anahtar of [...panelAnahtarlari, 'home.footer.closed', 'home.footer.hours']) {
+        expect(catalogKeys(locale)).toContain(anahtar)
+      }
+      for (const anahtar of panelAnahtarlari) {
+        expect(Object.keys(vitrin[locale])).not.toContain(anahtar)
+      }
+      expect(
+        Object.keys(vitrin[locale]).filter((k) => k.startsWith('home.') && /closed|hours/.test(k)),
+      ).toEqual(['home.footer.closed', 'home.footer.hours'])
     }
   })
 })

@@ -21,6 +21,21 @@ internal static class GalleryProfileDevelopmentSeed
             platform => (string?)WorstCase($"https://{platform.Hosts[^1]}/"),
             StringComparer.Ordinal);
 
+    /// <summary>
+    /// `0025` AC-60'ın kurgusu: yedi günün her birinde üç aralık ve 21 (açılış, kapanış) çiftinin
+    /// hepsi farklı (gün başına dakika farklı), yani yapısal veride hiçbir öğe birleşmez.
+    /// </summary>
+    internal static IReadOnlyDictionary<string, IReadOnlyList<OpeningIntervalInput>?> OpeningHours() =>
+        Domain.OpeningHours.Days.Select((day, index) => (day, index)).ToDictionary(
+            pair => pair.day,
+            pair => (IReadOnlyList<OpeningIntervalInput>?)
+            [
+                new($"08:{pair.index:D2}", $"10:{pair.index:D2}"),
+                new($"12:{pair.index:D2}", $"14:{pair.index:D2}"),
+                new($"16:{pair.index:D2}", $"21:{pair.index:D2}"),
+            ],
+            StringComparer.Ordinal);
+
     private static string WorstCase(string root)
     {
         int kalan = SocialLink.MaxUtf8Bytes - Encoding.UTF8.GetByteCount(root);

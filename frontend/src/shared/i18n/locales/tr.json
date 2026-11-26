@@ -125,6 +125,8 @@
   "home.footer.follow": "Bizi takip edin",
   "home.footer.contact": "Şubelerimiz",
   "home.footer.loading": "Şube bilgileri yükleniyor",
+  "home.footer.closed": "Kapalı",
+  "home.footer.hours": "Çalışma saatleri",
   "showcase.filter.selectedValues": "{count, plural, =0 {Seçim yok} other {# seçili}}",
   "showcase.filter.axis.bodyTypes": "Kasa tipi",
   "showcase.filter.axis.brands": "Marka",
