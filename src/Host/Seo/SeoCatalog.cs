@@ -28,12 +28,15 @@ internal sealed partial class SeoCatalog
     internal const string ListDescription = "seo.list.description";
     internal const string DetailDescription = "seo.detail.description";
     internal const string DocumentFallbackTitle = "seo.document.fallbackTitle";
+    internal const string FavoritesTitle = "seo.favorites.title";
+    internal const string CompareTitle = "seo.compare.title";
 
     /// <summary>Host'un okuduğu bütün anahtarlar; başlangıç denetimi ve katalog kapısı bunu kullanır.</summary>
     internal static IReadOnlyList<string> UsedKeys { get; } =
     [
         HomeIntroBody, PriceOnRequest, MileageValue, NotFoundTitle,
         HomeFallbackTitle, ListTitle, ListDescription, DetailDescription, DocumentFallbackTitle,
+        FavoritesTitle, CompareTitle,
     ];
 
     internal const string Directory = "i18n";

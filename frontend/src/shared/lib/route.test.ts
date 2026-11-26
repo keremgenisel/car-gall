@@ -56,6 +56,21 @@ describe('parseRoute', () => {
  * etmek için üçüncüsünü de yazmak gerekti — eksikliği kapatmak, onu bir dilim daha
  * taşımaktan ucuz.
  */
+describe('parseRoute — favoriler ve karşılaştırma (frontend-003 D1)', () => {
+  it('frontend-003/AC-1: /{l}/favorites ve /{l}/compare üç dilde kendi ekranlarıdır; sorgu dizesi rotayı değiştirmez', () => {
+    for (const locale of ['tr', 'ar', 'en']) {
+      expect(parseRoute(`/${locale}/favorites`)).toEqual({ kind: 'favorites' })
+      expect(parseRoute(`/${locale}/compare`)).toEqual({ kind: 'compare' })
+    }
+  })
+
+  it('frontend-003/AC-2: iki ekranın altındaki her yol "bulunamadı"dır, içerik sayfası adayı değildir', () => {
+    for (const path of ['/tr/favorites/x', '/tr/compare/x', '/tr/compare/x/y', '/ar/favorites/x']) {
+      expect(parseRoute(path)).toEqual({ kind: 'not-found' })
+    }
+  })
+})
+
 describe('parseRoute — panel (0010b D29, 0012a D17)', () => {
   it('panel kökü locale öneki TAŞIMAZ', () => {
     expect(parseRoute('/admin')).toEqual({ kind: 'admin', view: 'staff' })

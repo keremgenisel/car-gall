@@ -10,6 +10,12 @@ internal enum SeoPageKind
     Detail,
     Content,
     Newsletter,
+
+    /// <summary>`frontend-003` **D1** · **D2** — `/{locale}/favorites`: ziyaretçinin kendi seçimi.</summary>
+    Favorites,
+
+    /// <summary>`frontend-003` **D1** · **D2** · **D3** — `/{locale}/compare?listing=…`.</summary>
+    Compare,
     Admin,
     NotFound,
 }
@@ -51,6 +57,17 @@ internal sealed record SeoPage(SeoPageKind Kind, string? Slug = null)
             };
         }
 
+        // `frontend-003` D1 — iki ayrılmış ad; alt yolları (`/tr/favorites/x`) aşağıda NotFound'dur.
+        if (parcalar.Length == 2 && parcalar[1] == FavoritesSegment)
+        {
+            return new(SeoPageKind.Favorites);
+        }
+
+        if (parcalar.Length == 2 && parcalar[1] == CompareSegment)
+        {
+            return new(SeoPageKind.Compare);
+        }
+
         if (IndexHtmlRenderer.IsNewsletterLinkPage(path, Locale(locale)))
         {
             return new(SeoPageKind.Newsletter);
@@ -63,6 +80,17 @@ internal sealed record SeoPage(SeoPageKind Kind, string? Slug = null)
 
         return new(SeoPageKind.NotFound);
     }
+
+    /// <summary>`frontend-003` D1 — `ContentReservedSlugs`'taki iki ad; ön yüzde `route.ts` aynası.</summary>
+    internal const string FavoritesSegment = "favorites";
+
+    internal const string CompareSegment = "compare";
+
+    /// <summary>
+    /// `0018` D35 · `frontend-003` D2 — yanıtı <c>Referrer-Policy: no-referrer</c> taşıyan sayfalar:
+    /// adresin kendisi (bülten anahtarı, karşılaştırılan ilanlar) başka bir siteye sızmamalı.
+    /// </summary>
+    internal bool IsPrivate => Kind is SeoPageKind.Newsletter or SeoPageKind.Favorites or SeoPageKind.Compare;
 
     private static CarGallery.BuildingBlocks.Locale Locale(string code) => CarGallery.BuildingBlocks.Locale.Create(code).Value;
 }

@@ -3,5 +3,7 @@
   "seo.list.title": "Tüm araçlar",
   "seo.list.description": "Satıştaki bütün araçlar. Kilometre, model yılı ve fiyat her ilanda açıkça yazılı; kasa tipine, yakıta, vitese ve fiyata göre daraltın.",
   "seo.detail.description": "{year} model, {mileage}, {price}. {branch} şubesinde.",
-  "seo.document.fallbackTitle": "Araç vitrini"
+  "seo.document.fallbackTitle": "Araç vitrini",
+  "seo.favorites.title": "Favorilerim",
+  "seo.compare.title": "Araç karşılaştırma"
 }

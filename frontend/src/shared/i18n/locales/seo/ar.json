@@ -3,5 +3,7 @@
   "seo.list.title": "جميع السيارات",
   "seo.list.description": "جميع السيارات المعروضة للبيع. المسافة المقطوعة وسنة الصنع والسعر مكتوبة بوضوح في كل إعلان؛ صفّ النتائج حسب نوع الهيكل والوقود وناقل الحركة والسعر.",
   "seo.detail.description": "موديل {year}، {mileage}، {price}. في فرع {branch}.",
-  "seo.document.fallbackTitle": "معرض السيارات"
+  "seo.document.fallbackTitle": "معرض السيارات",
+  "seo.favorites.title": "مفضلتي",
+  "seo.compare.title": "مقارنة السيارات"
 }
