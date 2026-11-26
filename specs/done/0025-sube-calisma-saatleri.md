@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1, kartlar arası X1–X3 → D10, D11, D12 güncellendi; AC-66–AC-72) · **QA 2 revizyonu (2026-11-26, AP-08, Proje Yöneticisi kararı):** AC-61 ve D10(b) `0024` AC-55'in tanımıyla hizalandı; D11'e `null` gün cümlesi |
+| **Durum** | Tamamlandı (2026-11-26) — kararlar ve kriterler #129 → `7ff57df`, uygulama #133 → `0c4838f` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (şube) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel şube formu, vitrin altlığı) |
@@ -636,26 +636,26 @@ yerel saat aralığından oluşan programı. Aralıksız gün kapalıdır. İsti
 - [x] Önerilen kararlar (**D1–D15**) onaylandı (Proje Yöneticisi kararı, 2026-11-26) ve QA CLARIFY
       turu (B1, kartlar arası X1–X3 → **D10**, **D11**, **D12** düzeltmeleri, AC-66–AC-72) işlendi.
       *(Takım Yöneticisi (ajan) kararı, 2026-11-26.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0025-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. *(72/72; eşleme PR #133'te.)*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0025-ac<n>.png`),
       boş ve hata durumları dâhil; panel bölümünün ve altlığın Arapça görüntüsü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor (`dealership`, D13).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi ("Çalışma Programı", D15).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor (`dealership`, D13).
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi ("Çalışma Programı", D15).
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi.
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *(`64d70bd`: Backend, Frontend, E2E, C3 yeşil — ana sayfa 2274, liste 2116, detay 2409 ms.)*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
+      bunun yerine geçmez. *(2026-11-26, merge'den önce, QA 2: 0/0/4 — dördü de `f33c8d4`…`64d70bd`'te işlendi.)*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu ve uygulamada bulunan ekler) PR'da listelendi.
       *(CLARIFY X3:)* Etiketi değişen eski testler **çok etiketli** kalır ve eski etiketini
       kaybetmez: `0004/AC-52, 0024/AC-45, 0025/AC-55: …`, `0014/AC-14, 0025/AC-41: …` (mevcut
-      desen `0017/AC-51, AC-52, AC-56`).
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+      desen `0017/AC-51, AC-52, AC-56`). *(Kapalı anahtar kümesi ölçen e2e ikizi arandı: şube öğesini ölçen e2e yok — QA 2 doğruladı. Tablo dışı tip değişikliği: `GaleriPaneli.test.tsx` sahte şubesine `openingHours: null`.)*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(Takım Yöneticisi (ajan), `0c4838f`, 2026-11-26.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in
       TAMAMI koşturuldu.
 
@@ -665,13 +665,19 @@ yerel saat aralığından oluşan programı. Aralıksız gün kapalıdır. İsti
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | | `git cat-file -e <impl>^:specs/0025-sube-calisma-saatleri.md` |
-| **Kriter sayısı: önce → bugün** | → | |
-| **Spec revizyon sayısı** | | Onay anındaki CLARIFY turu sayılır (ADR 0008 / K3). |
-| **Düzeltme turu sayısı** | | `0` yalnız T10 `[x]` ise. |
-| **Dış bulgu (gerçek/gürültü)** | / | |
-| **Uygulama içi bulgu** | | |
-| **Regresyon sayısı** | | |
-| **Kaçan hata** | | Arşive taşınırken `izleniyor`. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e 0c4838f^:specs/0025-sube-calisma-saatleri.md` → var; kararlar ve 72 kriter #129 ile (`7ff57df`) uygulamadan önce girdi. |
+| **Kriter sayısı: önce → bugün** | **72 → 72** | İlk öneri 65; CLARIFY onaydan önce 72'ye çıkardı. |
+| **Spec revizyon sayısı** | **2** | (1) Onay anındaki CLARIFY turu (K3): X1 (açık `null` değişmez), X2 (perf tohumu birikimi), 0025 B1 (yedi gün zorunlu, `missing_day`) → D10, D11, D12. (2) `main`'den sonra AP-08: AC-61'in "ilk paket" tanımı 0024 AC-55'e hizalandı; D11'e "gün değeri `null` = kapalı" cümlesi. |
+| **Düzeltme turu sayısı** | **1** | QA 2'nin dört bulgusu tek turda işlendi. T10 `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **4 / 0** | BULGU-1: .NET'te `$` sondaki `\n`'in önünde de eşleştiği için `"09:00\n"` doğrulamayı geçip `ParseExact`'te 500 döndürüyordu · BULGU-2: "Kaldır" düğmelerinin erişilebilir adı katalogda olmayan bir anahtardan geliyordu, 21 düğme aynı adı taşıyordu; aralık hataları input'a bağlı değildi · BULGU-3: PR'daki ilk paket sayısı ara bir commit'e aitti (+337 → +409) · BULGU-4: PR başlığı 75 karakterdi. |
+| **Uygulama içi bulgu** | **3** | Yasak 34 kapısı (`0003/AC-35`) kapalı günün schema.org kodlaması `"00:00"`'ı mesai varsayımı sandı — kapı gevşetilmedi, değer `TimeOnly.MinValue`'dan türetildi · parametreli panel etiketleri `0020/AC-72`'yi kırdı — eski test değiştirilmedi, `aria-labelledby` ile çözüldü · commit başlığı uzunluğu `awk` ile bayt olarak ölçülmüştü (push'tan önce düzeltildi). |
+| **Regresyon sayısı** | **0** |  |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-26 (`0c4838f`). |
 
 **Bu spec'ten çıkarılan ders:**
+
+**Biçim doğrulaması tek bir kapıdan geçmeli.** Önce düzenli ifade, sonra `ParseExact` iki ayrı
+kapıydı ve aralarındaki fark (.NET'te `$`, sondaki satır sonunun önünde de eşleşir) 422 yerine 500
+üretti — 0024'teki NUL → 500 ile aynı sınıf. Doğrulama, değeri gerçekten ayrıştıran tek çağrıyla
+(`TryParseExact`) yapılmalı. İkinci ders: `check:locales` katalogların birbirine eşitliğini ölçüyor,
+koddaki anahtarın katalogda VAR olduğunu ölçmüyor; boş `aria-label` hiçbir kapıya takılmadı.
