@@ -303,6 +303,69 @@ ekranda karşılaştırabiliyor.**
 13. **Üst çubuğa eklenen öğenin adı kırması veya taşırması** — `0026`'da ad iki satıra kırılınca
     CLS 0.041'e çıkmıştı; dar ekranda sayaç, logo, ad ve dil değiştirici aynı satırdadır.
 
+### Verilen kararlar — plan turu (DEV, 2026-11-26)
+
+R/C/AC'ye dokunmayan uygulama kararları. Bir kararı değiştiren her şey Proje Yöneticisine gider
+(AP-08).
+
+- **P1 — Depo kaydı.** Anahtar `cargallery.favorites` (`/token|session|auth/i`'ye uymaz, AC-19);
+  değer `{"v":1,"items":[{"slug","addedAt","modelName","modelYear"}]}`, son eklenen sonda; ekran
+  ters çevirir (AC-33). Doğrulama yalnız sürüm, slug biçimi (`[a-z0-9-]`, 1–160) ve tiplerdir
+  (düşürme adımı 4). Bozuk JSON ya da `v !== 1` boş sayılır; geçersiz öğe atlanır (AC-14).
+- **P2 — `shared/lib/favorites.ts` tek kaynak.** Modül açılışta bir kez deneme yazması + silmesi
+  yapar (D9'un üç biçimi `available = false`). Bellekteki anlık görüntü `useSyncExternalStore` ile
+  okunur; ilk render depodan eşzamanlı okur, yani sayaç ilk boyamada doğrudur (AC-29). Ekleme ve
+  çıkarma **o anki depoyu yeniden okur**, görünen hâlin eylemini uygular (ekle görünüyorsa ekle,
+  kayıtta varsa no-op; D4/B8), yazar ve anlık görüntüyü yazılandan kurar. Yazma atarsa görüntü
+  değişmez ve neden duyurulur (AC-17). 24'te ekleme yapılmaz (AC-18).
+- **P3 — Tek canlı bölge.** Kabukta (üst çubuk) tek `role="status"` bölge; düğmeler oraya yazar.
+  Metin tek ICU `select` anahtarıdır (düşürme adımı 3): eklendi · çıkarıldı · sınır (sayı ICU) ·
+  yazılamadı. Karşılaştırma seçim sınırı tembel parçanın kendi bölgesindedir.
+- **P4 — Tek simge.** Kalp tek SVG yolu; dolu/boş hâl CSS'te `fill` ile (`aria-pressed="true"` →
+  dolgulu, aksi çizgi) — renk dışı fark biçimdir (AC-26). Düğme ve sayaç aynı `HeartIcon`'u
+  kullanır (düşürme adımları 1–2).
+- **P5 — Sayaç biçimi.** Sayaç her genişlikte **simge + sayı**dır; erişilebilir adı tam ICU
+  cümlesidir (AC-30). D8'in "pay yetmezse" sırasının birinci adımı baştan uygulanır: 320 px'te
+  logo + ad + sayaç + dil değiştirici aynı satıra sığsın ve ilk paket küçük kalsın. Ölçümde yine
+  sığmazsa ikinci adım (dar ekranda logo 120 px) uygulanır ve PR'da yazılır.
+- **P6 — Kart düğmesi gövdede.** Düğme kartın gövdesinde, model adının satırında, satır sonu
+  tarafındadır (bağlantının dışında, AC-22). Görselin üstüne konmaz: kapaksız ilanda görsel alanı
+  boştur ve düğme metnin üstüne binerdi.
+- **P7 — Detay düğmesi** model adının altında, fiyatın üstünde; görünür metin duruma göre
+  (düşürme adımı 5: metin canlı bölge `select`'iyle değil, kendi iki anahtarıyla — "Favorilere
+  ekle" / "Favorilerde" sayaç cümlesinden türetilemiyor; adım 5 uygulanamazsa PR'da gerekçesiyle).
+- **P8 — Tembel parça ve üçüncü küme.** İki ekran tek modülden (`features/catalog/favoritePages.tsx`)
+  tek `import()` ile iner. Küme `shared/i18n/locales/favorites/{tr,ar,en}.json`; kaydı
+  `shared/i18n/favoritesCatalog.ts` yapar ve onu yalnız bu modül içe aktarır. Stiller parçanın kendi
+  CSS dosyasında (`0026` P8 deseni).
+- **P9 — Kapı (`check-locale-keys.mjs`).** Küme listesi genelleşir; "iki kümede birden" bütün
+  kümeler arasında ölçülür; Arapça çoğulu bütün kümelerin birleşimi; vitrin sınırı panel modülü
+  gibi küme modülünü ve anahtarlarını da ölçer. D19 için bütün `src` (test dosyaları dâhil)
+  TypeScript ayrıştırıcısıyla okunur: `t('…')` çağrısının sabit ilk argümanı bir kümede, şablonlu
+  argümanın sabit öneki bir anahtarın başında olmalı.
+- **P10 — Adres.** Ön yüz rotası `favorites` ve `compare` türlerini tanır, ikisinin alt yolları
+  `not-found`'dur. Karşılaştırma adresi `URLSearchParams.getAll('listing')`'ten D3'e göre okunur
+  ve gerekiyorsa `history.replaceState` ile düzeltilir (`utm_*` dâhil öbür parametreler korunur).
+- **P11 — Host.** `SeoPageKind.Favorites` ve `Compare`; belge `200`, başlık `WithName(seo.…, ad)`,
+  `noindex`, kanonik/og/JSON-LD yok. `Referrer-Policy: no-referrer` bülten sayfalarıyla aynı
+  dalda, sayfa türüne göre verilir. SEO kümesine iki başlık anahtarı.
+- **P12 — Veri yolu.** Favoriler ve karşılaştırma ekranı mevcut `fetchListingDetail`'i slug başına
+  paralel çağırır; 404 → "düştü", diğer hata → satır/sütun hatası + "tekrar dene" (yalnız o slug).
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Host + ayrılmış adlar + ön yüz rotası: AC-1–AC-7, AC-11, AC-3.
+3. Depo katmanı (`favorites.ts`): AC-12–AC-20 birim testleri.
+4. Düğme, sayaç, canlı bölge; kart, detay, üst çubuk: AC-21–AC-31; ilk paket ölçümü ve düşürme
+   adımları (AC-67).
+5. Üçüncü küme ve kapı (P9): AC-69, AC-72; D19'un mevcut kodda bulduğu eksikler.
+6. Favoriler ekranı ve karşılaştırma seçimi: AC-33–AC-48.
+7. `attributeName` taşınması + kapı; karşılaştırma ekranı: AC-50–AC-64, AC-56/57.
+8. e2e (gizlilik, depo, üst çubuk, tablo, perf), görsel kanıt: AC-15, AC-29, AC-32, AC-43, AC-62,
+   AC-65, AC-71, AC-74.
+9. Belgeler (D16, D17).
+
 ---
 
 ## Verilen kararlar
