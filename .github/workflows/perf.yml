@@ -93,8 +93,9 @@ jobs:
           # sınanmamış kalırdı.
           Development__SeedHomeTexts: 'true'
           # 0024 D9(c) · AC-56 — galeri profilinin en kötü hâli: altı sosyal hesap, her adres
-          # 200 bayt Arapça yollu. Altlık simge parçasını ister; C3 bu hâli ölçer. `0025` ve
-          # `0026` aynı bayrağa program ve logo ekler (tohum korunur).
+          # 200 bayt Arapça yollu. Altlık simge parçasını ister; C3 bu hâli ölçer.
+          # 0025 D10(c) · AC-62 — aynı bayrak her aktif şubeye (perf'te iki) en kötü haftalık
+          # programı yazar: yedi günde üçer aralık, 21 farklı çift. `0026` logoyu ekler.
           Development__SeedGalleryProfile: 'true'
           # D2/AC-53 — uygulama bu parola olmadan HİÇ başlamaz. Ölçüm işi giriş
           # yapmaz ama Host'u ayağa kaldırmak zorunda. ADR 0011 — değer SABİT DEĞİL:

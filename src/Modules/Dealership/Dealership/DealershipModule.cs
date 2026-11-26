@@ -6,6 +6,7 @@ using CarGallery.Modules.Dealership.Application;
 using CarGallery.Modules.Dealership.Contracts.Branches;
 using CarGallery.Modules.Dealership.Contracts.Events;
 using CarGallery.Modules.Dealership.Contracts.Gallery;
+using CarGallery.Modules.Dealership.Domain;
 using CarGallery.Modules.Dealership.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using CarGallery.Modules.Dealership.Endpoints;
@@ -138,6 +139,39 @@ public static class DealershipModule
         if (sonuc.IsFailure)
         {
             throw new InvalidOperationException($"Galeri profili tohumlanamadı: {sonuc.Error.Code}.");
+        }
+
+        // `0025` D10(c) · P9 · AC-62 — her AKTİF şubeye AC-60'ın programı; şubenin diğer alanları
+        // okunduğu gibi geri yazılır. `0024`'ün hesapları yukarıda korunur (AC-71).
+        DealershipDbContext context = scope.ServiceProvider.GetRequiredService<DealershipDbContext>();
+        List<BranchId> aktifler = await context.Branches.AsNoTracking()
+            .Where(branch => branch.Status == BranchStatus.Active)
+            .Select(branch => branch.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (BranchId id in aktifler)
+        {
+            AdminBranchDto sube = (await scope.ServiceProvider.GetRequiredService<DealershipAdminQueries>().FindBranchAsync(id.Value, cancellationToken))!;
+            Result<int> program = await scope.ServiceProvider.GetRequiredService<BranchCommands>().UpdateAsync(
+                id.Value,
+                sube.Version,
+                new BranchFormInput(
+                    sube.Names.ToDictionary(pair => pair.Key, pair => (string?)pair.Value, StringComparer.Ordinal),
+                    sube.Addresses.ToDictionary(pair => pair.Key, pair => (string?)pair.Value, StringComparer.Ordinal),
+                    sube.Phone,
+                    sube.WhatsApp,
+                    sube.Email,
+                    sube.TimeZone,
+                    sube.Slug,
+                    sube.Latitude,
+                    sube.Longitude,
+                    GalleryProfileDevelopmentSeed.OpeningHours()),
+                cancellationToken);
+
+            if (program.IsFailure)
+            {
+                throw new InvalidOperationException($"Şube programı tohumlanamadı: {program.Error.Code}.");
+            }
         }
     }
 
