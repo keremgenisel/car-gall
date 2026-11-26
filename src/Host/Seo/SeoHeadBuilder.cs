@@ -119,6 +119,13 @@ internal sealed class SeoHeadBuilder(
                 })]);
             }
 
+            // `0024` D8 — altlığın gösterdiği hesaplar, aynı sırayla (C3); hiç yoksa anahtar yok.
+            // Şube öğeleri `sameAs` taşımaz (AC-48).
+            if (gallery.SocialLinks.Count > 0)
+            {
+                dealer["sameAs"] = new JsonArray([.. gallery.SocialLinks.Select(link => (JsonNode)JsonValue.Create(link.Url))]);
+            }
+
             tags.Append(JsonLd(dealer));
         }
 
