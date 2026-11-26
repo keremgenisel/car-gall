@@ -388,9 +388,14 @@ if (vitrinModulleri.size < 10) {
  * doğrular.
  */
 {
+  // QA 2 BULGU-3 (a) — SEO kümesi SAYILMAZ: ön yüz onu hiç yüklemez; `t('seo.…')` boş metin basar.
   const butunAnahtarlar = new Set(
-    [...kumeler.values()].flatMap((catalogs) => Object.keys(catalogs.get('tr') ?? {})),
+    [...kumeler]
+      .filter(([kume]) => kume !== 'seo')
+      .flatMap(([, catalogs]) => Object.keys(catalogs.get('tr') ?? {})),
   )
+  /** Statik olarak ölçülemeyen çağrılar, ilk argümanın türüne göre (ADR 0013 eki). */
+  const olculemeyen = new Map()
   const eksikler = []
 
   const anahtarlar = (dugum) => {
@@ -409,6 +414,15 @@ if (vitrinModulleri.size < 10) {
 
     if (ts.isParenthesizedExpression(dugum)) {
       return anahtarlar(dugum.expression)
+    }
+
+    // BULGU-3 (b) — `t(x ?? 'k')`, `t(x || 'k')`: sabit dal ölçülür.
+    if (
+      ts.isBinaryExpression(dugum) &&
+      (dugum.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken ||
+        dugum.operatorToken.kind === ts.SyntaxKind.BarBarToken)
+    ) {
+      return [...anahtarlar(dugum.left), ...anahtarlar(dugum.right)]
     }
 
     return []
@@ -434,7 +448,14 @@ if (vitrinModulleri.size < 10) {
         dugum.expression.text === 't' &&
         dugum.arguments.length > 0
       ) {
-        for (const { anahtar, onek } of anahtarlar(dugum.arguments[0])) {
+        const bulunan = anahtarlar(dugum.arguments[0])
+
+        if (bulunan.length === 0) {
+          const tur = ts.SyntaxKind[dugum.arguments[0].kind]
+          olculemeyen.set(tur, (olculemeyen.get(tur) ?? 0) + 1)
+        }
+
+        for (const { anahtar, onek } of bulunan) {
           const var_ = onek
             ? [...butunAnahtarlar].some((key) => key.startsWith(anahtar))
             : butunAnahtarlar.has(anahtar)
@@ -451,6 +472,10 @@ if (vitrinModulleri.size < 10) {
 
     dolas(kaynak)
   }
+
+  ozet.push(
+    `ölçülemeyen t() çağrısı: ${[...olculemeyen].map(([tur, sayi]) => `${tur} ${sayi}`).join(', ') || 'yok'}`,
+  )
 
   if (eksikler.length > 0) {
     failed = true

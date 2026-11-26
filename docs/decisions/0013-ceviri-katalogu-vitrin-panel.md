@@ -112,5 +112,18 @@ parçasıyla iner; kaydı `shared/i18n/favoritesCatalog.ts` yapar ve onu yalnız
 `check:locales` tembel her kümeyi dört denetimin her birine alır (üç dil eşitliği, Arapça çoğul
 biçimleri, başka kümede tekrar yok, vitrin sınırı); küme yalnız `TEMBEL_KUMELER`'e eklenir. Aynı
 kartla kapıya **anahtar varlığı** eklendi (D19): `src` altındaki her `t('…')` sabit anahtarı bir
-kümede, şablonlu anahtarın sabit öneki bir anahtarın başında olmalı. Sabit öneki olmayan şablon
-(`` t(`${prefix}.x`) ``) ve `t` dışında adlandırılmış çevirmenler statik olarak ölçülmez.
+kümede, şablonlu anahtarın sabit öneki bir anahtarın başında olmalı. `x ?? 'k'` / `x || 'k'` ve
+koşullu ifadede sabit dallar ölçülür. SEO kümesi "var" sayılmaz: ön yüz onu yüklemez.
+
+**Ölçülemeyenler** (statik olarak; `check:locales` her koşuda türüne göre sayar). `frontend-003` QA 2
+turu sonunda, `src` altında 857 `t()` çağrısından:
+
+| İlk argüman | Sayı | Örnek |
+|---|---|---|
+| Değişken (`Identifier`) | 33 | `t(key)` — anahtar çağıranda kurulur |
+| Özellik erişimi (`PropertyAccessExpression`) | 16 | `t(item.labelKey)` |
+| Çağrı (`CallExpression`) | 19 | `t(keyOf(code))` |
+| Öneksiz şablon (`TemplateExpression`) | 5 | `` t(`${prefix}.x`) `` (yalnız testlerde) |
+
+`t` dışında adlandırılmış çevirmenler ve kümenin onu kullanan modülle uyumu (panel kodunun vitrin
+kümesine yaslanması gibi) ölçülmez; sonuncusu ayrı iş adayıdır.

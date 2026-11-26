@@ -164,7 +164,9 @@ galeri-alanadi.com {
 3. **İlk Yönetici girişi.** `https://<alan-adı>/admin` → `Identity__SeedAdmin__LoginId`
    ve parola → parola değişikliği zorunlu → ikinci adım kurulumu zorunlu.
 4. **Erişim günlüğü (`frontend-003` D15, D17).** Ters vekil ya da CDN erişim günlüğü tutuyorsa
-   `/api/catalog/showcase-listings/*` yollarının saklama süresi **kısa** tutulur. Favoriler
+   şu yolların saklama süresi **kısa** tutulur: `/api/catalog/showcase-listings/*` (ilan okumaları),
+   `/{locale}/compare?listing=…` (karşılaştırma belgesi; en çok üç ilan adresi taşır) ve görsel
+   okumaları (`Media__PublicBaseUrl`'in kökü ya da önündeki CDN). Favoriler
    ekranı aynı ziyaretçiden aynı anda 24'e kadar ilan okuması yapar; bu okumaların zamanlaması
    ziyaretçinin hangi araçlarla ilgilendiğini gösterir ve IP adresiyle birlikte KVKK açısından
    kişisel veriyle ilişkilendirilebilir. Uygulamanın kendisi istek yolu günlüğü yazmaz.
