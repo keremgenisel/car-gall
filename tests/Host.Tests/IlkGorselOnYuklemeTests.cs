@@ -58,7 +58,7 @@ public sealed class IlkGorselOnYuklemeTests
     public async Task Basar_OnYukleme_DetayOkumasiDustugunde()
     {
         SahteDetay detay = new(Gorsel, okumaDuser: true);
-        KayitTutanLog log = new();
+        KayitTutanLog<SeoHeadBuilder> log = new();
 
         (int durum, string html) = await RenderAsync("/tr/cars/toyota-corolla-2019-abc123", detay, log);
 
@@ -73,6 +73,40 @@ public sealed class IlkGorselOnYuklemeTests
         Assert.Equal(LogLevel.Warning, duzey);
         Assert.IsType<InvalidOperationException>(hata);
         Assert.Contains("toyota-corolla-2019-abc123", mesaj, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// QA 2 BULGU-3 — yedek yolun ikinci okuması da düşerse belge yine düşmez: 200, ön yükleme
+    /// yok, detay etiketleri yok. Bileşim hatası çizicide TEK bir Error olarak loglanır (önce
+    /// bileşimin kendi Warning'i: ilk okuma); loglarda yalnız ilanın public adresi var, kişisel
+    /// veri yok.
+    /// </summary>
+    [Fact]
+    public async Task Basar_200_IkiOkumaDaDustugunde()
+    {
+        SahteDetay detay = new(Gorsel, okumaDuser: true, ilkGorselDuser: true);
+        KayitTutanLog<SeoHeadBuilder> bilesim = new();
+        KayitTutanLog<IndexHtmlRenderer> cizici = new();
+
+        (int durum, string html) = await RenderAsync("/tr/cars/toyota-corolla-2019-abc123", detay, bilesim, cizici);
+
+        Assert.Equal(StatusCodes.Status200OK, durum);
+        Assert.True(detay.IlkGorselSoruldu);
+        Assert.DoesNotContain("rel=\"preload\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("rel=\"canonical\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("application/ld+json", html, StringComparison.Ordinal);
+
+        (LogLevel duzey, string mesaj, _) = Assert.Single(cizici.Kayitlar.Concat(bilesim.Kayitlar), kayit => kayit.Duzey == LogLevel.Error);
+        Assert.Equal(LogLevel.Error, duzey);
+        Assert.Single(bilesim.Kayitlar, kayit => kayit.Duzey == LogLevel.Warning);
+
+        foreach ((_, string kayit, _) in cizici.Kayitlar.Concat(bilesim.Kayitlar))
+        {
+            Assert.DoesNotContain("@", kayit, StringComparison.Ordinal);
+            Assert.DoesNotContain("+90", kayit, StringComparison.Ordinal);
+        }
+
+        Assert.DoesNotContain("toyota-corolla-2019-abc123", mesaj, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -135,10 +169,14 @@ public sealed class IlkGorselOnYuklemeTests
         return dizin?.FullName ?? throw new InvalidOperationException("CarGallery.slnx bulunamadı.");
     }
 
-    private static async Task<(int Durum, string Html)> RenderAsync(string adres, IShowcaseListingDetailQueries detay, ILogger<SeoHeadBuilder>? log = null)
+    private static async Task<(int Durum, string Html)> RenderAsync(
+        string adres,
+        IShowcaseListingDetailQueries detay,
+        ILogger<SeoHeadBuilder>? log = null,
+        ILogger<IndexHtmlRenderer>? ciziciLog = null)
     {
         LocalePrefixResolver diller = new("tr", ["tr", "ar", "en"]);
-        IndexHtmlRenderer renderer = new(new SabitWebRoot(), ThemeOptions.Default, diller, Microsoft.Extensions.Logging.Abstractions.NullLogger<IndexHtmlRenderer>.Instance);
+        IndexHtmlRenderer renderer = new(new SabitWebRoot(), ThemeOptions.Default, diller, ciziciLog ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<IndexHtmlRenderer>.Instance);
 
         // `0004` P5 — ön yükleme artık tam yolda, SEO bileşiminin içinde ölçülür.
         SeoHeadBuilder seo = new(
@@ -164,7 +202,7 @@ public sealed class IlkGorselOnYuklemeTests
     /// Görünür ilanın sahte okuması; <c>gorsel</c> <c>null</c> ise ilan görünmüyor (<c>FindAsync</c>
     /// <c>null</c>). Gerçek okumanın biçimini taşır: görseller <c>Images</c>'ta, sırayla.
     /// </summary>
-    private sealed class SahteDetay(ShowcaseImageDto? gorsel, bool okumaDuser = false) : IShowcaseListingDetailQueries
+    private sealed class SahteDetay(ShowcaseImageDto? gorsel, bool okumaDuser = false, bool ilkGorselDuser = false) : IShowcaseListingDetailQueries
     {
         internal string? SorulanAdres { get; private set; }
 
@@ -196,11 +234,14 @@ public sealed class IlkGorselOnYuklemeTests
         public Task<ShowcaseImageDto?> FindFirstImageAsync(string slug, CancellationToken cancellationToken)
         {
             IlkGorselSoruldu = true;
-            return Task.FromResult(gorsel);
+
+            return ilkGorselDuser
+                ? throw new InvalidOperationException("veritabanına yine ulaşılamadı")
+                : Task.FromResult(gorsel);
         }
     }
 
-    private sealed class KayitTutanLog : ILogger<SeoHeadBuilder>
+    private sealed class KayitTutanLog<T> : ILogger<T>
     {
         internal List<(LogLevel Duzey, string Mesaj, Exception? Hata)> Kayitlar { get; } = [];
 
