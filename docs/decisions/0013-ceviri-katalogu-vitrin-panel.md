@@ -103,3 +103,14 @@ CI `C3 eşikleri` medyanları bu ADR'nin PR'ında raporlanır.
   anahtarı) kapıda kırılır; diğer yönü (panelin anahtarı vitrin kümesinde) yalnız paket
   boyutunu büyütür ve **kapı onu görmez**.
 - Vitrin sınırı statik bir taramadır; görmediği biçimler § Kapı'da listeli.
+
+## Ek — tembel vitrin kümesi (`frontend-003` D13, 2026-11-26)
+
+Üçüncü bir küme: **favoriler** (`locales/favorites/*.json`). Vitrinin ziyaretçiye açık ama ilk pakete
+girmeyen ekranlarının (favoriler ve karşılaştırma) metinleri burada yaşar ve ekranların tembel
+parçasıyla iner; kaydı `shared/i18n/favoritesCatalog.ts` yapar ve onu yalnız o parça içe aktarır.
+`check:locales` tembel her kümeyi dört denetimin her birine alır (üç dil eşitliği, Arapça çoğul
+biçimleri, başka kümede tekrar yok, vitrin sınırı); küme yalnız `TEMBEL_KUMELER`'e eklenir. Aynı
+kartla kapıya **anahtar varlığı** eklendi (D19): `src` altındaki her `t('…')` sabit anahtarı bir
+kümede, şablonlu anahtarın sabit öneki bir anahtarın başında olmalı. Sabit öneki olmayan şablon
+(`` t(`${prefix}.x`) ``) ve `t` dışında adlandırılmış çevirmenler statik olarak ölçülmez.

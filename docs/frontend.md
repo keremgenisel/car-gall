@@ -238,6 +238,17 @@ içinde kalır.
 - **Panel stilleri** (`0026`): yalnız panelin kullandığı bir bölümün stilleri bileşenin kendi
   `.css` dosyasında durur ve bileşen onu içe aktarır (`features/dealership/admin/galleryLogo.css`):
   Vite onu panelin tembel parçasının CSS'ine koyar, vitrinin giriş CSS'ine (ilk paket) girmez.
+- **Favori düğmesi** (`frontend-003` D7): durum `aria-pressed` ile; dolu/boş fark biçimle (tek kalp
+  yolu, basılıyken `fill`), yalnız renkle değil. Kart düğmesinin adı aracın model adını ve yılını
+  taşır (aynı sayfada yirmi dört özdeş "Favorilere ekle" duyulmaz). Eylemi tek bir kibar canlı
+  bölge söyler (üst çubukta). Dokunma hedefi en az `--touch-target-min-size`.
+- **Tarayıcı deposu** (`frontend-003` D4, D9): depoya yalnız `shared/lib/favorites.ts` dokunur.
+  Açılışta deneme yazması + silmesiyle sınanır; erişici, yazma ya da ikisi birden atarsa depo
+  yoktur ve ona bağlı arayüz hiç basılmaz (çalışmıyormuş gibi görünen düğme bırakılmaz). Her
+  yazma o anki kaydı yeniden okur (bayat sekme öbürünün yazdığını silmez); okunamayan kayıt boş
+  sayılır. Anahtar adı `check:session`'ın yasak sözcüklerini taşımaz.
+- **Dar ekranda üst çubuk** (`frontend-003` D8): 40rem altında her zaman iki satır (marka; sayaç +
+  dil değiştirici). Kırılma içerikten bağımsızdır; satır sayısı ilk boyamadan sonra değişmez.
   `app/styles.css`'e yazılan her kural her vitrin sayfasında iner.
 
 ---
