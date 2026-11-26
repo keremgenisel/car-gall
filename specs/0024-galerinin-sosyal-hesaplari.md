@@ -2,16 +2,22 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaya sunuldu (2026-11-26)** |
+| **Durum** | **Onaya sunuldu (2026-11-26)** · D1–D12 onaylandı (Proje Yöneticisi kararı, 2026-11-26) · sahibin SS1–SS3 cevapları işlendi · QA 1 CLARIFY turu bekliyor |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (galeri profili) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel Galeri ekranı, vitrin altlığı) |
 | **Bağımlı spec'ler** | `0004` (**D1**, **D15**, **D16**, **D17**, **AC-52**) · `0014` (altlık, **AC-14**, **AC-46**) · `0020` (galeri profili formu, **R16** sürüm, **D2** yetki). **Sonra gelenler:** `0025` → `0026` aynı dosyalara dokunur (§ Context › Sıradaki kartlarla kesişme). |
-| **Karar bekliyor** | **Takım Yöneticisi:** D1–D12 (öneri). **Sahip:** SS1–SS3 (önerili). |
+| **Karar bekliyor** | yok — D1–D12 onaylandı (Proje Yöneticisi kararı, 2026-11-26). SS1–SS3 cevaplandı (sahip kararı, 2026-11-26). |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26):** `0004` **SS2**'ye "evet": sosyal hesaplar panelden
 > girilsin, yapısal veride (`sameAs`) ve vitrinde görünsün; `0004`'ten sonra **ayrı küçük kart**.
 > Bu kart onu karşılar. `0004` **X4** ve **D15**'in notu bu kartın dayanağıdır.
+>
+> **Sahibin cevapları (sahip kararı, 2026-11-26):** SS1 → altı platform (D1 aynen). SS2 → yalnız ana
+> sayfa altlığı (öneri kabul). **SS3 → platform simgeleri (öneriden farklı).** Bu cevapla **D6** ve
+> **D9** yeniden yazıldı, **X2** değişti ve simge kaynağı Context'e girdi (Proje Yöneticisi kararı:
+> Simple Icons, CC0). **AC-37** ve **AC-43** yerinde değişti; yeni kriterler numara **eklenerek**
+> geldi (**AC-60–AC-70**), var olan numaralar değişmedi.
 
 ---
 
@@ -59,7 +65,7 @@ yapısal verisinde de yer alır.
   JSON-LD bloğu taşır (`0004` AC-49).
 - **C5.** Performans: C3 (Lighthouse mobil, LCP < 2500 ms) ana sayfa, liste ve detayda yeşil kalır.
   İlk paket ADR 0013'ün protokolüyle ölçülür. Panel metinleri panel kataloğuna girer, vitrin
-  kataloğuna girmez (ADR 0013).
+  kataloğuna girmez (ADR 0013). Simgeler giriş paketine girmez ve ayrı ölçülür (**D9**).
 - **C6.** Migration varsa yalnız `dealership` şemasına dokunur.
 - **C7.** Yazma, galeri yönetim uçlarının mevcut **Yönetici** politikasındadır (`0020` **D2**).
   Rol kodu uçta karşılaştırılmaz.
@@ -72,9 +78,10 @@ yapısal verisinde de yer alır.
 - **X1.** **Şube başına sosyal hesap** — *neden:* domain hesapları galeri düzeyinde tutuyor
   (`docs/architecture.md` § 1, "Galeri profili … sosyal hesaplar"). Şube sayfası da yok (`0004`
   **X3**, **SS4**: şimdilik hayır).
-- **X2.** **Platform simgeleri (marka logoları)** — *neden:* her markanın simge kullanım kuralları
-  var. Altı simge ilk pakete SVG olarak girer ve **D9**'un bütçesini harcar. Bağlantı metni
-  platformun adıdır (**D6**, **SS3**).
+- **X2.** **Marka renkleri ve markaların kendi resmî logo dosyaları** — *neden:* simgeler
+  **kapsam içinde** (**SS3**, sahip kararı, 2026-11-26), ama temanın metin rengiyle tek renk basılır
+  (**D6**). Marka renkleri ve markaların dağıttığı resmî dosyalar her markanın kullanım kurallarına
+  bağlı. Tek renkli, değiştirilmemiş simge bu kurallara takılmayan en dar seçenek.
 - **X3.** **Gömülü akış** (Instagram gönderileri, YouTube oynatıcısı) — *neden:* üçüncü taraf
   betiği ve çerezi demek. LCP'yi ve KVKK çerez kapsamını değiştirir.
 - **X4.** **Altlığın ana sayfa dışındaki sayfalarda görünmesi** — *neden:* bugün altlık yalnız ana
@@ -150,6 +157,18 @@ yapısal verisinde de yer alır.
   Ana sayfa metinleri perf koşusunda **sınır uzunlukta** tohumlanıyor (`.github/workflows/perf.yml:90-94`,
   `0022` **D11**). Bu kartın en kötü durumu da aynı desenle ölçülür (**D9**).
 
+### Simge kaynağı (Proje Yöneticisi kararı, 2026-11-26)
+
+- Altı simge **Simple Icons**'tan (simpleicons.org) alınır: `instagram`, `facebook`, `youtube`,
+  `tiktok`, `x`, `linkedin`. Lisans **CC0 1.0**. Yalnız SVG yolları kaynağa kopyalanır.
+  **Yeni çalışma zamanı bağımlılığı yoktur** (`package.json`'a paket eklenmez). Kaynak ve lisans
+  notu simgelerin durduğu dosyada yorum olarak yazılır.
+- CC0 telif hakkından vazgeçmedir, marka hakkını kapsamaz: simgeler markaların ticari markasıdır.
+  Bu yüzden biçimleri değiştirilmez ve marka renkleri kullanılmaz (`currentColor`, **D6**, X2).
+- **Boyut ölçülmedi, tahmin:** altı yolun toplamı sıkıştırmasız yaklaşık 4 kB'tır. Instagram'ın
+  yolu en uzunudur. Sayısal veri iyi sıkışmadığı için `gzip` sonrası yaklaşık 2 kB olur. Bu, ADR
+  0013'ün +512 B'lık giriş paketi payını tek başına aşar → **D9**(b).
+
 ### Bilerek değişecek eski testler (kod taranarak çıkarıldı)
 
 `0004`'ün dersi: liste spec yazılırken değil, kodda o davranışa dayanan testler aranarak çıkarılır.
@@ -179,7 +198,7 @@ yapısal verisinde de yer alır.
 2. **Gövdede alanın olmaması ile boş olması farklı şeydir** (**D4**). JSON'da ikisi de `null`'a
    düşebilir. Ayrım ölçülmezse `0020`'nin istemcisi, ve alansız gövde gönderen her test, kayıtlı
    hesapları siler.
-3. **`&` JSON-LD'de altı bayta büyür** (`&`, `SeoHeadBuilder.cs:404`). Bütçe kurgusu
+3. **`&` JSON-LD'de altı bayta büyür** (`\u0026`, `SeoHeadBuilder.cs:404`). Bütçe kurgusu
    (**AC-54**) bu yüzden `&` içermeyen adresle kurulur ve `&` ayrıca ölçülür (**AC-49**, **D9**'un bedeli).
 4. **Kapalı küme, yasak listesinden güçlüdür** (`0014` **D15**). Yanıtın anahtar kümesi birebir
    ölçülür, yalnız "yeni alan var mı" diye bakılmaz.
@@ -251,19 +270,31 @@ Bölümün yardım metni "Boş bırakılan platform vitrinde görünmez" der. Al
 *Gerekçe:* altı sabit alan, dinamik bir listeden daha az durum ve kriter üretir.
 *Bedel:* ekranda her zaman altı alan durur.
 
-**D6 — Vitrin: ana sayfa altlığında "Bizi takip edin" bloğu.** (R4, SS2, SS3)
-- Blok "Kurumsal"dan sonra, "Diller"den önce gelir. Bağlantılar D1'in sırasıyla dizilir.
-- Bağlantı metni platformun adıdır. Hedef kayıtlı adrestir. Bağlantı `rel="me"` taşır,
-  `target` taşımaz (aynı sekmede açılır).
-- Platform adı yön yalıtımıyla basılır: Latin ad Arapça sayfada doğru dizilir.
+**D6 — Vitrin: ana sayfa altlığında simgeli "Bizi takip edin" bloğu.** (R4, SS2, SS3) *(SS3'ün
+cevabıyla yeniden yazıldı, sahip kararı, 2026-11-26.)*
+- Blok "Kurumsal"dan sonra, "Diller"den önce gelir. Bağlantılar D1'in sırasıyla dizilir. Arapçada
+  satır sağdan sola akar, yani ilk simge sağdadır. Belgedeki sıra her dilde D1'dir.
+- **Bağlantı görsel olarak platformun simgesidir** (satır içi SVG, Context › Simge kaynağı).
+  Simge `aria-hidden="true"` taşır ve odaklanamaz.
+- **Bağlantının erişilebilir adı platformun adıdır** ("Instagram"). Ad markanın kendi adıdır,
+  çevrilmez ve dilden bağımsızdır. Görünür metin yoktur.
+- Simge temanın metin rengiyle (`currentColor`) basılır ve SVG'de sabit renk yoktur. Görünen boyutu
+  24 CSS pikseldir. **Dokunma hedefi en az 44×44 CSS pikseldir.** Klavye odağı görünür.
+- Hedef kayıtlı adrestir. Bağlantı `rel="me"` taşır ve `target` taşımaz (aynı sekmede açılır).
+- Simgeler ayrı bir parçadan gelir (D9(b)). Parça gelene kadar bağlantı kutusu son boyutundadır,
+  yani simge geldiğinde yer kaymaz. **Parça yüklenemezse** her bağlantı platformun adını görünür
+  metin olarak gösterir ve hedefi değişmez.
 - Hiç hesap yoksa blok, başlığıyla birlikte hiç basılmaz.
 - Okuma sürerken ve okuma hata verdiğinde de blok basılmaz, hata metni yoktur. Altlık bir hata
   ekranının yeri değildir (`0014` AC-54).
-- Vitrine eklenen tek metin bloğun başlığıdır.
+- Vitrin kataloğuna eklenen tek metin bloğun başlığıdır. Platform adları koddadır (D1).
 
-*Gerekçe:* altlık bugün yalnız ana sayfada var ve yapısal veri de yalnız ana sayfada (C3).
-Yeni sekme açmamak erişilebilirlik varsayılanıdır.
-*Bedel:* liste, detay ve içerik sayfalarında hesaplar görünmez (X4).
+*Gerekçe:* altlık bugün yalnız ana sayfada var ve yapısal veri de yalnız ana sayfada (C3). Sahip
+simge istedi. Erişilebilir ad, ekran okuyucunun simgeyi "Instagram" diye okumasını sağlar. Tek
+renk, marka kullanım kurallarına takılmamak içindir. 44 piksel dokunma hedefi WCAG 2.5.5'in
+değeridir. Yeni sekme açmamak erişilebilirlik varsayılanıdır.
+*Bedel:* liste, detay ve içerik sayfalarında hesaplar görünmez (X4). Simgeler marka renginde
+değildir. Simge parçası hesaplı ana sayfaya bir istek ekler.
 
 **D7 — Ziyaretçiye dönük okuma `socialLinks` dizisini taşır.** (R6, C2) Her öğe yalnız `platform`
 (kod) ve `url` taşır ve öğeler D1'in sırasıyla dizilir. Hiç hesap yoksa dizi **boştur**, `null`
@@ -283,16 +314,25 @@ yoktur. Görünen ad okunamazsa blok hiç basılmaz (`0004` **D15**), `sameAs` d
 - **(a)** `/ar/` ana sayfa belgesinde bu kartın eklediği bayt **en çok 1536 B**'tır (sıkıştırmasız).
   Kurgulanmış en kötü durum: altı platformun hepsi girilmiş, her adres 200 karakter ve hiçbirinde
   `&` yok.
-- **(b)** İlk paket, ADR 0013'ün protokolüyle (giriş JS + giriş CSS, `gzip -9`) `main` tabanına göre
-  **en çok 512 B** büyür.
+- **(b)** *(SS3'ün cevabıyla yeniden yazıldı.)* **Simgeler ne ilk pakete ne belgeye girer: ayrı,
+  tembel yüklenen bir parçadadırlar.**
+  - İlk paket ADR 0013'ün protokolüyle (giriş JS + giriş CSS, `gzip -9`) `main` tabanına göre **en
+    çok 512 B** büyür. Giriş JS'i simge yollarını taşımaz.
+  - Simge parçası (`gzip -9`) **en çok 3072 B**'tır.
+  - Parça yalnız **en az bir hesabı olan galerinin ana sayfasında** istenir. Hesapsız ana sayfa ile
+    liste, detay ve içerik sayfaları onu hiç istemez.
 - **(c)** C3 ana sayfa, liste ve detayda yeşil kalır. Perf koşusu (a)'nın altı hesabını sınır
   uzunlukta tohumlar (`0022` **D11** deseni). Bir sayfanın medyanı **2450 ms**'yi aşarsa ikinci
   koşu istenir ve LCP öğesi PR'a yazılır (`0004` **D17**(c)).
 
-*Gerekçe:* altı adresin kodlanmış hâli yaklaşık 1230 B'tır. Blok altlıkta, ilk ekranın altında
-ve galeri okumasından sonra basılır, yani LCP öğesine dokunmaz.
+*Gerekçe:* altı adresin kodlanmış hâli yaklaşık 1230 B'tır. Simgeler yaklaşık 2 kB gzip
+(Context, tahmin) ve +512 B'lık payı tek başına aşar. Belgeye basmak, arayüzü Host'a taşımak demek
+(tam SSR yok, `0004` **C1**; altlık uçta, galeri okumasından basılıyor) ve her ana sayfa belgesini
+hesap olsa da olmasa da büyütür. Tembel parça yalnız simge gösterecek sayfada iner. Blok altlıkta,
+ilk ekranın altında ve galeri okumasından sonra basılır, yani LCP öğesine dokunmaz.
 *Bedel:* her `&` beş bayt ekler. Sorgu dizesi `&` ile dolu, el yapımı bir adres sınırı aşabilir.
-Bunu ancak Yönetici yazabilir ve asıl kapı C3'tür.
+Bunu ancak Yönetici yazabilir ve asıl kapı C3'tür. Hesaplı ana sayfaya bir istek eklenir. Parça
+gelene kadar bağlantılar simgesizdir.
 
 **D10 — Yetki galeri yönetim grubunun politikasıdır.** (R7, C7) Satış Danışmanı ve İçerik Editörü
 `403`, oturumsuz istek `401` alır. Panelin "erişim yok" ekranı `0020` **D23**'ten gelir.
@@ -317,20 +357,22 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 
 ## Sahibe sorular
 
-> Yalnız sahibin verebileceği kararlar. Her birinin altında öneri var. Cevap gelene kadar öneri
-> uygulanır. Cevap öneriden farklıysa ilgili D ve kriterler kart onaylanmadan güncellenir.
+> **Cevaplandı (sahip kararı, 2026-11-26):** **SS1** → altı platform, D1 aynen. **SS2** → yalnız
+> ana sayfa altlığı, öneri kabul. **SS3** → **platform simgeleri**, öneriden farklı. D6, D9 ve X2 bu
+> cevapla değişti. Simge kaynağı Proje Yöneticisi kararıdır (Context).
 
 - **SS1. Hangi platformlar?** Galeri bugün hangi platformlarda hesap tutuyor ya da tutacak? Listede
-  olmayan bir platform kod değişikliği ister (D1).
+  olmayan bir platform kod değişikliği ister (D1). **Cevap (sahip kararı, 2026-11-26): öneri kabul.**
   **Öneri:** Instagram, Facebook, YouTube, TikTok, X, LinkedIn. Türkiye ve Körfez'de araç galerileri
   için yaygın olanlar bunlar. Kullanılmayan platformun alanı boş kalır ve vitrinde görünmez.
 - **SS2. Hesaplar vitrinde nerede görünsün?**
   **Öneri:** yalnız ana sayfanın altlığında, "Bizi takip edin" başlığıyla (D6). Altlık bugün yalnız
   ana sayfada var. Hesapları her sayfada göstermek, her sayfaya altlık eklemek demek ve ayrı bir
-  karar (X4).
+  karar (X4). **Cevap (sahip kararı, 2026-11-26): öneri kabul.**
 - **SS3. Simge mi, ad mı?** Bağlantılar platform simgesiyle mi, platformun adıyla mı görünsün?
   **Öneri:** ad (D6, X2). Simgeler sayfa paketini büyütür ve her markanın kullanım kuralı var. Ad
   her dilde okunur.
+  **Cevap (sahip kararı, 2026-11-26): simge.** → D6, D9, X2.
 
 ---
 
@@ -422,8 +464,8 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 ### Vitrin altlığı (R4, R8 · D6)
 
 - **AC-37.** Instagram, YouTube ve LinkedIn hesabı olan galerinin ana sayfa altlığında "Bizi takip
-  edin" bloğu üç bağlantı taşır. Sırası Instagram, YouTube, LinkedIn'dir. Metinleri platform
-  adlarıdır ve hedefleri kayıtlı adreslerdir.
+  edin" bloğu üç bağlantı taşır. Sırası Instagram, YouTube, LinkedIn'dir. Her bağlantı o platformun
+  simgesini satır içi SVG olarak taşır ve hedefi kayıtlı adrestir.
 - **AC-38.** Kurumsal sayfası olmayan, iki şubeli ve iki hesaplı bir kurulumda altlığın bağlantı
   hedefleri sırasıyla şunlardır: iki şube telefonu, `/tr/cars`, iki hesap adresi, `/tr/`, `/ar/`,
   `/en/`. (`0014` AC-46'nın hesaplı hâli.)
@@ -432,8 +474,8 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
   blokları görünmeye devam eder.
 - **AC-41.** Galeri okuması sürerken altlıkta blok yoktur.
 - **AC-42.** Galeri okuması hata verdiğinde altlıkta blok ve hata metni yoktur.
-- **AC-43.** `/ar/` ana sayfasında blok başlığı Arapçadır. Platform adları Latin harfli kalır ve
-  her biri yönü yalıtılmış olarak basılır. `/en/`'de başlık İngilizcedir.
+- **AC-43.** `/ar/` ana sayfasında blok başlığı Arapçadır. Bağlantıların belgedeki sırası D1'dir ve
+  ilk bağlantı (Instagram) satırın sağ ucundadır. `/en/`'de başlık İngilizcedir.
 - **AC-44.** Liste, detay ve içerik sayfalarında sosyal hesap bağlantısı yoktur.
 
 ### Yapısal veri (R5 · C3, C4 · D8, D16)
@@ -445,7 +487,7 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 - **AC-47.** Hiç hesabı olmayan galerinin `/tr/` belgesinde `AutoDealer` `sameAs` anahtarı taşımaz.
 - **AC-48.** `department` öğelerinin hiçbiri `sameAs` taşımaz.
 - **AC-49.** `https://www.facebook.com/profile.php?id=1&sk=about` adresi JSON-LD'nin ham metninde
-  `&` ile kodlanmıştır. Ayrıştırılan değer kayıtlı adrese eşittir.
+  `\u0026` ile kodlanmıştır. Ayrıştırılan değer kayıtlı adrese eşittir.
 - **AC-50.** Görünen ad okunamadığında, hesap kayıtlı olsa bile `/tr/` belgesi `AutoDealer` bloğu
   taşımaz.
 - **AC-51.** Liste, detay ve içerik belgelerinde `sameAs` anahtarı taşıyan JSON-LD yoktur.
@@ -460,7 +502,7 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
   en çok **1536 B** büyüktür.
 - **AC-55.** İlk paket (giriş JS + giriş CSS, `gzip -9`, ADR 0013) `main` tabanına göre en çok
   **512 B** büyür.
-- **AC-56.** Perf koşusu altı hesabı AC-48'in kurgusuyla tohumlar. C3 ana sayfa, liste ve detayda
+- **AC-56.** Perf koşusu altı hesabı AC-54'ün kurgusuyla tohumlar. C3 ana sayfa, liste ve detayda
   yeşildir. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi PR'da yazılıdır.
 - **AC-57.** Bu kartla vitrin kataloğuna yalnız blok başlığının anahtarı eklenir. Panelin metinleri
   (bölüm başlığı, yardım metni, üç hata kodu) panel kataloğundadır.
@@ -470,6 +512,27 @@ vitrinde gösterilen hesap adresi. Galeri başına platform başına en çok bir
 - **AC-58.** Bu kart `dealership` şeması dışında hiçbir şemaya dokunan migration eklemez.
 - **AC-59.** Panelin bölüm başlığı, yardım metni ve üç hata kodunun metni ile vitrin bloğunun başlığı
   tr, ar ve en'de vardır. Eksik anahtar kontrolü yeşildir.
+
+### Simgeler (R4, R8 · D6, D9 — sahibin SS3 cevabıyla eklendi)
+
+- **AC-60.** Her hesap bağlantısının erişilebilir adı platformun adıdır ("Instagram", "Facebook",
+  "YouTube", "TikTok", "X", "LinkedIn"). Ad `/tr/`, `/ar/` ve `/en/`'de aynıdır.
+- **AC-61.** Simge parçası yüklendikten sonra bağlantının görünür metni yoktur. Simge SVG'si
+  `aria-hidden="true"` taşır ve odaklanamaz.
+- **AC-62.** Her hesap bağlantısının dokunma hedefi en az 44×44 CSS pikseldir.
+- **AC-63.** Simge bağlantının metin rengiyle (`currentColor`) boyanır. SVG'nin hiçbir öğesi sabit
+  bir renk değeri taşımaz.
+- **AC-64.** Hesap bağlantısına klavyeyle odaklanıldığında görünür bir odak göstergesi vardır.
+- **AC-65.** Simgelerin bulunduğu kaynak dosya Simple Icons'ı ve CC0 1.0 lisansını adıyla anan bir
+  not taşır. Bu kart `package.json`'a çalışma zamanı bağımlılığı eklemez.
+- **AC-66.** Giriş JS'i altı simgenin hiçbirinin yol verisini taşımaz.
+- **AC-67.** Simge parçası `gzip -9` ile en çok **3072 B**'tır.
+- **AC-68.** Simge parçası yalnız en az bir hesabı olan galerinin ana sayfasında istenir. Hesapsız
+  ana sayfada ve liste, detay, içerik sayfalarında istenmez.
+- **AC-69.** Simge parçası yüklenemediğinde her hesap bağlantısı platformun adını görünür metin
+  olarak gösterir ve hedefi kayıtlı adres olarak kalır.
+- **AC-70.** Simge parçası gelmeden önce ve geldikten sonra hesap bağlantılarının konumu ve boyutu
+  aynıdır.
 
 
 ---
