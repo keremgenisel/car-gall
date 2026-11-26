@@ -4,7 +4,7 @@ import { HomeFooter } from './HomeFooter'
 import { useCorporateLinks } from './useCorporateLinks'
 import { HomePage } from './HomePage'
 import { BranchList } from '../features/dealership/BranchList'
-import { SocialLinks } from '../features/dealership/SocialLinks'
+import { SocialLinksSlot } from '../features/dealership/SocialLinksSlot'
 import { useGallery } from '../features/dealership/useGallery'
 import { LocaleProvider } from './LocaleProvider'
 import { useLocale } from './localeContext'
@@ -135,7 +135,7 @@ function HomeRoute() {
         <HomeFooter
           branches={<BranchList load={gallery} />}
           corporate={corporate}
-          social={<SocialLinks load={gallery} />}
+          social={<SocialLinksSlot load={gallery} />}
         />
       }
     >

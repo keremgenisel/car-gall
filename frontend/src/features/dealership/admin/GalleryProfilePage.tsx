@@ -6,7 +6,7 @@ import {
   type AdminGallery,
 } from '../../../shared/api/dealershipAdmin'
 import { enabledLocales } from '../../../shared/lib/locale'
-import { SOCIAL_PLATFORMS } from '../socialPlatforms'
+import { SOCIAL_PLATFORM_NAMES } from '../socialPlatforms'
 import { Button, ErrorState, Skeleton } from '../../../shared/ui'
 import { DealershipField } from './DealershipField'
 import { fieldErrorsOf, isConflict, localizedPayload } from './dealershipForm'
@@ -40,7 +40,7 @@ function valuesOf(gallery: AdminGallery, locales: readonly string[]): Values {
     ),
     // `0024` AC-2 — kayıtlı hesap dolu, olmayan boş gelir; altı alan her zaman var (D5).
     socialLinks: Object.fromEntries(
-      SOCIAL_PLATFORMS.map(({ code }) => [code, gallery.socialLinks[code] ?? '']),
+      Object.keys(SOCIAL_PLATFORM_NAMES).map((code) => [code, gallery.socialLinks[code] ?? '']),
     ),
   }
 }
@@ -251,7 +251,7 @@ export function GalleryProfilePage() {
         <fieldset className="admin-form__group" data-testid="gallery-social-links">
           <legend className="admin-form__label">{t('dealership.gallery.social.title')}</legend>
           <p className="admin-form__hint">{t('dealership.gallery.social.hint')}</p>
-          {SOCIAL_PLATFORMS.map(({ code, name }) => (
+          {Object.entries(SOCIAL_PLATFORM_NAMES).map(([code, name]) => (
             <DealershipField
               key={code}
               id={`gallery-social-${code}`}

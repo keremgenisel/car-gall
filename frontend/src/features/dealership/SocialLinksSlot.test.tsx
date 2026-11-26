@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../../app/LocaleProvider'
 import type { PublicSocialLink } from '../../shared/api/types'
 import type { AppLocale } from '../../shared/lib/locale'
-import { SOCIAL_ICON_PATHS } from './socialIcons'
-import { SocialLinks } from './SocialLinks'
+import { SOCIAL_ICON_PATHS, socialIconLinks } from './socialIconLinks'
+import { SocialLinksSlot } from './SocialLinksSlot'
 import type { GalleryLoad } from './useGallery'
 
 const UC: readonly PublicSocialLink[] = [
@@ -28,16 +28,16 @@ function hazir(socialLinks: readonly PublicSocialLink[]): GalleryLoad {
 
 afterEach(cleanup)
 
-const basarili = () => Promise.resolve(SOCIAL_ICON_PATHS)
+const basarili = () => Promise.resolve(socialIconLinks)
 
 function ekran(
   load: GalleryLoad,
-  loadIcons: () => Promise<typeof SOCIAL_ICON_PATHS> = basarili,
+  loadBlock: () => Promise<typeof socialIconLinks> = basarili,
   locale: AppLocale = 'tr',
 ) {
   return render(
     <LocaleProvider locale={locale}>
-      <SocialLinks load={load} loadIcons={loadIcons} />
+      <SocialLinksSlot load={load} loadBlock={loadBlock} />
     </LocaleProvider>,
   )
 }
@@ -96,8 +96,8 @@ describe('0024 — altlığın "Bizi takip edin" bloğu', () => {
       expect(
         within(blok)
           .getAllByRole('link')
-          .map((link) => link.getAttribute('data-platform')),
-      ).toEqual(['instagram', 'youtube', 'linkedin'])
+          .map((link) => link.getAttribute('href')),
+      ).toEqual(UC.map((hesap) => hesap.url))
       unmount()
     }
   })
@@ -122,7 +122,7 @@ describe('0024 — altlığın "Bizi takip edin" bloğu', () => {
 
     const baglantilar = within(screen.getByTestId('footer-social')).getAllByRole('link')
     for (const link of baglantilar.filter(
-      (item) => item.getAttribute('data-platform') !== 'linkedin',
+      (item) => !item.getAttribute('href')!.includes('linkedin'),
     )) {
       expect(link.textContent).toBe('')
       const svg = link.querySelector('svg')!
@@ -171,9 +171,9 @@ describe('0024 — altlığın "Bizi takip edin" bloğu', () => {
     window.removeEventListener('unhandledrejection', yakalanmamis)
   })
 
-  it('0024/AC-70: Parça gelmeden önce simgeli bağlantı aynı kutudadır (aynı sınıf, erişilebilir ad), yalnız simgesizdir', async () => {
-    let coz: (paths: typeof SOCIAL_ICON_PATHS) => void = () => {}
-    ekran(
+  it('0024/AC-70: Parça gelene kadar blok yoktur (yer ayrılmaz, altlık ilk ekranın altında); gelince bağlantılar son hâlleriyle bir kez basılır', async () => {
+    let coz: (render: typeof socialIconLinks) => void = () => {}
+    const { container } = ekran(
       hazir(UC),
       () =>
         new Promise((resolve) => {
@@ -181,17 +181,20 @@ describe('0024 — altlığın "Bizi takip edin" bloğu', () => {
         }),
     )
 
-    const once = screen.getByRole('link', { name: 'Instagram' })
-    expect(once.className).toBe('social-link')
-    expect(once.querySelector('svg')).toBeNull()
+    expect(container.innerHTML).toBe('')
 
     await act(async () => {
-      coz(SOCIAL_ICON_PATHS)
+      coz(socialIconLinks)
       await Promise.resolve()
     })
 
-    const sonra = screen.getByRole('link', { name: 'Instagram' })
-    expect(sonra.className).toBe('social-link')
-    expect(sonra.querySelector('svg')).not.toBeNull()
+    const instagram = screen.getByRole('link', { name: 'Instagram' })
+    expect(instagram.className).toBe('social-link')
+    expect(instagram.querySelector('svg')).not.toBeNull()
+  })
+
+  it('0024/AC-78: Yükleyici aynı sayfada tek söz döner (tek istek)', async () => {
+    const { loadSocialLinks } = await import('./socialLinksLoader')
+    expect(loadSocialLinks()).toBe(loadSocialLinks())
   })
 })

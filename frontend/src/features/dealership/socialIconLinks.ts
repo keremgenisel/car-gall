@@ -1,7 +1,16 @@
+import type { createElement, ReactNode } from 'react'
+import type { PublicSocialLink } from '../../shared/api/types'
+
 /**
- * `0024` D6 · D9(b) · D13 — vitrin altlığındaki platform simgeleri. Bu modül TEMBEL yüklenir ve
- * derlemede `social-icons` adlı tek parçaya düşer (`vite.config.ts`, `manualChunks`); giriş
- * paketine girmez (AC-66, AC-67).
+ * `0024` D6 · D9(b) — tembel parçanın (`social-icons`) TAMAMI: simgeli hesap bağlantılarını kuran
+ * işlev ve beş simgenin yol verisi. QA 2 BULGU-1: parça girişle HİÇBİR modülü paylaşmaz (yalnız
+ * tip içe aktarması, derlemede silinir). Paylaşsaydı rolldown ortak modülleri (`jsx-runtime`)
+ * girişin statik içe aktardığı ayrı bir dosyaya çıkarıyor ve kritik yola ikinci JS ekliyordu
+ * (ölçüldü: +1184 B). Bu yüzden JSX yok; `createElement` çağırandan gelir.
+ *
+ * Simgeli kutu `aria-label` ile platformun adını taşır (AC-60); SVG `aria-hidden`, odaklanamaz ve
+ * `currentColor` ile boyanır (AC-61, AC-63). Simgesi olmayan platform (LinkedIn, D13) çağıranın
+ * metin bağlantısıyla basılır.
  *
  * Kaynak: Simple Icons (https://simpleicons.org), npm paketi `simple-icons@16.38.1`, dosyalar
  * `icons/<slug>.svg`. Lisans: CC0 1.0 Universal (paketin `LICENSE.md`'si; beş simgenin
@@ -9,8 +18,8 @@
  * verisi kopyalandı, biçimi değiştirilmedi. Yeni çalışma zamanı bağımlılığı yok (AC-65).
  *
  * CC0 telif hakkından vazgeçmedir, marka hakkını kapsamaz: simgeler sahiplerinin ticari
- * markasıdır. Bu yüzden biçim değiştirilmez ve marka rengi kullanılmaz; simge `currentColor`
- * ile temanın metin rengini alır (D6, X2). Marka kuralları (AC-82; paketin `guidelines` alanı):
+ * markasıdır. Bu yüzden biçim değiştirilmez ve marka rengi kullanılmaz (D6, X2). Marka kuralları
+ * (AC-82; paketin `guidelines` alanı):
  * - Instagram: https://about.meta.com/brand/resources/instagram
  * - Facebook: https://about.meta.com/brand/resources/facebook/logo
  * - YouTube: https://www.youtube.com/howyoutubeworks/resources/brand-resources/#logos-icons-and-colors
@@ -32,3 +41,41 @@ export const SOCIAL_ICON_PATHS = {
 } as const
 
 export type SocialIconPlatform = keyof typeof SOCIAL_ICON_PATHS
+
+/** Simgeli bağlantılar; simgesi olmayan platform için `textLink`. */
+export function socialIconLinks(
+  h: typeof createElement,
+  links: readonly PublicSocialLink[],
+  names: Readonly<Record<string, string>>,
+  textLink: (link: PublicSocialLink) => ReactNode,
+): ReactNode[] {
+  return links.map((link) =>
+    link.platform in SOCIAL_ICON_PATHS
+      ? h(
+          'li',
+          { key: link.platform },
+          h(
+            'a',
+            {
+              className: 'social-link',
+              href: link.url,
+              rel: 'me',
+              'aria-label': names[link.platform],
+            },
+            h(
+              'svg',
+              {
+                width: 24,
+                height: 24,
+                viewBox: '0 0 24 24',
+                fill: 'currentColor',
+                'aria-hidden': 'true',
+                focusable: 'false',
+              },
+              h('path', { d: SOCIAL_ICON_PATHS[link.platform as SocialIconPlatform] }),
+            ),
+          ),
+        )
+      : textLink(link),
+  )
+}

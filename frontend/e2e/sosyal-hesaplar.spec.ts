@@ -339,9 +339,11 @@ test('0024/AC-69, AC-79: Parçanın içe aktarması reddedilince bağlantılar a
   await kanit(page, page.getByTestId('home-footer'), '0024-ac69.png')
 })
 
-test('0024/AC-70: Parça geldiğinde simgeli bağlantıların konumu ve boyutu gelmeden öncekiyle aynıdır', async ({
+test('0024/AC-70: Parça gelene kadar blok yok; gelince simgeli bağlantılar son boyutlarıyla basılır ve bir daha kıpırdamaz', async ({
   page,
 }) => {
+  // QA 2 BULGU-1 ile blok bütünüyle tembel parçada: parçadan ÖNCE bağlantı yok. Ölçülen, bağlantıların
+  // geldikleri anda son boyutlarında (44×44) olması ve sonra sabit kalması.
   await hesaplar(page.request, ALTI)
   let birak: () => void = () => {}
   const bekle = new Promise<void>((resolve) => {
@@ -353,25 +355,23 @@ test('0024/AC-70: Parça geldiğinde simgeli bağlantıların konumu ve boyutu g
   })
 
   await anaSayfa(page)
-  const simgeli = blok(page).locator('a.social-link:not(.social-link--text)')
-  await expect(simgeli).toHaveCount(5)
-  await expect(blok(page).locator('svg')).toHaveCount(0)
-  const once = await simgeli.evaluateAll((els) =>
-    els.map((el) => {
-      const k = el.getBoundingClientRect()
-      return [k.x, k.y, k.width, k.height]
-    }),
-  )
+  await expect(blok(page)).toHaveCount(0)
 
   birak()
+  const simgeli = blok(page).locator('a.social-link:not(.social-link--text)')
+  await expect(simgeli).toHaveCount(5)
   await expect(blok(page).locator('svg')).toHaveCount(5)
-  const sonra = await simgeli.evaluateAll((els) =>
-    els.map((el) => {
-      const k = el.getBoundingClientRect()
-      return [k.x, k.y, k.width, k.height]
-    }),
-  )
-  expect(sonra).toEqual(once)
+  const kutular = () =>
+    simgeli.evaluateAll((els) =>
+      els.map((el) => {
+        const k = el.getBoundingClientRect()
+        return [k.x, k.y, k.width, k.height]
+      }),
+    )
+  const ilk = await kutular()
+  expect(ilk.every(([, , g, y]) => g === 44 && y === 44)).toBe(true)
+  await page.waitForLoadState('networkidle')
+  expect(await kutular()).toEqual(ilk)
 })
 
 test("0024/AC-80: C3'ün mobil görüntü alanında altı hesaplı /tr/ ana sayfanın altlığı ilk ekranın altındadır", async ({

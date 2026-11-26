@@ -11,10 +11,15 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        // `0024` D9(b) — simge yolları SABİT adlı tek parçada (`social-icons-<hash>.js`); giriş
-        // paketine girmez. Ad dosya adından değil buradan gelir (CLARIFY B4).
-        manualChunks(id) {
-          return id.includes('/features/dealership/socialIcons.') ? 'social-icons' : undefined
+        // `0024` D9(b) — tembel blok parçasının (bileşen + simge yolları) adı SABİT (`social-icons-<hash>.js`). `manualChunks`
+        // DEĞİL: o, paylaşılan bir çalışma zamanı parçası üretip girişe statik bağlıyordu ve
+        // kritik yola ikinci bir JS dosyası ekliyordu (QA 2 BULGU-1).
+        chunkFileNames(chunk) {
+          return /\/features\/dealership\/socialIconLinks\.[jt]sx?$/.test(
+            chunk.facadeModuleId ?? '',
+          )
+            ? 'assets/social-icons-[hash].js'
+            : 'assets/[name]-[hash].js'
         },
       },
     },

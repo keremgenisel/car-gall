@@ -1248,8 +1248,8 @@ a.top-bar__brand:hover {
 }
 
 /* `0024` D6 — "Bizi takip edin": satır mantıksal yönle akar (ar'da ilk simge sağda). Simgeli kutu
-   SABİT 44×44: parça gelmeden önce ve sonra aynı yer (AC-70). Metinli kutu (LinkedIn, reddedilen
-   parça) en az 44×44 ve metne göre genişler (AC-80, D13). */
+   SABİT 44×44 (AC-62, AC-70); simgenin 24px'i SVG'nin kendi `width`/`height`'ındadır (ilk paket,
+   QA 2 BULGU-1). Metinli kutu (LinkedIn, reddedilen parça) en az 44×44, metne göre genişler (D13). */
 .social-links {
   list-style: none;
   padding: 0;
@@ -1273,11 +1273,6 @@ a.top-bar__brand:hover {
   inline-size: auto;
   min-inline-size: var(--touch-target-min-size);
   padding-inline: var(--space-4);
-}
-
-.social-link__icon {
-  inline-size: var(--social-icon-size);
-  block-size: var(--social-icon-size);
 }
 
 .home-footer__branch-name,
