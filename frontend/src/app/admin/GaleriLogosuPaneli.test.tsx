@@ -233,6 +233,97 @@ describe('0026 — panelin "Logo" bölümü', () => {
     expect(vi.mocked(api.saveGalleryProfile).mock.calls[0]![0]).toBe(5)
   })
 
+  it('0026/AC-73, AC-74 (QA 2 BULGU-1): Profil kaydı dönen sürümü hemen benimser; yeniden okuma dönmeden biten logo ataması yeni sürümle gider, `409` yok; kayıt ve okuma sürerken logo denetimleri kapalı', async () => {
+    let yuklemeBitti: (value: { id: string; status: 'uploaded' }) => void = () => {}
+    vi.mocked(medya.uploadMediaAsset).mockReturnValue(
+      new Promise((resolve) => {
+        yuklemeBitti = resolve
+      }),
+    )
+    // Sunucu kuralı: güncel sürüm 5; eski sürümle atama `409`.
+    vi.mocked(api.assignGalleryLogo).mockImplementation((_id, surum) =>
+      surum === 5
+        ? Promise.resolve(6)
+        : Promise.reject(new ApiError('dealership.concurrency_conflict', null, 409)),
+    )
+    vi.mocked(medya.fetchMediaAsset).mockResolvedValue(durum('processing'))
+    vi.mocked(api.saveGalleryProfile).mockResolvedValue(5)
+    await panel()
+    await screen.findByTestId('gallery-logo')
+
+    // Yükleme başlar (henüz dönmedi), bu arada profil kaydedilir.
+    fireEvent.change(bolum().getByLabelText('Logo yükle'), { target: { files: [dosya()] } })
+    let okumaBitti: (value: AdminGallery) => void = () => {}
+    vi.mocked(api.fetchGalleryProfile).mockReturnValue(
+      new Promise((resolve) => {
+        okumaBitti = resolve
+      }),
+    )
+    fireEvent.click(screen.getByTestId('gallery-save'))
+    await waitFor(() => expect(vi.mocked(api.fetchGalleryProfile)).toHaveBeenCalledTimes(2))
+    expect(vi.mocked(api.saveGalleryProfile).mock.calls[0]![0]).toBe(4)
+
+    // Yeniden okuma bekliyor: seçici kapalı.
+    expect((bolum().getByTestId('gallery-logo-file') as HTMLInputElement).disabled).toBe(true)
+
+    await act(async () => {
+      yuklemeBitti({ id: 'logo-1', status: 'uploaded' })
+    })
+    await waitFor(() => expect(vi.mocked(api.assignGalleryLogo)).toHaveBeenCalledTimes(1))
+    expect(vi.mocked(api.assignGalleryLogo).mock.calls[0]!.slice(0, 2)).toEqual(['logo-1', 5])
+    expect(bolum().queryByTestId('gallery-logo-error')).toBeNull()
+
+    await act(async () => {
+      okumaBitti({ ...GALERI, version: 6, logoMediaAssetId: 'logo-1' })
+    })
+    await waitFor(() =>
+      expect((bolum().getByTestId('gallery-logo-file') as HTMLInputElement).disabled).toBe(false),
+    )
+    expect(bolum().getByTestId('gallery-logo-remove').hasAttribute('disabled')).toBe(false)
+  })
+
+  it('0026/AC-73, AC-74 (QA 2 BULGU-1): Profil kaydı ve ardından gelen yeniden okuma sürerken "Değiştir" seçicisi ve "Kaldır" kapalı; okuma dönünce açılır', async () => {
+    vi.mocked(api.fetchGalleryProfile).mockResolvedValueOnce({
+      ...GALERI,
+      logoMediaAssetId: 'logo-1',
+    })
+    vi.mocked(medya.fetchMediaAsset).mockResolvedValue(durum('ready'))
+    let kayitBitti: (value: number) => void = () => {}
+    vi.mocked(api.saveGalleryProfile).mockReturnValue(
+      new Promise((resolve) => {
+        kayitBitti = resolve
+      }),
+    )
+    let okumaBitti: (value: AdminGallery) => void = () => {}
+    vi.mocked(api.fetchGalleryProfile).mockReturnValueOnce(
+      new Promise((resolve) => {
+        okumaBitti = resolve
+      }),
+    )
+    await panel()
+    await screen.findByTestId('gallery-logo-preview')
+    const secici = () => bolum().getByTestId('gallery-logo-file') as HTMLInputElement
+    const kaldir = () => bolum().getByTestId('gallery-logo-remove')
+    expect(secici().disabled).toBe(false)
+
+    fireEvent.click(screen.getByTestId('gallery-save'))
+    await waitFor(() => expect(secici().disabled).toBe(true))
+    expect(kaldir().hasAttribute('disabled')).toBe(true)
+
+    await act(async () => {
+      kayitBitti(5)
+    })
+    await waitFor(() => expect(vi.mocked(api.fetchGalleryProfile)).toHaveBeenCalledTimes(2))
+    expect(secici().disabled).toBe(true)
+    expect(kaldir().hasAttribute('disabled')).toBe(true)
+
+    await act(async () => {
+      okumaBitti({ ...GALERI, version: 5, logoMediaAssetId: 'logo-1' })
+    })
+    await waitFor(() => expect(secici().disabled).toBe(false))
+    expect(kaldir().hasAttribute('disabled')).toBe(false)
+  })
+
   it('0026/AC-17, AC-27, AC-28: Erişim yok, yükleniyor ve hata durumlarında logo bölümü basılmaz', async () => {
     await panel('sales_advisor')
     expect(await screen.findByTestId('admin-no-access')).toBeTruthy()

@@ -63,6 +63,8 @@ export function GalleryProfilePage() {
   const [banner, setBanner] = useState<Banner>({ kind: 'none' })
   const [busy, setBusy] = useState(false)
   const [reload, setReload] = useState(0)
+  // `0026` QA 2 BULGU-1 — kaydetmenin ardından gelen yeniden okuma sürüyor; logo bölümü kapalı.
+  const [refreshing, setRefreshing] = useState(false)
   // `0026` D8 — logo işleminin döndürdüğü sürüm ve kimlik. Ekran onları benimser: aynı ekrandaki
   // profil kaydetmesi `409` vermez ve form değerleri (kaydedilmemiş olanlar dâhil) yerinde kalır.
   const [adopted, setAdopted] = useState<{
@@ -78,9 +80,11 @@ export function GalleryProfilePage() {
         setLoad({ kind: 'ready', gallery })
         setValues(valuesOf(gallery, enabledLocales()))
         setAdopted(null)
+        setRefreshing(false)
       })
       .catch((cause: unknown) => {
         if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
+          setRefreshing(false)
           setLoad({ kind: 'error' })
         }
       })
@@ -125,7 +129,7 @@ export function GalleryProfilePage() {
     setBanner({ kind: 'none' })
 
     try {
-      await saveGalleryProfile(
+      const next = await saveGalleryProfile(
         version,
         {
           commercialName: current.commercialName,
@@ -136,6 +140,10 @@ export function GalleryProfilePage() {
         },
         locale,
       )
+      // Dönen sürüm HEMEN ekranın sürümü olur (`0026` QA 2 BULGU-1): yeniden okuma dönmeden
+      // yapılan bir logo işlemi eski sürümle gidip `409` almaz.
+      setAdopted({ logoMediaAssetId, version: next })
+      setRefreshing(true)
       setBanner({ kind: 'saved' })
       setReload((value) => value + 1)
     } catch (cause) {
@@ -293,6 +301,7 @@ export function GalleryProfilePage() {
           logoMediaAssetId={logoMediaAssetId}
           version={version}
           onChange={(id, next) => setAdopted({ logoMediaAssetId: id, version: next })}
+          disabled={busy || refreshing}
         />
 
         <div className="admin-form__actions">

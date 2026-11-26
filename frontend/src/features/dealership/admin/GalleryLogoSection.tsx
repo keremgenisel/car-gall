@@ -33,15 +33,20 @@ interface Read {
  *   "Tekrar dene".
  * - Atama ve kaldırma okunan sürümle gider; dönen sürüm `onVersion` ile ekranın sürümü olur, yani
  *   aynı ekrandaki profil kaydetmesi `409` vermez ve kaydedilmemiş form değerleri yerinde kalır.
+ * - `0026` QA 2 BULGU-1 — sürüm bir ref'ten okunur: yükleme sürerken profil kaydedilirse atama
+ *   yüklemenin BAŞLADIĞI andaki değil, o anki sürümle gider. Profil kaydı ve ardından gelen yeniden
+ *   okuma sürerken (`disabled`) dosya seçici ve düğmeler kapalıdır.
  */
 export function GalleryLogoSection({
   logoMediaAssetId,
   version,
   onChange,
+  disabled = false,
 }: {
   readonly logoMediaAssetId: string | null
   readonly version: number
   readonly onChange: (logoMediaAssetId: string | null, version: number) => void
+  readonly disabled?: boolean
 }) {
   const { locale, t } = useLocale()
   const input = useRef<HTMLInputElement>(null)
@@ -49,6 +54,11 @@ export function GalleryLogoSection({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tick, setTick] = useState(0)
+  const latestVersion = useRef(version)
+
+  useEffect(() => {
+    latestVersion.current = version
+  }, [version])
 
   useEffect(() => {
     if (logoMediaAssetId === null) {
@@ -91,7 +101,7 @@ export function GalleryLogoSection({
     setError(null)
     try {
       const uploaded = await uploadMediaAsset(file, locale, undefined, 'logo')
-      const next = await assignGalleryLogo(uploaded.id, version, locale)
+      const next = await assignGalleryLogo(uploaded.id, latestVersion.current, locale)
       onChange(uploaded.id, next)
     } catch (cause) {
       setError(problem(cause))
@@ -107,7 +117,7 @@ export function GalleryLogoSection({
     setBusy(true)
     setError(null)
     try {
-      onChange(null, await removeGalleryLogo(version, locale))
+      onChange(null, await removeGalleryLogo(latestVersion.current, locale))
     } catch (cause) {
       setError(problem(cause))
     } finally {
@@ -177,6 +187,7 @@ export function GalleryLogoSection({
           <Button
             variant="secondary"
             loading={busy}
+            disabled={disabled}
             onClick={() => void retry()}
             data-testid="gallery-logo-retry"
           >
@@ -200,7 +211,7 @@ export function GalleryLogoSection({
           type="file"
           accept="image/jpeg,image/png,image/webp"
           aria-describedby="gallery-logo-hint"
-          disabled={busy}
+          disabled={busy || disabled}
           data-testid="gallery-logo-file"
           onChange={(event) => {
             const file = event.target.files?.[0]
@@ -213,6 +224,7 @@ export function GalleryLogoSection({
           <Button
             variant="secondary"
             loading={busy}
+            disabled={disabled}
             onClick={() => void remove()}
             data-testid="gallery-logo-remove"
           >
