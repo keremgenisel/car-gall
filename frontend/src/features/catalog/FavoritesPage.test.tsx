@@ -375,4 +375,20 @@ describe('favoriler ekranı', () => {
     )
     expect((document.activeElement as HTMLAnchorElement).getAttribute('href')).toBe(`/tr/cars/${A}`)
   })
+  it('frontend-003 QA 2 BULGU-4: Depoda 30 öğe varken ekran en çok 24 okuma yapar', async () => {
+    favoriler(
+      ...Array.from(
+        { length: 30 },
+        (_, index) =>
+          [`a-2020-${String(index).padStart(6, '0')}`, 'A', 2020] as [string, string, number],
+      ),
+    )
+    ekran()
+
+    await screen.findByTestId('favorites-list')
+    expect(vi.mocked(fetchListingDetail).mock.calls.length).toBeLessThanOrEqual(24)
+    expect(
+      within(screen.getByTestId('favorites-list')).getAllByTestId('listing-card'),
+    ).toHaveLength(24)
+  })
 })

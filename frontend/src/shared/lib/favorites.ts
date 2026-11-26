@@ -27,6 +27,9 @@ export type FavoriteOutcome = 'added' | 'removed' | 'limit' | 'failed'
 
 const SLUG = /^[a-z0-9-]{1,160}$/
 
+/** D9 — deneme yazmasının anahtarı; kaydın kendisine dokunmaz. */
+const PROBE = 'cargallery.probe'
+
 let store: Storage | null | undefined
 let items: readonly Favorite[] | undefined
 let outcome: FavoriteOutcome | null = null
@@ -36,8 +39,8 @@ function storage(): Storage | null {
   if (store === undefined) {
     try {
       const candidate = window.localStorage
-      candidate.setItem(`${FAVORITES_KEY}.probe`, '1')
-      candidate.removeItem(`${FAVORITES_KEY}.probe`)
+      candidate.setItem(PROBE, '1')
+      candidate.removeItem(PROBE)
       store = candidate
     } catch {
       store = null
@@ -72,7 +75,10 @@ function read(): readonly Favorite[] {
     }
 
     const seen = new Set<string>()
-    return record.items.filter((item) => valid(item) && !seen.has(item.slug) && seen.add(item.slug))
+    // QA 2 BULGU-4 — elle yazılmış dev bir kayıt sayaçta ve ekranda 24'ü aşmaz (D5): ilk 24.
+    return record.items
+      .filter((item) => valid(item) && !seen.has(item.slug) && seen.add(item.slug))
+      .slice(0, FAVORITES_LIMIT)
   } catch {
     return []
   }

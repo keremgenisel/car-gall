@@ -193,4 +193,13 @@ describe('favoriler deposu', () => {
       ],
     })
   })
+  it("frontend-003 QA 2 BULGU-4: Depoya elle 30 geçerli öğe yazılsa da okuma ilk 24'tür", () => {
+    digerSekmeYazar(
+      Array.from({ length: 30 }, (_, index) => ilan(`a-2020-${String(index).padStart(6, '0')}`)),
+    )
+
+    const okunan = renderHook(() => useFavorites()).result.current
+    expect(okunan).toHaveLength(24)
+    expect(okunan[0]!.slug).toBe('a-2020-000000')
+  })
 })
