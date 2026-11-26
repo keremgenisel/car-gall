@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaya sunuldu (2026-11-26)** · D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26) · sahibin SS1 cevabı işlendi · QA 1 CLARIFY turu bekliyor |
+| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1, kartlar arası X1–X3 → D10, D11, D12 güncellendi; AC-66–AC-72) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (şube) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel şube formu, vitrin altlığı) |
 | **Bağımlı spec'ler** | `0003` (**X2**, **C9**, **C10**, **B4**) · `0004` (**D1**, **D15**, **D16**, **D17**, **AC-52**) · `0014` (altlık, **AC-14**) · `0020` (şube formu, **R16** sürüm, **D21** kapatılmış şube) · **`0024`** (okuma sözleşmesinin ve altlığın o kartla aldığı hâl). **Sonra gelen:** `0026`. |
-| **Karar bekliyor** | yok — D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26). SS1 cevaplandı (sahip kararı, 2026-11-26). SS2 ve SS3'e sahip itiraz etmedi; öneri Proje Yöneticisi kararıyla kalır. |
+| **Karar bekliyor** | yok — D1–D15 onaylandı (Proje Yöneticisi kararı, 2026-11-26), CLARIFY turu işlendi. SS1 cevaplandı (sahip kararı, 2026-11-26). SS2 ve SS3'e sahip itiraz etmedi; öneri Proje Yöneticisi kararıyla kalır. |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26):** `0004` **SS3**'e "evet": şube çalışma saatleri
 > panelden girilsin, vitrinde ve yapısal veride (`openingHoursSpecification`) görünsün; `0004`'ten
@@ -17,6 +17,10 @@
 > **bu kartın hemen ardından ayrı bir iş** (X1, X2). SS2 (altlıkta şube başına yedi satır) ve SS3
 > (her dilde Pazartesi) için sahip itiraz etmedi: öneriler **Proje Yöneticisi kararı** olarak
 > kalır (D6, D7). Kriter değişmedi.
+>
+> **QA CLARIFY turu (QA 1, 2026-11-26; Proje Yöneticisi kararları):** B1 ve kartlar arası X1–X3
+> işlendi. **D10**, **D11** ve **D12** yerinde güncellendi ve "CLARIFY" diye işaretlendi. Yeni D yok.
+> Yeni kriterler **AC-66–AC-72**. Var olan numaralar değişmedi.
 
 ---
 
@@ -178,7 +182,7 @@ yedi günün saatleri görünür ve aynı saatler şubenin yapısal verisinde de
 | `tests/Host.Tests/GaleriPublicUcTests.cs:31` (`0014/AC-14`) | şube öğesi `address, name, phone` | `address, name, openingHours, phone` (**AC-41**) |
 | `tests/Dealership.Tests/Integration/GaleriPublicOkumaTests.cs:76-77` | `PublicBranchDto` üç parametreli eşitlik | kurucu değişir. Programsız şubede beklenen değer `openingHours: null` ile aynı |
 | `tests/Host.Tests/SeoBelgeTests.cs:547-551` (`0004/AC-50`) ve `PublicBranchDto` kuran diğer testler | üç parametreli kurucu | kurucu değişir, beklenen değer değişmez |
-| `tests/Host.Tests/SeoBelgeTests.cs:561-573` (`0004/AC-52`, `0024`'ten sonra `0024` AC-45 hâli) | `openingHoursSpecification` yok | listeden çıkar (**AC-55**) |
+| `tests/Host.Tests/SeoBelgeTests.cs:561-573` (`0004/AC-52`, `0024`'ten sonra `0024` AC-45 hâli) | `openingHoursSpecification` yok | listeden çıkar (**AC-55**). Test çok etiketli kalır: `0004/AC-52, 0024/AC-45, 0025/AC-55` (CLARIFY X3) |
 | `frontend/src/app/HomePage.test.tsx`, `BultenBolumu.test.tsx`, `AnaSayfaMetinleri.test.tsx` | `PublicGallery` sahte şubeleri | şube tipi değişir. Programsız şubede altlık beklentileri değişmez |
 | `0020`'nin şube kaydetme/açma testleri (`tests/Host.Tests/GaleriYonetimiZinciriTests.cs` ve `tests/Dealership.Tests`) | programsız gövde | **değişmez** (**D11**, **AC-25**) |
 
@@ -313,8 +317,12 @@ kararı, 2026-11-26: sahip SS2'ye itiraz etmedi.)*
   hiçbiri başka bir günle aynı (`opens`, `closes`) çiftini taşımıyor. Şube sayısıyla doğrusal büyür.
 - **(b)** İlk paket ADR 0013'ün protokolüyle `main` tabanına göre **en çok 512 B** büyür.
 - **(c)** C3 ana sayfa, liste ve detayda yeşil kalır. Perf koşusu her aktif şubeye (a)'nın
-  programını tohumlar. Bir sayfanın medyanı **2450 ms**'yi aşarsa ikinci koşu istenir ve LCP öğesi
-  PR'a yazılır.
+  programını tohumlar. *(CLARIFY X2(c), koddan ölçüldü:)* perf koşusunda **iki aktif şube** var:
+  ikisi de kurulum tohumunun (`SeedInitialDealership.cs:24-37`, durum `1` = Aktif). Vitrin
+  tohumunun "Main Branch" adı (`ShowcaseSeeder.cs:80-85`) `VehicleCatalog`'un kopyasıdır, bir
+  `Dealership` şubesi değildir. Yani ölçülen belge (a)'nın programını iki kez taşır. *(CLARIFY
+  X2(a):)* Koşu `0024`'ün tohumunu (`0024` AC-56: altı hesap, sınır uzunlukta) **korur**. Bir
+  sayfanın medyanı **2450 ms**'yi aşarsa ikinci koşu istenir ve LCP öğesi PR'a yazılır.
 
 *Gerekçe:* bir öğe yaklaşık 95 B, 21 öğe yaklaşık 2 kB. Liste altlıkta, ilk ekranın altında.
 *Bedel:* çok şubeli galeride belge şube başına büyür.
@@ -324,8 +332,14 @@ kararı, 2026-11-26: sahip SS2'ye itiraz etmedi.)*
   eski sürüm `409` döner (`0020` **D17**).
 - Hata varsa şubenin **hiçbir alanı** değişmez.
 - Başarılı değişiklik sürümü bir artırır.
-- Gövdede alan **yoksa** kayıtlı program değişmez. Açmada program yok demektir. Yedi günü boş bir
-  program (ya da boş nesne) programı **siler** (D4).
+- Gövdede alan **yoksa** kayıtlı program değişmez. Açmada program yok demektir. *(CLARIFY X1:)*
+  **Açık `null`, alanın yokluğuyla aynıdır: değişmez. Silmenin tek yolu yedi boş gündür.** Okuma
+  "program yok"u `null` olarak verir (D8), yani GET → PUT gidiş-dönüşündeki `null` programı silmez.
+  Ayrımı nasıl kuracağı (ör. `JsonElement`, `Optional<T>`) DEV'in plan kararıdır.
+- *(CLARIFY B1:)* Gövde program taşıyorsa **yedi gün anahtarının hepsini** taşır. Eksik gün `422`
+  `opening_hours.missing_day` döner. Gün kodu **harfe duyarlıdır**: `Monday`, `opening_hours.unknown_day`
+  döner. Yedi günün hepsi boş dizi olan program, programı **siler** (D4). Boş nesne (`{}`) yedi günü
+  eksik bir programdır, yani `missing_day` döner.
 - Kapatılmış şubede değişiklik `409` `branch.closed_read_only` döner (`0020` **D21**). Geçici kapalı
   şubenin programı değiştirilebilir.
 - Program değişikliği entegrasyon olayı üretmez.
@@ -339,7 +353,10 @@ kararı, 2026-11-26: sahip SS2'ye itiraz etmedi.)*
 - `opening_hours.end_not_after_start`: bitiş başlangıçtan sonra değil. Aralığın `end` alanında.
 - `opening_hours.too_many_intervals`: günde üçten fazla aralık. Gün alanında.
 - `opening_hours.overlap`: çakışma ya da uç uca değme. Gün alanında.
-- `opening_hours.unknown_day`: bilinmeyen gün kodu. Gönderilen kodun alanında.
+- `opening_hours.unknown_day`: bilinmeyen gün kodu. Harfe duyarlıdır (`Monday` bilinmeyen koddur).
+  Gönderilen kodun alanında.
+- `opening_hours.missing_day`: program taşıyan gövdede eksik gün. Eksik günün alanında
+  (`openingHours.<gün>`). *(CLARIFY B1.)*
 
 *Gerekçe:* `0020`'nin alan hatası deseni. Sıralı saklama (D3) hatanın girilen sıraya göre
 gösterilmesini engellemez, çünkü doğrulama sıralamadan önce yapılır.
@@ -530,13 +547,32 @@ yerel saat aralığından oluşan programı. Aralıksız gün kapalıdır. İsti
 
 - **AC-64.** Bu kartın migration'ı yalnız `dealership` şemasına dokunur.
 - **AC-65.** Panel bölümünün metinleri (başlık, yardım metni, "Aralık ekle", "Kaldır", "Önceki günle
-  aynı", "Kapalı" ve beş hata kodu) ile vitrinin iki metni tr, ar ve en'de vardır. Eksik anahtar
+  aynı", "Kapalı" ve altı hata kodu) ile vitrinin iki metni tr, ar ve en'de vardır. Eksik anahtar
   kontrolü yeşildir.
+
+### QA CLARIFY turuyla eklenenler (2026-11-26)
+
+- **AC-66.** `"openingHours": null` taşıyan bir şube kaydetmesi kayıtlı programı değiştirmez (CLARIFY X1).
+- **AC-67.** Bir şubenin `GET /api/admin/branches/{id}` yanıtını değiştirmeden `PUT` olarak geri
+  göndermek kayıtlı programı değiştirmez. Programsız şube programsız kalır.
+- **AC-68.** `sunday` anahtarı olmayan bir programla kaydetme `422` döner. Yanıt `openingHours.sunday`
+  alanında `opening_hours.missing_day` taşır.
+- **AC-69.** Boş nesne (`{}`) programla kaydetme `422` döner ve yedi günün her biri için
+  `opening_hours.missing_day` taşır. Kayıtlı program değişmez.
+- **AC-70.** `Monday` anahtarıyla (büyük harfle) kaydetme `422` döner. Yanıt `openingHours.Monday`
+  alanında `opening_hours.unknown_day` taşır.
+- **AC-71.** Perf koşusu `0024`'ün tohumunu korur: koşunun ana sayfa belgesinin `sameAs`'ı altı adres
+  taşır (`0024` AC-56) ve iki aktif şubenin her biri AC-60'ın programını taşır.
+- **AC-72.** Yedi gün anahtarının hepsi boş dizi olan programla kaydetme programı siler (AC-24) ve
+  `missing_day` döndürmez.
 
 ---
 
 ## Definition of Done
 
+- [x] Önerilen kararlar (**D1–D15**) onaylandı (Proje Yöneticisi kararı, 2026-11-26) ve QA CLARIFY
+      turu (B1, kartlar arası X1–X3 → **D10**, **D11**, **D12** düzeltmeleri, AC-66–AC-72) işlendi.
+      *(Takım Yöneticisi (ajan) kararı, 2026-11-26.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0025-ac<n>.png`),
       boş ve hata durumları dâhil; panel bölümünün ve altlığın Arapça görüntüsü de var.
@@ -552,6 +588,9 @@ yerel saat aralığından oluşan programı. Aralıksız gün kapalıdır. İsti
       bunun yerine geçmez.
 - [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu ve uygulamada bulunan ekler) PR'da listelendi.
+      *(CLARIFY X3:)* Etiketi değişen eski testler **çok etiketli** kalır ve eski etiketini
+      kaybetmez: `0004/AC-52, 0024/AC-45, 0025/AC-55: …`, `0014/AC-14, 0025/AC-41: …` (mevcut
+      desen `0017/AC-51, AC-52, AC-56`).
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in
