@@ -803,8 +803,14 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 - **AC-54.** Karşılaştırma ekranı yalnız yanıttaki nitelikleri basar (vitest). Yanıtta olmayan
   anahtar için satır yoktur. Karşılaştırma ekranının kaynağında alan ayarı okuması yoktur:
   `field-settings` / alan ayarı tipi grep'i boştur.
-- **AC-55.** e2e: panelden bir alan kapatılır → karşılaştırmada o alanın ne satırı ne
-  "Belirtilmemiş" hücresi vardır; alan açılınca satır geri gelir.
+- **AC-55.** Alan ayarı veritabanında kapatılır (panelde bu yol yok — `0002` AC-12/13 ile aynı
+  yöntem) → karşılaştırmada o alanın ne satırı ne "Belirtilmemiş" hücresi vardır; alan açılınca
+  satır geri gelir. Ölçü üç parçadır: (a) gerçek veritabanında alan açıkken detay okumasında
+  anahtar VAR, kapatılıp yeniden yansıtılınca YOK, açılınca geri gelir (aynı testte);
+  (b) vitest: yanıtta olmayan anahtar için satır ve hücre yok (AC-52, AC-54); (c) e2e: ekrandaki
+  satır kümesi gerçek detay yanıtının anahtar kümesidir (sayı ve adlar).
+  *Revizyon (2026-11-26, AP-08): "panelden" ifadesi uygulanamıyordu — panelde ve admin API'de alan
+  ayarı yazma yolu yok — Takım Yöneticisi kararı.*
 - **AC-56.** Satır başlıkları detay ekranındaki alan adlarıyla aynıdır; hiçbir satırda başlık
   değerle aynı metin değildir ("Hatchback | Hatchback" yok). Alan adı eşlemesi kodda **tek**
   yerdedir; detay ve karşılaştırma onu içe aktarır.
