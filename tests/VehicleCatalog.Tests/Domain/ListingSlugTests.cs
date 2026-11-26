@@ -75,4 +75,69 @@ public sealed class ListingSlugTests
     {
         Assert.False(ListingSlug.TryParse(deger, out _));
     }
+
+    // ── 0002 E9 · kaçan hata (2026-11-26): uzunluk sınırı ──────────────────────────────────────
+
+    /// <summary>`ReferenceNames`'in sınırları: marka 80, model 120; tam ad "marka model".</summary>
+    private static readonly string EnUzunAd = "Marka" + new string('b', 75) + " " + "Model " + new string('m', 114);
+
+    public static TheoryData<string, int> Girdiler() => new()
+    {
+        { EnUzunAd, 2019 },
+        { new string('a', 201), 2024 },
+        { string.Join(' ', Enumerable.Repeat("Kelime", 34)), 1999 },
+        { "Şçğüöı İŞÇĞÜÖ " + new string('ğ', 150) + " Model", 2020 },
+        { "Mercedes-Benz " + string.Join('-', Enumerable.Repeat("AMG", 60)), 2021 },
+        { "Toyota Corolla", 2019 },
+        { "a " + new string('b', 147), 2019 },
+        { new string('c', 148) + " d", 2019 },
+    };
+
+    [Theory(DisplayName = "0002 E9 (kaçan hata): Create'in çıktısı her girdide TryParse'tan geçer ve en çok MaxLength (160) karakterdir; yıl ve kimlik soneki korunur")]
+    [MemberData(nameof(Girdiler))]
+    public void TryParsetanGecer_HerGirdide(string ad, int yil)
+    {
+        string slug = ListingSlug.Create(ad, yil, Kimlik).Value.Value;
+
+        Assert.InRange(slug.Length, 1, ListingSlug.MaxLength);
+        Assert.True(ListingSlug.TryParse(slug, out ListingSlug okunan));
+        Assert.Equal(slug, okunan.Value);
+        Assert.EndsWith($"-{yil}-000001", slug, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", slug, StringComparison.Ordinal);
+    }
+
+    [Fact(DisplayName = "0002 E9 (kaçan hata): En uzun marka + model adı kelime sınırında kısalır: marka kalır, model kelimesi yarıda kesilmez")]
+    public void KelimeSinirindaKisalir_EnUzunAd()
+    {
+        string slug = ListingSlug.Create(EnUzunAd, 2019, Kimlik).Value.Value;
+
+        // Ad parçası 160 − "-2019-000001" = 148 karaktere sığmalı; 81. karakterden sonra gelen
+        // "model-mmm…" kelimelerinden yarım kalanı atılır.
+        Assert.Equal("marka" + new string('b', 75) + "-model-2019-000001", slug);
+    }
+
+    [Fact(DisplayName = "0002 E9 (kaçan hata): Sınırdan uzun TEK kelimelik ad sınırda kesilir; ad parçası tam 148 karakter")]
+    public void SinirdaKesilir_TekKelime()
+    {
+        string slug = ListingSlug.Create(new string('a', 201), 2024, Kimlik).Value.Value;
+
+        Assert.Equal(new string('a', 148) + "-2024-000001", slug);
+        Assert.Equal(ListingSlug.MaxLength, slug.Length);
+    }
+
+    [Fact(DisplayName = "0002 E9 (kaçan hata): Sığan ad değişmez — tam 148 karakterlik ad kesilmez; bugünkü kısa adların adresi aynı")]
+    public void Degismez_SiganAd()
+    {
+        string tam = "a-" + new string('b', 146);
+        Assert.Equal(tam + "-2019-000001", ListingSlug.Create(tam.Replace('-', ' '), 2019, Kimlik).Value.Value);
+        Assert.Equal("toyota-corolla-2019-000001", ListingSlug.Create("Toyota Corolla", 2019, Kimlik).Value.Value);
+    }
+
+    [Fact(DisplayName = "0002 E9 (kaçan hata): TryParse'ın sınırı MaxLength'tir: 160 karakter tanınır, 161 tanınmaz")]
+    public void Sinir_TekSabittenGelir()
+    {
+        Assert.Equal(160, ListingSlug.MaxLength);
+        Assert.True(ListingSlug.TryParse(new string('a', ListingSlug.MaxLength), out _));
+        Assert.False(ListingSlug.TryParse(new string('a', ListingSlug.MaxLength + 1), out _));
+    }
 }

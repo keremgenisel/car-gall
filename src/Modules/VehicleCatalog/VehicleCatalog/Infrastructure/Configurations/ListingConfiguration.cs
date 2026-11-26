@@ -39,7 +39,7 @@ internal sealed class ListingConfiguration : IEntityTypeConfiguration<Listing>
         // karakterinden geliyor ve çakışma teorik olarak mümkün.
         builder.Property(listing => listing.Slug)
             .HasColumnName("slug")
-            .HasMaxLength(160)
+            .HasMaxLength(ListingSlug.MaxLength)
             .HasConversion(CatalogConverters.ListingSlug);
 
         builder.HasIndex(listing => listing.Slug)
