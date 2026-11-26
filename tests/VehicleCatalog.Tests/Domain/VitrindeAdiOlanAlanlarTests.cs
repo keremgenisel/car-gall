@@ -46,26 +46,45 @@ public sealed class VitrindeAdiOlanAlanlarTests
     {
         Assert.True(
             DetaySayfasi.Value.Contains($"case '{anahtar}':", StringComparison.Ordinal),
-            $"`{anahtar}` ilan detayında satır olabilir ama `ListingDetailPage.attributeName`'de adı "
+            $"`{anahtar}` ilan detayında satır olabilir ama `attributeName.ts`'de adı "
             + "yok: ekran başlık sütununa değeri basar (\"Değer | Değer\"). Eşlemeye `case` ve "
             + "`detail.field.*` çevirisi eklenir.");
     }
 
-    private static readonly Lazy<string> DetaySayfasi = new(() =>
+    /// <summary>
+    /// `frontend-003` **D11** — eşleme TEK dosyadadır: ilan detayı ve karşılaştırma tablosu onu içe
+    /// aktarır. İkinci bir kopya bu kapının görmediği ikinci bir liste olurdu; yeni bir alan detayda
+    /// adlanır, kopyada "Değer | Değer" basar (`0002`'nin kaçan hatası).
+    /// </summary>
+    [Fact(DisplayName = "frontend-003/AC-57: Alan adı eşlemesi `frontend/src` altında tek dosyadadır — `case 'body_type':` tam olarak bir dosyada geçer ve o dosya `attributeName.ts`'dir")]
+    public void TekDosyada_AlanAdiEslemesi()
     {
-        const string Goreceli = "frontend/src/features/catalog/ListingDetailPage.tsx";
+        string kaynak = Path.Combine(DepoKoku.Value, "frontend", "src");
+        List<string> dosyalar =
+        [
+            .. Directory.EnumerateFiles(kaynak, "*.ts*", SearchOption.AllDirectories)
+                .Where(dosya => File.ReadAllText(dosya).Contains("case 'body_type':", StringComparison.Ordinal))
+                .Select(dosya => Path.GetRelativePath(kaynak, dosya).Replace('\\', '/')),
+        ];
 
+        Assert.Equal(["features/catalog/attributeName.ts"], dosyalar);
+    }
+
+    private const string Eslemesi = "frontend/src/features/catalog/attributeName.ts";
+
+    private static readonly Lazy<string> DepoKoku = new(() =>
+    {
         for (DirectoryInfo? dizin = new(AppContext.BaseDirectory); dizin is not null; dizin = dizin.Parent)
         {
-            string aday = Path.Combine(dizin.FullName, Goreceli);
-
-            if (File.Exists(aday))
+            if (File.Exists(Path.Combine(dizin.FullName, Eslemesi)))
             {
-                return File.ReadAllText(aday);
+                return dizin.FullName;
             }
         }
 
         throw new FileNotFoundException(
-            $"`{Goreceli}` {AppContext.BaseDirectory} ve üstündeki hiçbir dizinde bulunamadı.");
+            $"`{Eslemesi}` {AppContext.BaseDirectory} ve üstündeki hiçbir dizinde bulunamadı.");
     });
+
+    private static readonly Lazy<string> DetaySayfasi = new(() => File.ReadAllText(Path.Combine(DepoKoku.Value, Eslemesi)));
 }
