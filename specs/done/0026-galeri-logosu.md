@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | **Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı)** · QA CLARIFY turu işlendi (B1–B6, kartlar arası X1–X3 → D1, D3, D4, D5, D11 güncellendi, **D16**, **D17** eklendi; AC-69–AC-79) |
+| **Durum** | Tamamlandı (2026-11-26) — kararlar ve kriterler #130 → `12c2043`, uygulama #135 → `5e69a5a` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Media` (logo işleme türü) · `Dealership` (galeri profilinin logo bağı) · `VehicleCatalog` (araca yalnız fotoğraf türü bağlanır, **D16** — CLARIFY B1) · `Host` (belge: üst çubuk logosu, `og:image`, `AutoDealer.logo`) · Frontend (panel Galeri ekranı, vitrin üst çubuğu) |
@@ -712,27 +712,27 @@ ilgisiz bir değişikliğe bağlar.
 - [x] Önerilen kararlar (**D1–D15**) onaylandı (Proje Yöneticisi kararı, 2026-11-26) ve QA CLARIFY
       turu (B1–B6, kartlar arası X1–X3 → **D16**, **D17** ve kriter düzeltmeleri, AC-69–AC-79)
       işlendi. *(Takım Yöneticisi (ajan) kararı, 2026-11-26.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0026-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. *(79/79; eşleme PR #135'te. AC-4'ün e2e yarısı yok — saydamlık gerçek Skia çıktısında ölçülüyor, CORS gerekçesi PR'da.)*
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0026-ac<n>.png`),
       boş, işleniyor ve hata durumları dâhil; üst çubuğun ve panel bölümünün Arapça görüntüsü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok (`Dealership` → `Media` referansı yok).
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor (`media`, D14).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi ("Galeri Logosu", D15).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok (`Dealership` → `Media` referansı yok).
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor (`media`, D14).
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi ("Galeri Logosu", D15).
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi
       (Host'un `Media.Contracts` okuması ve logo işleme türü).
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). *(`ea1ce2e`: Backend, Frontend, E2E, C3 yeşil — ana sayfa 2409, liste 2129 (LCP öğesi üst çubuk logosu, D11(e) izinli), detay 2409 ms.)*
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
+      bunun yerine geçmez. *(2026-11-26, merge'den önce, QA 2: 0/0/4 — üçü `ea1ce2e`'te işlendi, dalda kalan merge commit'i squash kapattı.)*
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu ve uygulamada bulunan ekler) PR'da listelendi.
       *(CLARIFY X3:)* Etiketi değişen eski testler **çok etiketli** kalır ve eski etiketini
       kaybetmez: `0004/AC-52, 0024/AC-45, 0025/AC-55, 0026/AC-52: …`, `0004/AC-32, 0026/AC-47, AC-48: …`,
-      `0004/AC-33, 0026/AC-44, AC-45, AC-48: …` (mevcut desen `0017/AC-51, AC-52, AC-56`).
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+      `0004/AC-33, 0026/AC-44, AC-45, AC-48: …` (mevcut desen `0017/AC-51, AC-52, AC-56`). *(Tablo dışı tek tip değişikliği: `GaleriPaneli.test.tsx` `logoMediaAssetId: null`. `GorunenAdEtiketiTests` sahteleri `IGalleryBrandingQueries`'e geçti, iddialar aynı — Takım Yöneticisi kararı.)*
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. *(Takım Yöneticisi (ajan), `5e69a5a`, 2026-11-26.)*
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in
       TAMAMI koşturuldu.
 
@@ -742,13 +742,20 @@ ilgisiz bir değişikliğe bağlar.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | | `git cat-file -e <impl>^:specs/0026-galeri-logosu.md` |
-| **Kriter sayısı: önce → bugün** | → | |
-| **Spec revizyon sayısı** | | Onay anındaki CLARIFY turu sayılır (ADR 0008 / K3). |
-| **Düzeltme turu sayısı** | | `0` yalnız T10 `[x]` ise. |
-| **Dış bulgu (gerçek/gürültü)** | / | |
-| **Uygulama içi bulgu** | | |
-| **Regresyon sayısı** | | |
-| **Kaçan hata** | | Arşive taşınırken `izleniyor`. |
+| **Kriterler önce `main`'de miydi?** | **evet** | `git cat-file -e 5e69a5a^:specs/0026-galeri-logosu.md` → var; kararlar ve 79 kriter #130 ile (`12c2043`) uygulamadan önce girdi. |
+| **Kriter sayısı: önce → bugün** | **79 → 79** | İlk öneri 61; sahip cevabı (logo altlıkta da) 68'e, CLARIFY 79'a çıkardı — üçü de onaydan önce. |
+| **Spec revizyon sayısı** | **2** | (1) Onay anındaki CLARIFY turu (K3): 0026 B1 (logo türü araca bağlanamaz → D16), B2 (üst çubuk logosu lazy değil), B3 (ayrı marka arayüzü → D17), X2 (birleşik bütçe) ve küçükler. (2) `main`'den sonra AP-08: AC-56'nın "ilk paket" tanımı 0024 AC-55'e hizalandı. |
+| **Düzeltme turu sayısı** | **1** | QA 2'nin dört bulgusu tek turda işlendi. T10 `[x]`. |
+| **Dış bulgu (gerçek/gürültü)** | **4 / 0** | BULGU-1: ekran `save()` dönen sürümü benimsemiyordu; profil kaydından hemen sonraki logo işlemi bayat sürümle 409 alabiliyordu — AC-73/74'ün ekran yarısı ölçülmüyordu · BULGU-2: PR'daki ilk paket sayısı head'e ait değildi (+330 → +366) · BULGU-3: `<para>` `</summary>`'nin dışında kalmıştı (standart taramanın görmediği varyant) · BULGU-4: dalda merge commit. |
+| **Uygulama içi bulgu** | **5** | İlk C3 kırmızıydı: logo kutusu görsel inene kadar 0×0 kalıyordu (detay CLS 0.22) · mobilde logo adı iki satıra kırıp web fontuyla kaydırıyordu (liste CLS 0.039) · yorum/üye arasına ekleme iki kez (YorumKapisi yakaladı) · BULGU-1 düzeltilirken: yükleme kayıttan önce başlamışsa atama kapanıştaki eski sürümü kullanıyordu (ref ile çözüldü; ilk negatif kanıt N11 yeşil kalınca kilidi ayrıca ölçen test eklendi). |
+| **Regresyon sayısı** | **0** |  |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-26 (`5e69a5a`). |
 
 **Bu spec'ten çıkarılan ders:**
+
+**Yer ayırma, görselin boyutu bilinmeden de yapılmalı.** İlk C3, logonun kutusunun görsel inene
+kadar 0×0 kaldığını gösterdi (detay CLS 0.22); `width`/`height` öznitelikleri tek başına yetmedi,
+çünkü CSS onları ezdi. Çözüm sabit blok yüksekliği + orandan genişlikti. İkinci ders: bir ekranda
+iki bağımsız işlem aynı sürüm belirtecini kullanıyorsa, birim testi "yeniden okuma dönmeden"
+ara hâlini ancak okumayı bilerek bekleterek görür (BULGU-1, hafızadaki "birim testi yeniden
+okumayı kaçırır" sınıfı).
