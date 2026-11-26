@@ -770,6 +770,26 @@ public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFacto
         }
     }
 
+    /// <summary>
+    /// QA 2 BULGU-2 — sunucu yolu ÇÖZÜLMÜŞ hâliyle sınıflandırır (<c>PathString</c>); uç da artık
+    /// bölüm adını çözerek karşılaştırıyor (`route.test.ts`). İki taraf aynı rotayı söyler.
+    /// </summary>
+    [Theory]
+    [InlineData("/tr/c%61rs", "List", null)]
+    [InlineData("/tr/c%61rs/" + Slug, "Detail", Slug)]
+    [InlineData("/tr/%61dmin", "NotFound", null)]
+    public void Siniflandirir_CozulmusYolla(string hamYol, string tur, string? slug) =>
+        Assert.Equal(new SeoPage(Enum.Parse<SeoPageKind>(tur), slug), SeoPage.Of(PathString.FromUriComponent(hamYol), "tr"));
+
+    [Fact]
+    public async Task Ayni_KodlanmisBolumAdi_Detay()
+    {
+        (HttpResponseMessage yanit, IDocument belge, _) = await GetAsync($"/tr/c%61rs/{Slug}");
+
+        Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
+        Assert.Equal([$"{K}/tr/cars/{Slug}"], belge.Kanonikler());
+    }
+
     // ── Korunan davranış ───────────────────────────────────────────────────
 
     [Fact(DisplayName = "0004/AC-80: Görselli bir ilanın detay belgesindeki ön yükleme bağlantısı (`rel=\"preload\"`, `href`, `imagesrcset`, `imagesizes`, `fetchpriority=\"high\"`) `0016b`'nin kriterleriyle aynıdır ve belgede bu kartın eklediği tüm etiketlerden **önce** gelir.")]
