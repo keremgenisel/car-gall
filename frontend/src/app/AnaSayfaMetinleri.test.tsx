@@ -82,7 +82,11 @@ beforeEach(() => {
   vi.mocked(catalog.fetchReferenceTerms).mockResolvedValue([])
   vi.mocked(catalog.fetchShowcaseTotal).mockResolvedValue(12)
   vi.mocked(catalog.fetchFeaturedListings).mockResolvedValue([ILAN])
-  vi.mocked(fetchGallery).mockResolvedValue({ displayName: 'Oto Galeri', branches: [] })
+  vi.mocked(fetchGallery).mockResolvedValue({
+    displayName: 'Oto Galeri',
+    branches: [],
+    socialLinks: [],
+  })
 })
 
 afterEach(() => {

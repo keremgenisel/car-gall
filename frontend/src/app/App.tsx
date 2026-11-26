@@ -4,6 +4,7 @@ import { HomeFooter } from './HomeFooter'
 import { useCorporateLinks } from './useCorporateLinks'
 import { HomePage } from './HomePage'
 import { BranchList } from '../features/dealership/BranchList'
+import { SocialLinks } from '../features/dealership/SocialLinks'
 import { useGallery } from '../features/dealership/useGallery'
 import { LocaleProvider } from './LocaleProvider'
 import { useLocale } from './localeContext'
@@ -130,7 +131,13 @@ function HomeRoute() {
 
   return (
     <AppShell
-      footer={<HomeFooter branches={<BranchList load={gallery} />} corporate={corporate} />}
+      footer={
+        <HomeFooter
+          branches={<BranchList load={gallery} />}
+          corporate={corporate}
+          social={<SocialLinks load={gallery} />}
+        />
+      }
     >
       <HomePage
         gallery={gallery}

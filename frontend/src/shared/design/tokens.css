@@ -144,6 +144,10 @@
   /* --- Düzen --- */
   --layout-max-inline-size: 1200px;
   --card-min-inline-size: 240px;
+
+  /* `0024` D6 — dokunma hedefi (WCAG 2.5.5) ve altlığın platform simgesi. */
+  --touch-target-min-size: 44px;
+  --social-icon-size: 24px;
   --media-aspect-ratio: 4 / 3;
 
   /* Daraltma çubuğunun ölçülmüş yüksekliği: legend + seçenek satırı + özet satırı.

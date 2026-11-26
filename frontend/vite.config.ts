@@ -9,6 +9,15 @@ export default defineConfig({
   build: {
     outDir: '../src/Host/wwwroot',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // `0024` D9(b) — simge yolları SABİT adlı tek parçada (`social-icons-<hash>.js`); giriş
+        // paketine girmez. Ad dosya adından değil buradan gelir (CLARIFY B4).
+        manualChunks(id) {
+          return id.includes('/features/dealership/socialIcons.') ? 'social-icons' : undefined
+        },
+      },
+    },
   },
   server: {
     proxy: {

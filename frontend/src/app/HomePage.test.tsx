@@ -36,6 +36,8 @@ const GALERI: PublicGallery = {
     { name: 'Ataşehir Şubesi', address: 'Ataşehir Bulvarı 5', phone: '+902165550001' },
     { name: 'Kadıköy Şubesi', address: 'Bağdat Caddesi 1', phone: '+902165550002' },
   ],
+  // `0024` — hesapsız kurulum: 0014'ün altlık beklentileri değişmez (0024 Context tablosu).
+  socialLinks: [],
 }
 
 function ekran(locale: AppLocale = 'tr') {
@@ -184,6 +186,35 @@ describe('0014 — altlık (R7)', () => {
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
     ).toEqual(['tel:+902165550001', 'tel:+902165550002', '/tr/cars', '/tr/', '/ar/', '/en/'])
+  })
+
+  it('0024/AC-38: Kurumsal sayfası olmayan, iki şubeli ve iki hesaplı kurulumda altlığın bağlantı hedefleri sırasıyla şube telefonları, /tr/cars, iki hesap, /tr/, /ar/, /en/', async () => {
+    vi.mocked(fetchGallery).mockResolvedValue({
+      ...GALERI,
+      socialLinks: [
+        { platform: 'instagram', url: 'https://www.instagram.com/otogaleri' },
+        { platform: 'youtube', url: 'https://www.youtube.com/@otogaleri' },
+      ],
+    })
+
+    ekran()
+
+    const altlik = await screen.findByTestId('home-footer')
+    await within(altlik).findByTestId('footer-social')
+    expect(
+      within(altlik)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual([
+      'tel:+902165550001',
+      'tel:+902165550002',
+      '/tr/cars',
+      'https://www.instagram.com/otogaleri',
+      'https://www.youtube.com/@otogaleri',
+      '/tr/',
+      '/ar/',
+      '/en/',
+    ])
   })
 
   it('0014/AC-67: Kurulumda yalnız tr ve en etkinken altlıkta /ar/ bağlantısı yoktur', async () => {
