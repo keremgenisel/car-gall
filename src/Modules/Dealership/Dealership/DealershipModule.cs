@@ -110,6 +110,11 @@ public static class DealershipModule
             provider.GetRequiredService<DealershipDbContext>(),
             parsed.Value));
 
+        // `0026` D17 — Host'un belgesi için ad + logo kimliği; aynı sınıf, ayrı dar yüzey.
+        services.AddScoped<IGalleryBrandingQueries>(provider => new PublicGalleryQueries(
+            provider.GetRequiredService<DealershipDbContext>(),
+            parsed.Value));
+
         return services;
     }
 

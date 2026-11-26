@@ -34,11 +34,6 @@ internal sealed class FakeMediaAssetQueries : IMediaAssetQueries
         return kimlik;
     }
 
-    /// <summary>
-    /// `0016b` — `Media`'nın gerçek kümesi gibi ÜÇ türevli varlık: kaynak <paramref name="en"/>×
-    /// <paramref name="boy"/>, türevler en uzun kenarda 400 / 800 / min(kaynak, 1600).
-    /// Hazır değilse türevsiz.
-    /// </summary>
     /// <summary>`0026` D16 — logo türünde, hazır ve logo türevli bir varlık.</summary>
     internal Guid EkleLogo()
     {
@@ -56,6 +51,11 @@ internal sealed class FakeMediaAssetQueries : IMediaAssetQueries
         return kimlik;
     }
 
+    /// <summary>
+    /// `0016b` — `Media`'nın gerçek kümesi gibi ÜÇ türevli varlık: kaynak <paramref name="en"/>×
+    /// <paramref name="boy"/>, türevler en uzun kenarda 400 / 800 / min(kaynak, 1600).
+    /// Hazır değilse türevsiz.
+    /// </summary>
     internal Guid EkleTurevli(MediaProcessingStatus status, int en = 1200, int boy = 900)
     {
         Guid kimlik = Guid.CreateVersion7();

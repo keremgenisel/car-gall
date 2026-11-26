@@ -76,4 +76,42 @@ internal sealed class GalleryCommands(DealershipDbContext context, DealershipLoc
 
         return Result.Success(gallery.Version);
     }
+
+    /// <summary>`0026` D8 · D9 — logo ataması; eski sürüm `409` (AC-12), sürüm bir artar (AC-11).</summary>
+    internal Task<Result<int>> AssignLogoAsync(int version, Guid mediaAssetId, CancellationToken cancellationToken) =>
+        mediaAssetId == Guid.Empty
+            ? Task.FromResult(Result.Failure<int>(FieldErrors.Single("mediaAssetId", Gallery.LogoMediaAssetRequired)))
+            : LogoAsync(version, gallery => gallery.AssignLogo(mediaAssetId), cancellationToken);
+
+    /// <summary>`0026` D8 · D9 — logo kaldırma; bağ silinir, varlık durur (AC-13).</summary>
+    internal Task<Result<int>> RemoveLogoAsync(int version, CancellationToken cancellationToken) =>
+        LogoAsync(version, gallery => gallery.RemoveLogo(), cancellationToken);
+
+    private async Task<Result<int>> LogoAsync(int version, Action<Gallery> change, CancellationToken cancellationToken)
+    {
+        Gallery? gallery = await context.Galleries.SingleOrDefaultAsync(cancellationToken);
+
+        if (gallery is null)
+        {
+            return Result.Failure<int>(new Error(Gallery.NotFound));
+        }
+
+        if (gallery.Version != version)
+        {
+            return Result.Failure<int>(new Error(ConcurrencyErrors.Lost));
+        }
+
+        change(gallery);
+
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<int>(new Error(ConcurrencyErrors.Lost));
+        }
+
+        return Result.Success(gallery.Version);
+    }
 }

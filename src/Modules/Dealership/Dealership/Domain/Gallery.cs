@@ -20,6 +20,9 @@ internal sealed class Gallery : Entity<Guid>
     internal const string DefaultLocaleDisplayNameRequired = "gallery.default_locale_display_name_required";
     internal const string DisplayNameTooLong = "gallery.display_name_too_long";
 
+    /// <summary>`0026` D9 — logo atamasında varlık kimliği yok ya da boş.</summary>
+    internal const string LogoMediaAssetRequired = "gallery.logo_media_asset_required";
+
     /// <summary>Tek satırın sabit kimliği; şema bu değeri bir CHECK kısıtıyla zorunlu kılar.</summary>
     internal static readonly Guid SingletonId = Guid.Parse("00000000-0000-7000-8000-00000000da01");
 
@@ -154,7 +157,23 @@ internal sealed class Gallery : Entity<Guid>
         return trimmed.Length == 0 ? null : trimmed;
     }
 
-    internal void SetLogo(Guid mediaAssetId) => LogoMediaAssetId = mediaAssetId;
+    /// <summary>
+    /// `0026` **D2** · **D8** — logo bağı. Kimliğin var olup olmadığı, hazırlığı ve türü burada
+    /// DOĞRULANMAZ: `Dealership` `Media`'yı okumaz (C1); vitrinde Host kontrol eder (D3). Atama da
+    /// kaldırma da profil sürümünü bir artırır (C9).
+    /// </summary>
+    internal void AssignLogo(Guid mediaAssetId)
+    {
+        LogoMediaAssetId = mediaAssetId;
+        Version++;
+    }
+
+    /// <summary>`0026` D8 — bağı siler; `Media`'daki varlığa dokunmaz (X10).</summary>
+    internal void RemoveLogo()
+    {
+        LogoMediaAssetId = null;
+        Version++;
+    }
 
     internal void SetRegistration(string? taxNumber, string? tradeRegistryNumber)
     {

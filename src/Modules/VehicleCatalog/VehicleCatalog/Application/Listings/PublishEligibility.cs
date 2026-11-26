@@ -34,19 +34,6 @@ namespace CarGallery.Modules.VehicleCatalog.Application.Listings;
 internal static class PublishEligibility
 {
     /// <summary>
-    /// Sağlanmayan koşulların **hepsi**. Boş liste = yayına alınabilir.
-    /// </summary>
-    /// <param name="vehicle">Yayına alınacak aracın agregatı.</param>
-    /// <param name="readyMediaAssetIds">
-    /// `Media`'ya göre `Hazır` varlıkların kimlikleri (**C4**: olay gövdesinden değil,
-    /// okuma yüzeyinden). Kesişim `Vehicle.EnsurePublishable` içinde alınıyor.
-    /// </param>
-    /// <param name="requiredFieldKeys">
-    /// O an **zorunlu** işaretli opsiyonel alanların anahtarları. Küme çalışma zamanında
-    /// değişiyor; **F2** gereği geriye dönük doğrulama yapılmıyor ama **A2 yayın anında
-    /// bağlayıcı**.
-    /// </param>
-    /// <summary>
     /// `0026` D16 · AC-70 — "hazır görsel" = hazır FOTOĞRAF. Hazır kümesi `ReadyAmongAsync`'ten,
     /// tür aynı varlıkların toplu okumasından: logo türündeki hazır varlık sayılmaz. Media'nın
     /// `ReadyAmongAsync` anlamı değişmez; süzgeç `VehicleCatalog`'un kuralıdır.
@@ -76,6 +63,19 @@ internal static class PublishEligibility
             .ToHashSet();
     }
 
+    /// <summary>
+    /// Sağlanmayan koşulların **hepsi**. Boş liste = yayına alınabilir.
+    /// </summary>
+    /// <param name="vehicle">Yayına alınacak aracın agregatı.</param>
+    /// <param name="readyMediaAssetIds">
+    /// `Media`'ya göre `Hazır` varlıkların kimlikleri (**C4**: olay gövdesinden değil,
+    /// okuma yüzeyinden). Kesişim `Vehicle.EnsurePublishable` içinde alınıyor.
+    /// </param>
+    /// <param name="requiredFieldKeys">
+    /// O an **zorunlu** işaretli opsiyonel alanların anahtarları. Küme çalışma zamanında
+    /// değişiyor; **F2** gereği geriye dönük doğrulama yapılmıyor ama **A2 yayın anında
+    /// bağlayıcı**.
+    /// </param>
     internal static IReadOnlyList<Error> Evaluate(
         Vehicle vehicle,
         IReadOnlySet<Guid> readyMediaAssetIds,
