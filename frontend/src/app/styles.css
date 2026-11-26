@@ -203,6 +203,26 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* `0026` D5 — logo adın satır başı tarafında; oran korunarak en çok 40 × 160 CSS piksel. Logosuz
+   üst çubuk bu karttan önceki hâlinde kalır (AC-34): esnek kutu yalnız logoluda. */
+.top-bar__brand--logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.top-bar__logo,
+.home-footer__logo {
+  block-size: auto;
+  inline-size: auto;
+  max-block-size: var(--logo-max-block-size);
+  max-inline-size: var(--logo-max-inline-size);
+}
+
+.home-footer__logo {
+  grid-column: 1 / -1;
+}
+
 a.top-bar__brand:hover {
   text-decoration: underline;
 }
