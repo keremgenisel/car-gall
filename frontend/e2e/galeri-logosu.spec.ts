@@ -201,7 +201,7 @@ test('0026 (C6, C7): Logo inmeden önce de üst çubuk logosunun kutusu son boyu
   expect(await page.locator('header.top-bar').boundingBox()).toEqual(cubukOnce)
 })
 
-test('0026 (C7, R4): Lighthouse mobil genişliğinde (412 px) logolu üst çubuk tek satırdır; ad kırılmaz, yani web fontu gelince üst çubuk yüksekliği değişmez', async ({
+test('0026 (C7, R4), frontend-003/AC-32: Lighthouse mobil genişliğinde (412 px) logolu üst çubuk tam iki satırdır (marka; sayaç + dil) ve yüksekliği ölçülen iki satırı aşmaz; ad kırılmaz, satır sayısı web fontu gelmeden ve geldikten sonra aynı', async ({
   page,
   browser,
 }) => {
@@ -217,9 +217,23 @@ test('0026 (C7, R4): Lighthouse mobil genişliğinde (412 px) logolu üst çubuk
     await expect(sayfa.getByTestId('top-bar-logo')).toBeVisible()
     const ad = sayfa.getByTestId('top-bar-brand').locator('bdi')
     expect(await ad.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe('nowrap')
+    // frontend-003 AC-32 (TM kararı, 2026-11-26): 40rem altında üst çubuk BİLEREK iki satır. Satırlar
+    // dikeyde ayrı: sayaç/dil satırı markanın altında başlar — fonttan önce ve sonra aynı.
+    const satirlar = () =>
+      sayfa.evaluate(() => {
+        const marka = document
+          .querySelector('[data-testid="top-bar-brand"]')!
+          .getBoundingClientRect()
+        const son = document.querySelector('.top-bar__end')!.getBoundingClientRect()
+        return son.top >= marka.bottom - 1 ? 2 : 1
+      })
+    expect(await satirlar()).toBe(2)
+    await sayfa.evaluate(() => document.fonts.ready)
+    expect(await satirlar()).toBe(2)
     const cubuk = (await sayfa.locator('header.top-bar').boundingBox())!
-    // Tek satır: 40 px logo + iki dikey dolgu + kenar. Ad kırılsaydı en az iki metin satırı (2 × 36 px).
-    expect(cubuk.height).toBeLessThan(72)
+    // Ölçülen iki satır 117 px: 12 + 40 (logo) + 8 (satır arası) + 44 (dokunma hedefi) + 12 + 1 (kenar).
+    // Pay 8 px: üçüncü satıra kırılma ya da adın kırılması (≥ 36 px'lik ek satır) bunu aşar.
+    expect(cubuk.height).toBeLessThanOrEqual(117 + 8)
     const logo = (await sayfa.getByTestId('top-bar-logo').boundingBox())!
     expect(logo.height).toBe(40)
   } finally {

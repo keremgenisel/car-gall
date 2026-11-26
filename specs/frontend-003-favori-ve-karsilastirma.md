@@ -488,6 +488,14 @@ Panelde yoktur. Üst çubuk taşmaz; ad iki biçimde ele alınır (B7):
   kısmı en az 6 karakterdir.
 - **Pay yetmezse sıra:** önce dar ekranda sayaç yalnız simge + sayı olur (erişilebilir ad tam
   cümle); bu da yetmezse dar ekranda logonun azami genişliği 160 px'ten **120 px**'e iner.
+- **Dar ekranda iki satır (AP-08 revizyonu, 2026-11-26 — Takım Yöneticisi kararı):** 40rem
+  (640 px) altında üst çubuk HER ZAMAN iki satırdır — 1. satır marka (logo + ad), 2. satır sayaç
+  ve dil değiştirici (satır sonunda); dil bağlantıları en az dokunma hedefi boyutundadır. Kırılma
+  içerikten bağımsızdır (sayaç 0 → 24, ad uzunluğu, dil). *Gerekçe:* ölçüm — 320 px'te dil
+  değiştirici tek başına 207 px, sayaçla satır sonu grubu 259 px, markaya 13 px kalıyordu; logo 120 px'e
+  inse de ad sığmıyordu. Logolu, 40 karakterlik ad, 24 favori ve üç dilin tam adıyla tek satırın
+  sığdığı en dar genişlik tr 560, en 560, ar 576 px; eşik 640 px. `main`'de de 320 px'te 160 px logo
+  taşıyordu (`0026` yalnız 412 px'i ölçmüştü) — bu kartla düzeldi.
 *Gerekçe:* altlık yalnız ana sayfada (Context, X8). Sıfırda gizlemek, ilk favoride üst çubuğu
 oynatırdı. *Bedel:* üst çubukta kalıcı bir öğe daha; dar ekranda adın üç noktaya düşme ihtimali
 artar ve dar ekranda logo küçülebilir.

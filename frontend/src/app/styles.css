@@ -295,6 +295,32 @@ a.top-bar__brand:hover {
   padding-inline: var(--space-5);
 }
 
+/*
+ * `frontend-003` D8 (AP-08 revizyonu) — dar ekranda üst çubuk HER ZAMAN iki satırdır: 1. satır
+ * marka (logo + ad), 2. satır sayaç + dil değiştirici. Kırılma içerikten bağımsızdır (sayaç 0 → 24,
+ * ad uzunluğu, dil); ilk boyamadan sonra satır sayısı değişmez. Eşik ölçüldü: logolu, 40 karakterlik
+ * ad, 24 favori ve üç dilin tam adıyla tek satırın sığdığı en dar genişlik ar'da 576 px; eşik
+ * 40rem (640 px). Dil bağlantıları burada en az dokunma hedefi boyutundadır.
+ */
+@media (width < 40rem) {
+  .top-bar__inner {
+    flex-wrap: wrap;
+    row-gap: var(--space-4);
+  }
+
+  /* İkinci satırın tamamı; öğeler satır sonunda kalır (ar'da solda, frontend-001 AC-4). */
+  .top-bar__end {
+    flex-basis: 100%;
+    justify-content: end;
+  }
+
+  .top-bar__locale {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--touch-target-min-size);
+  }
+}
+
 .top-bar__locales {
   display: flex;
   gap: var(--space-4);
