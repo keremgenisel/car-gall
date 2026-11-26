@@ -9,6 +9,7 @@ import { enabledLocales } from '../../../shared/lib/locale'
 import { SOCIAL_PLATFORM_NAMES } from '../socialPlatforms'
 import { Button, ErrorState, Skeleton } from '../../../shared/ui'
 import { DealershipField } from './DealershipField'
+import { GalleryLogoSection } from './GalleryLogoSection'
 import { fieldErrorsOf, isConflict, localizedPayload } from './dealershipForm'
 
 type Load =
@@ -62,6 +63,12 @@ export function GalleryProfilePage() {
   const [banner, setBanner] = useState<Banner>({ kind: 'none' })
   const [busy, setBusy] = useState(false)
   const [reload, setReload] = useState(0)
+  // `0026` D8 — logo işleminin döndürdüğü sürüm ve kimlik. Ekran onları benimser: aynı ekrandaki
+  // profil kaydetmesi `409` vermez ve form değerleri (kaydedilmemiş olanlar dâhil) yerinde kalır.
+  const [adopted, setAdopted] = useState<{
+    readonly logoMediaAssetId: string | null
+    readonly version: number
+  } | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -70,6 +77,7 @@ export function GalleryProfilePage() {
       .then((gallery) => {
         setLoad({ kind: 'ready', gallery })
         setValues(valuesOf(gallery, enabledLocales()))
+        setAdopted(null)
       })
       .catch((cause: unknown) => {
         if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
@@ -108,6 +116,8 @@ export function GalleryProfilePage() {
 
   const { gallery } = load
   const current = values
+  const version = adopted?.version ?? gallery.version
+  const logoMediaAssetId = adopted === null ? gallery.logoMediaAssetId : adopted.logoMediaAssetId
 
   async function save() {
     setBusy(true)
@@ -116,7 +126,7 @@ export function GalleryProfilePage() {
 
     try {
       await saveGalleryProfile(
-        gallery.version,
+        version,
         {
           commercialName: current.commercialName,
           taxNumber: current.taxNumber,
@@ -278,6 +288,12 @@ export function GalleryProfilePage() {
             </DealershipField>
           ))}
         </fieldset>
+
+        <GalleryLogoSection
+          logoMediaAssetId={logoMediaAssetId}
+          version={version}
+          onChange={(id, next) => setAdopted({ logoMediaAssetId: id, version: next })}
+        />
 
         <div className="admin-form__actions">
           <Button type="submit" loading={busy} data-testid="gallery-save">

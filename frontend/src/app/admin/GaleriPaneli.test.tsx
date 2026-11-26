@@ -80,6 +80,8 @@ const GALERI: AdminGallery = {
   // `0024` — panel okumasının yeni alanı; hesapsız kurulum, 0020'nin beklentileri değişmez.
   socialLinks: {},
   version: 4,
+  // `0026` — panel okumasının yeni alanı; logosuz galeri, önceki beklentiler değişmez.
+  logoMediaAssetId: null,
 }
 
 const SUBE: AdminBranch = {

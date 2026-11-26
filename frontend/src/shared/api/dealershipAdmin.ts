@@ -17,6 +17,8 @@ export interface AdminGallery {
   /** `0024` AC-32 — platform kodundan adrese; hiç hesap yoksa boş. */
   readonly socialLinks: Readonly<Record<string, string>>
   readonly version: number
+  /** `0026` D9 — atanmış logonun medya kimliği; yoksa `null`. */
+  readonly logoMediaAssetId: string | null
 }
 
 /** `0020` R1 — galeri profili kaydetme girdisi. */
@@ -142,6 +144,32 @@ export async function runBranchAction(
     'POST',
     `${ROOT}/branches/${encodeURIComponent(branchId)}/${action}`,
     { version },
+    locale,
+  )
+  return result?.version ?? version
+}
+
+/** `0026` D9 — logo ataması; okunan sürümle, yeni sürümü döner. Eski sürümle `409`. */
+export async function assignGalleryLogo(
+  mediaAssetId: string,
+  version: number,
+  locale: AppLocale,
+): Promise<number> {
+  const result = await sendJson<{ readonly version: number }>(
+    'PUT',
+    `${ROOT}/gallery/logo`,
+    { mediaAssetId, version },
+    locale,
+  )
+  return result?.version ?? version
+}
+
+/** `0026` D9 — logoyu kaldırır (bağı siler, varlık durur); yeni sürümü döner. */
+export async function removeGalleryLogo(version: number, locale: AppLocale): Promise<number> {
+  const result = await sendJson<{ readonly version: number }>(
+    'DELETE',
+    `${ROOT}/gallery/logo?version=${version}`,
+    undefined,
     locale,
   )
   return result?.version ?? version
