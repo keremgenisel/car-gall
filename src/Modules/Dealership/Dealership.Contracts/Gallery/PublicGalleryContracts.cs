@@ -29,3 +29,16 @@ public interface IGalleryDisplayNameQueries
     /// </summary>
     Task<string?> FindDisplayNameAsync(string locale, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// `0014` — ana sayfanın galeri adı (`0020`'den beri görünen ad) ve altlığın şube bloğu (R1, R7).
+/// Yalnız vitrinde görünen (`Active`) şubeler döner.
+///
+/// <para>`0004` **P9** — modülün içinden sözleşmeye taşındı: Host ana sayfanın `AutoDealer`
+/// yapısal verisini (**D15**) aynı okumadan kurar; ikinci bir "public şubeler" okuması açılmadı.</para>
+/// </summary>
+public interface IPublicGalleryQueries
+{
+    /// <summary>Galeri profili yoksa <c>null</c>.</summary>
+    Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken);
+}
