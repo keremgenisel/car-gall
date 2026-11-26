@@ -14,6 +14,8 @@ import { enabledLocales } from '../../../shared/lib/locale'
 import { adminPath } from '../../../shared/lib/route'
 import { Badge, Button, Dialog, EmptyState, ErrorState, Skeleton } from '../../../shared/ui'
 import { DealershipField } from './DealershipField'
+import { OpeningHoursFieldset } from './OpeningHoursFieldset'
+import { scheduleOf, schedulePayload, type Schedule } from './openingHoursForm'
 import {
   actionErrorKey,
   fieldErrorsOf,
@@ -46,6 +48,7 @@ interface Values {
   readonly slug: string
   readonly latitude: string
   readonly longitude: string
+  readonly openingHours: Schedule
 }
 
 function valuesOf(branch: AdminBranch | null, locales: readonly string[]): Values {
@@ -59,6 +62,8 @@ function valuesOf(branch: AdminBranch | null, locales: readonly string[]): Value
     slug: branch?.slug ?? '',
     latitude: branch?.latitude === null || branch === null ? '' : String(branch.latitude),
     longitude: branch?.longitude === null || branch === null ? '' : String(branch.longitude),
+    // `0025` AC-2 — programsız şube yedi gün "Kapalı".
+    openingHours: scheduleOf(branch?.openingHours ?? null),
   }
 }
 
@@ -196,6 +201,7 @@ export function BranchEditPage({ branchId }: { readonly branchId?: string }) {
       slug: values.slug,
       latitude,
       longitude,
+      openingHours: schedulePayload(values.openingHours),
     }
   }
 
@@ -438,6 +444,13 @@ export function BranchEditPage({ branchId }: { readonly branchId?: string }) {
             )}
           </fieldset>
         </fieldset>
+
+        <OpeningHoursFieldset
+          schedule={values.openingHours}
+          errors={errors}
+          disabled={closed}
+          onChange={(openingHours) => setValues({ ...values, openingHours })}
+        />
 
         {closed ? null : (
           <div className="admin-form__actions">
