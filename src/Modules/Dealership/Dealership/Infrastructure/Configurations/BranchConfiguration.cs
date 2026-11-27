@@ -88,6 +88,18 @@ internal sealed class BranchConfiguration : IEntityTypeConfiguration<Branch>
                     hours => hours == null ? 0 : hours.ToJson().GetHashCode(StringComparison.Ordinal),
                     hours => hours == null ? null : OpeningHours.FromJson(hours.ToJson())));
 
+        // `0027` P1 · D18 — özel günler aynı satırda, jsonb; NULL = kayıt yok.
+        builder.Property(branch => branch.SpecialHours)
+            .HasColumnName("special_hours")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                special => special == null ? null : special.ToJson(),
+                json => json == null ? null : SpecialHours.FromJson(json),
+                new ValueComparer<SpecialHours?>(
+                    (left, right) => (left == null ? null : left.ToJson()) == (right == null ? null : right.ToJson()),
+                    special => special == null ? 0 : (special.ToJson() ?? string.Empty).GetHashCode(StringComparison.Ordinal),
+                    special => special == null ? null : SpecialHours.FromJson(special.ToJson())));
+
         builder.Ignore(branch => branch.MediaAssetIds);
         builder.Ignore(branch => branch.DomainEvents);
     }

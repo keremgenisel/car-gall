@@ -35,7 +35,27 @@ public sealed record PublicBranchDto(
     string Name,
     string Address,
     string Phone,
-    IReadOnlyDictionary<string, IReadOnlyList<PublicOpeningIntervalDto>>? OpeningHours = null);
+    IReadOnlyDictionary<string, IReadOnlyList<PublicOpeningIntervalDto>>? OpeningHours = null,
+    PublicOpenNowDto? OpenNow = null)
+{
+    /// <summary>
+    /// `0027` **D8** — penceredeki özel günler (<c>through</c> ≥ bugün, <c>from</c> ≤ bugün + 30),
+    /// <c>from</c>'a göre sıralı. Hiç <c>null</c> olmaz; programsız şubede boştur.
+    /// </summary>
+    public IReadOnlyList<PublicSpecialDayDto> SpecialHours { get; init; } = [];
+}
+
+/// <summary>
+/// `0027` **D8** — şubenin "şu an" durumu; şubenin saat diliminde sunucuda hesaplanır (D6). Saat dilimi
+/// yanıtta yoktur. <c>Next</c> sürekli açık şubede <c>null</c>'dır (anahtar yine yazılır).
+/// </summary>
+public sealed record PublicOpenNowDto(bool Open, string Today, PublicNextChangeDto? Next, int RefreshInSeconds);
+
+/// <summary>`0027` D8 — sıradaki değişimin şubenin yerel tarihi (<c>YYYY-MM-DD</c>) ve saati (<c>HH:mm</c>).</summary>
+public sealed record PublicNextChangeDto(string Date, string Time);
+
+/// <summary>`0027` D2 · D8 — bir özel gün; aralık yoksa tam gün kapalı.</summary>
+public sealed record PublicSpecialDayDto(string From, string Through, IReadOnlyList<PublicOpeningIntervalDto> Intervals);
 
 /// <summary>`0025` D8 — bir aralık; ikisi de <c>HH:mm</c>.</summary>
 public sealed record PublicOpeningIntervalDto(string Start, string End);

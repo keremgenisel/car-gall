@@ -1,3 +1,4 @@
+using CarGallery.BuildingBlocks;
 using CarGallery.Modules.Dealership.Domain;
 using CarGallery.Modules.Dealership.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -34,13 +35,14 @@ internal sealed record AdminBranchDto(
     decimal? Longitude,
     string Status,
     int Version,
-    IReadOnlyDictionary<string, IReadOnlyList<CarGallery.Modules.Dealership.Contracts.Gallery.PublicOpeningIntervalDto>>? OpeningHours = null);
+    IReadOnlyDictionary<string, IReadOnlyList<CarGallery.Modules.Dealership.Contracts.Gallery.PublicOpeningIntervalDto>>? OpeningHours = null,
+    IReadOnlyList<CarGallery.Modules.Dealership.Contracts.Gallery.PublicSpecialDayDto>? SpecialHours = null);
 
 /// <summary>
 /// `0020` — panelin okumaları. Uç modülün dışına çıkmaz; `Contracts`'a girmez, çünkü başka
 /// bir modülün bu veriye ihtiyacı yok (C1).
 /// </summary>
-internal sealed class DealershipAdminQueries(DealershipDbContext context)
+internal sealed class DealershipAdminQueries(DealershipDbContext context, IClock? clock = null)
 {
     internal async Task<AdminGalleryDto?> GetGalleryAsync(CancellationToken cancellationToken)
     {
@@ -83,6 +85,8 @@ internal sealed class DealershipAdminQueries(DealershipDbContext context)
                 branch.Status.ToString(),
                 branch.Version,
                 // `0025` D14 · AC-40 — D8'in biçimi; programsız şubede null.
-                branch.OpeningHours?.ToDto());
+                branch.OpeningHours?.ToDto(),
+                // `0027` D13 — güncel ve gelecek bütün kayıtlar; geçmiş dönmez (D4). Hiç null değil.
+                BranchSchedule.ForPanel(branch.SpecialHours, branch.TimeZone, (clock ?? new SystemClock()).UtcNow));
     }
 }

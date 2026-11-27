@@ -379,7 +379,7 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
 
     // ----- Ziyaretçiye dönük okuma ve belge (R8, R9 · D8, D9) -----
 
-    [Fact(DisplayName = "0025/AC-41, AC-42, AC-43: Public şube öğesinin anahtarları tam olarak `address, name, openingHours, phone`; programlı şubede yedi gün, `sunday` boş, `saturday` 10:00–14:00; tr/ar/en aynı.")]
+    [Fact(DisplayName = "0025/AC-41, AC-42, AC-43, 0027/AC-42: Public şube öğesinin anahtarları tam olarak `address, name, openNow, openingHours, phone, specialHours`; programlı şubede yedi gün, `sunday` boş, `saturday` 10:00–14:00; tr/ar/en aynı.")]
     public async Task PublicOkuma()
     {
         string ad = Benzersiz("Programlı Şube");
@@ -387,7 +387,7 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
 
         JsonElement galeri = JsonDocument.Parse(await Istemci().GetStringAsync("/api/dealership/gallery?locale=tr")).RootElement;
         Assert.Equal(["branches", "displayName", "socialLinks"], galeri.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
-        Assert.All(galeri.GetProperty("branches").EnumerateArray(), oge => Assert.Equal(["address", "name", "openingHours", "phone"], oge.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal)));
+        Assert.All(galeri.GetProperty("branches").EnumerateArray(), oge => Assert.Equal(["address", "name", "openNow", "openingHours", "phone", "specialHours"], oge.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal)));
 
         JsonElement program = (await PublicSubeAsync(ad)).GetProperty("openingHours");
         Assert.Equal(Gunler, program.EnumerateObject().Select(p => p.Name));

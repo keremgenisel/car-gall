@@ -111,6 +111,10 @@ namespace CarGallery.Modules.Dealership.Infrastructure.Migrations
                         .HasColumnType("character varying(80)")
                         .HasColumnName("slug");
 
+                    b.Property<string>("SpecialHours")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("special_hours");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");

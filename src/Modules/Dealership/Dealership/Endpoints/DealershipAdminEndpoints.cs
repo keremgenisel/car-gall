@@ -87,7 +87,8 @@ internal static class DealershipAdminEndpoints
                 body.Slug,
                 body.Latitude,
                 body.Longitude,
-                OpeningHoursBody.ToInput(body.OpeningHours)),
+                OpeningHoursBody.ToInput(body.OpeningHours),
+                SpecialHoursBody.ToInput(body.SpecialHours)),
             cancellationToken);
 
         return sonuc.IsSuccess
@@ -113,7 +114,8 @@ internal static class DealershipAdminEndpoints
         body.Slug,
         body.Latitude,
         body.Longitude,
-        OpeningHoursBody.ToInput(body.OpeningHours));
+        OpeningHoursBody.ToInput(body.OpeningHours),
+        SpecialHoursBody.ToInput(body.SpecialHours));
 }
 
 /// <summary>
@@ -142,7 +144,8 @@ internal sealed record OpenBranchBody(
     string? Slug,
     decimal? Latitude,
     decimal? Longitude,
-    Dictionary<string, List<OpeningIntervalBody>?>? OpeningHours = null);
+    Dictionary<string, List<OpeningIntervalBody>?>? OpeningHours = null,
+    List<SpecialDayBody?>? SpecialHours = null);
 
 /// <summary>Şube kaydetme gövdesi; <c>Version</c> okunan sürümdür (R16).</summary>
 internal sealed record SaveBranchBody(
@@ -156,7 +159,8 @@ internal sealed record SaveBranchBody(
     string? Slug,
     decimal? Latitude,
     decimal? Longitude,
-    Dictionary<string, List<OpeningIntervalBody>?>? OpeningHours = null);
+    Dictionary<string, List<OpeningIntervalBody>?>? OpeningHours = null,
+    List<SpecialDayBody?>? SpecialHours = null);
 
 /// <summary>`0025` D8 — bir aralık: <c>{ "start": "HH:mm", "end": "HH:mm" }</c>.</summary>
 internal sealed record OpeningIntervalBody(string? Start, string? End);
@@ -176,6 +180,29 @@ internal static class OpeningHoursBody
                 ? null
                 : (IReadOnlyList<OpeningIntervalInput>?)[.. pair.Value.Select(item => new OpeningIntervalInput(item?.Start, item?.End))],
             StringComparer.Ordinal);
+}
+
+/// <summary>`0027` D2 — bir özel gün: <c>{ "from", "through", "intervals": [{ "start", "end" }] }</c>.</summary>
+internal sealed record SpecialDayBody(string? From, string? Through, List<OpeningIntervalBody?>? Intervals);
+
+/// <summary>
+/// `0027` **D13** — şube gövdelerinin <c>SpecialHours</c>'u. Alan yoksa ya da açık <c>null</c>'sa kayıtlar
+/// DEĞİŞMEZ (`0025` D11); dizi bütün kayıtların yerine geçer, boş dizi siler. Şekil ve <c>null</c>
+/// öğeler olduğu gibi taşınır: doğrulamanın tek kapısı <c>SpecialHours.Parse</c>'tır (D14).
+/// </summary>
+internal static class SpecialHoursBody
+{
+    internal static IReadOnlyList<SpecialDayInput?>? ToInput(List<SpecialDayBody?>? body) =>
+        body is null
+            ? null
+            : [.. body.Select(item => item is null
+                ? null
+                : new SpecialDayInput(
+                    item.From,
+                    item.Through,
+                    item.Intervals is null
+                        ? null
+                        : [.. item.Intervals.Select(interval => interval is null ? null : new OpeningIntervalInput(interval.Start, interval.End))]))];
 }
 
 /// <summary>`0026` D9 — logo ataması: varlık kimliği (`Media`'nın yükleme yanıtından) ve okunan sürüm.</summary>

@@ -54,6 +54,9 @@ internal sealed class OpeningHours
     internal IEnumerable<(string Day, IReadOnlyList<OpeningInterval> Intervals)> InOrder() =>
         Days.Select(day => (day, days[day]));
 
+    /// <summary>`0027` D7 — haftanın bir gününün aralıkları (`DayOfWeek.Sunday` = 0).</summary>
+    internal IReadOnlyList<OpeningInterval> For(DayOfWeek day) => days[Days[((int)day + 6) % 7]];
+
     /// <summary>
     /// D3 · D11 · D12 — programı doğrular. Hatalar çağıranın <paramref name="errors"/>'una
     /// toplanır (şubenin diğer alan hatalarıyla aynı yanıt, AC-20, AC-21); hata yoksa programı
@@ -175,7 +178,7 @@ internal sealed class OpeningHours
     /// geçersiz. QA 2 BULGU-1: önceki düzenli ifadenin `$`'ı sondaki `\n`'in önünde de eşleşiyordu;
     /// `"09:00\n"` geçip `ParseExact`'te atıyor ve `500` dönüyordu. Tek kapı `TryParseExact`.
     /// </summary>
-    private static TimeOnly? ParseTime(string? value) =>
+    internal static TimeOnly? ParseTime(string? value) =>
         value is not null
         && TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly time)
             ? time

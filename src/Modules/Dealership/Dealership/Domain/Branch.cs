@@ -61,6 +61,12 @@ internal sealed class Branch : AggregateRoot<BranchId>
     /// </summary>
     internal OpeningHours? OpeningHours { get; private set; }
 
+    /// <summary>
+    /// `0027` D2 · D18 — özel günler; <c>null</c> = kayıt yok. Saklanan kayıtlar geçmiş olabilir: okumalar
+    /// bugüne göre süzer (D4), silinmeleri yalnız <c>specialHours</c> taşıyan bir kaydetmededir (B10).
+    /// </summary>
+    internal SpecialHours? SpecialHours { get; private set; }
+
     /// <summary>D7 — yalnızca REFERANS; görselin kendisi `Media` spec'ine aittir.</summary>
     internal IReadOnlyList<Guid> MediaAssetIds => mediaAssetIds;
 
@@ -175,6 +181,12 @@ internal sealed class Branch : AggregateRoot<BranchId>
         if (draft.OpeningHours is { } openingHours)
         {
             OpeningHours = openingHours.IsEmpty ? null : openingHours;
+        }
+
+        // `0027` D13 — taslakta `null`: kayıtlar değişmez; liste (geçmişi düşmüş) yerine geçer.
+        if (draft.SpecialHours is { } specialHours)
+        {
+            SpecialHours = specialHours.Days.Count == 0 ? null : specialHours;
         }
 
         if (draft.WhatsApp is { } whatsApp)

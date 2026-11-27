@@ -18,7 +18,8 @@ internal sealed record BranchInput(
     string? Slug,
     decimal? Latitude,
     decimal? Longitude,
-    IReadOnlyDictionary<string, IReadOnlyList<OpeningIntervalInput>?>? OpeningHours = null);
+    IReadOnlyDictionary<string, IReadOnlyList<OpeningIntervalInput>?>? OpeningHours = null,
+    IReadOnlyList<SpecialDayInput?>? SpecialHours = null);
 
 /// <summary>
 /// `0020` R9 · R15 — doğrulanmış şube alanları. Açma ve düzenleme AYNI çözümlemeden geçer:
@@ -34,7 +35,8 @@ internal sealed record BranchDraft(
     TimeZoneId TimeZone,
     BranchSlug Slug,
     Coordinate? Coordinate,
-    OpeningHours? OpeningHours = null)
+    OpeningHours? OpeningHours = null,
+    SpecialHours? SpecialHours = null)
 {
     internal const string NameTooLong = "branch.name_too_long";
     internal const string AddressTooLong = "branch.address_too_long";
@@ -48,7 +50,7 @@ internal sealed record BranchDraft(
     /// alanı görür. Kod, alanın kendi değer tipinin kodudur (telefon için
     /// <c>phone_number.invalid_format</c>) — `0003`'ün kuralları tek yerde yaşar.
     /// </summary>
-    internal static Result<BranchDraft> Parse(BranchInput input, Locale defaultLocale)
+    internal static Result<BranchDraft> Parse(BranchInput input, Locale defaultLocale, DateTimeOffset? now = null)
     {
         FieldErrors errors = new();
 
@@ -96,6 +98,13 @@ internal sealed record BranchDraft(
         // hataları diğer alanların hatalarıyla aynı yanıtta toplanır (AC-20, AC-21).
         OpeningHours? openingHours = input.OpeningHours is null ? null : Domain.OpeningHours.Parse(input.OpeningHours, errors);
 
+        // `0027` D13 · D14 · P3 — `null`: kayıtlar değişmez. Liste: tek kapıdan; "bugün" GÖVDEDEKİ saat
+        // diliminde (B11). Saat dilimi geçersizse alan zaten hatalı; küme kuralları atlanır.
+        DateOnly? today = timeZone is { } zone && now is { } an
+            ? BranchClock.LocalDate(TimeZoneInfo.FindSystemTimeZoneById(zone.Value), an)
+            : null;
+        SpecialHours? specialHours = input.SpecialHours is null ? null : Domain.SpecialHours.Parse(input.SpecialHours, today, errors);
+
         if (errors.Any)
         {
             return Result.Failure<BranchDraft>(errors.ToError());
@@ -110,7 +119,8 @@ internal sealed record BranchDraft(
             timeZone!.Value,
             slug!.Value,
             coordinate,
-            openingHours));
+            openingHours,
+            specialHours));
     }
 
     private static LocalizedText Texts(

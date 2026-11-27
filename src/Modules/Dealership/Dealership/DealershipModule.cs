@@ -101,19 +101,23 @@ public static class DealershipModule
             parsed.Value));
 
         // 0014 D15 — ziyaretçiye dönük dar yüzey; panelin şube listesinden ayrı.
+        // `0027` D6 — "şu an" saat soyutlamasından: modülün kaydettiği `IClock` (testte sabitlenebilir).
         services.AddScoped<IPublicGalleryQueries>(provider => new PublicGalleryQueries(
             provider.GetRequiredService<DealershipDbContext>(),
-            parsed.Value));
+            parsed.Value,
+            provider.GetRequiredService<IClock>()));
 
         // `0020` D16 — Host'un `index.html`'e bastığı görünen ad; aynı sınıf, dar yüzey.
         services.AddScoped<IGalleryDisplayNameQueries>(provider => new PublicGalleryQueries(
             provider.GetRequiredService<DealershipDbContext>(),
-            parsed.Value));
+            parsed.Value,
+            provider.GetRequiredService<IClock>()));
 
         // `0026` D17 — Host'un belgesi için ad + logo kimliği; aynı sınıf, ayrı dar yüzey.
         services.AddScoped<IGalleryBrandingQueries>(provider => new PublicGalleryQueries(
             provider.GetRequiredService<DealershipDbContext>(),
-            parsed.Value));
+            parsed.Value,
+            provider.GetRequiredService<IClock>()));
 
         return services;
     }
