@@ -18,7 +18,8 @@ internal sealed record BranchFormInput(
     string? Slug,
     decimal? Latitude,
     decimal? Longitude,
-    IReadOnlyDictionary<string, IReadOnlyList<OpeningIntervalInput>?>? OpeningHours = null);
+    IReadOnlyDictionary<string, IReadOnlyList<OpeningIntervalInput>?>? OpeningHours = null,
+    IReadOnlyList<SpecialDayInput?>? SpecialHours = null);
 
 /// <summary>
 /// Şubenin yazma yolu. `0007` B5 korumasını (kalıcı kapatma) yazmıştı ve "şube yönetimi
@@ -33,7 +34,8 @@ internal sealed class BranchCommands(
     DealershipDbContext context,
     DealershipUnitOfWork unitOfWork,
     InvariantGuardOptions<DealershipDbContext> guardOptions,
-    DealershipLocales locales)
+    DealershipLocales locales,
+    IClock? clock = null)
 {
     internal const string BranchNotFound = "branch.not_found";
 
@@ -249,8 +251,11 @@ internal sealed class BranchCommands(
                 input.Slug,
                 input.Latitude,
                 input.Longitude,
-                input.OpeningHours),
-            locales.Default);
+                input.OpeningHours,
+                input.SpecialHours),
+            locales.Default,
+            // `0027` P3 — özel günlerin "bugün"ü gövdedeki saat diliminde, saat soyutlamasından.
+            (clock ?? new SystemClock()).UtcNow);
 
         if (draft.IsFailure)
         {

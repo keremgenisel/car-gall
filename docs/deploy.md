@@ -93,7 +93,9 @@ yazdığı ana sayfa metinlerini her dilde 120/500 karakterlik ölçüm dolgusuy
 yalnız `perf.yml`). `Development__SeedGalleryProfile` (galeri profili tohumu) her başlangıçta
 galerinin panelden girilen profil verisini ölçüm dolgusuyla EZER: gerçek sosyal hesapları sınır
 uzunlukta dolgu adreslerle, her aktif şubenin çalışma programını yirmi bir aralıklı dolgu
-programla değiştirir; `0026` aynı bayrağa logoyu ekler (`0024` P9, `0025` P9, yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
+programla değiştirir; `0026` aynı bayrağa logoyu ekler; `0027` her aktif şubenin penceresine
+üçer aralıklı 12 özel gün yazar ve şubenin özel günlerini EZER (`0024` P9, `0025` P9, `0027` P10,
+yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
 düşürmeyin; geliştirme betiği bunu hız için 1000'e çeker, üretim değeri 210.000'dir.
 
 ## 4. Sıra: önce kurulum adımı, sonra uygulama
@@ -170,7 +172,11 @@ galeri-alanadi.com {
    ekranı aynı ziyaretçiden aynı anda 24'e kadar ilan okuması yapar; bu okumaların zamanlaması
    ziyaretçinin hangi araçlarla ilgilendiğini gösterir ve IP adresiyle birlikte KVKK açısından
    kişisel veriyle ilişkilendirilebilir. Uygulamanın kendisi istek yolu günlüğü yazmaz.
-5. **Duman testi:**
+5. **Galeri okuması kenarda önbelleğe alınmaz (`0027` D8, D17).** Önde bir CDN ya da önbellekli
+   ters vekil varsa `/api/dealership/gallery` için kenar önbelleği kapatılır ve uygulamanın
+   `Cache-Control: no-store` başlığı korunur. Yanıt zamana bağlıdır ("şu an açık" ve "Bugün");
+   kenarda önbelleğe alınırsa altlık bayat bir "açık" basar.
+6. **Duman testi:**
 
    | İstek | Beklenen |
    |---|---|

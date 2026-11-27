@@ -186,7 +186,7 @@ test('0025/AC-44, AC-45, AC-46, AC-47, AC-48: Altlıkta programlı şubenin yedi
 
   await page.goto('/tr/')
   const tr = altliktakiSube(page, ad)
-  await expect(tr.locator('dt')).toHaveText([
+  await expect(tr.getByTestId('branch-hours').locator('.home-footer__day')).toHaveText([
     'Pazartesi',
     'Salı',
     'Çarşamba',
@@ -195,7 +195,7 @@ test('0025/AC-44, AC-45, AC-46, AC-47, AC-48: Altlıkta programlı şubenin yedi
     'Cumartesi',
     'Pazar',
   ])
-  await expect(tr.locator('dd')).toHaveText([
+  await expect(tr.getByTestId('branch-hours').locator('dd')).toHaveText([
     '09:00–18:00',
     '09:00–18:00',
     '09:00–13:0016:00–21:00',
@@ -204,15 +204,20 @@ test('0025/AC-44, AC-45, AC-46, AC-47, AC-48: Altlıkta programlı şubenin yedi
     '10:00–14:00',
     'Kapalı',
   ])
-  await expect(tr.locator('dd').nth(2).locator('span')).toHaveText(['09:00–13:00', '16:00–21:00'])
+  await expect(tr.getByTestId('branch-hours').locator('dd').nth(2).locator('span')).toHaveText([
+    '09:00–13:00',
+    '16:00–21:00',
+  ])
   await expect(altliktakiSube(page, programsizAd).getByTestId('branch-hours')).toHaveCount(0)
   await kanit(page, tr, '0025-ac44.png')
 
   await page.goto('/ar/')
   const ar = page.getByTestId('branch').filter({ hasText: `فرع ${ad}` })
-  await expect(ar.locator('dd').last()).toHaveText('مغلق')
-  await expect(ar.locator('dt').first()).toHaveText(/\p{Script=Arabic}/u)
-  await expect(ar.locator('dd').first()).toHaveText('09:00–18:00')
+  await expect(ar.getByTestId('branch-hours').locator('dd').last()).toHaveText('مغلق')
+  await expect(ar.getByTestId('branch-hours').locator('.home-footer__day').first()).toHaveText(
+    /\p{Script=Arabic}/u,
+  )
+  await expect(ar.getByTestId('branch-hours').locator('dd').first()).toHaveText('09:00–18:00')
   expect(
     await ar
       .locator('dd span')
@@ -223,9 +228,11 @@ test('0025/AC-44, AC-45, AC-46, AC-47, AC-48: Altlıkta programlı şubenin yedi
 
   await page.goto('/en/')
   const en = altliktakiSube(page, `${ad} Branch`)
-  await expect(en.locator('dt').first()).toHaveText('Monday')
-  await expect(en.locator('dd').first()).toHaveText('09:00–18:00')
-  await expect(en.locator('dd').last()).toHaveText('Closed')
+  await expect(en.getByTestId('branch-hours').locator('.home-footer__day').first()).toHaveText(
+    'Monday',
+  )
+  await expect(en.getByTestId('branch-hours').locator('dd').first()).toHaveText('09:00–18:00')
+  await expect(en.getByTestId('branch-hours').locator('dd').last()).toHaveText('Closed')
 })
 
 test('0025/AC-49: Şube Asia/Kuwait, tarayıcı Europe/Istanbul iken altlık Pazartesi için 09:00–18:00 gösterir', async ({
@@ -240,8 +247,10 @@ test('0025/AC-49: Şube Asia/Kuwait, tarayıcı Europe/Istanbul iken altlık Paz
     const sayfa = await istanbul.newPage()
     await sayfa.goto('/tr/')
     const oge = sayfa.getByTestId('branch').filter({ hasText: ad })
-    await expect(oge.locator('dt').first()).toHaveText('Pazartesi')
-    await expect(oge.locator('dd').first()).toHaveText('09:00–18:00')
+    await expect(oge.getByTestId('branch-hours').locator('.home-footer__day').first()).toHaveText(
+      'Pazartesi',
+    )
+    await expect(oge.getByTestId('branch-hours').locator('dd').first()).toHaveText('09:00–18:00')
   } finally {
     await istanbul.close()
   }

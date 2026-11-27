@@ -1354,6 +1354,8 @@ a.top-bar__brand:hover {
 }
 
 .home-footer__branch-items {
+  /* `0027` QA 2 BULGU-2 — saat bloğunun kat kararını okuyan kapsayıcı (aşağıda). */
+  container: branches / inline-size;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -1395,27 +1397,40 @@ a.top-bar__brand:hover {
   margin-block: 0 var(--space-1);
 }
 
-/* `0025` D7 — şubenin yedi günü: gün adı satır başında, aralıklar yan yana. Rakamlar Latin ve
-   aralık soldan sağa (`dir="ltr"`); ar'da satır sağdan sola akar. */
-.home-footer__hours {
-  margin: var(--space-2) 0 0;
-  font-size: var(--font-size-sm);
+/* `0027` D15 — saat bloğu tembel parçada (`features/dealership/branchClock.css`); girişte yalnız
+   evre B: satır yüksekliği, iskelet ve "şu an" kutusu. Her satır `--hours-line` yüksekliğinde ve
+   her aralık kendi satırında, yani iskelet açılacak alanın yüksekliğini veriden aynen ayırır. */
+.home-footer__branch {
+  --hours-line: calc(var(--font-size-sm) * var(--line-height-base));
+  --special-stack: 0;
 }
 
-.home-footer__hours-row {
-  display: flex;
-  gap: var(--space-4);
+/* QA 2 BULGU-2 — dar SÜTUNDA özel gün satırı iki katlıdır (tarih, altında aralıklar): en uzun
+   tarih ("28 September–2 October" + "Today", ≈210 px) aralıkla aynı satıra sığmıyordu. Ölçüt
+   görünüm değil sütun genişliğidir: masaüstü altlığında sütun 240 px'e iner. Kat veriden bellidir;
+   iskelet ve parça aynı kapsayıcı sorgusunu okur. */
+@container branches (width < 24rem) {
+  .home-footer__branch {
+    --special-stack: 1;
+  }
 }
 
-.home-footer__hours dt {
-  min-inline-size: 7rem;
+.home-footer__hours-skeleton {
+  margin-block-start: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  block-size: calc(
+    var(--hours-lines) * var(--hours-line) + var(--special-on) *
+      (var(--space-3) + var(--hours-line)) + var(--special-lines) * var(--hours-line) +
+      var(--special-stack) * var(--special-rows) * var(--hours-line)
+  );
 }
 
-.home-footer__hours dd {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
+/* D11 — "şu an" satırı iki satırlık sabit kutu: kısa metinde alt satır boş kalır, metin kesilmez. */
+.home-footer__now {
+  margin-block: 0 var(--space-1);
+  line-height: var(--line-height-base);
+  block-size: calc(2em * var(--line-height-base));
 }
 
 .home-footer__branch-name {

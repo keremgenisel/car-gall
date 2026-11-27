@@ -551,6 +551,25 @@ export interface PublicBranch {
    * kapalı gün boş dizi, aralıklar başlangıca göre sıralı.
    */
   readonly openingHours: Readonly<Record<string, readonly OpeningInterval[]>> | null
+  /** `0027` D8 — programsız şubede `null`; "şu an" sunucuda, şubenin saat diliminde hesaplanır. */
+  readonly openNow: PublicOpenNow | null
+  /** `0027` D8 — bugünden 30 gün ileriye kadarki özel günler, `from` sırasıyla; programsızda `[]`. */
+  readonly specialHours: readonly PublicSpecialDay[]
+}
+
+/** `0027` D8 — `today` ve `next.date` şubenin yerel tarihidir (`YYYY-MM-DD`), saat `HH:mm`. */
+export interface PublicOpenNow {
+  readonly open: boolean
+  readonly today: string
+  readonly next: { readonly date: string; readonly time: string } | null
+  readonly refreshInSeconds: number
+}
+
+/** `0027` D2 — aralıksız kayıt tam gün kapalıdır. */
+export interface PublicSpecialDay {
+  readonly from: string
+  readonly through: string
+  readonly intervals: readonly OpeningInterval[]
 }
 
 /** `0024` R6 · D7 — platform KODU ve kayıtlı adres; başka alan yok. */

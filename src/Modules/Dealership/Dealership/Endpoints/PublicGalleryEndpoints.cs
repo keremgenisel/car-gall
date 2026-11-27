@@ -31,6 +31,9 @@ internal static class PublicGalleryEndpoints
             httpContext.Request.Query["locale"].ToString(),
             cancellationToken);
 
+        // `0027` D8 — yanıt zamana bağlı ("şu an"): hiçbir ara katman onu saklamaz (AC-47).
+        httpContext.Response.Headers.CacheControl = "no-store";
+
         return gallery is null ? TypedResults.NotFound() : TypedResults.Ok(gallery);
     }
 }

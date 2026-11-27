@@ -36,6 +36,20 @@ internal static class GalleryProfileDevelopmentSeed
             ],
             StringComparer.Ordinal);
 
+    /// <summary>
+    /// `0027` P10 · D15 · AC-70 — D12'nin en kötü durumu: penceredeki 12 kayıt, üçer aralık
+    /// (yarından başlayıp iki günde bir, son kayıt bugün + 23; pencere bugün + 30).
+    /// </summary>
+    internal static IReadOnlyList<SpecialDayInput?> SpecialHours(DateOnly today) =>
+    [
+        .. Enumerable.Range(0, Domain.SpecialHours.MaxDays).Select(index =>
+        {
+            string day = today.AddDays(1 + 2 * index).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            // Aralıklar `0025` tohumunun Pazartesi'sinden: saat sabiti yazılmaz (Yasak Listesi 34).
+            return (SpecialDayInput?)new SpecialDayInput(day, day, [.. OpeningHours()[Domain.OpeningHours.Days[0]]!]);
+        }),
+    ];
+
     private static string WorstCase(string root)
     {
         int kalan = SocialLink.MaxUtf8Bytes - Encoding.UTF8.GetByteCount(root);

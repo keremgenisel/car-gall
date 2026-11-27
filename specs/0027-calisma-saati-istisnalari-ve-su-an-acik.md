@@ -269,6 +269,63 @@ Liste ve detay sayfalarının altlığı şube taşımıyor. İlan detayı şube
 10. **Tembel parça CLS doğurabilir.** Galeri okuması parçadan önce gelirse önce adres basılır, sonra
     saat bloğu araya girer. → **D15**: iskelet ikisi de hazır olana kadar durur (AC-68).
 
+### Verilen kararlar — plan turu (DEV, 2026-11-27)
+
+R/C/AC'ye dokunmayan uygulama kararları; bir kararı değiştiren her şey Proje Yöneticisine gider
+(AP-08).
+
+- **P1 — Saklama (D18).** `dealership.branches.special_hours jsonb NULL`: şubenin satırında, sürümüyle
+  aynı yerde (`0025` P3 deseni). `null` = kayıt yok. Öğe `{from, through, intervals:[{start,end}]}`,
+  `from`'a göre sıralı. Migration yalnız bu kolonu ekler (C6).
+- **P2 — Tek kapı (D14).** `Domain/SpecialHours.cs`: tarih `DateOnly.TryParseExact(…, "yyyy-MM-dd",
+  InvariantCulture, DateTimeStyles.None)` ile ham dizgeden, tek çağrı; saat `0025`'in aynı çağrısıyla
+  (`OpeningHours`'un ayrıştırıcısı paylaşılır). Sıra: kayıt başına kurallar (şekil, tarih, aralık,
+  `end_before_start`, `too_long`) → geçmişin düşmesi → küme kuralları (`too_far`, `overlap`,
+  `too_many`). Hata anahtarındaki `<i>` daima gönderilen indekstir.
+- **P3 — "Bugün" gövdenin saat diliminde (B11).** `BranchDraft.Parse` `IClock`'un anını alır ve
+  bugünü gövdedeki (yeni) saat diliminden kurar. Saat dilimi geçersizse küme kuralları atlanır (alan
+  zaten hatalı).
+- **P4 — "Şu an" hesabı (D6, D7).** `Domain/BranchClock.cs`, saf bir işlev: (haftalık program, özel
+  günler, `TimeZoneInfo`, an) → durum. Günün etkin aralıkları ANLARA çevrilir: var olmayan yerel saat
+  ilk geçerli dakikaya kayar, iki kez yaşanan ilkini (erken anı) alır, 23:59 bitiş ertesi yerel gece
+  yarısıdır. Değen aralıklar birleşir — gece yarısı zinciri buradan çıkar. Açılış arama sınırı
+  `max(bugün, son through) + 7`; zincir 7 günü aşarsa `next` yok. `refreshInSeconds` = ⌈min(sıradaki
+  değişim, sonraki yerel gece yarısı) − an⌉, 1–90000.
+- **P5 — Okumalar (D8, D13).** `PublicGalleryQueries` ve panel okuması `IClock` alır. Panel geçmişi
+  okumada süzer (pencere yok); ziyaretçi okuması pencereyi uygular ve `openNow`'u hesaplar. Uç
+  `Cache-Control: no-store` yazar. `next: null` anahtarıyla serileşir.
+- **P6 — Yapısal veri (D12).** `SeoHeadBuilder` `department` öğesine aynı DTO'nun (pencereli)
+  `specialHours`'undan `specialOpeningHoursSpecification` yazar; kapalı gün `TimeOnly.MinValue`'dan
+  `00:00` (`0025` deseni, Yasak 34 kapısı).
+- **P7 — Tembel parça (D15).** `features/dealership/branchClock.tsx`: "şu an" satırı, haftalık liste
+  (`OpeningHoursList` buraya taşınır) ve özel günler; D9'un tek yenileyicisi parçanın içinde, modül
+  düzeyinde tek bir depo (bütün şubelerin en küçük süresi, `performance.now()`, görünürlük, 60 sn
+  yeniden deneme, geçersiz süre → 60 sn, en çok 90000, en az 1 sn aralık). Yenileme yalnız `openNow`'u
+  ve `today`'i değiştirir. Giriş tarafı evre B'yi basar: ad, iki satırlık sabit "şu an" kutusu, adres,
+  telefon ve yüksekliği veriden CSS değişkeniyle kurulan saat iskeleti.
+- **P8 — Tarih ve gün (AC-102).** `"YYYY-MM-DD"` → `Date.UTC` → `getUTCDay`; gün farkı UTC gün
+  sayısıyla. Süreç saat diliminden bağımsız.
+- **P9 — Panel (D13).** `SpecialHoursFieldset` panelin parçasında, `OpeningHoursFieldset`'in aralık
+  düzenleyicisini paylaşır; tarih `type="date"`.
+- **P10 — Perf tohumu (D15, AC-70).** `SeedShowcase` açıkken her aktif şubeye pencerede 12 kayıt,
+  üçer aralık, `0025` P9'un yolundan; önceki tohumlar korunur.
+- **P11 — Testler.** "Şu an" kriterleri Host'ta `ConfigureTestServices` ile sabit `IClock`
+  (`OturumBoruHattiTests:76-78`) ve `Dealership.Tests`'te saf işlev üzerinden; doğrulama Host'ta gerçek
+  uçla (500 yok). Her Host satırının e2e ikizi aranır.
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Domain: `SpecialHours` (tek kapı), `BranchClock`, migration; birim testleri (AC-10–19, AC-30–41,
+   AC-83–99, AC-104).
+3. Kaydetme ve okumalar: taslak, şube, panel okuması, ziyaretçi okuması, `no-store`; Host testleri
+   (AC-2–9 sunucu yarısı, AC-20–29, AC-40–47, AC-103, AC-106, AC-107).
+4. Yapısal veri (AC-62–66).
+5. Panel bölümü (AC-1–9, AC-22, AC-73).
+6. Vitrin: tembel parça, evre B, metinler, yenileyici (AC-48–61, AC-68–69, AC-79–82, AC-100–102, AC-105).
+7. Perf tohumu, e2e (AC-58, AC-75–78, AC-101, ikizler), ilk paket ve C3 (AC-67, AC-70, AC-71).
+8. Belgeler (D16, D17).
+
 ### Bilerek değişecek eski testler (kod taranarak çıkarıldı)
 
 | Test | Bugün ölçtüğü | Bu kartla |

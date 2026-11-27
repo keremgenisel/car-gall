@@ -39,7 +39,8 @@ hangi şubede olduğu (`Identity`).
 - **Hafta sonu yapılandırmadan gelmez, programdan çıkar.** Kapalı gün = aralığı olmayan gün.
   Kuveyt'te Cuma–Cumartesi, Türkiye'de Pazar. Kodda hiçbir yerde sabit hafta sonu varsayımı yok.
 - **Tarih aralıklı istisna**: Ramazan saatleri, bayram, geçici kapanış.
-- Saat dilimi **şube bazında**. "Şu an açık mı?" uçta, şubenin saat diliminde hesaplanır.
+- Saat dilimi **şube bazında**. "Şu an açık mı?" sunucuda, `Dealership`'te, şubenin saat diliminde ve
+  saat soyutlamasıyla hesaplanır; uç yalnız basar (`0027` D6).
 
 **Coğrafi arama:** PostGIS yok. Koordinat `decimal` kolonlarda durur; "en yakın şube"
 istemci tarafında hesaplanır. *Tetikleyici:* stok coğrafi olarak anlamlı biçimde yayılırsa.
@@ -590,6 +591,7 @@ altındaki ADR'lerdedir.
 | Vitrinde marka simgeleri | Simple Icons (CC0) yolları kaynağa kopyalanır, paket bağımlılığı yok; tek renk (`currentColor`), tembel ve sabit adlı tek parça (`social-icons`, `chunkFileNames`); parça girişle modül paylaşmaz, kritik yolda tek JS (`modulepreload` yok), ≤3072 B gzip; CI `check:social-icons` ile denetler (`0024` D6, D9(b), P6, QA 2 BULGU-1) |
 | Performans tohumu (galeri profili) | Tek bayrak `Development:SeedGalleryProfile`, gerçek yazma yolundan; `0024` hesapları, `0025` her aktif şubeye en kötü program (21 farklı aralık), `0026` logo aynı yönteme eklenir (`0024` P9, `0025` P9) |
 | Şube çalışma programı | Haftalık program şubenin duvar saatidir (`TimeOnly`, UTC'ye çevrilmez); `dealership.branches.opening_hours jsonb`, NULL = girilmemiş. Yedi boş gün siler, gövdede alan yoksa/`null`'sa değişmez. Ziyaretçi okumasında şube başına `openingHours`, ana sayfa `department` öğesinde gruplanmış `openingHoursSpecification` (`0025` D2, D4, D8, D9, D11, P1, P3) |
+| Şube özel günleri ve "şu an" | Özel günler `dealership.branches.special_hours jsonb` (aynı satır, aynı sürüm); tek kapı doğrulama, geçmiş kayıt düşmeden önce doğrulanır. "Şu an" `Dealership`'te `IClock` + IANA bölgesiyle (yaz saati dâhil) hesaplanır; ziyaretçi okuması `openNow` + 30 günlük `specialHours` taşır, `Cache-Control: no-store`. Uç tembel parçada basar, tek yenileyici `performance.now()` ile (`0027` D6–D9, D14, D15) |
 | Medya işleme türü | `Media` "nasıl işlenir"i bilir, "kime ait"i bilmez: `photo` (üç türev, filigran, siyah zemin) ve `logo` (iki türev, filigransız, saydam). Tür yüklemede `kind` alanıyla, tek kapıdan; bilinmeyen değer `422` `media.kind_unknown`. `VehicleCatalog` araca yalnız `photo` bağlar ve yayın kapısı logoyu hazır görsel saymaz (`0026` D1, D16, P1–P3) |
 | Galeri logosu vitrinde | Bağ `Dealership`'te (doğrulamasız); Host adı ve logo kimliğini ayrı marka okumasından (`IGalleryBrandingQueries`, tek sorgu) alır, türevleri `Media.Contracts`'tan tek okumayla çözer ve yalnız hazır + logo türünü kullanır; `Media` düşerse belge 200 ve logosuz. Bilgi belgeye `<meta name="gallery-logo">` olarak basılır (`0026` D3, D5, D17, P4–P6) |
 | Favoriler tarayıcıda | Favori verisi sunucuya hiç gitmez (sahip kararı S3); `Engagement` doğmadı. Kayıt tek anahtarda, dilden bağımsız; her yazma o anki kaydı yeniden okur ve ekranda görünen hâlin eylemini uygular. Depo kullanılamazsa favori arayüzü basılmaz. Ekranlar mevcut detay okumasını slug başına kullanır — backend sözleşmesi değişmez (`frontend-003` D4, D9, D14, D15) |

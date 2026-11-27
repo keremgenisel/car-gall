@@ -101,19 +101,23 @@ public static class DealershipModule
             parsed.Value));
 
         // 0014 D15 — ziyaretçiye dönük dar yüzey; panelin şube listesinden ayrı.
+        // `0027` D6 — "şu an" saat soyutlamasından: modülün kaydettiği `IClock` (testte sabitlenebilir).
         services.AddScoped<IPublicGalleryQueries>(provider => new PublicGalleryQueries(
             provider.GetRequiredService<DealershipDbContext>(),
-            parsed.Value));
+            parsed.Value,
+            provider.GetRequiredService<IClock>()));
 
         // `0020` D16 — Host'un `index.html`'e bastığı görünen ad; aynı sınıf, dar yüzey.
         services.AddScoped<IGalleryDisplayNameQueries>(provider => new PublicGalleryQueries(
             provider.GetRequiredService<DealershipDbContext>(),
-            parsed.Value));
+            parsed.Value,
+            provider.GetRequiredService<IClock>()));
 
         // `0026` D17 — Host'un belgesi için ad + logo kimliği; aynı sınıf, ayrı dar yüzey.
         services.AddScoped<IGalleryBrandingQueries>(provider => new PublicGalleryQueries(
             provider.GetRequiredService<DealershipDbContext>(),
-            parsed.Value));
+            parsed.Value,
+            provider.GetRequiredService<IClock>()));
 
         return services;
     }
@@ -147,7 +151,7 @@ public static class DealershipModule
             throw new InvalidOperationException($"Galeri profili tohumlanamadı: {sonuc.Error.Code}.");
         }
 
-        // `0025` D10(c) · P9 · AC-62 — her AKTİF şubeye AC-60'ın programı; şubenin diğer alanları
+        // `0025` D10(c) · P9 · AC-62 — her AKTİF şubeye AC-60'ın programı (`0027` P10: ve 12 özel gün); şubenin diğer alanları
         // okunduğu gibi geri yazılır. `0024`'ün hesapları yukarıda korunur (AC-71).
         DealershipDbContext context = scope.ServiceProvider.GetRequiredService<DealershipDbContext>();
         List<BranchId> aktifler = await context.Branches.AsNoTracking()
@@ -171,7 +175,11 @@ public static class DealershipModule
                     sube.Slug,
                     sube.Latitude,
                     sube.Longitude,
-                    GalleryProfileDevelopmentSeed.OpeningHours()),
+                    GalleryProfileDevelopmentSeed.OpeningHours(),
+                    // `0027` P10 — penceredeki 12 özel gün; "bugün" şubenin saat dilimindedir.
+                    GalleryProfileDevelopmentSeed.SpecialHours(BranchClock.LocalDate(
+                        TimeZoneInfo.FindSystemTimeZoneById(sube.TimeZone),
+                        scope.ServiceProvider.GetRequiredService<IClock>().UtcNow))),
                 cancellationToken);
 
             if (program.IsFailure)

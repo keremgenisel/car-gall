@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarGallery.Modules.Dealership.Application;
 
-internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale defaultLocale)
+internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale defaultLocale, IClock? clock = null)
     : IPublicGalleryQueries, IGalleryDisplayNameQueries, IGalleryBrandingQueries
 {
     /// <summary>
@@ -64,8 +64,12 @@ internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale d
         var rows = await context.Branches
             .AsNoTracking()
             .Where(branch => branch.Status == BranchStatus.Active)
-            .Select(branch => new { branch.Names, branch.Addresses, branch.Phone, branch.OpeningHours })
+            .Select(branch => new { branch.Names, branch.Addresses, branch.Phone, branch.OpeningHours, branch.SpecialHours, branch.TimeZone })
             .ToListAsync(cancellationToken);
+
+        // `0027` D6 — "şimdi" yalnız saat soyutlamasından; her şube kendi saat diliminde (C2).
+        // DI daima modülün `IClock`'unu verir; varsayılan yalnız saati sormayan doğrudan kurulumlar için.
+        DateTimeOffset now = (clock ?? new SystemClock()).UtcNow;
 
         List<PublicBranchDto> branches =
         [
@@ -74,14 +78,25 @@ internal sealed class PublicGalleryQueries(DealershipDbContext context, Locale d
                 // deterministik. Ziyaretçinin dilindeki ada göre sıralamak aynı şubeleri
                 // her dilde başka sırada gösterirdi.
                 .OrderBy(row => row.Names.Resolve(defaultLocale, defaultLocale) ?? string.Empty, StringComparer.Ordinal)
-                .Select(row => new PublicBranchDto(
-                    // D8 — ziyaretçinin dilinde yoksa varsayılan dildeki metin (AC-44, AC-68).
-                    // Varsayılan dildeki ad ve adres zorunlu (0003 AC-6), satır boş kalmaz.
-                    row.Names.Resolve(resolved, defaultLocale) ?? string.Empty,
-                    row.Addresses.Resolve(resolved, defaultLocale) ?? string.Empty,
-                    row.Phone.Value,
-                    // `0025` D8 — programsız şubede null; dilden bağımsız.
-                    row.OpeningHours?.ToDto()))
+                .Select(row =>
+                {
+                    (PublicOpenNowDto? openNow, IReadOnlyList<PublicSpecialDayDto> specialHours) =
+                        BranchSchedule.ForVisitor(row.OpeningHours, row.SpecialHours, row.TimeZone, now);
+
+                    return new PublicBranchDto(
+                        // D8 — ziyaretçinin dilinde yoksa varsayılan dildeki metin (AC-44, AC-68).
+                        // Varsayılan dildeki ad ve adres zorunlu (0003 AC-6), satır boş kalmaz.
+                        row.Names.Resolve(resolved, defaultLocale) ?? string.Empty,
+                        row.Addresses.Resolve(resolved, defaultLocale) ?? string.Empty,
+                        row.Phone.Value,
+                        // `0025` D8 — programsız şubede null; dilden bağımsız.
+                        row.OpeningHours?.ToDto(),
+                        // `0027` D8 — "şu an" ve penceredeki özel günler; saat dilimi yanıtta yok (C3).
+                        openNow)
+                    {
+                        SpecialHours = specialHours,
+                    };
+                })
         ];
 
         // D3 — D1'de olmayan kodla saklanmış satır düşer; sıra D1'inkidir, girilme sırası değil.
