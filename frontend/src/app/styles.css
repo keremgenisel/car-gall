@@ -1460,6 +1460,9 @@ a.top-bar__brand:hover {
 .home-footer__branch-name,
 .home-footer__branch-address {
   margin-block: 0 var(--space-1);
+
+  /* QA 2 BULGU-2 (`0028`, önceden var olan kusur) — boşluksuz uzun adres sütunu genişletip altlığı kaydırıyordu. */
+  overflow-wrap: anywhere;
 }
 
 /* `0028` AC-77 — satır yüksekliği yazı tipinden bağımsız: `normal` yedek fontun ölçüsünü alıyordu ve

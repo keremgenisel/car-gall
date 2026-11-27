@@ -39,6 +39,7 @@ const PROGRAMLI = Object.fromEntries(
 type Harita = { linkUrl: string; embedUrl?: string }
 type Sube = {
   name: string
+  address: string
   email: string | null
   map: Harita | null
   openNow: {
@@ -318,6 +319,48 @@ test("0028/AC-41, AC-42: 320 px'te tr/ar/en yatay kayma yok; 1280 px'te harita k
     }
   }
   await kanit(page, page.locator('.contact-page'), '0028-ac42-en-1280.png')
+})
+
+test('0028/AC-41, QA 2 BULGU-2: boşluksuz 300 karakterlik adres iletişim sayfasını ve altlığı yatay kaydırmaz (320 ve 1280 px, tr/en/ar; her öğe görünüm alanının içinde)', async ({
+  page,
+}) => {
+  const adres = '–'.repeat(300)
+  await galeriyiDegistir(page, (galeri) => {
+    galeri.branches[0]!.address = adres
+  })
+  // ar'da `scrollWidth` sola taşmayı saymaz: ölçü her öğenin kutusunun görünüm alanında kalmasıdır.
+  const tasanlar = (kapsam: string) =>
+    page.evaluate((secici) => {
+      const genislik = document.documentElement.clientWidth
+      return [...document.querySelectorAll(`${secici} *`)]
+        .filter((el) => {
+          const r = el.getBoundingClientRect()
+          // Kutu ya da içeriği taşar: metin kutusundan dışarı akınca kutu yerinde kalır (scrollWidth yakalar).
+          return (
+            r.width > 0 &&
+            (r.left < -1 || r.right > genislik + 1 || el.scrollWidth > el.clientWidth + 1)
+          )
+        })
+        .map((el) => el.className || el.tagName)
+    }, kapsam)
+  for (const dil of ['tr', 'en', 'ar'] as const) {
+    for (const genislik of [320, 1280]) {
+      await page.setViewportSize({ width: genislik, height: 900 })
+      await page.goto(`/${dil}/contact`)
+      await expect(page.getByText(adres).first()).toBeVisible()
+      expect(await tasanlar('.contact-page'), `iletişim ${dil} ${genislik}`).toEqual([])
+
+      await page.goto(`/${dil}/`)
+      await expect(page.getByTestId('branch-list')).toBeVisible()
+      expect(await tasanlar('[data-testid="home-footer"]'), `altlık ${dil} ${genislik}`).toEqual([])
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        ),
+        `altlık ${dil} ${genislik}`,
+      ).toBe(true)
+    }
+  }
 })
 
 // ----- Tıkla-yükle harita (D6, D15, D16) -----

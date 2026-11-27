@@ -52,6 +52,7 @@
 }
 
 .contact-branch__name {
+  overflow-wrap: anywhere;
   font-size: var(--font-size-md);
   margin-block: 0 var(--space-4);
 }
@@ -66,6 +67,9 @@
 .contact-branch__address,
 .contact-branch__line {
   margin-block: 0 var(--space-3);
+
+  /* QA 2 BULGU-2 — boşluksuz uzun adres, e-posta ya da ad sütunu genişletip sayfayı kaydırmaz. */
+  overflow-wrap: anywhere;
 }
 
 .contact-branch__line a,
