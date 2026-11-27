@@ -1,3 +1,4 @@
+import { StrictMode } from 'react'
 import { act, cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../../app/LocaleProvider'
@@ -305,6 +306,7 @@ describe('0027/AC-68 (birim yarısı): Parça yüklenmeden ad, adres, telefon ve
     expect(iskelet.style.getPropertyValue('--hours-lines')).toBe('14')
     expect(iskelet.style.getPropertyValue('--special-on')).toBe('1')
     expect(iskelet.style.getPropertyValue('--special-lines')).toBe('24')
+    expect(iskelet.style.getPropertyValue('--special-rows')).toBe('12')
   })
 })
 
@@ -322,6 +324,33 @@ describe('0027/AC-59: `refreshInSeconds` = 2 → en geç 3 sn içinde tam bir ok
     await ilerle(1999)
     expect(fetchGallery).not.toHaveBeenCalled()
     await ilerle(1001)
+    expect(fetchGallery).toHaveBeenCalledTimes(1)
+    expect(satir()).toBe('Şu an kapalı · Açılış yarın 10:00')
+  })
+})
+
+describe("0027/AC-59, QA 2 BULGU-3: StrictMode'da (abone kaldırılıp hemen yeniden kurulur) yenileyici çalışır: 2 sn sonra bir okuma ve yeni satır", () => {
+  it('StrictMode', async () => {
+    vi.mocked(fetchGallery).mockResolvedValue(yanit(KAPALI))
+    render(
+      <StrictMode>
+        <LocaleProvider locale="tr">
+          <BranchList
+            load={{
+              kind: 'ready',
+              gallery: yanit(durum(true, '2026-12-04', '2026-12-04 18:00', 2)),
+              receivedAt: performance.now(),
+            }}
+          />
+        </LocaleProvider>
+      </StrictMode>,
+    )
+    await act(async () => {
+      await import('./branchClock')
+    })
+    expect(satir()).toBe('Şu an açık · Kapanış 18:00')
+
+    await ilerle(2000)
     expect(fetchGallery).toHaveBeenCalledTimes(1)
     expect(satir()).toBe('Şu an kapalı · Açılış yarın 10:00')
   })

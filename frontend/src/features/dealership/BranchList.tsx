@@ -21,6 +21,7 @@ function hoursLines(branch: PublicBranch): CSSProperties {
     '--hours-lines': weekly,
     '--special-on': branch.specialHours.length === 0 ? 0 : 1,
     '--special-lines': special,
+    '--special-rows': branch.specialHours.length,
   } as CSSProperties
 }
 

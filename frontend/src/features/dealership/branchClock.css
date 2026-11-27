@@ -25,6 +25,22 @@
   flex-direction: column;
 }
 
+/* QA 2 BULGU-2 — aralık tireden kırılmaz; satırın sayısı veriden bellidir. */
+.home-footer__hours dd span {
+  white-space: nowrap;
+}
+
+@container branches (width < 24rem) {
+  .home-footer__special .home-footer__hours-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .home-footer__special .home-footer__hours dd {
+    padding-inline-start: var(--space-6);
+  }
+}
+
 /* D11 — "Bugün" gün adından ayrı öğe; satır yüksekliğini değiştirmez. */
 .home-footer__today {
   font-weight: var(--font-weight-semibold);

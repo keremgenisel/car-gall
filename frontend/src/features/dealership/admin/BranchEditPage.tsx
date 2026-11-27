@@ -17,7 +17,7 @@ import { DealershipField } from './DealershipField'
 import { OpeningHoursFieldset } from './OpeningHoursFieldset'
 import { scheduleOf, schedulePayload, type Schedule } from './openingHoursForm'
 import { SpecialHoursFieldset } from './SpecialHoursFieldset'
-import { entriesOf, specialPayload, type SpecialEntry } from './specialHoursForm'
+import { entriesOf, ordered, specialPayload, type SpecialEntry } from './specialHoursForm'
 import {
   actionErrorKey,
   fieldErrorsOf,
@@ -214,6 +214,9 @@ export function BranchEditPage({ branchId }: { readonly branchId?: string }) {
   async function save() {
     setErrors({})
     setBanner({ kind: 'none' })
+    // `0027` QA 2 BULGU-1 — ekran sırası gövde sırasıdır: sunucunun `specialHours.<i>`'si ekranda
+    // aynı kayda düşer. Kayıtlar kaydetmede `from`'a göre dizilir (AC-9).
+    setValues({ ...values, specialHours: ordered(values.specialHours) })
     const input = payload()
 
     if (input === null) {

@@ -40,7 +40,7 @@ interface Now {
 class BranchClockStore {
   private readonly listeners = new Set<() => void>()
   private readonly state = new Map<string, Now>()
-  private readonly controller = new AbortController()
+  private controller: AbortController | null = null
   private deadline: number | null = null
   private timer: ReturnType<typeof setTimeout> | undefined
   private lastRead = Number.NEGATIVE_INFINITY
@@ -62,9 +62,15 @@ class BranchClockStore {
     return () => {
       this.listeners.delete(listener)
 
-      if (this.listeners.size === 0) {
-        this.dispose()
-      }
+      // QA 2 BULGU-3 — StrictMode aboneliği kaldırıp HEMEN yeniden kurar (aynı depo, aynı
+      // `subscribe`). Anında `dispose` zamanlayıcıyı söküyor ve satır hiç yenilenmiyordu
+      // (`frontend-003` BULGU-1'in sınıfı: tekil depo + StrictMode). Söküm bir mikro görev
+      // ertelenir ve abone o zaman hâlâ yoksa yapılır.
+      queueMicrotask(() => {
+        if (this.listeners.size === 0) {
+          this.dispose()
+        }
+      })
     }
   }
 
@@ -146,6 +152,8 @@ class BranchClockStore {
 
     try {
       // Okuma sürerken eski durum ekranda kalır (AC-61): depo yanıt gelene kadar değişmez.
+      // Okuma başına bir `AbortController`: söküm yalnız süren okumayı iptal eder.
+      this.controller = new AbortController()
       const gallery = await fetchGallery(this.locale, this.controller.signal)
       this.accept(gallery, performance.now())
     } catch (cause) {
@@ -164,7 +172,7 @@ class BranchClockStore {
 
   dispose() {
     clearTimeout(this.timer)
-    this.controller.abort()
+    this.controller?.abort()
     document.removeEventListener('visibilitychange', this.onVisible)
 
     if (current === this) {

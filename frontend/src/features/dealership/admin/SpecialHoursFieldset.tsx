@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useLocale } from '../../../app/localeContext'
 import { Button } from '../../../shared/ui'
 import { fieldErrorKey } from './dealershipForm'
@@ -30,6 +31,27 @@ export function SpecialHoursFieldset({
   readonly onChange: (entries: readonly SpecialEntry[]) => void
 }) {
   const { locale, t } = useLocale()
+  const section = useRef<HTMLFieldSetElement>(null)
+
+  // QA 2 BULGU-1 — sıralamadan sonra odak hatalı alana gider: önce `aria-invalid` alan, yoksa
+  // hatası kayda ya da aralık listesine bağlı kaydın başlangıç alanı.
+  useEffect(() => {
+    const keys = Object.keys(errors).filter((key) => key.startsWith('specialHours'))
+
+    if (keys.length === 0 || section.current === null) {
+      return
+    }
+
+    const index = keys
+      .map((key) => /^specialHours\.(\d+)/.exec(key)?.[1])
+      .find((i) => i !== undefined)
+    const target =
+      section.current.querySelector<HTMLElement>('[aria-invalid="true"]') ??
+      (index === undefined
+        ? null
+        : section.current.querySelector<HTMLElement>(`#special-${index}-from`))
+    target?.focus()
+  }, [errors])
   const errorId = (field: string) => `error-${field.replace(/\./g, '-')}`
   const describedBy = (field: string) => (errors[field] === undefined ? undefined : errorId(field))
   const invalid = (field: string) => (errors[field] === undefined ? undefined : true)
@@ -45,7 +67,11 @@ export function SpecialHoursFieldset({
     onChange(changeEntry(entries, index, entry))
 
   return (
-    <fieldset className="admin-form__group opening-hours" data-testid="branch-special-hours">
+    <fieldset
+      ref={section}
+      className="admin-form__group opening-hours"
+      data-testid="branch-special-hours"
+    >
       <legend className="admin-form__label">{t('dealership.branch.special.title')}</legend>
       <p className="admin-form__hint">{t('dealership.branch.special.hint')}</p>
       {entries.map((entry, index) => {

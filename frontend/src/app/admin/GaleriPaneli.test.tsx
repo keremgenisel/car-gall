@@ -1265,3 +1265,63 @@ describe("0027/AC-73 (panel yarısı): Bölümün metinleri ve D14'ün hata kodl
     }
   })
 })
+
+describe('0027/AC-22, QA 2 BULGU-1: Öne sıralanan yeni kaydın hatası o kaydın yanında; kaydetmede ekran gövdeyle aynı sıraya geçer ve odak hatalı alana gider', () => {
+  it('end_before_start — yeni kayıt başa sıralanır', async () => {
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue(OZEL_SUBE)
+    vi.mocked(api.saveBranch).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'specialHours.0.through',
+        'specialHours.0.through': 'special_hours.end_before_start',
+      }),
+    )
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-special-hours')
+
+    fireEvent.click(screen.getByTestId('special-add'))
+    fireEvent.change(screen.getByTestId('special-2-from'), { target: { value: '2026-12-20' } })
+    fireEvent.change(screen.getByTestId('special-2-through'), { target: { value: '2026-12-19' } })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    const gonderilen = vi.mocked(api.saveBranch).mock.calls[0]![2].specialHours!
+    expect(gonderilen[0]).toEqual({ from: '2026-12-20', through: '2026-12-19', intervals: [] })
+
+    const hata = await screen.findByTestId('error-specialHours.0.through')
+    const kayit = hata.closest<HTMLElement>('[data-testid^="special-"]')!
+    expect(kayit.getAttribute('data-testid')).toBe('special-0')
+    expect((within(kayit).getByTestId('special-0-from') as HTMLInputElement).value).toBe(
+      '2026-12-20',
+    )
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByTestId('special-0-through')),
+    )
+  })
+
+  it('overlap — hata, sunucunun gösterdiği (sıralı) kaydın yanında', async () => {
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue(OZEL_SUBE)
+    vi.mocked(api.saveBranch).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'specialHours.2.from',
+        'specialHours.2.from': 'special_hours.overlap',
+      }),
+    )
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-special-hours')
+
+    // Yeni kayıt 2027-01-15–02-10, var olan 2027-02-08–03-09'un ÖNÜNE sıralanır ve onunla çakışır.
+    fireEvent.click(screen.getByTestId('special-add'))
+    fireEvent.change(screen.getByTestId('special-2-from'), { target: { value: '2027-01-15' } })
+    fireEvent.change(screen.getByTestId('special-2-through'), { target: { value: '2027-02-10' } })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    expect(
+      vi.mocked(api.saveBranch).mock.calls[0]![2].specialHours!.map((kayit) => kayit.from),
+    ).toEqual(['2027-01-01', '2027-01-15', '2027-02-08'])
+    const hata = await screen.findByTestId('error-specialHours.2.from')
+    const kayit = hata.closest<HTMLElement>('[data-testid^="special-"]')!
+    expect((within(kayit).getByTestId('special-2-from') as HTMLInputElement).value).toBe(
+      '2027-02-08',
+    )
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId('special-2-from')))
+  })
+})

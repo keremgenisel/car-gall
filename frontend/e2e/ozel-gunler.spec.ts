@@ -364,6 +364,39 @@ test('0027/AC-1, AC-2, AC-3, AC-9, AC-22: Bölüm "Çalışma saatleri"nden sonr
   await kanit(page, ar, '0027-ac1-ar.png')
 })
 
+test('0027/AC-22, QA 2 BULGU-1: Var olanın önüne sıralanan yeni kaydın hatası doğru kaydın yanında; çakışma sıralı kayıtta; odak hatalı alanda', async ({
+  page,
+}) => {
+  const ad = benzersiz('Sıra')
+  const id = await subeAc(page.request, ad, PROGRAMLI)
+  const g = await bugun(page.request, ad)
+  expect(
+    (
+      await ozelYaz(page.request, id, [{ from: ekle(g, 20), through: ekle(g, 25), intervals: [] }])
+    ).status(),
+  ).toBe(200)
+  await page.goto(`/admin/branches/${id}`)
+  await expect(page.getByTestId('special-0-from')).toHaveValue(ekle(g, 20))
+
+  // Yeni kayıt başa sıralanır ve bitişi başlangıçtan önce: hata YENİ kaydın yanında.
+  await page.getByTestId('special-add').click()
+  await page.getByTestId('special-1-from').fill(ekle(g, 5))
+  await page.getByTestId('special-1-through').fill(ekle(g, 4))
+  await page.getByTestId('branch-save').click()
+  const hata = page.getByTestId('error-specialHours.0.through')
+  await expect(hata).toHaveText('Bitiş başlangıçtan önce olamaz.')
+  await expect(page.getByTestId('special-0').getByTestId('special-0-from')).toHaveValue(ekle(g, 5))
+  await expect(page.getByTestId('special-0-through')).toBeFocused()
+
+  // Çakışma: yeni kayıt (g+10–g+21) var olanın (g+20–g+25) önünde; hata sıralı ikinci kayıtta.
+  await page.getByTestId('special-0-from').fill(ekle(g, 10))
+  await page.getByTestId('special-0-through').fill(ekle(g, 21))
+  await page.getByTestId('branch-save').click()
+  await expect(page.getByTestId('error-specialHours.1.from')).toBeVisible()
+  await expect(page.getByTestId('special-1').getByTestId('special-1-from')).toHaveValue(ekle(g, 20))
+  await expect(page.getByTestId('special-1-from')).toBeFocused()
+})
+
 // ----- Altlık (D9–D11) -----
 
 test('0027/AC-48, AC-53, AC-55, AC-56, AC-57: Altlıkta "şu an" satırı adın altında sunucunun durumuyla; "Bugün" tek satırda; "Özel günler" from sırasıyla; programsızda satır yok', async ({
@@ -480,6 +513,10 @@ async function iskelet(page: Page, ad: string) {
 
 for (const [etiket, dil, genislik, saatler, ozelSayisi] of [
   ['AC-75, AC-77 (en kötü, ar, 320 px)', 'ar', 320, HER_GUN_IKI, 12],
+  // QA 2 BULGU-2 — en uzun tarih etiketi: İngilizce, ay aşan aralık + "Today", 320 px.
+  ['AC-75, AC-77, QA 2 BULGU-2 (en kötü, en, 320 px)', 'en', 320, HER_GUN_IKI, 12],
+  // 800 px'te altlık üç sütun, şube sütunu 245 px (1280 px'te 379): kat kararı görünümden değil sütundan.
+  ['QA 2 BULGU-2 (en kötü, en, 800 px — 245 px sütun)', 'en', 800, HER_GUN_IKI, 12],
   ['AC-76 (programlı, tr, 1280 px)', 'tr', 1280, PROGRAMLI, 0],
   // Geniş ekranda iki aralık tek satıra sığar: "her aralık kendi satırında" kuralını yalnız bu ölçer.
   ['AC-75 ek (en kötü, tr, 1280 px)', 'tr', 1280, HER_GUN_IKI, 12],
@@ -491,10 +528,16 @@ for (const [etiket, dil, genislik, saatler, ozelSayisi] of [
     const id = await subeAc(page.request, ad, saatler)
     const g = await bugun(page.request, ad)
     if (ozelSayisi > 0) {
-      const kayitlar = Array.from({ length: ozelSayisi }, (_, i) => ({
-        from: ekle(g, 1 + 2 * i),
-        intervals: IKI,
-      }))
+      // İlk kayıt bugünü kapsar ve ay aşar (aralık etiketi + "Bugün" aynı satırda); kalanlar ardından.
+      const [y, a] = g.split('-').map(Number)
+      const ayAsan = new Date(Date.UTC(y!, a!, 2)).toISOString().slice(0, 10)
+      const kayitlar = [
+        { from: g, through: ayAsan, intervals: IKI },
+        ...Array.from({ length: ozelSayisi - 1 }, (_, i) => ({
+          from: ekle(ayAsan, 1 + 2 * i),
+          intervals: IKI,
+        })),
+      ]
       expect((await ozelYaz(page.request, id, kayitlar)).status()).toBe(200)
     }
 
@@ -541,6 +584,34 @@ for (const [etiket, dil, genislik, saatler, ozelSayisi] of [
     await expect(oge.getByTestId('branch-now')).not.toHaveText('')
     await page.waitForTimeout(300)
 
+    // QA 2 BULGU-2 — hiçbir satırda tarih/gün ile aralık üst üste binmez; şube taşmaz.
+    const binenler = await oge.evaluate((li) =>
+      [...li.querySelectorAll('.home-footer__hours-row')].flatMap((row) => {
+        // Kutu değil İÇERİK: `dt` 9rem'e kadar daralır ve `nowrap` metni kutusundan taşar; yalnız
+        // kutular karşılaştırılırsa metin `dd`'nin üstüne binerken test yeşil kalıyordu (Range ile ölç).
+        const icerik = document.createRange()
+        icerik.selectNodeContents(row.querySelector('dt')!)
+        const dt = icerik.getBoundingClientRect()
+        const dd = row.querySelector('dd')!.getBoundingClientRect()
+        const kesisir =
+          dt.left < dd.right - 0.5 &&
+          dd.left < dt.right - 0.5 &&
+          dt.top < dd.bottom - 0.5 &&
+          dd.top < dt.bottom - 0.5
+        // Kutu şubenin içinde kalır (sağdan sola dahil); sığmayan satır taşar ve komşu sütuna biner.
+        const kutu = li.getBoundingClientRect()
+        const tasar = [dt, dd].some((r) => r.left < kutu.left - 1 || r.right > kutu.right + 1)
+        return kesisir || tasar ? [row.textContent] : []
+      }),
+    )
+    expect(binenler, etiket).toEqual([])
+    expect(await oge.evaluate((li) => li.scrollWidth <= li.clientWidth + 1), etiket).toBe(true)
+    if (ozelSayisi > 0) {
+      await expect(oge.getByTestId('branch-special').locator('[aria-current="date"]')).toHaveCount(
+        1,
+      )
+    }
+
     const sonra = await saatAlani(page, adi)
     expect(Math.abs(sonra - once), `${etiket}: iskelet ${once}, alan ${sonra}`).toBeLessThanOrEqual(
       1,
@@ -553,13 +624,13 @@ for (const [etiket, dil, genislik, saatler, ozelSayisi] of [
     expect(
       await page.evaluate(() => (window as unknown as { kaymalar: string[] }).kaymalar),
     ).toEqual([])
-    if (ozelSayisi > 0) {
-      await kanit(page, oge, '0027-ac75-ar.png')
+    if (ozelSayisi > 0 && genislik === 320) {
+      await kanit(page, oge, `0027-ac75-${dil}.png`)
     }
   })
 }
 
-test('0027/AC-69: "Şu an" kutusu dokuz metinde 320 px\'te aynı yükseklikte, iki satır; metin kesilmez (fontlar yüklü)', async ({
+test('0027/AC-69: "Şu an" kutusu dokuz metinde 320 px\'te aynı yükseklikte, iki satır; metin kesilmez (fontlar bekletilip serbest bırakılarak; QA 2 BULGU-6)', async ({
   page,
 }) => {
   const ad = benzersiz('Kutu')
@@ -623,8 +694,14 @@ test('0027/AC-69: "Şu an" kutusu dokuz metinde 320 px\'te aynı yükseklikte, i
         }
         await route.fulfill({ response: yanit, json: govde })
       })
-      await page.goto(`/${dil}/`)
-      await page.evaluate(() => document.fonts.ready)
+      // QA 2 BULGU-6 — font gerçekten bekletilir (yönlendirme HTTP önbelleğini kapatır), yüklenirken
+      // doğrulanır, sonra serbest bırakılır: ölçüm web fontuyla, şansa bırakılmadan.
+      await page.unroute('**/*.woff2')
+      const fontuBirak = await fontlariBeklet(page)
+      await page.goto(`/${dil}/`, { waitUntil: 'domcontentloaded' })
+      await expect(page.getByTestId('home-footer')).toBeAttached()
+      expect(await page.evaluate(() => document.fonts.status), beklenen).toBe('loading')
+      await fontuBirak()
       const kutu = page.getByTestId('branch').filter({ hasText: ad }).getByTestId('branch-now')
       await expect(kutu).toHaveText(beklenen)
       const olcu = await kutu.evaluate((el) => ({
