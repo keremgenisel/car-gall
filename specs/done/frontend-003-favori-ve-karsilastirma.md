@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-26 — Takım Yöneticisi (ajan) kararı) · QA CLARIFY turu işlendi (QA 1, PR #138 @ `8ecf9ae`: 17 bulgu — 0 engelleyici / 9 önemli / 8 küçük; B1–B17 → § Verilen kararlar) |
+| **Durum** | Tamamlandı (2026-11-27) — kararlar ve kriterler #138 → `ce1c010`, uygulama #139 → `bb5f491` |
 | **Sahip** | — |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `frontend/` public vitrin (favori düğmesi, sayaç, favoriler ve karşılaştırma ekranları, tembel katalog kümesi) · `Host` (iki yeni sayfa türü, belge etiketleri, `Referrer-Policy` — **D2**) · `Content.Contracts` (yalnız ayrılmış ad listesine `favorites` ve `compare` — **D1**) · `tests/VehicleCatalog.Tests` (alan adı kapısının okuduğu dosya ve "tek yerde" ölçüsü — **D11**) · `frontend/scripts/check-locale-keys.mjs` (üçüncü küme **D13**, anahtar varlığı kapısı **D19**) · `docs/` (sözlük **D16**, karar defteri, ADR `0013` eki ve `deploy.md` günlük notu **D17**). **Backend sözleşmesi değişmez** (**D14**; S5 koddan doğrulandı). |
@@ -930,28 +930,28 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 - [x] Açık sorular karara bağlandı; **S5 kodda doğrulandı** ve sonucu Context'e yazıldı.
 - [x] Proje Yöneticisi D1–D17'yi onayladı; QA CLARIFY turu işlendi (B1–B17, 2026-11-26).
 - [x] D18 (ilk paket bütçesi) karara bağlandı: +1280 B (Proje Yöneticisi kararı, 2026-11-26); AP-08 revizyonuyla +1450 B (Takım Yöneticisi kararı, 2026-11-26).
-- [ ] `docs/deploy.md`'ye ters vekil/CDN erişim günlüğü notu düşüldü (D17, B2).
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/frontend-003-ac<n>.png`); iki boş durum, mobil
-      görünüm ve Arapça (RTL) görünüm dâhil.
-- [ ] `localStorage` erişilemezken arayüzün çalıştığı testle gösterildi (C9, AC-15, AC-16).
-- [ ] Favori verisinin sunucuya **gitmediği** doğrulandı (C2, AC-27, AC-65).
-- [ ] Kapalı ve gizli alanların karşılaştırmada bulunmadığı testle gösterildi (R8, C3, AC-53).
-- [ ] İlk paket ölçümü head commit'te yapıldı ve PR'da yazılı (AC-67).
-- [ ] Bilerek değişen eski testler tablodakilerle sınırlı; her değişiklik PR'da kriteriyle yazılı (AC-75).
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`).
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. (Bu kartta migration yok — AC-66.)
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (D16).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D17; ADR `0013` eki).
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+- [x] `docs/deploy.md`'ye ters vekil/CDN erişim günlüğü notu düşüldü (D17, B2). — `docs/deploy.md` § 5 madde 4; QA 2 BULGU-7 ile karşılaştırma belgesi ve görsel okumaları da eklendi.
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. — 75/75; kriter → kanıt tablosu #139 gövdesinde.
+- [x] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/frontend-003-ac<n>.png`); iki boş durum, mobil
+      görünüm ve Arapça (RTL) görünüm dâhil. — `docs/evidence/frontend-003-*.png` (32 dosya; boş durumlar, 320 px, ar).
+- [x] `localStorage` erişilemezken arayüzün çalıştığı testle gösterildi (C9, AC-15, AC-16). — `favorites.test.ts` + e2e (AC-15, AC-16).
+- [x] Favori verisinin sunucuya **gitmediği** doğrulandı (C2, AC-27, AC-65). — e2e ağ denetimi; QA 2 gerçek tarayıcıda ayrıca ölçtü: ekle/çıkar 0 istek, birden çok slug taşıyan tek istek karşılaştırma belgesi (≤3), Referer boş.
+- [x] Kapalı ve gizli alanların karşılaştırmada bulunmadığı testle gösterildi (R8, C3, AC-53). — AC-55 zinciri `VehicleCatalog.Tests` (gerçek Postgres; açıkken VAR, kapalıyken YOK, açılınca geri) + vitest + e2e anahtar kümesi.
+- [x] İlk paket ölçümü head commit'te yapıldı ve PR'da yazılı (AC-67). — head `4322560`: 117 605 → 119 041 B = +1436 / 1450 B; QA 2 base/head ayrı derleyip doğruladı (+1439 @ de09c62).
+- [x] Bilerek değişen eski testler tablodakilerle sınırlı; her değişiklik PR'da kriteriyle yazılı (AC-75). — B9 tablosu + tablo dışı tek test `galeri-logosu.spec.ts:204` (TM onayı, AC-32 kararı); #139 gövdesinde tablo.
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). — Host 622, VehicleCatalog 572, Content 171.
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok. — Architecture 71/71 (kapanış commit'inde yeniden koşuldu).
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. (Bu kartta migration yok — AC-66.) — migration yok; `src/Modules`'ta yalnız `ContentPageContracts.cs` (AC-66).
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil. — üç küme + D19 anahtar varlığı kapısı; mevcut kodda eksik anahtar 0.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi (D16). — `docs/domain.md` (favori, karşılaştırma).
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D17; ADR `0013` eki). — `docs/architecture.md` Karar Defteri "Favoriler tarayıcıda"; ADR `0013` eki (D19 kör noktaları dahil).
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). — `4322560`: Backend, Frontend, E2E (499/499 yerel), C3, değişen yollar.
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD) ve spec `specs/done/` klasörüne taşındı.
+      bunun yerine geçmez. — QA 2, head `de09c62`: 8 bulgu (0/1/7), hepsi düzeltildi.
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. — karşılanmayan kriter yok.
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. — 2026-11-27, `bb5f491`.
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD) ve spec `specs/done/` klasörüne taşındı. — bu kapanış.
 
 ---
 
@@ -969,13 +969,25 @@ tanımın netleştirilmesini öner.
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | evet / hayır | R/C/AC, **implementasyon commit'inden önce** `main`'de miydi (ADR 0008 / K2)? Tek komutla doğrulanır: `git cat-file -e <impl>^:specs/<ad>.md`. **`hayır` ise alttaki revizyon sayısı ÖLÇÜLEMEZ** ve `—` yazılır — düşük sayı iyi spec değil, karşılaştırılacak tabanı olmayan spec demektir. |
-| **Kriter sayısı: önce → bugün** | → | O commit'in ebeveyninde kaç kabul kriteri vardı, bugün kaç? `git show <impl>^:specs/<ad>.md \| grep -c '^- \*\*AC-'`. İkisi arasındaki fark, revizyon sayısının söylemediği şeyi söyler: `0008` bu ölçümde **2 → 33** çıktı ve kartı revizyon **1** yazıyordu. |
-| **Spec revizyon sayısı** | | Kriterler `main`'e girdikten **sonra** **Requirements, Constraints veya Acceptance Criteria** kaç kez değişti? Açıklayıcı not eklemek de sayılır: nete ihtiyaç duyan kural, eksik yazılmış kuraldır. Intent, Context, kapsam dışı gerekçeleri ve SCORECARD değişiklikleri **sayılmaz**. Yüksekse spec eksik yazılmıştır. **Onay anındaki CLARIFY turu SAYILIR** (ADR 0008 / K3) — ölçütün sorduğu şey "spec eksik mi yazılmıştı" ve kriter sayısının iki katına çıkması bunun en net cevabıdır. Üstteki satır `hayır` ise buraya `—` yazılır. |
-| **Düzeltme turu sayısı** | | PR kaç kez geri döndü? Yüksekse kriterler belirsizdir veya iş çok büyüktür. **`0` ile `—` aynı şey değildir:** `0`, gözden geçirildi ve hiç tur dönmedi demektir; gözden geçirme hiç yapılmadıysa `—` yazılır. İkisini aynı göstermek, ölçülmemiş işi temiz işmiş gibi gösterir. **`0` yalnız DoD'un dış gözden geçirme kutusu `[x]` ise yazılır; kutu açıksa veya madde yoksa `—`** (ADR 0008 / K3). Bu, "gözden geçirildi"yi var olan bir kutuya bağlar: kural eskiden kimin gözden geçirdiğini söylemiyordu ve üç kart (`0002`, `0007`, `frontend-002`) tam o boşlukta `0` yazdı. |
-| **Dış bulgu (gerçek/gürültü)** | / | **Dış** gözden geçirmede çıkan bulgulardan kaçı gerçek sorundu, kaçı gürültü? Yazarın kendi triyajı bu sütuna yazılmaz — kendi kodunu okuyan kişi kendi körlüğünü paylaşır. Dış gözden geçirme yapılmadıysa `— (dış gözden geçirme yok)`. **Ölçtüğü şey: spec ve kod ne kadar açık yazıldı.** |
-| **Uygulama içi bulgu** | | Yazarın kendi işini yaparken bulduğu kusur sayısı — kendi testi kırmızı verdiği, kendi kanıtına baktığı veya kendi sondası yakaladığı için. Dış bulguyla aynı sütunda toplanmaz: ikisi **farklı şey** ölçer. **Ölçtüğü şey: yazar kendi işini ne kadar sorguladı.** Sıfır, "hiç hata yapmadım" değil "hiçbirini kendim bulmadım" demektir ve dış bulgu yüksekse bu bir uyarıdır. |
-| **Regresyon sayısı** | | Bu iş yüzünden bozulan, daha önce çalışan davranış sayısı. `0001`/`0002`'yi bozup bozmadığı burada görünür. |
-| **Kaçan hata** | | Merge'den **sonra** bulunan hata sayısı. En pahalı sütun budur. **Spec arşive taşınırken DEĞER hücresine `izleniyor` yazılır**; merge'den sonra bulunan her kusur bu satıra tarihiyle eklenir. Bu tek ölçüt DoD'nin şartı değildir — tanımı gereği merge anında bilinemez. **Değer hücresine yalnız `izleniyor` veya bir sayı girer; `0` ve BOŞ hücre yasak** (ADR 0008 / K3). Üçü de kullanıldı ve sütun üç dialekte bölündü; `frontend-002`'nin boş hücresi bir ortalamada da bir `grep`'te de sessizce kaybolur. |
+| **Kriterler önce `main`'de miydi?** | evet | `git cat-file -e bb5f491^:specs/frontend-003-favori-ve-karsilastirma.md` → var; kriterler #138 → `ce1c010`. |
+| **Kriter sayısı: önce → bugün** | 75 → 75 | Numara eklenmedi; altı revizyonun hepsi yerinde metin değişikliği. |
+| **Spec revizyon sayısı** | 6 | CLARIFY turu (QA 1, 17 bulgu → D18–D19, 73 → 75 AC) · D18/AC-67 +1280 → +1450 B (beş düşürmeden sonra +1396 ölçüldü) · AC-55 "panelden" → "veritabanında" (panelde alan ayarı yazma yolu yok) · D8/AC-32 dar ekranda iki satır, eşik 40rem (320 px'te ada 13 px kalıyordu) · AC-12 metni D4'e hizalandı (kendi içinde çelişkiliydi) · AC-32(i) + `0026` AC-34: logosuz ad da tek satır + "…" (font bekletilince CLS 0.15–0.24). Hepsi AP-08, Takım Yöneticisi kararı. |
+| **Düzeltme turu sayısı** | 1 | QA 2 turu (BULGU-1…8 + AC-12, D3.4, ayna testi); AC-32(i) aynı turda çıktı. |
+| **Dış bulgu (gerçek/gürültü)** | 8 / 0 | QA 2: 0 engelleyici / 1 önemli (StrictMode'da favoriler iskelette takılı) / 7 küçük. BULGU-6'nın istediği font bekletmesi ayrıca önceden var olan bir kusuru açtı (logosuz adın font değişiminde CLS'i) — sayıya katılmadı, `0026` kaçan hatasına yazıldı. |
+| **Uygulama içi bulgu** | 7 | İlk paket iki kez sınırı aştı (tembel parçanın girişten bağları +80 B, kalp yolu ~60 B) · ar karşılaştırma hücresinde `dir=auto` hizası (bdi) · kaldır düğmesinde sabit "×" · D19'un ilk hâli öneksiz şablonları eksik sayıyordu · M6 negatif kanıtı ilk denemede uygulanmamıştı · `kabuk.spec` frontend-001/AC-4 ara kırılması (test değişmeden düzeldi). Ayrıca 320 px'te main'deki logo taşmasını buldu (`0026` kaçan hatası). |
+| **Regresyon sayısı** | 0 | Ara kırılma (`kabuk.spec` AC-4) PR'dan önce düzeldi; bilerek değişen tek tablo dışı test TM onaylı. |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-27 (`bb5f491`). |
 
 **Bu spec'ten çıkarılan ders:**
+
+1. **Font bekletilmeden ölçülen CLS yeşil yalan söyler.** Üst çubuk testleri `0020`'den beri
+   "ilk karede / fonttan önce" diyordu ama `goto` `load`'u beklediği için ölçüm font sonrasıydı.
+   Font `page.route` ile bekletilince `0026`'nın logosuz kırılabilir adı 0.15–0.24 CLS verdi.
+   Üst çubuğa dokunan her kartta font bekletmeli ölçüm zorunlu; satır sayısı fonttan bağımsız
+   olmalı (tek satır + "…" ya da içerikten bağımsız eşik).
+2. **Dar ekran alt sınırı (320 px) ölçülmeden yerleşim kararı verilmez.** `0026` yalnız 412 px'i
+   ölçmüştü; logo 320 px'te zaten taşıyordu. Kırılma içerikten değil eşikten gelmeli — sonradan
+   görünen sayaç içerik bağımlı `flex-wrap`'ı ilk boyamadan sonra değiştirirdi.
+3. **Bütçe kararı ölçülmüş tavanla verilir.** +1280 B kod payı tahminiydi; beş düşürmeden sonra
+   +1396 çıktı. Tahminî bütçe "sert sınır" diye yazılınca ilk aşımda karar turu doğuruyor.
+4. **"Panelden yapılır" diyen kriter, panelde o yolun varlığı doğrulanmadan yazılmaz** (AC-55).

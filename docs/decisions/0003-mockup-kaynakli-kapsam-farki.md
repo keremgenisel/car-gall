@@ -319,7 +319,7 @@ yerde duruyor — kapı yalnız kartın kendisini okur. Güncellenmesi kapanış
 | 9 | Liste: sıralama + filtre eksenleri | `0015` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 10 | Medya galerisi + parça haritası şeması | `0016a` ✅ tamamlandı · `0016b` ✅ tamamlandı *(#8'den önce — § Sapma)* |
 | 11 | `Content` sayfaları | `0017` ✅ tamamlandı *(#8'den önce — § Sapma)* |
-| 12 | Favori + karşılaştırma | **`frontend-003`** (Taslak — S1–S5) |
+| 12 | Favori + karşılaştırma | `frontend-003` ✅ tamamlandı |
 | 13 | Bülten aboneliği | `0018` ✅ tamamlandı *(#8 ve #12'den önce — § Sapma)* |
 
 `3`. satır `0010`'un **D9**'uyla ikiye bölündü ve **iki dilimi de kapandı**: `0010a` (araç
