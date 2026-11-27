@@ -115,6 +115,17 @@ async function googleTaslagi(baglam: BrowserContext) {
   )
 }
 
+/**
+ * Sayfanın KENDİ aldığı galeri yanıtı (yönlendirilmişse yönlendirilmiş hâli). Şubeler global: paralel bir
+ * spec şubesini açıp kapatabilir, sayfadan sonra yapılan ayrı bir okuma başka bir küme döndürür
+ * (QA 2 sonrası tam koşuda ölçüldü).
+ */
+async function gitVeGaleri(page: Page, adres: string): Promise<Galeri> {
+  const yanit = page.waitForResponse((r) => r.url().includes('/api/dealership/gallery'))
+  await page.goto(adres)
+  return (await (await yanit).json()) as Galeri
+}
+
 /** Fontlar bekletilir; `birak()` serbest bırakır ve yüklenmelerini bekler (`frontend-003` dersi). */
 async function fontlariBeklet(page: Page) {
   let birak: () => void = () => {}
@@ -400,15 +411,12 @@ test('0028/AC-48, AC-50, AC-51, AC-52, AC-54: Enter ve Space iframe\'i açar; if
   context,
 }) => {
   await googleTaslagi(context)
-  await page.goto('/tr/contact')
+  const galeri = await gitVeGaleri(page, '/tr/contact')
   const [ilk, ikinci] = [
     page.getByTestId('contact-branch').nth(0),
     page.getByTestId('contact-branch').nth(1),
   ]
   const ad = (await ilk.locator('h2').textContent())!
-  const galeri = (await (
-    await page.request.get('/api/dealership/gallery?locale=tr')
-  ).json()) as Galeri
   const embed = galeri.branches.find((b) => b.name === ad)!.map!.embedUrl!
 
   const dugme = ilk.getByRole('button', { name: 'Haritayı göster' })
@@ -488,7 +496,7 @@ for (const logolu of [false, true]) {
         gezinme: istek.isNavigationRequest(),
       })
     })
-    await page.goto('/tr/contact')
+    const galeri = await gitVeGaleri(page, '/tr/contact')
     await expect(page.getByTestId('map-box').first()).toBeVisible()
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
     await page.waitForTimeout(5000)
@@ -502,9 +510,6 @@ for (const logolu of [false, true]) {
     expect(disari()).toEqual([])
     expect(await page.locator('link[rel="preconnect"], link[rel="dns-prefetch"]').count()).toBe(0)
 
-    const galeri = (await (
-      await page.request.get('/api/dealership/gallery?locale=tr')
-    ).json()) as Galeri
     const ad = (await page.getByTestId('contact-branch').first().locator('h2').textContent())!
     const embed = galeri.branches.find((b) => b.name === ad)!.map!.embedUrl!
 
@@ -532,10 +537,6 @@ test('0028/AC-55, AC-56, AC-81 (anahtarsız yarı): `embedUrl` yokken kutu ve d�
       }
     }
   })
-  const galeri = (await (
-    await page.request.get('/api/dealership/gallery?locale=tr')
-  ).json()) as Galeri
-
   for (const [dil, metin] of [
     ['tr', "Google Haritalar'da aç"],
     ['ar', 'افتح في خرائط Google'],
@@ -553,7 +554,7 @@ test('0028/AC-55, AC-56, AC-81 (anahtarsız yarı): `embedUrl` yokken kutu ve d�
     await expect(baglantilar.first()).toHaveText(metin)
     expect(await baglantilar.first().getAttribute('target')).toBeNull()
   }
-  await page.goto('/tr/contact')
+  const galeri = await gitVeGaleri(page, '/tr/contact')
   const ilk = page.getByTestId('contact-branch').first()
   const ad = (await ilk.locator('h2').textContent())!
   await expect(ilk.getByTestId('map-link')).toHaveAttribute(
