@@ -626,7 +626,7 @@ test('0027/AC-71: Ana sayfa fontlar bekletilerek açılır, altlığa kaydırıl
   )
 })
 
-test('0027/AC-78: 412×823 ve 1350×940 görünümde altlığın üst kenarı ilk görünüm alanının altında', async ({
+test('0027/AC-78, 0028/AC-96: 412×823 ve 1350×940 görünümde altlığın üst kenarı ilk görünüm alanının altında (sadeleşen altlıkla da)', async ({
   page,
 }) => {
   for (const [w, h] of [

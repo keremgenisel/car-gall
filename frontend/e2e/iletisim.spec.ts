@@ -468,7 +468,8 @@ test('0028/AC-55, AC-56, AC-81 (anahtarsız yarı): `embedUrl` yokken kutu ve d�
       page.getByRole('button', { name: /Haritayı göster|اعرض الخريطة|Show map/u }),
     ).toHaveCount(0)
     const baglantilar = page.getByTestId('map-link')
-    await expect(baglantilar).toHaveCount(galeri.branches.filter((b) => b.map !== null).length)
+    // Şubeler global (başka spec'ler aynı anda açabilir): sayı ayrı okumadan değil, basılan bölümlerden.
+    await expect(baglantilar).toHaveCount(await page.getByTestId('contact-branch').count())
     await expect(baglantilar.first()).toHaveText(metin)
     expect(await baglantilar.first().getAttribute('target')).toBeNull()
   }
