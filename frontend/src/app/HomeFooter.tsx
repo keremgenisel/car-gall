@@ -10,7 +10,7 @@ import { useLocale } from './localeContext'
  * araç listesi, ETKİN locale'lerin ana sayfaları ve şube telefonları (AC-46). Kurumsal
  * sayfalar yok (`Content` yok, X6); dil listesi koddan değil kurulumdan gelir (AC-67).
  *
- * `id="contact"` boş vitrin durumunun "Galeriye ulaşın" eyleminin hedefidir.
+ * `0028` **D17** — `id="contact"` kalktı: "Galeriye ulaşın" iletişim sayfasına gider (AC-63).
  */
 export function HomeFooter({
   branches,
@@ -34,7 +34,7 @@ export function HomeFooter({
   const logo = galleryLogo()
 
   return (
-    <footer className="home-footer" id="contact" data-testid="home-footer">
+    <footer className="home-footer" data-testid="home-footer">
       <div className="home-footer__inner">
         {/*
           `0026` D5 · R4a — altlığın başında, şube bloğundan önce; üst çubukla AYNI `logo-small`

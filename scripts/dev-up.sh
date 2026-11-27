@@ -146,6 +146,8 @@ echo "    kimlik : yonetici@cargallery.local"
 echo "    parola : $SEED_ADMIN_PASSWORD"
 echo "    e2e için: export E2E_SEED_ADMIN_PASSWORD='$SEED_ADMIN_PASSWORD'"
 echo "    bülten e2e için: export E2E_MAILPIT_URL='http://localhost:$MAIL_UI_PORT'"
+# `0028` QA 2 BULGU-1 — iletisim.spec'in "kendi kökenler" kümesi Host'un Media__PublicBaseUrl'ini okur.
+echo "    iletişim e2e için: export E2E_MEDIA_PUBLIC_BASE_URL='http://localhost:$S3_PORT/$S3_BUCKET/'"
 
 echo "==> Host ($SEED_COUNT ilanla seed edilerek)"
 ConnectionStrings__VehicleCatalog="Host=localhost;Port=$PORT;Database=cargallery;Username=postgres;Password=devonly" \

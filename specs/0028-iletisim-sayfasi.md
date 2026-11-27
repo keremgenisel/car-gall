@@ -299,6 +299,103 @@ Kaynaktan doğrulananlar:
 10. **"Şu an" kutusu yeni sayfada da iki satır** (`0027` D11, AC-69). Sayfanın sütun genişliği altlıktan
     farklıdır; ölçüm yeni sayfada yapılır.
 
+### Verilen kararlar — plan turu (DEV, 2026-11-27)
+
+R/C/AC'ye dokunmayan uygulama kararları. Bir kararı değiştiren her şey Proje Yöneticisine gider
+(AP-08).
+
+- **P1 — Sözleşme (D5, C2).** `PublicBranchDto`'ya `Email` (`string?`) ve `Map` (`PublicBranchMapDto?`)
+  eklenir. `PublicBranchMapDto(string LinkUrl)` ve `EmbedUrl` init özelliği
+  `[JsonIgnore(Condition = WhenWritingNull)]` taşır: anahtar yokken alan yanıtta **yoktur** (AC-28).
+  Koordinat ziyaretçi DTO'suna girmez. İletişim belgesinin `geo`'su için sözleşmeye ayrı bir okuma
+  eklenir: `IPublicGalleryQueries.GetContactAsync(locale)` → `ContactGalleryDto(PublicGalleryDto
+  Gallery, IReadOnlyList<PublicGeoDto?> Geo)` (aynı sıra, aynı sorgu). Uç bu okumayı çağırmaz, yani
+  izin listesi ham koordinatı hiç görmez (AC-23).
+- **P2 — Harita adresleri tek yerde (D7).** `Domain/BranchMapAddress.cs`, saf işlev: (koordinat?,
+  varsayılan dildeki adres, istek dili, anahtar?) → `(link, embed?)` ya da `null`.
+  - Koordinat `ToString("0.############", InvariantCulture)`: nokta ondalık, sondaki sıfır yok (AC-25).
+  - Adres: her `char.IsControl` karakteri boşluğa çevrilir, ardışık boşluk teke iner, kırpılır
+    (AC-97), sonra `Uri.EscapeDataString` (AC-26).
+  - Kodlanmış iki adresten biri 2048 karakteri aşarsa `null` (AC-91).
+  - Anahtar `GoogleMaps:EmbedApiKey`'den bir kez okunur (`DealershipMapOptions`, tekil). Boş ya da
+    yalnız boşluk = yok. Sınıfın `ToString`'i anahtarı taşımaz. Anahtarı yazan hiçbir günlük satırı
+    yoktur (AC-83).
+- **P3 — Belge (D12, D13).** `SeoPageKind.Contact`. `SeoPage` `/{l}/contact`'ı içerik adayından önce
+  tanır, alt yollar bugünkü kuralla `NotFound`'dur (AC-2, AC-93). Başlık ve açıklama SEO kümesinde
+  (`seo.contact.title`, `seo.contact.description`). JSON-LD kökü ana sayfa ve iletişim için tek bir
+  yardımcıdan kurulur, `@id` = `{kök}/{l}/#dealer` (AC-103). Ana sayfanın `department`'ı dört anahtara
+  iner (AC-17). İletişim `department`'ı `email`, saatler, `hasMap` ve `geo` taşır. `geo` değerleri
+  ölçeği atılmış `decimal`, JSON sayısı (AC-15). Galeri okuması düşerse belge `200` ve blok yok, uyarı
+  günlüğe yazılır (anahtarsız ileti).
+- **P4 — Sitemap (D12).** Liste girdisinden sonra `/{l}/contact`. İçerik sayfaları
+  `ContentReservedSlugs.Contains` ile süzülür (AC-93, AC-94).
+- **P5 — Ayrılmış ad (D2, C8).** `contact` üç yerde: `ContentReservedSlugs.All`, `RESERVED_SEGMENTS`,
+  `SeoPage`. `route.ts` `{ kind: 'contact' }`'u içerik adayından önce çözer. `contactPath(locale)`.
+- **P6 — Rota kabuğu, ilk pakette (D4, D14).** `app/ContactRoute.tsx`: `AppShell`, `<h1>`, iskelet
+  (`role="status"`). `useGallery` isteğe bağlı bir deneme sayacı alır ("Tekrar dene", AC-39). Kabuk
+  render anında parçanın `import()`'unu çağırır ve galeri okuması aynı commit'te başlar (AC-95).
+  Okuma sürerken ya da parça inmemişken iskelet görünür. Sonra şube bölümleri bir kerede basılır.
+- **P7 — Tembel parça (D6, D11, D16).** `features/dealership/contactPage.tsx` + `contactPage.css`.
+  - Şube bölümleri, hata ve boş durumu, harita kutusu ve "Google Haritalar'da aç" bu parçadadır.
+  - `branchClock.tsx`'i **statik** içe aktarır, yani ayrı bir `branchClock-*` isteği olmaz (AC-45).
+  - Harita durumu (`open`) her şubenin `MapBox` bileşeninin `useState`'indedir. Depo yalnız
+    `NowLine`/`BranchHours`'u yeniler, `MapBox`'ın props'u ilk okumadan gelir ve değişmez
+    (AC-88–AC-90).
+  - Tıklamadan sonra iframe'e `ref` ile odak verilir (AC-52). Kutu `aspect-ratio: 4 / 3`'tür, iframe
+    `inline-size/block-size: 100%`'dür (AC-53).
+- **P8 — Katalog kümesi (D14).** Dördüncü tembel küme `locales/contact/*.json`. Onu yalnız parça
+  `shared/i18n/contactCatalog.ts` ile kaydeder ve `check:locales`'in `TEMBEL_KUMELER`'ine girer.
+  - Saat metinleri vitrin kümesinden buraya taşınır ve `contact.*` adını alır: `openNow`,
+    `closedNow`, `closes`, `opens`, `tomorrow`, `today`, `specialDays`, `hours`, `closed`.
+  - Vitrin kümesinde yalnız şunlar kalır: `contact.title` (`<h1>` ve üst çubuğun bağlantısı, tek
+    anahtar) ve `home.footer.contactLink`.
+  - `GaleriPaneli.test.tsx:1048-1056`'nın beklentisi bu kümeye göre yazılır: vitrinde
+    `/closed|hours/` eşleşen `home.*` anahtarı kalmaz.
+- **P9 — Altlık (D9, D17).** `BranchList` yalnız ad, adres ve telefon basar. Bağlantı `<ul>`'den sonra
+  şube bölümünün sonundadır. Tembel saat bağları, evre B iskeleti ve `--hours-*` / `--special-*`
+  değişkenleri kalkar. `id="contact"` kalkar. Izgara aynı `auto-fit` kalır, sütun alt sınırı küçülür:
+  1168 px'te 5 sütun sığar, 6 sütun sığmaz. Olmayan blok yer tutmaz. Değer token'dır, ölçü AC-85/86.
+- **P10 — Üst çubuk (D10).** `TopBar`'da marka ile satır sonu grubu arasında
+  `<a class="top-bar__contact">`: satır içi SVG simgesi (`aria-hidden`) ve metin. Eşiğin altında metin
+  `visually-hidden`'dır (ad "İletişim" kalır), simge görünür ve kutu en az 44×44'tür. Bağlantı
+  1. satırın sonundadır. Eşiğin üstünde metin görünür, simge gizlidir ve bağlantı sayaçtan önce
+  gelir. Eşik ölçülür: önce dar ekranda 120 px logo, sonra eşik 40rem'den en çok 48rem'e
+  (AC-68). İletişim sayfasında `aria-current="page"` taşır.
+- **P11 — Boş vitrin ve panel (D8, D17).** `EmptyShowcase` `contactPath(locale)`'a gider. Panelin
+  e-posta alanına yardım cümlesi (`dealership.branch.emailHint`, panel kümesi) ve
+  `aria-describedby` eklenir.
+- **P12 — Perf tohumu (D14).** `SeedGalleryProfileForDevelopmentAsync` aynı döngüde, alan boşsa her
+  aktif şubeye deterministik bir koordinat ve e-posta yazar (gerçek yazma yolu). Bu bayrak yalnız
+  `perf.yml`'da açık, e2e yığınını etkilemez. `perf.yml` `GoogleMaps__EmbedApiKey`'e sahte bir değer
+  verir. `lighthouse-run.mjs` `/tr/contact`'ı dördüncü hedef olarak ölçer.
+- **P13 — Testler.**
+  - Host: `IletisimSayfasiTests.cs`, sabit `IClock` ile. `test-anahtar`'lı ve anahtarsız iki fabrika
+    vardır, test başına tek fabrika ve `Dispose` (inotify dersi).
+  - AC-83: bütün kategorileri `Trace`'ten yakalayan bir `ILoggerProvider`, kapsamlar dahil, ve
+    okumayı `500`'e düşüren bir senaryo.
+  - `Dealership.Tests`: `BranchMapAddress` için saf testler (AC-24–28, AC-91, AC-97, AC-98).
+  - vitest: iletişim parçası StrictMode ve sahte zamanlayıcıyla (AC-44, AC-88, AC-89). `SuAnSatiri`
+    ve `BranchList` saat testleri bu bileşene taşınır.
+  - e2e: `iletisim.spec.ts`. `embedUrl` `page.route` ile yerel bir taslak sayfaya yönlenir, Google'a
+    gidilmez. Ağ denetimi `request.frame()` ile yapılır. Her Host satırının e2e ikizi aranır.
+- **P14 — Ölçümler.** Adreste NUL ile kaydetme bu yığında ölçülür ve sonucu PR'a yazılır. Sahibin
+  yerel veritabanında `contact` slug'ı salt-okur bir sorguyla aranır
+  (`default_transaction_read_only`, yalnız `SELECT`).
+- **P15 — Belgeler (D18).** `architecture.md` Karar Defteri'ne üç satır yazılır. `deploy.md`'ye
+  anahtar, kısıtlar, CSP, çerez notu ve perf tohumu yazılır.
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Dealership: `BranchMapAddress`, DTO, okumalar ve seçenekler. Birim ve Host testleri (AC-21–31,
+   AC-83 okuma yarısı, AC-91, AC-97, AC-98).
+3. Host: ayrılmış ad, `SeoPage`, belge, yapısal verinin ayrılması, sitemap (AC-1–20, AC-82, AC-93,
+   AC-94, AC-99–103). Bilerek değişen Host testleri.
+4. Vitrin: rota kabuğu, parça, harita, katalog kümesi (AC-32–57, AC-88, AC-89).
+5. Altlık, üst çubuk, boş vitrin, panel yardımı (AC-58–72, AC-79, AC-85, AC-86).
+6. Perf tohumu, e2e, ilk paket, C3 (AC-73–77, AC-81, AC-84, AC-87, AC-90, AC-95, AC-96), kanıtlar.
+7. Belgeler ve ölçümler (P14, P15).
+
 ### Bilerek değişecek eski testler (kod taranarak çıkarıldı)
 
 | Test | Bugün ölçtüğü | Bu kartla |
@@ -556,6 +653,9 @@ adına ≈52 px daha az yer kalır. Geniş ekranda iki satıra geçiş eşiği b
 - İletişim sayfasının gövdesi (şube bölümleri, harita kutusu) ve saat kodu **tek tembel parçadadır**.
   *(CLARIFY B5:)* `<h1>` ve iskelet ilk paketteki rota kabuğundadır. Şube bölümleri parça ve veri hazır
   olunca bir kerede basılır. **Evre B yoktur.** `0027` AC-68 ve AC-75–AC-77 geçersizdir.
+- *(AP-08, Proje Yöneticisi kararı, 2026-11-27, AC-77:)* Bölümler, gereken font yüzleri yüklenince
+  (en çok ~1500 ms) basılır. Yüzler dile göre `document.fonts.load` ile açıkça yüklenir; font isteği
+  başarısız olursa bekleme hemen biter. Süre dolduktan sonra gelen font kayma üretebilir (bilinen bedel).
 
 *Gerekçe:* C6. Davranış değişmez, yalnız yeri değişir. Sayfanın tek içeriği şubeler olduğu için ara
 evre gereksiz. *Bedel:* sayfa ilk ziyarette bir parça isteği daha bekler. Bu parça ana sayfa için
@@ -635,6 +735,8 @@ ayrıntıda anlatılır. İkisi de kendi sayfasında görüneni söyler.
 - Ana sayfa, liste, detay ve iletişim sayfasının C3 medyanları PR'da `main` ile yan yana yazılır.
   *(CLARIFY B5:)* İletişim sayfasının LCP öğesi de PR'a yazılır.
 - CLS fontlar bekletilerek ölçülür (`frontend-003` dersi).
+- *(AP-08, Proje Yöneticisi kararı, 2026-11-27:)* İletişim sayfasının bölümleri, gereken font yüzleri
+  yüklenince (en çok ~1500 ms) basılır (D11). İletişim sayfasının LCP medyanı 2450 ms'yi aşarsa iş durur.
 
 *Gerekçe:* `0024`, `0027` D15 deseni. İletişim yeni bir indekslenen sayfa, C3'e girmeli. *Bedel:*
 perf koşusu bir sayfa uzar.
@@ -884,9 +986,13 @@ konsolundaki yönlendiren (site kökü) ve API (yalnız Maps Embed) kısıtıdı
   metni vardır. tr/ar/en çevrilidir.
 - **AC-47.** Yer tutucu bir `<iframe>` ve `<img>` içermez.
 - **AC-48.** Düğme `<button type="button">`'dır. Enter ile de Space ile de iframe'i açar.
-- **AC-49.** Sayfa açılıp sona kadar kaydırıldığında ve 5 sn beklendiğinde, düğmeye basılmadan önce
-  sayfanın köken dışı hiçbir alan adına isteği yoktur (`google.com`, `gstatic.com`, `googleapis.com`
+- **AC-49.** *(AP-08 revizyonu, Proje Yöneticisi kararı, 2026-11-27, QA 2 BULGU-1.)* Sayfa açılıp sona kadar
+  kaydırıldığında ve 5 sn beklendiğinde, düğmeye basılmadan önce sayfanın üçüncü taraf alan adına (sitenin
+  ve kurulumun kendi medya kökeni dışında) isteği yoktur (`google.com`, `gstatic.com`, `googleapis.com`
   dâhil). Ağ kaydıyla ölçülür. Belgede `preconnect` ya da `dns-prefetch` yoktur.
+  *Revizyon notu:* ilk metin "köken dışı hiçbir alan adı" diyordu. Galerinin logosu ve ilan görselleri
+  kurulumun medya kovasından (`Media__PublicBaseUrl`, ayrı köken olabilir) gelir; logolu kurulumda ilk metin
+  sağlanamazdı. Kova kökeni yapılandırmadan okunur, testte sabit yazılmaz.
 - **AC-50.** *(CLARIFY B9 ile değişti.)* Düğmeye basınca kutunun içinde bir `<iframe>` açılır:
   - `src` `embedUrl`'dir;
   - `referrerpolicy` `strict-origin-when-cross-origin`'dır;

@@ -110,3 +110,23 @@ describe('0020/AC-18: `\u003cb>Galeri & "Oto"\u003c/b>` görünen adı üst çub
     expect(yer.querySelector('b')).toBeNull()
   })
 })
+
+describe('0028/AC-64, AC-69: Üst çubukta `/{l}/contact`\'a giden "İletişim" bağlantısı; yalnız iletişim sayfasında `aria-current="page"`', () => {
+  it.each<[AppLocale, string]>([
+    ['tr', 'İletişim'],
+    ['ar', 'اتصل بنا'],
+    ['en', 'Contact'],
+  ])('%s', (locale, ad) => {
+    for (const yol of [`/${locale}/`, `/${locale}/cars`, `/${locale}/contact`]) {
+      window.history.replaceState(null, '', yol)
+      ciz(locale)
+
+      const baglanti = screen.getByRole('link', { name: ad })
+      expect(baglanti.getAttribute('href')).toBe(`/${locale}/contact`)
+      expect(baglanti.getAttribute('aria-current')).toBe(yol.endsWith('/contact') ? 'page' : null)
+      // AC-67 — simge dekoratif; erişilebilir ad tam metindir.
+      expect(baglanti.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+      cleanup()
+    }
+  })
+})

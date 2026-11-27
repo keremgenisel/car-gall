@@ -5,5 +5,7 @@
   "seo.detail.description": "موديل {year}، {mileage}، {price}. في فرع {branch}.",
   "seo.document.fallbackTitle": "معرض السيارات",
   "seo.favorites.title": "مفضلتي",
-  "seo.compare.title": "مقارنة السيارات"
+  "seo.compare.title": "مقارنة السيارات",
+  "seo.contact.title": "اتصل بنا",
+  "seo.contact.description": "عناوين فروعنا وأرقام هواتفها وبريدها الإلكتروني وساعات عملها وخرائطها."
 }

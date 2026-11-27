@@ -111,6 +111,22 @@ public sealed class AdresVeSssTests(ContentDatabase database) : IAsyncLifetime
         Assert.Equal(ContentErrors.SlugReserved, Icerik.Alanlar(sonuc.Error)[$"{locale}.slug"]);
     }
 
+    [Theory(DisplayName = "0028/AC-3: Slug'ı `contact` olan içerik sayfası kaydı üç dilde ayrı ayrı reddedilir; hata o dilin slug alanında, liste `contact`'ı içerir")]
+    [InlineData("tr")]
+    [InlineData("ar")]
+    [InlineData("en")]
+    public async Task Reddeder_ContactSlugunu(string locale)
+    {
+        Assert.Contains("contact", ContentReservedSlugs.All);
+
+        Result<(Guid, int)> sonuc = await icerik.KomutAsync(k => k.CreatePageAsync([new PageTextInput(locale, "x", "x", "contact")], CancellationToken.None));
+
+        Assert.True(sonuc.IsFailure);
+        Assert.Equal([$"{locale}.slug"], Icerik.Alanlar(sonuc.Error).Keys);
+        Assert.Equal(ContentErrors.SlugReserved, Icerik.Alanlar(sonuc.Error)[$"{locale}.slug"]);
+        await icerik.SerbestAsync(new PageTextInput(locale, "x", "x", "contact-bilgileri"));
+    }
+
     // ── Eski slug (okuma tarafı; 301'in kendisi Host testinde) ──────────────
 
     [Fact(DisplayName = "0017/AC-51 (okuma yarısı): yayındaki tr slug'ı kvkk → kvkk-aydinlatma değişince kvkk güncele çözülür")]

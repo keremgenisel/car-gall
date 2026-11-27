@@ -43,8 +43,9 @@ public sealed class CalismaSaatleriBelgeTests(HostFactory factory, Xunit.Abstrac
 
     private void Subeler(params PublicBranchDto[] subeler) => ortam.Galeri = ortam.Galeri! with { Branches = subeler };
 
+    /// <summary>`0028` D13 — saatler iletişim belgesinde (AC-14); ana sayfada yok (AC-17, aşağıda).</summary>
     private async Task<JsonElement> DealerAsync() =>
-        Assert.Single((await SeoOrtami.GetAsync(ortam.Istemci(factory), "/tr/")).Belge.JsonLd());
+        Assert.Single((await SeoOrtami.GetAsync(ortam.Istemci(factory), "/tr/contact")).Belge.JsonLd());
 
     private static List<(string Gunler, string Acilis, string Kapanis)> Ogeler(JsonElement department) =>
         [.. department.GetProperty("openingHoursSpecification").EnumerateArray().Select(oge => (
@@ -52,7 +53,7 @@ public sealed class CalismaSaatleriBelgeTests(HostFactory factory, Xunit.Abstrac
             oge.GetProperty("opens").GetString()!,
             oge.GetProperty("closes").GetString()!))];
 
-    [Fact(DisplayName = "0025/AC-52: Programlı şubenin dizisi tam olarak üç öğe: Pzt–Cum 09:00–18:00, Cumartesi 10:00–14:00, Pazar 00:00–00:00.")]
+    [Fact(DisplayName = "0025/AC-52, 0028/AC-14: Programlı şubenin dizisi tam olarak üç öğe: Pzt–Cum 09:00–18:00, Cumartesi 10:00–14:00, Pazar 00:00–00:00.")]
     public async Task Programli_UcOge()
     {
         Subeler(new PublicBranchDto("Kadıköy", "Bağdat Cad. 1", "+902160000001", Programli()));
@@ -66,7 +67,7 @@ public sealed class CalismaSaatleriBelgeTests(HostFactory factory, Xunit.Abstrac
             Ogeler((await DealerAsync()).GetProperty("department")[0]));
     }
 
-    [Fact(DisplayName = "0025/AC-53: Pzt 09:00–13:00 ve 16:00–21:00, Salı 09:00–13:00, diğerleri kapalı: [Pzt, Salı] 09–13; [Pzt] 16–21; [Çar…Paz] 00:00–00:00.")]
+    [Fact(DisplayName = "0025/AC-53, 0028/AC-14: Pzt 09:00–13:00 ve 16:00–21:00, Salı 09:00–13:00, diğerleri kapalı: [Pzt, Salı] 09–13; [Pzt] 16–21; [Çar…Paz] 00:00–00:00.")]
     public async Task Gruplama_IlkGorunduguGun()
     {
         Subeler(new PublicBranchDto("Kadıköy", "Bağdat Cad. 1", "+902160000001", Program(("monday", [("09:00", "13:00"), ("16:00", "21:00")]), ("tuesday", [("09:00", "13:00")]))));
@@ -80,7 +81,7 @@ public sealed class CalismaSaatleriBelgeTests(HostFactory factory, Xunit.Abstrac
             Ogeler((await DealerAsync()).GetProperty("department")[0]));
     }
 
-    [Fact(DisplayName = "0025/AC-53 (D9): Kapalı grup da ilk göründüğü günün yerindedir — Pazartesi kapalıysa ilk öğe.")]
+    [Fact(DisplayName = "0025/AC-53 (D9), 0028/AC-14: Kapalı grup da ilk göründüğü günün yerindedir — Pazartesi kapalıysa ilk öğe.")]
     public async Task Gruplama_KapaliIlkGun()
     {
         Subeler(new PublicBranchDto("Kadıköy", "Bağdat Cad. 1", "+902160000001", Program(("tuesday", [("09:00", "18:00")]))));
@@ -90,7 +91,7 @@ public sealed class CalismaSaatleriBelgeTests(HostFactory factory, Xunit.Abstrac
             Ogeler((await DealerAsync()).GetProperty("department")[0])[0]);
     }
 
-    [Fact(DisplayName = "0025/AC-54: Her öğenin anahtar kümesi tam olarak `@type`, `dayOfWeek`, `opens`, `closes` ve `@type` `OpeningHoursSpecification`.")]
+    [Fact(DisplayName = "0025/AC-54, 0028/AC-14: Her öğenin anahtar kümesi tam olarak `@type`, `dayOfWeek`, `opens`, `closes` ve `@type` `OpeningHoursSpecification`.")]
     public async Task OgeAnahtarlari()
     {
         Subeler(new PublicBranchDto("Kadıköy", "Bağdat Cad. 1", "+902160000001", Programli()));
@@ -102,27 +103,31 @@ public sealed class CalismaSaatleriBelgeTests(HostFactory factory, Xunit.Abstrac
         }
     }
 
-    [Fact(DisplayName = "0025/AC-56, AC-59: Programsız şubenin öğesinde anahtar yok; kök `AutoDealer` hiçbir kurulumda taşımaz; programlı şubeler varken tam bir JSON-LD bloğu.")]
+    [Fact(DisplayName = "0025/AC-56, AC-59, 0028/AC-14, AC-17: Programsız şubenin öğesinde anahtar yok; kök `AutoDealer` hiçbir kurulumda taşımaz; programlı şubeler varken tam bir JSON-LD bloğu.")]
     public async Task Programsiz_VeKok()
     {
         Subeler(
             new PublicBranchDto("Kadıköy", "Bağdat Cad. 1", "+902160000001", Programli()),
             new PublicBranchDto("Ataşehir", "Barbaros 7", "+902160000002"));
 
-        IDocument belge = (await SeoOrtami.GetAsync(ortam.Istemci(factory), "/tr/")).Belge;
+        IDocument belge = (await SeoOrtami.GetAsync(ortam.Istemci(factory), "/tr/contact")).Belge;
         JsonElement dealer = Assert.Single(belge.JsonLd());
         Assert.Single(belge.QuerySelectorAll("script[type='application/ld+json']"));
 
         Assert.DoesNotContain("openingHoursSpecification", dealer.Anahtarlar());
         Assert.Contains("openingHoursSpecification", dealer.GetProperty("department")[0].Anahtarlar());
         Assert.DoesNotContain("openingHoursSpecification", dealer.GetProperty("department")[1].Anahtarlar());
+
+        // `0028` AC-17 — taşınma iki yönlü: ana sayfanın öğeleri artık programlı şubede de anahtarı taşımaz.
+        JsonElement ev = Assert.Single((await SeoOrtami.GetAsync(ortam.Istemci(factory), "/tr/")).Belge.JsonLd());
+        Assert.All(ev.GetProperty("department").EnumerateArray(), oge => Assert.Equal(["@type", "address", "name", "telephone"], oge.Anahtarlar().Order(StringComparer.Ordinal)));
     }
 
     /// <summary>
     /// D10(a) — tek şube; yedi günde üçer aralık ve 21 (opens, closes) çiftinin hepsi farklı: hiçbir
     /// öğe birleşmez. Fark aynı şubenin programsız `/ar/` belgesine göre, sıkıştırmasız UTF-8.
     /// </summary>
-    [Fact(DisplayName = "0025/AC-60: Tek şubeli kurulumda en kötü programlı şubenin `/ar/` belgesi programsız hâlinden en çok 2304 B büyüktür (21 farklı çift).")]
+    [Fact(DisplayName = "0025/AC-60, 0028/AC-18: Tek şubeli kurulumda en kötü programlı şubenin `/ar/` belgesi programsız hâlinden en çok 2304 B büyüktür (21 farklı çift).")]
     public async Task Sigar_2304Bayta_EnKotuDurumda()
     {
         IReadOnlyDictionary<string, IReadOnlyList<PublicOpeningIntervalDto>> enKotu = EnKotuProgram();
@@ -165,7 +170,8 @@ public sealed class CalismaSaatleriBelgeTests(HostFactory factory, Xunit.Abstrac
         {
             RequestServices = new ServiceCollection().AddSingleton<IPublicGalleryQueries>(new Sabit(galeri)).BuildServiceProvider(),
         };
-        context.Request.Path = "/ar/";
+        // `0028` D13 — bütçe iletişim belgesinde ölçülür (AC-18).
+        context.Request.Path = "/ar/contact";
 
         return await seo.BuildAsync(context, CarGallery.BuildingBlocks.Locale.Create("ar").Value, galeri.DisplayName, null);
     }

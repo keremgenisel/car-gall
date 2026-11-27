@@ -64,6 +64,9 @@ export const FAVORITES_SEGMENT = 'favorites'
 
 export const COMPARE_SEGMENT = 'compare'
 
+/** `0028` **D2** — iletişim sayfası; her dilde aynı ad, çevrilmez (`SeoPage.ContactSegment`). */
+export const CONTACT_SEGMENT = 'contact'
+
 export type Route =
   /** 0014 **D9** — `/{locale}/` artık ana sayfadır; liste `/{locale}/cars`'a taşındı. */
   | { readonly kind: 'home' }
@@ -77,6 +80,8 @@ export type Route =
   | { readonly kind: 'favorites' }
   /** `frontend-003` **D1** · **D3** — karşılaştırma (`/{locale}/compare?listing=…`). */
   | { readonly kind: 'compare' }
+  /** `0028` **D2** — iletişim sayfası (`/{locale}/contact`); alt yolları "bulunamadı"dır. */
+  | { readonly kind: 'contact' }
   /**
    * `0017` **D9** — tek parçalı tanınmayan yol (`/{locale}/{slug}`) bir içerik sayfası
    * adayıdır; yayında bir sayfaya çözülmezse "bulunamadı" ekranı basılır, listeye düşmez.
@@ -235,6 +240,11 @@ export function parseRoute(pathname: string): Route {
     return { kind: 'compare' }
   }
 
+  // `0028` D2 · CLARIFY B4 — içerik adayından ÖNCE; `/tr/contact/x` aşağıda "bulunamadı"dır (AC-2).
+  if (slugSegment === undefined && section === CONTACT_SEGMENT) {
+    return { kind: 'contact' }
+  }
+
   // `0017` D9 — tek parçalı yol bir içerik sayfası adayıdır (AC-37); ayrılmış ad değilse.
   // `0004` D8 — `0017` AC-38'in "iki parçalı tanınmayan yol listeye düşer" davranışı kalktı:
   // `/tr/foo/bar`, `/tr/newsletter`, `/tr/newsletter/foo`, `/tr/admin` "bulunamadı"dır.
@@ -257,6 +267,7 @@ const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([
   NEWSLETTER_SEGMENT,
   FAVORITES_SEGMENT,
   COMPARE_SEGMENT,
+  CONTACT_SEGMENT,
 ])
 
 /**
@@ -289,6 +300,11 @@ export function newsletterTokenOf(search: string): string {
 /** `frontend-003` **D1** — favoriler ekranı; sayaç buraya götürür (D8). */
 export function favoritesPath(locale: AppLocale): string {
   return `/${locale}/${FAVORITES_SEGMENT}`
+}
+
+/** `0028` **D2** — iletişim sayfası: üst çubuk, altlık ve boş vitrin buraya götürür (D9, D10, D17). */
+export function contactPath(locale: AppLocale): string {
+  return `/${locale}/${CONTACT_SEGMENT}`
 }
 
 /** 0014 — ana sayfanın adresi; altlığın dil bağlantıları (AC-46). */

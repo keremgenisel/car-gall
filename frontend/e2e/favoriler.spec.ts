@@ -382,12 +382,14 @@ const SAYAC_HALLERI = [
   ['24 favori', 24],
 ] as const
 
-for (const genislik of [320, 360, 639, 640]) {
+// `0028` D10 · AC-68 — üst çubuğa "İletişim" girdi, eşik yeniden ölçüldü: 40rem → 42rem (672 px).
+// Döngü eşiğin bir altını ve kendisini taşır (0028 Context tablosu, CLARIFY B6).
+for (const genislik of [320, 360, 671, 672]) {
   for (const dil of ['tr', 'ar', 'en']) {
-    test(`frontend-003/AC-32, 0026/AC-34: ${genislik} px, ${dil} — satır sayısı içerikten bağımsız (40rem altı 2, üstü 1); yatay taşma yok; logoluda adın ≥ 6 karakteri görünür; sayaç ve dil bağlantıları tam görünür ve tıklanabilir (dar ekranda ≥ 44 px); logosuz ad kırılabilir ve CLS ≤ 0.1`, async ({
+    test(`frontend-003/AC-32, 0026/AC-34, 0028/AC-68: ${genislik} px, ${dil} — satır sayısı içerikten bağımsız (42rem altı 2, üstü 1); yatay taşma yok; logoluda adın ≥ 6 karakteri görünür; sayaç ve dil bağlantıları tam görünür ve tıklanabilir (dar ekranda ≥ 44 px); logosuz ad kırılabilir ve CLS ≤ 0.1`, async ({
       browser,
     }) => {
-      const beklenenSatir = genislik < 640 ? 2 : 1
+      const beklenenSatir = genislik < 672 ? 2 : 1
 
       for (const logolu of [false, true]) {
         for (const [hal, sayi] of SAYAC_HALLERI) {
@@ -489,7 +491,7 @@ for (const genislik of [320, 360, 639, 640]) {
           for (const hedef of hedefler) {
             await expect(hedef, etiket).toBeInViewport({ ratio: 1 })
             const kutu = (await hedef.boundingBox())!
-            if (genislik < 640) {
+            if (genislik < 672) {
               expect(kutu.height, etiket).toBeGreaterThanOrEqual(44)
               expect(kutu.width, etiket).toBeGreaterThanOrEqual(44)
             }

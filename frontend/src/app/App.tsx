@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { AppShell } from './AppShell'
+import { ContactRoute } from './ContactRoute'
 import { HomeFooter } from './HomeFooter'
 import { useCorporateLinks } from './useCorporateLinks'
 import { HomePage } from './HomePage'
@@ -79,6 +80,15 @@ export function App({ locale }: { readonly locale: AppLocale }) {
     return (
       <LocaleProvider locale={locale}>
         <HomeRoute />
+      </LocaleProvider>
+    )
+  }
+
+  // `0028` D2 — iletişim sayfası; altlık taşımaz (X10, X12).
+  if (route.kind === 'contact') {
+    return (
+      <LocaleProvider locale={locale}>
+        <ContactRoute />
       </LocaleProvider>
     )
   }

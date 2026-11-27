@@ -404,7 +404,14 @@ export function BranchEditPage({ branchId }: { readonly branchId?: string }) {
             errors['whatsApp'],
             t('dealership.branch.field.phoneHint'),
           )}
-          {ltrInput('email', 'branch-email', t('dealership.branch.field.email'), errors['email'])}
+          {/* `0028` D8 — alan vitrinin iletişim sayfasında görünür ve talep bildiriminin hedefidir (AC-79). */}
+          {ltrInput(
+            'email',
+            'branch-email',
+            t('dealership.branch.field.email'),
+            errors['email'],
+            t('dealership.branch.field.emailHint'),
+          )}
 
           <DealershipField
             id="branch-time-zone"

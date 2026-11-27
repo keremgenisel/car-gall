@@ -11,7 +11,7 @@ namespace CarGallery.Host.Tests;
 /// </summary>
 public sealed class GaleriPublicUcTests(HostFactory factory) : IClassFixture<HostFactory>
 {
-    [Fact(DisplayName = "0014/AC-14, 0024/AC-33, 0025/AC-41, 0027/AC-42: Galerinin ziyaretçiye dönük okuma yanıtı yalnız galerinin adını ve aktif şubelerin adını, adresini ve telefonunu taşır; başka alan yanıtta bulunmaz (null olarak da gelmez)")]
+    [Fact(DisplayName = "0014/AC-14, 0024/AC-33, 0025/AC-41, 0027/AC-42, 0028/AC-21: Galerinin ziyaretçiye dönük okuma yanıtı yalnız galerinin adını ve aktif şubelerin adını, adresini ve telefonunu taşır; başka alan yanıtta bulunmaz (null olarak da gelmez)")]
     public async Task Tasir_YalnizIzinListesindekiAlanlari()
     {
         using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
@@ -32,7 +32,8 @@ public sealed class GaleriPublicUcTests(HostFactory factory) : IClassFixture<Hos
         {
             // `0025` D8 — `openingHours` bilerek eklendi (Context tablosu); programsız şubede null.
             // `0027` D8 — `openNow` ve `specialHours` bilerek eklendi (0027 Context tablosu).
-            Assert.Equal(["address", "name", "openNow", "openingHours", "phone", "specialHours"], AnahtarlarSirali(sube));
+            // `0028` D5 — `email` ve `map` bilerek eklendi (0028 Context tablosu); yoksa null.
+            Assert.Equal(["address", "email", "map", "name", "openNow", "openingHours", "phone", "specialHours"], AnahtarlarSirali(sube));
         }
     }
 

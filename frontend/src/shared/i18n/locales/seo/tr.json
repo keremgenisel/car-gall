@@ -5,5 +5,7 @@
   "seo.detail.description": "{year} model, {mileage}, {price}. {branch} şubesinde.",
   "seo.document.fallbackTitle": "Araç vitrini",
   "seo.favorites.title": "Favorilerim",
-  "seo.compare.title": "Araç karşılaştırma"
+  "seo.compare.title": "Araç karşılaştırma",
+  "seo.contact.title": "İletişim",
+  "seo.contact.description": "Şubelerimizin adresi, telefonu, e-postası, çalışma saatleri ve haritası."
 }

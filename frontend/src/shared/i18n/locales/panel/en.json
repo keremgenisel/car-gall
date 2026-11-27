@@ -568,6 +568,7 @@
   "dealership.branch.field.phoneHint": "In international format, e.g. +902165554433.",
   "dealership.branch.field.whatsApp": "WhatsApp number",
   "dealership.branch.field.email": "Email",
+  "dealership.branch.field.emailHint": "Shown on the showcase contact page; lead notifications are also sent to this address.",
   "dealership.branch.field.timeZone": "Time zone",
   "dealership.branch.field.timeZoneChoose": "Choose a time zone",
   "dealership.branch.field.slug": "Address slug",

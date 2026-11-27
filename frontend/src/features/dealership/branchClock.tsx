@@ -14,9 +14,10 @@ import { OPENING_DAYS } from './openingDays'
 import './branchClock.css'
 
 /**
- * `0027` **D15** — altlığın saat bloğu tembel parçadadır: "şu an" satırı, haftalık liste (`0025`
- * D7) ve özel günler (D11). Giriş tarafı evre B'yi basar (`BranchList`); bu modül yüklenince
- * satırın metni ve liste iskeletin yerine geçer.
+ * `0027` **D15** — şubenin saat bloğu: "şu an" satırı, haftalık liste (`0025` D7) ve özel günler (D11).
+ * `0028` **D11** — altlıktan iletişim sayfasına taşındı. Bu modülü yalnız iletişim sayfasının tembel
+ * parçası (`contactPage`) STATİK içe aktarır: ayrı bir `branchClock-*` isteği yoktur (AC-45) ve evre B
+ * yoktur. Davranış (D9 yenileyicisi dahil) `0027`'deki gibidir (C6).
  */
 
 // ----- D9: tek yenileyici (modül düzeyinde bir depo, bütün şubeler için) -----
@@ -225,20 +226,20 @@ export function NowLine({ gallery, branch, receivedAt }: BranchClockProps) {
     next === null || gap === 0
       ? ''
       : gap === 1
-        ? t('home.footer.tomorrow')
+        ? t('contact.tomorrow')
         : gap < 7
           ? weekdayName(weekdayIndex(next.date), locale)
           : dayMonth(next.date, locale)
 
   return (
     <>
-      <strong className={openNow.open ? 'home-footer__now--open' : 'home-footer__now--closed'}>
-        {t(openNow.open ? 'home.footer.openNow' : 'home.footer.closedNow')}
+      <strong className={openNow.open ? 'branch-clock__now--open' : 'branch-clock__now--closed'}>
+        {t(openNow.open ? 'contact.openNow' : 'contact.closedNow')}
       </strong>
       {next === null ? null : (
         <>
           {' · '}
-          {t(openNow.open ? 'home.footer.closes' : 'home.footer.opens')}
+          {t(openNow.open ? 'contact.closes' : 'contact.opens')}
           {day === '' ? null : ` ${day}`} <span dir="ltr">{next.time}</span>
         </>
       )}
@@ -252,7 +253,7 @@ function Intervals({ intervals }: { readonly intervals: readonly OpeningInterval
   return (
     <dd>
       {intervals.length === 0
-        ? t('home.footer.closed')
+        ? t('contact.closed')
         : intervals.map((interval) => (
             <span key={interval.start} dir="ltr">
               {interval.start}–{interval.end}
@@ -264,7 +265,7 @@ function Intervals({ intervals }: { readonly intervals: readonly OpeningInterval
 
 function TodayLabel() {
   const { t } = useLocale()
-  return <span className="home-footer__today">{t('home.footer.today')}</span>
+  return <span className="branch-clock__today">{t('contact.today')}</span>
 }
 
 /**
@@ -285,18 +286,18 @@ export function BranchHours({ gallery, branch, receivedAt }: BranchClockProps) {
   return (
     <>
       <dl
-        className="home-footer__hours"
-        aria-label={t('home.footer.hours')}
+        className="branch-clock__hours"
+        aria-label={t('contact.hours')}
         data-testid="branch-hours"
       >
         {OPENING_DAYS.map((day, index) => (
           <div
             key={day}
-            className="home-footer__hours-row"
+            className="branch-clock__hours-row"
             aria-current={index === weekday ? 'date' : undefined}
           >
             <dt>
-              <span className="home-footer__day">{weekdayName(index, locale)}</span>
+              <span className="branch-clock__day">{weekdayName(index, locale)}</span>
               {index === weekday ? <TodayLabel /> : null}
             </dt>
             <Intervals intervals={hours[day] ?? []} />
@@ -304,19 +305,19 @@ export function BranchHours({ gallery, branch, receivedAt }: BranchClockProps) {
         ))}
       </dl>
       {branch.specialHours.length === 0 ? null : (
-        <div className="home-footer__special" data-testid="branch-special">
-          <p className="home-footer__special-title" id={`special-${branchKey(branch)}`}>
-            {t('home.footer.specialDays')}
+        <div className="branch-clock__special" data-testid="branch-special">
+          <p className="branch-clock__special-title" id={`special-${branchKey(branch)}`}>
+            {t('contact.specialDays')}
           </p>
-          <dl className="home-footer__hours" aria-labelledby={`special-${branchKey(branch)}`}>
+          <dl className="branch-clock__hours" aria-labelledby={`special-${branchKey(branch)}`}>
             {branch.specialHours.map((day) => (
               <div
                 key={day.from}
-                className="home-footer__hours-row"
+                className="branch-clock__hours-row"
                 aria-current={day === special ? 'date' : undefined}
               >
                 <dt>
-                  <span className="home-footer__day">
+                  <span className="branch-clock__day">
                     {dateRange(day.from, day.through, locale)}
                   </span>
                   {day === special ? <TodayLabel /> : null}

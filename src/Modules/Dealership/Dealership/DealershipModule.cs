@@ -27,7 +27,8 @@ public static class DealershipModule
         this IServiceCollection services,
         string connectionString,
         string defaultLocale,
-        IReadOnlyList<string> enabledLocales)
+        IReadOnlyList<string> enabledLocales,
+        string? mapsEmbedApiKey = null)
     {
         services.AddDbContext<DealershipDbContext>(options =>
             options.UseNpgsql(
@@ -102,10 +103,13 @@ public static class DealershipModule
 
         // 0014 D15 — ziyaretçiye dönük dar yüzey; panelin şube listesinden ayrı.
         // `0027` D6 — "şu an" saat soyutlamasından: modülün kaydettiği `IClock` (testte sabitlenebilir).
+        // `0028` D7 — harita anahtarı kurulum yapılandırmasından; yalnız ziyaretçi okuması kullanır.
+        services.AddSingleton(new DealershipMapOptions(mapsEmbedApiKey));
         services.AddScoped<IPublicGalleryQueries>(provider => new PublicGalleryQueries(
             provider.GetRequiredService<DealershipDbContext>(),
             parsed.Value,
-            provider.GetRequiredService<IClock>()));
+            provider.GetRequiredService<IClock>(),
+            provider.GetRequiredService<DealershipMapOptions>()));
 
         // `0020` D16 — Host'un `index.html`'e bastığı görünen ad; aynı sınıf, dar yüzey.
         services.AddScoped<IGalleryDisplayNameQueries>(provider => new PublicGalleryQueries(
@@ -151,7 +155,8 @@ public static class DealershipModule
             throw new InvalidOperationException($"Galeri profili tohumlanamadı: {sonuc.Error.Code}.");
         }
 
-        // `0025` D10(c) · P9 · AC-62 — her AKTİF şubeye AC-60'ın programı (`0027` P10: ve 12 özel gün); şubenin diğer alanları
+        // `0025` D10(c) · P9 · AC-62 — her AKTİF şubeye AC-60'ın programı (`0027` P10: ve 12 özel gün;
+        // `0028` P12: boşsa koordinat ve e-posta); şubenin diğer alanları
         // okunduğu gibi geri yazılır. `0024`'ün hesapları yukarıda korunur (AC-71).
         DealershipDbContext context = scope.ServiceProvider.GetRequiredService<DealershipDbContext>();
         List<BranchId> aktifler = await context.Branches.AsNoTracking()
@@ -159,9 +164,11 @@ public static class DealershipModule
             .Select(branch => branch.Id)
             .ToListAsync(cancellationToken);
 
-        foreach (BranchId id in aktifler)
+        foreach ((BranchId id, int sira) in aktifler.Select((id, sira) => (id, sira)))
         {
             AdminBranchDto sube = (await scope.ServiceProvider.GetRequiredService<DealershipAdminQueries>().FindBranchAsync(id.Value, cancellationToken))!;
+            // `0028` P12 — boş alana koordinat ve e-posta; kayıtlı değer korunur.
+            (decimal enlem, decimal boylam) = GalleryProfileDevelopmentSeed.Coordinate(sira);
             Result<int> program = await scope.ServiceProvider.GetRequiredService<BranchCommands>().UpdateAsync(
                 id.Value,
                 sube.Version,
@@ -170,11 +177,11 @@ public static class DealershipModule
                     sube.Addresses.ToDictionary(pair => pair.Key, pair => (string?)pair.Value, StringComparer.Ordinal),
                     sube.Phone,
                     sube.WhatsApp,
-                    sube.Email,
+                    sube.Email ?? GalleryProfileDevelopmentSeed.Email(sira),
                     sube.TimeZone,
                     sube.Slug,
-                    sube.Latitude,
-                    sube.Longitude,
+                    sube.Latitude ?? enlem,
+                    sube.Longitude ?? boylam,
                     GalleryProfileDevelopmentSeed.OpeningHours(),
                     // `0027` P10 — penceredeki 12 özel gün; "bugün" şubenin saat dilimindedir.
                     GalleryProfileDevelopmentSeed.SpecialHours(BranchClock.LocalDate(

@@ -244,6 +244,11 @@ jobs:
     # E2E koşar, iptal sırasında koşmaz.
     if: ${{ !cancelled() && needs.changes.outputs.kod != 'false' }}
 
+    # `0028` QA 2 BULGU-1 — medya kovasının kökü TEK yerde: Host'un `Media__PublicBaseUrl`'i ve e2e'nin
+    # "sitenin kendi kökenleri" kümesi (iletisim.spec AC-49/84) aynı değeri okur.
+    env:
+      MEDIA_PUBLIC_BASE_URL: http://localhost:4566/cargallery-media/
+
     # TEK KAYNAK, ama SABİT DEĞİL (ADR 0011). Host'un kurulum hesabı ile E2E'nin
     # globalSetup'ı aynı parolayı kullanmak ZORUNDA — ikisi ayrı yazıldığında globalSetup
     # 401 alıyor ve bütün paket düşüyor. Değer aşağıdaki ilk adımda koşu başına üretilip
@@ -400,18 +405,23 @@ jobs:
           Media__Storage__AccessKey: ci
           Media__Storage__SecretKey: ci
           Media__Storage__Region: us-east-1
-          Media__PublicBaseUrl: http://localhost:4566/cargallery-media/
+          Media__PublicBaseUrl: ${{ env.MEDIA_PUBLIC_BASE_URL }}
           Media__WatermarkObjectKey: private/brand/watermark.png
           # AC-9 — tür kümesi yapılandırmadan; boş küme kuruluşta reddedilir.
           Media__AllowedImageFormats__0: jpeg
           Media__AllowedImageFormats__1: png
           Media__AllowedImageFormats__2: webp
+          # `0028` D7 — sahte harita anahtarı: iletişim sayfasının kutusu ve düğmesi e2e'de görünür;
+          # Google'a hiçbir istek gitmez (gömme adresi `page.route` ile taslak sayfaya yönlenir).
+          # AC-82/83 — bu DEĞER belgelerde (e2e) ve Host günlüğünde (aşağıdaki adım) aranır.
+          GoogleMaps__EmbedApiKey: e2e-sahte-anahtar
           ASPNETCORE_URLS: http://localhost:5080
         run: |
           # Migration'ı çalışan uygulama değil, bu tek seferlik kurulum adımı uygular
           # (docs/decisions/0002). Uygulama yalnız doğrular; adım atlanırsa hiç başlamaz.
           dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release -- --migrate
-          dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release &
+          # `0028` AC-83 — Host'un günlüğü dosyaya: e2e'den sonra anahtar onda aranır.
+          dotnet run --project src/Host/Host.csproj --no-launch-profile -c Release > "$RUNNER_TEMP/host.log" 2>&1 &
           # SINIRLI bekleme. Sınırsız `until` döngüsü, başlamayı REDDEDEN bir Host'ta
           # (kurulum adımı atlanmış, eksik yapılandırma, eksik şema) işi GitHub'ın
           # 6 saatlik sınırına kadar asılı bırakır — sessiz bir maliyet.
@@ -427,7 +437,19 @@ jobs:
         working-directory: frontend
         env:
           E2E_SEED_ADMIN_PASSWORD: ${{ env.SEED_ADMIN_PASSWORD }}
+          E2E_MEDIA_PUBLIC_BASE_URL: ${{ env.MEDIA_PUBLIC_BASE_URL }}
         run: npm run test:e2e
+
+      # `0028` AC-83 — e2e boyunca Host'un yazdığı hiçbir günlük satırı harita anahtarını taşımaz.
+      - name: Harita anahtarı Host günlüğünde yok mu?
+        if: always()
+        run: |
+          test -s "$RUNNER_TEMP/host.log" || { echo "Host günlüğü boş ya da yok." >&2; exit 1; }
+          if grep -n "e2e-sahte-anahtar" "$RUNNER_TEMP/host.log"; then
+            echo "Harita anahtarı Host günlüğünde geçiyor." >&2
+            exit 1
+          fi
+          echo "Host günlüğü: $(wc -l < "$RUNNER_TEMP/host.log") satır, anahtar yok."
 
       # Kanıt üretimi artık AÇIKÇA istenir (`npm run evidence`); CI'ın e2e koşusu hiçbir
       # görsel yazmaz ve çalışma ağacını kirletmez. Bu yüzden yüklenecek bir değişiklik

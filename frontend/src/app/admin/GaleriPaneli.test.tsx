@@ -11,7 +11,11 @@ import { AdminApp } from './AdminApp'
 import vitrinAr from '../../shared/i18n/locales/ar.json'
 import vitrinEn from '../../shared/i18n/locales/en.json'
 import vitrinTr from '../../shared/i18n/locales/tr.json'
+import iletisimAr from '../../shared/i18n/locales/contact/ar.json'
+import iletisimEn from '../../shared/i18n/locales/contact/en.json'
+import iletisimTr from '../../shared/i18n/locales/contact/tr.json'
 
+const iletisim = { tr: iletisimTr, ar: iletisimAr, en: iletisimEn }
 const vitrin = { tr: vitrinTr, ar: vitrinAr, en: vitrinEn } as const
 
 /**
@@ -1016,7 +1020,7 @@ describe('0025/AC-35, AC-37, AC-38: Erişim yok, yükleniyor ve hata durumların
   })
 })
 
-describe('0025/AC-39, AC-63, AC-65, 0027/AC-73: ar bölümü Arapça; panel metinleri panel kataloğunda üç dilde; vitrine yalnız iki metin (0027: + "Şu an kapalı")', () => {
+describe('0025/AC-39, AC-63, AC-65, 0027/AC-73, 0028/AC-78: ar bölümü Arapça; panel metinleri panel kataloğunda üç dilde; ziyaretçinin saat metinleri (0028: iletişim kümesinde) panel kataloğunda değil', () => {
   it('ar metinleri ve katalog', async () => {
     await panel('branch-edit', 'manager', 'ar', 'b-1')
     await screen.findByTestId('branch-opening-hours')
@@ -1045,15 +1049,21 @@ describe('0025/AC-39, AC-63, AC-65, 0027/AC-73: ar bölümü Arapça; panel meti
       'dealership.fieldError.opening_hours_missing_day',
     ]
     for (const locale of ['tr', 'ar', 'en'] as const) {
-      for (const anahtar of [...panelAnahtarlari, 'home.footer.closed', 'home.footer.hours']) {
-        expect(catalogKeys(locale)).toContain(anahtar)
-      }
       for (const anahtar of panelAnahtarlari) {
+        expect(catalogKeys(locale)).toContain(anahtar)
         expect(Object.keys(vitrin[locale])).not.toContain(anahtar)
+        expect(Object.keys(iletisim[locale])).not.toContain(anahtar)
       }
+      // `0028` P8 — ziyaretçinin saat metinleri vitrin kümesinden iletişim sayfasının kümesine taşındı
+      // (Context tablosu): vitrinde `/closed|hours/` eşleşen `home.*` anahtarı kalmadı.
       expect(
         Object.keys(vitrin[locale]).filter((k) => k.startsWith('home.') && /closed|hours/.test(k)),
-      ).toEqual(['home.footer.closed', 'home.footer.hours', 'home.footer.closedNow'])
+      ).toEqual([])
+      expect(Object.keys(iletisim[locale]).filter((k) => /closed|hours/i.test(k))).toEqual([
+        'contact.closed',
+        'contact.hours',
+        'contact.closedNow',
+      ])
     }
   })
 })
@@ -1323,5 +1333,27 @@ describe('0027/AC-22, QA 2 BULGU-1: Öne sıralanan yeni kaydın hatası o kayd�
       '2027-02-08',
     )
     await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId('special-2-from')))
+  })
+})
+
+// ── 0028 — e-posta alanının yardım cümlesi (D8) ─────────────────────────────
+
+describe("0028/AC-79, AC-78: Şube formunda e-posta alanının yanında D8'in yardım cümlesi tr/ar/en çevrili; alan cümleyle betimlenir; cümle panel kümesinde", () => {
+  it.each<[AppLocale, string]>([
+    ['tr', 'Vitrinin iletişim sayfasında görünür; talep bildirimleri de bu adrese gider.'],
+    ['ar', 'يظهر في صفحة الاتصال بالموقع؛ وتُرسَل إشعارات الطلبات إلى هذا العنوان أيضًا.'],
+    ['en', 'Shown on the showcase contact page; lead notifications are also sent to this address.'],
+  ])('%s', async (locale, metin) => {
+    await panel('branch-edit', 'manager', locale, 'b-1')
+    await screen.findByTestId('branch-edit')
+    const alan = await waitFor(() => {
+      const oge = document.getElementById('branch-email')
+      expect(oge).not.toBeNull()
+      return oge!
+    })
+    const ipucu = document.getElementById(alan.getAttribute('aria-describedby')!.split(' ')[0]!)
+
+    expect(ipucu?.textContent).toBe(metin)
+    expect(Object.keys(vitrin[locale])).not.toContain('dealership.branch.field.emailHint')
   })
 })

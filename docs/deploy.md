@@ -75,6 +75,7 @@ Bütün değerler ortam değişkenidir. `__` iki nokta yerine geçer
 | `Localization__EnabledLocales__0..n` | `tr`, `ar`, `en` |
 | `Currency__Code`, `Currency__MinorUnitExponent` | `TRY`, `2` (KWD için `KWD`, `3`) |
 | `Theme__…` | Varsayılan palet (ADR `0005`; ya tam ya hiç) |
+| `GoogleMaps__EmbedApiKey` | *(yok)* — iletişim sayfasının tıkla-yükle haritası için Maps Embed API anahtarı (`0028` D7). Yoksa ya da boşsa harita kutusu basılmaz, her şubede yalnız "Google Haritalar'da aç" bağlantısı görünür. Kurulum ve kısıtlar § 5'te |
 | `Identity__TwoFactor__Issuer` | `CarGallery` — personelin kimlik doğrulayıcı uygulamasında görünen ad; galerinin adı verilir |
 | `Media__Storage__ForcePathStyle` | `true` (MinIO/R2 için doğru); sanal-host adresleme isteyen sağlayıcıda `false` |
 | `Notifications__Newsletter__SendDayOfWeek`, `…__SendTimeUtc` | `Monday`, `07:00` — bültenin haftalık gönderim anı, **UTC** (yerel saat yaz saatinde kayar). Panelden değiştirilmez (`0018` D2, D13) |
@@ -94,8 +95,9 @@ yalnız `perf.yml`). `Development__SeedGalleryProfile` (galeri profili tohumu) h
 galerinin panelden girilen profil verisini ölçüm dolgusuyla EZER: gerçek sosyal hesapları sınır
 uzunlukta dolgu adreslerle, her aktif şubenin çalışma programını yirmi bir aralıklı dolgu
 programla değiştirir; `0026` aynı bayrağa logoyu ekler; `0027` her aktif şubenin penceresine
-üçer aralıklı 12 özel gün yazar ve şubenin özel günlerini EZER (`0024` P9, `0025` P9, `0027` P10,
-yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
+üçer aralıklı 12 özel gün yazar ve şubenin özel günlerini EZER; `0028` e-postası ya da koordinatı
+boş her aktif şubeye ölçüm dolgusu bir e-posta (`sube{n}@galeri.example.com`) ve koordinat yazar
+(`0024` P9, `0025` P9, `0027` P10, `0028` P12, yalnız `perf.yml`). `Identity__PasswordIterations`'ı da
 düşürmeyin; geliştirme betiği bunu hız için 1000'e çeker, üretim değeri 210.000'dir.
 
 ## 4. Sıra: önce kurulum adımı, sonra uygulama
@@ -176,12 +178,31 @@ galeri-alanadi.com {
    ters vekil varsa `/api/dealership/gallery` için kenar önbelleği kapatılır ve uygulamanın
    `Cache-Control: no-store` başlığı korunur. Yanıt zamana bağlıdır ("şu an açık" ve "Bugün");
    kenarda önbelleğe alınırsa altlık bayat bir "açık" basar.
-6. **Duman testi:**
+6. **Harita anahtarı (`0028` D7, D18, SS1).** İletişim sayfasının haritası Google'ın resmî Maps Embed
+   API'siyle gömülür. Anahtar olmadan sayfa çalışır; her şubede yalnız "Google Haritalar'da aç"
+   bağlantısı görünür.
+   - Google Cloud'da bir proje ve faturalandırma hesabı açın; **Maps Embed API**'yi etkinleştirin
+     (Google bu kullanım için ücret almıyor, ama faturalandırma hesabı istiyor).
+   - Anahtarı oluşturun ve iki kısıtla daraltın: **HTTP yönlendiren (referrer)** ile sitenin köküne
+     (`https://<alan-adı>/*`) ve **API kısıtı** ile yalnız Maps Embed API'ye. Anahtar sır değildir
+     (harita açan her ziyaretçi iframe adresinde görür), ama kısıtsız bir anahtar başka sitelerde
+     kullanılabilir.
+   - Anahtarı `GoogleMaps__EmbedApiKey` olarak verin. Uygulama anahtarı yalnız gömme adresine
+     yazar; hiçbir belgeye, yapısal veriye ya da günlüğe yazmaz.
+   - **CSP:** ters vekil bir `Content-Security-Policy` eklerse `frame-src https://www.google.com`
+     gerekir; yoksa harita kutusu boş kalır. Uygulamanın kendisi CSP başlığı yazmaz.
+   - **Çerez politikası (sahip işi):** harita tıklanınca Google çerez bırakabilir. Çerez politikası
+     buna göre güncellenmelidir; örnek metin "üçüncü taraf çerez yok" diyorsa artık doğru değildir
+     (`0028` X8). Haritayı açmak ziyaretçinin eylemidir ve onay hiçbir yerde saklanmaz.
+   - **Şube e-postası herkese açıktır** (`0028` D8, SS2): iletişim sayfasında görünür ve talep
+     bildirimleri de bu adrese gider.
+7. **Duman testi:**
 
    | İstek | Beklenen |
    |---|---|
    | `GET /tr/` | `200` |
    | `GET /ar/` | `200`, `<html lang="ar" dir="rtl">` |
+   | `GET /tr/contact` | `200`, şubelerin adresi, telefonu ve "Google Haritalar'da aç" |
    | `GET /seed-media/cover-1.svg` | `404` — geliştirme yüzeyi kapalı |
    | Tarayıcıdan panel girişi (`https`) | Parola değiştirme ekranı |
 

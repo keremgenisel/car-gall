@@ -79,6 +79,7 @@ internal sealed class SeoHeadBuilder(
             // kanonik, dil alternatifi, Open Graph ve JSON-LD yok. Açıklama yok.
             SeoPageKind.Favorites => Private(locale.Code, ad, SeoCatalog.FavoritesTitle),
             SeoPageKind.Compare => Private(locale.Code, ad, SeoCatalog.CompareTitle),
+            SeoPageKind.Contact => Contact(locale.Code, ad, await ContactGalleryAsync(context, locale.Code, ad), logoImage),
             SeoPageKind.Admin => new SeoHead(StatusCodes.Status200OK, Title(ad ?? Text(locale.Code, SeoCatalog.DocumentFallbackTitle)) + Robots("noindex")),
             _ => NotFound(locale.Code, ad),
         };
@@ -110,46 +111,13 @@ internal sealed class SeoHeadBuilder(
         // D15 — galeri ad okunamazsa blok HİÇ basılmaz (AC-53).
         if (ad is not null && gallery is not null)
         {
-            JsonObject dealer = new()
-            {
-                ["@context"] = "https://schema.org",
-                ["@type"] = "AutoDealer",
-                ["name"] = ad,
-                ["url"] = canonical,
-            };
+            JsonObject dealer = Dealer(locale, ad, logoImage);
 
-            // `0026` D7 — kökte, metin adres; `department` öğelerinde yok, logo yoksa anahtar yok.
-            if (logoImage is not null)
-            {
-                dealer["logo"] = logoImage;
-            }
-
+            // `0028` D13 — ana sayfanın şube öğeleri altlıkta görünenle sınırlı: ad, adres, telefon
+            // (AC-17). Saatler, özel günler, e-posta, harita ve `geo` iletişim belgesindedir (C3).
             if (gallery.Branches.Count > 0)
             {
-                dealer["department"] = new JsonArray([.. gallery.Branches.Select(branch =>
-                {
-                    JsonObject department = new()
-                    {
-                        ["@type"] = "AutoDealer",
-                        ["name"] = branch.Name,
-                        ["address"] = branch.Address,
-                        ["telephone"] = branch.Phone,
-                    };
-
-                    // `0025` D9 — yalnız programı girilmiş şubede; kök `AutoDealer`'da hiç yok (AC-56).
-                    if (branch.OpeningHours is { } hours)
-                    {
-                        department["openingHoursSpecification"] = OpeningHoursSpecification(hours);
-
-                        // `0027` D12 — penceredeki özel günler (altlıkla aynı pencere, C4); yoksa anahtar yok.
-                        if (branch.SpecialHours.Count > 0)
-                        {
-                            department["specialOpeningHoursSpecification"] = SpecialOpeningHoursSpecification(branch.SpecialHours);
-                        }
-                    }
-
-                    return (JsonNode)department;
-                })]);
+                dealer["department"] = new JsonArray([.. gallery.Branches.Select(branch => (JsonNode)Department(branch))]);
             }
 
             // `0024` D8 — altlığın gösterdiği hesaplar, aynı sırayla (C3); hiç yoksa anahtar yok.
@@ -164,6 +132,113 @@ internal sealed class SeoHeadBuilder(
 
         return new SeoHead(StatusCodes.Status200OK, tags.ToString());
     }
+
+    /// <summary>
+    /// `0028` **D12** · **D13** — iletişim belgesi: indekslenir (robots yok, `Referrer-Policy` yok),
+    /// kanonik sorgu dizesi taşımaz. JSON-LD sayfada görünen şube bilgisini taşır: saatler, özel
+    /// günler, e-posta, `hasMap` (= "Google Haritalar'da aç") ve koordinatlı şubede `geo`. "Şu an",
+    /// gömme adresi ve anahtar belgede YOKTUR (AC-20); `sameAs` yoktur, sayfa altlık taşımaz (X10).
+    /// </summary>
+    private SeoHead Contact(string locale, string? ad, ContactGalleryDto? contact, string? logoImage)
+    {
+        string title = WithName(Text(locale, SeoCatalog.ContactTitle), ad);
+        string description = Text(locale, SeoCatalog.ContactDescription);
+        string canonical = root.Absolute(ContactPath(locale));
+
+        StringBuilder tags = new();
+        tags.Append(Title(title)).Append(Description(description));
+        AppendLinks(tags, canonical, AllLocales(ContactPath));
+        AppendOpenGraph(tags, title, description, canonical, ad, image: logoImage);
+
+        // `0024` AC-50'nin ikizi (AC-100) — ad okunamazsa blok HİÇ basılmaz.
+        if (ad is not null && contact is not null)
+        {
+            JsonObject dealer = Dealer(locale, ad, logoImage);
+            IReadOnlyList<PublicBranchDto> branches = contact.Gallery.Branches;
+
+            if (branches.Count > 0)
+            {
+                dealer["department"] = new JsonArray([.. branches.Select((branch, index) =>
+                {
+                    JsonObject department = Department(branch);
+
+                    if (branch.Email is { } email)
+                    {
+                        department["email"] = email;
+                    }
+
+                    // `0025` D9 — yalnız programı girilmiş şubede; kök `AutoDealer`'da hiç yok (AC-56).
+                    if (branch.OpeningHours is { } hours)
+                    {
+                        department["openingHoursSpecification"] = OpeningHoursSpecification(hours);
+
+                        // `0027` D12 — penceredeki özel günler (sayfayla aynı pencere, C4); yoksa anahtar yok.
+                        if (branch.SpecialHours.Count > 0)
+                        {
+                            department["specialOpeningHoursSpecification"] = SpecialOpeningHoursSpecification(branch.SpecialHours);
+                        }
+                    }
+
+                    // D7 — sınırı aşan adresin haritası yok; `hasMap` de yok (AC-92).
+                    if (branch.Map is { } map)
+                    {
+                        department["hasMap"] = map.LinkUrl;
+                    }
+
+                    // D13 — koordinat bu sayfada haritayla görünür; `0004` AC-52'nin gerekçesi burada kalkar.
+                    if (contact.Geo[index] is { } geo)
+                    {
+                        department["geo"] = new JsonObject
+                        {
+                            ["@type"] = "GeoCoordinates",
+                            ["latitude"] = geo.Latitude,
+                            ["longitude"] = geo.Longitude,
+                        };
+                    }
+
+                    return (JsonNode)department;
+                })]);
+            }
+
+            tags.Append(JsonLd(dealer));
+        }
+
+        return new SeoHead(StatusCodes.Status200OK, tags.ToString());
+    }
+
+    /// <summary>
+    /// `0028` **D13** · CLARIFY B10 — ana sayfa ve iletişim belgesinin ORTAK kökü. İki belge aynı
+    /// işletmeyi aynı <c>@id</c>'yle anlatır (AC-103); <c>url</c> galerinin ana sayfasıdır.
+    /// `0026` D7 — logo kökte, metin adres; yoksa anahtar yok.
+    /// </summary>
+    private JsonObject Dealer(string locale, string ad, string? logoImage)
+    {
+        string home = root.Absolute(HomePath(locale));
+        JsonObject dealer = new()
+        {
+            ["@context"] = "https://schema.org",
+            ["@type"] = "AutoDealer",
+            ["@id"] = home + "#dealer",
+            ["name"] = ad,
+            ["url"] = home,
+        };
+
+        if (logoImage is not null)
+        {
+            dealer["logo"] = logoImage;
+        }
+
+        return dealer;
+    }
+
+    /// <summary>`0004` D15 — şube öğesinin çekirdeği; `logo` ve `sameAs` taşımaz (`0026` AC-51, `0024` AC-48).</summary>
+    private static JsonObject Department(PublicBranchDto branch) => new()
+    {
+        ["@type"] = "AutoDealer",
+        ["name"] = branch.Name,
+        ["address"] = branch.Address,
+        ["telephone"] = branch.Phone,
+    };
 
     /// <summary>
     /// `0025` **D9** · P6 — (opens, closes) çiftini taşıyan günler tek öğede birleşir; öğeler çiftin
@@ -398,6 +473,27 @@ internal sealed class SeoHeadBuilder(
         return new SeoHead(StatusCodes.Status200OK, tags.ToString());
     }
 
+    /// <summary>`0028` P3 — iletişim belgesinin okuması; düşerse belge yapısal verisiz basılır.</summary>
+    private async Task<ContactGalleryDto?> ContactGalleryAsync(HttpContext context, string locale, string? ad)
+    {
+        if (ad is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await context.RequestServices
+                .GetRequiredService<IPublicGalleryQueries>()
+                .GetContactAsync(locale, context.RequestAborted);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogWarning(exception, "Galeri bilgisi okunamadı; iletişim sayfası yapısal verisiz basılıyor.");
+            return null;
+        }
+    }
+
     private async Task<PublicGalleryDto?> GalleryAsync(HttpContext context, string locale, string? ad)
     {
         if (ad is null)
@@ -487,6 +583,9 @@ internal sealed class SeoHeadBuilder(
     internal static string HomePath(string locale) => $"/{locale}/";
 
     internal static string ListPath(string locale) => $"/{locale}/{LocalePrefixMiddleware.ListSegment}";
+
+    /// <summary>`0028` D2 — her dilde aynı ad.</summary>
+    internal static string ContactPath(string locale) => $"/{locale}/{SeoPage.ContactSegment}";
 
     internal static string ContentPath(string locale, string slug) => $"/{locale}/{Uri.EscapeDataString(slug)}";
 

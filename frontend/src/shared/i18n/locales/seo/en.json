@@ -5,5 +5,7 @@
   "seo.detail.description": "{year} model, {mileage}, {price}. At our {branch} branch.",
   "seo.document.fallbackTitle": "Car showroom",
   "seo.favorites.title": "My favourites",
-  "seo.compare.title": "Compare cars"
+  "seo.compare.title": "Compare cars",
+  "seo.contact.title": "Contact",
+  "seo.contact.description": "Our branches' addresses, phone numbers, email, opening hours and maps."
 }

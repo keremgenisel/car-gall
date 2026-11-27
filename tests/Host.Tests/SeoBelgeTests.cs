@@ -577,11 +577,12 @@ public sealed class SeoBelgeTests(HostFactory factory) : IClassFixture<HostFacto
         Assert.Equal(("Ataşehir Şubesi", "Barbaros Mah. 7, İstanbul", "+902160000002"), (subeler[1].GetProperty("name").GetString(), subeler[1].GetProperty("address").GetString(), subeler[1].GetProperty("telephone").GetString()));
     }
 
-    [Fact(DisplayName = "0004/AC-52, 0024/AC-45, 0025/AC-55, 0026/AC-52: `AutoDealer` bloğunda (kökte ve `department` öğelerinde) `geo` anahtarı yoktur (`0024` D8: `sameAs`, `0025` D9: `openingHoursSpecification`, `0026` D7: `logo` listeden çıktı).")]
+    [Fact(DisplayName = "0004/AC-52, 0024/AC-45, 0025/AC-55, 0026/AC-52, 0028/AC-17: Ana sayfanın `AutoDealer` bloğunda (kökte ve `department` öğelerinde) `geo` anahtarı yoktur (`0024` D8: `sameAs`, `0025` D9: `openingHoursSpecification`, `0026` D7: `logo` listeden çıktı).")]
     public async Task AutoDealer_KapsamDisiAnahtarlarYok()
     {
-        // `0024`, `0025`, `0026` — hesaplı, programlı ve logolu kurulumda ölçülür: `sameAs`, şube
-        // öğesindeki `openingHoursSpecification` ve kökteki `logo` artık beklenen anahtarlar.
+        // `0024`, `0025`, `0026` — hesaplı, programlı ve logolu kurulumda ölçülür: `sameAs` ve kökteki
+        // `logo` beklenen anahtarlar. `0028` D13 — `openingHoursSpecification` ana sayfadan iletişim
+        // belgesine taşındı; `geo` iletişim belgesinde koordinatlı şubede VAR (AC-15), ana sayfada yok.
         Guid logo = Guid.CreateVersion7();
         ortam.LogoKimligi = logo;
         ortam.LogoVarligi = SeoOrtami.LogoDto(logo);

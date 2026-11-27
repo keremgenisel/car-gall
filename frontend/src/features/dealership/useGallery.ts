@@ -16,13 +16,18 @@ export type GalleryLoad =
 /**
  * 0014 — galeri adı ve şube bloğu TEK okumadan beslenir. Önbellek yok: ad değiştiğinde
  * bir sonraki yükleme yeni adı gösterir (AC-13).
+ *
+ * `0028` **D4** — `attempt` artınca okuma tekrarlanır: iletişim sayfasının "Tekrar dene"si (AC-39).
+ * Ana sayfa vermez; okuma bir kez yapılır.
  */
-export function useGallery(): GalleryLoad {
+export function useGallery(attempt = 0): GalleryLoad {
   const { locale } = useLocale()
   const [result, setResult] = useState<{
     readonly key: string
     readonly value: GalleryLoad
   } | null>(null)
+
+  const key = `${locale}|${attempt}`
 
   useEffect(() => {
     const controller = new AbortController()
@@ -30,18 +35,18 @@ export function useGallery(): GalleryLoad {
     fetchGallery(locale, controller.signal)
       .then((gallery) =>
         setResult({
-          key: locale,
+          key,
           value: { kind: 'ready', gallery, receivedAt: performance.now() },
         }),
       )
       .catch((cause: unknown) => {
         if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
-          setResult({ key: locale, value: { kind: 'error' } })
+          setResult({ key, value: { kind: 'error' } })
         }
       })
 
     return () => controller.abort()
-  }, [locale])
+  }, [key, locale])
 
-  return result?.key === locale ? result.value : { kind: 'loading' }
+  return result?.key === key ? result.value : { kind: 'loading' }
 }

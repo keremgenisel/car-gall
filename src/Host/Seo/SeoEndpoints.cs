@@ -60,9 +60,14 @@ internal static class SeoEndpoints
             [
                 root.Absolute(SeoHeadBuilder.HomePath(locale)),
                 root.Absolute(SeoHeadBuilder.ListPath(locale)),
+                // `0028` D12 — iletişim sayfası her etkin dilde (AC-11).
+                root.Absolute(SeoHeadBuilder.ContactPath(locale)),
                 .. (await listings.ListVisibleSlugsAsync(cancellationToken))
                     .Select(slug => root.Absolute($"{SeoHeadBuilder.ListPath(locale)}/{Uri.EscapeDataString(slug)}")),
+                // `0028` D12 · CLARIFY B4 — ayrılmış adla saklanmış içerik sayfası girmez: o adres
+                // ayrılmış sayfayı açar. `favorites`/`compare`'deki önceden var olan açığı da kapatır (AC-93, AC-94).
                 .. (await pages.ListVisibleSlugsAsync(locale, cancellationToken))
+                    .Where(slug => !ContentReservedSlugs.Contains(slug))
                     .Select(slug => root.Absolute(SeoHeadBuilder.ContentPath(locale, slug))),
             ];
 

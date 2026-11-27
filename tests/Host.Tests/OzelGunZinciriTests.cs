@@ -204,7 +204,7 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
 
     // ----- Ziyaretçiye dönük okuma (R10, C3 · D8) -----
 
-    [Fact(DisplayName = "0027/AC-42, AC-43, AC-47: Şube öğesi `address, name, openNow, openingHours, phone, specialHours`; `openNow` `next, open, refreshInSeconds, today`; saat dilimi yanıtta yok; `Cache-Control: no-store`")]
+    [Fact(DisplayName = "0027/AC-42, AC-43, AC-47, 0028/AC-21: Şube öğesi `address, name, openNow, openingHours, phone, specialHours`; `openNow` `next, open, refreshInSeconds, today`; saat dilimi yanıtta yok; `Cache-Control: no-store`")]
     public async Task OkumaBicimi()
     {
         string ad = await SubeAcAsync(Zaman("2026-12-04T09:00:00Z"), Program(Programli), "Asia/Tokyo", OzelGunler("2026-12-10..2026-12-10="));
@@ -216,7 +216,8 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
         Assert.DoesNotContain("timeZone", metin, StringComparison.OrdinalIgnoreCase);
 
         JsonElement oge = JsonDocument.Parse(metin).RootElement.GetProperty("branches").EnumerateArray().Single(item => item.GetProperty("name").GetString() == ad);
-        Assert.Equal(["address", "name", "openNow", "openingHours", "phone", "specialHours"], oge.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
+        // `0028` D5 — `email` ve `map` bilerek eklendi; e-postasız ve haritasız şubede de anahtar var, değeri null.
+        Assert.Equal(["address", "email", "map", "name", "openNow", "openingHours", "phone", "specialHours"], oge.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
         Assert.Equal(["next", "open", "refreshInSeconds", "today"], oge.GetProperty("openNow").EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
         Assert.Equal("""[{"from":"2026-12-10","through":"2026-12-10","intervals":[]}]""", oge.GetProperty("specialHours").GetRawText());
     }
@@ -560,7 +561,7 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
 
     // ----- Yapısal veri (R11 · C4 · D12) -----
 
-    [Fact(DisplayName = "0027/AC-62: Pencerede 2026-12-31 tam gün kapalı ve 2027-01-02 10:00–13:00 → `specialOpeningHoursSpecification` tam bu iki öğe, her biri tam beş anahtar (Saat 2026-12-20T09:00Z)")]
+    [Fact(DisplayName = "0027/AC-62, 0028/AC-14: Pencerede 2026-12-31 tam gün kapalı ve 2027-01-02 10:00–13:00 → `specialOpeningHoursSpecification` tam bu iki öğe, her biri tam beş anahtar (Saat 2026-12-20T09:00Z)")]
     public async Task YapisalVeri_OzelGunler()
     {
         string ad = await SubeAcAsync(Zaman("2026-12-20T09:00:00Z"), Program(Programli), "Europe/Istanbul", OzelGunler("2027-01-02..2027-01-02=10:00-13:00;2026-12-31..2026-12-31="));
@@ -570,22 +571,23 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
             (await DepartmentAsync(ad, "tr")).GetProperty("specialOpeningHoursSpecification").GetRawText());
     }
 
-    [Fact(DisplayName = "0027/AC-63: 12 kayıt × 3 aralık, hepsi pencerede: `/ar/` belgesi aynı şubenin özel günsüz hâlinden en çok 4608 B büyük")]
+    [Fact(DisplayName = "0027/AC-63, 0028/AC-18: 12 kayıt × 3 aralık, hepsi pencerede: `/ar/` belgesi aynı şubenin özel günsüz hâlinden en çok 4608 B büyük")]
     public async Task YapisalVeri_Butce()
     {
         DateTimeOffset an = Zaman("2026-12-01T09:00:00Z");
         HttpClient yonetici = await YoneticiAsync(an);
         Guid sube = await KimlikAsync(yonetici, await SubeAcAsync(an, Program(Programli), "Europe/Istanbul", null, yonetici));
-        int once = Encoding.UTF8.GetByteCount(await Istemci().GetStringAsync("/ar/"));
+        // `0028` D13 — bütçe iletişim belgesinde (AC-18).
+        int once = Encoding.UTF8.GetByteCount(await Istemci().GetStringAsync("/ar/contact"));
 
         string enKotu = string.Join(';', Enumerable.Range(0, 12).Select(i => $"2026-12-{2 + 2 * i:00}..2026-12-{2 + 2 * i:00}=08:00-09:30,10:00-12:30,13:00-18:30"));
         await BasariliAsync(await KaydetAsync(yonetici, sube, govde => govde["specialHours"] = OzelGunler(enKotu)));
-        int sonra = Encoding.UTF8.GetByteCount(await Istemci().GetStringAsync("/ar/"));
+        int sonra = Encoding.UTF8.GetByteCount(await Istemci().GetStringAsync("/ar/contact"));
 
         Assert.InRange(sonra - once, 1, 4608);
     }
 
-    [Fact(DisplayName = "0027/AC-64, AC-65: Pencere dışı, geçmiş ve programsız şubenin kaydı belgede yok; kök `AutoDealer`'da anahtar yok; belge \"şu an\" metni ve değeri taşımaz; tam bir JSON-LD bloğu")]
+    [Fact(DisplayName = "0027/AC-64, AC-65, 0028/AC-17, AC-20: Pencere dışı, geçmiş ve programsız şubenin kaydı belgede yok; kök `AutoDealer`'da anahtar yok; belge \"şu an\" metni ve değeri taşımaz; tam bir JSON-LD bloğu")]
     public async Task YapisalVeri_Yokluklar()
     {
         // Aynı anda iki giriş ikinci adım kodunu yeniden kullanırdı: o andaki tek oturum paylaşılır.
@@ -596,20 +598,24 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
         string programsiz = await SubeAcAsync(an, null, "Europe/Istanbul", OzelGunler("2026-12-05..2026-12-05="), yonetici);
         saat.Simdi = an;
 
-        string belge = await Istemci().GetStringAsync("/tr/");
-        JsonElement kok = Assert.Single(new AngleSharp.Html.Parser.HtmlParser().ParseDocument(belge).JsonLd());
-        Assert.False(kok.TryGetProperty("specialOpeningHoursSpecification", out _));
         foreach (string ad in new[] { disarida, programsiz, gecmisli })
         {
             Assert.False((await DepartmentAsync(ad, "tr")).TryGetProperty("specialOpeningHoursSpecification", out _), ad);
         }
 
-        Assert.DoesNotContain("Şu an", belge, StringComparison.Ordinal);
-        Assert.DoesNotContain("openNow", belge, StringComparison.Ordinal);
-        Assert.DoesNotContain("refreshInSeconds", belge, StringComparison.Ordinal);
+        // `0028` — AC-64'ün "kök" ve AC-65'in "şu an yok" ölçümü İKİ belgede de (Context tablosu).
+        foreach (string adres in new[] { "/tr/", "/tr/contact" })
+        {
+            string belge = await Istemci().GetStringAsync(adres);
+            JsonElement kok = Assert.Single(new AngleSharp.Html.Parser.HtmlParser().ParseDocument(belge).JsonLd());
+            Assert.False(kok.TryGetProperty("specialOpeningHoursSpecification", out _), adres);
+            Assert.DoesNotContain("Şu an", belge, StringComparison.Ordinal);
+            Assert.DoesNotContain("openNow", belge, StringComparison.Ordinal);
+            Assert.DoesNotContain("refreshInSeconds", belge, StringComparison.Ordinal);
+        }
     }
 
-    [Fact(DisplayName = "0027/AC-66: Yönetici özel günü kaydettikten sonraki ilk `/tr/` belgesi yeni kaydı taşır")]
+    [Fact(DisplayName = "0027/AC-66, 0028/AC-14: Yönetici özel günü kaydettikten sonraki ilk `/tr/` belgesi yeni kaydı taşır")]
     public async Task YapisalVeri_KaydedinceIlkBelge()
     {
         DateTimeOffset an = Zaman("2026-12-01T09:00:00Z");
@@ -736,8 +742,9 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
         JsonDocument.Parse(await Istemci().GetStringAsync("/api/dealership/gallery?locale=tr")).RootElement
             .GetProperty("branches").EnumerateArray().Single(oge => oge.GetProperty("name").GetString() == ad);
 
+    /// <summary>`0028` D13 — özel günler iletişim belgesinde; ana sayfanın öğesi yalnız ad, adres, telefon.</summary>
     private async Task<JsonElement> DepartmentAsync(string ad, string dil) =>
-        Assert.Single(new AngleSharp.Html.Parser.HtmlParser().ParseDocument(await Istemci().GetStringAsync($"/{dil}/")).JsonLd())
+        Assert.Single(new AngleSharp.Html.Parser.HtmlParser().ParseDocument(await Istemci().GetStringAsync($"/{dil}/contact")).JsonLd())
             .GetProperty("department").EnumerateArray().Single(oge => oge.GetProperty("name").GetString() == ad);
 
     private async Task<long> OutboxAsync()

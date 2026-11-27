@@ -568,6 +568,7 @@
   "dealership.branch.field.phoneHint": "بالصيغة الدولية، مثل ‎+902165554433‎.",
   "dealership.branch.field.whatsApp": "رقم واتساب",
   "dealership.branch.field.email": "البريد الإلكتروني",
+  "dealership.branch.field.emailHint": "يظهر في صفحة الاتصال بالموقع؛ وتُرسَل إشعارات الطلبات إلى هذا العنوان أيضًا.",
   "dealership.branch.field.timeZone": "المنطقة الزمنية",
   "dealership.branch.field.timeZoneChoose": "اختر المنطقة الزمنية",
   "dealership.branch.field.slug": "الاختصار في العنوان",
