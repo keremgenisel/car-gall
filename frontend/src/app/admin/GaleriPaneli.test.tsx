@@ -1057,3 +1057,211 @@ describe('0025/AC-39, AC-63, AC-65: ar bölümü Arapça; panel metinleri panel 
     }
   })
 })
+
+// ── 0027 — şube formunun özel günleri (R1, R4, R5 · D13) ─────────────────────
+
+function ozel() {
+  return within(screen.getByTestId('branch-special-hours'))
+}
+
+const OZEL_SUBE: AdminBranch = {
+  ...SUBE,
+  // Sunucunun sırası bile bozuk gelse ekran `from` sırasıyla gösterir (AC-9).
+  specialHours: [
+    { from: '2027-02-08', through: '2027-03-09', intervals: [{ start: '10:00', end: '16:00' }] },
+    { from: '2027-01-01', through: '2027-01-01', intervals: [] },
+  ],
+}
+
+describe('0027/AC-1: "Çalışma saatleri"nin ardından "Özel günler ve tatiller"; özel günsüz şubede bölüm boş ve yardım metni', () => {
+  it.each<AppLocale>(['tr', 'ar', 'en'])('%s', async (locale) => {
+    await panel('branch-edit', 'manager', locale, 'b-1')
+    const bolum = await screen.findByTestId('branch-special-hours')
+    const t = createTranslator(locale)
+
+    expect(
+      screen.getByTestId('branch-opening-hours').compareDocumentPosition(bolum) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(ozel().getByText(t('dealership.branch.special.title'))).toBeTruthy()
+    expect(ozel().getByText(t('dealership.branch.special.hint'))).toBeTruthy()
+    expect(ozel().queryByTestId('special-0')).toBeNull()
+  })
+})
+
+describe('0027/AC-2, AC-3, AC-4, AC-9: Kayıtlar `from` sırasıyla görünür; "Tam gün kapalı" ve aralık; boş "Bitiş" `null` gider', () => {
+  it('görünüm ve gövde', async () => {
+    vi.mocked(api.saveBranch).mockResolvedValue(3)
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue(OZEL_SUBE)
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-special-hours')
+
+    const deger = (id: string) => (screen.getByTestId(id) as HTMLInputElement).value
+    expect([deger('special-0-from'), deger('special-0-through')]).toEqual([
+      '2027-01-01',
+      '2027-01-01',
+    ])
+    expect((screen.getByTestId('special-0-closed') as HTMLInputElement).checked).toBe(true)
+    expect([deger('special-1-from'), deger('special-1-through')]).toEqual([
+      '2027-02-08',
+      '2027-03-09',
+    ])
+    expect((screen.getByTestId('special-1-closed') as HTMLInputElement).checked).toBe(false)
+    expect([deger('special-1-0-start'), deger('special-1-0-end')]).toEqual(['10:00', '16:00'])
+    expect(screen.getByTestId('special-0-from').getAttribute('type')).toBe('date')
+
+    fireEvent.click(screen.getByTestId('special-add'))
+    fireEvent.change(screen.getByTestId('special-2-from'), { target: { value: '2027-01-10' } })
+    fireEvent.click(screen.getByTestId('special-2-closed'))
+    fireEvent.change(screen.getByTestId('special-2-0-start'), { target: { value: '09:00' } })
+    fireEvent.change(screen.getByTestId('special-2-0-end'), { target: { value: '13:00' } })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    await screen.findByTestId('dealership-saved')
+    expect(vi.mocked(api.saveBranch).mock.calls[0]![2].specialHours).toEqual([
+      { from: '2027-01-01', through: '2027-01-01', intervals: [] },
+      { from: '2027-01-10', through: null, intervals: [{ start: '09:00', end: '13:00' }] },
+      { from: '2027-02-08', through: '2027-03-09', intervals: [{ start: '10:00', end: '16:00' }] },
+    ])
+  })
+})
+
+describe('0027/AC-5: Bir kayda iki aralık girilir; gövde ikisini girildiği sırayla taşır; üçüncüden sonra "Aralık ekle" yok', () => {
+  it('aralıklar', async () => {
+    vi.mocked(api.saveBranch).mockResolvedValue(3)
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-special-hours')
+
+    fireEvent.click(screen.getByTestId('special-add'))
+    fireEvent.change(screen.getByTestId('special-0-from'), { target: { value: '2027-01-10' } })
+    fireEvent.click(screen.getByTestId('special-0-closed'))
+    fireEvent.change(screen.getByTestId('special-0-0-start'), { target: { value: '09:00' } })
+    fireEvent.change(screen.getByTestId('special-0-0-end'), { target: { value: '13:00' } })
+    fireEvent.click(screen.getByTestId('special-0-add-interval'))
+    fireEvent.change(screen.getByTestId('special-0-1-start'), { target: { value: '16:00' } })
+    fireEvent.change(screen.getByTestId('special-0-1-end'), { target: { value: '21:00' } })
+    fireEvent.click(screen.getByTestId('special-0-add-interval'))
+    expect(screen.queryByTestId('special-0-add-interval')).toBeNull()
+    fireEvent.click(ozel().getAllByRole('button', { name: /^Kaldır/ })[2]!)
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    await screen.findByTestId('dealership-saved')
+    expect(vi.mocked(api.saveBranch).mock.calls[0]![2].specialHours![0]!.intervals).toEqual([
+      { start: '09:00', end: '13:00' },
+      { start: '16:00', end: '21:00' },
+    ])
+  })
+})
+
+describe('0027/AC-6, AC-7: 12 kayıtta "Özel gün ekle" yok; "Kaydı kaldır" kaydı gövdeden çıkarır; kaydetmeden ayrılmak istek atmaz', () => {
+  it('sınır ve kaldırma', async () => {
+    vi.mocked(api.saveBranch).mockResolvedValue(3)
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue({
+      ...SUBE,
+      specialHours: Array.from({ length: 12 }, (_, i) => ({
+        from: `2027-01-${String(i + 1).padStart(2, '0')}`,
+        through: `2027-01-${String(i + 1).padStart(2, '0')}`,
+        intervals: [],
+      })),
+    })
+    await panel('branch-edit', 'manager', 'tr', 'b-1')
+    await screen.findByTestId('branch-special-hours')
+
+    expect(screen.queryByTestId('special-add')).toBeNull()
+    fireEvent.click(screen.getByTestId('special-0-remove'))
+    expect(screen.getByTestId('special-add')).toBeTruthy()
+    expect(vi.mocked(api.saveBranch)).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByTestId('branch-save'))
+    await screen.findByTestId('dealership-saved')
+    const gonderilen = vi.mocked(api.saveBranch).mock.calls[0]![2].specialHours!
+    expect(gonderilen).toHaveLength(11)
+    expect(gonderilen.map((kayit) => kayit.from)).not.toContain('2027-01-01')
+  })
+})
+
+describe('0027/AC-8: Yeni şube formunda bölüm var ve açma gövdesi özel günü taşır', () => {
+  it('açma', async () => {
+    vi.mocked(api.openBranch).mockResolvedValue({ id: 'yeni', version: 1 } as never)
+    await panel('branch-new')
+    await screen.findByTestId('branch-special-hours')
+
+    fireEvent.click(screen.getByTestId('special-add'))
+    fireEvent.change(screen.getByTestId('special-0-from'), { target: { value: '2027-01-01' } })
+    fireEvent.change(screen.getByLabelText('Türkçe', { selector: '#branch-name-tr' }), {
+      target: { value: 'Yeni Şube' },
+    })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    await waitFor(() => expect(vi.mocked(api.openBranch)).toHaveBeenCalled())
+    expect(vi.mocked(api.openBranch).mock.calls[0]![0].specialHours).toEqual([
+      { from: '2027-01-01', through: null, intervals: [] },
+    ])
+  })
+})
+
+describe('0027/AC-22: Hata ilgili kaydın ya da aralığın yanında, ekranın dilinde; girilen değerler formda kalır', () => {
+  it.each<AppLocale>(['tr', 'ar', 'en'])('%s', async (locale) => {
+    vi.mocked(api.fetchAdminBranch).mockResolvedValue(OZEL_SUBE)
+    vi.mocked(api.saveBranch).mockRejectedValue(
+      new ApiError('dealership.validation_failed', null, 422, null, {
+        fields: 'specialHours.1.through,specialHours.1.intervals.0.start,specialHours',
+        'specialHours.1.through': 'special_hours.too_long',
+        'specialHours.1.intervals.0.start': 'opening_hours.invalid_time',
+        specialHours: 'special_hours.too_many',
+      }),
+    )
+    await panel('branch-edit', 'manager', locale, 'b-1')
+    await screen.findByTestId('branch-special-hours')
+    const t = createTranslator(locale)
+
+    fireEvent.change(screen.getByTestId('special-1-through'), { target: { value: '2027-04-30' } })
+    fireEvent.click(screen.getByTestId('branch-save'))
+
+    const kayit = within(await screen.findByTestId('special-1'))
+    expect((await kayit.findByTestId('error-specialHours.1.through')).textContent).toBe(
+      t('dealership.fieldError.special_hours_too_long'),
+    )
+    expect(kayit.getByTestId('error-specialHours.1.intervals.0.start').textContent).toBe(
+      t('dealership.fieldError.opening_hours_invalid_time'),
+    )
+    expect(screen.getByTestId('special-1-through').getAttribute('aria-describedby')).toBe(
+      'error-specialHours-1-through',
+    )
+    expect(ozel().getByTestId('error-specialHours').textContent).toBe(
+      t('dealership.fieldError.special_hours_too_many'),
+    )
+    expect((screen.getByTestId('special-1-through') as HTMLInputElement).value).toBe('2027-04-30')
+  })
+})
+
+describe("0027/AC-73 (panel yarısı): Bölümün metinleri ve D14'ün hata kodları panel kataloğunda, üç dilde; vitrin kataloğunda yok", () => {
+  it('anahtarlar', () => {
+    const anahtarlar = [
+      'dealership.branch.special.title',
+      'dealership.branch.special.hint',
+      'dealership.branch.special.from',
+      'dealership.branch.special.through',
+      'dealership.branch.special.closedAllDay',
+      'dealership.branch.special.add',
+      'dealership.branch.special.remove',
+      'dealership.branch.special.entry',
+      ...[
+        'invalid_date',
+        'end_before_start',
+        'too_long',
+        'too_far',
+        'overlap',
+        'too_many',
+        'invalid_entry',
+        'intervals_required',
+      ].map((kod) => `dealership.fieldError.special_hours_${kod}`),
+    ]
+    for (const locale of ['tr', 'ar', 'en'] as const) {
+      for (const anahtar of anahtarlar) {
+        expect(catalogKeys(locale)).toContain(anahtar)
+        expect(Object.keys(vitrin[locale])).not.toContain(anahtar)
+      }
+    }
+  })
+})

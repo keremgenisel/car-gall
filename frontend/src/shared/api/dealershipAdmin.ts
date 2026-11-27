@@ -50,6 +50,15 @@ export interface AdminBranch {
   readonly version: number
   /** `0025` D14 — D8'in biçimi; programsız şubede `null`. */
   readonly openingHours: Readonly<Record<string, readonly OpeningInterval[]>> | null
+  /** `0027` D13 — güncel ve gelecek bütün kayıtlar, `from` sırasıyla; geçmiş hiç dönmez. */
+  readonly specialHours?: readonly AdminSpecialDay[]
+}
+
+/** `0027` D2 — bir özel gün; aralıksız kayıt tam gün kapalıdır. */
+export interface AdminSpecialDay {
+  readonly from: string
+  readonly through: string
+  readonly intervals: readonly OpeningInterval[]
 }
 
 /** `0020` R9 — şube açma ve kaydetme girdisi; opsiyonel alan boş metinle boşaltılır (D9). */
@@ -65,6 +74,12 @@ export interface BranchInput {
   readonly longitude: number | null
   /** `0025` D11 · P8 — panel yedi günün hepsini gönderir; yedi boş gün programı siler. */
   readonly openingHours: Readonly<Record<string, readonly OpeningInterval[]>>
+  /** `0027` D13 — dizi bütün kayıtların yerine geçer; boş "Bitiş" `null` (başlangıçla aynı gün). */
+  readonly specialHours?: readonly {
+    from: string
+    through: string | null
+    intervals: OpeningInterval[]
+  }[]
 }
 
 /** `0020` R11, R12 — durum eylemleri. */

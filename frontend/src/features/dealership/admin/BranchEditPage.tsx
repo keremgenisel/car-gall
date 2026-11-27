@@ -16,6 +16,8 @@ import { Badge, Button, Dialog, EmptyState, ErrorState, Skeleton } from '../../.
 import { DealershipField } from './DealershipField'
 import { OpeningHoursFieldset } from './OpeningHoursFieldset'
 import { scheduleOf, schedulePayload, type Schedule } from './openingHoursForm'
+import { SpecialHoursFieldset } from './SpecialHoursFieldset'
+import { entriesOf, specialPayload, type SpecialEntry } from './specialHoursForm'
 import {
   actionErrorKey,
   fieldErrorsOf,
@@ -49,6 +51,7 @@ interface Values {
   readonly latitude: string
   readonly longitude: string
   readonly openingHours: Schedule
+  readonly specialHours: readonly SpecialEntry[]
 }
 
 function valuesOf(branch: AdminBranch | null, locales: readonly string[]): Values {
@@ -64,6 +67,8 @@ function valuesOf(branch: AdminBranch | null, locales: readonly string[]): Value
     longitude: branch?.longitude === null || branch === null ? '' : String(branch.longitude),
     // `0025` AC-2 — programsız şube yedi gün "Kapalı".
     openingHours: scheduleOf(branch?.openingHours ?? null),
+    // `0027` AC-9 — `from` sırasıyla; panel okuması güncel ve gelecek bütün kayıtları taşır.
+    specialHours: entriesOf(branch?.specialHours),
   }
 }
 
@@ -202,6 +207,7 @@ export function BranchEditPage({ branchId }: { readonly branchId?: string }) {
       latitude,
       longitude,
       openingHours: schedulePayload(values.openingHours),
+      specialHours: specialPayload(values.specialHours),
     }
   }
 
@@ -450,6 +456,13 @@ export function BranchEditPage({ branchId }: { readonly branchId?: string }) {
           errors={errors}
           disabled={closed}
           onChange={(openingHours) => setValues({ ...values, openingHours })}
+        />
+
+        <SpecialHoursFieldset
+          entries={values.specialHours}
+          errors={errors}
+          disabled={closed}
+          onChange={(specialHours) => setValues({ ...values, specialHours })}
         />
 
         {closed ? null : (
