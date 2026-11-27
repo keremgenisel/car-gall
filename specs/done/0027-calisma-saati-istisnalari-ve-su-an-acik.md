@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-27 — Proje Yöneticisi kararı) · QA CLARIFY turu işlendi (QA 1, PR #141 @ `c51e167`: 12 bulgu, 0 engelleyici / 8 önemli / 4 küçük) |
+| **Durum** | Tamamlandı (2026-11-27) — kararlar ve kriterler #141 → `629153f`, uygulama #142 → `a59ca55` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (özel gün, "şu an" hesabı, okumalar) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel şube formu, vitrin altlığı) |
@@ -1095,27 +1095,27 @@ korunmalıdır (R5).
       → AC-75–AC-91). **SS1–SS4** cevaplandı (sahip kararı, 2026-11-27).
 - [x] QA CLARIFY turu işlendi (QA 1, 12 bulgu → D2, D4, D7, D9, D11, D14, D15, D17; AC-92–AC-107).
       *(Proje Yöneticisi kararı, 2026-11-27.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0027-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. — 107/107; kriter → kanıt tablosu #142 gövdesinde.
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0027-ac<n>.png`),
       boş ve hata durumları dâhil; panel bölümünün ve altlığın (açık, kapalı, özel gün) Arapça
-      görüntüsü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). "Şu an" kriterleri sabit `IClock` ile.
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor (`dealership`, D18).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi ("Özel Gün", "Şu An Durumu", D16).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D6, D17: `:42` cümlesi).
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      görüntüsü de var. — `docs/evidence/0027-*.png` (tr/ar/en, 320 px dahil).
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). "Şu an" kriterleri sabit `IClock` ile. — Host 701 (`OzelGunZinciriTests` 82), Dealership 243; QA 2 34 satırı zoneinfo ile yeniden hesapladı, 4 ek uç (yaz saati boşluğu, Beirut iki kez yaşanan saat, 10 günlük zincir) geçici testle doğrulandı.
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok. — Architecture 71/71 (kapanış commit'inde yeniden koşuldu).
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor (`dealership`, D18). — yalnız `dealership.branches.special_hours jsonb` (P1).
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil. — üç küme; frontend-003 D19 anahtar kapısı yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi ("Özel Gün", "Şu An Durumu", D16). — `docs/domain.md`.
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi (D6, D17: `:42` cümlesi). — `docs/architecture.md` ("şu an" sunucuda, D6) + `docs/deploy.md` CDN `no-store` notu (D17, B12).
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). — `9976236`: Backend, Frontend, E2E, C3, değişen yollar.
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
+      bunun yerine geçmez. — QA 2, head `7e88402`: 7 bulgu (0/4/3), hepsi düzeltildi (`1aef494`, `9976236`).
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu) PR'da listelendi ve **çok etiketli** kaldı. İlk paket
-      ölçümü head commit'ten yapıldı.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+      ölçümü head commit'ten yapıldı. — karşılanmayan kriter yok; tablo dışı değişen tek test `BranchList.test.tsx:54` (PM onayı, AP-08).
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. — 2026-11-27, `a59ca55`.
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in
-      TAMAMI koşturuldu.
+      TAMAMI koşturuldu. — bu kapanış.
 
 ---
 
@@ -1123,13 +1123,30 @@ korunmalıdır (R5).
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | | |
-| **Kriter sayısı: önce → bugün** | → | |
-| **Spec revizyon sayısı** | | |
-| **Düzeltme turu sayısı** | | |
-| **Dış bulgu (gerçek/gürültü)** | / | |
-| **Uygulama içi bulgu** | | |
-| **Regresyon sayısı** | | |
-| **Kaçan hata** | | |
+| **Kriterler önce `main`'de miydi?** | evet | `git cat-file -e a59ca55^:specs/0027-calisma-saati-istisnalari-ve-su-an-acik.md` → var; #141 → `629153f`. |
+| **Kriter sayısı: önce → bugün** | 107 → 107 | Spec PR'ında 74 → 91 (PM onay şartları a–c) → 107 (CLARIFY); uygulamada kriter değişmedi. |
+| **Spec revizyon sayısı** | 1 | CLARIFY turu (QA 1, 12 bulgu, 0/8/4 → AC-92–107, D2/D4/D7/D9/D11/D14/D15/D17). Merge sonrası R/C/AC değişmedi; #142'nin spec diff'i yalnız Context'teki plan turu (P1–P11). |
+| **Düzeltme turu sayısı** | 1 | QA 2 turu (BULGU-1…7). |
+| **Dış bulgu (gerçek/gürültü)** | 7 / 0 | QA 2: 0 engelleyici / 4 önemli (panel hatası yanlış kayıtta — AC-22; en/320 iskelet 42 px kısa — AC-77; StrictMode'da yenileme ölü; çakışma O(n²) + sınırsız dizi) / 3 küçük (gövde, AC-69 font bekletmesi, tip uyuşmazlığı 400). QA 2'nin ayrıca not ettiği 3 eski kod gözlemi bu PR'ın değil, sayılmadı. |
+| **Uygulama içi bulgu** | 5 | İlk paket ilk ölçümde +526 B (> 512; parça CSS'i parçaya taşındı) · mimari kapı: tohumda saat sabiti · stylelint ham px · ar "2–4 ديسمبر" bidi ile "4–2" (LRI/PDI) · AC-75 "aralıklar alt alta"yı 320 px'te yakalamıyordu (1280 px en kötü durum eklendi). |
+| **Regresyon sayısı** | 0 | Tablo dışı değişen tek test PM onaylı (`BranchList.test.tsx:54`, D11 sırası). |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-27 (`a59ca55`). |
 
 **Bu spec'ten çıkarılan ders:**
+
+1. **Tekil depo + React StrictMode ikinci kez kırıldı** (frontend-003 BULGU-1, 0027 BULGU-3).
+   Son abone çıkınca kaynağı hemen kapatan (`dispose`, paylaşılan `AbortController`) modül düzeyi
+   depolar StrictMode'un ol/çık/ol döngüsünde ölü kalıyor; üretim derlemesi etkileri çift çağırmadığı
+   için e2e hiç görmüyor. Aboneli depo yazan her kartta StrictMode'lu bir vitest zorunlu; kapatma
+   ertelenir, iptal okuma başına kurulur.
+2. **Ekran sırası ≠ gövde sırası ise sunucunun indeksi yanlış satırı işaretler** (BULGU-1). Gövdeyi
+   sıralayan her form ya ekranı da sıralar ya indeksi eşler; test yeni kaydı ÖNE sıralanacak biçimde
+   kurar — sona eklenen kayıt bu kusuru gizler.
+3. **İskelet eşitliği en kötü metinle ölçülür, en kötü sayıyla değil.** 12 özel gün ölçülmüştü; 42 px'i
+   açan tek kayıt "Today" + ay aşan aralığın İngilizcesiydi. En kötü durum kümesi dil × etiket × aralık
+   biçimidir.
+4. **Küme kuralı sayı sınırından sonra koşarsa sınır koruma değildir** (BULGU-4): `too_many` çakışma
+   taramasından önce gelmeli.
+5. **Süreç desenle öldürülmez** — DEV'in boş `-P`'li `pkill -f` deseni sahibin 5080 sitesini düşürdü;
+   yalnız port sahibi PID (`lsof -tiTCP:<port> -sTCP:LISTEN`). Tam e2e `EVIDENCE_WRITE=1` ile koşunca
+   280+ eski kanıt yeniden yazıldı; commit'ten önce kapsam denetlendi.
