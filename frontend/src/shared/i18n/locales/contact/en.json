@@ -1,0 +1,20 @@
+{
+  "contact.closed": "Closed",
+  "contact.hours": "Opening hours",
+  "contact.openNow": "Open now",
+  "contact.closedNow": "Closed now",
+  "contact.closes": "Closes",
+  "contact.opens": "Opens",
+  "contact.tomorrow": "tomorrow",
+  "contact.today": "Today",
+  "contact.specialDays": "Special days",
+  "contact.error.title": "Contact details could not be loaded",
+  "contact.error.body": "Something went wrong. Please try again.",
+  "contact.error.retry": "Try again",
+  "contact.empty.title": "No contact details yet",
+  "contact.empty.body": "Branch details will appear here once they are added.",
+  "contact.map.show": "Show map",
+  "contact.map.notice": "The map loads from Google Maps. Google may use cookies.",
+  "contact.map.open": "Open in Google Maps",
+  "contact.map.frameTitle": "{name} — Google Maps map"
+}

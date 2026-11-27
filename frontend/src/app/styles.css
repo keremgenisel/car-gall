@@ -251,6 +251,32 @@ a.top-bar__brand:hover {
   text-decoration: underline;
 }
 
+/* `0028` D10 — iletişim bağlantısı markadan sonra, satır sonu grubundan önce; satırın geri kalanını
+   itip satır sonu tarafına yaslanır. Büzülmez: ad kısalır. Dokunma hedefi en az 44×44 (AC-67). */
+.top-bar__contact {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-inline-size: var(--touch-target-min-size);
+  min-block-size: var(--touch-target-min-size);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.top-bar__contact[aria-current='page'] {
+  color: var(--color-accent-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.top-bar__contact-icon {
+  display: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+}
+
 /* `frontend-003` D8 — sayaç ve dil değiştirici satır sonunda; ikisi de büzülmez, ad kısalır. */
 .top-bar__end {
   display: flex;
@@ -307,6 +333,20 @@ a.top-bar__brand:hover {
   .top-bar__inner {
     flex-wrap: wrap;
     row-gap: var(--space-4);
+  }
+
+  /* `0028` D10 — dar ekranda 1. satırın sonunda yalnız simge; metin ekran okuyucuya kalır. */
+  .top-bar__contact-icon {
+    display: block;
+  }
+
+  .top-bar__contact-text {
+    position: absolute;
+    inline-size: var(--size-hairline);
+    block-size: var(--size-hairline);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   /* İkinci satırın tamamı; öğeler satır sonunda kalır (ar'da solda, frontend-001 AC-4). */
@@ -1325,6 +1365,17 @@ a.top-bar__brand:hover {
   gap: var(--space-6);
 }
 
+/* `0028` D9 · PM şartı (c) — geniş ekranda şube bloğu ve gezinme blokları TEK satırda (AC-85): bugün
+   1168 px'lik iç genişliğe 240 px'lik dört sütun sığıyor, beşinci ("Diller") alt satıra düşüyordu.
+   Sütun alt sınırı satırın beşte biridir: en çok beş blok olduğu için hepsi tek satıra sığar, olmayan
+   blok `auto-fit` ile yer tutmaz, sıra DOM sırasıdır (ar'da şube bloğu sağda). Logo kendi satırında
+   kalır (`grid-column: 1 / -1`). Dar ekranda yukarıdaki ızgara aynen kalır (AC-86). */
+@media (width >= 64rem) {
+  .home-footer__inner {
+    grid-template-columns: repeat(auto-fit, minmax(calc((100% - 4 * var(--space-6)) / 5), 1fr));
+  }
+}
+
 .home-footer__heading {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -1354,8 +1405,6 @@ a.top-bar__brand:hover {
 }
 
 .home-footer__branch-items {
-  /* `0027` QA 2 BULGU-2 — saat bloğunun kat kararını okuyan kapsayıcı (aşağıda). */
-  container: branches / inline-size;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -1397,40 +1446,17 @@ a.top-bar__brand:hover {
   margin-block: 0 var(--space-1);
 }
 
-/* `0027` D15 — saat bloğu tembel parçada (`features/dealership/branchClock.css`); girişte yalnız
-   evre B: satır yüksekliği, iskelet ve "şu an" kutusu. Her satır `--hours-line` yüksekliğinde ve
-   her aralık kendi satırında, yani iskelet açılacak alanın yüksekliğini veriden aynen ayırır. */
-.home-footer__branch {
-  --hours-line: calc(var(--font-size-sm) * var(--line-height-base));
-  --special-stack: 0;
+/* `0028` D4 — iletişim sayfasının iskeleti rota kabuğunda (ilk paket); bölümler parçayla gelir. */
+.contact-page__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-/* QA 2 BULGU-2 — dar SÜTUNDA özel gün satırı iki katlıdır (tarih, altında aralıklar): en uzun
-   tarih ("28 September–2 October" + "Today", ≈210 px) aralıkla aynı satıra sığmıyordu. Ölçüt
-   görünüm değil sütun genişliğidir: masaüstü altlığında sütun 240 px'e iner. Kat veriden bellidir;
-   iskelet ve parça aynı kapsayıcı sorgusunu okur. */
-@container branches (width < 24rem) {
-  .home-footer__branch {
-    --special-stack: 1;
-  }
-}
-
-.home-footer__hours-skeleton {
-  margin-block-start: var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-muted);
-  block-size: calc(
-    var(--hours-lines) * var(--hours-line) + var(--special-on) *
-      (var(--space-3) + var(--hours-line)) + var(--special-lines) * var(--hours-line) +
-      var(--special-stack) * var(--special-rows) * var(--hours-line)
-  );
-}
-
-/* D11 — "şu an" satırı iki satırlık sabit kutu: kısa metinde alt satır boş kalır, metin kesilmez. */
-.home-footer__now {
-  margin-block: 0 var(--space-1);
-  line-height: var(--line-height-base);
-  block-size: calc(2em * var(--line-height-base));
+/* `0028` D9 — altlık şube başına yalnız ad, adres ve telefon taşır; saatler iletişim sayfasında. */
+.home-footer__contact-link {
+  color: var(--color-accent-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 .home-footer__branch-name {

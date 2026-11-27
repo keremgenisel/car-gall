@@ -1,0 +1,20 @@
+{
+  "contact.closed": "مغلق",
+  "contact.hours": "ساعات العمل",
+  "contact.openNow": "مفتوح الآن",
+  "contact.closedNow": "مغلق الآن",
+  "contact.closes": "يغلق",
+  "contact.opens": "يفتح",
+  "contact.tomorrow": "غدًا",
+  "contact.today": "اليوم",
+  "contact.specialDays": "أيام خاصة",
+  "contact.error.title": "تعذّر تحميل معلومات الاتصال",
+  "contact.error.body": "حدثت مشكلة. يُرجى المحاولة مرة أخرى.",
+  "contact.error.retry": "حاول مرة أخرى",
+  "contact.empty.title": "لم تُضف معلومات الاتصال بعد",
+  "contact.empty.body": "ستظهر معلومات الفروع هنا عند إضافتها.",
+  "contact.map.show": "اعرض الخريطة",
+  "contact.map.notice": "تُحمَّل الخريطة من خرائط Google. قد تستخدم Google ملفات تعريف الارتباط.",
+  "contact.map.open": "افتح في خرائط Google",
+  "contact.map.frameTitle": "{name} — خريطة من خرائط Google"
+}

@@ -1,0 +1,20 @@
+{
+  "contact.closed": "Kapalı",
+  "contact.hours": "Çalışma saatleri",
+  "contact.openNow": "Şu an açık",
+  "contact.closedNow": "Şu an kapalı",
+  "contact.closes": "Kapanış",
+  "contact.opens": "Açılış",
+  "contact.tomorrow": "yarın",
+  "contact.today": "Bugün",
+  "contact.specialDays": "Özel günler",
+  "contact.error.title": "İletişim bilgileri yüklenemedi",
+  "contact.error.body": "Bir sorun oluştu. Lütfen tekrar deneyin.",
+  "contact.error.retry": "Tekrar dene",
+  "contact.empty.title": "İletişim bilgisi henüz eklenmedi",
+  "contact.empty.body": "Şube bilgileri eklendiğinde burada görünecek.",
+  "contact.map.show": "Haritayı göster",
+  "contact.map.notice": "Harita Google Haritalar'dan yüklenir. Google çerez kullanabilir.",
+  "contact.map.open": "Google Haritalar'da aç",
+  "contact.map.frameTitle": "{name} — Google Haritalar haritası"
+}

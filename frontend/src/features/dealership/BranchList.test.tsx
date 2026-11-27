@@ -55,6 +55,8 @@ function sube(
     openingHours,
     openNow: openingHours === null ? null : ACIK,
     specialHours: [],
+    email: null,
+    map: null,
     ...extra,
   }
 }
@@ -71,65 +73,55 @@ function hazir(...branches: PublicBranch[]): GalleryLoad {
   return { kind: 'ready', gallery: { displayName: 'Oto Galeri', branches, socialLinks: [] } }
 }
 
-/**
- * `0027` D11 (PM şartı (a)) — gün adı kendi öğesinden okunur: "Bugün" etiketi `dt`'de ayrı öğedir
- * ve gerçek takvime göre bir satıra girer; `dt` metni okunsaydı sonuç takvime bağlanırdı.
- */
-async function satirlar(oge: HTMLElement) {
-  return within(await within(oge).findByTestId('branch-hours'))
-    .getAllByRole('term')
-    .map((dt) => [
-      dt.querySelector('.home-footer__day')?.textContent,
-      dt.nextElementSibling?.textContent,
-    ])
-}
-
-describe('0025 — altlıkta şubenin çalışma saatleri', () => {
-  it('0025/AC-44, 0027/AC-48: Programlı şubede ad, "şu an" satırı, adres, telefon, sonra yedi satır; Pzt–Cum 09:00–18:00, Cumartesi 10:00–14:00, Pazar Kapalı', async () => {
-    ekran(hazir(sube(PROGRAMLI)))
-
-    const oge = screen.getByTestId('branch')
-    const tablo = await satirlar(oge)
-    const cocuklar = [...oge.children].map((el) => el.tagName)
-    // `0027` D11 (PM kararı, AP-08): ['P', 'P', 'A', 'DL'] → ['P', 'P', 'P', 'A', 'DL'].
-    expect(cocuklar).toEqual(['P', 'P', 'P', 'A', 'DL'])
-    expect(oge.children[1]!.getAttribute('data-testid')).toBe('branch-now')
-    expect(oge.children[1]!.textContent).toBe('Şu an açık · Kapanış 18:00')
-    expect(tablo).toEqual([
-      ['Pazartesi', '09:00–18:00'],
-      ['Salı', '09:00–18:00'],
-      ['Çarşamba', '09:00–18:00'],
-      ['Perşembe', '09:00–18:00'],
-      ['Cuma', '09:00–18:00'],
-      ['Cumartesi', '10:00–14:00'],
-      ['Pazar', 'Kapalı'],
-    ])
-    expect(within(oge).getByTestId('branch-hours').getAttribute('aria-label')).toBe(
-      'Çalışma saatleri',
-    )
-  })
-
-  it('0025/AC-45: İki aralıklı gün iki aralığı bu sırayla gösterir', async () => {
+describe('0025 · 0028 — altlığın şube öğesi', () => {
+  it('0028/AC-58, AC-59: Programlı ve özel günlü şubenin öğesi yalnız ad, adres, telefon; "şu an", haftalık liste, "Özel günler" ve saat iskeleti yok; bloğun sonunda tek "İletişim ve çalışma saatleri" bağlantısı', () => {
     ekran(
       hazir(
-        sube(
-          program({
-            monday: [
-              { start: '09:00', end: '13:00' },
-              { start: '16:00', end: '21:00' },
-            ],
-          }),
-        ),
+        sube(PROGRAMLI, 'Kadıköy Şubesi', {
+          specialHours: [{ from: '2026-12-31', through: '2026-12-31', intervals: [] }],
+        }),
+        sube(PROGRAMLI, 'Bostancı Şubesi'),
       ),
     )
 
-    const pazartesi = within(await screen.findByTestId('branch-hours')).getAllByRole(
-      'definition',
-    )[0]!
-    expect([...pazartesi.querySelectorAll('span')].map((span) => span.textContent)).toEqual([
-      '09:00–13:00',
-      '16:00–21:00',
+    for (const oge of screen.getAllByTestId('branch')) {
+      expect([...oge.children].map((el) => el.tagName)).toEqual(['P', 'P', 'A'])
+    }
+    for (const yok of ['branch-now', 'branch-hours', 'branch-special', 'branch-hours-skeleton']) {
+      expect(screen.queryByTestId(yok)).toBeNull()
+    }
+    expect(screen.queryByText(/Şu an|Özel günler|Pazartesi/u)).toBeNull()
+
+    const baglanti = screen.getByTestId('footer-contact-link')
+    expect(screen.getAllByRole('link', { name: 'İletişim ve çalışma saatleri' })).toEqual([
+      baglanti,
     ])
+    expect(baglanti.getAttribute('href')).toBe('/tr/contact')
+    // Son şubenin ARDINDAN: listeden sonra gelen tek öğe.
+    expect(baglanti.previousElementSibling?.tagName).toBe('UL')
+    expect(baglanti.nextElementSibling).toBeNull()
+  })
+
+  it.each<[AppLocale, string, string]>([
+    ['ar', '/ar/contact', 'التواصل وساعات العمل'],
+    ['en', '/en/contact', 'Contact and opening hours'],
+  ])('0028/AC-59: %s bağlantısı', (locale, href, metin) => {
+    ekran(hazir(sube(PROGRAMLI)), locale)
+
+    const baglanti = screen.getByTestId('footer-contact-link')
+    expect(baglanti.getAttribute('href')).toBe(href)
+    expect(baglanti.textContent).toBe(metin)
+  })
+
+  it('0028/AC-61: Ana sayfa galeriyi yenilemez: `refreshInSeconds` = 2 olan yanıttan 5 sn sonra okuma yok', () => {
+    vi.useFakeTimers()
+    try {
+      ekran(hazir(sube(PROGRAMLI, 'Kadıköy Şubesi', { openNow: { ...ACIK, refreshInSeconds: 2 } })))
+      vi.advanceTimersByTime(5000)
+      expect(fetchGallery).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('0025/AC-46: Programsız şubede saat listesi yok; ad, adres ve telefon bugünkü gibi', () => {
@@ -140,33 +132,16 @@ describe('0025 — altlıkta şubenin çalışma saatleri', () => {
     expect([...oge.children].map((el) => el.tagName)).toEqual(['P', 'P', 'A'])
   })
 
-  it('0025/AC-47: ar altlığında gün adları ve "Kapalı" Arapça; saatler Latin rakam ve aralık soldan sağa', async () => {
-    ekran(hazir(sube(PROGRAMLI)), 'ar')
-
-    const satir = await satirlar(screen.getByTestId('branch'))
-    expect(satir[0]![0]).toMatch(/\p{Script=Arabic}/u)
-    expect(satir[6]![1]).toBe('مغلق')
-    expect(satir[0]![1]).toBe('09:00–18:00')
-    // `0027` D11 — `dt`'nin ilk `span`'i artık gün adı; aralık `dd`'dedir.
-    const aralik = screen.getByTestId('branch-hours').querySelector('dd span')!
-    expect(aralik.getAttribute('dir')).toBe('ltr')
-  })
-
-  it('0025/AC-48: en altlığında gün adları İngilizce ve 24 saat biçimi', async () => {
-    ekran(hazir(sube(PROGRAMLI)), 'en')
-
-    const tablo = await satirlar(screen.getByTestId('branch'))
-    expect(tablo[0]).toEqual(['Monday', '09:00–18:00'])
-    expect(tablo[6]).toEqual(['Sunday', 'Closed'])
-  })
-
-  it('0025/AC-50, AC-51: Okuma sürerken bugünkü iskelet, ayrı bir saat göstergesi yok; hata verdiğinde blok ve hata metni yok', () => {
+  it('0025/AC-50, AC-51, 0028/AC-62: Okuma sürerken bugünkü iskelet, ayrı bir saat göstergesi yok; hata verdiğinde ve aktif şube yokken blok, bağlantı ve hata metni yok', () => {
     const { unmount } = ekran({ kind: 'loading' })
     expect(screen.getByTestId('branch-skeleton')).toBeTruthy()
     expect(screen.queryByTestId('branch-hours')).toBeNull()
     unmount()
 
-    const { container } = ekran({ kind: 'error' })
+    const { container, unmount: kaldir } = ekran({ kind: 'error' })
     expect(container.innerHTML).toBe('')
+    kaldir()
+
+    expect(ekran(hazir()).container.innerHTML).toBe('')
   })
 })

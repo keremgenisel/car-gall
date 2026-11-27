@@ -125,15 +125,6 @@
   "home.footer.follow": "تابعونا",
   "home.footer.contact": "فروعنا",
   "home.footer.loading": "جارٍ تحميل معلومات الفروع",
-  "home.footer.closed": "مغلق",
-  "home.footer.hours": "ساعات العمل",
-  "home.footer.openNow": "مفتوح الآن",
-  "home.footer.closedNow": "مغلق الآن",
-  "home.footer.closes": "يغلق",
-  "home.footer.opens": "يفتح",
-  "home.footer.tomorrow": "غدًا",
-  "home.footer.today": "اليوم",
-  "home.footer.specialDays": "أيام خاصة",
   "showcase.filter.selectedValues": "{count, plural, =0 {لا يوجد تحديد} zero {لا يوجد تحديد} one {قيمة واحدة محددة} two {قيمتان محددتان} few {# قيم محددة} many {# قيمة محددة} other {# قيمة محددة}}",
   "showcase.filter.axis.bodyTypes": "نوع الهيكل",
   "showcase.filter.axis.brands": "العلامة التجارية",
@@ -213,5 +204,7 @@
   "newsletter.unsubscribed.body": "لن تصلك النشرة بعد الآن. إن غيّرت رأيك يمكنك الاشتراك من جديد.",
   "favorites.card": "المفضلة: {model} {year}",
   "favorites.counter": "{count, plural, one {مفضلتي، سيارة واحدة} two {مفضلتي، سيارتان} few {مفضلتي، # سيارات} many {مفضلتي، # سيارة} other {مفضلتي، # سيارة}}",
-  "favorites.outcome": "{state, select, added {أضيفت إلى المفضلة} removed {أزيلت من المفضلة} limit {الحد الأقصى للمفضلة {count, number}} on {في المفضلة} off {أضف إلى المفضلة} other {تعذّر حفظ المفضلة}}"
+  "favorites.outcome": "{state, select, added {أضيفت إلى المفضلة} removed {أزيلت من المفضلة} limit {الحد الأقصى للمفضلة {count, number}} on {في المفضلة} off {أضف إلى المفضلة} other {تعذّر حفظ المفضلة}}",
+  "contact.title": "اتصل بنا",
+  "home.footer.contactLink": "التواصل وساعات العمل"
 }

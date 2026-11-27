@@ -40,6 +40,8 @@ const GALERI: PublicGallery = {
       openingHours: null,
       openNow: null,
       specialHours: [],
+      email: null,
+      map: null,
     },
     {
       name: 'Kadıköy Şubesi',
@@ -48,6 +50,8 @@ const GALERI: PublicGallery = {
       openingHours: null,
       openNow: null,
       specialHours: [],
+      email: null,
+      map: null,
     },
   ],
   // `0024` — hesapsız kurulum: 0014'ün altlık beklentileri değişmez (0024 Context tablosu).
@@ -190,7 +194,7 @@ describe('0014 — altlık (R7)', () => {
     expect(within(sube).getByRole('link').getAttribute('href')).toBe('tel:+902165550001')
   })
 
-  it("0014/AC-46: Altlığın bağlantıları yalnız /{locale}/cars, etkin locale'lerin ana sayfaları ve şube telefonlarıdır", async () => {
+  it("0014/AC-46, 0028/AC-59: Altlığın bağlantıları yalnız /{locale}/cars, etkin locale'lerin ana sayfaları ve şube telefonlarıdır", async () => {
     ekran()
 
     const altlik = await screen.findByTestId('home-footer')
@@ -199,10 +203,19 @@ describe('0014 — altlık (R7)', () => {
       within(altlik)
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
-    ).toEqual(['tel:+902165550001', 'tel:+902165550002', '/tr/cars', '/tr/', '/ar/', '/en/'])
+      // `0028` D9 — şube bloğunun sonunda iletişim sayfasının bağlantısı (PM onaylı, AP-08).
+    ).toEqual([
+      'tel:+902165550001',
+      'tel:+902165550002',
+      '/tr/contact',
+      '/tr/cars',
+      '/tr/',
+      '/ar/',
+      '/en/',
+    ])
   })
 
-  it('0024/AC-38: Kurumsal sayfası olmayan, iki şubeli ve iki hesaplı kurulumda altlığın bağlantı hedefleri sırasıyla şube telefonları, /tr/cars, iki hesap, /tr/, /ar/, /en/', async () => {
+  it('0024/AC-38, 0028/AC-59: Kurumsal sayfası olmayan, iki şubeli ve iki hesaplı kurulumda altlığın bağlantı hedefleri sırasıyla şube telefonları, /tr/cars, iki hesap, /tr/, /ar/, /en/', async () => {
     vi.mocked(fetchGallery).mockResolvedValue({
       ...GALERI,
       socialLinks: [
@@ -222,6 +235,8 @@ describe('0014 — altlık (R7)', () => {
     ).toEqual([
       'tel:+902165550001',
       'tel:+902165550002',
+      // `0028` D9 — şube bloğunun sonunda (PM onaylı, AP-08).
+      '/tr/contact',
       '/tr/cars',
       'https://www.instagram.com/otogaleri',
       'https://www.youtube.com/@otogaleri',

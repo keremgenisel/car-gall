@@ -555,6 +555,19 @@ export interface PublicBranch {
   readonly openNow: PublicOpenNow | null
   /** `0027` D8 — bugünden 30 gün ileriye kadarki özel günler, `from` sırasıyla; programsızda `[]`. */
   readonly specialHours: readonly PublicSpecialDay[]
+  /** `0028` D5 · D8 — şubenin kayıtlı e-postası; yoksa `null`. */
+  readonly email: string | null
+  /** `0028` D5 · D7 — harita adresleri; sınırı aşan adreste `null`. */
+  readonly map: PublicBranchMap | null
+}
+
+/**
+ * `0028` **D5** · **D7** — "Google Haritalar'da aç" her zaman; `embedUrl` yalnız harita anahtarı
+ * yapılandırılmışken (anahtar yokken alan hiç yoktur).
+ */
+export interface PublicBranchMap {
+  readonly linkUrl: string
+  readonly embedUrl?: string
 }
 
 /** `0027` D8 — `today` ve `next.date` şubenin yerel tarihidir (`YYYY-MM-DD`), saat `HH:mm`. */

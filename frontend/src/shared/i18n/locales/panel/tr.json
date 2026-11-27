@@ -568,6 +568,7 @@
   "dealership.branch.field.phoneHint": "Uluslararası biçimde, örneğin +902165554433.",
   "dealership.branch.field.whatsApp": "WhatsApp numarası",
   "dealership.branch.field.email": "E-posta",
+  "dealership.branch.field.emailHint": "Vitrinin iletişim sayfasında görünür; talep bildirimleri de bu adrese gider.",
   "dealership.branch.field.timeZone": "Saat dilimi",
   "dealership.branch.field.timeZoneChoose": "Saat dilimi seçin",
   "dealership.branch.field.slug": "Adres kısaltması",

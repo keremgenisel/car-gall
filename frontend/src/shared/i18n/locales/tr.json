@@ -125,15 +125,6 @@
   "home.footer.follow": "Bizi takip edin",
   "home.footer.contact": "Şubelerimiz",
   "home.footer.loading": "Şube bilgileri yükleniyor",
-  "home.footer.closed": "Kapalı",
-  "home.footer.hours": "Çalışma saatleri",
-  "home.footer.openNow": "Şu an açık",
-  "home.footer.closedNow": "Şu an kapalı",
-  "home.footer.closes": "Kapanış",
-  "home.footer.opens": "Açılış",
-  "home.footer.tomorrow": "yarın",
-  "home.footer.today": "Bugün",
-  "home.footer.specialDays": "Özel günler",
   "showcase.filter.selectedValues": "{count, plural, =0 {Seçim yok} other {# seçili}}",
   "showcase.filter.axis.bodyTypes": "Kasa tipi",
   "showcase.filter.axis.brands": "Marka",
@@ -213,5 +204,7 @@
   "newsletter.unsubscribed.body": "Size bir daha bülten gönderilmeyecek. Fikrinizi değiştirirseniz yeniden abone olabilirsiniz.",
   "favorites.card": "Favori: {model} {year}",
   "favorites.counter": "{count, plural, other {Favorilerim, # araç}}",
-  "favorites.outcome": "{state, select, added {Favorilere eklendi} removed {Favorilerden çıkarıldı} limit {Favori sınırı: {count, number}} on {Favorilerde} off {Favorilere ekle} other {Favori kaydedilemedi}}"
+  "favorites.outcome": "{state, select, added {Favorilere eklendi} removed {Favorilerden çıkarıldı} limit {Favori sınırı: {count, number}} on {Favorilerde} off {Favorilere ekle} other {Favori kaydedilemedi}}",
+  "contact.title": "İletişim",
+  "home.footer.contactLink": "İletişim ve çalışma saatleri"
 }

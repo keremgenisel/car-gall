@@ -38,12 +38,15 @@ const kumeler = new Map([
   ['seo', kumeyiOku(join(localesDir, 'seo'))],
   // `frontend-003` D13 — favoriler ve karşılaştırma ekranlarının metinleri.
   ['favoriler', kumeyiOku(join(localesDir, 'favorites'))],
+  // `0028` **P8** — iletişim sayfasının parçasının metinleri (saat metinleri vitrinden taşındı).
+  ['iletisim', kumeyiOku(join(localesDir, 'contact'))],
 ])
 
 /** İlk pakete girmeyen ve ön yüzün tembel bir parçayla indirdiği kümeler; kayıt modülleriyle. */
 const TEMBEL_KUMELER = new Map([
   ['panel', 'shared/i18n/panel.ts'],
   ['favoriler', 'shared/i18n/favoritesCatalog.ts'],
+  ['iletisim', 'shared/i18n/contactCatalog.ts'],
 ])
 
 let failed = false
@@ -80,7 +83,7 @@ for (const [kume, catalogs] of kumeler) {
 // İki kümenin dil listesi aynı olmalı: bir dilin panel kataloğu yoksa panel o dilde boş kalır.
 const vitrinDilleri = [...kumeler.get('vitrin').keys()].sort().join(',')
 
-for (const kume of ['panel', 'seo', 'favoriler']) {
+for (const kume of ['panel', 'seo', 'favoriler', 'iletisim']) {
   const diller = [...kumeler.get(kume).keys()].sort().join(',')
 
   if (vitrinDilleri !== diller) {

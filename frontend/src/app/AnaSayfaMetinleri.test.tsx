@@ -178,13 +178,15 @@ describe('0022 — boş stok mesajı (R6)', () => {
     expect(within(bos).getByText('Bu hafta yeni araçlar geliyor.')).toBeTruthy()
   })
 
-  it('0022/AC-11: Boş stok mesajının bağlantı metni değişmez ("Galeriye ulaşın").', async () => {
+  it('0022/AC-11, 0028/AC-72: Boş stok mesajının bağlantı metni değişmez ("Galeriye ulaşın"); hedefi iletişim sayfası', async () => {
     vi.mocked(catalog.fetchShowcaseTotal).mockResolvedValue(0)
     metin('empty-title', 'Yeni araçlar yolda')
     anaSayfa()
 
     const bos = await screen.findByTestId('empty-showcase')
     expect(within(bos).getByRole('link').textContent).toBe('Galeriye ulaşın')
+    // `0028` D17 — `#contact` (altlığın `id`'si) kalktı; liste aynı bileşeni basar.
+    expect(within(bos).getByRole('link').getAttribute('href')).toBe('/tr/contact')
     expect(tr('showcase.empty.showcase.action')).toBe('Galeriye ulaşın')
   })
 })

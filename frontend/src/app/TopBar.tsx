@@ -2,7 +2,7 @@ import { useLocale } from './localeContext'
 import { FavoritesCounter } from './FavoritesCounter'
 import { LocaleSwitcher } from './LocaleSwitcher'
 import { galleryDisplayName, galleryLogo } from '../shared/lib/galleryName'
-import { homePath } from '../shared/lib/route'
+import { contactPath, homePath, parseRoute } from '../shared/lib/route'
 
 /**
  * frontend-001 R1 — her vitrin sayfası bu kabuğun içinde gelir; sonraki dilimler
@@ -18,7 +18,7 @@ import { homePath } from '../shared/lib/route'
  * içerikten çözer: Latin ad Arapça sayfada da doğru dizilir (AC-12).
  */
 export function TopBar() {
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const name = galleryDisplayName()
   const logo = galleryLogo()
 
@@ -53,6 +53,32 @@ export function TopBar() {
             <bdi>{name}</bdi>
           </a>
         )}
+        {/*
+          `0028` D10 — her vitrin sayfasında iletişim bağlantısı: geniş ekranda metin, sayaçtan önce;
+          dar ekranda 1. satırın sonunda yalnız simge (metin `visually-hidden`, erişilebilir ad tam
+          metindir). Panelin kabuğu ayrı, orada yok (AC-65).
+        */}
+        <a
+          className="top-bar__contact"
+          href={contactPath(locale)}
+          aria-current={
+            parseRoute(window.location.pathname).kind === 'contact' ? 'page' : undefined
+          }
+          data-testid="top-bar-contact"
+        >
+          <svg
+            className="top-bar__contact-icon"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z" />
+            <circle cx="12" cy="9.5" r="2.5" />
+          </svg>
+          <span className="top-bar__contact-text">{t('contact.title')}</span>
+        </a>
         {/* `frontend-003` D8 — sayaç dil değiştiricinin yanında, satır sonu tarafında. */}
         <div className="top-bar__end">
           <FavoritesCounter />

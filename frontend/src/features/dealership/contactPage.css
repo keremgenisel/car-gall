@@ -1,0 +1,108 @@
+/* `0028` D3 — iletişim sayfasının şube bölümleri; parçayla gelir (D11). Bölümler alt alta, aralarında
+   ayraç. 64rem ve üstünde iki sütun: bilgiler ve saatler satır başında, harita satır sonunda (ar'da
+   solda, AC-42). Altında tek sütun, DOM sırasıyla (AC-33). */
+.contact-page__branches {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-branch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'info'
+    'map'
+    'hours';
+  gap: var(--space-6);
+  padding-block: var(--space-7);
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+.contact-branch:first-child {
+  border-block-start: 0;
+  padding-block-start: 0;
+}
+
+@media (width >= 64rem) {
+  .contact-branch {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'info map'
+      'hours map';
+    align-items: start;
+  }
+}
+
+.contact-branch__info {
+  grid-area: info;
+}
+
+.contact-branch__map {
+  grid-area: map;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+/* `0027` QA 2 BULGU-2 — saat bloğunun kat kararını okuyan kapsayıcı (`branchClock.css`). */
+.contact-branch__hours {
+  grid-area: hours;
+  container: branches / inline-size;
+}
+
+.contact-branch__name {
+  font-size: var(--font-size-md);
+  margin-block: 0 var(--space-4);
+}
+
+/* `0027` D11 — "şu an" satırı iki satırlık sabit kutu: kısa metinde alt satır boş kalır (AC-69). */
+.contact-branch__now {
+  margin-block: 0 var(--space-4);
+  line-height: var(--line-height-base);
+  block-size: calc(2em * var(--line-height-base));
+}
+
+.contact-branch__address,
+.contact-branch__line {
+  margin-block: 0 var(--space-3);
+}
+
+.contact-branch__line a,
+.contact-branch__map-link {
+  color: var(--color-accent-text);
+}
+
+/* D6 — yer tutucu ve iframe AYNI kutuda; kutu 4:3 ve tıklamadan önce de sonra da aynı boyda (AC-53). */
+.contact-branch__map-box {
+  inline-size: 100%;
+  aspect-ratio: var(--media-aspect-ratio);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-muted);
+  border: var(--border-width) solid var(--color-border);
+}
+
+.contact-branch__map-placeholder {
+  block-size: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.contact-branch__map-notice {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}
+
+.contact-branch__map-frame {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border: 0;
+}

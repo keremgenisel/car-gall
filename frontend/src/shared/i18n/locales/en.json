@@ -125,15 +125,6 @@
   "home.footer.follow": "Follow us",
   "home.footer.contact": "Our branches",
   "home.footer.loading": "Loading branch details",
-  "home.footer.closed": "Closed",
-  "home.footer.hours": "Opening hours",
-  "home.footer.openNow": "Open now",
-  "home.footer.closedNow": "Closed now",
-  "home.footer.closes": "Closes",
-  "home.footer.opens": "Opens",
-  "home.footer.tomorrow": "tomorrow",
-  "home.footer.today": "Today",
-  "home.footer.specialDays": "Special days",
   "showcase.filter.selectedValues": "{count, plural, =0 {No selection} other {# selected}}",
   "showcase.filter.axis.bodyTypes": "Body type",
   "showcase.filter.axis.brands": "Brand",
@@ -213,5 +204,7 @@
   "newsletter.unsubscribed.body": "You will not receive the newsletter again. If you change your mind, you can subscribe again.",
   "favorites.card": "Favourite: {model} {year}",
   "favorites.counter": "{count, plural, one {My favourites, # car} other {My favourites, # cars}}",
-  "favorites.outcome": "{state, select, added {Added to favourites} removed {Removed from favourites} limit {Favourites limit: {count, number}} on {In favourites} off {Add to favourites} other {Could not save the favourite}}"
+  "favorites.outcome": "{state, select, added {Added to favourites} removed {Removed from favourites} limit {Favourites limit: {count, number}} on {In favourites} off {Add to favourites} other {Could not save the favourite}}",
+  "contact.title": "Contact",
+  "home.footer.contactLink": "Contact and opening hours"
 }
