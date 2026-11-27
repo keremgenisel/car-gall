@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-27 — Proje Yöneticisi kararı) · QA CLARIFY turu bekleniyor |
+| **Durum** | Onaylandı (2026-11-27 — Proje Yöneticisi kararı) · QA CLARIFY turu işlendi (QA 1, PR #141 @ `c51e167`: 12 bulgu, 0 engelleyici / 8 önemli / 4 küçük) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (özel gün, "şu an" hesabı, okumalar) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel şube formu, vitrin altlığı) |
 | **Bağımlı spec'ler** | **`0025`** (**X1**, **X2**, **X3**, **D1**–**D12**: haftalık program, okuma biçimi, altlık, yapısal veri) · `0003` (**B4**, **C10**, saat dilimi) · `0004` (**D1**, **D15**, **D16**, **C13**) · `0014` (altlık, **D15** izin listesi) · `0020` (şube formu, **R16** sürüm, **D21**) · `0024` (**AC-55** ilk paket tanımı, okuma kökü) · `0026` (üst çubuk ve CLS dersleri) · `frontend-003` (**D18**, ilk paket ölçüm yöntemi) |
-| **Karar bekliyor** | yok — D1–D18 Proje Yöneticisi kararı (2026-11-27, üç ek şartla: (a)–(c)); SS1–SS4 sahip kararı (2026-11-27). QA 1 CLARIFY turu sürüyor. |
+| **Karar bekliyor** | yok — D1–D18 Proje Yöneticisi kararı (2026-11-27, üç ek şartla: (a)–(c)); SS1–SS4 sahip kararı (2026-11-27). CLARIFY B1–B12 Proje Yöneticisi kararı (2026-11-27). |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26 ve 2026-11-27):** `0025` **SS1** → bayram ve tatil
 > istisnaları ile "şu an açık" göstergesi `0025`'in hemen ardından gelsin ve ikisi aynı kartta olsun
@@ -24,6 +24,15 @@
 >   **AC-79–AC-85**;
 > - **(c)** yaz saati geçişinde "şu an" ve `next` → D7, **AC-86–AC-91**.
 > Var olan numaralar değişmedi. Yalnız AC-61 ve AC-68'in metni şartlarla değişti.
+>
+> **QA CLARIFY turu (QA 1, 2026-11-27; Proje Yöneticisi kararları):** B1–B12 işlendi.
+> - Değişen kararlar "CLARIFY" diye işaretli: **D2**, **D4**, **D7**, **D9**, **D11**, **D14**,
+>   **D15**, **D17**.
+> - Metni değişen kriterler: AC-10, AC-41, AC-61, AC-68, AC-69, AC-71.
+> - Yeni kriterler: **AC-92–AC-107**.
+> - Proje Yöneticisi iki çakışmada `c51e167`'nin kuralını korudu:
+>   - B3(ii): `next.time` gerçek anı verir ("03:00").
+>   - B5: AC-79/80'in kuralı geçerli; süre `performance.now()` ile ölçülür.
 
 ---
 
@@ -300,8 +309,10 @@ altlığında.** (R1–R13, X3, **SS3**)
 
 **D2 — Özel gün modeli.** (R1, R3, X2, X4, **SS2**)
 - Kayıt = `from` ve `through` (ikisi dahil, `YYYY-MM-DD`, şubenin yerel takvim günü) + `intervals`.
-- `from` = `through` tek gündür.
-- `intervals` boşsa kayıt **tam gün kapalıdır**. Doluysa 1–3 aralık taşır. Aralıklar `0025` D3'ün
+- `from` = `through` tek gündür. *(CLARIFY B7:)* `through` yoksa ya da `null`'sa tek gündür
+  (`through` = `from`), panelin "boş Bitiş" kuralıyla aynı (AC-3). Boş metin (`""`) geçersizdir.
+- `intervals` **açık boş dizi** (`[]`) ise kayıt **tam gün kapalıdır**. *(CLARIFY B7:)* `intervals`
+  yoksa ya da `null`'sa kayıt reddedilir: yok ≠ boş (`0024` X1 dersi). Doluysa 1–3 aralık taşır. Aralıklar `0025` D3'ün
   kurallarına uyar (çift mesai dahil) ve kaydın her gününe aynen uygulanır (ör. Ramazan boyunca
   10:00–16:00).
 - Kayıt **şube başınadır**. Adı yoktur (X4).
@@ -325,8 +336,13 @@ arifesine çekilir).
 - Şubenin **bugünü** (`IClock` + şubenin saat dilimi) ölçüt alınır. `through` < bugün olan kayıt
   **geçmiştir**.
 - Geçmiş kayıt hiçbir okumada dönmez: panel okuması, ziyaretçi okuması, yapısal veri ve "şu an" hesabı.
-- Kaydetme gövdesindeki geçmiş kayıt **hata değildir**. Sessizce düşer ve saklanmaz. Kayıtlı geçmiş
-  kayıtlar şubenin bir sonraki başarılı kaydetmesinde silinir. Arka plan işi yoktur.
+- Kaydetme gövdesindeki geçerli ama geçmiş kayıt **hata değildir**. Sessizce düşer ve saklanmaz.
+  Arka plan işi yoktur.
+- *(CLARIFY B10:)* Kayıtlı geçmiş kayıtlar yalnız gövdesinde **`specialHours` alanı bulunan** başarılı
+  bir kaydetmede silinir. Alan yoksa ya da `null`'sa saklanan hiçbir kayıt değişmez, geçmiş olanlar da
+  (D13, AC-25, AC-106).
+- *(CLARIFY B11:)* Aynı gövde saat dilimini de değiştiriyorsa "bugün", geçmiş kaydın düşmesi ve
+  `too_far` **yeni** saat dilimine göre hesaplanır (AC-107).
 - Bir şubede en çok **12** güncel ya da gelecek özel gün olur. Geçmiş kayıtlar sayılmaz.
 - Bir kayıt en çok **60** gün sürer (`through − from + 1 ≤ 60`).
 - `through` bugünden en çok **366** gün ileride olabilir.
@@ -369,15 +385,26 @@ istek atılır (D9). `architecture.md`'nin bir cümlesi değişir.
 - **Açık:** şubenin yerel anı, o günün bir etkin aralığının içindedir.
 - **Kapanış saati:** içinde bulunulan aralığın bitişidir. Bitiş gün sonuysa ve ertesi günün ilk
   etkin aralığı 00:00'da başlıyorsa açık süre ertesi güne devam eder. Bu kural zincirlenir.
+- *(CLARIFY B2:)* Kapanış gün sonundaysa (bitiş 23:59 ve zincir orada bitiyorsa) `next` =
+  `{ertesi gün, "00:00"}`. Metin D10'un kuralıyla basılır: "Kapanış yarın 00:00", "Kapanış Pazar
+  00:00". Yeni anahtar yoktur (AC-93, AC-94).
 - Zincir **7 günü** aşarsa kapanış saati yoktur. Sürekli açık şube yalnız "Şu an açık" der.
-- **Kapalı:** sonraki açılış, şimdiden sonraki ilk etkin aralığın başlangıcıdır. Arama sınırı en
-  son özel günün bitişinden 7 gün sonrasıdır. Haftalık programda en az bir aralık olduğundan
-  (`0025` D4) açılış her zaman bulunur.
+- **Kapalı:** sonraki açılış, şimdiden sonraki ilk etkin aralığın başlangıcıdır. *(CLARIFY B4(d):)*
+  Arama sınırı **max(bugün, en son özel günün `through`'u) + 7 gün**dür (o gün dahil). Haftalık
+  programda en az bir aralık olduğundan (`0025` D4) açılış her zaman bu sınırın içinde bulunur (AC-99).
+- *(CLARIFY B4(c):)* Sınır anları: aralığın başlangıç anı **açıktır**, bitiş anı **kapalıdır**.
+  `refreshInSeconds` kesirli saniyede yukarı yuvarlanır ve en az 1'dir (AC-98).
 - Yerel saat → an çevirisi bölge kurallarıyla yapılır. Sabit fark ve "+24 saat" yoktur.
 - *(PM şartı (c):)* Yaz saati geçişinde iki kural geçerlidir:
   - **Var olmayan yerel saat** (ileri geçiş): ondan sonraki ilk geçerli ana kayar. `next.time` o anın
     gerçek yerel saatini verir. Ör. `Europe/Berlin` 2027-03-28'de 02:30 açılış "03:00" olarak döner.
-  - **İki kez yaşanan yerel saat** (geri geçiş): başlangıç da bitiş de **ilk** (erken) anı alır.
+  - **İki kez yaşanan yerel saat** (geri geçiş): başlangıç da bitiş de **ilk** (erken, yaz saati) anı
+    alır.
+  - *(CLARIFY B3:)* Üç durum da deterministik Host testiyle ölçülür:
+    - 23 saatlik günde `refreshInSeconds` (AC-84, AC-95);
+    - var olmayan saat, `next.time` = gerçek an "03:00" (AC-87; Proje Yöneticisi `c51e167`'nin
+      kuralını korudu);
+    - iki kez yaşanan saat, ilk geçiş esas (AC-89, AC-90).
   Var olmayan gece yarısı (ör. `Asia/Beirut`, geçiş 00:00'da) günün ilk geçerli anıdır. Hem "bugün"ün
   değişimi hem 23:59 zinciri o ana bağlanır.
 - Haftalık programı girilmemiş şubede (`openingHours: null`) "şu an" **hesaplanmaz**. Özel günler
@@ -386,6 +413,8 @@ istek atılır (D9). `architecture.md`'nin bir cümlesi değişir.
 *Gerekçe:* `0025`'in 23:59 ve "iki güne bölme" kararlarının doğal okunuşu. Aksi her gece bir
 dakikalık sahte kapanış ve yanlış kapanış saati üretir.
 *Bedel:* 23:59'da gerçekten kapanan şube yok sayılır. Bir dakikalık fark kabul edilir.
+*(CLARIFY B2, kabul edilen yan etki:)* zincir 7 günü aşarsa kapanış saati gösterilmez. Ör. 8 gün
+kesintisiz açık bir şube (haftalık 00:00–23:59 + özel gün) "Şu an açık" der, kapanışını söylemez.
 
 **D8 — Ziyaretçi okuması: şube öğesine `openNow` ve `specialHours`.** (R7, R10, R11, C3, X10)
 - `openNow`, haftalık programı yoksa `null`'dır. Varsa şu nesnedir:
@@ -411,10 +440,17 @@ altlığı ve yapısal veriyi kısa tutar. Bayramlar genellikle birkaç hafta ö
 
 **D9 — Sayfa açıkken güncelleme.** (R9, tuzak 5, 7)
 - Altlık, yanıttaki en küçük `refreshInSeconds` dolunca galeri okumasını **bir kez** tekrarlar.
-  Süre, yanıtın alındığı andan itibaren ölçülür.
+  Süre, yanıtın alındığı andan itibaren ölçülür. *(CLARIFY B5:)* Süre monoton saatle
+  (`performance.now()`) ölçülür, cihazın duvar saatiyle (`Date`) ölçülmez. Cihaz saatini ileri ya da
+  geri almak tekrar okuma anını değiştirmez (AC-100).
 - Sekme görünür olduğunda süre dolmuşsa okuma hemen tekrarlanır.
 - Bunun dışında periyodik okuma yoktur.
 - Tekrarlanan okuma sürerken eski durum ekranda kalır ve iskelete dönülmez.
+- *(CLARIFY B8:)* Otomatik tekrar okuma **yalnız "şu an" satırını ve "Bugün" vurgusunu** günceller.
+  Haftalık liste ve özel gün listesi sayfa yenilenene kadar ilk okumadaki hâliyle **sabit kalır**,
+  yeni yanıt farklı kayıt taşısa da. Böylece yenileme blok yüksekliğini değiştirmez. Bloğun altında
+  akışta öğe var: tek sütunlu altlıkta "Kurumsal" ve "Bizi takip edin" blokları onun ardından gelir
+  (AC-105).
 - *(PM şartı (b):)* **Tekrarlanan okuma başarısız olursa:**
   - Eski durum **gösterilmez**, çünkü geçerlilik süresi dolmuştur ve "açık" yazmaya devam etmek
     yanlış bilgi verir. "Şu an" satırının metni kaldırılır ama kutusu aynı yükseklikte kalır.
@@ -456,6 +492,16 @@ Süresi dolmuş durumu basmamak, yanlış "açık" yazmaktan iyidir.
 
 **D11 — Vitrin yerleşimi.** (R7, R10, R12)
 - Şube öğesinin sırası: ad · "şu an" satırı · adres · telefon · haftalık yedi satır · "Özel günler".
+- *(CLARIFY B8, ölçüldü:)* "Şu an" satırı **sabit iki satırlık** yer taşır. Kısa metin tek satırda
+  durur, alt satır boş kalır. Metin kesilmez ve "…" kullanılmaz.
+  - Ölçüm: `main` @ `9912ade` derlemesinin fontlarıyla, 16 px, kalın durum sözcüğüyle. 320 px'te
+    kullanılabilir genişlik ≈288 px (16 px kenar boşluğu).
+  - "Şu an kapalı · Açılış Çarşamba 09:00" 272 px, "… Açılış 21 Ağustos 09:00" 280 px.
+  - "Closed now · Opens Wednesday 09:00" 291 px, "… Opens 21 September 09:00" 307 px.
+  - `ar` "مغلق الآن · يفتح 21 سبتمبر 09:00" 231 px.
+  - Yani İngilizce tek satıra sığmıyor. "…" de cümlenin sonundaki saati, yani asıl bilgiyi keserdi.
+    En uzun metin 307 px, yani iki satırı aşmaz (AC-69).
+- *(CLARIFY B8:)* D9 yenilemesi listeleri değiştirmez (D9). Satırın metni değişir, kutusu değişmez.
 - **Bugün vurgusu:**
   - Bugün bir özel günün içinde değilse haftalık listede bugünün satırı (`today`'in haftanın günü)
     görünür bir "Bugün" etiketi ve `aria-current="date"` taşır.
@@ -470,7 +516,8 @@ Süresi dolmuş durumu basmamak, yanlış "açık" yazmaktan iyidir.
 
 *Gerekçe:* durum, adın hemen altında ilk okunan bilgidir. Haftalık liste haftanın gününe, özel gün
 tarihe göre dizilir. İki anlamı tek listede karıştırmamak için ayrı liste. Vurgu tek yerde olur.
-*Bedel:* altlık özel gün sayısı kadar uzar (en çok 12 satır, pratikte 1–3).
+*Bedel:* altlık özel gün sayısı kadar uzar (en çok 12 satır, pratikte 1–3). Kısa durumda bir satırlık
+boşluk kalır. Sayfa açıkken biten bir özel gün, sayfa yenilenene kadar listede görünür (D9).
 
 **D12 — Yapısal veri: `department` öğesinde `specialOpeningHoursSpecification`.** (R11, C4, X10)
 - Haftalık programı girilmiş şubenin öğesi, penceresinde (D8) kayıt varsa bir dizi taşır.
@@ -516,6 +563,19 @@ Gruplama yapılmaz, çünkü tarih aralıkları nadiren tekrarlar.
   kodla `422` alır. **Hiçbir girdi `500` dönmez.**
 - Alan anahtarları `specialHours.<i>.from|through` ve `specialHours.<i>.intervals.<j>.start|end`.
   `<i>` gönderilen sıradır ve 0'dan başlar. Doğrulama sıralamadan önce yapılır.
+- *(CLARIFY B7:)* **Şekil ve `null` girdileri:**
+  - `null` öğe (`specialHours: [null]`) → `specialHours.<i>` alanında `special_hours.invalid_entry`.
+  - `intervals` yok ya da `null` → `specialHours.<i>.intervals` alanında `special_hours.intervals_required`.
+  - `null` aralık (`intervals: [null]`) → `specialHours.<i>.intervals.<j>` alanında
+    `special_hours.invalid_entry`.
+  - Aralıkta `start` ya da `end` yok veya `null` → o alanda `opening_hours.invalid_time`.
+  - `from` yok ya da `null` → `from` alanında `special_hours.invalid_date`.
+  - `through` yok ya da `null` → hata değil, tek gün (D2). `""` → `special_hours.invalid_date`.
+- *(CLARIFY B7:)* **Doğrulama, geçmiş kayıtların düşürülmesinden ÖNCE yapılır.**
+  - Kayıt başına kurallar (şekil, tarih biçimi, `end_before_start`, `too_long`, aralık kuralları)
+    gönderilen **her** kayda uygulanır. Geçmiş ama hatalı kayıt da `422` alır.
+  - Küme kuralları (`overlap`, `too_many`) ve `too_far` düşürmeden sonra kalan kayıtlara uygulanır.
+  - Hata anahtarındaki `<i>` her zaman gönderilen dizinin indeksidir. Düşürme indeksi kaydırmaz (AC-104).
 - `special_hours.invalid_date`: tarih biçimi ya da var olmayan gün. Alanın kendisinde.
 - `special_hours.end_before_start`: `through` < `from`. `through` alanında.
 - `special_hours.too_long`: 60 günden uzun kayıt. `through` alanında.
@@ -523,6 +583,7 @@ Gruplama yapılmaz, çünkü tarih aralıkları nadiren tekrarlar.
 - `special_hours.overlap`: başka bir kayıtla ortak tarih. Sonraki kaydın (`<i>` büyük olan) `from`
   alanında.
 - `special_hours.too_many`: güncel ya da gelecek 12'den fazla kayıt. `specialHours` alanında.
+- `special_hours.invalid_entry`, `special_hours.intervals_required`: yukarıdaki şekil kuralları *(CLARIFY B7)*.
 - Aralık hataları `0025` D12'nin kodlarıyla (`opening_hours.invalid_time`, `end_not_after_start`,
   `too_many_intervals`, `overlap`) aralığın ya da kaydın alanında döner.
 - Özel gün hatası varsa şubenin hiçbir alanı değişmez. Bütün hatalar tek yanıtta toplanır (`0025` P2).
@@ -534,8 +595,9 @@ haftalık programla aynı kalır.
 **D15 — İlk paket: saat bloğu tembel parçaya taşınır.** (C5, Ölçümler, tuzak 10)
 - Şubenin "şu an" satırı, haftalık listesi (`0025`'ten bugün ilk pakette olan `OpeningHoursList`
   dahil) ve özel gün listesi ilk paketin dışında, tembel bir parçadadır.
-- Metinleri ilk paketin kataloğunda kalabilir. Tembel parçaya katalog eklemek ADR 0013'ün
-  `registerCatalogs` yoluyla mümkündür. Hangisi daha küçükse ölçülür ve PR'da yazılır.
+- *(CLARIFY B9:)* Vitrin metinleri **vitrin kataloğundadır** (AC-73), yani ilk paketle gelir. Ölçülen
+  payları ≈284 B'tır (üç dil). Bütçenin geri kalanı tembel parça bağına (≈80 B) ve parçayı yükleyen
+  koda kalır.
 - İlk paket `main` tabanına göre **en çok 512 B** büyür (`0024` AC-55 tanımı).
 - *(PM şartı (a):)* İki bekleme evresi vardır:
   - **A — galeri okunmadı:** şube sayısı bilinmez. `0014`'ün iskeleti aynen kalır (`0014` AC-49,
@@ -578,6 +640,9 @@ yükseklik zaten kurulamaz.
   saat soyutlamasıyla hesaplanır; uç yalnız basar (`0027` D6)."
 - Karar Defteri'ne bir satır (D6).
 - `docs/deploy.md`: perf tohumunun cümlesi (D15).
+- *(CLARIFY B12:)* `docs/deploy.md`'ye CDN kuralı: "`/api/dealership/gallery` kenarda önbelleğe
+  alınmaz. `Cache-Control: no-store` korunur." Yanıt zamana bağlıdır (D8). Kenar önbelleği bayat bir
+  "açık" basar.
 
 *Gerekçe:* tek gerçek kaynağı. Kod belgeyle çelişmesin.
 *Bedel:* yok.
@@ -651,9 +716,17 @@ korunmalıdır (R5).
 
 ### Doğrulama (R4 · D2, D3, D4, D14)
 
-- **AC-10.** `from` değerleri `2027-02-30`, `2027-13-01`, `27.11.2026`, `2027-1-1`, `""`,
-  `"2027-01-01\n"` ve NUL içeren bir metin olan her kaydetme `422` döner.
-  `specialHours.0.from` alanında `special_hours.invalid_date` taşır. Hiçbiri `500` dönmez.
+- **AC-10.** Aşağıdaki her kaydetme `422` döner, belirtilen alan anahtarını ve kodu taşır. Hiçbiri
+  `500` dönmez:
+  - `from` `2027-02-30`, `2027-13-01`, `27.11.2026`, `2027-1-1`, `""`, `"2027-01-01\n"` ya da NUL içeren
+    bir metin → `specialHours.0.from`, `special_hours.invalid_date`.
+  - *(CLARIFY B7:)* `from` yok ya da `null` → `specialHours.0.from`, `special_hours.invalid_date`.
+  - `through` `""` → `specialHours.0.through`, `special_hours.invalid_date`.
+  - `specialHours: [null]` → `specialHours.0`, `special_hours.invalid_entry`.
+  - `intervals` yok ya da `null` → `specialHours.0.intervals`, `special_hours.intervals_required`.
+  - `intervals: [null]` → `specialHours.0.intervals.0`, `special_hours.invalid_entry`.
+  - Aralıkta `start` ya da `end` `null` veya yok → `specialHours.0.intervals.0.start|end`,
+    `opening_hours.invalid_time`.
 - **AC-11.** `through` < `from` olan kayıt `422` döner ve `specialHours.0.through` alanında
   `special_hours.end_before_start` taşır.
 - **AC-12.** 61 gün süren kayıt `422` ve `special_hours.too_long` döner. 60 gün süren kayıt kabul edilir.
@@ -721,8 +794,10 @@ korunmalıdır (R5).
   bölge kuralıyla hesaplandığını ölçer.
 - **AC-40.** Programsız şubenin `openNow`'u `null` ve `specialHours`'u `[]`'dir. Özel günleri olsa
   bile bu böyledir.
-- **AC-41.** Saat dilimi `Europe/Istanbul`'dan `Asia/Kuwait`'e değiştirilen şubenin kayıtları
-  (tarih ve saat) değişmez. Saat 2026-12-04T09:00Z'deki `today` ve `open` yeni bölgeye göre hesaplanır.
+- **AC-41.** *(CLARIFY B1 ile değişti.)* Saat dilimi `Europe/Istanbul`'dan `Asia/Tokyo`'ya
+  değiştirilen programlı şubenin kayıtları (tarih ve saat) değişmez. Saat 2026-12-04T09:00Z'de
+  (Tokyo'da Cuma 18:00) `today` `2026-12-04`, `open` false ve `next` `{"date":"2026-12-05","time":"10:00"}`'dır.
+  Aynı anda İstanbul'da şube açık olurdu.
 
 ### Ziyaretçiye dönük okuma (R10, C3 · D8)
 
@@ -768,7 +843,8 @@ korunmalıdır (R5).
 - **AC-60.** Süresi dolmuş bir yanıtla gizli kalan sekme görünür olduğunda okuma bir kez tekrarlanır.
   Süresi dolmamışsa tekrarlanmaz.
 - **AC-61.** Tekrarlanan okuma sürerken eski satır görünür kalır ve iskelet basılmaz. *(PM şartı (b)
-  ile değişti:)* Başarısız tekrar okuma için AC-79'a bakın.
+  ve CLARIFY B5 ile değişti:)* Okuma 5 saniyede sonuçlanmayacak şekilde bekletildiğinde bu 5 saniye
+  boyunca satırın metni ilk yanıtınkidir. Başarısız tekrar okuma için AC-79 ve AC-80 geçerlidir.
 
 ### Yapısal veri (R11 · C4 · D12)
 
@@ -789,14 +865,26 @@ korunmalıdır (R5).
 
 - **AC-67.** İlk paket (`0024` AC-55 tanımı) `main` tabanına göre en çok **512 B** büyür. Ölçüm
   PR'ın **head** commit'inden yapılır.
-- **AC-68.** *(PM şartı (a) ile değişti:)* Galeri okuması tamamlanmış ama saat parçası yüklenmemişken
-  her şubenin adı, adresi ve telefonu basılır. Saat alanının yerinde evre B iskeleti görünür (D15).
-- **AC-69.** "Şu an" satırının kutusunun yüksekliği açık ve kapalı hâlde, `tr`, `ar` ve `en`'de
-  320 px genişlikte aynıdır.
+- **AC-68.** *(PM şartı (a) ve CLARIFY B8 ile değişti.)* Galeri okuması tamamlanmış ama saat parçası
+  yüklenmemişken her şubenin adı, adresi ve telefonu basılır. Saat alanının yerinde evre B iskeleti
+  görünür (D15). Parça yüklenince iskelet → blok geçişinde bloğun **dışındaki** hiçbir öğe kaymaz:
+  fontlar bekletilmiş e2e ölçümünde `layout-shift` girdilerinin `sources` düğümlerinden hiçbiri şube
+  bloğunun dışında değildir.
+- **AC-69.** *(CLARIFY B8 ile değişti.)* "Şu an" satırının kutusu, fontlar bekletilmiş ölçümde, 320 px
+  genişlikte aşağıdaki dokuz metnin hepsinde **aynı yükseklikte** ve iki satır yüksekliğindedir.
+  Metin kesilmez:
+  - "Şu an açık · Kapanış 18:00", "Şu an kapalı · Açılış Çarşamba 09:00",
+    "Şu an kapalı · Açılış 21 Ağustos 09:00";
+  - "Open now · Closes 18:00", "Closed now · Opens Wednesday 09:00", "Closed now · Opens 21 September 09:00";
+  - `ar`'da aynı üç biçim ("مفتوح الآن · يغلق 18:00", "مغلق الآن · يفتح الأربعاء 09:00",
+    "مغلق الآن · يفتح 21 سبتمبر 09:00").
 - **AC-70.** Perf koşusu her aktif şubeye penceresinde 12 kayıt (üçer aralık) tohumlar. `0024` ve
   `0025`'in tohumları korunur. C3 ana sayfa, liste ve detayda yeşildir. Bir sayfanın medyanı
   2450 ms'yi aşarsa ikinci koşunun sonucu ve LCP öğesi PR'dadır.
-- **AC-71.** Ana sayfa CLS'i fontlar bekletilerek ölçülür ve şube bloğunun payı 0'dır.
+- **AC-71.** *(CLARIFY B8 ile değişti.)* Ana sayfa fontlar bekletilerek yüklenir ve altlığa kadar
+  kaydırılır. `PerformanceObserver('layout-shift')` girdilerinin `sources` düğümlerinin hiçbiri şube
+  bloğunun ya da altlıkta ondan sonra gelen öğelerin içinde değildir (e2e). Lighthouse öğe bazlı
+  pay vermediği için ölçüm bu yoldan yapılır.
 
 ### Şema ve çeviri (C6 · DoD T5, T6)
 
@@ -880,13 +968,76 @@ korunmalıdır (R5).
   - Saat 2027-03-27T22:00Z'de (Pazar 01:00 EEST): `open` true, `today` `2027-03-28`, `next.time`
     `02:00`, `refreshInSeconds` 3600.
 
+
+### QA CLARIFY turuyla eklenenler (2026-11-27)
+
+- **AC-92.** *(B1)* `America/New_York` saat dilimli programlı şube, Saat 2026-12-05T02:00Z (yerelde
+  Cuma 2026-12-04 21:00; UTC tarihi 12-05):
+  - `today` `2026-12-04`, `open` false;
+  - `next` `{"date":"2026-12-05","time":"10:00"}`;
+  - `refreshInSeconds` 10800 (yerel gece yarısı 05:00Z).
+- **AC-93.** *(B2(a))* Cuma 20:00–23:59 açık, Cumartesi 00:00'da başlayan aralığı olmayan şube, Saat
+  2026-12-04T18:00Z'de (Cuma 21:00):
+  - `open` true, `next` `{"date":"2026-12-05","time":"00:00"}`, `refreshInSeconds` 10800;
+  - altlık "Şu an açık · Kapanış yarın 00:00" yazar.
+- **AC-94.** *(B2(b))* Pazartesi–Cumartesi 00:00–23:59, Pazar kapalı şube, Saat 2026-12-07T09:00Z'de
+  (Pazartesi 12:00):
+  - `open` true, `next` `{"date":"2026-12-13","time":"00:00"}`, `refreshInSeconds` 43200;
+  - altlık "Şu an açık · Kapanış Pazar 00:00" yazar.
+- **AC-95.** *(B3(i))* AC-84'ün `Europe/Berlin` şubesi, Saat 2027-03-27T23:30Z'de (Pazar 00:30 CET):
+  `refreshInSeconds` 81000.
+- **AC-96.** *(B4(a))* Programlı şubede 2026-12-05 (Cumartesi) tam gün kapalıyken, Saat
+  2026-12-05T09:00Z'de `open` false ve `next` `{"date":"2026-12-07","time":"09:00"}`'dır (Pazar haftalık
+  kapalı).
+- **AC-97.** *(B4(b))* Programlı şubede 2027-01-04–2027-01-13 (10 gün) tam gün kapalıyken, Saat
+  2027-01-03T09:00Z'de (Pazar) `next` `{"date":"2027-01-14","time":"09:00"}`'dır (11 gün ileride).
+  Altlık "Şu an kapalı · Açılış 14 Ocak 09:00" yazar.
+- **AC-98.** *(B4(c))* Programlı şube, Cuma 2026-12-04:
+  - Saat 15:00:00Z (yerel 18:00:00) → `open` false.
+  - Saat 06:00:00Z (yerel 09:00:00) → `open` true.
+  - Saat 14:59:59.5Z (yerel 17:59:59.5) → `open` true, `refreshInSeconds` 1.
+- **AC-99.** *(B4(d))* Yalnız Pazartesi 09:00–10:00 açık şube:
+  - Saat 2026-12-07T08:00Z'de (Pazartesi 11:00): `next` `{"date":"2026-12-14","time":"09:00"}` (bugün + 7).
+  - Aynı şubede 2026-12-14–2026-12-20 tam gün kapalıyken aynı anda: `next`
+    `{"date":"2026-12-21","time":"09:00"}` (en son `through` + 1, sınır + 7'nin içinde).
+- **AC-100.** *(B5)* Birim testi, sahte zamanlayıcı:
+  - `refreshInSeconds` = 60 olan yanıttan 10 saniye sonra cihaz saati (`Date`) 1 saat ileri alınır.
+    Tekrar okuma 60. saniyeden önce yapılmaz.
+  - Cihaz saati 1 saat geri alınır. Okuma 60. saniyede yapılır.
+- **AC-101.** *(B6)* AC-58'in ikizi, tarayıcı saat dilimi `America/Los_Angeles`: aynı yanıtla altlık
+  aynı "şu an" metnini basar. "Bugün" etiketi Host yanıtındaki `today`'in haftanın günü olan satırdadır.
+  {gün} kelimesi ("yarın", gün adı ya da tarih) `next.date` − `today` farkına göre aynı çıkar.
+- **AC-102.** *(B6)* Birim testi: `"2026-12-04"` tarih dizgesinin haftanın günü, süreç saat dilimi
+  (`TZ`) `America/Los_Angeles`, `Pacific/Kiritimati` ve `UTC` iken aynı (Cuma) türetilir. `"2026-12-04"`
+  ile `"2026-12-14"` arasındaki fark üçünde de 10 gündür.
+- **AC-103.** *(B7)* `through` alanı olmayan ve `through: null` taşıyan iki kaydetme de kabul edilir.
+  Panel okuması iki durumda da `through` = `from` döner.
+- **AC-104.** *(B7)* Saat 2027-01-05T09:00Z'de iki kayıtlı gövde: `[{ from 2027-01-01, through 2027-01-01 }`
+  (geçmiş, geçerli)`, { from 2027-02-10, through 2027-02-01 }]` (hatalı). Yanıt `422` ve
+  `specialHours.1.through` alanında `special_hours.end_before_start` taşır. Geçmiş ama hatalı tek kayıt
+  `[{ from 2027-01-03, through 2027-01-01 }]` de `422` ve `specialHours.0.through` alır.
+- **AC-105.** *(B8)* İlk yanıtında iki özel gün bulunan altlık, D9 yenilemesinde üç özel gün taşıyan bir
+  yanıt alır. Özel gün listesi iki satırlı kalır, "şu an" satırı yeni durumu basar ve şube bloğunun
+  yüksekliği değişmez.
+- **AC-106.** *(B10)* `dealership` şemasında 2027-01-01'lik kaydı saklı olan şube için Saat
+  2027-01-05T09:00Z'de:
+  - Gövdesinde `specialHours` alanı olmayan bir adres kaydetmesinden sonra saklı kayıt sayısı değişmez
+    (veritabanında sayılır).
+  - Ardından yalnız 2027-02-10'luk kaydı taşıyan bir `specialHours` listesiyle yapılan kaydetmeden
+    sonra 2027-01-01'lik kayıt veritabanında yoktur. 2027-02-10'luk kayıt vardır.
+- **AC-107.** *(B11)* Saat 2026-11-27T22:30Z'de (İstanbul'da 11-28 01:30, New York'ta 11-27 17:30)
+  `Europe/Istanbul` şubesine tek gövdeyle iki değişiklik gönderilir: saat dilimi `America/New_York`
+  ve `through` = 2026-11-27 olan bir kayıt. Kayıt saklanır ve panel okumasında görünür, çünkü yeni
+  bölgede bugün 2026-11-27'dir.
+
 ---
 
 ## Definition of Done
 
 - [x] Önerilen kararlar (**D1–D18**) onaylandı (Proje Yöneticisi kararı, 2026-11-27; şartlar (a)–(c)
       → AC-75–AC-91). **SS1–SS4** cevaplandı (sahip kararı, 2026-11-27).
-- [ ] QA CLARIFY turu işlendi.
+- [x] QA CLARIFY turu işlendi (QA 1, 12 bulgu → D2, D4, D7, D9, D11, D14, D15, D17; AC-92–AC-107).
+      *(Proje Yöneticisi kararı, 2026-11-27.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0027-ac<n>.png`),
       boş ve hata durumları dâhil; panel bölümünün ve altlığın (açık, kapalı, özel gün) Arapça
