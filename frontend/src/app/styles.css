@@ -1404,7 +1404,7 @@ a.top-bar__brand:hover {
 
 .home-footer__hours-skeleton {
   margin-block-start: var(--space-2);
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm);
   background: var(--color-surface-muted);
   block-size: calc(
     var(--hours-lines) * var(--hours-line) + var(--special-on) *

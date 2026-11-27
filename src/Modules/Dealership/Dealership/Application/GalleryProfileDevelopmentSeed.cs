@@ -45,7 +45,8 @@ internal static class GalleryProfileDevelopmentSeed
         .. Enumerable.Range(0, Domain.SpecialHours.MaxDays).Select(index =>
         {
             string day = today.AddDays(1 + 2 * index).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-            return (SpecialDayInput?)new SpecialDayInput(day, day, [new("08:00", "10:00"), new("12:00", "14:00"), new("16:00", "21:00")]);
+            // Aralıklar `0025` tohumunun Pazartesi'sinden: saat sabiti yazılmaz (Yasak Listesi 34).
+            return (SpecialDayInput?)new SpecialDayInput(day, day, [.. OpeningHours()[Domain.OpeningHours.Days[0]]!]);
         }),
     ];
 
