@@ -30,6 +30,8 @@ internal sealed partial class SeoCatalog
     internal const string DocumentFallbackTitle = "seo.document.fallbackTitle";
     internal const string FavoritesTitle = "seo.favorites.title";
     internal const string CompareTitle = "seo.compare.title";
+    internal const string ContactTitle = "seo.contact.title";
+    internal const string ContactDescription = "seo.contact.description";
 
     /// <summary>Host'un okuduğu bütün anahtarlar; başlangıç denetimi ve katalog kapısı bunu kullanır.</summary>
     internal static IReadOnlyList<string> UsedKeys { get; } =

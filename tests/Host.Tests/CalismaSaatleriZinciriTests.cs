@@ -223,7 +223,7 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
 
     // ----- Opsiyonellik, saat dilimi, sürüm (R2, R3, R4, R6 · D2, D4, D11) -----
 
-    [Fact(DisplayName = "0025/AC-24, AC-72: Yedi boş gün programı siler: okumada `openingHours` null, belgede o şubenin öğesinde `openingHoursSpecification` yok; `missing_day` dönmez.")]
+    [Fact(DisplayName = "0025/AC-24, AC-72, 0028/AC-14: Yedi boş gün programı siler: okumada `openingHours` null, belgede o şubenin öğesinde `openingHoursSpecification` yok; `missing_day` dönmez.")]
     public async Task Siler_YediBosGun()
     {
         string ad = Benzersiz("Silinen Şube");
@@ -279,7 +279,7 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
         Assert.Equal(program, (await SubeAsync(sube)).GetProperty("openingHours").GetRawText());
     }
 
-    [Fact(DisplayName = "0025/AC-26: Saat dilimi `Asia/Kuwait`'e değişince Pazartesi 09:00–18:00 okumada ve belgede 09:00–18:00 kalır.")]
+    [Fact(DisplayName = "0025/AC-26, 0028/AC-14: Saat dilimi `Asia/Kuwait`'e değişince Pazartesi 09:00–18:00 okumada ve belgede 09:00–18:00 kalır.")]
     public async Task SaatDilimi_DuvarSaatiniDegistirmez()
     {
         string ad = Benzersiz("Kuveyt Şubesi");
@@ -323,7 +323,7 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
         Assert.Equal("09:00", (await SubeAsync(sube)).GetProperty("openingHours").GetProperty("monday")[0].GetProperty("start").GetString());
     }
 
-    [Fact(DisplayName = "0025/AC-30, AC-57: Geçici kapalı şubenin programı değiştirilebilir; kapalıyken `department`'ta yoktur, yeniden açıldıktan sonraki ilk `/tr/` belgesi yeni programı taşır.")]
+    [Fact(DisplayName = "0025/AC-30, AC-57, 0028/AC-14: Geçici kapalı şubenin programı değiştirilebilir; kapalıyken `department`'ta yoktur, yeniden açıldıktan sonraki ilk `/tr/` belgesi yeni programı taşır.")]
     public async Task GeciciKapali_DegistirilebilirVeAcilincaGorunur()
     {
         string ad = Benzersiz("Geçici Şube");
@@ -379,7 +379,7 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
 
     // ----- Ziyaretçiye dönük okuma ve belge (R8, R9 · D8, D9) -----
 
-    [Fact(DisplayName = "0025/AC-41, AC-42, AC-43, 0027/AC-42: Public şube öğesinin anahtarları tam olarak `address, name, openNow, openingHours, phone, specialHours`; programlı şubede yedi gün, `sunday` boş, `saturday` 10:00–14:00; tr/ar/en aynı.")]
+    [Fact(DisplayName = "0025/AC-41, AC-42, AC-43, 0027/AC-42, 0028/AC-21: Public şube öğesinin anahtarları tam olarak `address, email, map, name, openNow, openingHours, phone, specialHours`; programlı şubede yedi gün, `sunday` boş, `saturday` 10:00–14:00; tr/ar/en aynı.")]
     public async Task PublicOkuma()
     {
         string ad = Benzersiz("Programlı Şube");
@@ -387,7 +387,8 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
 
         JsonElement galeri = JsonDocument.Parse(await Istemci().GetStringAsync("/api/dealership/gallery?locale=tr")).RootElement;
         Assert.Equal(["branches", "displayName", "socialLinks"], galeri.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal));
-        Assert.All(galeri.GetProperty("branches").EnumerateArray(), oge => Assert.Equal(["address", "name", "openNow", "openingHours", "phone", "specialHours"], oge.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal)));
+        // `0028` D5 — `email` ve `map` bilerek eklendi (0028 Context tablosu).
+        Assert.All(galeri.GetProperty("branches").EnumerateArray(), oge => Assert.Equal(["address", "email", "map", "name", "openNow", "openingHours", "phone", "specialHours"], oge.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal)));
 
         JsonElement program = (await PublicSubeAsync(ad)).GetProperty("openingHours");
         Assert.Equal(Gunler, program.EnumerateObject().Select(p => p.Name));
@@ -401,7 +402,7 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
         Assert.Equal(diller[0], diller[2]);
     }
 
-    [Fact(DisplayName = "0025/AC-52, AC-58: Yönetici programı kaydettikten sonraki ilk `/tr/` belgesinde şubenin öğesi üç gruplu `openingHoursSpecification` taşır.")]
+    [Fact(DisplayName = "0025/AC-52, AC-58, 0028/AC-14: Yönetici programı kaydettikten sonraki ilk `/tr/` belgesinde şubenin öğesi üç gruplu `openingHoursSpecification` taşır.")]
     public async Task YapisalVeri_KaydettiktenSonra()
     {
         string ad = Benzersiz("Belge Şubesi");
@@ -501,8 +502,9 @@ public sealed class CalismaSaatleriZinciriTests : IAsyncLifetime
         JsonDocument.Parse(await Istemci().GetStringAsync("/api/dealership/gallery?locale=tr")).RootElement
             .GetProperty("branches").EnumerateArray().Single(oge => oge.GetProperty("name").GetString() == ad);
 
+    /// <summary>`0028` D13 — saatler iletişim belgesinde; ana sayfanın şube öğesi yalnız ad, adres, telefon (AC-17).</summary>
     private async Task<List<JsonElement>> DepartmentlarAsync() =>
-        [.. Assert.Single(new HtmlParser().ParseDocument(await Istemci().GetStringAsync("/tr/")).JsonLd()).GetProperty("department").EnumerateArray()];
+        [.. Assert.Single(new HtmlParser().ParseDocument(await Istemci().GetStringAsync("/tr/contact")).JsonLd()).GetProperty("department").EnumerateArray()];
 
     private async Task<JsonElement> DepartmentAsync(string ad) =>
         (await DepartmentlarAsync()).Single(oge => oge.GetProperty("name").GetString() == ad);

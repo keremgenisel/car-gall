@@ -60,7 +60,7 @@ public sealed class SitemapTests(HostFactory factory) : IClassFixture<HostFactor
             belge.Root.Elements().Select(sitemap => sitemap.Element(Ns + "loc")!.Value));
     }
 
-    [Fact(DisplayName = "0004/AC-56: `/sitemap-tr.xml` iyi biçimli XML'dir. Kök öğesi aynı ad alanında `urlset`'tir, alt öğeleri yalnız `<url><loc>`'tur. Adres kümesi tam olarak şudur: `{kök}/tr/`, `{kök}/tr/cars`, görünür her ilanın `{kök}/tr/cars/{slug}`'ı ve tr'de görünen (`FindBySlugAsync`'in döndüreceği) her içerik sayfasının `{kök}/tr/{slug}`'ı.")]
+    [Fact(DisplayName = "0004/AC-56, 0028/AC-11: `/sitemap-tr.xml` iyi biçimli XML'dir. Kök öğesi aynı ad alanında `urlset`'tir, alt öğeleri yalnız `<url><loc>`'tur. Adres kümesi tam olarak şudur: `{kök}/tr/`, `{kök}/tr/cars`, `{kök}/tr/contact`, görünür her ilanın `{kök}/tr/cars/{slug}`'ı ve tr'de görünen (`FindBySlugAsync`'in döndüreceği) her içerik sayfasının `{kök}/tr/{slug}`'ı.")]
     public async Task DilSitemap_Yapisi()
     {
         (_, XDocument? belge) = await GetAsync("/sitemap-tr.xml");
@@ -72,7 +72,8 @@ public sealed class SitemapTests(HostFactory factory) : IClassFixture<HostFactor
             Assert.Equal(Ns + "loc", Assert.Single(url.Elements()).Name);
         });
         Assert.Equal(
-            new HashSet<string>([$"{K}/tr/", $"{K}/tr/cars", $"{K}/tr/cars/audi-a3-2020-aaa111", $"{K}/tr/cars/toyota-corolla-2019-bbb222", $"{K}/tr/kvkk"]),
+            // `0028` D12 — iletişim sayfası bilerek eklendi (0028 Context tablosu).
+            new HashSet<string>([$"{K}/tr/", $"{K}/tr/cars", $"{K}/tr/contact", $"{K}/tr/cars/audi-a3-2020-aaa111", $"{K}/tr/cars/toyota-corolla-2019-bbb222", $"{K}/tr/kvkk"]),
             new HashSet<string>(Adresler(belge)));
     }
 

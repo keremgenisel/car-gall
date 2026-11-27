@@ -16,6 +16,9 @@ internal enum SeoPageKind
 
     /// <summary>`frontend-003` **D1** · **D2** · **D3** — `/{locale}/compare?listing=…`.</summary>
     Compare,
+
+    /// <summary>`0028` **D2** · **D12** — `/{locale}/contact`: iletişim sayfası, indekslenir.</summary>
+    Contact,
     Admin,
     NotFound,
 }
@@ -68,6 +71,13 @@ internal sealed record SeoPage(SeoPageKind Kind, string? Slug = null)
             return new(SeoPageKind.Compare);
         }
 
+        // `0028` D2 · CLARIFY B4 — içerik adayından ÖNCE: aynı slug'lı görünür bir içerik sayfası
+        // bulunsa da iletişim sayfası açılır (AC-93). Alt yolları aşağıda NotFound'dur (AC-2).
+        if (parcalar.Length == 2 && parcalar[1] == ContactSegment)
+        {
+            return new(SeoPageKind.Contact);
+        }
+
         if (IndexHtmlRenderer.IsNewsletterLinkPage(path, Locale(locale)))
         {
             return new(SeoPageKind.Newsletter);
@@ -85,6 +95,9 @@ internal sealed record SeoPage(SeoPageKind Kind, string? Slug = null)
     internal const string FavoritesSegment = "favorites";
 
     internal const string CompareSegment = "compare";
+
+    /// <summary>`0028` D2 — `ContentReservedSlugs`'taki ad; ön yüzde `route.ts` aynası.</summary>
+    internal const string ContactSegment = "contact";
 
     /// <summary>
     /// `0018` D35 · `frontend-003` D2 — yanıtı <c>Referrer-Policy: no-referrer</c> taşıyan sayfalar:

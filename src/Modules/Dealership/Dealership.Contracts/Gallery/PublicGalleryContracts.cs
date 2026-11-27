@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace CarGallery.Modules.Dealership.Contracts.Gallery;
 
 /// <summary>
@@ -30,13 +32,19 @@ public sealed record PublicSocialLinkDto(string Platform, string Url);
 /// şubede <c>null</c>; girilmişse TAM yedi gün kodu (<c>monday</c> … <c>sunday</c>, bu sırayla),
 /// kapalı gün boş dizi, aralıklar başlangıca göre sıralı. Saatler şubenin yerel duvar saatidir
 /// (`0025` D2) ve dilden bağımsızdır.</para>
+///
+/// <para>`0028` **D5** — izin listesi bilerek bir kez daha genişledi: <c>Email</c> kayıtlı adres ya
+/// da <c>null</c> (D8, SS2); <c>Map</c> iki harita adresi ya da <c>null</c> (D7). Ham koordinat,
+/// saat dilimi, WhatsApp ve slug yine YOKTUR (C2, AC-23).</para>
 /// </summary>
 public sealed record PublicBranchDto(
     string Name,
     string Address,
     string Phone,
     IReadOnlyDictionary<string, IReadOnlyList<PublicOpeningIntervalDto>>? OpeningHours = null,
-    PublicOpenNowDto? OpenNow = null)
+    PublicOpenNowDto? OpenNow = null,
+    string? Email = null,
+    PublicBranchMapDto? Map = null)
 {
     /// <summary>
     /// `0027` **D8** — penceredeki özel günler (<c>through</c> ≥ bugün, <c>from</c> ≤ bugün + 30),
@@ -56,6 +64,27 @@ public sealed record PublicNextChangeDto(string Date, string Time);
 
 /// <summary>`0027` D2 · D8 — bir özel gün; aralık yoksa tam gün kapalı.</summary>
 public sealed record PublicSpecialDayDto(string From, string Through, IReadOnlyList<PublicOpeningIntervalDto> Intervals);
+
+/// <summary>
+/// `0028` **D5** · **D7** — "Google Haritalar'da aç" adresi ve, anahtar yapılandırılmışsa, tıkla-yükle
+/// haritanın gömme adresi. Anahtar yokken <c>EmbedUrl</c> anahtarı yanıtta HİÇ yoktur, <c>null</c>
+/// olarak da yoktur (PM şartı (a), AC-28).
+/// </summary>
+public sealed record PublicBranchMapDto(string LinkUrl)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? EmbedUrl { get; init; }
+}
+
+/// <summary>`0028` **D13** — iletişim belgesinin <c>geo</c>'su; değerler ölçeği atılmış <c>decimal</c>.</summary>
+public sealed record PublicGeoDto(decimal Latitude, decimal Longitude);
+
+/// <summary>
+/// `0028` **P1** — iletişim belgesinin okuması: ziyaretçi okumasının AYNISI ve her şubenin koordinatı
+/// (aynı sıra). Yalnız Host'un belgesi içindir; ziyaretçi ucu bu okumayı çağırmaz, yani ham koordinat
+/// izin listesine hiç girmez (C2, AC-23).
+/// </summary>
+public sealed record ContactGalleryDto(PublicGalleryDto Gallery, IReadOnlyList<PublicGeoDto?> Geo);
 
 /// <summary>`0025` D8 — bir aralık; ikisi de <c>HH:mm</c>.</summary>
 public sealed record PublicOpeningIntervalDto(string Start, string End);
@@ -85,6 +114,16 @@ public interface IPublicGalleryQueries
 {
     /// <summary>Galeri profili yoksa <c>null</c>.</summary>
     Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// `0028` P1 — <see cref="GetAsync"/> ve şubelerin koordinatı; galeri profili yoksa <c>null</c>.
+    /// Varsayılan gövde koordinat bilmeyen uygulamalar içindir (test taslakları): hiçbir şubede
+    /// <c>geo</c> yok. Modülün uygulaması aynı sorgudan koordinatı da verir.
+    /// </summary>
+    async Task<ContactGalleryDto?> GetContactAsync(string locale, CancellationToken cancellationToken) =>
+        await GetAsync(locale, cancellationToken) is { } gallery
+            ? new ContactGalleryDto(gallery, [.. gallery.Branches.Select(_ => (PublicGeoDto?)null)])
+            : null;
 }
 
 /// <summary>`0026` D17 — görünen ad (yoksa <c>null</c>) ve atanmış logonun kimliği (yoksa <c>null</c>).</summary>

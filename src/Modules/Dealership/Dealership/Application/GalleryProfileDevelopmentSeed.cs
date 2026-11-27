@@ -22,6 +22,16 @@ internal static class GalleryProfileDevelopmentSeed
             StringComparer.Ordinal);
 
     /// <summary>
+    /// `0028` **D14** · **P12** — perf ölçümünde iletişim sayfası harita kutusunu ve e-postayı basar:
+    /// şubenin sırasına bağlı, deterministik bir adres ve İstanbul içinde bir nokta. Yalnız alan
+    /// boşsa yazılır; kayıtlı değer korunur.
+    /// </summary>
+    internal static string Email(int index) => $"sube{index + 1}@galeri.example.com";
+
+    internal static (decimal Latitude, decimal Longitude) Coordinate(int index) =>
+        (40.98765m + (index * 0.01m), 29.0275m + (index * 0.01m));
+
+    /// <summary>
     /// `0025` AC-60'ın kurgusu: yedi günün her birinde üç aralık ve 21 (açılış, kapanış) çiftinin
     /// hepsi farklı (gün başına dakika farklı), yani yapısal veride hiçbir öğe birleşmez.
     /// </summary>

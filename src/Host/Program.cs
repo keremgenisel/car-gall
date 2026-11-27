@@ -78,7 +78,12 @@ builder.Services.AddVehicleCatalog(
 builder.Services.AddVehicleReference(connectionString, localization.EnabledLocales);
 // Modül kendi arka plan dağıtıcısını da kaydeder: DealershipDbContext internal'dır ve
 // host onu göremez — sınırın doğru yerde durduğunun işareti.
-builder.Services.AddDealership(connectionString, localization.DefaultLocale, localization.EnabledLocales);
+// `0028` D7 — Maps Embed API anahtarı (`docs/deploy.md`); yoksa harita yalnız bağlantıdır.
+builder.Services.AddDealership(
+    connectionString,
+    localization.DefaultLocale,
+    localization.EnabledLocales,
+    builder.Configuration["GoogleMaps:EmbedApiKey"]);
 
 // `0017` — içerik sayfaları ve SSS. Etkin diller yapılandırmadan: eksik dil yalnız etkin
 // dillerde sayılır (R9).

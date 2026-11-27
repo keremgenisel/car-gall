@@ -42,6 +42,9 @@ internal sealed class SeoOrtami : IDisposable
 
     internal Dictionary<string, HomeTextsDto> AnaSayfaMetinleri { get; } = [];
 
+    /// <summary>`0028` — şubelerin koordinatı, <see cref="Galeri"/>'nin sırasıyla; eksik olan <c>null</c>.</summary>
+    internal List<PublicGeoDto?> Koordinatlar { get; } = [];
+
     internal PublicGalleryDto? Galeri { get; set; } = new("Oto Galeri", [new("Kadıköy", "Bağdat Cad. 1, İstanbul", "+902160000001")], []);
 
     /// <summary>`0026` — galeriye atanmış logo kimliği (marka okumasının ikinci alanı).</summary>
@@ -194,6 +197,12 @@ internal sealed class SeoOrtami : IDisposable
     private sealed class SahteGaleri(SeoOrtami ortam) : IPublicGalleryQueries
     {
         public Task<PublicGalleryDto?> GetAsync(string locale, CancellationToken cancellationToken) => Task.FromResult(ortam.Galeri);
+
+        /// <summary>`0028` P1 — iletişim belgesinin okuması; koordinat verilmemiş şubede <c>geo</c> yok.</summary>
+        public Task<ContactGalleryDto?> GetContactAsync(string locale, CancellationToken cancellationToken) =>
+            Task.FromResult(ortam.Galeri is { } galeri
+                ? new ContactGalleryDto(galeri, [.. galeri.Branches.Select((_, index) => ortam.Koordinatlar.ElementAtOrDefault(index))])
+                : null);
     }
 
     private sealed class SahteDetay(SeoOrtami ortam) : IShowcaseListingDetailQueries
