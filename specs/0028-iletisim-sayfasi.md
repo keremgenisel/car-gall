@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-27 — Proje Yöneticisi kararı) · QA CLARIFY turu bekleniyor |
+| **Durum** | Onaylandı (2026-11-27 — Proje Yöneticisi kararı) · QA CLARIFY turu işlendi (QA 1, `b474e70`: 10 bulgu, 0/7/3) |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (ziyaretçi okumasına e-posta ve harita adresleri) · `Content.Contracts` (yalnız ayrılmış ad listesine `contact`) · `Host` (yeni sayfa türü, belge etiketleri, yapısal verinin taşınması, sitemap) · Frontend (iletişim sayfası, altlığın sadeleşmesi, üst çubuk bağlantısı, boş vitrin eylemi) · `docs/` (`deploy.md`, Karar Defteri) |
 | **Bağımlı spec'ler** | **`0027`** (**D1**, **D9**, **D11**, **D12**, **D15**: "şu an" satırı, yenileme, yerleşim, yapısal veri, tembel parça; bu kart altlık kararlarını tersine çevirir) · **`0025`** (haftalık liste, **D9** `openingHoursSpecification`, **D10**(a) bütçe) · `0014` (altlık, **D15** izin listesi, iskelet) · `0020` (**D15** izin listesi, **X4**: vitrinde e-posta/koordinat yok) · `0003` (**X3** harita, koordinat, e-posta alanları) · `0009` (**D2**: şube e-postası bildirim hedefi) · `0004` (**D1**, **D7**, **D8**, **D11**, **AC-52** `geo` yok, sitemap) · `0017` (ayrılmış adlar, slug kuralları) · `0024` (**AC-55** ilk paket tanımı, **X3** üçüncü taraf) · `0026` (üst çubukta logo) · `frontend-002` (**D8**: üçüncü taraf isteği yok) · `frontend-003` (**D1**, **D2**, **D8**, **D13**: ayrılmış ad, belge, üst çubuk, kritik yol) · `0022` (**AC-11** boş vitrin metni) |
-| **Karar bekliyor** | yok — D1–D19 Proje Yöneticisi kararı (2026-11-27, dört ek şartla: (a)–(d)); SS1–SS4 sahip kararı (2026-11-27). |
+| **Karar bekliyor** | yok — D1–D19 Proje Yöneticisi kararı (2026-11-27, dört ek şartla: (a)–(d)); SS1–SS4 sahip kararı (2026-11-27). CLARIFY B1–B10 Proje Yöneticisi kararı (2026-11-27). |
 
 > **Sahibin isteği (2026-11-27, kelimesi kelimesine):** "footer çalışma saatleri eklenince çok büyüdü.
 > Çalışma saatlerini oradan kaldırıp yeni bir iletişim sayfası yaparak oraya taşıyalım; adres, tel,
@@ -29,6 +29,13 @@
 > - **(d)** çerez politikası notu: D18, Context 7.
 >
 > Var olan numaralar değişmedi.
+>
+> **QA CLARIFY turu (QA 1, `b474e70`; Proje Yöneticisi kararları, 2026-11-27):** B1–B10 işlendi.
+> - Değişen kararlar "CLARIFY" diye işaretli: **D2**, **D4**, **D5**, **D6**, **D7**, **D9**, **D11**,
+>   **D12**, **D13**, **D14**, **D15**.
+> - Metni değişen kriterler: AC-3, AC-18, AC-26, AC-44, AC-50, AC-76.
+> - Yeni kriterler: **AC-88–AC-103**.
+> - Bulguların bir kısmını `8a62745` zaten karşılıyordu: B7(a) için AC-83, B7(c) için AC-85/86.
 
 ---
 
@@ -195,6 +202,13 @@ gitmez. Arama motoru şubenin saatlerini ve yerini bu sayfadan okur.
   `Private(...)` (`:86-87`). İçerik sayfası kanonik ve alternatif kurar (`:366-399`).
 - Sitemap ana sayfa, liste, ilan ve içerik sayfalarını **açıkça** sayar (`SeoEndpoints.cs:61-66`).
   Yeni sayfa kendiliğinden girmez. `SitemapTests.cs:63` (`0004/AC-56`) tr adres kümesini **tam** ölçer.
+- *(CLARIFY B4, önceden var olan kusur:)* Sitemap içerik sayfalarını `ListVisibleSlugsAsync`'ten süzmeden
+  alıyor (`SeoEndpoints.cs:65-66`). Ayrılmış adla saklanmış görünür bir içerik sayfası (ör. ad ayrılmadan
+  önce kaydedilmiş bir `favorites` ya da `compare`) sitemap'e girer. O adres ise içerik sayfasını değil
+  ayrılmış sayfayı açar. `contact` ile aynı açık bir üçüncü ad kazanır (→ D12).
+- *(CLARIFY B8:)* Adres doğrulaması yalnız kırpar ve uzunluğu sınırlar (300 karakter,
+  `BranchDraft.cs:126-150`, `DealershipLimits.cs:15`). Adresin içindeki satır sonu, sekme ve diğer
+  denetim karakterleri doğrulamadan geçer (→ D7).
 
 **5. Ana sayfanın yapısal verisi.** `SeoHeadBuilder.cs:96-165`. Kök `AutoDealer`: `name`, `url`, varsa
 `logo` (`0026`), varsa `sameAs` (`0024`). `department` öğesi: `@type`, `name`, `address`,
@@ -312,6 +326,10 @@ Kaynaktan doğrulananlar:
 | `frontend/src/app/HomePage.test.tsx:261`, `:277`, `:299`, `frontend/e2e/evidence-0014.spec.ts:63` (`0014` iskeleti) | galeri okunurken `branch-skeleton` | **değişmez** |
 | `frontend/src/app/AnaSayfaMetinleri.test.tsx:181-188`, `frontend/e2e/evidence-0022.spec.ts:290` (`0022/AC-11`) | "Galeriye ulaşın" metni | metin **değişmez**. Hedef `#contact` → `/{l}/contact` (**AC-72**) |
 | `frontend/src/app/TopBar.test.tsx` ve `frontend-003`'ün üst çubuk e2e'leri (D8: iki satır, 320 px) | satır sonu grubu sayaç + dil | üst çubukta bir bağlantı daha (D10). Ölçüm bağlantıyla yeniden koşar (**AC-68**) |
+| *(CLARIFY B6)* `frontend/e2e/favoriler.spec.ts:385` (`frontend-003/AC-32`, `0026/AC-34`) | genişlik döngüsü `[320, 360, 639, 640]`; `genislik < 640 ? 2 : 1` | döngü ve beklenen satır sayısı **yeni eşikle** kurulur: eşiğin bir altı ve kendisi. Eşik PR'da ölçülüp yazılır. Etiket `0028/AC-68` eklenir |
+| *(CLARIFY B6)* `frontend/e2e/galeri-logosu.spec.ts:242-245` (`0026`) | iki satırlı çubuk 117 px (12 + 40 logo + 8 + 44 + 12 + 1), pay 8 px | 1. satırda 44 px'lik simge bağlantı logodan (40 px) yüksek: hesap 121 px olur (12 + **44** + 8 + 44 + 12 + 1). Yorum ve sınır yeni hesapla güncellenir, pay 8 px kalır |
+| *(CLARIFY B6)* `frontend/e2e/kabuk.spec.ts:55` (`frontend-001/AC-4`) | ar'da marka sağda, dil değiştirici solda | **değişmez, yeniden koşar.** Simge bağlantı 1. satırın sonunda (ar'da solda) ve marka ile dil seçicinin göreli yeri aynı kalır |
+| *(CLARIFY B4)* `tests/Host.Tests/SitemapTests.cs` | içerik sayfaları süzülmeden | ayrılmış adlı içerik sayfası sitemap'te yok (**AC-93**, **AC-94**). Var olan beklentiler değişmez |
 
 > **e2e ikizi:** Yukarıdaki her Host satırının e2e karşılığı arandı. Belgenin yapısal verisini ölçen tek
 > e2e `ozel-gunler.spec.ts:276` ve tabloda. Şube öğesinin anahtar kümesini ölçen e2e yok:
@@ -337,7 +355,10 @@ AC-75–AC-77) geçersiz olur (Context tablosu).
 
 **D2 — Adres: `/{locale}/contact` (SS3).** (R1, C8, tuzak 1)
 - Ad her dilde aynıdır ve çevrilmez (`cars`, `newsletter`, `favorites` gibi).
-- `ContentReservedSlugs.All`'a ve uçtaki ayna listeye eklenir. Bu adla içerik sayfası açılamaz.
+- `ContentReservedSlugs.All`'a ve uçtaki ayna listeye eklenir. Bu adla **hiçbir dilde** içerik sayfası
+  açılamaz. *(CLARIFY B4:)* tr, ar ve en slug'larının üçü de ayrı ayrı reddedilir (AC-3).
+- *(CLARIFY B4:)* Sunucu ve uç `contact`'ı içerik sayfası adayından **önce** tanır. Veritabanında bu
+  slug'la görünür bir içerik sayfası bulunsa da `/{l}/contact` iletişim sayfasını açar (AC-93).
 - Sunucu `SeoPageKind.Contact` tanır.
 - Alt yolları (`/tr/contact/x`) `0004` D8 gereği 404 + "bulunamadı"dır.
 
@@ -366,7 +387,8 @@ demek. Ayrıca dil değiştiricinin yolu koruması bozulur (`LocaleSwitcher.tsx:
 ekran okuyucuda ek bir etkileşim ister. *Bedel:* 5+ şubede sayfa uzar. Harita kutuları uzunluğu artırır.
 
 **D4 — Durumlar.** (R5, R11, X11)
-- **Yükleniyor:** `<h1>` hemen basılır. Şube alanında iskelet ve `role="status"` vardır.
+- **Yükleniyor:** `<h1>` hemen basılır. Şube alanında iskelet ve `role="status"` vardır. *(CLARIFY B5:)*
+  `<h1>` ve iskelet ilk paketteki rota kabuğundadır. Parçayı ve okumayı beklemez (D14).
 - **Hata:** `ErrorState` (`shared/ui`), çevrilmiş metin ve "Tekrar dene" düğmesi. Düğme okumayı
   tekrarlar. Altlıktan farklı olarak bu sayfanın tek içeriği şubelerdir, yani boş yer bırakmak yerine
   hata gösterilir.
@@ -381,15 +403,22 @@ ekran okuyucuda ek bir etkileşim ister. *Bedel:* 5+ şubede sayfa uzar. Harita 
 **D5 — Ziyaretçi okuması: şube öğesine `email` ve `map`.** (R2, R3, C2)
 - Aynı uç kullanılır: `GET /api/dealership/gallery`.
 - `email`: kayıtlı adres ya da `null`.
-- `map`: `{ "linkUrl": string, "embedUrl"?: string }`. İki adres de sunucuda, tek yerde kurulur (D7).
+- `map`: `{ "linkUrl": string, "embedUrl"?: string } | null`. İki adres de sunucuda, tek yerde kurulur
+  (D7). *(CLARIFY B3:)* Adreslerden biri 2048 karakteri aşarsa `map` `null`'dır (D7).
   *(PM şartı (a):)* Anahtar yokken `embedUrl` anahtarı **hiç yoktur**, `null` değildir.
 - Ham koordinat, saat dilimi, WhatsApp ve slug gönderilmez.
 - `no-store` kalır (`0027` D8).
 
 *Gerekçe:* ikinci bir uç, ikinci bir izin listesi ve aynı "şu an" hesabının ikinci bir yolu demek.
 `0027`'nin yenileyicisi bu okumayı zaten tekrarlıyor (`branchClock.tsx`). Adresleri sunucunun kurması,
-anahtarı (D7) ve ondalık kuralını (tuzak 6) tek yerde tutar. *Bedel:* ana sayfa da şube başına
-≈150 B fazla JSON alır (kullanmadığı iki alan). `0020` D15'in izin listesi ikinci kez genişler.
+anahtarı (D7) ve ondalık kuralını (tuzak 6) tek yerde tutar. *Bedel (CLARIFY B3, ölçüldü):* ana sayfa da kullanmadığı iki alanı alır. Şube başına sıkıştırmasız
+yanıt payı şöyledir:
+- koordinatlı, e-postasız, anahtarsız ≈100 B;
+- koordinatlı, e-postalı, anahtarlı ≈255 B;
+- en kötü durum (koordinatsız, 300 karakterlik ASCII dışı adres, 254 B e-posta, anahtarlı) ≈4,0 KB.
+  Adres iki adreste de yüzde kodlu geçer.
+
+`0020` D15'in izin listesi ikinci kez genişler.
 
 **D6 — Harita: tıkla-yükle + her zaman bağlantı (SS1 önerisi (b)+(c)).** (R3, R4, C4, tuzak 4, 8)
 - `embedUrl` doluysa şube bölümünde sabit oranlı (**4:3**) bir **yer tutucu** basılır. İçinde şunlar
@@ -400,6 +429,11 @@ anahtarı (D7) ve ondalık kuralını (tuzak 6) tek yerde tutar. *Bedel:* ana sa
 - Düğmeye basılınca **aynı kutuda** iframe açılır (`src` = `embedUrl`). Kutunun boyutu değişmez. Odak
   iframe'e geçer.
 - Her şubenin düğmesi yalnız kendi haritasını açar.
+- *(CLARIFY B2:)* **Harita durumu yenilemeden bağımsızdır.** D9 yenilemesi yalnız "şu an" satırını ve
+  "Bugün" vurgusunu değiştirir (`0027` D9, B8). Açık bir haritanın `<iframe>` düğümü yenilemede ve
+  sonrasında yerinde kalır. Yeniden kurulmaz, `src`'si değişmez, Google'a yeni belge isteği gitmez.
+  Kutunun yüksekliği değişmez. Açık/kapalı durumu şubenin bileşeninde tutulur, yenilenen depoda tutulmaz
+  (AC-88–AC-90).
 - *(PM şartı (b):)* Tıklama **kalıcı bir onay değildir.** Yalnız o sayfa görüntülemesi için geçerlidir.
   Sayfa yenilenince ya da yeniden açılınca bütün kutular yer tutucuya döner. Çerez, `localStorage`,
   `sessionStorage` ya da IndexedDB'ye hiçbir şey yazılmaz (X7, AC-57).
@@ -421,6 +455,23 @@ yeniden tıklanır.
   Kodda, depoda ve tohumda anahtar yoktur.
 - Anahtar yoksa ya da boşsa (yalnız boşluk da boş sayılır) yanıtta `embedUrl` anahtarı **yoktur**.
   Kutu ve düğme basılmaz, yalnız bağlantı kalır (tuzak 5).
+- *(CLARIFY B8:)* **Kodlama** `Uri.EscapeDataString` ile yapılır (RFC 3986: ayrılmamış karakterler
+  dışındaki her şey yüzde kodlanır, boşluk `%20`). Kodlamadan önce adresteki her denetim karakteri
+  (Unicode `Cc`: satır sonu, sekme, NUL dahil) tek boşluğa çevrilir. Ardışık boşluklar teke iner,
+  baştaki ve sondaki boşluk atılır (AC-26, AC-97). Adres kaydetmede NUL'un bugün nasıl işlendiği
+  (`jsonb` `\u0000`'ı reddeder) bu kartın kapsamında değildir. DEV ölçer ve `500` dönüyorsa PR'a
+  "önceden var olan kusur" diye yazar.
+- *(CLARIFY B8:)* Varsayılan dili `ar` olan kurulumda koordinatsız şubenin sorgusu **ar** adresidir,
+  istek dili ne olursa olsun (AC-98).
+- *(CLARIFY B3, kaynakla doğrulandı:)* Google Maps URLs'nin istek başına **2048 karakter** sınırı var
+  ([Maps URLs Get Started](https://developers.google.com/maps/documentation/urls/get-started)). Kodlanmış
+  `linkUrl` ya da `embedUrl` 2048 karakteri aşarsa o şube için `map` `null`'dır.
+  - Bağlantı, kutu ve düğme basılmaz. Yapısal veride `hasMap` yoktur. Adres metin olarak kalır.
+  - Kısaltma yapılmaz: kesilmiş bir adres yanlış yeri gösterir ve bu, harita göstermemekten kötüdür.
+  - Ölçü: tamamı Türkçe harfli (2 bayt) 300 karakterlik adres sınırın altında kalır (`linkUrl` 1848,
+    `embedUrl` 39 karakterlik anahtarla 1901). Karakterleri 3 baytlık olan adres ("–", "€") aşar
+    (`linkUrl` 2748) (AC-91, AC-92).
+  - Embed API için ayrı bir sınır belgesi bulunamadı. Aynı sınır ihtiyatla iki adrese de uygulanır.
 - *(PM şartı (a):)* Anahtar sır değildir, ama yalnız `embedUrl`'in içinde bulunur. Bu adres de yalnız
   ziyaretçi düğmeye basınca ağa çıkar. Anahtar hiçbir belgeye (`<head>`, `<meta>`, JSON-LD, kabuk),
   hiçbir başka yanıta ve hiçbir günlük kaydına yazılmaz. Yapılandırma okunurken, adres kurulurken ya da
@@ -462,6 +513,11 @@ migration gerekir (SS2 (b)).
     "Bizi takip edin", "Diller") **tek satırda** durur. Şube bloğu satır başındadır. Logo kendi satırında
     kalır. Olmayan blok yer tutmaz. Bugün 1280 px'te "Diller" alt satıra düşüyor (Context 3).
   - Dar ekranda (320 px) bloklar DOM sırasıyla tek sütundur.
+  - *(CLARIFY B7(c):)* "İletişim ve çalışma saatleri" bağlantısı şube bloğunun **sonundadır**. Bu, son
+    şubenin ardından tek bir bağlantıdır. Her şubeye aynı hedefli ayrı bir bağlantı konmaz, çünkü aynı
+    metinli ve aynı hedefli tekrar eden bağlantılar ekran okuyucunun bağlantı listesini kalabalıklaştırır.
+  - *(CLARIFY B7(c):)* `0027` AC-78'in ölçüsü korunur: altlığın üst kenarı 412×823 ve 1350×940
+    görünümde ilk görünüm alanının altındadır (AC-96).
   - Izgaranın nasıl kurulacağı uygulamanın plan kararıdır (ör. şube sütunu + `auto-fit` gezinme
     sütunları ya da daha küçük bir sütun alt sınırı). Ölçü AC-85 ve AC-86'dır.
 - *(PM şartı (c):)* Altlığın CLS'i fontlar bekletilerek ölçülür (`0027` dersi, AC-87). Ana sayfanın C3
@@ -497,8 +553,9 @@ adına ≈52 px daha az yer kalır. Geniş ekranda iki satıra geçiş eşiği b
   (D11), yenileme (D9). Yenilemenin kapsamı: tek okuma, `performance.now()`, görünürlük, hata
   durumunda metnin kalkması, 60 sn yeniden deneme, geçersiz süre, 90000 sınırı ve listelerin sabit
   kalması.
-- İletişim sayfasının kodu ve saat kodu **tek tembel parçadadır**. Sayfa, parça ve veri hazır olunca
-  bir kerede basılır. **Evre B yoktur.** `0027` AC-68 ve AC-75–AC-77 geçersizdir.
+- İletişim sayfasının gövdesi (şube bölümleri, harita kutusu) ve saat kodu **tek tembel parçadadır**.
+  *(CLARIFY B5:)* `<h1>` ve iskelet ilk paketteki rota kabuğundadır. Şube bölümleri parça ve veri hazır
+  olunca bir kerede basılır. **Evre B yoktur.** `0027` AC-68 ve AC-75–AC-77 geçersizdir.
 
 *Gerekçe:* C6. Davranış değişmez, yalnız yeri değişir. Sayfanın tek içeriği şubeler olduğu için ara
 evre gereksiz. *Bedel:* sayfa ilk ziyarette bir parça isteği daha bekler. Bu parça ana sayfa için
@@ -516,6 +573,9 @@ indirilen parçanın yerini alır.
 - `robots` etiketi yoktur, `Referrer-Policy` başlığı yoktur (özel sayfa değil).
 - Belge `no-store`'dur (`0004` AC-82).
 - Üç dilin sitemap'i `/{l}/contact` girdisini taşır. `robots.txt` değişmez.
+- *(CLARIFY B4:)* Sitemap'in içerik sayfası listesi `ContentReservedSlugs`'ı süzer. Ayrılmış adla
+  saklanmış bir içerik sayfası sitemap'e girmez. Bu, `favorites` ve `compare`'deki aynı açığı da
+  kapatır ve PR'da "önceden var olan kusur" diye yazılır (Context 4, AC-93, AC-94).
 
 *Gerekçe:* `0004` D11, D15. Sayfa ziyaretçinin değil galerinin içeriği; aranabilir olmalı.
 *Bedel:* yok.
@@ -536,6 +596,16 @@ indirilen parçanın yerini alır.
 - **Ana sayfa belgesi:** `department` öğeleri yalnız `@type`, `name`, `address`, `telephone` taşır.
   `openingHoursSpecification` ve `specialOpeningHoursSpecification` kalkar. Kök değişmez (`sameAs`,
   `logo` kalır). Ana sayfada `geo` yine yoktur (`0004` AC-52 ana sayfa için geçerli).
+- *(CLARIFY B10:)* İki belgenin kökü aynı `@id`'yi taşır: `{kök}/{l}/#dealer`. Aynı işletme iki
+  sayfada aynı kimlikle anlatılır, bu kabul edilmiştir (AC-103). Bugün iki belgede de `@id` yok. Kökün
+  anahtar kümesini tam ölçen test de yok (`SeoBelgeTests.cs:594` yalnız `geo`'nun yokluğunu ölçüyor),
+  yani ekleme bir testi kırmaz.
+- *(CLARIFY B10:)* Ana sayfanın güvenlik ve kapsam kriterlerinin iletişim belgesinde ikizi vardır:
+  - `&` ham metinde `\u0026`'dır (`0024` AC-49);
+  - görünen ad okunamazsa blok yoktur (`0024` AC-50);
+  - `department` `logo` taşımaz (`0026` AC-51);
+  - adresteki `</script>` bloğu kapatamaz (`0004` AC-46)
+  (AC-99–AC-102).
 - **Bütçe** `0025` D10(a) ve `0027` D12'den taşınır. Tek şubeli kurulumda şu belge ölçülür: `/ar/contact`.
   - En kötü haftalık program, belgeyi programsız hâlinden en çok **2304 B** büyütür.
   - 12 özel gün × 3 aralık, özel günsüz hâlinden en çok **4608 B** büyütür.
@@ -550,6 +620,10 @@ ayrıntıda anlatılır. İkisi de kendi sayfasında görüneni söyler.
   altlığın saat parçası bağı ve evre B iskeleti kodu.
 - İletişim sayfası, harita kutusu ve saat kodu tek tembel parçadadır (D11). Ana sayfa, liste ve
   detay bu parçayı istemez.
+- *(CLARIFY B5:)* **Okuma ve parça aynı anda başlar.** Rota `contact` diye çözülünce rota kabuğu
+  parçanın `import()`'unu ve galeri okumasını **aynı anda** başlatır. Okuma ilk paketteki `fetchGallery`
+  ile yapılır. Parça okumayı başlatmaz, yani okuma parçanın inmesini beklemez (AC-95). `<h1>`, iskelet
+  ve bu bağ ilk paketteki +512 B'ın içindedir.
 - Sayfanın yeni metinleri (başlık, durumlar, harita bilgi metni, düğme, iframe başlığı) ilk paketi
   +512 B'ın üstüne çıkarırsa `frontend-003` D13'ün üçüncü küme yoluyla parçaya iner (`registerCatalogs`).
   Hangi kümede olduğu PR'a yazılır.
@@ -559,6 +633,7 @@ ayrıntıda anlatılır. İkisi de kendi sayfasında görüneni söyler.
   - Perf tohumu her aktif şubeye koordinat, e-posta ve `0027`'nin 12 özel gününü verir.
   - Harita anahtarı sahte bir değerle yapılandırılır. Yer tutucu görünür, ağa istek gitmez.
 - Ana sayfa, liste, detay ve iletişim sayfasının C3 medyanları PR'da `main` ile yan yana yazılır.
+  *(CLARIFY B5:)* İletişim sayfasının LCP öğesi de PR'a yazılır.
 - CLS fontlar bekletilerek ölçülür (`frontend-003` dersi).
 
 *Gerekçe:* `0024`, `0027` D15 deseni. İletişim yeni bir indekslenen sayfa, C3'e girmeli. *Bedel:*
@@ -569,10 +644,21 @@ perf koşusu bir sayfa uzar.
   görsel, betik ve yazı tipi yoktur. Ölçü ağ kaydıdır.
 - iframe `referrerpolicy="strict-origin-when-cross-origin"` taşır: Google'a yalnız köken gider. Bu,
   anahtarın yönlendiren kısıtı için gereklidir. Sayfa düzeyinde `Referrer-Policy` başlığı yoktur.
-- iframe'de `allow` izni yoktur (konum, kamera vb.). `sandbox` uygulamanın plan kararıdır: haritanın
-  çalıştığı ve "daha büyük haritada aç"ın açıldığı ölçülür.
+- *(CLARIFY B9:)* iframe'in öznitelikleri tam olarak şunlardır:
+  - `src` = `embedUrl`;
+  - `title`, dile göre çevrili (D16);
+  - `referrerpolicy="strict-origin-when-cross-origin"`. Anahtarın yönlendiren kısıtı çalışsın diye
+    köken gitmelidir;
+  - bir `class` ya da `data-testid`.
 
-*Gerekçe:* `frontend-002` D8'in ilkesi. *Bedel:* yok.
+  `sandbox`, `allow`, `allowfullscreen` ve `loading` **yoktur**. `sandbox` anlamsızdır: Google'ın
+  haritası betik ve aynı köken ister, bu ikisini açan bir `sandbox` korumayı kaldırır. `loading`
+  gereksizdir: iframe zaten yalnız tıklamayla kurulur. Haritanın "daha büyük haritada aç" bağlantısı
+  yeni sekmede açılır (AC-50).
+
+*Gerekçe:* `frontend-002` D8'in ilkesi. *Bedel (CLARIFY B7(a)):* anahtar herkese açıktır. iframe
+adresinde zorunlu olarak görünür ve harita açan her ziyaretçi onu görebilir. Koruma, Google
+konsolundaki yönlendiren (site kökü) ve API (yalnız Maps Embed) kısıtıdır (D18).
 
 **D16 — Erişilebilirlik ve RTL.** (R5, R10)
 - iframe `title`: "{şube adı} — Google Haritalar haritası" (çevrili).
@@ -676,8 +762,9 @@ perf koşusu bir sayfa uzar.
   basar ve sayfanın tek `<h1>`'i sırasıyla "İletişim", "اتصل بنا", "Contact"tır.
 - **AC-2.** `/tr/contact/x` ve `/tr/contact/kadikoy` istekleri `404` döner ve uç "bulunamadı" basar
   (`0004` D8).
-- **AC-3.** Panelde tr slug'ı `contact` olan bir içerik sayfası kaydı, bugünkü ayrılmış ad hatasıyla
-  reddedilir. `ContentReservedSlugs.All` `contact`'ı içerir.
+- **AC-3.** *(CLARIFY B4 ile değişti.)* Panelde tr, ar ya da en slug'ı `contact` olan bir içerik sayfası
+  kaydı, üç dilde ayrı ayrı, bugünkü ayrılmış ad hatasıyla reddedilir. Hata o dilin slug alanındadır.
+  `ContentReservedSlugs.All` `contact`'ı içerir.
 - **AC-4.** `/tr/contact` belgesinin `<title>`'ı `{tr seo.contact.title} · {tr görünen ad}`'dır.
   Görünen ad okunamadığında yalnız katalog başlığıdır.
 - **AC-5.** `/ar/contact` belgesinin `<meta name="description">` değeri ar katalogdaki
@@ -712,7 +799,11 @@ perf koşusu bir sayfa uzar.
   - en kötü programlı şubenin `/ar/contact` belgesi, aynı şubenin programsız hâlinden en çok
     **2304 B** büyüktür;
   - 12 kayıt × 3 aralığın hepsi penceredeyken `/ar/contact` belgesi, özel günsüz hâlinden en çok
-    **4608 B** büyüktür.
+    **4608 B** büyüktür;
+  - *(CLARIFY B3 ile eklendi.)* koordinatsız bir şubede 300 karakterlik, tamamı ASCII dışı (Türkçe
+    harfli, ar karşılığı olmayan) tr adres ve 254 B'lık e-posta, `/ar/contact` belgesini aynı şubenin
+    `A` adresli ve e-postasız hâlinden en çok **2816 B** büyütür. Ölçülen tahmin ≈2663 B: adres ≈600 B,
+    `hasMap` ≈1800 B, `email` ≈265 B.
 - **AC-19.** İletişim belgesinin kökü `sameAs` taşımaz, hesaplı kurulumda da. Logolu kurulumda
   `logo` taşır (`0026` D7).
 - **AC-20.** İletişim belgesi "Şu an açık"/"Şu an kapalı" metinlerini, `openNow`'un hiçbir değerini,
@@ -731,8 +822,10 @@ perf koşusu bir sayfa uzar.
   `https://www.google.com/maps/search/?api=1&query=40.98765%2C29.0275`'tir.
 - **AC-25.** Süreç kültürü `tr-TR` iken de AC-24'ün adresi aynıdır: virgül ondalık ve sondaki sıfır
   yoktur.
-- **AC-26.** Bostancı'nın `linkUrl` sorgusu şubenin **tr** adresinin URL kodlamasıdır. `locale=ar`
-  isteğinde de tr adresi kullanılır.
+- **AC-26.** *(CLARIFY B8 ile değişti.)* tr adresi `Bağdat Cad. No:5/1 & #2` olan koordinatsız Bostancı'nın
+  `linkUrl`'i tam olarak
+  `https://www.google.com/maps/search/?api=1&query=Ba%C4%9Fdat%20Cad.%20No%3A5%2F1%20%26%20%232`'dir.
+  `locale=ar` isteğinde de aynıdır (tr adresi).
 - **AC-27.** Anahtar yapılandırılmışken Kadıköy'ün `embedUrl`'i
   `https://www.google.com/maps/embed/v1/place?key=test-anahtar&q=40.98765%2C29.0275&language=tr`'dir.
   `locale=en` isteğinde `language=en` olur.
@@ -773,6 +866,8 @@ perf koşusu bir sayfa uzar.
   ve soldan sağa basılır.
 - **AC-44.** `0027`'nin şu kriterleri iletişim sayfasının şube bölümünde aynen sağlanır. Testleri bu
   sayfanın bileşeniyle koşar, metinlerde "altlık" yerine "iletişim sayfası" okunur:
+  - *(CLARIFY B1 ile eklendi.)* `0025` AC-44–AC-49: yedi satır ve sırası, çift mesai, ar gün adları ve
+    Latin rakam, en'de 24 saat, tarayıcının saat diliminin günleri kaydırmaması;
   - metin: AC-48–AC-57;
   - tarayıcı saati: AC-58;
   - yenileme: AC-59–AC-61, AC-79–AC-82, AC-100, AC-105;
@@ -792,8 +887,14 @@ perf koşusu bir sayfa uzar.
 - **AC-49.** Sayfa açılıp sona kadar kaydırıldığında ve 5 sn beklendiğinde, düğmeye basılmadan önce
   sayfanın köken dışı hiçbir alan adına isteği yoktur (`google.com`, `gstatic.com`, `googleapis.com`
   dâhil). Ağ kaydıyla ölçülür. Belgede `preconnect` ya da `dns-prefetch` yoktur.
-- **AC-50.** Düğmeye basınca kutunun içinde bir `<iframe>` açılır. `src`'si `embedUrl`'dir,
-  `referrerpolicy` değeri `strict-origin-when-cross-origin`'dır, `allow` özniteliği yoktur.
+- **AC-50.** *(CLARIFY B9 ile değişti.)* Düğmeye basınca kutunun içinde bir `<iframe>` açılır:
+  - `src` `embedUrl`'dir;
+  - `referrerpolicy` `strict-origin-when-cross-origin`'dır;
+  - `title` doludur (AC-51);
+  - `sandbox`, `allow`, `allowfullscreen` ve `loading` öznitelikleri yoktur.
+
+  e2e'de `embedUrl` `page.route` ile, `target="_blank"` bağlantılı bir sayfaya yönlendirilir. O bağlantıya
+  basınca yeni bir sekme açılır. Yani "daha büyük haritada aç" engellenmez.
 - **AC-51.** iframe'in `title`'ı tr'de "Kadıköy Şubesi — Google Haritalar haritası"dır. ar ve en'de
   çevrili karşılığı şube adını taşır.
 - **AC-52.** Düğmeye klavyeyle basıldıktan sonra `document.activeElement` iframe'dir.
@@ -855,7 +956,7 @@ perf koşusu bir sayfa uzar.
 - **AC-76.** *(PM şartı (c) ile değişti: font bekletmeli CLS.)* `perf.yml` `/tr/contact`'ı ölçer. CLS
   fontlar bekletilerek ölçülür. Perf tohumuyla (koordinat, e-posta, 12 özel gün, sahte
   anahtar) LCP medyanı < 2500 ms ve CLS < 0.1'dir. Ana sayfa, liste ve detayın C3'ü yeşil kalır. Dört
-  sayfanın medyanı PR'da `main` ile yan yana yazılır.
+  sayfanın medyanı PR'da `main` ile yan yana yazılır. *(CLARIFY B5:)* İletişim sayfasının LCP öğesi de PR'a yazılır.
 - **AC-77.** İletişim sayfası fontlar bekletilerek açılır. Şube bölümlerinde ve harita kutusunda
   `PerformanceObserver('layout-shift')` kaynağı yoktur.
 
@@ -896,13 +997,54 @@ perf koşusu bir sayfa uzar.
   bırakılarak) açılır ve altlığa kaydırılır. Altlıkta ve altlığın bloklarında
   `PerformanceObserver('layout-shift')` kaynağı yoktur. 320 px'te ve 1280 px'te ölçülür.
 
+### QA CLARIFY turuyla eklenenler (2026-11-27)
+
+- **AC-88.** *(B2)* Birim testi (vitest, sahte zamanlayıcı, StrictMode): Kadıköy'ün haritası açıkken
+  `refreshInSeconds` = 2 olan yanıttan sonraki yenilemede ve sonrasında kutudaki `<iframe>` düğümü aynı
+  düğümdür (`isSameNode`) ve `src`'si değişmez.
+- **AC-89.** *(B2)* Aynı kurguda kutunun yüksekliği yenilemeden önce ve sonra aynıdır (±0 px). "Şu an"
+  satırı yeni durumu basar.
+- **AC-90.** *(B2)* e2e: harita açıkken D9 yenilemesi gerçekleştikten sonra 5 sn içinde ağ kaydında
+  `embedUrl`'e ya da `google.com/maps/embed`'e ikinci bir belge isteği yoktur.
+- **AC-91.** *(B3)* Her karakteri "–" olan 300 karakterlik tr adresli, koordinatsız şubenin yanıtta
+  `map`'i `null`'dır. Kodlanmış `linkUrl` 2748 karakter olurdu.
+- **AC-92.** *(B3)* AC-91'in şubesinin bölümünde "Google Haritalar'da aç", kutu ve düğme yoktur. Adres
+  metin olarak vardır. `/tr/contact` belgesindeki öğesi `hasMap` taşımaz.
+- **AC-93.** *(B4)* Tohumda en slug'ı `contact` olan görünür bir içerik sayfası varken:
+  - `sitemap-en.xml`'de `{kök}/en/contact` tam bir kez geçer;
+  - `/en/contact` belgesinin başlığı `seo.contact.title`'dır (içerik sayfasının başlığı değil);
+  - uç iletişim sayfasını basar.
+- **AC-94.** *(B4)* Tohumda tr slug'ı `favorites` ve `compare` olan görünür iki içerik sayfası varken
+  `sitemap-tr.xml`'de `{kök}/tr/favorites` ve `{kök}/tr/compare` yoktur (önceden var olan kusur).
+- **AC-95.** *(B5)* `/tr/contact` açılışının ağ kaydında `/api/dealership/gallery` isteğinin başlangıcı,
+  iletişim parçasının yanıtının bitişinden öncedir. Parça `page.route` ile 2 sn bekletilerek ölçülür:
+  okuma parçayı beklemez.
+- **AC-96.** *(B7(c))* Perf tohumuyla `/tr/` ana sayfası 412×823 ve 1350×940 görünümde açıldığında
+  altlığın üst kenarı ilk görünüm alanının altındadır (`0027` AC-78'in ölçüsü).
+- **AC-97.** *(B8)* tr adresi `Bağdat Cad.\nNo:5\t\t1` (satır sonu ve iki sekme) olan koordinatsız
+  şubenin `linkUrl` sorgusu tam olarak `Ba%C4%9Fdat%20Cad.%20No%3A5%201`'dir.
+- **AC-98.** *(B8)* Varsayılan dili `ar` olan kurulumda koordinatsız şubenin `linkUrl` sorgusu şubenin
+  ar adresinin kodlamasıdır. `locale=tr` isteğinde de aynıdır.
+- **AC-99.** *(B10)* Adresi `A & B` olan şubenin `/tr/contact` belgesinde JSON-LD'nin ham metni
+  `A \u0026 B`'yi taşır. Ayrıştırılan `address` kayıtlı adrese eşittir (`0024` AC-49'un ikizi).
+- **AC-100.** *(B10)* Görünen ad okunamadığında `/tr/contact` belgesi `200` döner ve `AutoDealer` bloğu
+  taşımaz (`0024` AC-50, `0004` AC-53'ün ikizi).
+- **AC-101.** *(B10)* Logolu kurulumda `/tr/contact` belgesinin `department` öğelerinin hiçbiri `logo`
+  taşımaz (`0026` AC-51'in ikizi).
+- **AC-102.** *(B10)* Adresi `X</script><script>alert(1)</script>` olan şubenin `/tr/contact` belgesi
+  ayrıştırıldığında tam bir JSON-LD bloğu vardır. İçeriği geçerli JSON'dur ve `address` bu dizedir
+  (`0004` AC-46'nın ikizi).
+- **AC-103.** *(B10)* `/tr/` ve `/tr/contact` belgelerinin kök `@id`'si aynıdır ve
+  `{kök}/tr/#dealer`'dır. `/ar/` ve `/ar/contact` için `{kök}/ar/#dealer`'dır.
+
 ---
 
 ## Definition of Done
 
 - [x] Önerilen kararlar (**D1–D19**) onaylandı (Proje Yöneticisi kararı, 2026-11-27; şartlar (a)–(d)
       → AC-81–AC-87). **SS1–SS4** cevaplandı (sahip kararı, 2026-11-27).
-- [ ] QA CLARIFY turu işlendi.
+- [x] QA CLARIFY turu işlendi (QA 1, `b474e70`, 10 bulgu → D2, D4, D5, D6, D7, D9, D11, D12, D13, D14,
+      D15; AC-88–AC-103). *(Proje Yöneticisi kararı, 2026-11-27.)*
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0028-ac<n>.png`),
       boş ve hata durumları dâhil. İletişim sayfasının (yer tutucu, açık harita, anahtarsız, iki şube),
@@ -920,8 +1062,10 @@ perf koşusu bir sayfa uzar.
       bunun yerine geçmez.
 - [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu) PR'da listelendi ve **çok etiketli** kaldı. İlk paket
-      ölçümü head commit'ten yapıldı. Sahibin yerel veritabanında `contact` slug'lı içerik sayfası
-      olmadığı **salt-okur** bir sorguyla doğrulandı ve sonucu PR'a yazıldı (Context 4).
+      ölçümü head commit'ten yapıldı. *(CLARIFY B4:)* Sahibin yerel veritabanında tr, ar ya da en
+      slug'ı `contact` olan içerik sayfası olup olmadığı üç dilde **salt-okur** bir sorguyla bakıldı ve
+      sonuç PR'a yazıldı (Context 4). Kayıt bulunursa sahip o sayfanın slug'ını panelden değiştirir.
+      Veri sorguyla değiştirilmez. "Önceden var olan kusur" satırları (D7 NUL, D12 sitemap) PR'da ayrıca listelendi.
 - [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
 - [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
       ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in TAMAMI koşturuldu.
