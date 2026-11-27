@@ -443,44 +443,81 @@ test('0028/AC-48, AC-50, AC-51, AC-52, AC-54: Enter ve Space iframe\'i açar; if
   await expect(page.getByTestId('map-frame').first()).toHaveAttribute('title', /— Google Maps map$/)
 })
 
-test("0028/AC-49, AC-84: düğmeden önce (sona kaydırılıp 5 sn) köken dışı istek 0, `preconnect`/`dns-prefetch` yok; basınca ilk köken dışı istek `embedUrl`'e giden iframe gezinmesi; köken dışı her istek iframe'in çerçevesinden", async ({
-  page,
-  context,
-}) => {
-  await googleTaslagi(context)
-  const istekler: { url: string; anaCerceve: boolean; gezinme: boolean }[] = []
-  context.on('request', (istek: Request) => {
-    istekler.push({
-      url: istek.url(),
-      anaCerceve: istek.frame() === page.mainFrame(),
-      gezinme: istek.isNavigationRequest(),
-    })
+/**
+ * QA 2 BULGU-1 · AC-49 (AP-08 revizyonu) — sitenin ve kurulumun KENDİ kökenleri: belgenin kökeni ve medya
+ * kovasının kökeni. Kova kökeni sabit yazılmaz: Host'un `Media__PublicBaseUrl`'i (`ci.yml`'da tek kaynak,
+ * yerelde geliştirme betiği) `E2E_MEDIA_PUBLIC_BASE_URL` olarak verilir. Logo ve ilan görselleri oradan gelir.
+ */
+function medyaKoku(): string {
+  const medya = process.env['E2E_MEDIA_PUBLIC_BASE_URL']
+  expect(medya, "E2E_MEDIA_PUBLIC_BASE_URL (Host'un Media__PublicBaseUrl'i) verilmeli").toBeTruthy()
+  return medya!
+}
+
+/** Logolu kurulum: belge medya kovasındaki bir logoyu ilan eder (paralel `galeri-logosu`'nun durumu). */
+async function kovadanLogo(page: Page, medya: string) {
+  const logo = new URL('public/assets/e2e-iletisim/logo-small.png', medya).href
+  await page.route(logo, (route) =>
+    route.fulfill({ contentType: 'image/png', body: pngUret(320, 80) }),
+  )
+  await page.route(/\/(tr|ar|en)\/contact$/, async (route) => {
+    const yanit = await route.fetch()
+    const html = (await yanit.text()).replace(
+      '</head>',
+      `<meta name="gallery-logo" content="${logo}" data-width="320" data-height="80" /></head>`,
+    )
+    return route.fulfill({ response: yanit, body: html })
   })
-  await page.goto('/tr/contact')
-  await expect(page.getByTestId('map-box').first()).toBeVisible()
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
-  await page.waitForTimeout(5000)
+}
 
-  const kok = koken(page)
-  const disari = () => istekler.filter((i) => new URL(i.url).origin !== kok)
-  expect(disari()).toEqual([])
-  expect(await page.locator('link[rel="preconnect"], link[rel="dns-prefetch"]').count()).toBe(0)
+for (const logolu of [false, true]) {
+  test(`0028/AC-49, AC-84, QA 2 BULGU-1 (${logolu ? 'logolu: logo medya kovasından' : 'logosuz'}): düğmeden önce (sona kaydırılıp 5 sn) sitenin ve kurulumun medya kökeni dışına istek 0, preconnect/dns-prefetch yok; basınca ilk dış istek embedUrl'e giden iframe gezinmesi; dış her istek iframe'in çerçevesinden`, async ({
+    page,
+    context,
+  }) => {
+    await googleTaslagi(context)
+    const medya = medyaKoku()
+    if (logolu) {
+      await kovadanLogo(page, medya)
+    }
+    const istekler: { url: string; anaCerceve: boolean; gezinme: boolean }[] = []
+    context.on('request', (istek: Request) => {
+      istekler.push({
+        url: istek.url(),
+        anaCerceve: istek.frame() === page.mainFrame(),
+        gezinme: istek.isNavigationRequest(),
+      })
+    })
+    await page.goto('/tr/contact')
+    await expect(page.getByTestId('map-box').first()).toBeVisible()
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    await page.waitForTimeout(5000)
 
-  const galeri = (await (
-    await page.request.get('/api/dealership/gallery?locale=tr')
-  ).json()) as Galeri
-  const ad = (await page.getByTestId('contact-branch').first().locator('h2').textContent())!
-  const embed = galeri.branches.find((b) => b.name === ad)!.map!.embedUrl!
+    const kendi = new Set([koken(page), new URL(medya).origin])
+    const disari = () => istekler.filter((i) => !kendi.has(new URL(i.url).origin))
+    if (logolu) {
+      // Durum gerçekten kuruldu: logo kovadan istendi ve "kendi" sayıldı.
+      expect(istekler.some((i) => new URL(i.url).origin === new URL(medya).origin)).toBe(true)
+    }
+    expect(disari()).toEqual([])
+    expect(await page.locator('link[rel="preconnect"], link[rel="dns-prefetch"]').count()).toBe(0)
 
-  await page.getByTestId('map-box').first().getByRole('button').click()
-  await expect(page.getByTestId('map-frame')).toBeVisible()
-  await page.waitForTimeout(1000)
+    const galeri = (await (
+      await page.request.get('/api/dealership/gallery?locale=tr')
+    ).json()) as Galeri
+    const ad = (await page.getByTestId('contact-branch').first().locator('h2').textContent())!
+    const embed = galeri.branches.find((b) => b.name === ad)!.map!.embedUrl!
 
-  const sonra = disari()
-  expect(sonra.length).toBeGreaterThan(0)
-  expect(sonra[0]).toEqual({ url: embed, anaCerceve: false, gezinme: true })
-  expect(sonra.filter((i) => i.anaCerceve)).toEqual([])
-})
+    await page.getByTestId('map-box').first().getByRole('button').click()
+    await expect(page.getByTestId('map-frame')).toBeVisible()
+    await page.waitForTimeout(1000)
+
+    const sonra = disari()
+    expect(sonra.length).toBeGreaterThan(0)
+    expect(sonra[0]).toEqual({ url: embed, anaCerceve: false, gezinme: true })
+    expect(sonra.filter((i) => i.anaCerceve)).toEqual([])
+  })
+}
 
 test('0028/AC-55, AC-56, AC-81 (anahtarsız yarı): `embedUrl` yokken kutu ve düğme yok, "Google Haritalar\'da aç" var; `href` = `linkUrl`, `target` yok; tr/ar/en çevrili', async ({
   page,

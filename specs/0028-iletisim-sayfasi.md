@@ -986,9 +986,13 @@ konsolundaki yönlendiren (site kökü) ve API (yalnız Maps Embed) kısıtıdı
   metni vardır. tr/ar/en çevrilidir.
 - **AC-47.** Yer tutucu bir `<iframe>` ve `<img>` içermez.
 - **AC-48.** Düğme `<button type="button">`'dır. Enter ile de Space ile de iframe'i açar.
-- **AC-49.** Sayfa açılıp sona kadar kaydırıldığında ve 5 sn beklendiğinde, düğmeye basılmadan önce
-  sayfanın köken dışı hiçbir alan adına isteği yoktur (`google.com`, `gstatic.com`, `googleapis.com`
+- **AC-49.** *(AP-08 revizyonu, Proje Yöneticisi kararı, 2026-11-27, QA 2 BULGU-1.)* Sayfa açılıp sona kadar
+  kaydırıldığında ve 5 sn beklendiğinde, düğmeye basılmadan önce sayfanın üçüncü taraf alan adına (sitenin
+  ve kurulumun kendi medya kökeni dışında) isteği yoktur (`google.com`, `gstatic.com`, `googleapis.com`
   dâhil). Ağ kaydıyla ölçülür. Belgede `preconnect` ya da `dns-prefetch` yoktur.
+  *Revizyon notu:* ilk metin "köken dışı hiçbir alan adı" diyordu. Galerinin logosu ve ilan görselleri
+  kurulumun medya kovasından (`Media__PublicBaseUrl`, ayrı köken olabilir) gelir; logolu kurulumda ilk metin
+  sağlanamazdı. Kova kökeni yapılandırmadan okunur, testte sabit yazılmaz.
 - **AC-50.** *(CLARIFY B9 ile değişti.)* Düğmeye basınca kutunun içinde bir `<iframe>` açılır:
   - `src` `embedUrl`'dir;
   - `referrerpolicy` `strict-origin-when-cross-origin`'dır;
