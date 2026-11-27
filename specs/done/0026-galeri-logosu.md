@@ -753,7 +753,7 @@ ilgisiz bir değişikliğe bağlar.
 | **Dış bulgu (gerçek/gürültü)** | **4 / 0** | BULGU-1: ekran `save()` dönen sürümü benimsemiyordu; profil kaydından hemen sonraki logo işlemi bayat sürümle 409 alabiliyordu — AC-73/74'ün ekran yarısı ölçülmüyordu · BULGU-2: PR'daki ilk paket sayısı head'e ait değildi (+330 → +366) · BULGU-3: `<para>` `</summary>`'nin dışında kalmıştı (standart taramanın görmediği varyant) · BULGU-4: dalda merge commit. |
 | **Uygulama içi bulgu** | **5** | İlk C3 kırmızıydı: logo kutusu görsel inene kadar 0×0 kalıyordu (detay CLS 0.22) · mobilde logo adı iki satıra kırıp web fontuyla kaydırıyordu (liste CLS 0.039) · yorum/üye arasına ekleme iki kez (YorumKapisi yakaladı) · BULGU-1 düzeltilirken: yükleme kayıttan önce başlamışsa atama kapanıştaki eski sürümü kullanıyordu (ref ile çözüldü; ilk negatif kanıt N11 yeşil kalınca kilidi ayrıca ölçen test eklendi). |
 | **Regresyon sayısı** | **0** |  |
-| **Kaçan hata** | **izleniyor** | Merge 2026-11-26 (`5e69a5a`). |
+| **Kaçan hata** | **2** | Merge 2026-11-26 (`5e69a5a`). **2026-11-27 (`frontend-003`, DEV ölçümü):** 320 px'te logolu üst çubukta logo (160 px, büzülmüyor) taşıyordu ve ada yer kalmıyordu — kart yalnız 412 px'i ölçmüştü. **2026-11-27 (`frontend-003` QA 2 BULGU-6'nın font bekletmesiyle):** logosuz uzun ad web fontu gelince farklı yerden kırılıp üst çubuğu yükseltiyordu, CLS 0.15–0.24 (C7'yi aşar); AC-34'ün "logosuz ad kırılabilir" kuralından. İkisi de `frontend-003` #139 → `bb5f491` ile düzeldi (eşik altı iki satır; ad her zaman tek satır + "…"). Merge sonrası bulunan her kusur buraya tarihiyle eklenir. |
 
 **Bu spec'ten çıkarılan ders:**
 
