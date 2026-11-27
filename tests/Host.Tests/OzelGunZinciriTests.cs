@@ -40,6 +40,9 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
     private string sir = string.Empty;
     private int sayac;
 
+    // Senaryoların hepsinden (≤ 2027) ileride; her girişte 90 sn (üç TOTP adımı) ilerler.
+    private DateTimeOffset girisAni = new(2031, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
     public async Task InitializeAsync()
     {
         await container.StartAsync();
@@ -54,7 +57,15 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
             MediaTestSettings.Apply(builder);
 
             // Saat en SONDA: modüller kendi `IClock`'larını kaydediyor ve son kayıt kazanıyor.
-            builder.ConfigureTestServices(services => services.AddSingleton<IClock>(saat));
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<IClock>(saat);
+
+                // QA 2 BULGU-7 — Development ortamında minimal API'ler bağlama hatasını istisna olarak
+                // fırlatır (`ThrowOnBadRequest` varsayılanı Development'ta true) ve `UseExceptionHandler`
+                // onu 500'e çevirir. Üretimin değeri (false → boş gövdeli 400) burada kurulur.
+                services.Configure<Microsoft.AspNetCore.Routing.RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
+            });
         });
 
         HttpClient kurulum = Istemci();
@@ -339,6 +350,53 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
         Assert.Equal("special_hours.too_many", problem.GetProperty("specialHours").GetString());
     }
 
+    public static TheoryData<string> TipUyusmazliklari() =>
+    [
+        "\"x\"",
+        "{}",
+        "123",
+        """[{"from":123,"intervals":[]}]""",
+        """[{"from":"2027-01-01","intervals":"x"}]""",
+        """[{"from":"2027-01-01","intervals":[{"start":9,"end":"13:00"}]}]""",
+        """[{"from":"2027-01-01","through":[],"intervals":[]}]""",
+        """[{"from":"2027-01-01","intervals":[["09:00","13:00"]]}]""",
+        """[1, "x", true]""",
+    ];
+
+    [Theory(DisplayName = "0027/D14, QA 2 BULGU-7: Tip uyuşmazlığı (`from: 123`, `intervals: \"x\"`, dizi yerine metin…) `500` DEĞİL: `400` ya da `422`; şube değişmez")]
+    [MemberData(nameof(TipUyusmazliklari))]
+    public async Task TipUyusmazligi_500Degil(string liste)
+    {
+        DateTimeOffset an = Zaman("2026-11-27T09:00:00Z");
+        HttpClient yonetici = await YoneticiAsync(an);
+        Guid sube = await KimlikAsync(yonetici, await SubeAcAsync(an, Program(Programli), "Europe/Istanbul", null, yonetici));
+        string once = (await GovdeAsync(yonetici, sube)).ToJsonString();
+
+        HttpResponseMessage yanit = await KaydetAsync(yonetici, sube, govde => govde["specialHours"] = JsonNode.Parse(liste));
+
+        Assert.True(
+            yanit.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity,
+            $"{liste} → {(int)yanit.StatusCode}: {await yanit.Content.ReadAsStringAsync()}");
+        Assert.Equal(once, (await GovdeAsync(yonetici, sube)).ToJsonString());
+    }
+
+    [Fact(DisplayName = "0027/AC-16, QA 2 BULGU-4: 20 000 kayıtlı gövde `422` `special_hours.too_many`, çakışma taraması yapılmaz (kaba eşik 5 sn, eski kodda dakikalar)")]
+    public async Task YirmiBinKayit_TooMany()
+    {
+        DateTimeOffset an = Zaman("2026-11-27T09:00:00Z");
+        HttpClient yonetici = await YoneticiAsync(an);
+        Guid sube = await KimlikAsync(yonetici, await SubeAcAsync(an, Program(Programli), "Europe/Istanbul", null, yonetici));
+        JsonArray kayitlar = [.. Enumerable.Range(0, 20_000).Select(_ => (JsonNode)new JsonObject { ["from"] = "2027-01-01", ["intervals"] = new JsonArray() })];
+
+        System.Diagnostics.Stopwatch sure = System.Diagnostics.Stopwatch.StartNew();
+        JsonElement problem = await ProblemAsync(await KaydetAsync(yonetici, sube, govde => govde["specialHours"] = kayitlar), HttpStatusCode.UnprocessableEntity);
+        sure.Stop();
+
+        Assert.Equal("special_hours.too_many", problem.GetProperty("specialHours").GetString());
+        Assert.False(problem.TryGetProperty("specialHours.1.from", out _));
+        Assert.True(sure.ElapsedMilliseconds < 5000, $"{sure.ElapsedMilliseconds} ms");
+    }
+
     [Fact(DisplayName = "0027/AC-20, AC-21: Hatalı özel günle kaydetmede şubenin hiçbir alanı (adres, haftalık program) değişmez; iki kaydın farklı hataları tek yanıtta")]
     public async Task HataliKaydetme_HicbirAlanDegismez()
     {
@@ -602,11 +660,21 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
                 };
             })];
 
+    /// <summary>
+    /// Yönetici girişi senaryonun anında DEĞİL, her girişte ileri giden bir "giriş anında" yapılır;
+    /// saat sonra senaryonun anına döner. İkinci adım yalnız son kabul edilenden SONRAKİ adımı kabul
+    /// eder (`LastAcceptedStep`) ve senaryolar 2026↔2027 arasında rastgele sırayla gidip gelir: giriş
+    /// senaryonun anında yapılınca test sırası değişince sınıf kırılıyordu. Oturum geçerliliği yalnız
+    /// <c>now &lt; RefreshExpiresAt</c>'e bakar; ileride açılan oturum geçmiş bir anda da geçerlidir.
+    /// </summary>
     private async Task<HttpClient> YoneticiAsync(DateTimeOffset an)
     {
-        saat.Simdi = an;
+        DateTimeOffset giris = girisAni;
+        girisAni = girisAni.AddSeconds(90);
+        saat.Simdi = giris;
         HttpClient yonetici = Istemci();
-        await IkinciAdim.GirAsync(yonetici, IdentityTestSettings.SeedAdminLoginId, CalisanParola, sir, an);
+        await IkinciAdim.GirAsync(yonetici, IdentityTestSettings.SeedAdminLoginId, CalisanParola, sir, giris);
+        saat.Simdi = an;
         return yonetici;
     }
 

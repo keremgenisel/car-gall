@@ -76,6 +76,20 @@ public sealed class OzelGunDogrulamaTests
         Assert.Equal(SpecialHours.TooMany, Dogrula(Bugun, onUc).Hatalar["specialHours"]);
     }
 
+    [Fact(DisplayName = "0027/AC-16, QA 2 BULGU-4: 20 000 aynı günlük kayıt `too_many` alır ve çift taraması yapılmaz (kaba eşik 500 ms)")]
+    public void YirmiBinKayit_TooMany_Hizli()
+    {
+        SpecialDayInput?[] kayitlar = [.. Enumerable.Repeat((SpecialDayInput?)new SpecialDayInput("2027-01-01", null, []), 20_000)];
+        System.Diagnostics.Stopwatch sure = System.Diagnostics.Stopwatch.StartNew();
+
+        IReadOnlyDictionary<string, string> hatalar = Dogrula(Bugun, kayitlar).Hatalar;
+
+        sure.Stop();
+        Assert.Equal(SpecialHours.TooMany, hatalar["specialHours"]);
+        Assert.DoesNotContain(hatalar.Keys, anahtar => anahtar.EndsWith(".from", StringComparison.Ordinal));
+        Assert.True(sure.ElapsedMilliseconds < 500, $"{sure.ElapsedMilliseconds} ms");
+    }
+
     [Fact(DisplayName = "0027/AC-17, AC-18, AC-19: aralık kuralları `0025`'in kodlarıyla, kaydın alanında")]
     public void AralikKurallari()
     {

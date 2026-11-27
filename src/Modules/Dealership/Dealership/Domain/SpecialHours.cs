@@ -147,6 +147,15 @@ internal sealed class SpecialHours
             hata = true;
         }
 
+        // QA 2 BULGU-4 — sınır aşıldıysa çift taraması YAPILMAZ: tarama O(n²)'dir ve gövdenin boyu
+        // sınırsızdır (20 000 kayıt 7 sn sürüyordu). Sınırın içinde en çok 12 kayıt, 66 karşılaştırma;
+        // çift taraması bilerek korunur, çünkü hata her çakışan çiftin BÜYÜK indeksine düşer (D3).
+        if (kalan.Count > MaxDays)
+        {
+            errors.Add("specialHours", TooMany);
+            return null;
+        }
+
         // D3 — ortak tarihli iki kayıt: hata, sonraki kaydın (`<i>` büyük olan) `from` alanında.
         for (int i = 0; i < kalan.Count; i++)
         {
@@ -158,12 +167,6 @@ internal sealed class SpecialHours
                     hata = true;
                 }
             }
-        }
-
-        if (kalan.Count > MaxDays)
-        {
-            errors.Add("specialHours", TooMany);
-            hata = true;
         }
 
         return hata ? null : new SpecialHours([.. kalan.Select(pair => pair.Day).OrderBy(day => day.From)]);
