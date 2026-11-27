@@ -8,7 +8,7 @@ using Testcontainers.PostgreSql;
 namespace CarGallery.Host.Tests;
 
 /// <summary>
-/// `0024` P9 · `0025` P9 — perf koşusunun galeri profili tohumu (`Development:SeedGalleryProfile`),
+/// `0024` P9 · `0025` P9 · `0027` P10 — perf koşusunun galeri profili tohumu (`Development:SeedGalleryProfile`),
 /// perf koşusunun kurulumuyla: taze veritabanı ve kurulum tohumunun İKİ aktif şubesi
 /// (`0025` D10(c)). Ayrı sınıf, ayrı veritabanı: tohum bütün aktif şubelere yazar ve başka bir
 /// sınıfın şubelerinin beklentisini bozmamalı.
@@ -89,5 +89,28 @@ public sealed class GaleriProfiliTohumuTests : IAsyncLifetime
         JsonElement dealer = Assert.Single(new HtmlParser().ParseDocument(await ziyaretci.GetStringAsync("/ar/")).JsonLd());
         Assert.Equal(6, dealer.GetProperty("sameAs").GetArrayLength());
         Assert.All(dealer.GetProperty("department").EnumerateArray(), oge => Assert.Equal(21, oge.GetProperty("openingHoursSpecification").GetArrayLength()));
+    }
+
+    [Fact(DisplayName = "0027/AC-70: Perf tohumu her aktif şubenin penceresine 12 özel gün (üçer aralık) yazar; `0024`'ün hesapları ve `0025`'in programı korunur; yapısal veride 36 öğe")]
+    public async Task Tohumlar_OzelGunler_OncekileriKorur()
+    {
+        await factory!.Services.SeedGalleryProfileForDevelopmentAsync();
+
+        HttpClient ziyaretci = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        JsonElement galeri = JsonDocument.Parse(await ziyaretci.GetStringAsync("/api/dealership/gallery?locale=ar")).RootElement;
+        Assert.Equal(6, galeri.GetProperty("socialLinks").GetArrayLength());
+        JsonElement[] subeler = [.. galeri.GetProperty("branches").EnumerateArray()];
+        Assert.Equal(2, subeler.Length);
+
+        foreach (JsonElement sube in subeler)
+        {
+            Assert.All(sube.GetProperty("openingHours").EnumerateObject(), gun => Assert.Equal(3, gun.Value.GetArrayLength()));
+            JsonElement[] ozel = [.. sube.GetProperty("specialHours").EnumerateArray()];
+            Assert.Equal(12, ozel.Length);
+            Assert.All(ozel, kayit => Assert.Equal(3, kayit.GetProperty("intervals").GetArrayLength()));
+        }
+
+        JsonElement dealer = Assert.Single(new HtmlParser().ParseDocument(await ziyaretci.GetStringAsync("/ar/")).JsonLd());
+        Assert.All(dealer.GetProperty("department").EnumerateArray(), oge => Assert.Equal(36, oge.GetProperty("specialOpeningHoursSpecification").GetArrayLength()));
     }
 }

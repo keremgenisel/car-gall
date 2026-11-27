@@ -151,7 +151,7 @@ public static class DealershipModule
             throw new InvalidOperationException($"Galeri profili tohumlanamadı: {sonuc.Error.Code}.");
         }
 
-        // `0025` D10(c) · P9 · AC-62 — her AKTİF şubeye AC-60'ın programı; şubenin diğer alanları
+        // `0025` D10(c) · P9 · AC-62 — her AKTİF şubeye AC-60'ın programı (`0027` P10: ve 12 özel gün); şubenin diğer alanları
         // okunduğu gibi geri yazılır. `0024`'ün hesapları yukarıda korunur (AC-71).
         DealershipDbContext context = scope.ServiceProvider.GetRequiredService<DealershipDbContext>();
         List<BranchId> aktifler = await context.Branches.AsNoTracking()
@@ -175,7 +175,11 @@ public static class DealershipModule
                     sube.Slug,
                     sube.Latitude,
                     sube.Longitude,
-                    GalleryProfileDevelopmentSeed.OpeningHours()),
+                    GalleryProfileDevelopmentSeed.OpeningHours(),
+                    // `0027` P10 — penceredeki 12 özel gün; "bugün" şubenin saat dilimindedir.
+                    GalleryProfileDevelopmentSeed.SpecialHours(BranchClock.LocalDate(
+                        TimeZoneInfo.FindSystemTimeZoneById(sube.TimeZone),
+                        scope.ServiceProvider.GetRequiredService<IClock>().UtcNow))),
                 cancellationToken);
 
             if (program.IsFailure)
