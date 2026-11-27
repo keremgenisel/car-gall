@@ -6,7 +6,12 @@ import type { PublicGallery } from '../../shared/api/types'
 export type GalleryLoad =
   | { readonly kind: 'loading' }
   | { readonly kind: 'error' }
-  | { readonly kind: 'ready'; readonly gallery: PublicGallery }
+  | {
+      readonly kind: 'ready'
+      readonly gallery: PublicGallery
+      /** `0027` D9 — yanıtın alındığı monoton an (`performance.now()`); süre buradan ölçülür. */
+      readonly receivedAt?: number
+    }
 
 /**
  * 0014 — galeri adı ve şube bloğu TEK okumadan beslenir. Önbellek yok: ad değiştiğinde
@@ -23,7 +28,12 @@ export function useGallery(): GalleryLoad {
     const controller = new AbortController()
 
     fetchGallery(locale, controller.signal)
-      .then((gallery) => setResult({ key: locale, value: { kind: 'ready', gallery } }))
+      .then((gallery) =>
+        setResult({
+          key: locale,
+          value: { kind: 'ready', gallery, receivedAt: performance.now() },
+        }),
+      )
       .catch((cause: unknown) => {
         if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
           setResult({ key: locale, value: { kind: 'error' } })

@@ -38,12 +38,16 @@ const GALERI: PublicGallery = {
       address: 'Ataşehir Bulvarı 5',
       phone: '+902165550001',
       openingHours: null,
+      openNow: null,
+      specialHours: [],
     },
     {
       name: 'Kadıköy Şubesi',
       address: 'Bağdat Caddesi 1',
       phone: '+902165550002',
       openingHours: null,
+      openNow: null,
+      specialHours: [],
     },
   ],
   // `0024` — hesapsız kurulum: 0014'ün altlık beklentileri değişmez (0024 Context tablosu).

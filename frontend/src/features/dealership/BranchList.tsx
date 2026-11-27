@@ -1,9 +1,28 @@
+import { lazy, Suspense, type CSSProperties } from 'react'
 import { useLocale } from '../../app/localeContext'
-import type { OpeningInterval } from '../../shared/api/types'
-import { weekdayName } from '../../shared/i18n/format'
+import type { PublicBranch } from '../../shared/api/types'
 import { Skeleton } from '../../shared/ui'
-import { OPENING_DAYS } from './openingDays'
 import type { GalleryLoad } from './useGallery'
+
+// `0027` D15 — saat bloğu tembel parçada; iki bileşen aynı modülden, tek istekle gelir.
+const clock = () => import('./branchClock')
+const NowLine = lazy(() => clock().then((module) => ({ default: module.NowLine })))
+const BranchHours = lazy(() => clock().then((module) => ({ default: module.BranchHours })))
+
+/**
+ * `0027` D15 evre B — saat alanının yüksekliği veriden: her aralık ve kapalı gün bir satır;
+ * özel gün varsa başlık satırı ve kayıtların satırları (`styles.css`, `--hours-*`).
+ */
+function hoursLines(branch: PublicBranch): CSSProperties {
+  const lines = (intervals: readonly unknown[]) => Math.max(1, intervals.length)
+  const weekly = Object.values(branch.openingHours ?? {}).reduce((sum, day) => sum + lines(day), 0)
+  const special = branch.specialHours.reduce((sum, day) => sum + lines(day.intervals), 0)
+  return {
+    '--hours-lines': weekly,
+    '--special-on': branch.specialHours.length === 0 ? 0 : 1,
+    '--special-lines': special,
+  } as CSSProperties
+}
 
 /**
  * 0014 R7 · D8, D13 — altlığın şube bloğu: aktif şubelerin adı, adresi ve telefonu.
@@ -33,6 +52,8 @@ export function BranchList({ load }: { readonly load: GalleryLoad }) {
     return null
   }
 
+  const { gallery, receivedAt } = load
+
   return (
     <section
       className="home-footer__branches"
@@ -43,7 +64,7 @@ export function BranchList({ load }: { readonly load: GalleryLoad }) {
         {t('home.footer.contact')}
       </h2>
       <ul className="home-footer__branch-items">
-        {load.gallery.branches.map((branch) => (
+        {gallery.branches.map((branch) => (
           <li
             key={`${branch.name}|${branch.phone}`}
             className="home-footer__branch"
@@ -52,6 +73,14 @@ export function BranchList({ load }: { readonly load: GalleryLoad }) {
             <p className="home-footer__branch-name" dir="auto">
               {branch.name}
             </p>
+            {/* `0027` D11 — iki satırlık sabit kutu; metin parçayla gelir, kutu hep yerinde. */}
+            {branch.openingHours === null ? null : (
+              <p className="home-footer__now" data-testid="branch-now">
+                <Suspense fallback={null}>
+                  <NowLine gallery={gallery} branch={branch} receivedAt={receivedAt} />
+                </Suspense>
+              </p>
+            )}
             <p className="home-footer__branch-address" dir="auto">
               {branch.address}
             </p>
@@ -59,51 +88,23 @@ export function BranchList({ load }: { readonly load: GalleryLoad }) {
             <a className="home-footer__phone" href={`tel:${branch.phone}`} dir="ltr">
               {branch.phone}
             </a>
-            {branch.openingHours === null ? null : <OpeningHoursList hours={branch.openingHours} />}
+            {branch.openingHours === null ? null : (
+              <Suspense
+                fallback={
+                  <div
+                    className="home-footer__hours-skeleton"
+                    data-testid="branch-hours-skeleton"
+                    aria-hidden="true"
+                    style={hoursLines(branch)}
+                  />
+                }
+              >
+                <BranchHours gallery={gallery} branch={branch} receivedAt={receivedAt} />
+              </Suspense>
+            )}
           </li>
         ))}
       </ul>
     </section>
-  )
-}
-
-/**
- * `0025` R7 · D7 — şubenin yedi günü, D6 sırasıyla. Gün adı ekranın dilinde `Intl`'den; aralık
- * sunucunun `HH:mm` metnidir ve biçimlendirilmez: her dilde Latin rakam, 24 saat, saat dilimi
- * dönüşümü yok (C9, D2, AC-47–AC-49). Aralık soldan sağa okunur. Kapalı günde "Kapalı" yazar.
- * Ayrı bir yükleme durumu yoktur: program galeri okumasıyla gelir (AC-50).
- */
-function OpeningHoursList({
-  hours,
-}: {
-  readonly hours: Readonly<Record<string, readonly OpeningInterval[]>>
-}) {
-  const { locale, t } = useLocale()
-
-  return (
-    <dl
-      className="home-footer__hours"
-      aria-label={t('home.footer.hours')}
-      data-testid="branch-hours"
-    >
-      {OPENING_DAYS.map((day, index) => {
-        const intervals = hours[day] ?? []
-
-        return (
-          <div key={day} className="home-footer__hours-row">
-            <dt>{weekdayName(index, locale)}</dt>
-            <dd>
-              {intervals.length === 0
-                ? t('home.footer.closed')
-                : intervals.map((interval) => (
-                    <span key={interval.start} dir="ltr">
-                      {interval.start}–{interval.end}
-                    </span>
-                  ))}
-            </dd>
-          </div>
-        )
-      })}
-    </dl>
   )
 }

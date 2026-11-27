@@ -1016,7 +1016,7 @@ describe('0025/AC-35, AC-37, AC-38: Erişim yok, yükleniyor ve hata durumların
   })
 })
 
-describe('0025/AC-39, AC-63, AC-65: ar bölümü Arapça; panel metinleri panel kataloğunda üç dilde; vitrine yalnız iki metin', () => {
+describe('0025/AC-39, AC-63, AC-65, 0027/AC-73: ar bölümü Arapça; panel metinleri panel kataloğunda üç dilde; vitrine yalnız iki metin (0027: + "Şu an kapalı")', () => {
   it('ar metinleri ve katalog', async () => {
     await panel('branch-edit', 'manager', 'ar', 'b-1')
     await screen.findByTestId('branch-opening-hours')
@@ -1053,7 +1053,7 @@ describe('0025/AC-39, AC-63, AC-65: ar bölümü Arapça; panel metinleri panel 
       }
       expect(
         Object.keys(vitrin[locale]).filter((k) => k.startsWith('home.') && /closed|hours/.test(k)),
-      ).toEqual(['home.footer.closed', 'home.footer.hours'])
+      ).toEqual(['home.footer.closed', 'home.footer.hours', 'home.footer.closedNow'])
     }
   })
 })

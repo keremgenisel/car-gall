@@ -1,0 +1,55 @@
+/* `0025` D7 — şubenin yedi günü: gün adı satır başında. Rakamlar Latin ve aralık soldan sağa
+   (`dir="ltr"`); ar'da satır sağdan sola akar. `0027` D15 — tembel parçayla gelir; satır ve aralık
+   yüksekliği girişteki evre B iskeletinin hesabıyla aynıdır (`app/styles.css`). */
+.home-footer__hours {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
+.home-footer__hours-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.home-footer__hours dt {
+  min-inline-size: 9rem;
+  display: flex;
+  gap: var(--space-4);
+  white-space: nowrap;
+}
+
+.home-footer__hours dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* D11 — "Bugün" gün adından ayrı öğe; satır yüksekliğini değiştirmez. */
+.home-footer__today {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent-text);
+}
+
+.home-footer__special {
+  margin-block-start: var(--space-3);
+}
+
+.home-footer__special-title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-footer__special .home-footer__hours {
+  margin: 0;
+}
+
+.home-footer__now--open {
+  color: var(--color-accent-text);
+}
+
+.home-footer__now--closed {
+  color: var(--color-danger);
+}
