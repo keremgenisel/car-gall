@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Durum** | Onaylandı (2026-11-27 — Proje Yöneticisi kararı) · QA CLARIFY turu işlendi (QA 1, `b474e70`: 10 bulgu, 0/7/3) |
+| **Durum** | Tamamlandı (2026-11-28) — kararlar ve kriterler #144 → `0be485c`, uygulama #145 → `a8601bc` |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (ziyaretçi okumasına e-posta ve harita adresleri) · `Content.Contracts` (yalnız ayrılmış ad listesine `contact`) · `Host` (yeni sayfa türü, belge etiketleri, yapısal verinin taşınması, sitemap) · Frontend (iletişim sayfası, altlığın sadeleşmesi, üst çubuk bağlantısı, boş vitrin eylemi) · `docs/` (`deploy.md`, Karar Defteri) |
@@ -427,6 +427,11 @@ R/C/AC'ye dokunmayan uygulama kararları. Bir kararı değiştiren her şey Proj
 | *(CLARIFY B6)* `frontend/e2e/galeri-logosu.spec.ts:242-245` (`0026`) | iki satırlı çubuk 117 px (12 + 40 logo + 8 + 44 + 12 + 1), pay 8 px | 1. satırda 44 px'lik simge bağlantı logodan (40 px) yüksek: hesap 121 px olur (12 + **44** + 8 + 44 + 12 + 1). Yorum ve sınır yeni hesapla güncellenir, pay 8 px kalır |
 | *(CLARIFY B6)* `frontend/e2e/kabuk.spec.ts:55` (`frontend-001/AC-4`) | ar'da marka sağda, dil değiştirici solda | **değişmez, yeniden koşar.** Simge bağlantı 1. satırın sonunda (ar'da solda) ve marka ile dil seçicinin göreli yeri aynı kalır |
 | *(CLARIFY B4)* `tests/Host.Tests/SitemapTests.cs` | içerik sayfaları süzülmeden | ayrılmış adlı içerik sayfası sitemap'te yok (**AC-93**, **AC-94**). Var olan beklentiler değişmez |
+| *(uygulama, PM onaylı, AP-08)* `tests/Host.Tests/CalismaSaatleriBelgeTests.cs:55`, `:69`, `:83` (`0025/AC-52`, `AC-53`) | ana sayfa belgesinin şube öğesi | `/ar/contact` belgesinde ölçülür, beklentiler aynı. Ana sayfa öğesinin dört anahtarı aynı dosyada assert edilir |
+| *(uygulama, PM onaylı, AP-08)* `tests/Host.Tests/OzelGunZinciriTests.cs:207` (`0027/AC-42`) | şube öğesi anahtar kümesi | kümeye `email`, `map` eklendi |
+| *(uygulama, PM onaylı, AP-08)* `frontend/src/app/HomePage.test.tsx:197`, `:209` (`0014/AC-46`, `0024/AC-38`) | ana sayfa bağlantı listesi | telefonlardan sonra `/tr/contact` |
+| *(uygulama, PM sürekli kuralı: ekleme türü)* `tests/Dealership.Tests/GaleriPublicOkumaTests.cs:76-77` | beklenen DTO | DTO `map`'i taşır (koordinatsız şubenin `linkUrl`'i) |
+| *(uygulama, PM sürekli kuralı: ekleme türü)* `frontend/e2e/ozel-gunler.spec.ts:202` (e2e ikizi) | şube öğesi anahtar kümesi | kümeye `email`, `map` eklendi |
 
 > **e2e ikizi:** Yukarıdaki her Host satırının e2e karşılığı arandı. Belgenin yapısal verisini ölçen tek
 > e2e `ozel-gunler.spec.ts:276` ve tabloda. Şube öğesinin anahtar kümesini ölçen e2e yok:
@@ -1151,30 +1156,30 @@ konsolundaki yönlendiren (site kökü) ve API (yalnız Maps Embed) kısıtıdı
       → AC-81–AC-87). **SS1–SS4** cevaplandı (sahip kararı, 2026-11-27).
 - [x] QA CLARIFY turu işlendi (QA 1, `b474e70`, 10 bulgu → D2, D4, D5, D6, D7, D9, D11, D12, D13, D14,
       D15; AC-88–AC-103). *(Proje Yöneticisi kararı, 2026-11-27.)*
-- [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
-- [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0028-ac<n>.png`),
+- [x] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi. — 103/103; kriter → kanıt tablosu #145 gövdesinde. AC-49 metni QA 2 turunda AP-08 ile revize edildi (kendi kökenler = site + medya kovası).
+- [x] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0028-ac<n>.png`),
       boş ve hata durumları dâhil. İletişim sayfasının (yer tutucu, açık harita, anahtarsız, iki şube),
-      sadeleşmiş altlığın ve üst çubuğun (320 px, 1280 px) Arapça görüntüsü de var.
-- [ ] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). "Şu an" kriterleri sabit `IClock` ile.
-- [ ] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok.
-- [ ] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. — bu kartta migration **yok** (D19, AC-80).
-- [ ] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil.
-- [ ] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi. — yeni terim **yok** (D18).
-- [ ] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi
-      (D18: adres, saat bloğunun yeri, tıkla-yükle harita) ve `docs/deploy.md` (anahtar, CSP, çerez notu, perf tohumu).
-- [ ] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4).
-- [ ] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
+      sadeleşmiş altlığın ve üst çubuğun (320 px, 1280 px) Arapça görüntüsü de var. — `docs/evidence/0028-*.png` (21 dosya; tr/ar/en, 320 ve 1280 px).
+- [x] <!-- DoD:T3 --> Backend testleri yazıldı ve yeşil (`docs/testing.md`). "Şu an" kriterleri sabit `IClock` ile. — Host 755, Dealership 259; anahtar sızıntısı Trace düzeyinde ve 500 yolunda ölçüldü; CI Host günlüğü 328 146 satır, anahtar yok.
+- [x] <!-- DoD:T4 --> Mimari testler yeşil — modül sınırı ihlali yok. — Architecture 71/71 (kapanış commit'inde yeniden koşuldu).
+- [x] <!-- DoD:T5 --> Yeni migration varsa yalnızca kendi şemasına dokunuyor. — bu kartta migration **yok** (D19, AC-80). — migration yok.
+- [x] <!-- DoD:T6 --> Çeviri anahtarları TR/AR/EN üçünde de eklendi; eksik anahtar kontrolü yeşil. — saat metinleri dördüncü kümeye (`locales/contact`); anahtar kapısı yeşil.
+- [x] <!-- DoD:T7 --> Yeni domain terimi varsa `docs/domain.md` sözlüğüne eklendi. — yeni terim **yok** (D18). — terim yok.
+- [x] <!-- DoD:T8 --> Mimari karar verildiyse `docs/architecture.md` § Karar Defteri güncellendi
+      (D18: adres, saat bloğunun yeri, tıkla-yükle harita) ve `docs/deploy.md` (anahtar, CSP, çerez notu, perf tohumu). — `docs/architecture.md` Karar Defteri (D18) + `docs/deploy.md` (anahtar, CSP, Google çerezi notu, perf tohumu).
+- [x] <!-- DoD:T9 --> Pipeline tamamen yeşil (`docs/git.md` § 4). — `9a616e3`, run 46065571653 (3. deneme): Backend, Frontend, E2E 532, C3, değişen yollar. İlk iki denemenin kırmızıları kartla ilgisiz eski kırılganlar (`toplu-eylem.spec.ts:114`, `icerik.spec.ts:507`, `0012c/AC-41`) → bakım kartı adayı.
+- [x] <!-- DoD:T10 --> **Dış gözden geçirme yapıldı:** **merge'den önce** bir QA oturumu diff + spec +
       testleri okudu ve bulgularını verdi (`docs/roles/qa.md`). Yazarın kendi triyajı
-      bunun yerine geçmez.
-- [ ] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
+      bunun yerine geçmez. — QA 2, head `dcaac24`: 3 gerçek bulgu (0/1/2) + 4 gürültü; üçü düzeltildi (`51f9367`, `4441d1b`, `90db178`).
+- [x] <!-- DoD:T11 --> PR şablonu dolduruldu; karşılanmayan kriter varsa **açıkça** yazıldı. Bilerek
       değişen eski testler (§ Context tablosu) PR'da listelendi ve **çok etiketli** kaldı. İlk paket
       ölçümü head commit'ten yapıldı. *(CLARIFY B4:)* Sahibin yerel veritabanında tr, ar ya da en
       slug'ı `contact` olan içerik sayfası olup olmadığı üç dilde **salt-okur** bir sorguyla bakıldı ve
       sonuç PR'a yazıldı (Context 4). Kayıt bulunursa sahip o sayfanın slug'ını panelden değiştirir.
-      Veri sorguyla değiştirilmez. "Önceden var olan kusur" satırları (D7 NUL, D12 sitemap) PR'da ayrıca listelendi.
-- [ ] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi.
-- [ ] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
-      ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in TAMAMI koşturuldu.
+      Veri sorguyla değiştirilmez. "Önceden var olan kusur" satırları (D7 NUL, D12 sitemap) PR'da ayrıca listelendi. — karşılanmayan kriter yok; tablo dışı değişen testler PM onaylı (Context tablosuna eklendi). 5080 veritabanında salt-okur sorgu: `contact`/`favorites`/`compare` slug'lı sayfa yok. Önceden var olan kusurlar #145'te listelendi.
+- [x] <!-- DoD:T12 --> Takım Yöneticisi onayladı ve squash-merge edildi. — 2026-11-28, `a8601bc`.
+- [x] <!-- DoD:T13 --> **SCORECARD dolduruldu** (`Kaçan hata` hariç — o `izleniyor` kalır, § SCORECARD)
+      ve spec `specs/done/` klasörüne taşındı. Taşımadan sonra `tests/Architecture.Tests`'in TAMAMI koşturuldu. — bu kapanış.
 
 ---
 
@@ -1182,13 +1187,27 @@ konsolundaki yönlendiren (site kökü) ve API (yalnız Maps Embed) kısıtıdı
 
 | Ölçüt | Değer | Not |
 |---|---|---|
-| **Kriterler önce `main`'de miydi?** | | |
-| **Kriter sayısı: önce → bugün** | → | |
-| **Spec revizyon sayısı** | | |
-| **Düzeltme turu sayısı** | | |
-| **Dış bulgu (gerçek/gürültü)** | / | |
-| **Uygulama içi bulgu** | | |
-| **Regresyon sayısı** | | |
-| **Kaçan hata** | | |
+| **Kriterler önce `main`'de miydi?** | evet | `git cat-file -e a8601bc^:specs/0028-iletisim-sayfasi.md` → var; #144 → `0be485c`. |
+| **Kriter sayısı: önce → bugün** | 103 → 103 | Spec PR'ında 80 → 87 (PM onay şartları a–d) → 103 (CLARIFY); uygulamada sayı değişmedi, AC-49'un metni revize edildi. |
+| **Spec revizyon sayısı** | 2 | CLARIFY turu (QA 1, 10 bulgu, 0/7/3 → AC-88–103) + merge sonrası AC-49 metni (AP-08, QA 2 BULGU-1). AC-77'nin font kapısı Context'te bir uygulama kararı; kriter metni değişmedi. Plan turu (P1–P15) sayılmadı. |
+| **Düzeltme turu sayısı** | 1 | QA 2 turu (BULGU-1…3). |
+| **Dış bulgu (gerçek/gürültü)** | 3 / 4 | QA 2: 0 engelleyici / 1 önemli (AC-49/84 testi medya kovasını üçüncü taraf sayıyordu, paralel koşuda kırmızı) / 2 küçük (boşluksuz uzun adres yatay taşma — altlıkta main'de de vardı; yalnız denetim karakterli adres boş harita sorgusu). |
+| **Uygulama içi bulgu** | 6 | Üst çubuk eşiği 40rem ar'da yetmedi (→ 42rem) · uzun logosuz ad üçüncü satır açıyordu (flex taban 0) · AC-77 font kayması üç kaynaktan (→ `fonts.load` kapısı) · `.woff2` kesmek `.woff`'a düşüyor · `check:comments` glob'u yorum sanıyor · iki e2e yarışı (ayrı okuma ↔ paralel spec; `91bc41e`, `9a616e3`). |
+| **Regresyon sayısı** | 0 | Tablo dışı değişen testlerin hepsi PM onaylı ya da ekleme türü (Context tablosu). Altlıktaki uzun adres taşması main'de önceden vardı, bu kartta düzeldi. |
+| **Kaçan hata** | **izleniyor** | Merge 2026-11-28 (`a8601bc`). |
 
 **Bu spec'ten çıkarılan ders:**
+
+1. **"Üçüncü taraf" ölçüsü kurulumun kendi kökenlerini yapılandırmadan almalı** (BULGU-1). Testi
+   "belgenin kökeni dışında istek yok" diye yazmak, medya kovası ayrı kökende olduğu an paralel
+   koşuda kırmızıya döner. Gizlilik ölçüsü yazan her kartta kendi kökenler kümesi tek bir
+   yapılandırma değişkeninden gelir ve test logolu/logosuz iki durumda da koşar.
+2. **Font kayması `fonts.ready` ile değil, gereken yüzleri `fonts.load` ile yükleyerek önlenir.**
+   Yedek fontun satır yüksekliği, ortalanmış öğe ve `swap` ile yeniden dizilen metin üç ayrı kaynaktı;
+   CLS ölçümü yalnız `.woff2`'yi değil iki biçimi de bekletmeli.
+3. **Paralel e2e'de global veriyi ayrı okumayla kıyaslamak yarıştır** — iki kez (AC-81, AC-48).
+   Beklenen değer sayfanın kendi aldığı yanıttan ya da basılan DOM'dan okunur.
+4. **CI'da her koşuda farklı tek kırmızı, kartın kalitesinin değil test takımının borcudur.**
+   `toplu-eylem.spec.ts:114` sayfa gövdesinde "409" arıyor, tohum kilometresi "90.409" ile eşleşiyor;
+   `icerik.spec.ts:507` ve `0012c/AC-41` de aralıklı. Ayrı bakım kartına; e2e işi hata durumunda
+   trace yüklemediği için kök neden aranamıyor — o kartın ilk maddesi.
