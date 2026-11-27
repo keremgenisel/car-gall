@@ -2,16 +2,33 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
+| **Durum** | Onaylandı (2026-11-27 — Proje Yöneticisi kararı) · QA CLARIFY turu bekleniyor |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (ziyaretçi okumasına e-posta ve harita adresleri) · `Content.Contracts` (yalnız ayrılmış ad listesine `contact`) · `Host` (yeni sayfa türü, belge etiketleri, yapısal verinin taşınması, sitemap) · Frontend (iletişim sayfası, altlığın sadeleşmesi, üst çubuk bağlantısı, boş vitrin eylemi) · `docs/` (`deploy.md`, Karar Defteri) |
 | **Bağımlı spec'ler** | **`0027`** (**D1**, **D9**, **D11**, **D12**, **D15**: "şu an" satırı, yenileme, yerleşim, yapısal veri, tembel parça; bu kart altlık kararlarını tersine çevirir) · **`0025`** (haftalık liste, **D9** `openingHoursSpecification`, **D10**(a) bütçe) · `0014` (altlık, **D15** izin listesi, iskelet) · `0020` (**D15** izin listesi, **X4**: vitrinde e-posta/koordinat yok) · `0003` (**X3** harita, koordinat, e-posta alanları) · `0009` (**D2**: şube e-postası bildirim hedefi) · `0004` (**D1**, **D7**, **D8**, **D11**, **AC-52** `geo` yok, sitemap) · `0017` (ayrılmış adlar, slug kuralları) · `0024` (**AC-55** ilk paket tanımı, **X3** üçüncü taraf) · `0026` (üst çubukta logo) · `frontend-002` (**D8**: üçüncü taraf isteği yok) · `frontend-003` (**D1**, **D2**, **D8**, **D13**: ayrılmış ad, belge, üst çubuk, kritik yol) · `0022` (**AC-11** boş vitrin metni) |
-| **Karar bekliyor** | **D1–D19 → Proje Yöneticisi.** **SS1–SS4 → sahip** (Proje Yöneticisi toplu soracak). |
+| **Karar bekliyor** | yok — D1–D19 Proje Yöneticisi kararı (2026-11-27, dört ek şartla: (a)–(d)); SS1–SS4 sahip kararı (2026-11-27). |
 
 > **Sahibin isteği (2026-11-27, kelimesi kelimesine):** "footer çalışma saatleri eklenince çok büyüdü.
 > Çalışma saatlerini oradan kaldırıp yeni bir iletişim sayfası yaparak oraya taşıyalım; adres, tel,
 > e-mail ve Google Haritalar'da adresi gösteren bir harita olsun."
+>
+> **Sahibin cevapları (sahip kararı, 2026-11-27):** dördü de önerilen yönde.
+> - SS1: harita tıkla-yükle, her zaman "Google Haritalar'da aç" bağlantısı (D6). Google Cloud hesabı ve
+>   anahtar sahibin ayrı işidir. Anahtar yokken yalnız bağlantı görünür (D7).
+> - SS2: şubenin bugünkü e-posta alanı vitrinde gösterilir (D8). Sahip bunun talep bildirim adresi
+>   olduğunu bilerek seçti.
+> - SS3: her dilde `/{l}/contact` (D2).
+> - SS4: altlıktaki "şu an" satırı kalkar (D9).
+>
+> **Proje Yöneticisi kararı (2026-11-27):** D1–D19 onaylandı. Dört ek şart işlendi:
+> - **(a)** anahtar: D5, D7, D18 → AC-21 ve AC-28'in metni değişti, yeni kriterler **AC-81–AC-83**;
+> - **(b)** üçüncü taraf istek ve onayın sıfırlanması: D6, D15 → **AC-84**;
+> - **(c)** altlık: font bekletmeli CLS, C3 yan yana ve "Diller" sütununun alt satıra kayması: D9, D14
+>   → AC-76'nın metni değişti, yeni kriterler **AC-85–AC-87**;
+> - **(d)** çerez politikası notu: D18, Context 7.
+>
+> Var olan numaralar değişmedi.
 
 ---
 
@@ -144,6 +161,12 @@ gitmez. Arama motoru şubenin saatlerini ve yerini bu sayfadan okur.
 
 **3. Altlıkta bugün ne var?** (`App.tsx:139-160`, `HomeFooter.tsx`, `BranchList.tsx`)
 - Sıra: logo (`0026`) · "Şubelerimiz" bloğu · "Keşfet" · "Kurumsal" · "Bizi takip edin" · "Diller".
+- *(PM şartı (c), ölçüldü:)* Izgara `repeat(auto-fit, minmax(var(--card-min-inline-size), 1fr))`,
+  boşluk 16 px (`styles.css:1318-1326`; `--card-min-inline-size` 240 px, `--layout-max-inline-size`
+  1200 px, iç boşluk 2×16 px; `tokens.css:108`, `:145-146`). Logo bütün satırı kaplar (`:246-248`).
+  Kullanılabilir genişlik 1168 px. 4 sütun 4×240 + 3×16 = 1008 px ile sığar, 5 sütun 1264 px ister.
+  Beş blok da varken (kurumsal sayfa ve sosyal hesap girilmiş) **"Diller" ikinci satıra düşer.** Bu
+  1280 px'te ve daha geniş her ekranda böyledir (→ **D9**, AC-85).
 - Şube başına: ad · iki satırlık sabit "şu an" kutusu · adres · telefon (`tel:`) · haftalık yedi satır
   (aralık başına bir satır) · "Özel günler" (kayıt başına bir satır, aralık başına satır).
   `BranchList.tsx:58-109`.
@@ -191,9 +214,10 @@ görünmeyen bilgi olur (C3) → **D13**.
   (`frontend-003` D8). Dokunma hedefi `--touch-target-min-size` = 44 px (`tokens.css:150`).
 - → **D10**.
 
-**7. Çerez ve üçüncü taraf.** "Bugünkü örnek metin 'üçüncü taraf çerez yok' diyor" iddiası **kodda
-doğrulanamadı**. Çerez politikası bir sistem sayfası ve kurulum onu gövdesiz açıyor (X8). Kodda doğrulanan
-şunlar:
+**7. Çerez ve üçüncü taraf.** "Örnek çerez politikası 'üçüncü taraf çerez yok' diyor" bilgisi **kodda
+değil**. Kurulum çerez politikası sayfasını gövdesiz açıyor (X8). *(PM şartı (d):)* Metin, Proje
+Yöneticisi'nin yerel veriye girdiği örnek içerik. Gerçek kurulumda da sahip benzer bir metin yazabilir.
+Harita açıldığında bu cümle yanlış olur (D18). Kodda doğrulanan şunlar:
 - Vitrin bugün hiçbir üçüncü taraf alan adına istek yapmıyor: yazı tipleri kendi kaynağımızdan
   (`frontend-002` D8, AC-8; `fonts.css:4-8`).
 - Gömülü akış "üçüncü taraf betiği ve çerezi" diye dışarıda bırakıldı (`0024` X3).
@@ -357,7 +381,8 @@ ekran okuyucuda ek bir etkileşim ister. *Bedel:* 5+ şubede sayfa uzar. Harita 
 **D5 — Ziyaretçi okuması: şube öğesine `email` ve `map`.** (R2, R3, C2)
 - Aynı uç kullanılır: `GET /api/dealership/gallery`.
 - `email`: kayıtlı adres ya da `null`.
-- `map`: `{ "linkUrl": string, "embedUrl": string | null }`. İki adres de sunucuda, tek yerde kurulur (D7).
+- `map`: `{ "linkUrl": string, "embedUrl"?: string }`. İki adres de sunucuda, tek yerde kurulur (D7).
+  *(PM şartı (a):)* Anahtar yokken `embedUrl` anahtarı **hiç yoktur**, `null` değildir.
 - Ham koordinat, saat dilimi, WhatsApp ve slug gönderilmez.
 - `no-store` kalır (`0027` D8).
 
@@ -375,7 +400,9 @@ anahtarı (D7) ve ondalık kuralını (tuzak 6) tek yerde tutar. *Bedel:* ana sa
 - Düğmeye basılınca **aynı kutuda** iframe açılır (`src` = `embedUrl`). Kutunun boyutu değişmez. Odak
   iframe'e geçer.
 - Her şubenin düğmesi yalnız kendi haritasını açar.
-- Seçim **saklanmaz** (X7). Sayfa yeniden açılınca yer tutucu yine gelir.
+- *(PM şartı (b):)* Tıklama **kalıcı bir onay değildir.** Yalnız o sayfa görüntülemesi için geçerlidir.
+  Sayfa yenilenince ya da yeniden açılınca bütün kutular yer tutucuya döner. Çerez, `localStorage`,
+  `sessionStorage` ya da IndexedDB'ye hiçbir şey yazılmaz (X7, AC-57).
 - "Google Haritalar'da aç" bağlantısı her şubede, `embedUrl` olsun olmasın basılır (`href` = `linkUrl`).
   Aynı sekmede açılır. Bu, `0024`'ün sosyal bağlantılarıyla aynıdır (`SocialLinksSlot.tsx:57`, `target` yok).
 
@@ -392,7 +419,12 @@ yeniden tıklanır.
 - `embedUrl` = `https://www.google.com/maps/embed/v1/place?key={anahtar}&q={sorgu}&language={istek dili}`.
 - **Anahtar** kurulum yapılandırmasından okunur. Adı `deploy.md`'de yazılır, ör. `GoogleMaps__EmbedApiKey`.
   Kodda, depoda ve tohumda anahtar yoktur.
-- Anahtar yoksa ya da boşsa `embedUrl` `null`'dır. Yer tutucu basılmaz, yalnız bağlantı kalır (tuzak 5).
+- Anahtar yoksa ya da boşsa (yalnız boşluk da boş sayılır) yanıtta `embedUrl` anahtarı **yoktur**.
+  Kutu ve düğme basılmaz, yalnız bağlantı kalır (tuzak 5).
+- *(PM şartı (a):)* Anahtar sır değildir, ama yalnız `embedUrl`'in içinde bulunur. Bu adres de yalnız
+  ziyaretçi düğmeye basınca ağa çıkar. Anahtar hiçbir belgeye (`<head>`, `<meta>`, JSON-LD, kabuk),
+  hiçbir başka yanıta ve hiçbir günlük kaydına yazılmaz. Yapılandırma okunurken, adres kurulurken ya da
+  bir hata olduğunda da yazılmaz (AC-82, AC-83).
 
 *Gerekçe:* koordinat yazım farkından etkilenmez. Varsayılan dildeki adres her şubede zorunlu
 (`0003` AC-6). Arapça adresin Google'da bulunması garanti değil. Resmî Embed API ve resmî Maps URLs
@@ -425,6 +457,15 @@ migration gerekir (SS2 (b)).
 - Ana sayfada D9 yenileyicisi yoktur, galeri okuması bir kez yapılır.
 - `0014`'ün iskeleti (evre A) ve hata/boş davranışı aynen kalır.
 - `id="contact"` altlıktan kalkar (D17).
+- *(PM şartı (c):)* **Sütun yerleşimi düzelir.**
+  - Geniş ekranda (≥64rem), beş blok da varken şube bloğu ve dört gezinme bloğu ("Keşfet", "Kurumsal",
+    "Bizi takip edin", "Diller") **tek satırda** durur. Şube bloğu satır başındadır. Logo kendi satırında
+    kalır. Olmayan blok yer tutmaz. Bugün 1280 px'te "Diller" alt satıra düşüyor (Context 3).
+  - Dar ekranda (320 px) bloklar DOM sırasıyla tek sütundur.
+  - Izgaranın nasıl kurulacağı uygulamanın plan kararıdır (ör. şube sütunu + `auto-fit` gezinme
+    sütunları ya da daha küçük bir sütun alt sınırı). Ölçü AC-85 ve AC-86'dır.
+- *(PM şartı (c):)* Altlığın CLS'i fontlar bekletilerek ölçülür (`0027` dersi, AC-87). Ana sayfanın C3
+  medyanı PR'da `main` ile yan yana yazılır (AC-76).
 
 *Gerekçe:* sahibin şikâyeti altlığın boyu. "Şu an" satırı, şube başına iki satırlık sabit yer ve bir
 yenileyici demek. Kalırsa ana sayfa saat parçasını (≈2,4 KB) indirmeye ve galeriyi yenilemeye devam
@@ -562,8 +603,11 @@ perf koşusu bir sayfa uzar.
     **HTTP yönlendiren** (site kökü) ve **yalnız Maps Embed API** ile kısıtlama; anahtar yoksa
     haritanın basılmadığı;
   - **CSP**: ters vekil bir CSP eklerse `frame-src https://www.google.com` gerekir;
-  - **sahibe not**: harita açılınca Google çerez kullanabilir, çerez politikası sayfası buna göre
-    yazılmalıdır (X8);
+  - *(PM şartı (a):)* "Anahtar HTTP yönlendiren (referrer) ile site köküne kısıtlanır ve yalnız Maps
+    Embed API'ye açılır." Anahtar sır değildir, ama kısıtsız anahtar başka sitelerde kullanılabilir;
+  - *(PM şartı (d))* **sahibe not**: "Harita tıklanınca Google çerez bırakabilir. Çerez politikası
+    buna göre güncellenmelidir (sahip işi)." Bugünkü örnek metin "üçüncü taraf çerez yok" diyor
+    (Context 7, X8);
   - perf tohumunun koordinat ve e-posta cümlesi.
 - `docs/domain.md`: yeni terim yok ("İletişim sayfası" bir sayfa, domain kavramı değil).
 
@@ -577,7 +621,8 @@ perf koşusu bir sayfa uzar.
 
 ## Sahibe sorular
 
-> Proje Yöneticisi bunları toplu soracak. Her sorunun ilk seçeneği öneridir.
+> **Cevaplandı (sahip kararı, 2026-11-27):** SS1 (b)+(c), SS2 (a), SS3 (a), SS4 (a). Dördü de önerilen
+> seçenek. Aşağıdaki metin sorulduğu hâliyle korunur.
 
 **SS1 — Harita nasıl gösterilsin?** (D6, D7) Bu kartın en kritik sorusu.
 - **(b)+(c) — Tıklayınca yüklenen harita + her zaman "Google Haritalar'da aç" bağlantısı (öneri).**
@@ -675,9 +720,10 @@ perf koşusu bir sayfa uzar.
 
 ### Ziyaretçi okuması (R2, R3, C2 · D5, D7)
 
-- **AC-21.** `/api/dealership/gallery` yanıtında her şube öğesinin anahtar kümesi tam olarak
-  `address`, `email`, `map`, `name`, `openNow`, `openingHours`, `phone`, `specialHours`'tır.
-  `map`'in anahtar kümesi tam olarak `embedUrl`, `linkUrl`'dir.
+- **AC-21.** *(PM şartı (a) ile değişti.)* `/api/dealership/gallery` yanıtında her şube öğesinin
+  anahtar kümesi tam olarak `address`, `email`, `map`, `name`, `openNow`, `openingHours`, `phone`,
+  `specialHours`'tır. Anahtar yapılandırılmışken `map`'in anahtar kümesi tam olarak `embedUrl`,
+  `linkUrl`'dir.
 - **AC-22.** Kadıköy'ün `email`'i `kadikoy@otogaleri.com.tr`, Bostancı'nınki `null`'dır.
 - **AC-23.** Yanıt hiçbir yerde ham koordinat (`40.98765` sayısı ya da `latitude` anahtarı), saat
   dilimi, WhatsApp ve slug taşımaz. Koordinat yalnız `map` adreslerinin sorgusunda geçer.
@@ -690,8 +736,9 @@ perf koşusu bir sayfa uzar.
 - **AC-27.** Anahtar yapılandırılmışken Kadıköy'ün `embedUrl`'i
   `https://www.google.com/maps/embed/v1/place?key=test-anahtar&q=40.98765%2C29.0275&language=tr`'dir.
   `locale=en` isteğinde `language=en` olur.
-- **AC-28.** Anahtar yapılandırılmamışken ya da boşken her şubenin `embedUrl`'i `null`'dır ve
-  `linkUrl`'i doludur.
+- **AC-28.** *(PM şartı (a) ile değişti.)* Anahtar yapılandırılmamışken, boşken ve yalnız boşluktan
+  oluşurken her şubenin `map`'inin anahtar kümesi tam olarak `linkUrl`'dir. `embedUrl` anahtarı yoktur
+  ve `linkUrl` doludur.
 - **AC-29.** Koordinatsız şubenin adresi panelden değiştirildikten sonraki ilk okumada `linkUrl` yeni
   adresi kullanır.
 - **AC-30.** Kadıköy'ün e-postası panelden boşaltıldıktan sonraki ilk okumada `email` `null`'dır.
@@ -753,7 +800,7 @@ perf koşusu bir sayfa uzar.
 - **AC-53.** Kutunun yüksekliği düğmeye basmadan önce ve sonra 320 px ve 1280 px'te aynıdır (±1 px).
 - **AC-54.** İki şubeli sayfada Kadıköy'ün düğmesine basınca yalnız Kadıköy'ün kutusunda iframe
   açılır. Bostancı'nın kutusu yer tutucuda kalır.
-- **AC-55.** `embedUrl` `null`'ken bölümde harita kutusu ve düğme yoktur, "Google Haritalar'da aç"
+- **AC-55.** `embedUrl` yokken bölümde harita kutusu ve düğme yoktur, "Google Haritalar'da aç"
   bağlantısı vardır.
 - **AC-56.** "Google Haritalar'da aç" bağlantısının `href`'i şubenin `linkUrl`'idir ve `target`
   özniteliği taşımaz. Metin tr/ar/en çevrilidir.
@@ -805,7 +852,8 @@ perf koşusu bir sayfa uzar.
 - **AC-74.** `index.html`'in `modulepreload` listesi ve girişin statik içe aktardığı dosya sayısı
   `main` ile aynıdır.
 - **AC-75.** Ana sayfa, liste ve detay açılışında iletişim sayfasının tembel parçası istenmez.
-- **AC-76.** `perf.yml` `/tr/contact`'ı ölçer. Perf tohumuyla (koordinat, e-posta, 12 özel gün, sahte
+- **AC-76.** *(PM şartı (c) ile değişti: font bekletmeli CLS.)* `perf.yml` `/tr/contact`'ı ölçer. CLS
+  fontlar bekletilerek ölçülür. Perf tohumuyla (koordinat, e-posta, 12 özel gün, sahte
   anahtar) LCP medyanı < 2500 ms ve CLS < 0.1'dir. Ana sayfa, liste ve detayın C3'ü yeşil kalır. Dört
   sayfanın medyanı PR'da `main` ile yan yana yazılır.
 - **AC-77.** İletişim sayfası fontlar bekletilerek açılır. Şube bölümlerinde ve harita kutusunda
@@ -819,11 +867,41 @@ perf koşusu bir sayfa uzar.
 - **AC-79.** Panel şube formunda e-posta alanının yanında, D8'in yardım cümlesi tr/ar/en çevrili basılır.
 - **AC-80.** Bu kart migration eklemez. `git diff --stat main...HEAD` `Migrations/` altında dosya göstermez.
 
+### Proje Yöneticisi şartlarıyla eklenenler (2026-11-27)
+
+- **AC-81.** *(a)* Anahtarsız kurulumda (e2e ikizi) `/tr/contact`'ta harita kutusu ve "Haritayı göster"
+  düğmesi yoktur. Her şubede "Google Haritalar'da aç" vardır. Ağ kaydındaki galeri yanıtında
+  `embedUrl` dizesi geçmez.
+- **AC-82.** *(a)* Anahtar `test-anahtar` iken `/tr/`, `/tr/cars`, görünür bir ilanın detayı,
+  `/tr/contact`, `/ar/contact` ve bir 404 belgesinin hiçbiri `test-anahtar` dizesini taşımaz.
+  `<head>`, JSON-LD ve gövde dahil.
+- **AC-83.** *(a)* Host'un başlangıcında, galeri okumasında ve `/tr/contact` belgesinde yakalanan günlük
+  kayıtlarının hiçbiri `test-anahtar` dizesini taşımaz. Ölçülen kayıtlar: bütün kategoriler, en düşük
+  düzey `Trace`, ileti ve kapsam değerleri. Okuma ucunun `500` döndüğü bir senaryo da ölçülür.
+- **AC-84.** *(b)* Anahtarlı kurulumda, e2e ağ denetimiyle:
+  - düğmeye basmadan önce köken dışı istek sayısı **0**'dır (AC-49);
+  - düğmeye basınca köken dışı ilk istek, `embedUrl`'e giden iframe gezinmesidir;
+  - köken dışı her istek iframe'in çerçevesinden gelir (`request.frame()` ana çerçeve değildir);
+  - ana çerçeve köken dışı hiçbir istek yapmaz.
+- **AC-85.** *(c)* 1280 px genişlikte, logolu, iki şubeli, kurumsal sayfası ve sosyal hesabı olan
+  kurulumda, tr/ar/en'de:
+  - şube bloğu, "Keşfet", "Kurumsal", "Bizi takip edin" ve "Diller" bloklarının üst kenarları
+    aynıdır (±1 px), yani tek satırdadırlar;
+  - şube bloğu satır başındadır: tr ve en'de en solda, ar'da en sağda;
+  - logo bu satırın üstündedir.
+- **AC-86.** *(c)* 320 px genişlikte aynı kurulumda bloklar tek sütundur ve DOM sırasıyla alt alta
+  durur: şube, Keşfet, Kurumsal, Bizi takip edin, Diller. Hiçbir iki bloğun üst kenarı aynı değildir.
+  Altlık yatay kaymaz.
+- **AC-87.** *(c)* Ana sayfa fontlar bekletilerek (`.woff2` `page.route` ile bekletilip serbest
+  bırakılarak) açılır ve altlığa kaydırılır. Altlıkta ve altlığın bloklarında
+  `PerformanceObserver('layout-shift')` kaynağı yoktur. 320 px'te ve 1280 px'te ölçülür.
+
 ---
 
 ## Definition of Done
 
-- [ ] Önerilen kararlar (**D1–D19**) onaylandı (Proje Yöneticisi). **SS1–SS4** cevaplandı (sahip).
+- [x] Önerilen kararlar (**D1–D19**) onaylandı (Proje Yöneticisi kararı, 2026-11-27; şartlar (a)–(d)
+      → AC-81–AC-87). **SS1–SS4** cevaplandı (sahip kararı, 2026-11-27).
 - [ ] QA CLARIFY turu işlendi.
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0028-ac<n>.png`),
