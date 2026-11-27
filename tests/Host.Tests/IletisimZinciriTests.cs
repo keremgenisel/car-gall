@@ -245,6 +245,16 @@ public sealed class IletisimZinciriTests : IAsyncLifetime
         Assert.Equal(adres, oge.GetProperty("address").GetString());
     }
 
+    [Fact(DisplayName = "0028/AC-92, QA 2 BULGU-3: Adresi yalnız denetim karakteri (`\\u0001\\u0002`) olan koordinatsız şubenin `map`'i null; belgedeki öğesi `hasMap` taşımaz")]
+    public async Task Okuma_BosSorgu()
+    {
+        await KurAsync();
+        string ad = await SubeAcAsync(await YoneticiAsync(), "\u0001\u0002");
+
+        Assert.Equal(JsonValueKind.Null, (await PublicSubeAsync(ad)).GetProperty("map").ValueKind);
+        Assert.DoesNotContain("hasMap", (await DepartmentAsync(ad)).EnumerateObject().Select(p => p.Name));
+    }
+
     [Fact(DisplayName = "0028/AC-97: tr adresi `Bağdat Cad.\\nNo:5\\t\\t1` olan koordinatsız şubenin sorgusu tam `Ba%C4%9Fdat%20Cad.%20No%3A5%201`")]
     public async Task Okuma_DenetimKarakterleri()
     {

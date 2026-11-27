@@ -100,6 +100,17 @@ public sealed class HaritaAdresiTests
         Assert.Equal("a b", BranchMapAddress.Normalize("\0 a \u0001\r\n b \u007f"));
     }
 
+    [Theory(DisplayName = "0028/AC-91, QA 2 BULGU-3: Normalleşince boş kalan adres (yalnız denetim karakteri ya da boşluk) → harita null; koordinat varsa adres önemsiz")]
+    [InlineData("\u0001\u0002")]
+    [InlineData(" \t\n ")]
+    [InlineData("")]
+    public void Bos_sorgu(string adres)
+    {
+        Assert.Null(BranchMapAddress.Build(null, adres, "tr", null));
+        Assert.Null(BranchMapAddress.Build(null, adres, "tr", "test-anahtar"));
+        Assert.NotNull(BranchMapAddress.Build(Kadikoy, adres, "tr", "test-anahtar"));
+    }
+
     [Fact(DisplayName = "0028/AC-15 yardımcısı: koordinat metni ölçeksiz, eksi işaretli değer de nokta ondalık")]
     public void Sayi_bicimi()
     {

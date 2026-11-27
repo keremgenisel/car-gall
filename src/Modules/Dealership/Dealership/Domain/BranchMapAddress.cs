@@ -30,10 +30,21 @@ internal static class BranchMapAddress
     /// D7 — iki adres; kodlanmış hâllerinden biri <see cref="MaxUrlLength"/>'i aşarsa <c>null</c>
     /// (AC-91): kesilmiş bir adres yanlış yeri gösterir. Anahtar yoksa ya da yalnız boşluksa gömme
     /// adresi yoktur (AC-28).
+    ///
+    /// <para>QA 2 BULGU-3 — normalleşmiş sorgu boşsa (adres yalnız denetim karakteri ve boşluktan
+    /// oluşuyorsa) da <c>null</c>: boş bir arama Google'da rastgele bir yer gösterir. 2048 kuralıyla
+    /// aynı yol: bağlantı, kutu ve <c>hasMap</c> basılmaz.</para>
     /// </summary>
     internal static (string LinkUrl, string? EmbedUrl)? Build(Coordinate? coordinate, string defaultAddress, string locale, string? embedKey)
     {
-        string query = Uri.EscapeDataString(Query(coordinate, defaultAddress));
+        string raw = Query(coordinate, defaultAddress);
+
+        if (raw.Length == 0)
+        {
+            return null;
+        }
+
+        string query = Uri.EscapeDataString(raw);
         string link = LinkBase + query;
 
         if (link.Length > MaxUrlLength)
