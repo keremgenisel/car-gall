@@ -140,6 +140,12 @@ internal sealed class SeoHeadBuilder(
                     if (branch.OpeningHours is { } hours)
                     {
                         department["openingHoursSpecification"] = OpeningHoursSpecification(hours);
+
+                        // `0027` D12 — penceredeki özel günler (altlıkla aynı pencere, C4); yoksa anahtar yok.
+                        if (branch.SpecialHours.Count > 0)
+                        {
+                            department["specialOpeningHoursSpecification"] = SpecialOpeningHoursSpecification(branch.SpecialHours);
+                        }
                     }
 
                     return (JsonNode)department;
@@ -202,6 +208,27 @@ internal sealed class SeoHeadBuilder(
             ["opens"] = group.Opens,
             ["closes"] = group.Closes,
         })]);
+    }
+
+    /// <summary>
+    /// `0027` **D12** — her kaydın her aralığı bir öğe (<c>validFrom</c>, <c>validThrough</c>, <c>opens</c>,
+    /// <c>closes</c>); sıra <c>from</c>, sonra aralık. Tam gün kapalı kayıt <c>00:00–00:00</c>'lık tek
+    /// öğedir (`0025` D9'un kodlaması, <c>TimeOnly.MinValue</c>'dan). Gruplama yapılmaz.
+    /// </summary>
+    private static JsonArray SpecialOpeningHoursSpecification(IReadOnlyList<PublicSpecialDayDto> days)
+    {
+        string midnight = TimeOnly.MinValue.ToString("HH:mm", CultureInfo.InvariantCulture);
+
+        return new JsonArray([.. days.SelectMany(day =>
+            (day.Intervals.Count == 0 ? [new PublicOpeningIntervalDto(midnight, midnight)] : day.Intervals)
+                .Select(interval => (JsonNode)new JsonObject
+                {
+                    ["@type"] = "OpeningHoursSpecification",
+                    ["validFrom"] = day.From,
+                    ["validThrough"] = day.Through,
+                    ["opens"] = interval.Start,
+                    ["closes"] = interval.End,
+                }))]);
     }
 
     /// <summary>

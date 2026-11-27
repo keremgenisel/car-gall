@@ -500,6 +500,70 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
         Assert.Equal("""[{"from":"2026-11-27","through":"2026-11-27","intervals":[]}]""", (await GovdeAsync(yonetici, sube))["specialHours"]!.ToJsonString());
     }
 
+    // ----- Yapısal veri (R11 · C4 · D12) -----
+
+    [Fact(DisplayName = "0027/AC-62: Pencerede 2026-12-31 tam gün kapalı ve 2027-01-02 10:00–13:00 → `specialOpeningHoursSpecification` tam bu iki öğe, her biri tam beş anahtar (Saat 2026-12-20T09:00Z)")]
+    public async Task YapisalVeri_OzelGunler()
+    {
+        string ad = await SubeAcAsync(Zaman("2026-12-20T09:00:00Z"), Program(Programli), "Europe/Istanbul", OzelGunler("2027-01-02..2027-01-02=10:00-13:00;2026-12-31..2026-12-31="));
+
+        Assert.Equal(
+            """[{"@type":"OpeningHoursSpecification","validFrom":"2026-12-31","validThrough":"2026-12-31","opens":"00:00","closes":"00:00"},{"@type":"OpeningHoursSpecification","validFrom":"2027-01-02","validThrough":"2027-01-02","opens":"10:00","closes":"13:00"}]""",
+            (await DepartmentAsync(ad, "tr")).GetProperty("specialOpeningHoursSpecification").GetRawText());
+    }
+
+    [Fact(DisplayName = "0027/AC-63: 12 kayıt × 3 aralık, hepsi pencerede: `/ar/` belgesi aynı şubenin özel günsüz hâlinden en çok 4608 B büyük")]
+    public async Task YapisalVeri_Butce()
+    {
+        DateTimeOffset an = Zaman("2026-12-01T09:00:00Z");
+        HttpClient yonetici = await YoneticiAsync(an);
+        Guid sube = await KimlikAsync(yonetici, await SubeAcAsync(an, Program(Programli), "Europe/Istanbul", null, yonetici));
+        int once = Encoding.UTF8.GetByteCount(await Istemci().GetStringAsync("/ar/"));
+
+        string enKotu = string.Join(';', Enumerable.Range(0, 12).Select(i => $"2026-12-{2 + 2 * i:00}..2026-12-{2 + 2 * i:00}=08:00-09:30,10:00-12:30,13:00-18:30"));
+        await BasariliAsync(await KaydetAsync(yonetici, sube, govde => govde["specialHours"] = OzelGunler(enKotu)));
+        int sonra = Encoding.UTF8.GetByteCount(await Istemci().GetStringAsync("/ar/"));
+
+        Assert.InRange(sonra - once, 1, 4608);
+    }
+
+    [Fact(DisplayName = "0027/AC-64, AC-65: Pencere dışı, geçmiş ve programsız şubenin kaydı belgede yok; kök `AutoDealer`'da anahtar yok; belge \"şu an\" metni ve değeri taşımaz; tam bir JSON-LD bloğu")]
+    public async Task YapisalVeri_Yokluklar()
+    {
+        // Aynı anda iki giriş ikinci adım kodunu yeniden kullanırdı: o andaki tek oturum paylaşılır.
+        string gecmisli = await SubeAcAsync(Zaman("2026-11-27T09:00:00Z"), Program(Programli), "Europe/Istanbul", OzelGunler("2026-11-28..2026-11-28="));
+        DateTimeOffset an = Zaman("2026-12-01T09:00:00Z");
+        HttpClient yonetici = await YoneticiAsync(an);
+        string disarida = await SubeAcAsync(an, Program(Programli), "Europe/Istanbul", OzelGunler("2027-01-20..2027-01-20="), yonetici);
+        string programsiz = await SubeAcAsync(an, null, "Europe/Istanbul", OzelGunler("2026-12-05..2026-12-05="), yonetici);
+        saat.Simdi = an;
+
+        string belge = await Istemci().GetStringAsync("/tr/");
+        JsonElement kok = Assert.Single(new AngleSharp.Html.Parser.HtmlParser().ParseDocument(belge).JsonLd());
+        Assert.False(kok.TryGetProperty("specialOpeningHoursSpecification", out _));
+        foreach (string ad in new[] { disarida, programsiz, gecmisli })
+        {
+            Assert.False((await DepartmentAsync(ad, "tr")).TryGetProperty("specialOpeningHoursSpecification", out _), ad);
+        }
+
+        Assert.DoesNotContain("Şu an", belge, StringComparison.Ordinal);
+        Assert.DoesNotContain("openNow", belge, StringComparison.Ordinal);
+        Assert.DoesNotContain("refreshInSeconds", belge, StringComparison.Ordinal);
+    }
+
+    [Fact(DisplayName = "0027/AC-66: Yönetici özel günü kaydettikten sonraki ilk `/tr/` belgesi yeni kaydı taşır")]
+    public async Task YapisalVeri_KaydedinceIlkBelge()
+    {
+        DateTimeOffset an = Zaman("2026-12-01T09:00:00Z");
+        HttpClient yonetici = await YoneticiAsync(an);
+        string ad = await SubeAcAsync(an, Program(Programli), "Europe/Istanbul", null, yonetici);
+        Assert.False((await DepartmentAsync(ad, "tr")).TryGetProperty("specialOpeningHoursSpecification", out _));
+
+        await BasariliAsync(await KaydetAsync(yonetici, await KimlikAsync(yonetici, ad), govde => govde["specialHours"] = OzelGunler("2026-12-08..2026-12-08=")));
+
+        Assert.Equal("2026-12-08", (await DepartmentAsync(ad, "tr")).GetProperty("specialOpeningHoursSpecification")[0].GetProperty("validFrom").GetString());
+    }
+
     // ----- Yardımcılar -----
 
     private static DateTimeOffset Zaman(string an) => DateTimeOffset.Parse(an, CultureInfo.InvariantCulture);
@@ -603,6 +667,10 @@ public sealed class OzelGunZinciriTests : IAsyncLifetime
     private async Task<JsonElement> PublicSubeAsync(string ad) =>
         JsonDocument.Parse(await Istemci().GetStringAsync("/api/dealership/gallery?locale=tr")).RootElement
             .GetProperty("branches").EnumerateArray().Single(oge => oge.GetProperty("name").GetString() == ad);
+
+    private async Task<JsonElement> DepartmentAsync(string ad, string dil) =>
+        Assert.Single(new AngleSharp.Html.Parser.HtmlParser().ParseDocument(await Istemci().GetStringAsync($"/{dil}/")).JsonLd())
+            .GetProperty("department").EnumerateArray().Single(oge => oge.GetProperty("name").GetString() == ad);
 
     private async Task<long> OutboxAsync()
     {
