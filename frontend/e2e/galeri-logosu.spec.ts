@@ -225,7 +225,7 @@ test('0026 (C7, R4), frontend-003/AC-32: Lighthouse mobil genişliğinde (412 px
     expect(await sayfa.evaluate(() => document.fonts.status)).toBe('loading')
     const ad = sayfa.getByTestId('top-bar-brand').locator('bdi')
     expect(await ad.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe('nowrap')
-    // frontend-003 AC-32 (TM kararı, 2026-11-26): 40rem altında üst çubuk BİLEREK iki satır. Satırlar
+    // frontend-003 AC-32 (TM kararı, 2026-11-26): 42rem (`0028` AC-68; önce 40rem) altında üst çubuk BİLEREK iki satır. Satırlar
     // dikeyde ayrı: sayaç/dil satırı markanın altında başlar — fonttan önce ve sonra aynı.
     const satirlar = () =>
       sayfa.evaluate(() => {
@@ -240,9 +240,10 @@ test('0026 (C7, R4), frontend-003/AC-32: Lighthouse mobil genişliğinde (412 px
     await sayfa.evaluate(() => document.fonts.ready)
     expect(await satirlar()).toBe(2)
     const cubuk = (await sayfa.locator('header.top-bar').boundingBox())!
-    // Ölçülen iki satır 117 px: 12 + 40 (logo) + 8 (satır arası) + 44 (dokunma hedefi) + 12 + 1 (kenar).
+    // `0028` D10 — 1. satırda 44 px'lik simge bağlantı logodan (40 px) yüksek: iki satır 121 px:
+    // 12 + 44 (simge bağlantı) + 8 (satır arası) + 44 (dokunma hedefi) + 12 + 1 (kenar).
     // Pay 8 px: üçüncü satıra kırılma ya da adın kırılması (≥ 36 px'lik ek satır) bunu aşar.
-    expect(cubuk.height).toBeLessThanOrEqual(117 + 8)
+    expect(cubuk.height).toBeLessThanOrEqual(121 + 8)
     const logo = (await sayfa.getByTestId('top-bar-logo').boundingBox())!
     expect(logo.height).toBe(40)
   } finally {
