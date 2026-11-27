@@ -236,6 +236,23 @@ describe('0027/AC-55, AC-56, AC-57: "Özel günler" listesi `from` sırasıyla; 
     ])
   })
 
+  it('AC-55 ar: aynı aydaki aralığın sayıları soldan sağa yalıtılır ("4–2" görünmez)', async () => {
+    await ekran(
+      galeri(
+        sube(durum(false, '2027-03-01', '2027-03-02 09:00'), [
+          { from: '2027-03-10', through: '2027-03-12', intervals: [] },
+          { from: '2027-02-27', through: '2027-03-02', intervals: [] },
+        ]),
+      ),
+      'ar',
+    )
+
+    const gunler = [
+      ...screen.getByTestId('branch-special').querySelectorAll('.home-footer__day'),
+    ].map((el) => el.textContent)
+    expect(gunler).toEqual(['\u206610–12\u2069 مارس', '27 فبراير–2 مارس'])
+  })
+
   it('AC-56', async () => {
     await ekran(galeri(sube(ACIK)))
     expect(screen.queryByTestId('branch-special')).toBeNull()

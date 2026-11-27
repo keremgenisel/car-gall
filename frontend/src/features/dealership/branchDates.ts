@@ -35,9 +35,15 @@ export function dateRange(from: string, through: string, locale: AppLocale): str
     return dayMonth(from, locale)
   }
 
-  return from.slice(0, 7) === through.slice(0, 7)
-    ? `${Number(from.slice(8, 10))}–${dayMonth(through, locale)}`
-    : `${dayMonth(from, locale)}–${dayMonth(through, locale)}`
+  if (from.slice(0, 7) !== through.slice(0, 7)) {
+    return `${dayMonth(from, locale)}–${dayMonth(through, locale)}`
+  }
+
+  // Sağdan sola satırda iki sayı arasındaki tire RTL çözülür ve "2–4" "4–2" görünür (Unicode
+  // çift yön algoritması, N1). Sayı aralığı ar'da soldan sağa yalıtılır (LRI … PDI).
+  const days = `${Number(from.slice(8, 10))}–${Number(through.slice(8, 10))}`
+  const month = dayMonth(through, locale).replace(/^\d+ /, '')
+  return locale === 'ar' ? `\u2066${days}\u2069 ${month}` : `${days} ${month}`
 }
 
 export function branchKey(branch: PublicBranch): string {
