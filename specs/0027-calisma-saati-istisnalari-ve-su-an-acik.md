@@ -2,16 +2,28 @@
 
 | | |
 |---|---|
-| **Durum** | Taslak |
+| **Durum** | Onaylandı (2026-11-27 — Proje Yöneticisi kararı) · QA CLARIFY turu bekleniyor |
 | **Sahip** | Analist (ajan) |
 | **Onaylayan** | Takım Yöneticisi |
 | **Modül(ler)** | `Dealership` (özel gün, "şu an" hesabı, okumalar) · `Host` (ana sayfanın yapısal verisi) · Frontend (panel şube formu, vitrin altlığı) |
 | **Bağımlı spec'ler** | **`0025`** (**X1**, **X2**, **X3**, **D1**–**D12**: haftalık program, okuma biçimi, altlık, yapısal veri) · `0003` (**B4**, **C10**, saat dilimi) · `0004` (**D1**, **D15**, **D16**, **C13**) · `0014` (altlık, **D15** izin listesi) · `0020` (şube formu, **R16** sürüm, **D21**) · `0024` (**AC-55** ilk paket tanımı, okuma kökü) · `0026` (üst çubuk ve CLS dersleri) · `frontend-003` (**D18**, ilk paket ölçüm yöntemi) |
-| **Karar bekliyor** | **D1–D18** Proje Yöneticisi onayı · **SS1–SS4** sahip cevabı (Proje Yöneticisi toplu soracak) |
+| **Karar bekliyor** | yok — D1–D18 Proje Yöneticisi kararı (2026-11-27, üç ek şartla: (a)–(c)); SS1–SS4 sahip kararı (2026-11-27). QA 1 CLARIFY turu sürüyor. |
 
 > **Sahibin isteği (sahip kararı, 2026-11-26 ve 2026-11-27):** `0025` **SS1** → bayram ve tatil
 > istisnaları ile "şu an açık" göstergesi `0025`'in hemen ardından gelsin ve ikisi aynı kartta olsun
 > (`0025` X1, X2). 2026-11-27: "tatil günleri ve şu an açık ile başla".
+>
+> **Sahibin cevapları (sahip kararı, 2026-11-27):** SS1–SS4'ün dördü de önerilen yönde: resmî
+> tatiller elle girilir (D5), özel gün şube başınadır (D2), gösterge yalnız ana sayfa altlığındadır
+> (D1), metin ek almaz (D10).
+>
+> **Proje Yöneticisi kararı (2026-11-27):** D1–D18 onaylandı. Üç ek şart işlendi:
+> - **(a)** D15: tembel parçanın iskeleti ve `0025`'in etkilenen testleri → D15, D11, Context tablosu,
+>   AC-68, **AC-75–AC-78**;
+> - **(b)** D9'un sınırları (başarısız yeniden okuma, geçersiz süre, yaz saati günü) → D8, D9, AC-61,
+>   **AC-79–AC-85**;
+> - **(c)** yaz saati geçişinde "şu an" ve `next` → D7, **AC-86–AC-91**.
+> Var olan numaralar değişmedi. Yalnız AC-61 ve AC-68'in metni şartlarla değişti.
 
 ---
 
@@ -259,6 +271,16 @@ Liste ve detay sayfalarının altlığı şube taşımıyor. İlan detayı şube
 | `frontend/src/app/HomePage.test.tsx`, `GaleriPaneli.test.tsx`, `BultenBolumu.test.tsx`, `AnaSayfaMetinleri.test.tsx` | `PublicGallery` sahte şubeleri | şube tipi değişir (`openNow`, `specialHours`). Beklentiler değişmez |
 | `frontend/e2e/calisma-saatleri.spec.ts:135`, `:208` | panel okuması ve `branch-hours` | panel okuması `specialHours` taşır. `branch-hours` tembel parçada, Playwright beklemesi yeterli. Beklenti değişmez |
 | `0025`'in kaydetme testleri (`CalismaSaatleriZinciriTests.cs`, `GaleriYonetimiZinciriTests.cs`) | özel günsüz gövde | **değişmez** (D13: alan yoksa değişmez, **AC-25**) |
+| *(PM şartı (a))* `frontend/src/features/dealership/BranchList.test.tsx:47-51` (`satirlar`), `:88`, `:110` (`0025/AC-44–AC-48`) | `dt` metni = gün adı, saat listesi eşzamanlı | "Bugün" etiketi `dt`'de ayrı öğe (D11). Testler gün adı öğesini okur, yoksa sonuç takvime bağlanır. Liste tembel parçada, `findBy…`. Beklenen değerler değişmez |
+| *(PM şartı (a))* `frontend/e2e/calisma-saatleri.spec.ts:188-207`, `:212-228` (`0025/AC-44`, `AC-47`, `AC-48`) | şube öğesinin **tümünde** `dt`/`dd` (`tr.locator('dt')`, `ar.locator('dd').last()`) | özel gün listesi de `dt`/`dd` taşır ve "Bugün" gerçek tarihe göre bir `dt`'ye girer. Sorgular `branch-hours` ve gün adı öğesiyle daraltılır. Beklenen değerler değişmez |
+| *(PM şartı (a))* `frontend/src/app/admin/GaleriPaneli.test.tsx:1048-1056` (`0025/AC-63`) | vitrin kataloğunda `home.*` içinde `/closed\|hours/` eşleşen anahtarlar tam `[closed, hours]` | `home.footer.closedNow` da eşleşir. Küme bu kartın anahtarlarıyla genişler. Çok etiketli: `0025/AC-63, 0027/AC-73` |
+| *(PM şartı (a))* `frontend/src/app/HomePage.test.tsx:261`, `:277`, `:299` ve `frontend/e2e/evidence-0014.spec.ts:63` (`0014` iskeleti) | galeri okunurken `branch-skeleton` | **değişmez** (D15 evre A). Evre B'nin iskeleti ayrı `data-testid` taşır |
+
+> *(PM şartı (a))* **İlk boyamayı ya da ilk paketi ölçen `0025` testi yok:** `0025` AC-61 (ilk paket)
+> PR #133'te elle ölçüldü ve test olarak yazılmadı. Haftalık listeyi belge HTML'inde arayan bir Host
+> testi de yok, altlık istemcide basılıyor. Host ikizi: altlığı ölçen Host testi yok. e2e ikizi
+> yukarıdaki iki satır. Görsel kanıtlar `0025-ac44.png` ve `0025-ac47-ar.png` yeniden üretilirse
+> "Bugün" etiketini taşır. Kanıt dosyaları test değildir ve yeniden üretilmeleri gerekmez.
 
 > **e2e ikizi:** Kapalı anahtar kümesi ölçen her Host satırının e2e ikizi arandı. Şube **öğesini**
 > ölçen e2e yok. `evidence-0020.spec.ts:18` yalnız kökü ölçüyor ve kök değişmiyor. Uygulamada
@@ -266,7 +288,7 @@ Liste ve detay sayfalarının altlığı şube taşımıyor. İlan detayı şube
 
 ---
 
-## Verilen kararlar (öneri — Proje Yöneticisi onayı bekliyor)
+## Verilen kararlar (Proje Yöneticisi kararı, 2026-11-27)
 
 Biçim: **karar** · *gerekçe* · *bedel*.
 
@@ -351,8 +373,13 @@ istek atılır (D9). `architecture.md`'nin bir cümlesi değişir.
 - **Kapalı:** sonraki açılış, şimdiden sonraki ilk etkin aralığın başlangıcıdır. Arama sınırı en
   son özel günün bitişinden 7 gün sonrasıdır. Haftalık programda en az bir aralık olduğundan
   (`0025` D4) açılış her zaman bulunur.
-- Yerel saat → an çevirisi bölge kurallarıyla yapılır. Sabit fark ve "+24 saat" yoktur. Yaz saati
-  geçişinde var olmayan yerel saat, ondan sonraki ilk geçerli ana kayar.
+- Yerel saat → an çevirisi bölge kurallarıyla yapılır. Sabit fark ve "+24 saat" yoktur.
+- *(PM şartı (c):)* Yaz saati geçişinde iki kural geçerlidir:
+  - **Var olmayan yerel saat** (ileri geçiş): ondan sonraki ilk geçerli ana kayar. `next.time` o anın
+    gerçek yerel saatini verir. Ör. `Europe/Berlin` 2027-03-28'de 02:30 açılış "03:00" olarak döner.
+  - **İki kez yaşanan yerel saat** (geri geçiş): başlangıç da bitiş de **ilk** (erken) anı alır.
+  Var olmayan gece yarısı (ör. `Asia/Beirut`, geçiş 00:00'da) günün ilk geçerli anıdır. Hem "bugün"ün
+  değişimi hem 23:59 zinciri o ana bağlanır.
 - Haftalık programı girilmemiş şubede (`openingHours: null`) "şu an" **hesaplanmaz**. Özel günler
   vitrinde ve yapısal veride gösterilmez (`0025` D4: saat bilgisi yok).
 
@@ -367,7 +394,9 @@ dakikalık sahte kapanış ve yanlış kapanış saati üretir.
   - `next` açıkken kapanışı, kapalıyken açılışı verir. Tarih ve saat şubenin yereline göredir.
     Sürekli açık şubede `null`'dır.
   - `refreshInSeconds` sıradaki değişime ya da şubenin bir sonraki yerel gece yarısına (erken olanına)
-    kalan saniyedir, yukarı yuvarlanır ve en az 1'dir.
+    kalan **gerçek** saniyedir, yukarı yuvarlanır ve en az 1'dir.
+  - *(PM şartı (b):)* Değer her zaman **1–90000** aralığındadır. Yaz saati gününde gün 23 ya da 25
+    saattir, yani gece yarısına kalan süre 82800 ya da 90000 olabilir.
 - `specialHours` dizidir ve hiç `null` olmaz. Haftalık programı girilmemiş şubede boştur.
   - Öğeleri `{ "from", "through", "intervals": [{ "start", "end" }] }` biçimindedir ve `from`'a
     göre sıralıdır.
@@ -386,11 +415,24 @@ altlığı ve yapısal veriyi kısa tutar. Bayramlar genellikle birkaç hafta ö
 - Sekme görünür olduğunda süre dolmuşsa okuma hemen tekrarlanır.
 - Bunun dışında periyodik okuma yoktur.
 - Tekrarlanan okuma sürerken eski durum ekranda kalır ve iskelete dönülmez.
-- Tekrarlanan okuma hata verirse eski satır kalır ve hata metni basılmaz (`0014` AC-54'ün deseni).
+- *(PM şartı (b):)* **Tekrarlanan okuma başarısız olursa:**
+  - Eski durum **gösterilmez**, çünkü geçerlilik süresi dolmuştur ve "açık" yazmaya devam etmek
+    yanlış bilgi verir. "Şu an" satırının metni kaldırılır ama kutusu aynı yükseklikte kalır.
+  - Haftalık liste, özel günler ve "Bugün" vurgusu kalır. Hata metni basılmaz (`0014` AC-54'ün deseni).
+  - Okuma, sekme görünürken **60 saniyede bir** yeniden denenir. Başarılı olunca satır yeni durumla
+    geri gelir.
+  - Yani bayat durum, sürenin dolmasından ilk tekrar okumanın sonucuna kadar ekranda kalır. Bu en
+    fazla bir istek süresidir.
+- *(PM şartı (b):)* **Geçersiz süre:**
+  - `refreshInSeconds` pozitif bir tam sayı değilse (0, negatif, `null`, sayı olmayan) okuma hemen
+    değil, **60 saniye** sonra tekrarlanır. Böylece döngü oluşmaz.
+  - 90000'den büyük değer 90000 sayılır.
+  - Ardışık iki otomatik okuma arasında en az 1 saniye vardır.
+- *(PM şartı (b):)* **Yaz saati günü:** süre gerçek saniyedir (D8). İstemci yerel saatle hesap yapmaz.
 
 *Gerekçe:* gösterge en çok değişim başına bir istek atar. Gece yarısı vurguyu ve "yarın"ı tazeler.
-*Bedel:* açık sekme başına günde birkaç istek. Hata sonrası satır bir sonraki açılışa kadar bayat
-kalabilir.
+Süresi dolmuş durumu basmamak, yanlış "açık" yazmaktan iyidir.
+*Bedel:* açık sekme başına günde birkaç istek. Sunucu düşükse dakikada bir istek. Bu sürede satır boş kalır.
 
 **D10 — Metinler.** (R7, R12, R13, tuzak 1, **SS4**)
 - **Açıkken:** "Şu an açık · Kapanış {gün} {saat}".
@@ -419,6 +461,8 @@ kalabilir.
     görünür bir "Bugün" etiketi ve `aria-current="date"` taşır.
   - Bugün bir özel günün içindeyse etiket ve `aria-current` o özel günün satırındadır. Haftalık
     listede hiçbir satır vurgulanmaz.
+  - *(PM şartı (a), test etkisi:)* "Bugün" etiketi gün adından **ayrı bir öğedir**. Gün adının kendi
+    öğesi vardır. Gün adını okuyan testler takvime bağlı kalmaz (Context tablosu).
 - **"Özel günler"** başlıklı liste D8'in penceresindeki kayıtları basar. Her satır tarihi (tek gün
   "1 Ocak", aralık "10–12 Mart") ve aralıkları ya da "Kapalı"yı gösterir. Pencerede kayıt yoksa liste
   ve başlığı basılmaz.
@@ -493,8 +537,17 @@ haftalık programla aynı kalır.
 - Metinleri ilk paketin kataloğunda kalabilir. Tembel parçaya katalog eklemek ADR 0013'ün
   `registerCatalogs` yoluyla mümkündür. Hangisi daha küçükse ölçülür ve PR'da yazılır.
 - İlk paket `main` tabanına göre **en çok 512 B** büyür (`0024` AC-55 tanımı).
-- Şube bloğunun iskeleti galeri okuması **ve** parça hazır olana kadar durur. İkisi hazır olunca
-  blok tek seferde basılır.
+- *(PM şartı (a):)* İki bekleme evresi vardır:
+  - **A — galeri okunmadı:** şube sayısı bilinmez. `0014`'ün iskeleti aynen kalır (`0014` AC-49,
+    `evidence-0014.spec.ts:63`). Altlık ilk ekranın altında olduğundan bu geçiş görünür alanda
+    olmaz (AC-78).
+  - **B — galeri hazır, parça yüklenmedi:** her şubenin adı, adresi ve telefonu basılır. Saat alanının
+    yerinde bir iskelet durur. İskeletin yüksekliği okunan veriden (satır sayısı, aralık sayısı, özel
+    gün sayısı) **açılacak alanın yüksekliğine eşit** kurulur. Bunun için saat alanının satırları
+    sabit yükseklikte olur ve satır kırılması veriden belirlenir (ör. her aralık ayrı satırda).
+- Eşitlik ölçülür: en kötü durumda (12 özel gün, her gün ve her kayıt çift aralıklı, `ar`, 320 px)
+  ve fontlar bekletilerek ±1 px (AC-75, AC-76). Parça yüklenince saat alanının altındaki hiçbir öğe
+  kaymaz (AC-77).
 - Perf koşusu her aktif şubeye penceresinde 12 özel gün tohumlar (D12'nin en kötü durumu, `0025`
   P9'un tohum yolundan). Koşu `0024` ve `0025`'in tohumlarını korur.
 - C3 eşikleri geçerlidir. Bir sayfanın medyanı 2450 ms'yi aşarsa ikinci koşu yapılır ve LCP öğesi
@@ -504,6 +557,9 @@ haftalık programla aynı kalır.
 
 *Gerekçe:* ölçülen ≈1,2 KB bütçenin iki katı. Altlık ilk ekranın altında, LCP'ye girmiyor. `0025`
 P7 bu yolu zaten öngörmüştü. Haftalık listeyi de taşımak ilk paketi küçültür ve bloğu tek parça yapar.
+Sabit "en kötü durum" yüksekliği yerine veriden kurulan yükseklik seçildi. Sebebi: tipik şube (0–2
+özel gün) 12 satırlık boş bir alan taşımasın. Şube sayısı A evresinde bilinmediği için orada eşit
+yükseklik zaten kurulamaz.
 *Bedel:* altlıktaki saat bloğu bir parça isteği kadar geç gelir. Bir kez daha tembel parça bağı (+≈80 B).
 
 **D16 — Sözlük: "Özel Gün" ve "Şu An Durumu".** (DoD T7)
@@ -536,8 +592,12 @@ korunmalıdır (R5).
 
 ## Sahibe sorular
 
-> Proje Yöneticisi toplu soracak. Her soru öneriyle gelir. Cevap gelmezse öneri Proje Yöneticisi
-> kararı olarak kalır.
+> **Cevaplandı (sahip kararı, 2026-11-27):** dördü de önerilen yönde.
+> - **SS1** → resmî tatiller otomatik değil, hepsi elle girilir.
+> - **SS2** → şube başına. "Tümüne uygula" sonra ayrı iş.
+> - **SS3** → gösterge bu kartta yalnız ana sayfa altlığında. İlan detayı ayrı kart.
+> - **SS4** → "Şu an açık · Kapanış 19:00" / "Şu an kapalı · Açılış yarın 09:00".
+> Kriter değişmedi.
 
 - **SS1. Sabit resmî tatiller (1 Ocak, 23 Nisan, 1 Mayıs, 19 Mayıs, 15 Temmuz, 30 Ağustos, 29 Ekim)
   otomatik "kapalı" gelsin mi?**
@@ -707,8 +767,8 @@ korunmalıdır (R5).
   içinde tam olarak bir kez tekrarlar ve yeni yanıtın satırını basar (birim testi, sahte zamanlayıcı).
 - **AC-60.** Süresi dolmuş bir yanıtla gizli kalan sekme görünür olduğunda okuma bir kez tekrarlanır.
   Süresi dolmamışsa tekrarlanmaz.
-- **AC-61.** Tekrarlanan okuma sürerken eski satır görünür kalır ve iskelet basılmaz. Tekrarlanan
-  okuma hata verirse eski satır kalır ve hata metni basılmaz.
+- **AC-61.** Tekrarlanan okuma sürerken eski satır görünür kalır ve iskelet basılmaz. *(PM şartı (b)
+  ile değişti:)* Başarısız tekrar okuma için AC-79'a bakın.
 
 ### Yapısal veri (R11 · C4 · D12)
 
@@ -729,8 +789,8 @@ korunmalıdır (R5).
 
 - **AC-67.** İlk paket (`0024` AC-55 tanımı) `main` tabanına göre en çok **512 B** büyür. Ölçüm
   PR'ın **head** commit'inden yapılır.
-- **AC-68.** Galeri okuması tamamlanmış ama saat parçası yüklenmemişken şube bloğunun iskeleti görünür.
-  Adres ve telefon tek başına basılmaz.
+- **AC-68.** *(PM şartı (a) ile değişti:)* Galeri okuması tamamlanmış ama saat parçası yüklenmemişken
+  her şubenin adı, adresi ve telefonu basılır. Saat alanının yerinde evre B iskeleti görünür (D15).
 - **AC-69.** "Şu an" satırının kutusunun yüksekliği açık ve kapalı hâlde, `tr`, `ar` ve `en`'de
   320 px genişlikte aynıdır.
 - **AC-70.** Perf koşusu her aktif şubeye penceresinde 12 kayıt (üçer aralık) tohumlar. `0024` ve
@@ -747,12 +807,86 @@ korunmalıdır (R5).
 - **AC-74.** `frontend/src` altında bu kartın eklediği her sabit `t('…')` anahtarı en az bir katalogda
   bulunur (`frontend-003` D19 kapısı).
 
+
+### Proje Yöneticisi şartlarıyla eklenenler (2026-11-27)
+
+**(a) Tembel parçanın iskeleti (D15)**
+
+- **AC-75.** Saat parçası `page.route` ile bekletilir ve fontlar yüklenmiştir (`.woff2` bekletilip
+  serbest bırakılarak, `frontend-003` dersi). En kötü durumdaki şubede (penceresinde 12 özel gün; yedi
+  günün ve 12 kaydın her biri iki aralıklı) `/ar/` altlığı 320 px genişlikte ölçülür. Evre B
+  iskeletinin yüksekliği, parça yüklendikten sonraki saat alanının yüksekliğine ±1 px eşittir.
+- **AC-76.** Aynı ölçüm, programlı şubede (özel gün yok), `/tr/` ve 1280 px genişlikte de ±1 px eşittir.
+- **AC-77.** AC-75'in kurgusunda parça serbest bırakıldığında saat alanının altındaki öğenin
+  (altlığın bir sonraki bloğu) dikey konumu değişmez (±1 px). Şube bloğundan kaynaklanan
+  `layout-shift` girdisi yoktur.
+- **AC-78.** Perf tohumuyla `/tr/` ana sayfası 412×823 ve 1350×940 görünümde açıldığında altlığın
+  üst kenarı ilk görünüm alanının altındadır. Evre A'dan içeriğe geçiş görünür alanda olmaz. Evre A
+  iskeleti `0014` AC-49'daki gibidir.
+
+**(b) Yeniden okumanın sınırları (D8, D9)**
+
+- **AC-79.** Süre dolduktan sonraki tekrar okuma `503` dönerse:
+  - "şu an" satırının metni kaldırılır ve kutusunun yüksekliği değişmez;
+  - haftalık liste, özel günler ve "Bugün" vurgusu kalır;
+  - altlıkta hata metni yoktur
+  (birim testi, sahte zamanlayıcı).
+- **AC-80.** AC-79'dan sonra sekme görünürken okuma 60 saniyede bir tekrarlanır. İkinci deneme `200`
+  dönünce satır yeni yanıtın durumunu basar. Sekme gizliyken deneme yapılmaz.
+- **AC-81.** `refreshInSeconds` değeri `0`, `-5`, `null` ya da `"abc"` olan yanıttan sonra altlık
+  ilk 59 saniyede tekrar okuma yapmaz. 60. saniyede tam olarak bir okuma yapar.
+- **AC-82.** `refreshInSeconds` = 200000 olan yanıttan sonra tekrar okuma 90000. saniyede yapılır.
+- **AC-83.** AC-30–AC-41 ve AC-84–AC-91'in her yanıtında `refreshInSeconds` 1 ile 90000 arasındadır
+  (Host).
+- **AC-84.** `Europe/Berlin` saat dilimli, yalnız Pazartesi 09:00–18:00 açık bir şube. Saat
+  2027-03-27T23:00Z'de (Pazar 2027-03-28, 00:00 CET; ileri geçiş günü):
+  - `open` false, `today` `2027-03-28`;
+  - `next` `{"date":"2027-03-29","time":"09:00"}`;
+  - `refreshInSeconds` 82800 (23 saatlik gün).
+- **AC-85.** Aynı şube, Saat 2027-10-30T22:00Z'de (Pazar 2027-10-31, 00:00 CEST; geri geçiş günü):
+  `refreshInSeconds` 90000 (25 saatlik gün).
+
+**(c) Yaz saati geçişinde "şu an" ve `next` (D7) — Host, sabit `IClock`**
+
+> Türkiye ve Körfez bölgelerinde (`Asia/Kuwait`, `Asia/Dubai`, `Asia/Riyadh`) yaz saati yok. Örnekler
+> `Europe/Berlin` (geçiş 01:00Z: ileri 2027-03-28, geri 2027-10-31) ve `Asia/Beirut` (ileri geçiş
+> yerel 00:00'da, 2027-03-28) bölgeleridir. Programlar kurgudur. Beklenen anlar tzdata ile
+> doğrulandı.
+
+- **AC-86.** Berlin, Pazar 01:00–04:00 (ileri geçişi içine alan aralık). Saat 2027-03-28T00:30Z'de
+  (01:30 CET):
+  - `open` true;
+  - `next` `{"date":"2027-03-28","time":"04:00"}`;
+  - `refreshInSeconds` 5400 (gerçek 1,5 saat, duvar saatindeki 2,5 saat değil).
+- **AC-87.** Berlin, Pazar 02:30–05:00 (başlangıç var olmayan saatte):
+  - Saat 2027-03-28T00:45Z'de (01:45 CET): `open` false, `next` `{"date":"2027-03-28","time":"03:00"}`,
+    `refreshInSeconds` 900.
+  - Saat 2027-03-28T01:00Z'de (03:00 CEST): `open` true, `next.time` `05:00`, `refreshInSeconds` 7200.
+- **AC-88.** Berlin, Pazar 01:00–04:00 (geri geçişi içine alan aralık). Saat 2027-10-31T00:30Z'de
+  (02:30 CEST):
+  - `open` true;
+  - `next.time` `04:00`;
+  - `refreshInSeconds` 9000 (gerçek 2,5 saat).
+- **AC-89.** Berlin, Pazar 02:30–05:00 (başlangıç iki kez yaşanan saatte):
+  - Saat 2027-10-31T00:15Z'de (ilk 02:15, CEST): `open` false, `next.time` `02:30`, `refreshInSeconds` 900.
+  - Saat 2027-10-31T01:15Z'de (ikinci 02:15, CET): `open` true, `next.time` `05:00`,
+    `refreshInSeconds` 9900.
+- **AC-90.** Berlin, Pazar 01:00–02:30 (bitiş iki kez yaşanan saatte):
+  - Saat 2027-10-31T00:15Z'de `open` true ve `refreshInSeconds` 900. Bitiş ilk 02:30'dur (00:30Z).
+  - Saat 2027-10-31T01:15Z'de (ikinci 02:15) `open` false.
+- **AC-91.** `Asia/Beirut`, Cumartesi 20:00–23:59 ve Pazar 00:00–02:00 (var olmayan gece yarısı):
+  - Saat 2027-03-27T21:30Z'de (Cumartesi 23:30 EET): `open` true, `today` `2027-03-27`,
+    `next` `{"date":"2027-03-28","time":"02:00"}`, `refreshInSeconds` 1800 (gün 22:00Z'de değişir).
+  - Saat 2027-03-27T22:00Z'de (Pazar 01:00 EEST): `open` true, `today` `2027-03-28`, `next.time`
+    `02:00`, `refreshInSeconds` 3600.
+
 ---
 
 ## Definition of Done
 
-- [ ] Önerilen kararlar (**D1–D18**) onaylandı ve **SS1–SS4** cevaplandı ya da Proje Yöneticisi
-      kararıyla kapandı. QA CLARIFY turu işlendi.
+- [x] Önerilen kararlar (**D1–D18**) onaylandı (Proje Yöneticisi kararı, 2026-11-27; şartlar (a)–(c)
+      → AC-75–AC-91). **SS1–SS4** cevaplandı (sahip kararı, 2026-11-27).
+- [ ] QA CLARIFY turu işlendi.
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Arayüz kriterlerinin **görsel kanıtı** eklendi (`docs/evidence/0027-ac<n>.png`),
       boş ve hata durumları dâhil; panel bölümünün ve altlığın (açık, kapalı, özel gün) Arapça
