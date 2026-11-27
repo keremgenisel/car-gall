@@ -328,11 +328,27 @@ a.top-bar__brand:hover {
  * ad uzunluğu, dil); ilk boyamadan sonra satır sayısı değişmez. Eşik ölçüldü: logolu, 40 karakterlik
  * ad, 24 favori ve üç dilin tam adıyla tek satırın sığdığı en dar genişlik ar'da 576 px; eşik
  * 40rem (640 px). Dil bağlantıları burada en az dokunma hedefi boyutundadır.
+ *
+ * `0028` D10 · AC-68 — üst çubuğa "İletişim" bağlantısı girdi ve eşik yeniden ölçüldü (aynı fikstür,
+ * geniş düzen zorlanarak): tek satırın sığdığı en dar genişlik tr 624, en 632, ar 648 px. 40rem ar'da
+ * yetmiyordu; D10'un sırasıyla önce dar ekranda logo 120 px'e iner (320 px'te 1. satırda logo, adın
+ * en az 6 karakteri ve 44 px'lik simge), sonra eşik 42rem'e (672 px) çıkar: ar'ın üstünde 24 px pay.
  */
-@media (width < 40rem) {
+@media (width < 42rem) {
   .top-bar__inner {
     flex-wrap: wrap;
     row-gap: var(--space-4);
+  }
+
+  .top-bar__logo {
+    max-inline-size: var(--logo-narrow-max-inline-size);
+  }
+
+  /* `0028` D10 — 1. satır marka + simge bağlantı. Satır kırılması esnek tabanı ölçer: markanın tabanı
+     adın TAM genişliği olsaydı uzun ad web fontuyla bağlantıyı üçüncü satıra iterdi (ölçüldü: 544 px,
+     logosuz, 121 → 165 px). Taban 0: marka kalan yeri alır ve ad kısalır, bağlantı 1. satırda kalır. */
+  .top-bar__brand {
+    flex: 1 1 0;
   }
 
   /* `0028` D10 — dar ekranda 1. satırın sonunda yalnız simge; metin ekran okuyucuya kalır. */
@@ -1444,6 +1460,12 @@ a.top-bar__brand:hover {
 .home-footer__branch-name,
 .home-footer__branch-address {
   margin-block: 0 var(--space-1);
+}
+
+/* `0028` AC-77 — satır yüksekliği yazı tipinden bağımsız: `normal` yedek fontun ölçüsünü alıyordu ve
+   web fontu gelince başlık ile satırlar 3 px uzayıp bölümleri kaydırıyordu (ölçüldü, fontlar bekletilerek). */
+.contact-page {
+  line-height: var(--line-height-base);
 }
 
 /* `0028` D4 — iletişim sayfasının iskeleti rota kabuğunda (ilk paket); bölümler parçayla gelir. */

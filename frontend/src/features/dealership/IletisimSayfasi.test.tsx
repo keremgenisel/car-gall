@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import { StrictMode, Suspense } from 'react'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ContactRoute } from '../../app/ContactRoute'
@@ -438,5 +438,99 @@ describe('0028/AC-88, AC-89: StrictMode ve sahte zamanlayıcıyla, açık harita
 
     expect(fetchGallery).toHaveBeenCalledTimes(1)
     expect(screen.getByTestId('branch-now').textContent).toBe('Şu an kapalı · Açılış yarın 10:00')
+  })
+})
+
+// ----- AC-77 · AP-08: bölümler yazı tipi yüzleri yüklenince (en çok ~1500 ms) basılır -----
+
+describe("0028/AC-77 (AP-08 şartları): şube bölümleri dilin yüzleri `document.fonts.load` ile yüklenince basılır; üst süre 1500 ms; başarısız font beklemeyi hemen bitirir; StrictMode'da tek bekleme", () => {
+  let yukle: ReturnType<typeof vi.fn>
+  let cozumler: { coz: () => void; reddet: () => void }[]
+
+  beforeEach(() => {
+    vi.resetModules()
+    cozumler = []
+    yukle = vi.fn(
+      () =>
+        new Promise<FontFace[]>((coz, reddet) =>
+          cozumler.push({
+            coz: () => coz([]),
+            reddet: () => reddet(new DOMException('ağ', 'NetworkError')),
+          }),
+        ),
+    )
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { load: yukle } })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+  })
+
+  afterEach(() => {
+    Reflect.deleteProperty(document, 'fonts')
+  })
+
+  async function kabuk(locale: AppLocale = 'tr', strict = false) {
+    // Taze modüller: dil başına söz önbelleği her senaryoda boş başlar.
+    const { ContactBranches: Taze } = await import('./contactPage')
+    const { LocaleProvider: TazeDil } = await import('../../app/LocaleProvider')
+    const agac = (
+      <TazeDil locale={locale}>
+        <Suspense fallback={<p data-testid="bekliyor" />}>
+          <Taze
+            load={{ kind: 'ready', gallery: galeri(kadikoy()), receivedAt: 0 }}
+            onRetry={() => {}}
+          />
+        </Suspense>
+      </TazeDil>
+    )
+    await act(async () => {
+      render(strict ? <StrictMode>{agac}</StrictMode> : agac)
+    })
+  }
+
+  it("yüzler yüklenince basılır; tr'de Space Grotesk 400 ve 600, Türkçe harfli örnekle", async () => {
+    await kabuk('tr')
+    expect(screen.getByTestId('bekliyor')).toBeTruthy()
+    expect(screen.queryByTestId('contact-branch')).toBeNull()
+    expect(yukle.mock.calls.map(([yuz]) => yuz)).toEqual([
+      '400 1em "Space Grotesk"',
+      '600 1em "Space Grotesk"',
+    ])
+    expect(yukle.mock.calls[0]![1]).toMatch(/[ğşİ]/u)
+
+    await act(async () => cozumler.forEach((c) => c.coz()))
+    expect(screen.getByTestId('contact-branch')).toBeTruthy()
+  })
+
+  it("ar'da Readex Pro, Arapça ve Latin örnekle", async () => {
+    await kabuk('ar')
+    expect(yukle.mock.calls.map(([yuz]) => yuz)).toEqual([
+      '400 1em "Readex Pro"',
+      '600 1em "Readex Pro"',
+    ])
+    expect(yukle.mock.calls[0]![1]).toMatch(/\p{Script=Arabic}.*[A-Za-z]/u)
+  })
+
+  it("üst süre: yüzler gelmezse 1500 ms'de basılır, öncesinde basılmaz", async () => {
+    await kabuk('tr')
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1499)
+    })
+    expect(screen.queryByTestId('contact-branch')).toBeNull()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1)
+    })
+    expect(screen.getByTestId('contact-branch')).toBeTruthy()
+  })
+
+  it('font isteği başarısızsa bekleme hemen biter', async () => {
+    await kabuk('tr')
+    await act(async () => cozumler[0]!.reddet())
+    expect(screen.getByTestId('contact-branch')).toBeTruthy()
+  })
+
+  it("StrictMode'da bekleme bir kez kurulur: iki yüz, iki yükleme", async () => {
+    await kabuk('tr', true)
+    await act(async () => cozumler.forEach((c) => c.coz()))
+    expect(screen.getByTestId('contact-branch')).toBeTruthy()
+    expect(yukle).toHaveBeenCalledTimes(2)
   })
 })

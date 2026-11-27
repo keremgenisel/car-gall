@@ -131,9 +131,12 @@ public sealed class GaleriProfiliTohumuTests : IAsyncLifetime
         HttpClient ziyaretci = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
         JsonElement[] subeler = [.. JsonDocument.Parse(await ziyaretci.GetStringAsync("/api/dealership/gallery?locale=tr")).RootElement.GetProperty("branches").EnumerateArray()];
         Assert.Equal(2, subeler.Length);
+        // Tohumun Kadıköy'ü kendi e-postasını taşır (kayıtlı değer korunur); e-postasız şubeye yazılır.
+        Assert.Contains(subeler, sube => sube.GetProperty("email").GetString() == "kadikoy@otogaleri.com.tr");
+        Assert.Contains(subeler, sube => sube.GetProperty("email").GetString()!.EndsWith("@galeri.example.com", StringComparison.Ordinal));
         Assert.All(subeler, sube =>
         {
-            Assert.EndsWith("@galeri.example.com", sube.GetProperty("email").GetString(), StringComparison.Ordinal);
+            Assert.Equal(JsonValueKind.String, sube.GetProperty("email").ValueKind);
             Assert.StartsWith("https://www.google.com/maps/search/?api=1&query=", sube.GetProperty("map").GetProperty("linkUrl").GetString(), StringComparison.Ordinal);
         });
 

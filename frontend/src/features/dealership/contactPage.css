@@ -87,11 +87,19 @@
   block-size: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+
+  /* AC-77 — içerik satır başına yaslanır: ortalanmış düğme ve metin, web fontu gelince genişlikleri
+     değiştiği için yatayda kayıyordu (ölçüldü); başlangıç kenarı yazı tipinden bağımsızdır. */
+  align-items: flex-start;
   justify-content: center;
   gap: var(--space-5);
-  padding: var(--space-6);
-  text-align: center;
+  padding: var(--space-7);
+  text-align: start;
+}
+
+.contact-branch__map-placeholder .ui-button {
+  /* AC-77 — düğmenin satır yüksekliği de yazı tipinden bağımsız (yukarıdaki `.contact-page` notu). */
+  line-height: var(--line-height-base);
 }
 
 .contact-branch__map-notice {

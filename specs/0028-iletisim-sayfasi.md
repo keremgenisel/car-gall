@@ -653,6 +653,9 @@ adına ≈52 px daha az yer kalır. Geniş ekranda iki satıra geçiş eşiği b
 - İletişim sayfasının gövdesi (şube bölümleri, harita kutusu) ve saat kodu **tek tembel parçadadır**.
   *(CLARIFY B5:)* `<h1>` ve iskelet ilk paketteki rota kabuğundadır. Şube bölümleri parça ve veri hazır
   olunca bir kerede basılır. **Evre B yoktur.** `0027` AC-68 ve AC-75–AC-77 geçersizdir.
+- *(AP-08, Proje Yöneticisi kararı, 2026-11-27, AC-77:)* Bölümler, gereken font yüzleri yüklenince
+  (en çok ~1500 ms) basılır. Yüzler dile göre `document.fonts.load` ile açıkça yüklenir; font isteği
+  başarısız olursa bekleme hemen biter. Süre dolduktan sonra gelen font kayma üretebilir (bilinen bedel).
 
 *Gerekçe:* C6. Davranış değişmez, yalnız yeri değişir. Sayfanın tek içeriği şubeler olduğu için ara
 evre gereksiz. *Bedel:* sayfa ilk ziyarette bir parça isteği daha bekler. Bu parça ana sayfa için
@@ -732,6 +735,8 @@ ayrıntıda anlatılır. İkisi de kendi sayfasında görüneni söyler.
 - Ana sayfa, liste, detay ve iletişim sayfasının C3 medyanları PR'da `main` ile yan yana yazılır.
   *(CLARIFY B5:)* İletişim sayfasının LCP öğesi de PR'a yazılır.
 - CLS fontlar bekletilerek ölçülür (`frontend-003` dersi).
+- *(AP-08, Proje Yöneticisi kararı, 2026-11-27:)* İletişim sayfasının bölümleri, gereken font yüzleri
+  yüklenince (en çok ~1500 ms) basılır (D11). İletişim sayfasının LCP medyanı 2450 ms'yi aşarsa iş durur.
 
 *Gerekçe:* `0024`, `0027` D15 deseni. İletişim yeni bir indekslenen sayfa, C3'e girmeli. *Bedel:*
 perf koşusu bir sayfa uzar.

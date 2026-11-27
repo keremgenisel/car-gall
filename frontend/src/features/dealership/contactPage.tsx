@@ -1,10 +1,11 @@
 import '../../shared/i18n/contactCatalog'
-import { useEffect, useRef, useState } from 'react'
+import { use, useEffect, useRef, useState } from 'react'
 import { useLocale } from '../../app/localeContext'
 import type { PublicBranch, PublicGallery } from '../../shared/api/types'
 import { EmptyState, ErrorState } from '../../shared/ui'
 import { BranchHours, NowLine } from './branchClock'
 import { branchKey } from './branchDates'
+import { contactFonts } from './contactFonts'
 import type { GalleryLoad } from './useGallery'
 import './contactPage.css'
 
@@ -20,7 +21,10 @@ export function ContactBranches({
   readonly load: Exclude<GalleryLoad, { readonly kind: 'loading' }>
   readonly onRetry: () => void
 }) {
-  const { t } = useLocale()
+  const { locale, t } = useLocale()
+  // AC-77 — bölümler kullandıkları yazı tipi yüzleriyle basılır (en çok ~1500 ms; `contactFonts`).
+  // Beklerken rota kabuğunun iskeleti görünür (Suspense).
+  use(contactFonts(locale))
 
   // D4 — sayfanın tek içeriği şubeler: altlıktan farklı olarak boş yer değil hata gösterilir (AC-39).
   if (load.kind === 'error') {

@@ -156,6 +156,9 @@
   --logo-max-block-size: 40px;
   --logo-max-inline-size: 160px;
 
+  /* `0028` D10 — dar ekranda (iki satırlı üst çubuk) logonun azami genişliği (`frontend-003` D8'in onaylı adımı). */
+  --logo-narrow-max-inline-size: 120px;
+
   /* Daraltma çubuğunun ölçülmüş yüksekliği: legend + seçenek satırı + özet satırı.
      Hem İSKELET hem GERÇEK çubuk bu yüksekliği tutar (styles.css `.filter-bar`), yoksa
      çubuk belirdiğinde altındaki her şey kayar (CLS).

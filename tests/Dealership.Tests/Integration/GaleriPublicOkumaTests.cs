@@ -61,7 +61,10 @@ public sealed class GaleriPublicOkumaTests(DealershipDatabase database)
         Assert.Equal("Örnek Oto", (await OkuAsync(context, "ar")).DisplayName);
     }
 
-    [Fact(DisplayName = "0014/AC-42: İki aktif şube varken altlık her ikisinin adını, adresini ve telefonunu gösterir")]
+    private static PublicBranchMapDto Harita(string adres) =>
+        new("https://www.google.com/maps/search/?api=1&query=" + Uri.EscapeDataString(adres));
+
+    [Fact(DisplayName = "0014/AC-42, 0028/AC-21: İki aktif şube varken altlık her ikisinin adını, adresini ve telefonunu gösterir")]
     public async Task Doner_IkiAktifSube_AdAdresTelefon()
     {
         await using DealershipDbContext context = database.CreateContext();
@@ -73,8 +76,9 @@ public sealed class GaleriPublicOkumaTests(DealershipDatabase database)
         PublicGalleryDto galeri = await OkuAsync(context, "tr");
 
         Assert.Equal(2, galeri.Branches.Count);
-        Assert.Equal(new PublicBranchDto("Ataşehir Şubesi", "Ataşehir Bulvarı 5", "+902165550001"), galeri.Branches[0]);
-        Assert.Equal(new PublicBranchDto("Kadıköy Şubesi", "Bağdat Caddesi 1", "+902165550002"), galeri.Branches[1]);
+        // `0028` D5 — kurucu `Map`'i de alır: koordinatsız şubenin "Google Haritalar'da aç" adresi (0028 Context tablosu).
+        Assert.Equal(new PublicBranchDto("Ataşehir Şubesi", "Ataşehir Bulvarı 5", "+902165550001", Map: Harita("Ataşehir Bulvarı 5")), galeri.Branches[0]);
+        Assert.Equal(new PublicBranchDto("Kadıköy Şubesi", "Bağdat Caddesi 1", "+902165550002", Map: Harita("Bağdat Caddesi 1")), galeri.Branches[1]);
     }
 
     [Fact(DisplayName = "0014/AC-43: geçici kapalı ve kapatılmış şubeler altlıkta yer almaz")]
