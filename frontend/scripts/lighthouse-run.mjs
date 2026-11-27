@@ -48,6 +48,15 @@ const TARGETS = [
     // AC-83 — LCP öğesi galerinin ilk görseli olmalı; `data-testid` React'in bastığı işaret.
     lcpElementMustMatch: 'data-testid="gallery-image"',
   },
+  {
+    // `0028` **D14** · AC-76 — dördüncü adres iletişim sayfasıdır; perf tohumu her aktif şubeye
+    // koordinat, e-posta ve 12 özel gün verir, harita anahtarı sahtedir (yer tutucu basılır, ağa
+    // istek gitmez). LCP öğesi her koşuda loglanır ve PR'a yazılır (CLARIFY B5).
+    spec: '0028',
+    page: 'iletişim',
+    path: '/tr/contact',
+    reportPath: '../docs/evidence/0028-performance.json',
+  },
 ]
 
 /** Liste ucunun sayfa boyutu; ilk sayfada görselli ilan yoksa sonraki sayfalara bakılır. */

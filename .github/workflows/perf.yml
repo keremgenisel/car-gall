@@ -99,6 +99,8 @@ jobs:
           # 0026 AC-57, AC-59 — aynı bayrak tohum medyasının logosunu atar (SeedShowcase açıkken):
           # üst çubukta ve altlıkta logo, `og:image` ve `AutoDealer.logo` ile ölçülür.
           Development__SeedGalleryProfile: 'true'
+          # `0028` D14 · AC-76 — sahte harita anahtarı: iletişim sayfası yer tutucuyu basar, Google'a istek gitmez.
+          GoogleMaps__EmbedApiKey: perf-sahte-anahtar
           # D2/AC-53 — uygulama bu parola olmadan HİÇ başlamaz. Ölçüm işi giriş
           # yapmaz ama Host'u ayağa kaldırmak zorunda. ADR 0011 — değer SABİT DEĞİL:
           # önceki adımda üretilip `$GITHUB_ENV`'e yazılıyor ve kayıtlarda maskeli.
@@ -173,4 +175,5 @@ jobs:
             docs/evidence/0014-performance.json
             docs/evidence/0015-performance.json
             docs/evidence/0021-performance.json
+            docs/evidence/0028-performance.json
           if-no-files-found: warn
