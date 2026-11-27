@@ -8,7 +8,7 @@
 | **Modül(ler)** | `frontend/` public vitrin (favori düğmesi, sayaç, favoriler ve karşılaştırma ekranları, tembel katalog kümesi) · `Host` (iki yeni sayfa türü, belge etiketleri, `Referrer-Policy` — **D2**) · `Content.Contracts` (yalnız ayrılmış ad listesine `favorites` ve `compare` — **D1**) · `tests/VehicleCatalog.Tests` (alan adı kapısının okuduğu dosya ve "tek yerde" ölçüsü — **D11**) · `frontend/scripts/check-locale-keys.mjs` (üçüncü küme **D13**, anahtar varlığı kapısı **D19**) · `docs/` (sözlük **D16**, karar defteri, ADR `0013` eki ve `deploy.md` günlük notu **D17**). **Backend sözleşmesi değişmez** (**D14**; S5 koddan doğrulandı). |
 | **Bağımlı spec'ler** | `0001` (tamamlandı; **X5**'i bu kart açar) · `0002` (tamamlandı; R7/R8 alan kümesi ve alan adı eşlemesi) · `0004` (tamamlandı; D7 gerçek 404, D8 tanınmayan yol, D23 liste parametreleri) · `0024` (tamamlandı; AC-55'in ilk paket tanımı) · `0026` (tamamlandı; üst çubuk yerleşimi) · `frontend-002` (token katmanı) |
 | **Dayanak** | ADR 0003 Ek 1, sıra #12 · sahibin sırası (2026-11-26): son iş |
-| **Karar bekliyor** | yok — D1–D19 Proje Yöneticisi kararı (D18: +1280 B, 2026-11-26); S1–S3, D5, D6 sahip kararı (2026-11-26). |
+| **Karar bekliyor** | yok — D1–D19 Proje Yöneticisi kararı (D18: +1280 B, 2026-11-26; AP-08 revizyonuyla +1450 B); S1–S3, D5, D6 sahip kararı (2026-11-26). |
 
 ---
 
@@ -303,6 +303,69 @@ ekranda karşılaştırabiliyor.**
 13. **Üst çubuğa eklenen öğenin adı kırması veya taşırması** — `0026`'da ad iki satıra kırılınca
     CLS 0.041'e çıkmıştı; dar ekranda sayaç, logo, ad ve dil değiştirici aynı satırdadır.
 
+### Verilen kararlar — plan turu (DEV, 2026-11-26)
+
+R/C/AC'ye dokunmayan uygulama kararları. Bir kararı değiştiren her şey Proje Yöneticisine gider
+(AP-08).
+
+- **P1 — Depo kaydı.** Anahtar `cargallery.favorites` (`/token|session|auth/i`'ye uymaz, AC-19);
+  değer `{"v":1,"items":[{"slug","addedAt","modelName","modelYear"}]}`, son eklenen sonda; ekran
+  ters çevirir (AC-33). Doğrulama yalnız sürüm, slug biçimi (`[a-z0-9-]`, 1–160) ve tiplerdir
+  (düşürme adımı 4). Bozuk JSON ya da `v !== 1` boş sayılır; geçersiz öğe atlanır (AC-14).
+- **P2 — `shared/lib/favorites.ts` tek kaynak.** Modül açılışta bir kez deneme yazması + silmesi
+  yapar (D9'un üç biçimi `available = false`). Bellekteki anlık görüntü `useSyncExternalStore` ile
+  okunur; ilk render depodan eşzamanlı okur, yani sayaç ilk boyamada doğrudur (AC-29). Ekleme ve
+  çıkarma **o anki depoyu yeniden okur**, görünen hâlin eylemini uygular (ekle görünüyorsa ekle,
+  kayıtta varsa no-op; D4/B8), yazar ve anlık görüntüyü yazılandan kurar. Yazma atarsa görüntü
+  değişmez ve neden duyurulur (AC-17). 24'te ekleme yapılmaz (AC-18).
+- **P3 — Tek canlı bölge.** Kabukta (üst çubuk) tek `role="status"` bölge; düğmeler oraya yazar.
+  Metin tek ICU `select` anahtarıdır (düşürme adımı 3): eklendi · çıkarıldı · sınır (sayı ICU) ·
+  yazılamadı. Karşılaştırma seçim sınırı tembel parçanın kendi bölgesindedir.
+- **P4 — Tek simge.** Kalp tek SVG yolu; dolu/boş hâl CSS'te `fill` ile (`aria-pressed="true"` →
+  dolgulu, aksi çizgi) — renk dışı fark biçimdir (AC-26). Düğme ve sayaç aynı `HeartIcon`'u
+  kullanır (düşürme adımları 1–2).
+- **P5 — Sayaç biçimi.** Sayaç her genişlikte **simge + sayı**dır; erişilebilir adı tam ICU
+  cümlesidir (AC-30). D8'in "pay yetmezse" sırasının birinci adımı baştan uygulanır: 320 px'te
+  logo + ad + sayaç + dil değiştirici aynı satıra sığsın ve ilk paket küçük kalsın. Ölçümde yine
+  sığmazsa ikinci adım (dar ekranda logo 120 px) uygulanır ve PR'da yazılır.
+- **P6 — Kart düğmesi gövdede.** Düğme kartın gövdesinde, model adının satırında, satır sonu
+  tarafındadır (bağlantının dışında, AC-22). Görselin üstüne konmaz: kapaksız ilanda görsel alanı
+  boştur ve düğme metnin üstüne binerdi.
+- **P7 — Detay düğmesi** model adının altında, fiyatın üstünde; görünür metin duruma göre
+  (düşürme adımı 5: metin canlı bölge `select`'iyle değil, kendi iki anahtarıyla — "Favorilere
+  ekle" / "Favorilerde" sayaç cümlesinden türetilemiyor; adım 5 uygulanamazsa PR'da gerekçesiyle).
+- **P8 — Tembel parça ve üçüncü küme.** İki ekran tek modülden (`features/catalog/favoritePages.tsx`)
+  tek `import()` ile iner. Küme `shared/i18n/locales/favorites/{tr,ar,en}.json`; kaydı
+  `shared/i18n/favoritesCatalog.ts` yapar ve onu yalnız bu modül içe aktarır. Stiller parçanın kendi
+  CSS dosyasında (`0026` P8 deseni).
+- **P9 — Kapı (`check-locale-keys.mjs`).** Küme listesi genelleşir; "iki kümede birden" bütün
+  kümeler arasında ölçülür; Arapça çoğulu bütün kümelerin birleşimi; vitrin sınırı panel modülü
+  gibi küme modülünü ve anahtarlarını da ölçer. D19 için bütün `src` (test dosyaları dâhil)
+  TypeScript ayrıştırıcısıyla okunur: `t('…')` çağrısının sabit ilk argümanı bir kümede, şablonlu
+  argümanın sabit öneki bir anahtarın başında olmalı.
+- **P10 — Adres.** Ön yüz rotası `favorites` ve `compare` türlerini tanır, ikisinin alt yolları
+  `not-found`'dur. Karşılaştırma adresi `URLSearchParams.getAll('listing')`'ten D3'e göre okunur
+  ve gerekiyorsa `history.replaceState` ile düzeltilir (`utm_*` dâhil öbür parametreler korunur).
+- **P11 — Host.** `SeoPageKind.Favorites` ve `Compare`; belge `200`, başlık `WithName(seo.…, ad)`,
+  `noindex`, kanonik/og/JSON-LD yok. `Referrer-Policy: no-referrer` bülten sayfalarıyla aynı
+  dalda, sayfa türüne göre verilir. SEO kümesine iki başlık anahtarı.
+- **P12 — Veri yolu.** Favoriler ve karşılaştırma ekranı mevcut `fetchListingDetail`'i slug başına
+  paralel çağırır; 404 → "düştü", diğer hata → satır/sütun hatası + "tekrar dene" (yalnız o slug).
+
+### Uygulama planı
+
+1. Plan (bu bölüm).
+2. Host + ayrılmış adlar + ön yüz rotası: AC-1–AC-7, AC-11, AC-3.
+3. Depo katmanı (`favorites.ts`): AC-12–AC-20 birim testleri.
+4. Düğme, sayaç, canlı bölge; kart, detay, üst çubuk: AC-21–AC-31; ilk paket ölçümü ve düşürme
+   adımları (AC-67).
+5. Üçüncü küme ve kapı (P9): AC-69, AC-72; D19'un mevcut kodda bulduğu eksikler.
+6. Favoriler ekranı ve karşılaştırma seçimi: AC-33–AC-48.
+7. `attributeName` taşınması + kapı; karşılaştırma ekranı: AC-50–AC-64, AC-56/57.
+8. e2e (gizlilik, depo, üst çubuk, tablo, perf), görsel kanıt: AC-15, AC-29, AC-32, AC-43, AC-62,
+   AC-65, AC-71, AC-74.
+9. Belgeler (D16, D17).
+
 ---
 
 ## Verilen kararlar
@@ -425,6 +488,14 @@ Panelde yoktur. Üst çubuk taşmaz; ad iki biçimde ele alınır (B7):
   kısmı en az 6 karakterdir.
 - **Pay yetmezse sıra:** önce dar ekranda sayaç yalnız simge + sayı olur (erişilebilir ad tam
   cümle); bu da yetmezse dar ekranda logonun azami genişliği 160 px'ten **120 px**'e iner.
+- **Dar ekranda iki satır (AP-08 revizyonu, 2026-11-26 — Takım Yöneticisi kararı):** 40rem
+  (640 px) altında üst çubuk HER ZAMAN iki satırdır — 1. satır marka (logo + ad), 2. satır sayaç
+  ve dil değiştirici (satır sonunda); dil bağlantıları en az dokunma hedefi boyutundadır. Kırılma
+  içerikten bağımsızdır (sayaç 0 → 24, ad uzunluğu, dil). *Gerekçe:* ölçüm — 320 px'te dil
+  değiştirici tek başına 207 px, sayaçla satır sonu grubu 259 px, markaya 13 px kalıyordu; logo 120 px'e
+  inse de ad sığmıyordu. Logolu, 40 karakterlik ad, 24 favori ve üç dilin tam adıyla tek satırın
+  sığdığı en dar genişlik tr 560, en 560, ar 576 px; eşik 640 px. `main`'de de 320 px'te 160 px logo
+  taşıyordu (`0026` yalnız 412 px'i ölçmüştü) — bu kartla düzeldi.
 *Gerekçe:* altlık yalnız ana sayfada (Context, X8). Sıfırda gizlemek, ilk favoride üst çubuğu
 oynatırdı. *Bedel:* üst çubukta kalıcı bir öğe daha; dar ekranda adın üç noktaya düşme ihtimali
 artar ve dar ekranda logo küçülebilir.
@@ -539,7 +610,8 @@ tarayıcıda işaretlediği ilan; sunucuda yoktur, slug ile tutulur · **Karşı
 
 *Gerekçe:* DoD T8. *Bedel:* yok.
 
-**D18 — İlk paket bütçesi: bu kart için +1280 B (Proje Yöneticisi kararı, 2026-11-26; B5).**
+**D18 — İlk paket bütçesi: bu kart için +1450 B (Proje Yöneticisi kararı, 2026-11-26; B5).**
+*Revizyon (2026-11-26, AP-08): +1280 B → +1450 B — Takım Yöneticisi kararı; gerekçe: beş düşürme adımından sonra ölçülen +1396 B, ekran entegrasyonuyla ~+1430 B. Sınır serttir; head'de aşılırsa Proje Yöneticisine dönülür.*
 Ölçü `0024` AC-55'in tanımıdır ve PR'ın head commit'inde alınır. Context ölçümü favori düğmesi +
 sayaç + depo kodunu ~1,2 KB gzip buluyor; +512 B ile karşılanamaz. Koşullar:
 1. **Düşürme sırası zorunludur** (Context § Paket). Her adımın kazancı ölçülür ve PR'da yazılır.
@@ -619,10 +691,16 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 ### Kayıt ve depo (D4, D5, D9 · R4, R13, R15, C9)
 
-- **AC-12.** İki sekme, ikisi de boş kayıtla açılmış (D4). A'da X eklenir. B yenilenmeden Y'yi
-  ekler → kayıtta X ve Y vardır, B'nin sayacı **2**'dir. B'de X basılı görünmüyor; basılır →
-  kayıtta X **tek** kez vardır (no-op birleşme), B'de X basılı ve sayaç 2'dir. A yenilenmeden X'i
-  çıkarır → kayıtta yalnız Y kalır.
+- **AC-12.** İki sekme, ikisi de boş kayıtla açılmış (D4). Düğme ve sayaç her eylemden sonra
+  kayıttan yeniden çizilir.
+  (i) A'da X eklenir. B yenilenmeden Y'yi ekler → kayıtta X ve Y vardır (X silinmez); B'nin sayacı
+  **2**'dir ve B X'i artık basılı çizer.
+  (ii) Bayat "ekle": A'da X eklenir; B yenilenmeden, X'i hâlâ basılı değil gösterirken X'e basar →
+  kayıtta X **tek** kez vardır (no-op birleşme), B'de X basılı.
+  (iii) A yenilenmeden X'i çıkarır → kayıtta yalnız öbürü kalır.
+  *Revizyon (2026-11-27, AP-08): önceki metin B Y'yi ekledikten sonra X'in basılı
+  görünmemesini bekliyordu; D4 "eylemden sonra kayıttan yeniden çizilir" diyor — Takım Yöneticisi
+  kararı.*
 - **AC-13.** `/tr/cars`'ta eklenen favori `/ar/` ve `/en/favorites`'ta görünür; sayaç üç dilde
   aynı sayıyı gösterir.
 - **AC-14.** Depodaki değer bozuk JSON, tanınmayan sürüm ya da yanlış biçimli öğe içerdiğinde
@@ -677,8 +755,11 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 - **AC-31.** Ekleme ve çıkarma sayacı sayfa yenilenmeden günceller.
 - **AC-32.** Üst çubuk iki fikstürle, üç dilde, 320 px ve 360 px'te ölçülür. Her ikisinde de
   sayfada yatay kaydırma yoktur (görsel kanıt, tr ve ar).
-  (i) **Logosuz, 40 karakterlik ad:** ad kırılabilir (`0026` AC-34 değişmez); web fontu gelirken
-  üst çubuğun CLS'i ≤ 0.1.
+  (i) **Logosuz, 40 karakterlik ad:** ad tek satırdır ve taşarsa "…" ile kısalır; web fontu gelirken
+  üst çubuğun CLS'i ≤ 0.1 ve yüksekliği değişmez. *Revizyon (2026-11-27, AP-08): önceki metin "ad
+  kırılabilir (`0026` AC-34 değişmez)" diyordu; font bekletilince (QA 2 BULGU-6) adın satır sayısı
+  font değişiminde değişip CLS 0.24'e kadar çıkıyordu — `0026` AC-34'ün "logosuz ad kırılabilir"
+  kısmı kalktı, Takım Yöneticisi kararı (sahibin logolu ad için verdiği "…" kararının uzatılması).*
   (ii) **Logolu (160×40), 40 karakterlik ad, 320 px:** sayaç ve dil değiştirici görünür ve
   tıklanabilirdir; adın görünen kısmı en az 6 karakterdir.
 
@@ -739,8 +820,14 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 - **AC-54.** Karşılaştırma ekranı yalnız yanıttaki nitelikleri basar (vitest). Yanıtta olmayan
   anahtar için satır yoktur. Karşılaştırma ekranının kaynağında alan ayarı okuması yoktur:
   `field-settings` / alan ayarı tipi grep'i boştur.
-- **AC-55.** e2e: panelden bir alan kapatılır → karşılaştırmada o alanın ne satırı ne
-  "Belirtilmemiş" hücresi vardır; alan açılınca satır geri gelir.
+- **AC-55.** Alan ayarı veritabanında kapatılır (panelde bu yol yok — `0002` AC-12/13 ile aynı
+  yöntem) → karşılaştırmada o alanın ne satırı ne "Belirtilmemiş" hücresi vardır; alan açılınca
+  satır geri gelir. Ölçü üç parçadır: (a) gerçek veritabanında alan açıkken detay okumasında
+  anahtar VAR, kapatılıp yeniden yansıtılınca YOK, açılınca geri gelir (aynı testte);
+  (b) vitest: yanıtta olmayan anahtar için satır ve hücre yok (AC-52, AC-54); (c) e2e: ekrandaki
+  satır kümesi gerçek detay yanıtının anahtar kümesidir (sayı ve adlar).
+  *Revizyon (2026-11-26, AP-08): "panelden" ifadesi uygulanamıyordu — panelde ve admin API'de alan
+  ayarı yazma yolu yok — Takım Yöneticisi kararı.*
 - **AC-56.** Satır başlıkları detay ekranındaki alan adlarıyla aynıdır; hiçbir satırda başlık
   değerle aynı metin değildir ("Hatchback | Hatchback" yok). Alan adı eşlemesi kodda **tek**
   yerdedir; detay ve karşılaştırma onu içe aktarır.
@@ -785,8 +872,9 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 - **AC-67.** İlk paket — giriş JS + giriş CSS + girişin statik içe aktardığı ya da `index.html`'in
   `modulepreload` ettiği her JS, `gzip -9` — `main` tabanına göre en çok **D18'in sınırı**
-  kadar büyür: **1280 B**. Ölçüm PR'ın **head** commit'inde yapılır. Context'teki
+  kadar büyür: **1450 B**. Ölçüm PR'ın **head** commit'inde yapılır. Context'teki
   düşürme sırasının her adımı uygulanmıştır ve her adımın ölçülen kazancı PR'da yazılıdır (D18).
+  *Revizyon (2026-11-26, AP-08): 1280 → 1450 B, D18 ile birlikte — Takım Yöneticisi kararı.*
 - **AC-68.** `index.html`'in `modulepreload` listesi ve girişin statik içe aktardığı JS dosyası
   sayısı `main` ile aynıdır; favoriler ve karşılaştırma ekranlarının kodu yalnız tembel
   parça(lar)dadır (derleme çıktısı denetimi CI'da).
@@ -841,7 +929,7 @@ Yok. S1–S3, D5 ve D6 sahibe soruldu ve cevaplandı (2026-11-26).
 
 - [x] Açık sorular karara bağlandı; **S5 kodda doğrulandı** ve sonucu Context'e yazıldı.
 - [x] Proje Yöneticisi D1–D17'yi onayladı; QA CLARIFY turu işlendi (B1–B17, 2026-11-26).
-- [x] D18 (ilk paket bütçesi) karara bağlandı: +1280 B (Proje Yöneticisi kararı, 2026-11-26).
+- [x] D18 (ilk paket bütçesi) karara bağlandı: +1280 B (Proje Yöneticisi kararı, 2026-11-26); AP-08 revizyonuyla +1450 B (Takım Yöneticisi kararı, 2026-11-26).
 - [ ] `docs/deploy.md`'ye ters vekil/CDN erişim günlüğü notu düşüldü (D17, B2).
 - [ ] <!-- DoD:T1 --> Tüm kabul kriterleri karşılandı; kriter → test eşlemesi PR'da tabloyla gösterildi.
 - [ ] <!-- DoD:T2 --> Görsel kanıt eklendi (`docs/evidence/frontend-003-ac<n>.png`); iki boş durum, mobil

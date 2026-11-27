@@ -3,5 +3,7 @@
   "seo.list.title": "All cars",
   "seo.list.description": "Every car for sale. Mileage, model year and price are stated plainly in each listing; narrow down by body type, fuel, transmission and price.",
   "seo.detail.description": "{year} model, {mileage}, {price}. At our {branch} branch.",
-  "seo.document.fallbackTitle": "Car showroom"
+  "seo.document.fallbackTitle": "Car showroom",
+  "seo.favorites.title": "My favourites",
+  "seo.compare.title": "Compare cars"
 }

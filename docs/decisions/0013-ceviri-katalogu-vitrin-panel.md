@@ -103,3 +103,27 @@ CI `C3 eşikleri` medyanları bu ADR'nin PR'ında raporlanır.
   anahtarı) kapıda kırılır; diğer yönü (panelin anahtarı vitrin kümesinde) yalnız paket
   boyutunu büyütür ve **kapı onu görmez**.
 - Vitrin sınırı statik bir taramadır; görmediği biçimler § Kapı'da listeli.
+
+## Ek — tembel vitrin kümesi (`frontend-003` D13, 2026-11-26)
+
+Üçüncü bir küme: **favoriler** (`locales/favorites/*.json`). Vitrinin ziyaretçiye açık ama ilk pakete
+girmeyen ekranlarının (favoriler ve karşılaştırma) metinleri burada yaşar ve ekranların tembel
+parçasıyla iner; kaydı `shared/i18n/favoritesCatalog.ts` yapar ve onu yalnız o parça içe aktarır.
+`check:locales` tembel her kümeyi dört denetimin her birine alır (üç dil eşitliği, Arapça çoğul
+biçimleri, başka kümede tekrar yok, vitrin sınırı); küme yalnız `TEMBEL_KUMELER`'e eklenir. Aynı
+kartla kapıya **anahtar varlığı** eklendi (D19): `src` altındaki her `t('…')` sabit anahtarı bir
+kümede, şablonlu anahtarın sabit öneki bir anahtarın başında olmalı. `x ?? 'k'` / `x || 'k'` ve
+koşullu ifadede sabit dallar ölçülür. SEO kümesi "var" sayılmaz: ön yüz onu yüklemez.
+
+**Ölçülemeyenler** (statik olarak; `check:locales` her koşuda türüne göre sayar). `frontend-003` QA 2
+turu sonunda, `src` altında 857 `t()` çağrısından:
+
+| İlk argüman | Sayı | Örnek |
+|---|---|---|
+| Değişken (`Identifier`) | 33 | `t(key)` — anahtar çağıranda kurulur |
+| Özellik erişimi (`PropertyAccessExpression`) | 16 | `t(item.labelKey)` |
+| Çağrı (`CallExpression`) | 19 | `t(keyOf(code))` |
+| Öneksiz şablon (`TemplateExpression`) | 5 | `` t(`${prefix}.x`) `` (yalnız testlerde) |
+
+`t` dışında adlandırılmış çevirmenler ve kümenin onu kullanan modülle uyumu (panel kodunun vitrin
+kümesine yaslanması gibi) ölçülmez; sonuncusu ayrı iş adayıdır.

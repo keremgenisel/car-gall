@@ -203,5 +203,8 @@
   "newsletter.error.body": "تعذّر إتمام طلبك. أعد المحاولة بعد قليل.",
   "newsletter.retry": "أعد المحاولة",
   "newsletter.unsubscribed.title": "تم إلغاء اشتراكك",
-  "newsletter.unsubscribed.body": "لن تصلك النشرة بعد الآن. إن غيّرت رأيك يمكنك الاشتراك من جديد."
+  "newsletter.unsubscribed.body": "لن تصلك النشرة بعد الآن. إن غيّرت رأيك يمكنك الاشتراك من جديد.",
+  "favorites.card": "المفضلة: {model} {year}",
+  "favorites.counter": "{count, plural, one {مفضلتي، سيارة واحدة} two {مفضلتي، سيارتان} few {مفضلتي، # سيارات} many {مفضلتي، # سيارة} other {مفضلتي، # سيارة}}",
+  "favorites.outcome": "{state, select, added {أضيفت إلى المفضلة} removed {أزيلت من المفضلة} limit {الحد الأقصى للمفضلة {count, number}} on {في المفضلة} off {أضف إلى المفضلة} other {تعذّر حفظ المفضلة}}"
 }

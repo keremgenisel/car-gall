@@ -6,9 +6,15 @@ import ts from 'typescript'
  * CI kapısı: tr/ar/en katalogları anahtar bazında EŞİT olmalı (docs/testing.md § 3).
  * Eksik anahtar ziyaretçiye boş metin veya ham anahtar gösterir; ikisi de kabul edilemez.
  *
- * ADR `0013` — İKİ katalog kümesi var: vitrin (`locales/*.json`, ilk pakete girer) ve
- * panel (`locales/panel/*.json`, panelin lazy paketiyle iner). Eşitlik HER KÜME İÇİN
- * ayrı ölçülür: vitrin kümesi eşit ama panel kümesi eksikse panel boş metin basar.
+ * ADR `0013` — katalog kümeleri: vitrin (`locales/*.json`, ilk pakete girer), panel
+ * (`locales/panel/*.json`, panelin lazy paketiyle iner), SEO (Host okur) ve `frontend-003` **D13**
+ * ile favoriler (`locales/favorites/*.json`, favoriler ve karşılaştırma ekranlarının tembel
+ * parçasıyla iner). Eşitlik HER KÜME İÇİN ayrı ölçülür: vitrin kümesi eşit ama tembel bir küme
+ * eksikse o ekran boş metin basar.
+ *
+ * `frontend-003` **B3** — tembel her küme dört denetimin HER BİRİNE girer: (1) üç dil eşitliği,
+ * (2) Arapça çoğul biçimleri, (3) başka kümede tekrar yok, (4) vitrin sınırı (küme modülü ve
+ * anahtarları vitrinin statik ağacından ulaşılmaz). Küme adı yalnız `TEMBEL_KUMELER`'e eklenir.
  */
 const localesDir = new URL('../src/shared/i18n/locales/', import.meta.url).pathname
 const srcDir = new URL('../src/', import.meta.url).pathname
@@ -30,6 +36,14 @@ const kumeler = new Map([
   // `0004` **D12** · **P2** — belge başlığı ve açıklamasının SEO'ya özgü metinleri. Ön yüz onları
   // hiç içe aktarmaz (vitrin paketine girmez); Host dağıtım paketinde okur.
   ['seo', kumeyiOku(join(localesDir, 'seo'))],
+  // `frontend-003` D13 — favoriler ve karşılaştırma ekranlarının metinleri.
+  ['favoriler', kumeyiOku(join(localesDir, 'favorites'))],
+])
+
+/** İlk pakete girmeyen ve ön yüzün tembel bir parçayla indirdiği kümeler; kayıt modülleriyle. */
+const TEMBEL_KUMELER = new Map([
+  ['panel', 'shared/i18n/panel.ts'],
+  ['favoriler', 'shared/i18n/favoritesCatalog.ts'],
 ])
 
 let failed = false
@@ -66,7 +80,7 @@ for (const [kume, catalogs] of kumeler) {
 // İki kümenin dil listesi aynı olmalı: bir dilin panel kataloğu yoksa panel o dilde boş kalır.
 const vitrinDilleri = [...kumeler.get('vitrin').keys()].sort().join(',')
 
-for (const kume of ['panel', 'seo']) {
+for (const kume of ['panel', 'seo', 'favoriler']) {
   const diller = [...kumeler.get(kume).keys()].sort().join(',')
 
   if (vitrinDilleri !== diller) {
@@ -79,10 +93,11 @@ for (const kume of ['panel', 'seo']) {
 // zaten görünen metin mevcut vitrin anahtarından okunur, kopyası yazılmaz.
 {
   const seoAnahtarlari = Object.keys(kumeler.get('seo').get('tr') ?? {})
-  const digerleri = new Set([
-    ...Object.keys(kumeler.get('vitrin').get('tr') ?? {}),
-    ...Object.keys(kumeler.get('panel').get('tr') ?? {}),
-  ])
+  const digerleri = new Set(
+    ['vitrin', ...TEMBEL_KUMELER.keys()].flatMap((kume) =>
+      Object.keys(kumeler.get(kume).get('tr') ?? {}),
+    ),
+  )
   const onekDisi = seoAnahtarlari.filter((key) => !key.startsWith('seo.'))
   const tekrar = seoAnahtarlari.filter((key) => digerleri.has(key))
   const disaridaOnekli = [...digerleri].filter((key) => key.startsWith('seo.'))
@@ -98,15 +113,30 @@ for (const kume of ['panel', 'seo']) {
 
 // Bir anahtar TEK kümede yaşar: ikisinde birden olursa hangisinin kazandığı kayıt sırasına
 // bağlı kalır ve iki çeviri sessizce ayrışır.
-const panelAnahtarlari = new Set(Object.keys(kumeler.get('panel').get('tr') ?? {}))
-const ikiKumede = Object.keys(kumeler.get('vitrin').get('tr') ?? {}).filter((key) =>
-  panelAnahtarlari.has(key),
-)
+// `frontend-003` B3 — vitrin ve bütün tembel kümeler çift çift karşılaştırılır.
+const ekranKumeleri = ['vitrin', ...TEMBEL_KUMELER.keys()]
 
-if (ikiKumede.length > 0) {
-  failed = true
-  console.error(`iki kümede birden (${ikiKumede.length}): ${ikiKumede.join(', ')}`)
+for (const [index, birinci] of ekranKumeleri.entries()) {
+  const anahtarlar = new Set(Object.keys(kumeler.get(birinci).get('tr') ?? {}))
+
+  for (const ikinci of ekranKumeleri.slice(index + 1)) {
+    const ikiKumede = Object.keys(kumeler.get(ikinci).get('tr') ?? {}).filter((key) =>
+      anahtarlar.has(key),
+    )
+
+    if (ikiKumede.length > 0) {
+      failed = true
+      console.error(
+        `iki kümede birden — ${birinci} ve ${ikinci} (${ikiKumede.length}): ${ikiKumede.join(', ')}`,
+      )
+    }
+  }
 }
+
+/** Vitrinin KULLANAMAYACAĞI anahtarlar: tembel kümelerin hepsi (vitrin sınırı aşağıda). */
+const tembelAnahtarlar = new Set(
+  [...TEMBEL_KUMELER.keys()].flatMap((kume) => Object.keys(kumeler.get(kume).get('tr') ?? {})),
+)
 
 /**
  * İkinci kapı: **Arapça'da altı çoğul biçimi var** (`docs/frontend.md` § 5,
@@ -167,7 +197,7 @@ function pluralBicimleri(message) {
   return bicimler
 }
 
-const arapca = { ...kumeler.get('vitrin').get('ar'), ...kumeler.get('panel').get('ar') }
+const arapca = Object.assign({}, ...ekranKumeleri.map((kume) => kumeler.get(kume).get('ar') ?? {}))
 
 {
   const eksikBicimler = []
@@ -213,7 +243,6 @@ const arapca = { ...kumeler.get('vitrin').get('ar'), ...kumeler.get('panel').get
  * düğüm değildir. Kapının hâlâ görmediği biçimler ADR `0013` § Kapı'da.
  */
 const girdi = join(srcDir, 'main.tsx')
-const panelModulu = join(srcDir, 'shared/i18n/panel.ts')
 
 function coz(kaynak, belirtec) {
   const temel = resolve(dirname(kaynak), belirtec)
@@ -245,7 +274,7 @@ while (yigin.length > 0) {
   const goreli = dosya.slice(srcDir.length)
 
   const onekIhlali = (onek) =>
-    onek.includes('.') && [...panelAnahtarlari].find((key) => key.startsWith(onek))
+    onek.includes('.') && [...tembelAnahtarlar].find((key) => key.startsWith(onek))
 
   const dolas = (dugum) => {
     // Statik import/export: `import x from`, `import './yan-etki'`, `export … from`.
@@ -272,7 +301,7 @@ while (yigin.length > 0) {
 
     if (ts.isStringLiteral(dugum) || ts.isNoSubstitutionTemplateLiteral(dugum)) {
       const metin = dugum.text
-      const ihlal = metin.endsWith('.') ? onekIhlali(metin) : panelAnahtarlari.has(metin)
+      const ihlal = metin.endsWith('.') ? onekIhlali(metin) : tembelAnahtarlar.has(metin)
 
       if (ihlal) {
         vitrinIhlalleri.push(`src/${goreli} → ${metin.endsWith('.') ? `${metin}…` : metin}`)
@@ -289,19 +318,21 @@ while (yigin.length > 0) {
   dolas(kaynak)
 }
 
-if (vitrinModulleri.has(panelModulu)) {
-  failed = true
-  console.error(
-    '[vitrin sınırı] src/shared/i18n/panel.ts vitrinin statik import ağacında: panel ' +
-      'kataloğu ilk pakete girer. Yalnız panelin lazy paketi (AdminApp) onu içe aktarır.',
-  )
+for (const [kume, modul] of TEMBEL_KUMELER) {
+  if (vitrinModulleri.has(join(srcDir, modul))) {
+    failed = true
+    console.error(
+      `[vitrin sınırı] src/${modul} vitrinin statik import ağacında: ${kume} kataloğu ilk ` +
+        'pakete girer. Yalnız o kümenin tembel parçası onu içe aktarır.',
+    )
+  }
 }
 
 if (vitrinIhlalleri.length > 0) {
   failed = true
   console.error(
-    `[vitrin sınırı] vitrin panel anahtarı kullanıyor (${vitrinIhlalleri.length}) — ziyaretçi ` +
-      `boş metin görür; anahtar vitrin kataloğuna (locales/*.json) taşınır:\n  ` +
+    `[vitrin sınırı] vitrin tembel bir kümenin anahtarını kullanıyor (${vitrinIhlalleri.length}) — ` +
+      `ziyaretçi boş metin görür; anahtar vitrin kataloğuna (locales/*.json) taşınır:\n  ` +
       vitrinIhlalleri.join('\n  '),
   )
 }
@@ -348,10 +379,117 @@ if (vitrinModulleri.size < 10) {
   }
 }
 
+/**
+ * `frontend-003` **D19** — anahtar VARLIĞI. `src` altındaki her `t('…')` çağrısının sabit anahtarı
+ * en az bir kümede bulunur; şablonlu anahtarın (`` t(`app.locale.${x}`) ``) sabit önekiyle başlayan
+ * en az bir anahtar vardır. Koşullu ifadenin (`t(a ? 'x' : 'y')`) iki dalı da ölçülür. Eksik
+ * anahtar ziyaretçiye BOŞ metin gösterir ve hiçbir birim testi bunu görmez (`0025`'in boş
+ * `aria-label`'ı). Test dosyaları da taranır: olmayan anahtarı arayan bir test, olmayan metni
+ * doğrular.
+ */
+{
+  // QA 2 BULGU-3 (a) — SEO kümesi SAYILMAZ: ön yüz onu hiç yüklemez; `t('seo.…')` boş metin basar.
+  const butunAnahtarlar = new Set(
+    [...kumeler]
+      .filter(([kume]) => kume !== 'seo')
+      .flatMap(([, catalogs]) => Object.keys(catalogs.get('tr') ?? {})),
+  )
+  /** Statik olarak ölçülemeyen çağrılar, ilk argümanın türüne göre (ADR 0013 eki). */
+  const olculemeyen = new Map()
+  const eksikler = []
+
+  const anahtarlar = (dugum) => {
+    if (ts.isStringLiteral(dugum) || ts.isNoSubstitutionTemplateLiteral(dugum)) {
+      return [{ anahtar: dugum.text, onek: false }]
+    }
+
+    // Sabit öneki olmayan şablon (`` t(`${prefix}.x`) ``) statik olarak ölçülemez; atlanır.
+    if (ts.isTemplateExpression(dugum)) {
+      return dugum.head.text === '' ? [] : [{ anahtar: dugum.head.text, onek: true }]
+    }
+
+    if (ts.isConditionalExpression(dugum)) {
+      return [...anahtarlar(dugum.whenTrue), ...anahtarlar(dugum.whenFalse)]
+    }
+
+    if (ts.isParenthesizedExpression(dugum)) {
+      return anahtarlar(dugum.expression)
+    }
+
+    // BULGU-3 (b) — `t(x ?? 'k')`, `t(x || 'k')`: sabit dal ölçülür.
+    if (
+      ts.isBinaryExpression(dugum) &&
+      (dugum.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken ||
+        dugum.operatorToken.kind === ts.SyntaxKind.BarBarToken)
+    ) {
+      return [...anahtarlar(dugum.left), ...anahtarlar(dugum.right)]
+    }
+
+    return []
+  }
+
+  for (const dosya of readdirSync(srcDir, { recursive: true })) {
+    if (!/\.tsx?$/.test(dosya)) {
+      continue
+    }
+
+    const kaynak = ts.createSourceFile(
+      dosya,
+      readFileSync(join(srcDir, dosya), 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+      dosya.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    )
+
+    const dolas = (dugum) => {
+      if (
+        ts.isCallExpression(dugum) &&
+        ts.isIdentifier(dugum.expression) &&
+        dugum.expression.text === 't' &&
+        dugum.arguments.length > 0
+      ) {
+        const bulunan = anahtarlar(dugum.arguments[0])
+
+        if (bulunan.length === 0) {
+          const tur = ts.SyntaxKind[dugum.arguments[0].kind]
+          olculemeyen.set(tur, (olculemeyen.get(tur) ?? 0) + 1)
+        }
+
+        for (const { anahtar, onek } of bulunan) {
+          const var_ = onek
+            ? [...butunAnahtarlar].some((key) => key.startsWith(anahtar))
+            : butunAnahtarlar.has(anahtar)
+
+          if (!var_) {
+            const { line } = kaynak.getLineAndCharacterOfPosition(dugum.getStart())
+            eksikler.push(`src/${dosya}:${line + 1} → ${onek ? `${anahtar}\${…}` : anahtar}`)
+          }
+        }
+      }
+
+      ts.forEachChild(dugum, dolas)
+    }
+
+    dolas(kaynak)
+  }
+
+  ozet.push(
+    `ölçülemeyen t() çağrısı: ${[...olculemeyen].map(([tur, sayi]) => `${tur} ${sayi}`).join(', ') || 'yok'}`,
+  )
+
+  if (eksikler.length > 0) {
+    failed = true
+    console.error(
+      `[anahtar varlığı] hiçbir kümede olmayan anahtar (${eksikler.length}) — ziyaretçi boş metin ` +
+        `görür:\n  ${eksikler.join('\n  ')}`,
+    )
+  }
+}
+
 if (failed) {
   process.exit(1)
 }
 
 console.log(
-  `${ozet.join(' · ')} — hepsi eşit. Vitrin sınırı: ${vitrinModulleri.size} modül, panel anahtarı yok.`,
+  `${ozet.join(' · ')} — hepsi eşit. Vitrin sınırı: ${vitrinModulleri.size} modül, tembel küme anahtarı yok. Anahtar varlığı: eksik yok.`,
 )

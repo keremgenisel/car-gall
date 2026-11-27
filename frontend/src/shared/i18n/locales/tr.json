@@ -203,5 +203,8 @@
   "newsletter.error.body": "İşleminiz tamamlanamadı. Biraz sonra yeniden deneyin.",
   "newsletter.retry": "Yeniden dene",
   "newsletter.unsubscribed.title": "Abonelikten çıktınız",
-  "newsletter.unsubscribed.body": "Size bir daha bülten gönderilmeyecek. Fikrinizi değiştirirseniz yeniden abone olabilirsiniz."
+  "newsletter.unsubscribed.body": "Size bir daha bülten gönderilmeyecek. Fikrinizi değiştirirseniz yeniden abone olabilirsiniz.",
+  "favorites.card": "Favori: {model} {year}",
+  "favorites.counter": "{count, plural, other {Favorilerim, # araç}}",
+  "favorites.outcome": "{state, select, added {Favorilere eklendi} removed {Favorilerden çıkarıldı} limit {Favori sınırı: {count, number}} on {Favorilerde} off {Favorilere ekle} other {Favori kaydedilemedi}}"
 }

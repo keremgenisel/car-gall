@@ -1,0 +1,98 @@
+/* `frontend-003` P8 — favoriler ve karşılaştırma ekranları; tembel parçanın kendi CSS'i (AC-70). */
+
+.favorites-page__note {
+  margin-block-end: var(--space-6);
+  color: var(--color-ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+.favorites-page__compare {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  margin-block-end: var(--space-6);
+}
+
+.favorites-page__select {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-block-size: var(--touch-target-min-size);
+  padding-inline: var(--space-6);
+  padding-block-end: var(--space-4);
+}
+
+.favorites-page__rows {
+  display: grid;
+  gap: var(--space-4);
+  margin-block: var(--space-6);
+  padding: 0;
+  list-style: none;
+}
+
+.favorites-page__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+
+.favorites-page__gone {
+  margin-block-start: var(--space-8);
+}
+
+.favorites-page__gone-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* D12 — tablo kendi kabında kayar, sayfa kaymaz; 360 px'te üç sütun iç kaydırmasız sığar. */
+.compare-table {
+  overflow-x: auto;
+}
+
+.compare-table table {
+  inline-size: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.compare-table th,
+.compare-table td {
+  padding: var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border);
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.compare-table__head {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: var(--space-3);
+}
+
+.compare-table__model {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.compare-table__image {
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: var(--radius-sm);
+}
+
+.compare-table__note {
+  color: var(--color-ink-muted);
+  font-weight: normal;
+}

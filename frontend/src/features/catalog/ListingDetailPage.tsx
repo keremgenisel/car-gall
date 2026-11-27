@@ -3,10 +3,11 @@ import { useLocale } from '../../app/localeContext'
 import { fetchListingDetail } from '../../shared/api/catalog'
 import type { ShowcaseListingDetail } from '../../shared/api/types'
 import { formatMoney, formatYear } from '../../shared/i18n/format'
-import type { Translator } from '../../shared/i18n/i18n'
 import { listPath } from '../../shared/lib/route'
 import { Badge, Card } from '../../shared/ui'
+import { attributeName } from './attributeName'
 import { Gallery } from './detail/Gallery'
+import { FavoriteButton } from './FavoriteButton'
 import { PaintChangeMapSection } from './detail/PaintChangeMapSection'
 import { DetailError } from './states/DetailError'
 import { DetailNotFound } from './states/DetailNotFound'
@@ -120,6 +121,9 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
             {detail.modelName}
           </h1>
 
+          {/* `frontend-003` D7 · P7 — görünür metinli düğme; "Karşılaştır" düğmesi yok (X7). */}
+          <FavoriteButton listing={detail} labelled />
+
           <p className="listing-detail__price" data-testid="detail-price">
             {price ?? t('detail.priceOnRequest')}
           </p>
@@ -162,32 +166,6 @@ export function ListingDetailPage({ slug, renderLead }: Props) {
       {renderLead === undefined ? null : renderLead(detail)}
     </div>
   )
-}
-
-/**
- * Nitelik anahtarının ziyaretçinin dilindeki ADI. Anahtarlar sunucunun yazabildiği kümedir
- * (`ShowcaseListingDetailQueries.BuildAttributesAsync`): beş referans alanı ve renk. Opsiyonel
- * alanlardan bugün hiçbiri buraya inmez — projektör yalnız `LocalizedText` taşır ve öyle bir
- * alan tanımlı değil; biri tanımlanırsa `VitrindeAdiOlanAlanlarTests` kırılır ve adı buraya
- * eklenir. Bilinmeyen anahtar `null` döner ve satır sunucunun etiketiyle basılır.
- */
-function attributeName(key: string, t: Translator): string | null {
-  switch (key) {
-    case 'body_type':
-      return t('detail.field.bodyType')
-    case 'fuel_type':
-      return t('detail.field.fuelType')
-    case 'transmission_type':
-      return t('detail.field.transmissionType')
-    case 'drivetrain_type':
-      return t('detail.field.drivetrainType')
-    case 'trim_level':
-      return t('detail.field.trimLevel')
-    case 'color':
-      return t('detail.field.color')
-    default:
-      return null
-  }
 }
 
 function Attribute({ label, value }: { readonly label: string; readonly value: string }) {

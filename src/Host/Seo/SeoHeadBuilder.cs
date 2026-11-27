@@ -75,10 +75,17 @@ internal sealed class SeoHeadBuilder(
             SeoPageKind.Detail => await DetailAsync(context, locale.Code, ad, page.Slug!, logoImage),
             SeoPageKind.Content => await ContentAsync(context, locale.Code, ad, page.Slug!, logoImage),
             SeoPageKind.Newsletter => new SeoHead(StatusCodes.Status200OK, Title(ad ?? Text(locale.Code, SeoCatalog.DocumentFallbackTitle))),
+            // `frontend-003` D2 — ziyaretçinin kendi seçimi: 200 (slug'lar görünmese de), `noindex`;
+            // kanonik, dil alternatifi, Open Graph ve JSON-LD yok. Açıklama yok.
+            SeoPageKind.Favorites => Private(locale.Code, ad, SeoCatalog.FavoritesTitle),
+            SeoPageKind.Compare => Private(locale.Code, ad, SeoCatalog.CompareTitle),
             SeoPageKind.Admin => new SeoHead(StatusCodes.Status200OK, Title(ad ?? Text(locale.Code, SeoCatalog.DocumentFallbackTitle)) + Robots("noindex")),
             _ => NotFound(locale.Code, ad),
         };
     }
+
+    private SeoHead Private(string locale, string? ad, string titleKey) =>
+        new(StatusCodes.Status200OK, Title(WithName(Text(locale, titleKey), ad)) + Robots("noindex"));
 
     /// <summary>
     /// `0004` **D7** · **D11** — 404 belgesi: ilan ve içerik için TEK başlık (C6), <c>noindex</c>;

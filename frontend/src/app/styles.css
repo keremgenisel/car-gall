@@ -109,6 +109,14 @@ body {
   margin: 0;
 }
 
+/* `frontend-003` P6 — model adı ve favori düğmesi aynı satırda; düğme satır sonu tarafında. */
+.listing-card__head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
 .listing-card__media {
   position: relative;
   background: var(--color-surface-muted);
@@ -200,22 +208,23 @@ body {
   /* `0020` R5 — ad bir bağlantıdır ama marka gibi görünür; uzun ad satırı taşırmaz (D22). */
   color: var(--color-ink);
   text-decoration: none;
-  overflow-wrap: anywhere;
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: 0;
 }
 
 /* `0026` D5 — logo adın satır başı tarafında; oran korunarak en çok 40 × 160 CSS piksel. Logosuz
    üst çubuk bu karttan önceki hâlinde kalır (AC-34): esnek kutu yalnız logoluda. */
 .top-bar__brand--logo {
-  display: inline-flex;
-  align-items: center;
   gap: var(--space-4);
-  min-inline-size: 0;
 }
 
-/* Dar ekranda logo adı sıkıştırır; ad birden çok satıra kırılırsa web fontu gelince satır sayısı
-   değişir ve üst çubuğun yüksekliği oynar (C3'te `main` kayıyordu, CLS 0.041). Logoluda ad TEK
-   satırdır ve taşarsa kısalır; logo büzülmez (aşağıda `flex-shrink`). Logosuz üst çubuk önceki hâlinde (AC-34). */
-.top-bar__brand--logo bdi {
+/* Ad TEK satırdır ve taşarsa kısalır (sonda "…"); logo büzülmez (aşağıda `flex-shrink`). Ad birden
+   çok satıra kırılırsa web fontu gelince satır sayısı değişir ve üst çubuk oynar: logoluda `0026` C3
+   (CLS 0.041), logosuzda `frontend-003` QA 2 (font bekletilince CLS 0.24'e kadar) — `0026` AC-34'ün
+   "logosuz ad kırılabilir" kısmı AP-08 ile kalktı. Görünen metin kısalsa da bağlantının erişilebilir
+   adı tam addır (metin düğümü tamdır). */
+.top-bar__brand bdi {
   min-inline-size: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -240,6 +249,77 @@ body {
 
 a.top-bar__brand:hover {
   text-decoration: underline;
+}
+
+/* `frontend-003` D8 — sayaç ve dil değiştirici satır sonunda; ikisi de büzülmez, ad kısalır. */
+.top-bar__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+.top-bar__favorites,
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-inline-size: var(--touch-target-min-size);
+  min-block-size: var(--touch-target-min-size);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+/* `frontend-003` D7 · P4 — tek kalp: çizgili, basılı düğmede dolgulu (renk dışı fark, AC-26). */
+.heart {
+  inline-size: var(--favorite-icon-size);
+  block-size: var(--favorite-icon-size);
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+}
+
+[aria-pressed='true'] > .heart {
+  fill: currentcolor;
+}
+
+.favorite-button {
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.listing-detail__body .favorite-button {
+  border: var(--border-width) solid var(--color-border);
+  padding-inline: var(--space-5);
+}
+
+/*
+ * `frontend-003` D8 (AP-08 revizyonu) — dar ekranda üst çubuk HER ZAMAN iki satırdır: 1. satır
+ * marka (logo + ad), 2. satır sayaç + dil değiştirici. Kırılma içerikten bağımsızdır (sayaç 0 → 24,
+ * ad uzunluğu, dil); ilk boyamadan sonra satır sayısı değişmez. Eşik ölçüldü: logolu, 40 karakterlik
+ * ad, 24 favori ve üç dilin tam adıyla tek satırın sığdığı en dar genişlik ar'da 576 px; eşik
+ * 40rem (640 px). Dil bağlantıları burada en az dokunma hedefi boyutundadır.
+ */
+@media (width < 40rem) {
+  .top-bar__inner {
+    flex-wrap: wrap;
+    row-gap: var(--space-4);
+  }
+
+  /* İkinci satırın tamamı; öğeler satır sonunda kalır (ar'da solda, frontend-001 AC-4). */
+  .top-bar__end {
+    flex-basis: 100%;
+    justify-content: end;
+  }
+
+  .top-bar__locale {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--touch-target-min-size);
+  }
 }
 
 .top-bar__locales {

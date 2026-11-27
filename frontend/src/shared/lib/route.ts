@@ -59,6 +59,11 @@ export type AdminView =
  */
 export const NEWSLETTER_SEGMENT = 'newsletter'
 
+/** `frontend-003` **D1** — favoriler ve karşılaştırma ekranları; dilden bağımsız, çevrilmez. */
+export const FAVORITES_SEGMENT = 'favorites'
+
+export const COMPARE_SEGMENT = 'compare'
+
 export type Route =
   /** 0014 **D9** — `/{locale}/` artık ana sayfadır; liste `/{locale}/cars`'a taşındı. */
   | { readonly kind: 'home' }
@@ -68,6 +73,10 @@ export type Route =
   | { readonly kind: 'newsletter-unsubscribe' }
   | { readonly kind: 'list' }
   | { readonly kind: 'detail'; readonly slug: string }
+  /** `frontend-003` **D1** — favoriler ekranı (`/{locale}/favorites`). */
+  | { readonly kind: 'favorites' }
+  /** `frontend-003` **D1** · **D3** — karşılaştırma (`/{locale}/compare?listing=…`). */
+  | { readonly kind: 'compare' }
   /**
    * `0017` **D9** — tek parçalı tanınmayan yol (`/{locale}/{slug}`) bir içerik sayfası
    * adayıdır; yayında bir sayfaya çözülmezse "bulunamadı" ekranı basılır, listeye düşmez.
@@ -217,6 +226,15 @@ export function parseRoute(pathname: string): Route {
       : { kind: 'not-found' }
   }
 
+  // `frontend-003` D1 — iki ekran; alt yolları (`/tr/favorites/x`) "bulunamadı"dır (aşağıda).
+  if (slugSegment === undefined && section === FAVORITES_SEGMENT) {
+    return { kind: 'favorites' }
+  }
+
+  if (slugSegment === undefined && section === COMPARE_SEGMENT) {
+    return { kind: 'compare' }
+  }
+
   // `0017` D9 — tek parçalı yol bir içerik sayfası adayıdır (AC-37); ayrılmış ad değilse.
   // `0004` D8 — `0017` AC-38'in "iki parçalı tanınmayan yol listeye düşer" davranışı kalktı:
   // `/tr/foo/bar`, `/tr/newsletter`, `/tr/newsletter/foo`, `/tr/admin` "bulunamadı"dır.
@@ -237,6 +255,8 @@ const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([
   'api',
   'assets',
   NEWSLETTER_SEGMENT,
+  FAVORITES_SEGMENT,
+  COMPARE_SEGMENT,
 ])
 
 /**
@@ -264,6 +284,11 @@ export function newsletterSectionPath(locale: AppLocale): string {
 /** `0018` **D26** — bağlantının anahtarı sorgu parametresindedir; yoksa boş metin. */
 export function newsletterTokenOf(search: string): string {
   return new URLSearchParams(search).get('token') ?? ''
+}
+
+/** `frontend-003` **D1** — favoriler ekranı; sayaç buraya götürür (D8). */
+export function favoritesPath(locale: AppLocale): string {
+  return `/${locale}/${FAVORITES_SEGMENT}`
 }
 
 /** 0014 — ana sayfanın adresi; altlığın dil bağlantıları (AC-46). */

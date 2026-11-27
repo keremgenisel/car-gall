@@ -1,4 +1,5 @@
 import { useLocale } from './localeContext'
+import { FavoritesCounter } from './FavoritesCounter'
 import { LocaleSwitcher } from './LocaleSwitcher'
 import { galleryDisplayName, galleryLogo } from '../shared/lib/galleryName'
 import { homePath } from '../shared/lib/route'
@@ -52,7 +53,11 @@ export function TopBar() {
             <bdi>{name}</bdi>
           </a>
         )}
-        <LocaleSwitcher />
+        {/* `frontend-003` D8 — sayaç dil değiştiricinin yanında, satır sonu tarafında. */}
+        <div className="top-bar__end">
+          <FavoritesCounter />
+          <LocaleSwitcher />
+        </div>
       </div>
     </header>
   )

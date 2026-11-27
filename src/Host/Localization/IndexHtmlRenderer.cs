@@ -127,6 +127,12 @@ internal sealed partial class IndexHtmlRenderer(
         if (IsNewsletterLinkPage(context.Request.Path, locale))
         {
             html = html.Replace(HeadEnd, "<meta name=\"robots\" content=\"noindex\" />" + HeadEnd, StringComparison.Ordinal);
+        }
+
+        // `frontend-003` D2 — favoriler ve karşılaştırma da: ekranın okumaları ve karşılaştırılan
+        // ilanlar `Referer`'da başka bir siteye gitmez (AC-6). `noindex` onların başlık kümesinde.
+        if (SeoPage.Of(context.Request.Path, locale.Code).IsPrivate)
+        {
             context.Response.Headers["Referrer-Policy"] = "no-referrer";
         }
 

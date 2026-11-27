@@ -95,6 +95,8 @@ describe('AC-17: Vitrin listesi ekranının smoke testi', () => {
     expect(screen.getByText('Toyota Corolla')).toBeTruthy()
     expect(screen.getByText('₺750.000,00')).toBeTruthy()
     expect(screen.getByText('Merkez Şube')).toBeTruthy()
+    // frontend-003 AC-21 — kartta favori düğmesi (tablodaki satır: yalnız varlığı eklenir).
+    expect(screen.getByRole('button', { name: 'Favori: Toyota Corolla 2019' })).toBeTruthy()
   })
 
   it('vitrinde hiç ilan yokken EmptyShowcase gösterir', async () => {

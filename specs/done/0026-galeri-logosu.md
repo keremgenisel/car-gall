@@ -606,6 +606,10 @@ ilgisiz bir değişikliğe bağlar.
 - **AC-33.** `/ar/` üst çubuğunda logo adın sağındadır.
 - **AC-34.** Logo atanmamış kurulumda üst çubuk ve belge bu karttan önceki hâlindedir: logo görseli
   ve logo bilgisi yoktur.
+  *Revizyon (2026-11-27, AP-08, `frontend-003` Takım Yöneticisi kararı): logosuz kurulumda da ad artık
+  tek satırdır ve taşarsa "…" ile kısalır ("bu karttan önceki hâl"de ad kırılabiliyordu). Gerekçe:
+  font bekletilerek ölçülünce (`frontend-003` QA 2 BULGU-6) adın satır sayısı web fontu gelince
+  değişip CLS üretiyordu; logo görseli ve logo bilgisinin yokluğu aynen.*
 - **AC-35.** Atanmış logo işleniyor ya da başarısız durumdayken üst çubukta logo yoktur.
 - **AC-36.** Atanmış kimlik fotoğraf türünde bir varlıksa üst çubukta logo yoktur.
 - **AC-37.** Atanmış kimlik `Media`'da yoksa üst çubukta logo yoktur ve belge 200 döner.
